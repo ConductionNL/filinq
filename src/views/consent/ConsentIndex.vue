@@ -307,6 +307,7 @@ export default {
 	margin-bottom: 16px;
 	flex-wrap: wrap;
 }
+
 .policy-preempted-badge {
 	margin-left: 8px;
 }

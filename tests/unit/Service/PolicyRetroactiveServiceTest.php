@@ -41,163 +41,147 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class PolicyRetroactiveServiceTest extends TestCase
-{
+class PolicyRetroactiveServiceTest extends TestCase {
 
-    /**
-     * Mock logger.
-     *
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * Mock logger.
+	 *
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * Mock DI container.
-     *
-     * @var ContainerInterface|MockObject
-     */
-    private ContainerInterface|MockObject $mockContainer;
+	/**
+	 * Mock DI container.
+	 *
+	 * @var ContainerInterface|MockObject
+	 */
+	private ContainerInterface|MockObject $mockContainer;
 
-    /**
-     * Mock policy matcher.
-     *
-     * @var PolicyMatchService|MockObject
-     */
-    private PolicyMatchService|MockObject $mockPolicyMatcher;
+	/**
+	 * Mock policy matcher.
+	 *
+	 * @var PolicyMatchService|MockObject
+	 */
+	private PolicyMatchService|MockObject $mockPolicyMatcher;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->mockContainer = $this->createMock(originalClassName: ContainerInterface::class);
+		$this->mockPolicyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
 
-        $this->mockLogger        = $this->createMock(originalClassName: LoggerInterface::class);
-        $this->mockContainer     = $this->createMock(originalClassName: ContainerInterface::class);
-        $this->mockPolicyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build a fresh service instance with the configured mocks.
+	 *
+	 * @return PolicyRetroactiveService
+	 */
+	private function makeService(): PolicyRetroactiveService {
+		return new PolicyRetroactiveService(
+			logger: $this->mockLogger,
+			container: $this->mockContainer,
+			policyMatcher: $this->mockPolicyMatcher
+		);
 
+	}//end makeService()
 
-    /**
-     * Build a fresh service instance with the configured mocks.
-     *
-     * @return PolicyRetroactiveService
-     */
-    private function makeService(): PolicyRetroactiveService
-    {
-        return new PolicyRetroactiveService(
-            logger: $this->mockLogger,
-            container: $this->mockContainer,
-            policyMatcher: $this->mockPolicyMatcher
-        );
+	/**
+	 * Inactive prohibitions MUST short-circuit and resolve nothing.
+	 *
+	 * @return void
+	 */
+	public function testInactiveProhibitionResolvesNothing(): void {
+		$this->mockContainer->expects($this->never())->method('get');
 
-    }//end makeService()
+		$service = $this->makeService();
+		$result = $service->applyProhibitionMutation(
+			prohibition: [
+				'active' => false,
+				'matchRules' => [['type' => 'exact', 'value' => 'Jan Janssen']],
+				'@self' => ['id' => 'p-1'],
+				'entityType' => 'PERSON',
+			]
+		);
 
+		$this->assertSame(expected: 0, actual: $result);
 
-    /**
-     * Inactive prohibitions MUST short-circuit and resolve nothing.
-     *
-     * @return void
-     */
-    public function testInactiveProhibitionResolvesNothing(): void
-    {
-        $this->mockContainer->expects($this->never())->method('get');
+	}//end testInactiveProhibitionResolvesNothing()
 
-        $service = $this->makeService();
-        $result  = $service->applyProhibitionMutation(
-                prohibition: [
-                    'active'     => false,
-                    'matchRules' => [['type' => 'exact', 'value' => 'Jan Janssen']],
-                    '@self'      => ['id' => 'p-1'],
-                    'entityType' => 'PERSON',
-                ]
-                );
+	/**
+	 * Time-bound prohibitions outside their validity window MUST not sweep.
+	 *
+	 * @return void
+	 */
+	public function testFutureProhibitionResolvesNothing(): void {
+		$this->mockContainer->expects($this->never())->method('get');
 
-        $this->assertSame(expected: 0, actual: $result);
+		$service = $this->makeService();
+		$result = $service->applyProhibitionMutation(
+			prohibition: [
+				'active' => true,
+				'validFrom' => '2099-01-01T00:00:00Z',
+				'matchRules' => [['type' => 'exact', 'value' => 'Jan Janssen']],
+				'@self' => ['id' => 'p-1'],
+				'entityType' => 'PERSON',
+			]
+		);
 
-    }//end testInactiveProhibitionResolvesNothing()
+		$this->assertSame(expected: 0, actual: $result);
 
+	}//end testFutureProhibitionResolvesNothing()
 
-    /**
-     * Time-bound prohibitions outside their validity window MUST not sweep.
-     *
-     * @return void
-     */
-    public function testFutureProhibitionResolvesNothing(): void
-    {
-        $this->mockContainer->expects($this->never())->method('get');
+	/**
+	 * Prohibitions without a UUID anchor MUST be skipped with a warning.
+	 *
+	 * @return void
+	 */
+	public function testProhibitionWithoutUuidLogsAndReturnsZero(): void {
+		$this->mockLogger->expects($this->once())->method('warning');
 
-        $service = $this->makeService();
-        $result  = $service->applyProhibitionMutation(
-                prohibition: [
-                    'active'     => true,
-                    'validFrom'  => '2099-01-01T00:00:00Z',
-                    'matchRules' => [['type' => 'exact', 'value' => 'Jan Janssen']],
-                    '@self'      => ['id' => 'p-1'],
-                    'entityType' => 'PERSON',
-                ]
-                );
+		$service = $this->makeService();
+		$result = $service->applyProhibitionMutation(
+			prohibition: [
+				'active' => true,
+				'matchRules' => [['type' => 'exact', 'value' => 'Jan Janssen']],
+				'entityType' => 'PERSON',
+			]
+		);
 
-        $this->assertSame(expected: 0, actual: $result);
+		$this->assertSame(expected: 0, actual: $result);
 
-    }//end testFutureProhibitionResolvesNothing()
+	}//end testProhibitionWithoutUuidLogsAndReturnsZero()
 
+	/**
+	 * Standing-consent mutation MUST invalidate the matcher cache and do nothing else.
+	 *
+	 * @return void
+	 */
+	public function testStandingConsentMutationOnlyInvalidatesCache(): void {
+		$this->mockPolicyMatcher->expects($this->once())->method('invalidateCache');
+		$this->mockContainer->expects($this->never())->method('get');
 
-    /**
-     * Prohibitions without a UUID anchor MUST be skipped with a warning.
-     *
-     * @return void
-     */
-    public function testProhibitionWithoutUuidLogsAndReturnsZero(): void
-    {
-        $this->mockLogger->expects($this->once())->method('warning');
+		$this->makeService()->applyStandingConsentMutation();
 
-        $service = $this->makeService();
-        $result  = $service->applyProhibitionMutation(
-                prohibition: [
-                    'active'     => true,
-                    'matchRules' => [['type' => 'exact', 'value' => 'Jan Janssen']],
-                    'entityType' => 'PERSON',
-                ]
-                );
+	}//end testStandingConsentMutationOnlyInvalidatesCache()
 
-        $this->assertSame(expected: 0, actual: $result);
+	/**
+	 * Rule removal MUST invalidate the matcher cache and do nothing else.
+	 *
+	 * @return void
+	 */
+	public function testRuleRemovalOnlyInvalidatesCache(): void {
+		$this->mockPolicyMatcher->expects($this->once())->method('invalidateCache');
+		$this->mockContainer->expects($this->never())->method('get');
 
-    }//end testProhibitionWithoutUuidLogsAndReturnsZero()
+		$this->makeService()->applyRuleRemoval();
 
-
-    /**
-     * Standing-consent mutation MUST invalidate the matcher cache and do nothing else.
-     *
-     * @return void
-     */
-    public function testStandingConsentMutationOnlyInvalidatesCache(): void
-    {
-        $this->mockPolicyMatcher->expects($this->once())->method('invalidateCache');
-        $this->mockContainer->expects($this->never())->method('get');
-
-        $this->makeService()->applyStandingConsentMutation();
-
-    }//end testStandingConsentMutationOnlyInvalidatesCache()
-
-
-    /**
-     * Rule removal MUST invalidate the matcher cache and do nothing else.
-     *
-     * @return void
-     */
-    public function testRuleRemovalOnlyInvalidatesCache(): void
-    {
-        $this->mockPolicyMatcher->expects($this->once())->method('invalidateCache');
-        $this->mockContainer->expects($this->never())->method('get');
-
-        $this->makeService()->applyRuleRemoval();
-
-    }//end testRuleRemovalOnlyInvalidatesCache()
-
+	}//end testRuleRemovalOnlyInvalidatesCache()
 
 }//end class

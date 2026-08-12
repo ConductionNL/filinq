@@ -50,177 +50,163 @@ use RuntimeException;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class VersionControllerTest extends TestCase
-{
+class VersionControllerTest extends TestCase {
 
-    /**
-     * Mocked version service.
-     *
-     * @var DocumentVersionService|MockObject
-     */
-    private DocumentVersionService|MockObject $service;
+	/**
+	 * Mocked version service.
+	 *
+	 * @var DocumentVersionService|MockObject
+	 */
+	private DocumentVersionService|MockObject $service;
 
-    /**
-     * Mocked localisation.
-     *
-     * @var IL10N|MockObject
-     */
-    private IL10N|MockObject $l10n;
+	/**
+	 * Mocked localisation.
+	 *
+	 * @var IL10N|MockObject
+	 */
+	private IL10N|MockObject $l10n;
 
-    /**
-     * Controller under test, with an authenticated session.
-     *
-     * @var VersionController
-     */
-    private VersionController $controller;
+	/**
+	 * Controller under test, with an authenticated session.
+	 *
+	 * @var VersionController
+	 */
+	private VersionController $controller;
 
+	/**
+	 * Set up an authenticated controller.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up an authenticated controller.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->service = $this->createMock(DocumentVersionService::class);
+		$this->l10n = $this->createMock(IL10N::class);
+		$this->l10n->method('t')->willReturnCallback(
+			static function (string $text): string {
+				return $text;
+			}
+		);
 
-        $this->service = $this->createMock(DocumentVersionService::class);
-        $this->l10n    = $this->createMock(IL10N::class);
-        $this->l10n->method('t')->willReturnCallback(
-            static function (string $text): string {
-                return $text;
-            }
-        );
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
 
-        $user    = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $session = $this->createMock(IUserSession::class);
-        $session->method('getUser')->willReturn($user);
+		$this->controller = new VersionController(
+			'docudesk',
+			$this->createMock(IRequest::class),
+			$this->createMock(LoggerInterface::class),
+			$this->service,
+			$this->l10n,
+			$session
+		);
 
-        $this->controller = new VersionController(
-            'docudesk',
-            $this->createMock(IRequest::class),
-            $this->createMock(LoggerInterface::class),
-            $this->service,
-            $this->l10n,
-            $session
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * A successful restore answers 200 with `{restored: true}` and forwards
+	 * both path parameters to the service.
+	 *
+	 * @return void
+	 */
+	public function testRestoreReturnsRestoredTrue(): void {
+		$this->service->expects($this->once())
+			->method('restoreVersion')
+			->with(1234, 1700000000);
 
+		$response = $this->controller->restore(1234, 1700000000);
 
-    /**
-     * A successful restore answers 200 with `{restored: true}` and forwards
-     * both path parameters to the service.
-     *
-     * @return void
-     */
-    public function testRestoreReturnsRestoredTrue(): void
-    {
-        $this->service->expects($this->once())
-            ->method('restoreVersion')
-            ->with(1234, 1700000000);
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['restored' => true], $response->getData());
 
-        $response = $this->controller->restore(1234, 1700000000);
+	}//end testRestoreReturnsRestoredTrue()
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame(['restored' => true], $response->getData());
+	/**
+	 * An anonymous caller is refused with 401 and no restore is attempted —
+	 * restore is a write, so this guard is the boundary, not a nicety.
+	 *
+	 * @return void
+	 */
+	public function testRestoreRejectsAnonymousCaller(): void {
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
 
-    }//end testRestoreReturnsRestoredTrue()
+		$controller = new VersionController(
+			'docudesk',
+			$this->createMock(IRequest::class),
+			$this->createMock(LoggerInterface::class),
+			$this->service,
+			$this->l10n,
+			$session
+		);
 
+		$this->service->expects($this->never())->method('restoreVersion');
 
-    /**
-     * An anonymous caller is refused with 401 and no restore is attempted —
-     * restore is a write, so this guard is the boundary, not a nicety.
-     *
-     * @return void
-     */
-    public function testRestoreRejectsAnonymousCaller(): void
-    {
-        $session = $this->createMock(IUserSession::class);
-        $session->method('getUser')->willReturn(null);
+		$response = $controller->restore(1234, 1700000000);
 
-        $controller = new VersionController(
-            'docudesk',
-            $this->createMock(IRequest::class),
-            $this->createMock(LoggerInterface::class),
-            $this->service,
-            $this->l10n,
-            $session
-        );
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['error' => 'Not authenticated'], $response->getData());
 
-        $this->service->expects($this->never())->method('restoreVersion');
+	}//end testRestoreRejectsAnonymousCaller()
 
-        $response = $controller->restore(1234, 1700000000);
+	/**
+	 * A file the caller cannot reach yields the service's 404 with a
+	 * `{error, reason}` body — the same answer as a file that does not exist,
+	 * so the endpoint discloses nothing (ADR-005).
+	 *
+	 * @return void
+	 */
+	public function testRestoreMapsInaccessibleFileToNotFound(): void {
+		$this->service->method('restoreVersion')
+			->willThrowException(new ComparisonException(404, 'not-found', 'no such file'));
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame(['error' => 'Not authenticated'], $response->getData());
+		$response = $this->controller->restore(999, 1700000000);
 
-    }//end testRestoreRejectsAnonymousCaller()
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('Document not found', $data['error']);
+		$this->assertSame('not-found', $data['reason']);
 
+	}//end testRestoreMapsInaccessibleFileToNotFound()
 
-    /**
-     * A file the caller cannot reach yields the service's 404 with a
-     * `{error, reason}` body — the same answer as a file that does not exist,
-     * so the endpoint discloses nothing (ADR-005).
-     *
-     * @return void
-     */
-    public function testRestoreMapsInaccessibleFileToNotFound(): void
-    {
-        $this->service->method('restoreVersion')
-            ->willThrowException(new ComparisonException(404, 'not-found', 'no such file'));
+	/**
+	 * An instance without files_versions answers with the service's own status
+	 * and the dedicated `versions-unavailable` reason, so the UI can explain
+	 * the deployment gap instead of reporting a missing document.
+	 *
+	 * @return void
+	 */
+	public function testRestoreReportsVersionsUnavailable(): void {
+		$this->service->method('restoreVersion')
+			->willThrowException(new ComparisonException(501, 'versions-unavailable', 'app disabled'));
 
-        $response = $this->controller->restore(999, 1700000000);
+		$response = $this->controller->restore(1234, 1700000000);
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame('Document not found', $data['error']);
-        $this->assertSame('not-found', $data['reason']);
+		$this->assertSame(501, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('File versions are not available on this instance', $data['error']);
+		$this->assertSame('versions-unavailable', $data['reason']);
 
-    }//end testRestoreMapsInaccessibleFileToNotFound()
+	}//end testRestoreReportsVersionsUnavailable()
 
+	/**
+	 * Any other failure is contained as a localised 500 body — the Throwable
+	 * must not escape to the framework's raw error page.
+	 *
+	 * @return void
+	 */
+	public function testRestoreContainsUnexpectedFailure(): void {
+		$this->service->method('restoreVersion')
+			->willThrowException(new RuntimeException('storage backend exploded'));
 
-    /**
-     * An instance without files_versions answers with the service's own status
-     * and the dedicated `versions-unavailable` reason, so the UI can explain
-     * the deployment gap instead of reporting a missing document.
-     *
-     * @return void
-     */
-    public function testRestoreReportsVersionsUnavailable(): void
-    {
-        $this->service->method('restoreVersion')
-            ->willThrowException(new ComparisonException(501, 'versions-unavailable', 'app disabled'));
+		$response = $this->controller->restore(1234, 1700000000);
 
-        $response = $this->controller->restore(1234, 1700000000);
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame(['error' => 'Could not restore version'], $response->getData());
 
-        $this->assertSame(501, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame('File versions are not available on this instance', $data['error']);
-        $this->assertSame('versions-unavailable', $data['reason']);
-
-    }//end testRestoreReportsVersionsUnavailable()
-
-
-    /**
-     * Any other failure is contained as a localised 500 body — the Throwable
-     * must not escape to the framework's raw error page.
-     *
-     * @return void
-     */
-    public function testRestoreContainsUnexpectedFailure(): void
-    {
-        $this->service->method('restoreVersion')
-            ->willThrowException(new RuntimeException('storage backend exploded'));
-
-        $response = $this->controller->restore(1234, 1700000000);
-
-        $this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-        $this->assertSame(['error' => 'Could not restore version'], $response->getData());
-
-    }//end testRestoreContainsUnexpectedFailure()
-
+	}//end testRestoreContainsUnexpectedFailure()
 
 }//end class

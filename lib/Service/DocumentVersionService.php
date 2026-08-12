@@ -49,337 +49,317 @@ use Throwable;
  *
  * @spec openspec/specs/document-versions/spec.md
  */
-class DocumentVersionService
-{
-    /**
-     * Fully-qualified IVersionManager class (resolved lazily so the app
-     * degrades gracefully when files_versions is disabled).
-     *
-     * @var string
-     */
-    private const VERSION_MANAGER = 'OCA\Files_Versions\Versions\IVersionManager';
+class DocumentVersionService {
+	/**
+	 * Fully-qualified IVersionManager class (resolved lazily so the app
+	 * degrades gracefully when files_versions is disabled).
+	 *
+	 * @var string
+	 */
+	private const VERSION_MANAGER = 'OCA\Files_Versions\Versions\IVersionManager';
 
-    /**
-     * Constructor.
-     *
-     * @param LoggerInterface    $logger      Logger for diagnostics.
-     * @param IRootFolder        $rootFolder  Root folder for user-scoped file access.
-     * @param IUserSession       $userSession Current user session.
-     * @param IAppManager        $appManager  App manager (files_versions availability).
-     * @param ContainerInterface $container   DI container for lazy IVersionManager resolution.
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger,
-        private readonly IRootFolder $rootFolder,
-        private readonly IUserSession $userSession,
-        private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container
-    ) {
+	/**
+	 * Constructor.
+	 *
+	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param IRootFolder $rootFolder Root folder for user-scoped file access.
+	 * @param IUserSession $userSession Current user session.
+	 * @param IAppManager $appManager App manager (files_versions availability).
+	 * @param ContainerInterface $container DI container for lazy IVersionManager resolution.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+		private readonly IRootFolder $rootFolder,
+		private readonly IUserSession $userSession,
+		private readonly IAppManager $appManager,
+		private readonly ContainerInterface $container,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * List a document's Nextcloud file versions, newest first.
-     *
-     * @param int $fileId The Nextcloud file id.
-     * @param int $limit  Maximum entries to return.
-     * @param int $offset Entries to skip (pagination).
-     *
-     * @return array<int, array<string, mixed>> The version entries (newest first).
-     *
-     * @throws ComparisonException 404 (not readable) / 422 (versions-unavailable).
-     *
-     * @spec openspec/specs/document-versions/spec.md
-     */
-    public function listVersions(int $fileId, int $limit=50, int $offset=0): array
-    {
-        $file           = $this->resolveFile(fileId: $fileId, requireWrite: false);
-        $versionManager = $this->resolveVersionManager();
-        $user           = $this->requireUser();
+	/**
+	 * List a document's Nextcloud file versions, newest first.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 * @param int $limit Maximum entries to return.
+	 * @param int $offset Entries to skip (pagination).
+	 *
+	 * @return array<int, array<string, mixed>> The version entries (newest first).
+	 *
+	 * @throws ComparisonException 404 (not readable) / 422 (versions-unavailable).
+	 *
+	 * @spec openspec/specs/document-versions/spec.md
+	 */
+	public function listVersions(int $fileId, int $limit = 50, int $offset = 0): array {
+		$file = $this->resolveFile(fileId: $fileId, requireWrite: false);
+		$versionManager = $this->resolveVersionManager();
+		$user = $this->requireUser();
 
-        $entries = [];
+		$entries = [];
 
-        // The current file content is itself the newest version.
-        $entries[] = [
-            'timestamp' => $file->getMTime(),
-            'author'    => $this->fileAuthor(file: $file),
-            'size'      => $file->getSize(),
-            'label'     => '',
-            'isCurrent' => true,
-        ];
+		// The current file content is itself the newest version.
+		$entries[] = [
+			'timestamp' => $file->getMTime(),
+			'author' => $this->fileAuthor(file: $file),
+			'size' => $file->getSize(),
+			'label' => '',
+			'isCurrent' => true,
+		];
 
-        try {
-            $versions = $versionManager->getVersionsForFile($user, $file);
-            foreach ($versions as $version) {
-                $entries[] = [
-                    'timestamp' => (int) $version->getTimestamp(),
-                    'author'    => $this->versionAuthor(version: $version, fallback: $entries[0]['author']),
-                    'size'      => $this->versionSize(version: $version),
-                    'label'     => $this->versionLabel(version: $version),
-                    'isCurrent' => false,
-                ];
-            }
-        } catch (Throwable $e) {
-            $this->logger->debug('Version listing failed', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
-            throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'version manager error');
-        }
+		try {
+			$versions = $versionManager->getVersionsForFile($user, $file);
+			foreach ($versions as $version) {
+				$entries[] = [
+					'timestamp' => (int)$version->getTimestamp(),
+					'author' => $this->versionAuthor(version: $version, fallback: $entries[0]['author']),
+					'size' => $this->versionSize(version: $version),
+					'label' => $this->versionLabel(version: $version),
+					'isCurrent' => false,
+				];
+			}
+		} catch (Throwable $e) {
+			$this->logger->debug('Version listing failed', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
+			throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'version manager error');
+		}
 
-        // Newest first.
-        usort($entries, static fn (array $a, array $b): int => ($b['timestamp'] <=> $a['timestamp']));
+		// Newest first.
+		usort($entries, static fn (array $a, array $b): int => ($b['timestamp'] <=> $a['timestamp']));
 
-        return array_slice($entries, $offset, $limit);
+		return array_slice($entries, $offset, $limit);
+	}//end listVersions()
 
-    }//end listVersions()
+	/**
+	 * Read the bytes of a specific version (for open/download).
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 * @param int $versionTimestamp The version timestamp (0 = current file).
+	 *
+	 * @return string The version bytes.
+	 *
+	 * @throws ComparisonException 404 / 422.
+	 *
+	 * @spec openspec/specs/document-versions/spec.md
+	 */
+	public function readVersion(int $fileId, int $versionTimestamp): string {
+		$file = $this->resolveFile(fileId: $fileId, requireWrite: false);
 
-    /**
-     * Read the bytes of a specific version (for open/download).
-     *
-     * @param int $fileId           The Nextcloud file id.
-     * @param int $versionTimestamp The version timestamp (0 = current file).
-     *
-     * @return string The version bytes.
-     *
-     * @throws ComparisonException 404 / 422.
-     *
-     * @spec openspec/specs/document-versions/spec.md
-     */
-    public function readVersion(int $fileId, int $versionTimestamp): string
-    {
-        $file = $this->resolveFile(fileId: $fileId, requireWrite: false);
+		if ($versionTimestamp === 0) {
+			try {
+				return $file->getContent();
+			} catch (Throwable $e) {
+				throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
+			}
+		}
 
-        if ($versionTimestamp === 0) {
-            try {
-                return $file->getContent();
-            } catch (Throwable $e) {
-                throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
-            }
-        }
+		$versionManager = $this->resolveVersionManager();
+		$user = $this->requireUser();
 
-        $versionManager = $this->resolveVersionManager();
-        $user           = $this->requireUser();
+		try {
+			foreach ($versionManager->getVersionsForFile($user, $file) as $version) {
+				if ((int)$version->getTimestamp() === $versionTimestamp) {
+					$content = $versionManager->read($version);
+					if (is_resource($content) === true) {
+						$content = (string)stream_get_contents($content);
+					}
 
-        try {
-            foreach ($versionManager->getVersionsForFile($user, $file) as $version) {
-                if ((int) $version->getTimestamp() === $versionTimestamp) {
-                    $content = $versionManager->read($version);
-                    if (is_resource($content) === true) {
-                        $content = (string) stream_get_contents($content);
-                    }
+					return (string)$content;
+				}
+			}
+		} catch (Throwable $e) {
+			$this->logger->debug('Version read failed', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
+		}
 
-                    return (string) $content;
-                }
-            }
-        } catch (Throwable $e) {
-            $this->logger->debug('Version read failed', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
-        }
+		throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
+	}//end readVersion()
 
-        throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
+	/**
+	 * Restore a prior version. Requires write access; Nextcloud preserves the
+	 * current state as a new version on rollback.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 * @param int $versionTimestamp The version timestamp to restore.
+	 *
+	 * @return void
+	 *
+	 * @throws ComparisonException 404 (not writeable) / 422 / 404 (unknown version).
+	 *
+	 * @spec openspec/specs/document-versions/spec.md
+	 */
+	public function restoreVersion(int $fileId, int $versionTimestamp): void {
+		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
+		$versionManager = $this->resolveVersionManager();
+		$user = $this->requireUser();
 
-    }//end readVersion()
+		try {
+			foreach ($versionManager->getVersionsForFile($user, $file) as $version) {
+				if ((int)$version->getTimestamp() === $versionTimestamp) {
+					$versionManager->rollback($version);
+					return;
+				}
+			}
+		} catch (ComparisonException $e) {
+			throw $e;
+		} catch (Throwable $e) {
+			$this->logger->debug('Version restore failed', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
+			throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'version manager error');
+		}
 
-    /**
-     * Restore a prior version. Requires write access; Nextcloud preserves the
-     * current state as a new version on rollback.
-     *
-     * @param int $fileId           The Nextcloud file id.
-     * @param int $versionTimestamp The version timestamp to restore.
-     *
-     * @return void
-     *
-     * @throws ComparisonException 404 (not writeable) / 422 / 404 (unknown version).
-     *
-     * @spec openspec/specs/document-versions/spec.md
-     */
-    public function restoreVersion(int $fileId, int $versionTimestamp): void
-    {
-        $file           = $this->resolveFile(fileId: $fileId, requireWrite: true);
-        $versionManager = $this->resolveVersionManager();
-        $user           = $this->requireUser();
+		throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
+	}//end restoreVersion()
 
-        try {
-            foreach ($versionManager->getVersionsForFile($user, $file) as $version) {
-                if ((int) $version->getTimestamp() === $versionTimestamp) {
-                    $versionManager->rollback($version);
-                    return;
-                }
-            }
-        } catch (ComparisonException $e) {
-            throw $e;
-        } catch (Throwable $e) {
-            $this->logger->debug('Version restore failed', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
-            throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'version manager error');
-        }
+	/**
+	 * Resolve a file through the requesting user's folder, enforcing read or
+	 * write access. Returns the File node or throws 404 — without distinguishing
+	 * "does not exist" from "no access" (ADR-005).
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 * @param bool $requireWrite Whether write (update) permission is required.
+	 *
+	 * @return File The resolved file.
+	 *
+	 * @throws ComparisonException 404 when not resolvable or insufficient access.
+	 */
+	private function resolveFile(int $fileId, bool $requireWrite): File {
+		$user = $this->userSession->getUser();
+		if ($user === null || $fileId <= 0) {
+			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
+		}
 
-        throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
+		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+		$nodes = $userFolder->getById($fileId);
+		if (empty($nodes) === true) {
+			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
+		}
 
-    }//end restoreVersion()
+		$node = $nodes[0];
+		if (($node instanceof File) === false) {
+			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
+		}
 
-    /**
-     * Resolve a file through the requesting user's folder, enforcing read or
-     * write access. Returns the File node or throws 404 — without distinguishing
-     * "does not exist" from "no access" (ADR-005).
-     *
-     * @param int  $fileId       The Nextcloud file id.
-     * @param bool $requireWrite Whether write (update) permission is required.
-     *
-     * @return File The resolved file.
-     *
-     * @throws ComparisonException 404 when not resolvable or insufficient access.
-     */
-    private function resolveFile(int $fileId, bool $requireWrite): File
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null || $fileId <= 0) {
-            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
-        }
+		$needed = Constants::PERMISSION_READ;
+		if ($requireWrite === true) {
+			$needed = Constants::PERMISSION_UPDATE;
+		}
 
-        $userFolder = $this->rootFolder->getUserFolder($user->getUID());
-        $nodes      = $userFolder->getById($fileId);
-        if (empty($nodes) === true) {
-            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
-        }
+		if (($node->getPermissions() & $needed) !== $needed) {
+			// No write (or read) access — 404, no existence disclosure.
+			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
+		}
 
-        $node = $nodes[0];
-        if (($node instanceof File) === false) {
-            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
-        }
+		return $node;
+	}//end resolveFile()
 
-        $needed = Constants::PERMISSION_READ;
-        if ($requireWrite === true) {
-            $needed = Constants::PERMISSION_UPDATE;
-        }
+	/**
+	 * Resolve the IVersionManager, degrading gracefully when files_versions is off.
+	 *
+	 * @return mixed The IVersionManager instance.
+	 *
+	 * @throws ComparisonException 422 versions-unavailable.
+	 */
+	private function resolveVersionManager(): mixed {
+		if ($this->appManager->isEnabledForUser('files_versions') === false) {
+			throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'files_versions disabled');
+		}
 
-        if (($node->getPermissions() & $needed) !== $needed) {
-            // No write (or read) access — 404, no existence disclosure.
-            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
-        }
+		try {
+			return $this->container->get(self::VERSION_MANAGER);
+		} catch (Throwable $e) {
+			throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'version manager unavailable');
+		}
 
-        return $node;
+	}//end resolveVersionManager()
 
-    }//end resolveFile()
+	/**
+	 * Require an authenticated user.
+	 *
+	 * @return \OCP\IUser The current user.
+	 *
+	 * @throws ComparisonException 404 when unauthenticated.
+	 */
+	private function requireUser(): \OCP\IUser {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
+		}
 
-    /**
-     * Resolve the IVersionManager, degrading gracefully when files_versions is off.
-     *
-     * @return mixed The IVersionManager instance.
-     *
-     * @throws ComparisonException 422 versions-unavailable.
-     */
-    private function resolveVersionManager(): mixed
-    {
-        if ($this->appManager->isEnabledForUser('files_versions') === false) {
-            throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'files_versions disabled');
-        }
+		return $user;
+	}//end requireUser()
 
-        try {
-            return $this->container->get(self::VERSION_MANAGER);
-        } catch (Throwable $e) {
-            throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'version manager unavailable');
-        }
+	/**
+	 * Best-effort author (owner UID) of the current file.
+	 *
+	 * @param File $file The file.
+	 *
+	 * @return string The owner UID or ''.
+	 */
+	private function fileAuthor(File $file): string {
+		try {
+			$owner = $file->getOwner();
+			if ($owner !== null) {
+				return $owner->getUID();
+			}
+		} catch (Throwable $e) {
+			$this->logger->debug('File owner lookup failed', ['exception' => $e->getMessage()]);
+		}
 
-    }//end resolveVersionManager()
+		return '';
+	}//end fileAuthor()
 
-    /**
-     * Require an authenticated user.
-     *
-     * @return \OCP\IUser The current user.
-     *
-     * @throws ComparisonException 404 when unauthenticated.
-     */
-    private function requireUser(): \OCP\IUser
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Document not found.');
-        }
+	/**
+	 * Best-effort author of a version, tolerating NC API variations.
+	 *
+	 * @param mixed $version The IVersion object.
+	 * @param string $fallback Fallback author when the version exposes none.
+	 *
+	 * @return string The author label.
+	 */
+	private function versionAuthor(mixed $version, string $fallback): string {
+		if (method_exists($version, 'getAuthor') === true) {
+			$author = $version->getAuthor();
+			if (is_string($author) === true && $author !== '') {
+				return $author;
+			}
+		}
 
-        return $user;
+		if (method_exists($version, 'getUser') === true) {
+			$userObj = $version->getUser();
+			if ($userObj !== null && method_exists($userObj, 'getUID') === true) {
+				return (string)$userObj->getUID();
+			}
+		}
 
-    }//end requireUser()
+		return $fallback;
+	}//end versionAuthor()
 
-    /**
-     * Best-effort author (owner UID) of the current file.
-     *
-     * @param File $file The file.
-     *
-     * @return string The owner UID or ''.
-     */
-    private function fileAuthor(File $file): string
-    {
-        try {
-            $owner = $file->getOwner();
-            if ($owner !== null) {
-                return $owner->getUID();
-            }
-        } catch (Throwable $e) {
-            $this->logger->debug('File owner lookup failed', ['exception' => $e->getMessage()]);
-        }
+	/**
+	 * Best-effort size of a version.
+	 *
+	 * @param mixed $version The IVersion object.
+	 *
+	 * @return int The size in bytes.
+	 */
+	private function versionSize(mixed $version): int {
+		if (method_exists($version, 'getSize') === true) {
+			return (int)$version->getSize();
+		}
 
-        return '';
+		return 0;
+	}//end versionSize()
 
-    }//end fileAuthor()
+	/**
+	 * Best-effort human label of a version.
+	 *
+	 * @param mixed $version The IVersion object.
+	 *
+	 * @return string The label, or ''.
+	 */
+	private function versionLabel(mixed $version): string {
+		if (method_exists($version, 'getLabel') === true) {
+			return (string)$version->getLabel();
+		}
 
-    /**
-     * Best-effort author of a version, tolerating NC API variations.
-     *
-     * @param mixed  $version  The IVersion object.
-     * @param string $fallback Fallback author when the version exposes none.
-     *
-     * @return string The author label.
-     */
-    private function versionAuthor(mixed $version, string $fallback): string
-    {
-        if (method_exists($version, 'getAuthor') === true) {
-            $author = $version->getAuthor();
-            if (is_string($author) === true && $author !== '') {
-                return $author;
-            }
-        }
-
-        if (method_exists($version, 'getUser') === true) {
-            $userObj = $version->getUser();
-            if ($userObj !== null && method_exists($userObj, 'getUID') === true) {
-                return (string) $userObj->getUID();
-            }
-        }
-
-        return $fallback;
-
-    }//end versionAuthor()
-
-    /**
-     * Best-effort size of a version.
-     *
-     * @param mixed $version The IVersion object.
-     *
-     * @return int The size in bytes.
-     */
-    private function versionSize(mixed $version): int
-    {
-        if (method_exists($version, 'getSize') === true) {
-            return (int) $version->getSize();
-        }
-
-        return 0;
-
-    }//end versionSize()
-
-    /**
-     * Best-effort human label of a version.
-     *
-     * @param mixed $version The IVersion object.
-     *
-     * @return string The label, or ''.
-     */
-    private function versionLabel(mixed $version): string
-    {
-        if (method_exists($version, 'getLabel') === true) {
-            return (string) $version->getLabel();
-        }
-
-        return '';
-
-    }//end versionLabel()
+		return '';
+	}//end versionLabel()
 }//end class

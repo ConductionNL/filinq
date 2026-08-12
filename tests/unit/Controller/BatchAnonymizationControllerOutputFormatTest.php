@@ -31,76 +31,68 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class BatchAnonymizationControllerOutputFormatTest extends TestCase
-{
+class BatchAnonymizationControllerOutputFormatTest extends TestCase {
 
+	/**
+	 * The batch controller's VALID_OUTPUT_FORMATS allow-list must contain
+	 * pdf-only, pdf and preserve (task 1.2).
+	 *
+	 * @return void
+	 */
+	public function testBatchValidOutputFormatsContainsPdfOnly(): void {
+		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
 
-    /**
-     * The batch controller's VALID_OUTPUT_FORMATS allow-list must contain
-     * pdf-only, pdf and preserve (task 1.2).
-     *
-     * @return void
-     */
-    public function testBatchValidOutputFormatsContainsPdfOnly(): void
-    {
-        $content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
+		$this->assertStringContainsString(
+			'self::VALID_OUTPUT_FORMATS',
+			$content,
+			'Batch controller must expose a VALID_OUTPUT_FORMATS allow-list'
+		);
+		$this->assertMatchesRegularExpression(
+			"/'pdf-only'\\s*,\\s*'pdf'\\s*,\\s*'preserve'/",
+			$content,
+			'Batch VALID_OUTPUT_FORMATS must contain pdf-only, pdf and preserve'
+		);
 
-        $this->assertStringContainsString(
-            'self::VALID_OUTPUT_FORMATS',
-            $content,
-            'Batch controller must expose a VALID_OUTPUT_FORMATS allow-list'
-        );
-        $this->assertMatchesRegularExpression(
-            "/'pdf-only'\\s*,\\s*'pdf'\\s*,\\s*'preserve'/",
-            $content,
-            'Batch VALID_OUTPUT_FORMATS must contain pdf-only, pdf and preserve'
-        );
+	}//end testBatchValidOutputFormatsContainsPdfOnly()
 
-    }//end testBatchValidOutputFormatsContainsPdfOnly()
+	/**
+	 * The batch controller must resolve to the new pdf-only default when no
+	 * per-call value is supplied and when the tenant setting is malformed
+	 * (task 4.5).
+	 *
+	 * @return void
+	 */
+	public function testBatchDefaultsToPdfOnly(): void {
+		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
 
+		$this->assertMatchesRegularExpression(
+			"/self::DEFAULT_OUTPUT_FORMAT_KEY\\s*,\\s*'pdf-only'/s",
+			$content,
+			'tenant default read must fall back to pdf-only'
+		);
+		$this->assertStringContainsString(
+			"return 'pdf-only';",
+			$content,
+			'malformed tenant setting must fall back to pdf-only'
+		);
 
-    /**
-     * The batch controller must resolve to the new pdf-only default when no
-     * per-call value is supplied and when the tenant setting is malformed
-     * (task 4.5).
-     *
-     * @return void
-     */
-    public function testBatchDefaultsToPdfOnly(): void
-    {
-        $content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
+	}//end testBatchDefaultsToPdfOnly()
 
-        $this->assertMatchesRegularExpression(
-            "/self::DEFAULT_OUTPUT_FORMAT_KEY\\s*,\\s*'pdf-only'/s",
-            $content,
-            'tenant default read must fall back to pdf-only'
-        );
-        $this->assertStringContainsString(
-            "return 'pdf-only';",
-            $content,
-            'malformed tenant setting must fall back to pdf-only'
-        );
+	/**
+	 * The batch controller must read the tenant default via the documented
+	 * IAppConfig key.
+	 *
+	 * @return void
+	 */
+	public function testBatchReadsTenantDefaultOutputFormat(): void {
+		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
 
-    }//end testBatchDefaultsToPdfOnly()
+		$this->assertStringContainsString(
+			'docudesk.anonymisation.default_output_format',
+			$content,
+			'Batch controller must read tenant default via the documented IAppConfig key'
+		);
 
-
-    /**
-     * The batch controller must read the tenant default via the documented
-     * IAppConfig key.
-     *
-     * @return void
-     */
-    public function testBatchReadsTenantDefaultOutputFormat(): void
-    {
-        $content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
-
-        $this->assertStringContainsString(
-            'docudesk.anonymisation.default_output_format',
-            $content,
-            'Batch controller must read tenant default via the documented IAppConfig key'
-        );
-
-    }//end testBatchReadsTenantDefaultOutputFormat()
-
+	}//end testBatchReadsTenantDefaultOutputFormat()
 
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Portal Signing Document Resolver
  *
@@ -48,55 +49,52 @@ use Throwable;
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */
-class PortalSigningDocumentResolver
-{
-    /**
-     * Constructor.
-     *
-     * @param IRootFolder $rootFolder Root folder (reads the target document).
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly IRootFolder $rootFolder
-    ) {
+class PortalSigningDocumentResolver {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRootFolder $rootFolder Root folder (reads the target document).
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly IRootFolder $rootFolder,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Resolve the target document's File node for viewDocument.
-     *
-     * Returns null — never throws — when the request carries no usable file
-     * reference or the node cannot be read, so the caller can answer
-     * `document_unavailable` without leaking storage internals.
-     *
-     * @param array<string, mixed> $signingRequest The resolved signing request.
-     *
-     * @return File|null The resolved file node, or null when unavailable.
-     *
-     * @spec openspec/specs/portal-signing-actions/spec.md
-     */
-    public function resolve(array $signingRequest): ?File
-    {
-        $fileId    = (int) ($signingRequest['documentFileId'] ?? 0);
-        $initiator = (string) ($signingRequest['initiatorUserId'] ?? '');
-        if ($fileId <= 0 || $initiator === '') {
-            return null;
-        }
+	/**
+	 * Resolve the target document's File node for viewDocument.
+	 *
+	 * Returns null — never throws — when the request carries no usable file
+	 * reference or the node cannot be read, so the caller can answer
+	 * `document_unavailable` without leaking storage internals.
+	 *
+	 * @param array<string, mixed> $signingRequest The resolved signing request.
+	 *
+	 * @return File|null The resolved file node, or null when unavailable.
+	 *
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 */
+	public function resolve(array $signingRequest): ?File {
+		$fileId = (int)($signingRequest['documentFileId'] ?? 0);
+		$initiator = (string)($signingRequest['initiatorUserId'] ?? '');
+		if ($fileId <= 0 || $initiator === '') {
+			return null;
+		}
 
-        try {
-            $nodes = $this->rootFolder->getUserFolder($initiator)->getById($fileId);
-        } catch (Throwable $e) {
-            return null;
-        }
+		try {
+			$nodes = $this->rootFolder->getUserFolder($initiator)->getById($fileId);
+		} catch (Throwable $e) {
+			return null;
+		}
 
-        foreach ($nodes as $node) {
-            if ($node instanceof File) {
-                return $node;
-            }
-        }
+		foreach ($nodes as $node) {
+			if ($node instanceof File) {
+				return $node;
+			}
+		}
 
-        return null;
-
-    }//end resolve()
+		return null;
+	}//end resolve()
 }//end class

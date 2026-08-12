@@ -43,41 +43,39 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class SigningEventRegistrar
-{
-    /**
-     * Register the signing event listeners.
-     *
-     * @param IRegistrationContext $context The registration context.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/document-signing/spec.md
-     */
-    public function register(IRegistrationContext $context): void
-    {
-        // Bridge OR ApprovalStep events into typed docudesk Signer*Events
-        // and invoke the configured SigningProviderInterface when a step
-        // becomes pending. Per migrate-signing-to-or-approval-workflow
-        // (D2.1) — OR's `add-approval-step-events` shipped upstream as of
-        // 2026-06-12 so the four event classes referenced below resolve at
-        // runtime; if the OR app is absent (degraded install) the listener
-        // simply never receives the events.
-        $context->registerEventListener(ApprovalStepInitiatedEvent::class, ApprovalStepListener::class);
-        $context->registerEventListener(ApprovalStepApprovedEvent::class, ApprovalStepListener::class);
-        $context->registerEventListener(ApprovalStepRejectedEvent::class, ApprovalStepListener::class);
-        $context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
+class SigningEventRegistrar {
+	/**
+	 * Register the signing event listeners.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function register(IRegistrationContext $context): void {
+		// Bridge OR ApprovalStep events into typed docudesk Signer*Events
+		// and invoke the configured SigningProviderInterface when a step
+		// becomes pending. Per migrate-signing-to-or-approval-workflow
+		// (D2.1) — OR's `add-approval-step-events` shipped upstream as of
+		// 2026-06-12 so the four event classes referenced below resolve at
+		// runtime; if the OR app is absent (degraded install) the listener
+		// simply never receives the events.
+		$context->registerEventListener(ApprovalStepInitiatedEvent::class, ApprovalStepListener::class);
+		$context->registerEventListener(ApprovalStepApprovedEvent::class, ApprovalStepListener::class);
+		$context->registerEventListener(ApprovalStepRejectedEvent::class, ApprovalStepListener::class);
+		$context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
 
-        // Cross-app delegated-signing contract (docudesk-signing-events): any
-        // installed consumer app (e.g. shillinq) dispatches
-        // DocumentSigningRequestedEvent and DocuDesk raises the signing request
-        // synchronously via SigningService::createRequest, writing the resolved
-        // signingRequestId back onto the event. The in-process replacement for
-        // the broken $registry->call('docudesk','createSigningRequest',…) path.
-        $context->registerEventListener(
-            DocumentSigningRequestedEvent::class,
-            DocumentSigningRequestedListener::class
-        );
+		// Cross-app delegated-signing contract (docudesk-signing-events): any
+		// installed consumer app (e.g. shillinq) dispatches
+		// DocumentSigningRequestedEvent and DocuDesk raises the signing request
+		// synchronously via SigningService::createRequest, writing the resolved
+		// signingRequestId back onto the event. The in-process replacement for
+		// the broken $registry->call('docudesk','createSigningRequest',…) path.
+		$context->registerEventListener(
+			DocumentSigningRequestedEvent::class,
+			DocumentSigningRequestedListener::class
+		);
 
-    }//end register()
+	}//end register()
 }//end class

@@ -38,42 +38,39 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class DocumentObjectServiceResolver
-{
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container  Container for dependency injection
-     * @param IAppManager        $appManager App manager interface
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager
-    ) {
+class DocumentObjectServiceResolver {
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container Container for dependency injection
+	 * @param IAppManager $appManager App manager interface
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly IAppManager $appManager,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the ObjectService from OpenRegister.
-     *
-     * @return \OCA\OpenRegister\Service\ObjectService The ObjectService instance
-     *
-     * @throws RuntimeException If OpenRegister is not available
-     */
-    public function resolve(): \OCA\OpenRegister\Service\ObjectService
-    {
-        if (in_array(
-            needle: 'openregister',
-            haystack: $this->appManager->getInstalledApps(),
-            strict: true
-        ) === true
-        ) {
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        }
+	/**
+	 * Get the ObjectService from OpenRegister.
+	 *
+	 * @return \OCA\OpenRegister\Service\ObjectService The ObjectService instance
+	 *
+	 * @throws RuntimeException If OpenRegister is not available
+	 */
+	public function resolve(): \OCA\OpenRegister\Service\ObjectService {
+		if (in_array(
+			needle: 'openregister',
+			haystack: $this->appManager->getInstalledApps(),
+			strict: true
+		) === true
+		) {
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		}
 
-        throw new RuntimeException(message: 'OpenRegister service is not available.');
-
-    }//end resolve()
+		throw new RuntimeException(message: 'OpenRegister service is not available.');
+	}//end resolve()
 }//end class

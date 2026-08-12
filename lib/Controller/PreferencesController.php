@@ -75,124 +75,117 @@ use OCP\IUserSession;
  * any logged-in user may read and write their OWN preferences, and the
  * `$user === null` guard still rejects anonymous callers with 401.
  */
-class PreferencesController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest     $request     The request object.
-     * @param IConfig      $config      Nextcloud config service (per-user values).
-     * @param IUserSession $userSession The current user session.
-     *
-     * @return void
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly IConfig $config,
-        private readonly IUserSession $userSession,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+class PreferencesController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request object.
+	 * @param IConfig $config Nextcloud config service (per-user values).
+	 * @param IUserSession $userSession The current user session.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly IConfig $config,
+		private readonly IUserSession $userSession,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * GET /api/preferences/{key} — read one preference for the current user.
-     *
-     * @param string $key The preference key (sanitised before use).
-     *
-     * @return JSONResponse `{value: string|null}`, or 401/400 on a bad caller/key.
-     *
-     * @spec openspec/specs/preferences-api/spec.md
-     */
-    #[NoAdminRequired]
-    public function getPreference(string $key): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * GET /api/preferences/{key} — read one preference for the current user.
+	 *
+	 * @param string $key The preference key (sanitised before use).
+	 *
+	 * @return JSONResponse `{value: string|null}`, or 401/400 on a bad caller/key.
+	 *
+	 * @spec openspec/specs/preferences-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function getPreference(string $key): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
 
-        $safeKey = $this->sanitizeKey(key: $key);
-        if ($safeKey === '') {
-            return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
-        }
+		$safeKey = $this->sanitizeKey(key: $key);
+		if ($safeKey === '') {
+			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
-        $value = $this->config->getUserValue(
-            userId: $user->getUID(),
-            appName: $this->appName,
-            key: 'pref_'.$safeKey,
-            default: ''
-        );
+		$value = $this->config->getUserValue(
+			userId: $user->getUID(),
+			appName: $this->appName,
+			key: 'pref_' . $safeKey,
+			default: ''
+		);
 
-        $stored = null;
-        if ($value !== '') {
-            $stored = $value;
-        }
+		$stored = null;
+		if ($value !== '') {
+			$stored = $value;
+		}
 
-        return new JSONResponse(data: ['value' => $stored]);
+		return new JSONResponse(data: ['value' => $stored]);
+	}//end getPreference()
 
-    }//end getPreference()
+	/**
+	 * PUT /api/preferences/{key} — write (or clear) one preference.
+	 *
+	 * An empty `$value` deletes the stored preference, matching the generic.
+	 *
+	 * @param string $key The preference key (sanitised before use).
+	 * @param string $value The value to store; empty string clears it.
+	 *
+	 * @return JSONResponse `{value: string|null}`, or 401/400 on a bad caller/key.
+	 *
+	 * @spec openspec/specs/preferences-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function setPreference(string $key, string $value = ''): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
 
-    /**
-     * PUT /api/preferences/{key} — write (or clear) one preference.
-     *
-     * An empty `$value` deletes the stored preference, matching the generic.
-     *
-     * @param string $key   The preference key (sanitised before use).
-     * @param string $value The value to store; empty string clears it.
-     *
-     * @return JSONResponse `{value: string|null}`, or 401/400 on a bad caller/key.
-     *
-     * @spec openspec/specs/preferences-api/spec.md
-     */
-    #[NoAdminRequired]
-    public function setPreference(string $key, string $value=''): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
-        }
+		$safeKey = $this->sanitizeKey(key: $key);
+		if ($safeKey === '') {
+			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
-        $safeKey = $this->sanitizeKey(key: $key);
-        if ($safeKey === '') {
-            return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
-        }
+		if ($value === '') {
+			$this->config->deleteUserValue(
+				userId: $user->getUID(),
+				appName: $this->appName,
+				key: 'pref_' . $safeKey
+			);
 
-        if ($value === '') {
-            $this->config->deleteUserValue(
-                userId: $user->getUID(),
-                appName: $this->appName,
-                key: 'pref_'.$safeKey
-            );
+			return new JSONResponse(data: ['value' => null]);
+		}
 
-            return new JSONResponse(data: ['value' => null]);
-        }
+		$this->config->setUserValue(
+			userId: $user->getUID(),
+			appName: $this->appName,
+			key: 'pref_' . $safeKey,
+			value: $value
+		);
 
-        $this->config->setUserValue(
-            userId: $user->getUID(),
-            appName: $this->appName,
-            key: 'pref_'.$safeKey,
-            value: $value
-        );
+		return new JSONResponse(data: ['value' => $value]);
+	}//end setPreference()
 
-        return new JSONResponse(data: ['value' => $value]);
+	/**
+	 * Reduce a caller-supplied key to a safe, bounded storage key.
+	 *
+	 * Lowercased, restricted to `[a-z0-9-]`, capped at 64 characters.
+	 *
+	 * @param string $key The raw key from the URL.
+	 *
+	 * @return string The sanitised key, or '' when nothing survives.
+	 */
+	private function sanitizeKey(string $key): string {
+		$safe = preg_replace(pattern: '/[^a-z0-9-]/', replacement: '', subject: strtolower($key));
 
-    }//end setPreference()
-
-    /**
-     * Reduce a caller-supplied key to a safe, bounded storage key.
-     *
-     * Lowercased, restricted to `[a-z0-9-]`, capped at 64 characters.
-     *
-     * @param string $key The raw key from the URL.
-     *
-     * @return string The sanitised key, or '' when nothing survives.
-     */
-    private function sanitizeKey(string $key): string
-    {
-        $safe = preg_replace(pattern: '/[^a-z0-9-]/', replacement: '', subject: strtolower($key));
-
-        return substr((string) $safe, offset: 0, length: 64);
-
-    }//end sanitizeKey()
+		return substr((string)$safe, offset: 0, length: 64);
+	}//end sanitizeKey()
 }//end class

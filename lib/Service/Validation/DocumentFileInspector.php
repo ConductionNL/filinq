@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Document File Inspector
  *
@@ -39,191 +40,181 @@ use Throwable;
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  */
-class DocumentFileInspector
-{
+class DocumentFileInspector {
 
-    /**
-     * App config key for the minimum chars-per-page threshold.
-     *
-     * @var string
-     */
-    private const CONFIG_TEXT_LAYER_MIN = 'validation.text_layer_min_chars_per_page';
+	/**
+	 * App config key for the minimum chars-per-page threshold.
+	 *
+	 * @var string
+	 */
+	private const CONFIG_TEXT_LAYER_MIN = 'validation.text_layer_min_chars_per_page';
 
-    /**
-     * Default minimum extracted characters per page.
-     *
-     * @var integer
-     */
-    private const DEFAULT_TEXT_LAYER_MIN = 32;
+	/**
+	 * Default minimum extracted characters per page.
+	 *
+	 * @var integer
+	 */
+	private const DEFAULT_TEXT_LAYER_MIN = 32;
 
-    /**
-     * Extension → expected mime prefixes used by the mismatch check.
-     *
-     * @var array<string, array<int, string>>
-     */
-    private const EXTENSION_MIME_MAP = [
-        'pdf'  => ['application/pdf'],
-        'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-        'doc'  => ['application/msword'],
-        'odt'  => ['application/vnd.oasis.opendocument.text'],
-        'txt'  => ['text/plain'],
-        'md'   => ['text/markdown', 'text/plain'],
-        'html' => ['text/html'],
-        'htm'  => ['text/html'],
-    ];
+	/**
+	 * Extension → expected mime prefixes used by the mismatch check.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private const EXTENSION_MIME_MAP = [
+		'pdf' => ['application/pdf'],
+		'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+		'doc' => ['application/msword'],
+		'odt' => ['application/vnd.oasis.opendocument.text'],
+		'txt' => ['text/plain'],
+		'md' => ['text/markdown', 'text/plain'],
+		'html' => ['text/html'],
+		'htm' => ['text/html'],
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig $appConfig App configuration.
-     *
-     * @return void
-     */
-    public function __construct(private readonly IAppConfig $appConfig)
-    {
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig App configuration.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly IAppConfig $appConfig,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Read a file's mime type defensively.
-     *
-     * @param File $file The file.
-     *
-     * @return string The mime type or ''.
-     *
-     * @spec openspec/specs/document-validation-checks/spec.md
-     */
-    public function safeMimeType(File $file): string
-    {
-        try {
-            return (string) $file->getMimeType();
-        } catch (Throwable $e) {
-            return '';
-        }
+	/**
+	 * Read a file's mime type defensively.
+	 *
+	 * @param File $file The file.
+	 *
+	 * @return string The mime type or ''.
+	 *
+	 * @spec openspec/specs/document-validation-checks/spec.md
+	 */
+	public function safeMimeType(File $file): string {
+		try {
+			return (string)$file->getMimeType();
+		} catch (Throwable $e) {
+			return '';
+		}
 
-    }//end safeMimeType()
+	}//end safeMimeType()
 
-    /**
-     * Read a file's name defensively.
-     *
-     * @param File $file The file.
-     *
-     * @return string The name or ''.
-     *
-     * @spec openspec/specs/document-validation-checks/spec.md
-     */
-    public function safeName(File $file): string
-    {
-        try {
-            return (string) $file->getName();
-        } catch (Throwable $e) {
-            return '';
-        }
+	/**
+	 * Read a file's name defensively.
+	 *
+	 * @param File $file The file.
+	 *
+	 * @return string The name or ''.
+	 *
+	 * @spec openspec/specs/document-validation-checks/spec.md
+	 */
+	public function safeName(File $file): string {
+		try {
+			return (string)$file->getName();
+		} catch (Throwable $e) {
+			return '';
+		}
 
-    }//end safeName()
+	}//end safeName()
 
-    /**
-     * Whether the file extension contradicts the detected mime type.
-     *
-     * @param string $name The file name.
-     * @param string $mime The detected mime type.
-     *
-     * @return bool True when a known extension maps to a different mime.
-     *
-     * @spec openspec/specs/document-validation-checks/spec.md
-     */
-    public function extensionMismatches(string $name, string $mime): bool
-    {
-        if ($mime === '') {
-            return false;
-        }
+	/**
+	 * Whether the file extension contradicts the detected mime type.
+	 *
+	 * @param string $name The file name.
+	 * @param string $mime The detected mime type.
+	 *
+	 * @return bool True when a known extension maps to a different mime.
+	 *
+	 * @spec openspec/specs/document-validation-checks/spec.md
+	 */
+	public function extensionMismatches(string $name, string $mime): bool {
+		if ($mime === '') {
+			return false;
+		}
 
-        $dot = strrpos($name, '.');
-        if ($dot === false) {
-            return false;
-        }
+		$dot = strrpos($name, '.');
+		if ($dot === false) {
+			return false;
+		}
 
-        $ext = strtolower(substr($name, ($dot + 1)));
-        if (isset(self::EXTENSION_MIME_MAP[$ext]) === false) {
-            return false;
-        }
+		$ext = strtolower(substr($name, ($dot + 1)));
+		if (isset(self::EXTENSION_MIME_MAP[$ext]) === false) {
+			return false;
+		}
 
-        return in_array($mime, self::EXTENSION_MIME_MAP[$ext], true) === false;
+		return in_array($mime, self::EXTENSION_MIME_MAP[$ext], true) === false;
+	}//end extensionMismatches()
 
-    }//end extensionMismatches()
+	/**
+	 * Heuristic: whether a PDF byte stream is encrypted.
+	 *
+	 * Looks for an `/Encrypt` entry in the trailer, which a non-encrypted PDF
+	 * does not carry. Cheap and parser-free.
+	 *
+	 * @param string $content The PDF bytes.
+	 *
+	 * @return bool True when encrypted.
+	 *
+	 * @spec openspec/specs/document-validation-checks/spec.md
+	 */
+	public function isPdfEncrypted(string $content): bool {
+		if (str_starts_with($content, '%PDF') === false) {
+			return false;
+		}
 
-    /**
-     * Heuristic: whether a PDF byte stream is encrypted.
-     *
-     * Looks for an `/Encrypt` entry in the trailer, which a non-encrypted PDF
-     * does not carry. Cheap and parser-free.
-     *
-     * @param string $content The PDF bytes.
-     *
-     * @return bool True when encrypted.
-     *
-     * @spec openspec/specs/document-validation-checks/spec.md
-     */
-    public function isPdfEncrypted(string $content): bool
-    {
-        if (str_starts_with($content, '%PDF') === false) {
-            return false;
-        }
+		return str_contains($content, '/Encrypt');
+	}//end isPdfEncrypted()
 
-        return str_contains($content, '/Encrypt');
+	/**
+	 * Heuristic: whether a PDF lacks a usable text layer.
+	 *
+	 * Counts PDF page objects (`/Type /Page`) and the text-show operators
+	 * (`Tj`/`TJ`); when the average extractable signal per page falls below the
+	 * configured threshold, the text layer is considered missing (scan-only).
+	 *
+	 * @param string $content The PDF bytes.
+	 *
+	 * @return bool True when the text layer is missing.
+	 *
+	 * @spec openspec/specs/document-validation-checks/spec.md
+	 */
+	public function textLayerMissing(string $content): bool {
+		if (str_starts_with($content, '%PDF') === false) {
+			return false;
+		}
 
-    }//end isPdfEncrypted()
+		$pages = preg_match_all('/\/Type\s*\/Page[^s]/', $content);
+		if ($pages === false || $pages === 0) {
+			$pages = 1;
+		}
 
-    /**
-     * Heuristic: whether a PDF lacks a usable text layer.
-     *
-     * Counts PDF page objects (`/Type /Page`) and the text-show operators
-     * (`Tj`/`TJ`); when the average extractable signal per page falls below the
-     * configured threshold, the text layer is considered missing (scan-only).
-     *
-     * @param string $content The PDF bytes.
-     *
-     * @return bool True when the text layer is missing.
-     *
-     * @spec openspec/specs/document-validation-checks/spec.md
-     */
-    public function textLayerMissing(string $content): bool
-    {
-        if (str_starts_with($content, '%PDF') === false) {
-            return false;
-        }
+		// Count text-show operators as a proxy for extractable characters.
+		$showOperators = preg_match_all('/\b(Tj|TJ)\b/', $content);
+		if ($showOperators === false) {
+			$showOperators = 0;
+		}
 
-        $pages = preg_match_all('/\/Type\s*\/Page[^s]/', $content);
-        if ($pages === false || $pages === 0) {
-            $pages = 1;
-        }
+		// Approximate extractable signal per page; ~1 operator ≈ a text run.
+		$perPage = ($showOperators * 8) / $pages;
 
-        // Count text-show operators as a proxy for extractable characters.
-        $showOperators = preg_match_all('/\b(Tj|TJ)\b/', $content);
-        if ($showOperators === false) {
-            $showOperators = 0;
-        }
+		return $perPage < $this->getTextLayerMin();
+	}//end textLayerMissing()
 
-        // Approximate extractable signal per page; ~1 operator ≈ a text run.
-        $perPage = ($showOperators * 8) / $pages;
+	/**
+	 * Read the configured minimum chars-per-page threshold.
+	 *
+	 * @return int The threshold.
+	 */
+	private function getTextLayerMin(): int {
+		$value = $this->appConfig->getValueInt('docudesk', self::CONFIG_TEXT_LAYER_MIN, self::DEFAULT_TEXT_LAYER_MIN);
+		if ($value <= 0) {
+			return self::DEFAULT_TEXT_LAYER_MIN;
+		}
 
-        return $perPage < $this->getTextLayerMin();
-
-    }//end textLayerMissing()
-
-    /**
-     * Read the configured minimum chars-per-page threshold.
-     *
-     * @return int The threshold.
-     */
-    private function getTextLayerMin(): int
-    {
-        $value = $this->appConfig->getValueInt('docudesk', self::CONFIG_TEXT_LAYER_MIN, self::DEFAULT_TEXT_LAYER_MIN);
-        if ($value <= 0) {
-            return self::DEFAULT_TEXT_LAYER_MIN;
-        }
-
-        return $value;
-
-    }//end getTextLayerMin()
+		return $value;
+	}//end getTextLayerMin()
 }//end class

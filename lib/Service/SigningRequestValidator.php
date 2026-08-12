@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Signing Request Validator
  *
@@ -45,87 +46,84 @@ use RuntimeException;
  *
  * @spec openspec/specs/document-signing/spec.md
  */
-class SigningRequestValidator
-{
-    /**
-     * Constructor.
-     *
-     * @param SigningProviderFactory $providerFactory Provider factory (strict resolution).
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly SigningProviderFactory $providerFactory
-    ) {
+class SigningRequestValidator {
+	/**
+	 * Constructor.
+	 *
+	 * @param SigningProviderFactory $providerFactory Provider factory (strict resolution).
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly SigningProviderFactory $providerFactory,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Validate signing request data.
-     *
-     * @param array<string, mixed> $data The request data.
-     *
-     * @return void
-     *
-     * @throws RuntimeException If validation fails.
-     *
-     * @spec openspec/specs/document-signing/spec.md
-     */
-    public function validateRequestData(array $data): void
-    {
-        if (empty($data['documentFileId']) === true) {
-            throw new RuntimeException('Document file ID is required', 400);
-        }
+	/**
+	 * Validate signing request data.
+	 *
+	 * @param array<string, mixed> $data The request data.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException If validation fails.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function validateRequestData(array $data): void {
+		if (empty($data['documentFileId']) === true) {
+			throw new RuntimeException('Document file ID is required', 400);
+		}
 
-        if (empty($data['documentName']) === true) {
-            throw new RuntimeException('Document name is required', 400);
-        }
+		if (empty($data['documentName']) === true) {
+			throw new RuntimeException('Document name is required', 400);
+		}
 
-        if (in_array($data['signatureLevel'] ?? '', ['SES', 'AdES', 'QES'], true) === false) {
-            throw new RuntimeException('Invalid signature level', 400);
-        }
+		if (in_array($data['signatureLevel'] ?? '', ['SES', 'AdES', 'QES'], true) === false) {
+			throw new RuntimeException('Invalid signature level', 400);
+		}
 
-        if (in_array($data['signingMode'] ?? '', ['sequential', 'parallel'], true) === false) {
-            throw new RuntimeException('Invalid signing mode', 400);
-        }
+		if (in_array($data['signingMode'] ?? '', ['sequential', 'parallel'], true) === false) {
+			throw new RuntimeException('Invalid signing mode', 400);
+		}
 
-    }//end validateRequestData()
+	}//end validateRequestData()
 
-    /**
-     * Validate that the requested provider actually supports the requested level.
-     *
-     * Provider/level honesty at request creation (signing-trust-rebuild
-     * REQ-DDSTR-002 point 1): an unknown provider, or a provider that does not
-     * support the requested signature level (via
-     * `SigningProviderInterface::supportsLevel()`), is rejected with HTTP 400
-     * before anything is persisted — the completion path (REQ-DDSTR-002 point
-     * 2) never has to silently substitute a provider or level because an
-     * invalid pair can never be created in the first place.
-     *
-     * @param string $provider The requested provider identifier.
-     * @param string $level    The requested signature level.
-     *
-     * @return void
-     *
-     * @throws RuntimeException With HTTP code 400 when the provider is unknown
-     *                          or does not support the requested level.
-     *
-     * @spec openspec/specs/document-signing/spec.md
-     */
-    public function validateProviderLevelPair(string $provider, string $level): void
-    {
-        try {
-            $providerInstance = $this->providerFactory->getProvider(identifier: $provider);
-        } catch (\Throwable $e) {
-            throw new RuntimeException('Unknown signing provider: '.$provider, 400);
-        }
+	/**
+	 * Validate that the requested provider actually supports the requested level.
+	 *
+	 * Provider/level honesty at request creation (signing-trust-rebuild
+	 * REQ-DDSTR-002 point 1): an unknown provider, or a provider that does not
+	 * support the requested signature level (via
+	 * `SigningProviderInterface::supportsLevel()`), is rejected with HTTP 400
+	 * before anything is persisted — the completion path (REQ-DDSTR-002 point
+	 * 2) never has to silently substitute a provider or level because an
+	 * invalid pair can never be created in the first place.
+	 *
+	 * @param string $provider The requested provider identifier.
+	 * @param string $level The requested signature level.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With HTTP code 400 when the provider is unknown
+	 *                          or does not support the requested level.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function validateProviderLevelPair(string $provider, string $level): void {
+		try {
+			$providerInstance = $this->providerFactory->getProvider(identifier: $provider);
+		} catch (\Throwable $e) {
+			throw new RuntimeException('Unknown signing provider: ' . $provider, 400);
+		}
 
-        if ($providerInstance->supportsLevel(level: $level) === false) {
-            throw new RuntimeException(
-                'Signing provider "'.$provider.'" does not support signature level "'.$level.'"',
-                400
-            );
-        }
+		if ($providerInstance->supportsLevel(level: $level) === false) {
+			throw new RuntimeException(
+				'Signing provider "' . $provider . '" does not support signature level "' . $level . '"',
+				400
+			);
+		}
 
-    }//end validateProviderLevelPair()
+	}//end validateProviderLevelPair()
 }//end class

@@ -55,109 +55,106 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
  */
-class DocumentSigningRequestedListener implements IEventListener
-{
-    /**
-     * Constructor.
-     *
-     * @param SigningService  $signingService The reused create-request service
-     * @param LoggerInterface $logger         Logger
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly SigningService $signingService,
-        private readonly LoggerInterface $logger,
-    ) {
+class DocumentSigningRequestedListener implements IEventListener {
+	/**
+	 * Constructor.
+	 *
+	 * @param SigningService $signingService The reused create-request service
+	 * @param LoggerInterface $logger Logger
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly SigningService $signingService,
+		private readonly LoggerInterface $logger,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Handle a DocumentSigningRequestedEvent.
-     *
-     * @param Event $event The dispatched event
-     *
-     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
-     *
-     * @return void
-     */
-    public function handle(Event $event): void
-    {
-        if (($event instanceof DocumentSigningRequestedEvent) === false) {
-            return;
-        }
+	/**
+	 * Handle a DocumentSigningRequestedEvent.
+	 *
+	 * @param Event $event The dispatched event
+	 *
+	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 *
+	 * @return void
+	 */
+	public function handle(Event $event): void {
+		if (($event instanceof DocumentSigningRequestedEvent) === false) {
+			return;
+		}
 
-        try {
-            $data    = $this->buildRequestData(event: $event);
-            $created = $this->signingService->createRequest($data);
+		try {
+			$data = $this->buildRequestData(event: $event);
+			$created = $this->signingService->createRequest($data);
 
-            $requestId = (string) ($created['id'] ?? $created['uuid'] ?? '');
-            if ($requestId !== '') {
-                $event->setSigningRequestId($requestId);
-                $event->setHandled(true);
-                $this->logger->info(
-                    'DocuDesk: handled DocumentSigningRequestedEvent',
-                    [
-                        'sourceApp'        => $event->getSourceApp(),
-                        'subjectId'        => $event->getSubjectId(),
-                        'signingRequestId' => $requestId,
-                    ]
-                );
-                return;
-            }
+			$requestId = (string)($created['id'] ?? $created['uuid'] ?? '');
+			if ($requestId !== '') {
+				$event->setSigningRequestId($requestId);
+				$event->setHandled(true);
+				$this->logger->info(
+					'DocuDesk: handled DocumentSigningRequestedEvent',
+					[
+						'sourceApp' => $event->getSourceApp(),
+						'subjectId' => $event->getSubjectId(),
+						'signingRequestId' => $requestId,
+					]
+				);
+				return;
+			}
 
-            // No id on the created request: leave the event unhandled and log.
-            $this->logger->warning(
-                'DocuDesk: DocumentSigningRequestedEvent not handled (no request id)',
-                [
-                    'sourceApp' => $event->getSourceApp(),
-                    'subjectId' => $event->getSubjectId(),
-                ]
-            );
-        } catch (\Throwable $e) {
-            // The event bus must never surface a DocuDesk failure as an
-            // exception to the dispatching consumer; log and leave unhandled.
-            $this->logger->error(
-                'DocuDesk: DocumentSigningRequestedListener failed',
-                [
-                    'sourceApp' => $event->getSourceApp(),
-                    'subjectId' => $event->getSubjectId(),
-                    'exception' => $e->getMessage(),
-                ]
-            );
-        }//end try
+			// No id on the created request: leave the event unhandled and log.
+			$this->logger->warning(
+				'DocuDesk: DocumentSigningRequestedEvent not handled (no request id)',
+				[
+					'sourceApp' => $event->getSourceApp(),
+					'subjectId' => $event->getSubjectId(),
+				]
+			);
+		} catch (\Throwable $e) {
+			// The event bus must never surface a DocuDesk failure as an
+			// exception to the dispatching consumer; log and leave unhandled.
+			$this->logger->error(
+				'DocuDesk: DocumentSigningRequestedListener failed',
+				[
+					'sourceApp' => $event->getSourceApp(),
+					'subjectId' => $event->getSubjectId(),
+					'exception' => $e->getMessage(),
+				]
+			);
+		}//end try
 
-    }//end handle()
+	}//end handle()
 
-    /**
-     * Build the data array SigningService::createRequest() expects from the event.
-     *
-     * Threads the signing parameters plus the consumer provenance fields so the
-     * created request can later be correlated back to the consumer when it
-     * concludes.
-     *
-     * @param DocumentSigningRequestedEvent $event The request event
-     *
-     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
-     *
-     * @return array<string, mixed>
-     */
-    private function buildRequestData(DocumentSigningRequestedEvent $event): array
-    {
-        return [
-            'documentFileId'    => $event->getDocumentReference(),
-            'documentName'      => $event->getSubjectLabel(),
-            'signatureLevel'    => $event->getSignatureLevel(),
-            'signingMode'       => $event->getSigningMode(),
-            'signers'           => $event->getSigners(),
-            'sourceApp'         => $event->getSourceApp(),
-            'subjectRegister'   => $event->getSubjectRegister(),
-            'subjectSchema'     => $event->getSubjectSchema(),
-            'subjectId'         => $event->getSubjectId(),
-            'subjectLabel'      => $event->getSubjectLabel(),
-            'externalReference' => $event->getExternalReference(),
-            'correlationId'     => $event->getCorrelationId(),
-        ];
+	/**
+	 * Build the data array SigningService::createRequest() expects from the event.
+	 *
+	 * Threads the signing parameters plus the consumer provenance fields so the
+	 * created request can later be correlated back to the consumer when it
+	 * concludes.
+	 *
+	 * @param DocumentSigningRequestedEvent $event The request event
+	 *
+	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function buildRequestData(DocumentSigningRequestedEvent $event): array {
+		return [
+			'documentFileId' => $event->getDocumentReference(),
+			'documentName' => $event->getSubjectLabel(),
+			'signatureLevel' => $event->getSignatureLevel(),
+			'signingMode' => $event->getSigningMode(),
+			'signers' => $event->getSigners(),
+			'sourceApp' => $event->getSourceApp(),
+			'subjectRegister' => $event->getSubjectRegister(),
+			'subjectSchema' => $event->getSubjectSchema(),
+			'subjectId' => $event->getSubjectId(),
+			'subjectLabel' => $event->getSubjectLabel(),
+			'externalReference' => $event->getExternalReference(),
+			'correlationId' => $event->getCorrelationId(),
+		];
 
-    }//end buildRequestData()
+	}//end buildRequestData()
 }//end class

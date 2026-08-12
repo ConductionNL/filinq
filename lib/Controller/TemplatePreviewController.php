@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template Preview Controller
  *
@@ -41,95 +42,92 @@ use OCP\IUserSession;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class TemplatePreviewController extends Controller
-{
-    /**
-     * Constructor for TemplatePreviewController
-     *
-     * @param string                 $appName        The application name
-     * @param IRequest               $request        The request object
-     * @param TemplateRequestHandler $requestHandler Request param parser and error handler
-     * @param TemplatePreviewService $previewService Service for preview rendering
-     * @param IUserSession           $userSession    User session for current user
-     *
-     * @return void
-     */
-    public function __construct(
-        string $appName,
-        IRequest $request,
-        private readonly TemplateRequestHandler $requestHandler,
-        private readonly TemplatePreviewService $previewService,
-        private readonly IUserSession $userSession,
-    ) {
-        parent::__construct(appName: $appName, request: $request);
+class TemplatePreviewController extends Controller {
+	/**
+	 * Constructor for TemplatePreviewController
+	 *
+	 * @param string $appName The application name
+	 * @param IRequest $request The request object
+	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
+	 * @param TemplatePreviewService $previewService Service for preview rendering
+	 * @param IUserSession $userSession User session for current user
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		private readonly TemplateRequestHandler $requestHandler,
+		private readonly TemplatePreviewService $previewService,
+		private readonly IUserSession $userSession,
+	) {
+		parent::__construct(appName: $appName, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Preview raw template content with sample data
-     *
-     * @return JSONResponse JSON response with rendered HTML
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/advanced-template-management/tasks.md#task-5
-     */
-    public function preview(): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => 'Not authenticated'],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
+	/**
+	 * Preview raw template content with sample data
+	 *
+	 * @return JSONResponse JSON response with rendered HTML
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
+	 */
+	public function preview(): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return new JSONResponse(
+					data: ['error' => 'Not authenticated'],
+					statusCode: Http::STATUS_UNAUTHORIZED
+				);
+			}
 
-            $data    = $this->requestHandler->parseBodyParams(request: $this->request);
-            $content = $data['content'] ?? '';
-            $context = $data['data'] ?? [];
+			$data = $this->requestHandler->parseBodyParams(request: $this->request);
+			$content = $data['content'] ?? '';
+			$context = $data['data'] ?? [];
 
-            if (empty($content) === true) {
-                throw new Exception(message: 'Content is required for preview', code: 400);
-            }
+			if (empty($content) === true) {
+				throw new Exception(message: 'Content is required for preview', code: 400);
+			}
 
-            $html = $this->previewService->preview(content: $content, data: $context);
-            return new JSONResponse(data: ['html' => $html]);
-        } catch (Exception $e) {
-            return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
-        }//end try
+			$html = $this->previewService->preview(content: $content, data: $context);
+			return new JSONResponse(data: ['html' => $html]);
+		} catch (Exception $e) {
+			return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
+		}//end try
 
-    }//end preview()
+	}//end preview()
 
-    /**
-     * Preview an existing template with sample data
-     *
-     * @param string $id The template UUID
-     *
-     * @return JSONResponse JSON response with rendered HTML
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/advanced-template-management/tasks.md#task-5
-     */
-    public function previewTemplate(string $id): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => 'Not authenticated'],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
+	/**
+	 * Preview an existing template with sample data
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return JSONResponse JSON response with rendered HTML
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
+	 */
+	public function previewTemplate(string $id): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return new JSONResponse(
+					data: ['error' => 'Not authenticated'],
+					statusCode: Http::STATUS_UNAUTHORIZED
+				);
+			}
 
-            $data    = $this->requestHandler->parseBodyParams(request: $this->request);
-            $context = $data['data'] ?? [];
-            $html    = $this->previewService->previewTemplate(templateId: $id, data: $context);
-            return new JSONResponse(data: ['html' => $html]);
-        } catch (Exception $e) {
-            return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
-        }
+			$data = $this->requestHandler->parseBodyParams(request: $this->request);
+			$context = $data['data'] ?? [];
+			$html = $this->previewService->previewTemplate(templateId: $id, data: $context);
+			return new JSONResponse(data: ['html' => $html]);
+		} catch (Exception $e) {
+			return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
+		}
 
-    }//end previewTemplate()
+	}//end previewTemplate()
 }//end class

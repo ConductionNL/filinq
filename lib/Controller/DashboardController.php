@@ -50,64 +50,56 @@ use OCP\IRequest;
  *
  * @psalm-suppress UnusedClass
  */
-class DashboardController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * Supplies the docudesk app id so Nextcloud's DI can auto-wire this
-     * controller from `IRequest` alone.
-     *
-     * @param IRequest $request HTTP request.
-     */
-    public function __construct(IRequest $request)
-    {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+class DashboardController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * Supplies the docudesk app id so Nextcloud's DI can auto-wire this
+	 * controller from `IRequest` alone.
+	 *
+	 * @param IRequest $request HTTP request.
+	 */
+	public function __construct(IRequest $request) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Render the main SPA page from `templates/index.php`.
-     *
-     * `#[NoAdminRequired]` / `#[NoCSRFRequired]` were previously INHERITED from
-     * the AppHost generic; they are declared explicitly here so the auth posture
-     * is byte-for-byte unchanged by dropping the inheritance.
-     *
-     * @return TemplateResponse The rendered DocuDesk index template.
-     *
-     * @spec openspec/specs/adopt-apphost/spec.md
-     */
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function page(): TemplateResponse
-    {
-        return $this->renderIndex();
+	/**
+	 * Render the main SPA page from `templates/index.php`.
+	 *
+	 * `#[NoAdminRequired]` / `#[NoCSRFRequired]` were previously INHERITED from
+	 * the AppHost generic; they are declared explicitly here so the auth posture
+	 * is byte-for-byte unchanged by dropping the inheritance.
+	 *
+	 * @return TemplateResponse The rendered DocuDesk index template.
+	 *
+	 * @spec openspec/specs/adopt-apphost/spec.md
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function page(): TemplateResponse {
+		return $this->renderIndex();
+	}//end page()
 
-    }//end page()
+	/**
+	 * Serve the SPA for deep links (Vue history mode). Delegates to {@see page()}.
+	 *
+	 * @return TemplateResponse The rendered DocuDesk index template.
+	 *
+	 * @spec openspec/specs/adopt-apphost/spec.md
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function catchAll(): TemplateResponse {
+		return $this->page();
+	}//end catchAll()
 
-    /**
-     * Serve the SPA for deep links (Vue history mode). Delegates to {@see page()}.
-     *
-     * @return TemplateResponse The rendered DocuDesk index template.
-     *
-     * @spec openspec/specs/adopt-apphost/spec.md
-     */
-    #[NoAdminRequired]
-    #[NoCSRFRequired]
-    public function catchAll(): TemplateResponse
-    {
-        return $this->page();
-
-    }//end catchAll()
-
-    /**
-     * Build the `index` TemplateResponse.
-     *
-     * @return TemplateResponse The rendered DocuDesk index template.
-     */
-    protected function renderIndex(): TemplateResponse
-    {
-        return new TemplateResponse($this->appName, 'index');
-
-    }//end renderIndex()
+	/**
+	 * Build the `index` TemplateResponse.
+	 *
+	 * @return TemplateResponse The rendered DocuDesk index template.
+	 */
+	protected function renderIndex(): TemplateResponse {
+		return new TemplateResponse($this->appName, 'index');
+	}//end renderIndex()
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Enrichment Runner
  *
@@ -40,103 +41,100 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  */
-class EnrichmentRunner
-{
-    /**
-     * Check if enrichment is enabled based on settings
-     *
-     * Reads the three toggles ONLY. It must not call `getAllSettings()`: that
-     * assembles the admin-settings payload, including a walk of every register
-     * and every schema on the instance. This runs inside an unrelated app's
-     * object save, and that walk issued 1,471 `SchemaMapper::find()` calls per
-     * create — 96% of all schema reads during an OpenRegister create, measured
-     * 2026-07-29, on a code path whose entire job is to answer a boolean.
-     *
-     * @param SettingsService $settingsService The settings service
-     *
-     * @return bool True if at least one enrichment feature is enabled
-     *
-     * @spec openspec/specs/metadata-enrichment/spec.md
-     */
-    public function isEnrichmentEnabled(SettingsService $settingsService): bool
-    {
-        $settings       = $settingsService->getFeatureToggles();
-        $enableLanguage = $settings['enable_language_detection'] ?? true;
-        $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
-        $enableTopic    = $settings['enable_topic_classification'] ?? true;
+class EnrichmentRunner {
+	/**
+	 * Check if enrichment is enabled based on settings
+	 *
+	 * Reads the three toggles ONLY. It must not call `getAllSettings()`: that
+	 * assembles the admin-settings payload, including a walk of every register
+	 * and every schema on the instance. This runs inside an unrelated app's
+	 * object save, and that walk issued 1,471 `SchemaMapper::find()` calls per
+	 * create — 96% of all schema reads during an OpenRegister create, measured
+	 * 2026-07-29, on a code path whose entire job is to answer a boolean.
+	 *
+	 * @param SettingsService $settingsService The settings service
+	 *
+	 * @return bool True if at least one enrichment feature is enabled
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function isEnrichmentEnabled(SettingsService $settingsService): bool {
+		$settings = $settingsService->getFeatureToggles();
+		$enableLanguage = $settings['enable_language_detection'] ?? true;
+		$enableKeywords = $settings['enable_keyword_extraction'] ?? true;
+		$enableTopic = $settings['enable_topic_classification'] ?? true;
 
-        return $enableLanguage === true || $enableKeywords === true || $enableTopic === true;
+		return $enableLanguage === true || $enableKeywords === true || $enableTopic === true;
+	}//end isEnrichmentEnabled()
 
-    }//end isEnrichmentEnabled()
+	/**
+	 * Enrich an object with metadata if enrichment is enabled
+	 *
+	 * @param mixed $object The OpenRegister object
+	 * @param MetadataService $metadataService The metadata service
+	 * @param SettingsService $settingsService The settings service
+	 * @param LoggerInterface $logger The logger instance
+	 * @param string $logContext Context string for logging
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function enrichObject(
+		mixed $object,
+		MetadataService $metadataService,
+		SettingsService $settingsService,
+		LoggerInterface $logger,
+		string $logContext,
+	): void {
+		$objectId = $object->getUuid();
 
-    /**
-     * Enrich an object with metadata if enrichment is enabled
-     *
-     * @param mixed           $object          The OpenRegister object
-     * @param MetadataService $metadataService The metadata service
-     * @param SettingsService $settingsService The settings service
-     * @param LoggerInterface $logger          The logger instance
-     * @param string          $logContext      Context string for logging
-     *
-     * @return void
-     *
-     * @spec openspec/specs/metadata-enrichment/spec.md
-     */
-    public function enrichObject(
-        mixed $object,
-        MetadataService $metadataService,
-        SettingsService $settingsService,
-        LoggerInterface $logger,
-        string $logContext
-    ): void {
-        $objectId = $object->getUuid();
+		$logger->info(
+			'DocuDesk: Processing ' . $logContext,
+			[
+				'objectId' => $objectId,
+				'schemaId' => $object->getSchema(),
+				'registerId' => $object->getRegister(),
+			]
+		);
 
-        $logger->info(
-            'DocuDesk: Processing '.$logContext,
-            [
-                'objectId'   => $objectId,
-                'schemaId'   => $object->getSchema(),
-                'registerId' => $object->getRegister(),
-            ]
-        );
+		try {
+			if ($this->isEnrichmentEnabled(settingsService: $settingsService) === false) {
+				return;
+			}
 
-        try {
-            if ($this->isEnrichmentEnabled(settingsService: $settingsService) === false) {
-                return;
-            }
+			$metadata = $metadataService->enhanceMetadata($object->getObject());
 
-            $metadata = $metadataService->enhanceMetadata($object->getObject());
+			if (empty($metadata) === true) {
+				return;
+			}
 
-            if (empty($metadata) === true) {
-                return;
-            }
+			// Event listeners run without a user session in webcron/background
+			// contexts; persist as a trusted system operation so OpenRegister
+			// RBAC does not deny the write as 'Anonymous'.
+			$metadataService->saveEnrichedMetadataAsSystem(
+				$objectId,
+				(string)$object->getRegister(),
+				(string)$object->getSchema(),
+				$metadata
+			);
 
-            // Event listeners run without a user session in webcron/background
-            // contexts; persist as a trusted system operation so OpenRegister
-            // RBAC does not deny the write as 'Anonymous'.
-            $metadataService->saveEnrichedMetadataAsSystem(
-                $objectId,
-                (string) $object->getRegister(),
-                (string) $object->getSchema(),
-                $metadata
-            );
+			$logger->info(
+				'DocuDesk: Metadata enrichment completed for ' . $logContext,
+				[
+					'objectId' => $objectId,
+					'enrichedFields' => array_keys($metadata),
+				]
+			);
+		} catch (\Exception $e) {
+			$logger->error(
+				'DocuDesk: Failed to enrich metadata for ' . $logContext,
+				[
+					'objectId' => $objectId,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}//end try
 
-            $logger->info(
-                'DocuDesk: Metadata enrichment completed for '.$logContext,
-                [
-                    'objectId'       => $objectId,
-                    'enrichedFields' => array_keys($metadata),
-                ]
-            );
-        } catch (\Exception $e) {
-            $logger->error(
-                'DocuDesk: Failed to enrich metadata for '.$logContext,
-                [
-                    'objectId'  => $objectId,
-                    'exception' => $e->getMessage(),
-                ]
-            );
-        }//end try
-
-    }//end enrichObject()
+	}//end enrichObject()
 }//end class

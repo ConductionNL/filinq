@@ -41,324 +41,302 @@ use PHPUnit\Framework\TestCase;
  * @psalm-suppress PropertyNotSetInConstructor
  * @phpstan-extends TestCase
  */
-class BatchAnonymizeServiceTest extends TestCase
-{
+class BatchAnonymizeServiceTest extends TestCase {
 
-    /**
-     * The BatchAnonymizeService under test
-     *
-     * @var BatchAnonymizeService
-     */
-    private BatchAnonymizeService $service;
+	/**
+	 * The BatchAnonymizeService under test
+	 *
+	 * @var BatchAnonymizeService
+	 */
+	private BatchAnonymizeService $service;
 
-    /**
-     * Mocked AnonymizationService
-     *
-     * @var AnonymizationService|MockObject
-     */
-    private AnonymizationService|MockObject $mockAnonService;
+	/**
+	 * Mocked AnonymizationService
+	 *
+	 * @var AnonymizationService|MockObject
+	 */
+	private AnonymizationService|MockObject $mockAnonService;
 
-    /**
-     * Mocked BatchStateService
-     *
-     * @var BatchStateService|MockObject
-     */
-    private BatchStateService|MockObject $mockStateService;
+	/**
+	 * Mocked BatchStateService
+	 *
+	 * @var BatchStateService|MockObject
+	 */
+	private BatchStateService|MockObject $mockStateService;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockAnonService = $this->createMock(AnonymizationService::class);
+		$this->mockStateService = $this->createMock(BatchStateService::class);
 
-        $this->mockAnonService  = $this->createMock(AnonymizationService::class);
-        $this->mockStateService = $this->createMock(BatchStateService::class);
+		$this->service = new BatchAnonymizeService(
+			$this->mockAnonService,
+			$this->mockStateService
+		);
 
-        $this->service = new BatchAnonymizeService(
-            $this->mockAnonService,
-            $this->mockStateService
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test anonymizeBatch throws when batch not found
+	 *
+	 * @return void
+	 */
+	public function testAnonymizeBatchThrowsWhenBatchNotFound(): void {
+		$this->mockStateService->method('getBatch')->willReturn(null);
 
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Batch not found or expired');
 
-    /**
-     * Test anonymizeBatch throws when batch not found
-     *
-     * @return void
-     */
-    public function testAnonymizeBatchThrowsWhenBatchNotFound(): void
-    {
-        $this->mockStateService->method('getBatch')->willReturn(null);
+		$this->service->anonymizeBatch(batchId: 'missing-id', entities: []);
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Batch not found or expired');
+	}//end testAnonymizeBatchThrowsWhenBatchNotFound()
 
-        $this->service->anonymizeBatch(batchId: 'missing-id', entities: []);
+	/**
+	 * Test anonymizeBatch skips files with error status
+	 *
+	 * @return void
+	 */
+	public function testAnonymizeBatchSkipsErrorFiles(): void {
+		$batch = [
+			'batchId' => 'batch-1',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 10, 'status' => 'error', 'error' => 'Upload failed'],
+			],
+		];
 
-    }//end testAnonymizeBatchThrowsWhenBatchNotFound()
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->expects($this->never())->method('anonymizeDocument');
 
+		$result = $this->service->anonymizeBatch(batchId: 'batch-1', entities: []);
 
-    /**
-     * Test anonymizeBatch skips files with error status
-     *
-     * @return void
-     */
-    public function testAnonymizeBatchSkipsErrorFiles(): void
-    {
-        $batch = [
-            'batchId' => 'batch-1',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 10, 'status' => 'error', 'error' => 'Upload failed'],
-            ],
-        ];
+		$this->assertSame('completed', $result['batchStatus']);
+		$this->assertSame(0, $result['processedFiles']);
+		$this->assertCount(1, $result['skippedFiles']);
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->expects($this->never())->method('anonymizeDocument');
+	}//end testAnonymizeBatchSkipsErrorFiles()
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-1', entities: []);
+	/**
+	 * Test anonymizeBatch processes extracted files successfully
+	 *
+	 * @return void
+	 */
+	public function testAnonymizeBatchProcessesExtractedFiles(): void {
+		$batch = [
+			'batchId' => 'batch-2',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 20, 'status' => 'extracted'],
+			],
+		];
 
-        $this->assertSame('completed', $result['batchStatus']);
-        $this->assertSame(0, $result['processedFiles']);
-        $this->assertCount(1, $result['skippedFiles']);
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeDocument')
+			->with(20, ['PERSON'])
+			->willReturn(['replacementCount' => 5, 'anonymizedFileId' => 'anon-file-1']);
 
-    }//end testAnonymizeBatchSkipsErrorFiles()
+		$result = $this->service->anonymizeBatch(batchId: 'batch-2', entities: ['PERSON']);
 
+		$this->assertSame('completed', $result['batchStatus']);
+		$this->assertSame(1, $result['processedFiles']);
+		$this->assertEmpty($result['skippedFiles']);
 
-    /**
-     * Test anonymizeBatch processes extracted files successfully
-     *
-     * @return void
-     */
-    public function testAnonymizeBatchProcessesExtractedFiles(): void
-    {
-        $batch = [
-            'batchId' => 'batch-2',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 20, 'status' => 'extracted'],
-            ],
-        ];
+	}//end testAnonymizeBatchProcessesExtractedFiles()
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->expects($this->once())
-            ->method('anonymizeDocument')
-            ->with(20, ['PERSON'])
-            ->willReturn(['replacementCount' => 5, 'anonymizedFileId' => 'anon-file-1']);
+	/**
+	 * Test anonymizeBatch records error when anonymization throws
+	 *
+	 * @return void
+	 */
+	public function testAnonymizeBatchRecordsErrorOnException(): void {
+		$batch = [
+			'batchId' => 'batch-3',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 30, 'status' => 'extracted'],
+			],
+		];
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-2', entities: ['PERSON']);
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willThrowException(new Exception('Presidio unavailable'));
 
-        $this->assertSame('completed', $result['batchStatus']);
-        $this->assertSame(1, $result['processedFiles']);
-        $this->assertEmpty($result['skippedFiles']);
+		$result = $this->service->anonymizeBatch(batchId: 'batch-3', entities: []);
 
-    }//end testAnonymizeBatchProcessesExtractedFiles()
+		$this->assertSame(0, $result['processedFiles']);
+		$this->assertCount(1, $result['skippedFiles']);
+		$this->assertSame('Presidio unavailable', $result['skippedFiles'][0]['reason']);
 
+	}//end testAnonymizeBatchRecordsErrorOnException()
 
-    /**
-     * Test anonymizeBatch records error when anonymization throws
-     *
-     * @return void
-     */
-    public function testAnonymizeBatchRecordsErrorOnException(): void
-    {
-        $batch = [
-            'batchId' => 'batch-3',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 30, 'status' => 'extracted'],
-            ],
-        ];
+	/**
+	 * Test anonymizeBatch returns correct totalFiles count
+	 *
+	 * @return void
+	 */
+	public function testAnonymizeBatchReturnsTotalFilesCount(): void {
+		$batch = [
+			'batchId' => 'batch-4',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 1, 'status' => 'extracted'],
+				['fileId' => 2, 'status' => 'extracted'],
+				['fileId' => 3, 'status' => 'error', 'error' => 'failed'],
+			],
+		];
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->method('anonymizeDocument')
-            ->willThrowException(new Exception('Presidio unavailable'));
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-3', entities: []);
+		$result = $this->service->anonymizeBatch(batchId: 'batch-4', entities: []);
 
-        $this->assertSame(0, $result['processedFiles']);
-        $this->assertCount(1, $result['skippedFiles']);
-        $this->assertSame('Presidio unavailable', $result['skippedFiles'][0]['reason']);
+		$this->assertSame(3, $result['totalFiles']);
+		$this->assertSame(2, $result['processedFiles']);
 
-    }//end testAnonymizeBatchRecordsErrorOnException()
+	}//end testAnonymizeBatchReturnsTotalFilesCount()
 
+	/**
+	 * Flag true is forwarded to anonymizeDocument for each extracted file.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+	 */
+	public function testAppendBasisSummaryFlagForwardedToEachFile(): void {
+		$batch = [
+			'batchId' => 'batch-5',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 50, 'status' => 'extracted'],
+				['fileId' => 51, 'status' => 'extracted'],
+			],
+		];
 
-    /**
-     * Test anonymizeBatch returns correct totalFiles count
-     *
-     * @return void
-     */
-    public function testAnonymizeBatchReturnsTotalFilesCount(): void
-    {
-        $batch = [
-            'batchId' => 'batch-4',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 1, 'status' => 'extracted'],
-                ['fileId' => 2, 'status' => 'extracted'],
-                ['fileId' => 3, 'status' => 'error', 'error' => 'failed'],
-            ],
-        ];
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->expects($this->never())->method('anonymizeDocument');
+		$this->mockAnonService->expects($this->exactly(2))
+			->method('anonymizeDocumentWithBasisSummary')
+			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'f']);
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->method('anonymizeDocument')
-            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
+		$result = $this->service->anonymizeBatchWithBasisSummary(
+			batchId: 'batch-5',
+			entities: []
+		);
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-4', entities: []);
+		$this->assertSame(2, $result['processedFiles']);
 
-        $this->assertSame(3, $result['totalFiles']);
-        $this->assertSame(2, $result['processedFiles']);
+	}//end testAppendBasisSummaryFlagForwardedToEachFile()
 
-    }//end testAnonymizeBatchReturnsTotalFilesCount()
+	/**
+	 * Flag false (default) means anonymizeDocument is called without the flag.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+	 */
+	public function testAppendBasisSummaryFlagDefaultsFalse(): void {
+		$batch = [
+			'batchId' => 'batch-6',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 60, 'status' => 'extracted'],
+			],
+		];
 
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->expects($this->never())->method('anonymizeDocumentWithBasisSummary');
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'g']);
 
-    /**
-     * Flag true is forwarded to anonymizeDocument for each extracted file.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
-     */
-    public function testAppendBasisSummaryFlagForwardedToEachFile(): void
-    {
-        $batch = [
-            'batchId' => 'batch-5',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 50, 'status' => 'extracted'],
-                ['fileId' => 51, 'status' => 'extracted'],
-            ],
-        ];
+		$this->service->anonymizeBatch(batchId: 'batch-6', entities: []);
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->expects($this->never())->method('anonymizeDocument');
-        $this->mockAnonService->expects($this->exactly(2))
-            ->method('anonymizeDocumentWithBasisSummary')
-            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'f']);
+	}//end testAppendBasisSummaryFlagDefaultsFalse()
 
-        $result = $this->service->anonymizeBatchWithBasisSummary(
-            batchId: 'batch-5',
-            entities: []
-        );
+	/**
+	 * Per-file warnings from summary failure are propagated into batch file entries.
+	 *
+	 * The batch still completes (HTTP 200 shape) even when per-file warnings exist.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+	 */
+	public function testPerFileSummaryWarningPropagated(): void {
+		$batch = [
+			'batchId' => 'batch-7',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 70, 'status' => 'extracted'],
+			],
+		];
 
-        $this->assertSame(2, $result['processedFiles']);
+		$warning = ['code' => 'SUMMARY_APPEND_FAILED', 'message' => 'Service unavailable.'];
 
-    }//end testAppendBasisSummaryFlagForwardedToEachFile()
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->method('anonymizeDocumentWithBasisSummary')
+			->willReturn(
+				[
+					'replacementCount' => 3,
+					'anonymizedFileId' => 'h',
+					'warning' => $warning,
+				]
+			);
 
+		$result = $this->service->anonymizeBatchWithBasisSummary(
+			batchId: 'batch-7',
+			entities: []
+		);
 
-    /**
-     * Flag false (default) means anonymizeDocument is called without the flag.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
-     */
-    public function testAppendBasisSummaryFlagDefaultsFalse(): void
-    {
-        $batch = [
-            'batchId' => 'batch-6',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 60, 'status' => 'extracted'],
-            ],
-        ];
+		$this->assertSame('completed', $result['batchStatus']);
+		$this->assertSame(1, $result['processedFiles']);
+		$this->assertEmpty($result['skippedFiles']);
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->expects($this->never())->method('anonymizeDocumentWithBasisSummary');
-        $this->mockAnonService->expects($this->once())
-            ->method('anonymizeDocument')
-            ->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'g']);
+	}//end testPerFileSummaryWarningPropagated()
 
-        $this->service->anonymizeBatch(batchId: 'batch-6', entities: []);
+	/**
+	 * Preserve-mode summary fields (summaryFileId, summaryFilePath) are stored per file.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+	 */
+	public function testPreserveModeSummaryFieldsStoredPerFile(): void {
+		$batch = [
+			'batchId' => 'batch-8',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 80, 'status' => 'extracted'],
+			],
+		];
 
-    }//end testAppendBasisSummaryFlagDefaultsFalse()
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockAnonService->method('anonymizeDocumentWithBasisSummary')
+			->willReturn(
+				[
+					'replacementCount' => 1,
+					'anonymizedFileId' => 'i',
+					'summaryFileId' => 'summary-80',
+					'summaryFilePath' => '/DocuDesk/doc_grondslagen.pdf',
+				]
+			);
 
+		$result = $this->service->anonymizeBatchWithBasisSummary(
+			batchId: 'batch-8',
+			entities: []
+		);
 
-    /**
-     * Per-file warnings from summary failure are propagated into batch file entries.
-     *
-     * The batch still completes (HTTP 200 shape) even when per-file warnings exist.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
-     */
-    public function testPerFileSummaryWarningPropagated(): void
-    {
-        $batch = [
-            'batchId' => 'batch-7',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 70, 'status' => 'extracted'],
-            ],
-        ];
+		$this->assertSame(1, $result['processedFiles']);
+		$this->assertSame('completed', $result['batchStatus']);
 
-        $warning = ['code' => 'SUMMARY_APPEND_FAILED', 'message' => 'Service unavailable.'];
-
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->method('anonymizeDocumentWithBasisSummary')
-            ->willReturn(
-                [
-                    'replacementCount' => 3,
-                    'anonymizedFileId' => 'h',
-                    'warning'          => $warning,
-                ]
-            );
-
-        $result = $this->service->anonymizeBatchWithBasisSummary(
-            batchId: 'batch-7',
-            entities: []
-        );
-
-        $this->assertSame('completed', $result['batchStatus']);
-        $this->assertSame(1, $result['processedFiles']);
-        $this->assertEmpty($result['skippedFiles']);
-
-    }//end testPerFileSummaryWarningPropagated()
-
-
-    /**
-     * Preserve-mode summary fields (summaryFileId, summaryFilePath) are stored per file.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
-     */
-    public function testPreserveModeSummaryFieldsStoredPerFile(): void
-    {
-        $batch = [
-            'batchId' => 'batch-8',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 80, 'status' => 'extracted'],
-            ],
-        ];
-
-        $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->method('anonymizeDocumentWithBasisSummary')
-            ->willReturn(
-                [
-                    'replacementCount' => 1,
-                    'anonymizedFileId' => 'i',
-                    'summaryFileId'    => 'summary-80',
-                    'summaryFilePath'  => '/DocuDesk/doc_grondslagen.pdf',
-                ]
-            );
-
-        $result = $this->service->anonymizeBatchWithBasisSummary(
-            batchId: 'batch-8',
-            entities: []
-        );
-
-        $this->assertSame(1, $result['processedFiles']);
-        $this->assertSame('completed', $result['batchStatus']);
-
-    }//end testPreserveModeSummaryFieldsStoredPerFile()
-
+	}//end testPreserveModeSummaryFieldsStoredPerFile()
 
 }//end class

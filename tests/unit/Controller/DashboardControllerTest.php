@@ -39,84 +39,74 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class DashboardControllerTest extends TestCase
-{
+class DashboardControllerTest extends TestCase {
 
-    /**
-     * Controller under test.
-     *
-     * @var DashboardController
-     */
-    private DashboardController $controller;
+	/**
+	 * Controller under test.
+	 *
+	 * @var DashboardController
+	 */
+	private DashboardController $controller;
 
+	/**
+	 * Set up the controller.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up the controller.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->controller = new DashboardController($this->createMock(IRequest::class));
 
-        $this->controller = new DashboardController($this->createMock(IRequest::class));
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * `dashboard#page` renders the docudesk `index` template with HTTP 200.
+	 *
+	 * @return void
+	 */
+	public function testPageRendersIndexTemplate(): void {
+		$response = $this->controller->page();
 
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('index', $response->getTemplateName());
+		$this->assertSame('docudesk', $response->getApp());
 
-    /**
-     * `dashboard#page` renders the docudesk `index` template with HTTP 200.
-     *
-     * @return void
-     */
-    public function testPageRendersIndexTemplate(): void
-    {
-        $response = $this->controller->page();
+	}//end testPageRendersIndexTemplate()
 
-        $this->assertInstanceOf(TemplateResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame('index', $response->getTemplateName());
-        $this->assertSame('docudesk', $response->getApp());
+	/**
+	 * `dashboard#catchAll` serves the same SPA host, so a deep link such as
+	 * `/apps/docudesk/templates/abc` boots the Vue router instead of 404ing.
+	 *
+	 * @return void
+	 */
+	public function testCatchAllServesTheSameSpaHost(): void {
+		$response = $this->controller->catchAll();
 
-    }//end testPageRendersIndexTemplate()
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('index', $response->getTemplateName());
+		$this->assertSame('docudesk', $response->getApp());
 
+	}//end testCatchAllServesTheSameSpaHost()
 
-    /**
-     * `dashboard#catchAll` serves the same SPA host, so a deep link such as
-     * `/apps/docudesk/templates/abc` boots the Vue router instead of 404ing.
-     *
-     * @return void
-     */
-    public function testCatchAllServesTheSameSpaHost(): void
-    {
-        $response = $this->controller->catchAll();
+	/**
+	 * The catch-all is defined as a delegate of `page()`, so the two responses
+	 * must be interchangeable — a divergence here means a deep link renders a
+	 * different document than the app root.
+	 *
+	 * @return void
+	 */
+	public function testCatchAllMatchesPageResponse(): void {
+		$page = $this->controller->page();
+		$catchAll = $this->controller->catchAll();
 
-        $this->assertInstanceOf(TemplateResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame('index', $response->getTemplateName());
-        $this->assertSame('docudesk', $response->getApp());
+		$this->assertSame($page->getTemplateName(), $catchAll->getTemplateName());
+		$this->assertSame($page->getApp(), $catchAll->getApp());
+		$this->assertSame($page->getStatus(), $catchAll->getStatus());
+		$this->assertSame($page->getRenderAs(), $catchAll->getRenderAs());
 
-    }//end testCatchAllServesTheSameSpaHost()
-
-
-    /**
-     * The catch-all is defined as a delegate of `page()`, so the two responses
-     * must be interchangeable — a divergence here means a deep link renders a
-     * different document than the app root.
-     *
-     * @return void
-     */
-    public function testCatchAllMatchesPageResponse(): void
-    {
-        $page     = $this->controller->page();
-        $catchAll = $this->controller->catchAll();
-
-        $this->assertSame($page->getTemplateName(), $catchAll->getTemplateName());
-        $this->assertSame($page->getApp(), $catchAll->getApp());
-        $this->assertSame($page->getStatus(), $catchAll->getStatus());
-        $this->assertSame($page->getRenderAs(), $catchAll->getRenderAs());
-
-    }//end testCatchAllMatchesPageResponse()
-
+	}//end testCatchAllMatchesPageResponse()
 
 }//end class

@@ -54,133 +54,129 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-class PdfConversionService
-{
-    /**
-     * Constructor.
-     *
-     * @param array<int, ConversionBackendInterface> $backends Ordered list of backends; first success wins.
-     * @param LoggerInterface                        $logger   Logger for per-attempt diagnostics.
-     */
-    public function __construct(
-        private readonly array $backends,
-        private readonly LoggerInterface $logger,
-    ) {
+class PdfConversionService {
+	/**
+	 * Constructor.
+	 *
+	 * @param array<int, ConversionBackendInterface> $backends Ordered list of backends; first success wins.
+	 * @param LoggerInterface $logger Logger for per-attempt diagnostics.
+	 */
+	public function __construct(
+		private readonly array $backends,
+		private readonly LoggerInterface $logger,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Convert the source file to PDF via the backend cascade.
-     *
-     * @param File $source Source file (any supported input format).
-     *
-     * @return File The newly written PDF file node.
-     *
-     * @throws ConversionFailedException When no backend in the cascade succeeded.
-     */
-    public function convertToPdf(File $source): File
-    {
-        $mimeType = (string) $source->getMimeType();
-        $ext      = $this->extractExtension(name: $source->getName());
+	/**
+	 * Convert the source file to PDF via the backend cascade.
+	 *
+	 * @param File $source Source file (any supported input format).
+	 *
+	 * @return File The newly written PDF file node.
+	 *
+	 * @throws ConversionFailedException When no backend in the cascade succeeded.
+	 */
+	public function convertToPdf(File $source): File {
+		$mimeType = (string)$source->getMimeType();
+		$ext = $this->extractExtension(name: $source->getName());
 
-        $attempts = [];
+		$attempts = [];
 
-        foreach ($this->backends as $backend) {
-            if ($backend instanceof ConversionBackendInterface === false) {
-                // Defensive — DI should only register interface
-                // implementations; skip anything else without crashing
-                // the cascade.
-                continue;
-            }
+		foreach ($this->backends as $backend) {
+			if ($backend instanceof ConversionBackendInterface === false) {
+				// Defensive — DI should only register interface
+				// implementations; skip anything else without crashing
+				// the cascade.
+				continue;
+			}
 
-            $backendName = $backend->name();
+			$backendName = $backend->name();
 
-            $available = $backend->isAvailable();
-            if ($available === false) {
-                $attempts[] = [
-                    'name'      => $backendName,
-                    'available' => false,
-                    'supports'  => false,
-                    'reason'    => 'backend disabled or prerequisites not present',
-                ];
-                continue;
-            }
+			$available = $backend->isAvailable();
+			if ($available === false) {
+				$attempts[] = [
+					'name' => $backendName,
+					'available' => false,
+					'supports' => false,
+					'reason' => 'backend disabled or prerequisites not present',
+				];
+				continue;
+			}
 
-            $supports = $backend->canHandle($mimeType, $ext);
-            if ($supports === false) {
-                $extLabel = $ext;
-                if ($ext === '') {
-                    $extLabel = '(none)';
-                }
+			$supports = $backend->canHandle($mimeType, $ext);
+			if ($supports === false) {
+				$extLabel = $ext;
+				if ($ext === '') {
+					$extLabel = '(none)';
+				}
 
-                $attempts[] = [
-                    'name'      => $backendName,
-                    'available' => true,
-                    'supports'  => false,
-                    'reason'    => sprintf(
-                        'backend does not support MIME %s / extension %s',
-                        $mimeType,
-                        $extLabel
-                    ),
-                ];
-                continue;
-            }
+				$attempts[] = [
+					'name' => $backendName,
+					'available' => true,
+					'supports' => false,
+					'reason' => sprintf(
+						'backend does not support MIME %s / extension %s',
+						$mimeType,
+						$extLabel
+					),
+				];
+				continue;
+			}
 
-            try {
-                $result = $backend->convert($source);
-                $this->logger->info(
-                    '[PdfConversionService] Conversion succeeded',
-                    [
-                        'backend' => $backendName,
-                        'source'  => $source->getPath(),
-                        'output'  => $result->getPath(),
-                    ]
-                );
-                return $result;
-            } catch (Throwable $e) {
-                $attempts[] = [
-                    'name'      => $backendName,
-                    'available' => true,
-                    'supports'  => true,
-                    'reason'    => $e->getMessage(),
-                ];
-                $this->logger->warning(
-                    '[PdfConversionService] Backend failed; falling through',
-                    [
-                        'backend'   => $backendName,
-                        'source'    => $source->getPath(),
-                        'exception' => get_class($e),
-                        'message'   => $e->getMessage(),
-                    ]
-                );
-                continue;
-            }//end try
-        }//end foreach
+			try {
+				$result = $backend->convert($source);
+				$this->logger->info(
+					'[PdfConversionService] Conversion succeeded',
+					[
+						'backend' => $backendName,
+						'source' => $source->getPath(),
+						'output' => $result->getPath(),
+					]
+				);
+				return $result;
+			} catch (Throwable $e) {
+				$attempts[] = [
+					'name' => $backendName,
+					'available' => true,
+					'supports' => true,
+					'reason' => $e->getMessage(),
+				];
+				$this->logger->warning(
+					'[PdfConversionService] Backend failed; falling through',
+					[
+						'backend' => $backendName,
+						'source' => $source->getPath(),
+						'exception' => get_class($e),
+						'message' => $e->getMessage(),
+					]
+				);
+				continue;
+			}//end try
+		}//end foreach
 
-        // No backend succeeded — emit a structured failure.
-        throw new ConversionFailedException(
-            message: 'Conversion to PDF failed; no backend in the cascade succeeded.',
-            attempts: $attempts
-        );
+		// No backend succeeded — emit a structured failure.
+		throw new ConversionFailedException(
+			message: 'Conversion to PDF failed; no backend in the cascade succeeded.',
+			attempts: $attempts
+		);
 
-    }//end convertToPdf()
+	}//end convertToPdf()
 
-    /**
-     * Return the lowercased extension of $name without the leading dot.
-     *
-     * @param string $name File name, with or without an extension.
-     *
-     * @return string Lowercased extension, or an empty string when the name
-     *                carries no dot.
-     */
-    private function extractExtension(string $name): string
-    {
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            return '';
-        }
+	/**
+	 * Return the lowercased extension of $name without the leading dot.
+	 *
+	 * @param string $name File name, with or without an extension.
+	 *
+	 * @return string Lowercased extension, or an empty string when the name
+	 *                carries no dot.
+	 */
+	private function extractExtension(string $name): string {
+		$dotPos = strrpos($name, '.');
+		if ($dotPos === false) {
+			return '';
+		}
 
-        return strtolower(substr($name, ($dotPos + 1)));
-
-    }//end extractExtension()
+		return strtolower(substr($name, ($dotPos + 1)));
+	}//end extractExtension()
 }//end class

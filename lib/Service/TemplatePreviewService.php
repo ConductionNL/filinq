@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template Preview Service
  *
@@ -35,74 +36,71 @@ use Exception;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class TemplatePreviewService
-{
-    /**
-     * Constructor for TemplatePreviewService
-     *
-     * @param TemplateRenderer $templateRenderer Twig template renderer
-     * @param TemplateService  $templateService  Template CRUD service
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly TemplateRenderer $templateRenderer,
-        private readonly TemplateService $templateService
-    ) {
+class TemplatePreviewService {
+	/**
+	 * Constructor for TemplatePreviewService
+	 *
+	 * @param TemplateRenderer $templateRenderer Twig template renderer
+	 * @param TemplateService $templateService Template CRUD service
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly TemplateRenderer $templateRenderer,
+		private readonly TemplateService $templateService,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Preview template content with sample data
-     *
-     * Processes conditional sections and renders Twig template
-     * with the provided data context.
-     *
-     * @param string $content Template HTML/Twig content
-     * @param array  $data    Sample data context for rendering
-     *
-     * @return string Rendered HTML output
-     *
-     * @throws Exception If rendering fails
-     *
-     * @spec openspec/specs/template-management/spec.md
-     */
-    public function preview(string $content, array $data): string
-    {
-        // Convert conditional sections to Twig before rendering.
-        $processedContent = $this->templateRenderer->convertConditionalSections(
-            html: $content
-        );
+	/**
+	 * Preview template content with sample data
+	 *
+	 * Processes conditional sections and renders Twig template
+	 * with the provided data context.
+	 *
+	 * @param string $content Template HTML/Twig content
+	 * @param array $data Sample data context for rendering
+	 *
+	 * @return string Rendered HTML output
+	 *
+	 * @throws Exception If rendering fails
+	 *
+	 * @spec openspec/specs/template-management/spec.md
+	 */
+	public function preview(string $content, array $data): string {
+		// Convert conditional sections to Twig before rendering.
+		$processedContent = $this->templateRenderer->convertConditionalSections(
+			html: $content
+		);
 
-        return $this->templateRenderer->renderTemplate(
-            templateContent: $processedContent,
-            data: $data
-        );
+		return $this->templateRenderer->renderTemplate(
+			templateContent: $processedContent,
+			data: $data
+		);
 
-    }//end preview()
+	}//end preview()
 
-    /**
-     * Preview an existing template with sample data
-     *
-     * Fetches the template by ID and renders it with the provided data.
-     *
-     * @param string $templateId The template UUID
-     * @param array  $data       Sample data context for rendering
-     *
-     * @return string Rendered HTML output
-     *
-     * @throws Exception If the template is not found or rendering fails
-     *
-     * @spec openspec/specs/template-management/spec.md
-     */
-    public function previewTemplate(string $templateId, array $data): string
-    {
-        $template = $this->templateService->getTemplate(id: $templateId);
+	/**
+	 * Preview an existing template with sample data
+	 *
+	 * Fetches the template by ID and renders it with the provided data.
+	 *
+	 * @param string $templateId The template UUID
+	 * @param array $data Sample data context for rendering
+	 *
+	 * @return string Rendered HTML output
+	 *
+	 * @throws Exception If the template is not found or rendering fails
+	 *
+	 * @spec openspec/specs/template-management/spec.md
+	 */
+	public function previewTemplate(string $templateId, array $data): string {
+		$template = $this->templateService->getTemplate(id: $templateId);
 
-        return $this->preview(
-            content: $template['content'],
-            data: $data
-        );
+		return $this->preview(
+			content: $template['content'],
+			data: $data
+		);
 
-    }//end previewTemplate()
+	}//end previewTemplate()
 }//end class

@@ -48,173 +48,158 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class EmlPreviewControllerTest extends TestCase
-{
+class EmlPreviewControllerTest extends TestCase {
 
-    /**
-     * @var EmlPreviewService|MockObject
-     */
-    private EmlPreviewService|MockObject $mockService;
+	/**
+	 * @var EmlPreviewService|MockObject
+	 */
+	private EmlPreviewService|MockObject $mockService;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $mockUserSession;
+	/**
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $mockUserSession;
 
-    /**
-     * @var IRootFolder|MockObject
-     */
-    private IRootFolder|MockObject $mockRootFolder;
+	/**
+	 * @var IRootFolder|MockObject
+	 */
+	private IRootFolder|MockObject $mockRootFolder;
 
-    /**
-     * @var EmlPreviewController
-     */
-    private EmlPreviewController $controller;
+	/**
+	 * @var EmlPreviewController
+	 */
+	private EmlPreviewController $controller;
 
+	/**
+	 * Build the controller with mocked collaborators.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->mockService = $this->createMock(EmlPreviewService::class);
+		$this->mockUserSession = $this->createMock(IUserSession::class);
+		$this->mockRootFolder = $this->createMock(IRootFolder::class);
 
-    /**
-     * Build the controller with mocked collaborators.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->mockService     = $this->createMock(EmlPreviewService::class);
-        $this->mockUserSession = $this->createMock(IUserSession::class);
-        $this->mockRootFolder  = $this->createMock(IRootFolder::class);
+		$mockL10n = $this->createMock(IL10N::class);
+		$mockL10n->method('t')->willReturnArgument(0);
 
-        $mockL10n = $this->createMock(IL10N::class);
-        $mockL10n->method('t')->willReturnArgument(0);
+		$this->controller = new EmlPreviewController(
+			'docudesk',
+			$this->createMock(IRequest::class),
+			$this->mockService,
+			$this->createMock(LoggerInterface::class),
+			$this->mockUserSession,
+			$this->mockRootFolder,
+			$mockL10n
+		);
 
-        $this->controller = new EmlPreviewController(
-            'docudesk',
-            $this->createMock(IRequest::class),
-            $this->mockService,
-            $this->createMock(LoggerInterface::class),
-            $this->mockUserSession,
-            $this->mockRootFolder,
-            $mockL10n
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Point the session at a user whose folder resolves $fileId to $nodes.
+	 *
+	 * @param array $nodes Nodes the caller's own user folder resolves the id to.
+	 *
+	 * @return void
+	 */
+	private function givenUserFolderResolvesTo(array $nodes): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('bob');
+		$this->mockUserSession->method('getUser')->willReturn($user);
 
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getById')->willReturn($nodes);
+		$this->mockRootFolder->method('getUserFolder')->with('bob')->willReturn($folder);
 
-    /**
-     * Point the session at a user whose folder resolves $fileId to $nodes.
-     *
-     * @param array $nodes Nodes the caller's own user folder resolves the id to.
-     *
-     * @return void
-     */
-    private function givenUserFolderResolvesTo(array $nodes): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('bob');
-        $this->mockUserSession->method('getUser')->willReturn($user);
+	}//end givenUserFolderResolvesTo()
 
-        $folder = $this->createMock(Folder::class);
-        $folder->method('getById')->willReturn($nodes);
-        $this->mockRootFolder->method('getUserFolder')->with('bob')->willReturn($folder);
+	/**
+	 * A file id the caller cannot resolve in their own tree is refused with
+	 * 404 — and the render service is never reached, so no un-redacted bytes
+	 * are produced.
+	 *
+	 * @return void
+	 */
+	public function testPreviewRefusesFileIdOutsideTheCallersOwnTree(): void {
+		$this->givenUserFolderResolvesTo([]);
+		$this->mockService->expects($this->never())->method('renderOriginalPreview');
 
-    }//end givenUserFolderResolvesTo()
+		$response = $this->controller->preview(fileId: 21992);
 
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 
-    /**
-     * A file id the caller cannot resolve in their own tree is refused with
-     * 404 — and the render service is never reached, so no un-redacted bytes
-     * are produced.
-     *
-     * @return void
-     */
-    public function testPreviewRefusesFileIdOutsideTheCallersOwnTree(): void
-    {
-        $this->givenUserFolderResolvesTo([]);
-        $this->mockService->expects($this->never())->method('renderOriginalPreview');
+	}//end testPreviewRefusesFileIdOutsideTheCallersOwnTree()
 
-        $response = $this->controller->preview(fileId: 21992);
+	/**
+	 * An unauthenticated caller is refused with 401 and never reaches the
+	 * render service.
+	 *
+	 * @return void
+	 */
+	public function testPreviewRefusesUnauthenticatedCaller(): void {
+		$this->mockUserSession->method('getUser')->willReturn(null);
+		$this->mockService->expects($this->never())->method('renderOriginalPreview');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$response = $this->controller->preview(fileId: 21992);
 
-    }//end testPreviewRefusesFileIdOutsideTheCallersOwnTree()
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 
+	}//end testPreviewRefusesUnauthenticatedCaller()
 
-    /**
-     * An unauthenticated caller is refused with 401 and never reaches the
-     * render service.
-     *
-     * @return void
-     */
-    public function testPreviewRefusesUnauthenticatedCaller(): void
-    {
-        $this->mockUserSession->method('getUser')->willReturn(null);
-        $this->mockService->expects($this->never())->method('renderOriginalPreview');
+	/**
+	 * A file id that resolves to a folder rather than a file is refused with
+	 * 404 rather than handed to the renderer.
+	 *
+	 * @return void
+	 */
+	public function testPreviewRefusesNonFileNode(): void {
+		$this->givenUserFolderResolvesTo([$this->createMock(Folder::class)]);
+		$this->mockService->expects($this->never())->method('renderOriginalPreview');
 
-        $response = $this->controller->preview(fileId: 21992);
+		$response = $this->controller->preview(fileId: 21992);
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 
-    }//end testPreviewRefusesUnauthenticatedCaller()
+	}//end testPreviewRefusesNonFileNode()
 
+	/**
+	 * A file the caller CAN resolve in their own tree — including one reached
+	 * through a share, which is mounted inside the user folder — still
+	 * renders, so the guard grants nothing less than before.
+	 *
+	 * @return void
+	 */
+	public function testPreviewRendersFileReachableByTheCaller(): void {
+		$this->givenUserFolderResolvesTo([$this->createMock(File::class)]);
+		$this->mockService->expects($this->once())
+			->method('renderOriginalPreview')
+			->with(fileId: 21991)
+			->willReturn('%PDF-1.7 bytes');
 
-    /**
-     * A file id that resolves to a folder rather than a file is refused with
-     * 404 rather than handed to the renderer.
-     *
-     * @return void
-     */
-    public function testPreviewRefusesNonFileNode(): void
-    {
-        $this->givenUserFolderResolvesTo([$this->createMock(Folder::class)]);
-        $this->mockService->expects($this->never())->method('renderOriginalPreview');
+		$response = $this->controller->preview(fileId: 21991);
 
-        $response = $this->controller->preview(fileId: 21992);
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+	}//end testPreviewRendersFileReachableByTheCaller()
 
-    }//end testPreviewRefusesNonFileNode()
+	/**
+	 * A render failure on a file the caller may read still surfaces as 422,
+	 * unchanged by the guard.
+	 *
+	 * @return void
+	 */
+	public function testPreviewStillReturns422OnRenderFailure(): void {
+		$this->givenUserFolderResolvesTo([$this->createMock(File::class)]);
+		$this->mockService->method('renderOriginalPreview')
+			->willThrowException(new \RuntimeException('EML preview requires the OpenRegister anonymise-EML API.'));
 
+		$response = $this->controller->preview(fileId: 21991);
 
-    /**
-     * A file the caller CAN resolve in their own tree — including one reached
-     * through a share, which is mounted inside the user folder — still
-     * renders, so the guard grants nothing less than before.
-     *
-     * @return void
-     */
-    public function testPreviewRendersFileReachableByTheCaller(): void
-    {
-        $this->givenUserFolderResolvesTo([$this->createMock(File::class)]);
-        $this->mockService->expects($this->once())
-            ->method('renderOriginalPreview')
-            ->with(fileId: 21991)
-            ->willReturn('%PDF-1.7 bytes');
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(422, $response->getStatus());
 
-        $response = $this->controller->preview(fileId: 21991);
-
-        $this->assertInstanceOf(DataDownloadResponse::class, $response);
-
-    }//end testPreviewRendersFileReachableByTheCaller()
-
-
-    /**
-     * A render failure on a file the caller may read still surfaces as 422,
-     * unchanged by the guard.
-     *
-     * @return void
-     */
-    public function testPreviewStillReturns422OnRenderFailure(): void
-    {
-        $this->givenUserFolderResolvesTo([$this->createMock(File::class)]);
-        $this->mockService->method('renderOriginalPreview')
-            ->willThrowException(new \RuntimeException('EML preview requires the OpenRegister anonymise-EML API.'));
-
-        $response = $this->controller->preview(fileId: 21991);
-
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(422, $response->getStatus());
-
-    }//end testPreviewStillReturns422OnRenderFailure()
+	}//end testPreviewStillReturns422OnRenderFailure()
 }//end class

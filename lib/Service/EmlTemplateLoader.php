@@ -33,36 +33,33 @@ use RuntimeException;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-class EmlTemplateLoader
-{
-    /**
-     * Load a bundled template file's content.
-     *
-     * The resolved path must stay inside `lib/Resources/templates`; a name
-     * that escapes the root — including via a config-supplied override — is
-     * rejected rather than read.
-     *
-     * @param string $name Template path relative to lib/Resources/templates.
-     *
-     * @return string Template content.
-     *
-     * @throws RuntimeException When the template file is missing or outside the root.
-     */
-    public function load(string $name): string
-    {
-        $path = dirname(__DIR__).'/Resources/templates/'.$name;
-        $real = realpath($path);
-        $base = realpath(dirname(__DIR__).'/Resources/templates');
-        if ($real === false || $base === false || strncmp($real, $base, strlen($base)) !== 0) {
-            throw new RuntimeException('Template not found or outside template root: '.$name);
-        }
+class EmlTemplateLoader {
+	/**
+	 * Load a bundled template file's content.
+	 *
+	 * The resolved path must stay inside `lib/Resources/templates`; a name
+	 * that escapes the root — including via a config-supplied override — is
+	 * rejected rather than read.
+	 *
+	 * @param string $name Template path relative to lib/Resources/templates.
+	 *
+	 * @return string Template content.
+	 *
+	 * @throws RuntimeException When the template file is missing or outside the root.
+	 */
+	public function load(string $name): string {
+		$path = dirname(__DIR__) . '/Resources/templates/' . $name;
+		$real = realpath($path);
+		$base = realpath(dirname(__DIR__) . '/Resources/templates');
+		if ($real === false || $base === false || strncmp($real, $base, strlen($base)) !== 0) {
+			throw new RuntimeException('Template not found or outside template root: ' . $name);
+		}
 
-        $content = file_get_contents($real);
-        if ($content === false) {
-            throw new RuntimeException('Could not read template: '.$name);
-        }
+		$content = file_get_contents($real);
+		if ($content === false) {
+			throw new RuntimeException('Could not read template: ' . $name);
+		}
 
-        return $content;
-
-    }//end load()
+		return $content;
+	}//end load()
 }//end class

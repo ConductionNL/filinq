@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Confidentiality Label
  *
@@ -35,62 +36,56 @@ namespace OCA\DocuDesk\Service;
  *
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  */
-final class ConfidentialityLabel
-{
-    /**
-     * Constructor for ConfidentialityLabel
-     *
-     * @param string $label The display name of the matched label/tag (e.g. "Confidential")
-     * @param int    $level The normalised level on the configured vocabulary scale
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly string $label,
-        private readonly int $level
-    ) {
+final class ConfidentialityLabel {
+	/**
+	 * Constructor for ConfidentialityLabel
+	 *
+	 * @param string $label The display name of the matched label/tag (e.g. "Confidential")
+	 * @param int $level The normalised level on the configured vocabulary scale
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly string $label,
+		private readonly int $level,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the display label.
-     *
-     * @return string The display name of the matched label/tag
-     *
-     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
-     */
-    public function getLabel(): string
-    {
-        return $this->label;
+	/**
+	 * Get the display label.
+	 *
+	 * @return string The display name of the matched label/tag
+	 *
+	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
+	 */
+	public function getLabel(): string {
+		return $this->label;
+	}//end getLabel()
 
-    }//end getLabel()
+	/**
+	 * Get the normalised level.
+	 *
+	 * @return int The normalised level on the configured vocabulary scale
+	 *
+	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
+	 */
+	public function getLevel(): int {
+		return $this->level;
+	}//end getLevel()
 
-    /**
-     * Get the normalised level.
-     *
-     * @return int The normalised level on the configured vocabulary scale
-     *
-     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
-     */
-    public function getLevel(): int
-    {
-        return $this->level;
+	/**
+	 * Represent as a plain array, e.g. for merging into a result payload.
+	 *
+	 * @return array{label: string, level: int}
+	 *
+	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
+	 */
+	public function toArray(): array {
+		return [
+			'label' => $this->label,
+			'level' => $this->level,
+		];
 
-    }//end getLevel()
-
-    /**
-     * Represent as a plain array, e.g. for merging into a result payload.
-     *
-     * @return array{label: string, level: int}
-     *
-     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
-     */
-    public function toArray(): array
-    {
-        return [
-            'label' => $this->label,
-            'level' => $this->level,
-        ];
-
-    }//end toArray()
+	}//end toArray()
 }//end class

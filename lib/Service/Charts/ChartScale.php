@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Chart Scale
  *
@@ -35,82 +36,75 @@ namespace OCA\DocuDesk\Service\Charts;
  *
  * @spec openspec/changes/template-charts/tasks.md#task-1.1
  */
-class ChartScale
-{
-    /**
-     * Compute the maximum value across all series (ignoring skipped points).
-     *
-     * @param array $series Normalized series list.
-     *
-     * @return float Maximum value, or 0.0 when no numeric value is present.
-     *
-     * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
-     */
-    public function seriesMax(array $series): float
-    {
-        $max = 0.0;
-        foreach ($series as $oneSeries) {
-            foreach ($oneSeries['values'] as $value) {
-                if ($value !== null && $value > $max) {
-                    $max = $value;
-                }
-            }
-        }
+class ChartScale {
+	/**
+	 * Compute the maximum value across all series (ignoring skipped points).
+	 *
+	 * @param array $series Normalized series list.
+	 *
+	 * @return float Maximum value, or 0.0 when no numeric value is present.
+	 *
+	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 */
+	public function seriesMax(array $series): float {
+		$max = 0.0;
+		foreach ($series as $oneSeries) {
+			foreach ($oneSeries['values'] as $value) {
+				if ($value !== null && $value > $max) {
+					$max = $value;
+				}
+			}
+		}
 
-        return $max;
+		return $max;
+	}//end seriesMax()
 
-    }//end seriesMax()
+	/**
+	 * Round a value up to a "nice" axis maximum (1/2/5/10 × 10^n), never
+	 * returning a non-positive ceiling for a drawable chart.
+	 *
+	 * @param float $value Raw maximum value.
+	 *
+	 * @return float Nice ceiling value (always >= 1.0).
+	 *
+	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 */
+	public function axisCeiling(float $value): float {
+		$ceiling = $this->niceCeiling(value: $value);
+		if ($ceiling <= 0.0) {
+			return 1.0;
+		}
 
-    /**
-     * Round a value up to a "nice" axis maximum (1/2/5/10 × 10^n), never
-     * returning a non-positive ceiling for a drawable chart.
-     *
-     * @param float $value Raw maximum value.
-     *
-     * @return float Nice ceiling value (always >= 1.0).
-     *
-     * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
-     */
-    public function axisCeiling(float $value): float
-    {
-        $ceiling = $this->niceCeiling(value: $value);
-        if ($ceiling <= 0.0) {
-            return 1.0;
-        }
+		return $ceiling;
+	}//end axisCeiling()
 
-        return $ceiling;
+	/**
+	 * Round a value up to a "nice" axis maximum (1/2/5/10 × 10^n).
+	 *
+	 * @param float $value Raw maximum value.
+	 *
+	 * @return float Nice ceiling value.
+	 */
+	private function niceCeiling(float $value): float {
+		if ($value <= 0.0) {
+			return 0.0;
+		}
 
-    }//end axisCeiling()
+		$magnitude = 10 ** floor(log10($value));
+		$normalized = $value / $magnitude;
 
-    /**
-     * Round a value up to a "nice" axis maximum (1/2/5/10 × 10^n).
-     *
-     * @param float $value Raw maximum value.
-     *
-     * @return float Nice ceiling value.
-     */
-    private function niceCeiling(float $value): float
-    {
-        if ($value <= 0.0) {
-            return 0.0;
-        }
+		if ($normalized <= 1.0) {
+			return 1.0 * $magnitude;
+		}
 
-        $magnitude  = 10 ** floor(log10($value));
-        $normalized = $value / $magnitude;
+		if ($normalized <= 2.0) {
+			return 2.0 * $magnitude;
+		}
 
-        if ($normalized <= 1.0) {
-            return 1.0 * $magnitude;
-        }
+		if ($normalized <= 5.0) {
+			return 5.0 * $magnitude;
+		}
 
-        if ($normalized <= 2.0) {
-            return 2.0 * $magnitude;
-        }
-
-        if ($normalized <= 5.0) {
-            return 5.0 * $magnitude;
-        }
-
-        return 10.0 * $magnitude;
-
-    }//end niceCeiling()
+		return 10.0 * $magnitude;
+	}//end niceCeiling()
 }//end class

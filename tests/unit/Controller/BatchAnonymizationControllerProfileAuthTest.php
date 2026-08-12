@@ -41,99 +41,92 @@ use ReflectionMethod;
  * instance-wide PII policy to every authenticated user. The write posture is
  * therefore asserted explicitly rather than left to Nextcloud's default.
  */
-class BatchAnonymizationControllerProfileAuthTest extends TestCase
-{
+class BatchAnonymizationControllerProfileAuthTest extends TestCase {
 
-    /**
-     * The WRITE endpoint must declare admin-only authorization explicitly.
-     *
-     * @return void
-     */
-    public function testUpdateProfilesIsAdminOnly(): void
-    {
-        $method     = new ReflectionMethod(BatchAnonymizationController::class, 'updateProfiles');
-        $attributes = $method->getAttributes(AuthorizedAdminSetting::class);
+	/**
+	 * The WRITE endpoint must declare admin-only authorization explicitly.
+	 *
+	 * @return void
+	 */
+	public function testUpdateProfilesIsAdminOnly(): void {
+		$method = new ReflectionMethod(BatchAnonymizationController::class, 'updateProfiles');
+		$attributes = $method->getAttributes(AuthorizedAdminSetting::class);
 
-        $this->assertCount(
-            1,
-            $attributes,
-            'updateProfiles() writes the instance-wide WOO profile via IAppConfig and MUST declare '
-            .'#[AuthorizedAdminSetting]. Without it the endpoint is admin-only only by Nextcloud default, '
-            .'which is an accident rather than a decision.'
-        );
+		$this->assertCount(
+			1,
+			$attributes,
+			'updateProfiles() writes the instance-wide WOO profile via IAppConfig and MUST declare '
+			. '#[AuthorizedAdminSetting]. Without it the endpoint is admin-only only by Nextcloud default, '
+			. 'which is an accident rather than a decision.'
+		);
 
-        $this->assertSame(
-            [DocuDeskAdmin::class],
-            $attributes[0]->getArguments(),
-            'The admin setting must be DocuDesk\'s own, matching SettingsController and AnonymiserWarningController.'
-        );
+		$this->assertSame(
+			[DocuDeskAdmin::class],
+			$attributes[0]->getArguments(),
+			'The admin setting must be DocuDesk\'s own, matching SettingsController and AnonymiserWarningController.'
+		);
 
-    }//end testUpdateProfilesIsAdminOnly()
+	}//end testUpdateProfilesIsAdminOnly()
 
+	/**
+	 * The WRITE endpoint must NOT be reachable by any authenticated user.
+	 *
+	 * This is the regression this file exists for: `#[NoAdminRequired]` (or the
+	 * `@NoAdminRequired` docblock tag) on `updateProfiles()` would satisfy a
+	 * naive "declare an auth posture" check while opening instance-wide PII
+	 * policy to every logged-in account.
+	 *
+	 * @return void
+	 */
+	public function testUpdateProfilesIsNotUserAccessible(): void {
+		$method = new ReflectionMethod(BatchAnonymizationController::class, 'updateProfiles');
 
-    /**
-     * The WRITE endpoint must NOT be reachable by any authenticated user.
-     *
-     * This is the regression this file exists for: `#[NoAdminRequired]` (or the
-     * `@NoAdminRequired` docblock tag) on `updateProfiles()` would satisfy a
-     * naive "declare an auth posture" check while opening instance-wide PII
-     * policy to every logged-in account.
-     *
-     * @return void
-     */
-    public function testUpdateProfilesIsNotUserAccessible(): void
-    {
-        $method = new ReflectionMethod(BatchAnonymizationController::class, 'updateProfiles');
+		$this->assertCount(
+			0,
+			$method->getAttributes(NoAdminRequired::class),
+			'updateProfiles() must NOT carry #[NoAdminRequired] — it writes instance-wide anonymisation policy.'
+		);
 
-        $this->assertCount(
-            0,
-            $method->getAttributes(NoAdminRequired::class),
-            'updateProfiles() must NOT carry #[NoAdminRequired] — it writes instance-wide anonymisation policy.'
-        );
+		// Match the tag only where a tag can actually live — at the start of a
+		// docblock line. A bare substring search would also hit the prose in
+		// this method's own docblock, which NAMES the annotation in order to
+		// warn against it: a checker that greps a string literal matches
+		// comments as readily as code, and fails in both directions at once.
+		$this->assertDoesNotMatchRegularExpression(
+			'/^\s*\*\s*@NoAdminRequired\b/m',
+			(string)$method->getDocComment(),
+			'updateProfiles() must NOT carry the @NoAdminRequired docblock tag either; Nextcloud honours both '
+			. 'spellings, so pinning only the attribute would leave the docblock route open.'
+		);
 
-        // Match the tag only where a tag can actually live — at the start of a
-        // docblock line. A bare substring search would also hit the prose in
-        // this method's own docblock, which NAMES the annotation in order to
-        // warn against it: a checker that greps a string literal matches
-        // comments as readily as code, and fails in both directions at once.
-        $this->assertDoesNotMatchRegularExpression(
-            '/^\s*\*\s*@NoAdminRequired\b/m',
-            (string) $method->getDocComment(),
-            'updateProfiles() must NOT carry the @NoAdminRequired docblock tag either; Nextcloud honours both '
-            .'spellings, so pinning only the attribute would leave the docblock route open.'
-        );
+	}//end testUpdateProfilesIsNotUserAccessible()
 
-    }//end testUpdateProfilesIsNotUserAccessible()
+	/**
+	 * Reading the profile stays user-level — the asymmetry is deliberate.
+	 *
+	 * Without this arm the pair above could be "satisfied" by locking the read
+	 * endpoint down too, which would break the UI while still looking green.
+	 *
+	 * @return void
+	 */
+	public function testGetProfilesRemainsUserAccessible(): void {
+		$method = new ReflectionMethod(BatchAnonymizationController::class, 'getProfiles');
+		$doc = (string)$method->getDocComment();
 
+		$declaresUserAccess = ($method->getAttributes(NoAdminRequired::class) !== []
+			|| preg_match('/^\s*\*\s*@NoAdminRequired\b/m', $doc) === 1);
 
-    /**
-     * Reading the profile stays user-level — the asymmetry is deliberate.
-     *
-     * Without this arm the pair above could be "satisfied" by locking the read
-     * endpoint down too, which would break the UI while still looking green.
-     *
-     * @return void
-     */
-    public function testGetProfilesRemainsUserAccessible(): void
-    {
-        $method = new ReflectionMethod(BatchAnonymizationController::class, 'getProfiles');
-        $doc    = (string) $method->getDocComment();
+		$this->assertTrue(
+			$declaresUserAccess,
+			'getProfiles() is a read of policy the UI needs and must stay user-accessible.'
+		);
 
-        $declaresUserAccess = ($method->getAttributes(NoAdminRequired::class) !== []
-            || preg_match('/^\s*\*\s*@NoAdminRequired\b/m', $doc) === 1);
+		$this->assertCount(
+			0,
+			$method->getAttributes(AuthorizedAdminSetting::class),
+			'getProfiles() must not be admin-gated; only the WRITE side is.'
+		);
 
-        $this->assertTrue(
-            $declaresUserAccess,
-            'getProfiles() is a read of policy the UI needs and must stay user-accessible.'
-        );
-
-        $this->assertCount(
-            0,
-            $method->getAttributes(AuthorizedAdminSetting::class),
-            'getProfiles() must not be admin-gated; only the WRITE side is.'
-        );
-
-    }//end testGetProfilesRemainsUserAccessible()
-
+	}//end testGetProfilesRemainsUserAccessible()
 
 }//end class

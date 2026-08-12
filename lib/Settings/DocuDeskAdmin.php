@@ -49,125 +49,114 @@ use OCP\Settings\IDelegatedSettings;
  * @license  EUPL-1.2
  * @link     https://github.com/conductionnl/docudesk
  */
-class DocuDeskAdmin implements IDelegatedSettings
-{
+class DocuDeskAdmin implements IDelegatedSettings {
 
-    /**
-     * App manager for retrieving app version
-     *
-     * @var IAppManager $appManager
-     */
-    private IAppManager $appManager;
+	/**
+	 * App manager for retrieving app version
+	 *
+	 * @var IAppManager $appManager
+	 */
+	private IAppManager $appManager;
 
-    /**
-     * Initial state service for passing data to the frontend
-     *
-     * @var IInitialState $initialState
-     */
-    private IInitialState $initialState;
+	/**
+	 * Initial state service for passing data to the frontend
+	 *
+	 * @var IInitialState $initialState
+	 */
+	private IInitialState $initialState;
 
-    /**
-     * Constructor for DocuDeskAdmin
-     *
-     * @param IAppManager   $appManager   App manager for retrieving app version
-     * @param IInitialState $initialState Initial state service for the frontend
-     *
-     * @return void
-     */
-    public function __construct(IAppManager $appManager, IInitialState $initialState)
-    {
-        $this->appManager   = $appManager;
-        $this->initialState = $initialState;
+	/**
+	 * Constructor for DocuDeskAdmin
+	 *
+	 * @param IAppManager $appManager App manager for retrieving app version
+	 * @param IInitialState $initialState Initial state service for the frontend
+	 *
+	 * @return void
+	 */
+	public function __construct(IAppManager $appManager, IInitialState $initialState) {
+		$this->appManager = $appManager;
+		$this->initialState = $initialState;
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the admin settings form
-     *
-     * @return TemplateResponse The template response for the admin settings
-     *
-     * @psalm-return   TemplateResponse
-     * @phpstan-return TemplateResponse
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    public function getForm(): TemplateResponse
-    {
-        $version = $this->appManager->getAppVersion(Application::APP_ID);
+	/**
+	 * Get the admin settings form
+	 *
+	 * @return TemplateResponse The template response for the admin settings
+	 *
+	 * @psalm-return   TemplateResponse
+	 * @phpstan-return TemplateResponse
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function getForm(): TemplateResponse {
+		$version = $this->appManager->getAppVersion(Application::APP_ID);
 
-        $this->initialState->provideInitialState('version', $version);
+		$this->initialState->provideInitialState('version', $version);
 
-        return new TemplateResponse(
-            'docudesk',
-            'settings/admin',
-            [],
-            ''
-        );
+		return new TemplateResponse(
+			'docudesk',
+			'settings/admin',
+			[],
+			''
+		);
 
-    }//end getForm()
+	}//end getForm()
 
-    /**
-     * Get the section ID for the admin settings
-     *
-     * @return string The section ID
-     *
-     * @psalm-return   string
-     * @phpstan-return string
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    public function getSection(): string
-    {
-        return 'docudesk';
+	/**
+	 * Get the section ID for the admin settings
+	 *
+	 * @return string The section ID
+	 *
+	 * @psalm-return   string
+	 * @phpstan-return string
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function getSection(): string {
+		return 'docudesk';
+	}//end getSection()
 
-    }//end getSection()
+	/**
+	 * Get the priority for the admin settings
+	 *
+	 * @return int The priority (0-100)
+	 *
+	 * @psalm-return   int
+	 * @phpstan-return int
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function getPriority(): int {
+		return 10;
+	}//end getPriority()
 
-    /**
-     * Get the priority for the admin settings
-     *
-     * @return int The priority (0-100)
-     *
-     * @psalm-return   int
-     * @phpstan-return int
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    public function getPriority(): int
-    {
-        return 10;
+	/**
+	 * Get the name of this delegated settings section.
+	 *
+	 * Returns null so only the section name is displayed in the UI.
+	 *
+	 * @return string|null The display name, or null to use the section name only.
+	 *
+	 * @psalm-return   string|null
+	 * @phpstan-return string|null
+	 */
+	public function getName(): ?string {
+		return null;
+	}//end getName()
 
-    }//end getPriority()
-
-    /**
-     * Get the name of this delegated settings section.
-     *
-     * Returns null so only the section name is displayed in the UI.
-     *
-     * @return string|null The display name, or null to use the section name only.
-     *
-     * @psalm-return   string|null
-     * @phpstan-return string|null
-     */
-    public function getName(): ?string
-    {
-        return null;
-
-    }//end getName()
-
-    /**
-     * Get the list of authorized app config keys for this settings section.
-     *
-     * DocuDesk admin settings are full-admin-only; no delegated config keys
-     * are granted.
-     *
-     * @return array<string,mixed> Empty array — no delegated config keys.
-     *
-     * @psalm-return   array<string,mixed>
-     * @phpstan-return array<string,mixed>
-     */
-    public function getAuthorizedAppConfig(): array
-    {
-        return [];
-
-    }//end getAuthorizedAppConfig()
+	/**
+	 * Get the list of authorized app config keys for this settings section.
+	 *
+	 * DocuDesk admin settings are full-admin-only; no delegated config keys
+	 * are granted.
+	 *
+	 * @return array<string,mixed> Empty array — no delegated config keys.
+	 *
+	 * @psalm-return   array<string,mixed>
+	 * @phpstan-return array<string,mixed>
+	 */
+	public function getAuthorizedAppConfig(): array {
+		return [];
+	}//end getAuthorizedAppConfig()
 }//end class

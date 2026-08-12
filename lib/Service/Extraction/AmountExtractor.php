@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Amount Extractor
  *
@@ -35,182 +36,171 @@ namespace OCA\DocuDesk\Service\Extraction;
  *
  * @spec openspec/changes/financial-document-field-extraction/tasks.md#2-4
  */
-class AmountExtractor
-{
+class AmountExtractor {
 
-    /**
-     * Confidence assigned to an amount found immediately after a matched label.
-     *
-     * @var float
-     */
-    private const LABELLED_CONFIDENCE = 0.75;
+	/**
+	 * Confidence assigned to an amount found immediately after a matched label.
+	 *
+	 * @var float
+	 */
+	private const LABELLED_CONFIDENCE = 0.75;
 
-    /**
-     * The raw amount-token regex (without delimiters): an optional currency
-     * marker followed by digits, optional thousands groups, and a decimal
-     * part.
-     *
-     * @var string
-     */
-    private const AMOUNT_TOKEN = '(?:€|EUR)?\s?[0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2}';
+	/**
+	 * The raw amount-token regex (without delimiters): an optional currency
+	 * marker followed by digits, optional thousands groups, and a decimal
+	 * part.
+	 *
+	 * @var string
+	 */
+	private const AMOUNT_TOKEN = '(?:€|EUR)?\s?[0-9]{1,3}(?:[.,][0-9]{3})*[.,][0-9]{2}';
 
-    /**
-     * Parse a single raw amount token (Dutch or Anglo grouping) to a float.
-     *
-     * @param string $raw The raw amount text (e.g. "€ 1.234,56", "1,234.56").
-     *
-     * @return float|null The parsed numeric value, or null when unparseable.
-     *
-     * @spec openspec/specs/financial-document-field-extraction/spec.md
-     */
-    public function parseAmount(string $raw): ?float
-    {
-        $cleaned = trim(str_replace(['€', 'EUR', ' '], '', $raw));
-        if ($cleaned === '') {
-            return null;
-        }
+	/**
+	 * Parse a single raw amount token (Dutch or Anglo grouping) to a float.
+	 *
+	 * @param string $raw The raw amount text (e.g. "€ 1.234,56", "1,234.56").
+	 *
+	 * @return float|null The parsed numeric value, or null when unparseable.
+	 *
+	 * @spec openspec/specs/financial-document-field-extraction/spec.md
+	 */
+	public function parseAmount(string $raw): ?float {
+		$cleaned = trim(str_replace(['€', 'EUR', ' '], '', $raw));
+		if ($cleaned === '') {
+			return null;
+		}
 
-        $normalised = $this->normaliseGrouping(cleaned: $cleaned);
-        if (is_numeric($normalised) === false) {
-            return null;
-        }
+		$normalised = $this->normaliseGrouping(cleaned: $cleaned);
+		if (is_numeric($normalised) === false) {
+			return null;
+		}
 
-        return round((float) $normalised, 2);
+		return round((float)$normalised, 2);
+	}//end parseAmount()
 
-    }//end parseAmount()
+	/**
+	 * Normalise Dutch/Anglo thousands+decimal grouping to a plain
+	 * dot-decimal numeric string.
+	 *
+	 * @param string $cleaned Amount text with currency markers/spaces stripped.
+	 *
+	 * @return string The normalised (dot-decimal) numeric string.
+	 */
+	private function normaliseGrouping(string $cleaned): string {
+		$hasComma = strpos($cleaned, ',') !== false;
+		$hasDot = strpos($cleaned, '.') !== false;
 
-    /**
-     * Normalise Dutch/Anglo thousands+decimal grouping to a plain
-     * dot-decimal numeric string.
-     *
-     * @param string $cleaned Amount text with currency markers/spaces stripped.
-     *
-     * @return string The normalised (dot-decimal) numeric string.
-     */
-    private function normaliseGrouping(string $cleaned): string
-    {
-        $hasComma = strpos($cleaned, ',') !== false;
-        $hasDot   = strpos($cleaned, '.') !== false;
+		if ($hasComma === true && $hasDot === true) {
+			return $this->normaliseMixedGrouping(cleaned: $cleaned);
+		}
 
-        if ($hasComma === true && $hasDot === true) {
-            return $this->normaliseMixedGrouping(cleaned: $cleaned);
-        }
+		if ($hasComma === true) {
+			// Only commas: decimal comma if exactly two digits follow the
+			// last one (Dutch "100,00"), otherwise a thousands separator.
+			$afterLastComma = substr($cleaned, strrpos($cleaned, ',') + 1);
+			if (strlen($afterLastComma) === 2) {
+				return str_replace(',', '.', $cleaned);
+			}
 
-        if ($hasComma === true) {
-            // Only commas: decimal comma if exactly two digits follow the
-            // last one (Dutch "100,00"), otherwise a thousands separator.
-            $afterLastComma = substr($cleaned, strrpos($cleaned, ',') + 1);
-            if (strlen($afterLastComma) === 2) {
-                return str_replace(',', '.', $cleaned);
-            }
+			return str_replace(',', '', $cleaned);
+		}
 
-            return str_replace(',', '', $cleaned);
-        }
+		if ($hasDot === true) {
+			// Only dots: decimal dot if exactly two digits follow the last
+			// one, otherwise a thousands separator.
+			$afterLastDot = substr($cleaned, strrpos($cleaned, '.') + 1);
+			if (strlen($afterLastDot) === 2) {
+				return $cleaned;
+			}
 
-        if ($hasDot === true) {
-            // Only dots: decimal dot if exactly two digits follow the last
-            // one, otherwise a thousands separator.
-            $afterLastDot = substr($cleaned, strrpos($cleaned, '.') + 1);
-            if (strlen($afterLastDot) === 2) {
-                return $cleaned;
-            }
+			return str_replace('.', '', $cleaned);
+		}
 
-            return str_replace('.', '', $cleaned);
-        }
+		return $cleaned;
+	}//end normaliseGrouping()
 
-        return $cleaned;
+	/**
+	 * Normalise grouping when both `,` and `.` are present: whichever
+	 * separator appears last is the decimal separator.
+	 *
+	 * @param string $cleaned Amount text containing both `,` and `.`.
+	 *
+	 * @return string The normalised (dot-decimal) numeric string.
+	 */
+	private function normaliseMixedGrouping(string $cleaned): string {
+		$lastComma = strrpos($cleaned, ',');
+		$lastDot = strrpos($cleaned, '.');
 
-    }//end normaliseGrouping()
+		if ($lastComma > $lastDot) {
+			return str_replace(',', '.', str_replace('.', '', $cleaned));
+		}
 
-    /**
-     * Normalise grouping when both `,` and `.` are present: whichever
-     * separator appears last is the decimal separator.
-     *
-     * @param string $cleaned Amount text containing both `,` and `.`.
-     *
-     * @return string The normalised (dot-decimal) numeric string.
-     */
-    private function normaliseMixedGrouping(string $cleaned): string
-    {
-        $lastComma = strrpos($cleaned, ',');
-        $lastDot   = strrpos($cleaned, '.');
+		return str_replace(',', '', $cleaned);
+	}//end normaliseMixedGrouping()
 
-        if ($lastComma > $lastDot) {
-            return str_replace(',', '.', str_replace('.', '', $cleaned));
-        }
+	/**
+	 * Extract every amount token in the text, in document order.
+	 *
+	 * @param string $text The text to search.
+	 *
+	 * @return array<int, array{raw: string, value: float}> Amounts found.
+	 *
+	 * @spec openspec/changes/financial-document-field-extraction/tasks.md#2-4
+	 */
+	public function extractAll(string $text): array {
+		$matchCount = preg_match_all('/' . self::AMOUNT_TOKEN . '/', $text, $matches);
+		if ($matchCount === false || $matchCount === 0) {
+			return [];
+		}
 
-        return str_replace(',', '', $cleaned);
+		$results = [];
+		foreach ($matches[0] as $raw) {
+			$value = $this->parseAmount(raw: $raw);
+			if ($value === null) {
+				continue;
+			}
 
-    }//end normaliseMixedGrouping()
+			$results[] = ['raw' => $raw, 'value' => $value];
+		}
 
-    /**
-     * Extract every amount token in the text, in document order.
-     *
-     * @param string $text The text to search.
-     *
-     * @return array<int, array{raw: string, value: float}> Amounts found.
-     *
-     * @spec openspec/changes/financial-document-field-extraction/tasks.md#2-4
-     */
-    public function extractAll(string $text): array
-    {
-        $matchCount = preg_match_all('/'.self::AMOUNT_TOKEN.'/', $text, $matches);
-        if ($matchCount === false || $matchCount === 0) {
-            return [];
-        }
+		return $results;
+	}//end extractAll()
 
-        $results = [];
-        foreach ($matches[0] as $raw) {
-            $value = $this->parseAmount(raw: $raw);
-            if ($value === null) {
-                continue;
-            }
+	/**
+	 * Extract the first amount immediately following one of the given labels.
+	 *
+	 * @param string $text The text to search.
+	 * @param array<string> $labels Case-insensitive labels (e.g. "totaal").
+	 *
+	 * @return array{value: float|null, confidence: float} The amount and its
+	 *                                                     confidence, or a null value with confidence 0.
+	 *
+	 * @spec openspec/specs/financial-document-field-extraction/spec.md
+	 */
+	public function extractLabelled(string $text, array $labels): array {
+		if ($labels === []) {
+			return ['value' => null, 'confidence' => 0.0];
+		}
 
-            $results[] = ['raw' => $raw, 'value' => $value];
-        }
+		$labelPattern = implode('|', array_map(static fn (string $label): string => preg_quote($label, '/'), $labels));
 
-        return $results;
+		// \b on both sides of the label so a longer word (e.g. "Subtotaal")
+		// never matches a shorter label (e.g. "totaal") as a substring.
+		$matched = preg_match(
+			'/\b(?:' . $labelPattern . ')\b\s*[:\-]?\s*(' . self::AMOUNT_TOKEN . ')/i',
+			$text,
+			$matches
+		);
 
-    }//end extractAll()
+		if ($matched === 1) {
+			$value = $this->parseAmount(raw: $matches[1]);
+			if ($value !== null) {
+				return [
+					'value' => $value,
+					'confidence' => self::LABELLED_CONFIDENCE,
+				];
+			}
+		}
 
-    /**
-     * Extract the first amount immediately following one of the given labels.
-     *
-     * @param string        $text   The text to search.
-     * @param array<string> $labels Case-insensitive labels (e.g. "totaal").
-     *
-     * @return array{value: float|null, confidence: float} The amount and its
-     *         confidence, or a null value with confidence 0.
-     *
-     * @spec openspec/specs/financial-document-field-extraction/spec.md
-     */
-    public function extractLabelled(string $text, array $labels): array
-    {
-        if ($labels === []) {
-            return ['value' => null, 'confidence' => 0.0];
-        }
-
-        $labelPattern = implode('|', array_map(static fn (string $label): string => preg_quote($label, '/'), $labels));
-
-        // \b on both sides of the label so a longer word (e.g. "Subtotaal")
-        // never matches a shorter label (e.g. "totaal") as a substring.
-        $matched = preg_match(
-            '/\b(?:'.$labelPattern.')\b\s*[:\-]?\s*('.self::AMOUNT_TOKEN.')/i',
-            $text,
-            $matches
-        );
-
-        if ($matched === 1) {
-            $value = $this->parseAmount(raw: $matches[1]);
-            if ($value !== null) {
-                return [
-                    'value'      => $value,
-                    'confidence' => self::LABELLED_CONFIDENCE,
-                ];
-            }
-        }
-
-        return ['value' => null, 'confidence' => 0.0];
-
-    }//end extractLabelled()
+		return ['value' => null, 'confidence' => 0.0];
+	}//end extractLabelled()
 }//end class

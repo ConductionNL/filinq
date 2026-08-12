@@ -35,85 +35,78 @@ use RuntimeException;
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
  */
-class SigningProviderFactory
-{
+class SigningProviderFactory {
 
-    /**
-     * Map of provider identifiers to their class instances
-     *
-     * @var array<string, SigningProviderInterface>
-     */
-    private array $providers = [];
+	/**
+	 * Map of provider identifiers to their class instances
+	 *
+	 * @var array<string, SigningProviderInterface>
+	 */
+	private array $providers = [];
 
-    /**
-     * Constructor
-     *
-     * @param IAppConfig            $config            The app config
-     * @param NativeSigningProvider $nativeProvider    The native signing provider
-     * @param ValidSignProvider     $validSignProvider The ValidSign provider
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly IAppConfig $config,
-        NativeSigningProvider $nativeProvider,
-        ValidSignProvider $validSignProvider
-    ) {
-        $this->providers['native']    = $nativeProvider;
-        $this->providers['validsign'] = $validSignProvider;
+	/**
+	 * Constructor
+	 *
+	 * @param IAppConfig $config The app config
+	 * @param NativeSigningProvider $nativeProvider The native signing provider
+	 * @param ValidSignProvider $validSignProvider The ValidSign provider
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+		NativeSigningProvider $nativeProvider,
+		ValidSignProvider $validSignProvider,
+	) {
+		$this->providers['native'] = $nativeProvider;
+		$this->providers['validsign'] = $validSignProvider;
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the currently configured signing provider
-     *
-     * @return SigningProviderInterface The active signing provider
-     *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
-     */
-    public function getActiveProvider(): SigningProviderInterface
-    {
-        $providerName = $this->config->getValueString('docudesk', 'signing_provider', 'native');
+	/**
+	 * Get the currently configured signing provider
+	 *
+	 * @return SigningProviderInterface The active signing provider
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
+	 */
+	public function getActiveProvider(): SigningProviderInterface {
+		$providerName = $this->config->getValueString('docudesk', 'signing_provider', 'native');
 
-        if (isset($this->providers[$providerName]) === false) {
-            return $this->providers['native'];
-        }
+		if (isset($this->providers[$providerName]) === false) {
+			return $this->providers['native'];
+		}
 
-        return $this->providers[$providerName];
+		return $this->providers[$providerName];
+	}//end getActiveProvider()
 
-    }//end getActiveProvider()
+	/**
+	 * Get a specific provider by identifier
+	 *
+	 * @param string $identifier The provider identifier
+	 *
+	 * @return SigningProviderInterface The requested provider
+	 *
+	 * @throws RuntimeException If the provider is not available
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
+	 */
+	public function getProvider(string $identifier): SigningProviderInterface {
+		if (isset($this->providers[$identifier]) === false) {
+			throw new RuntimeException('Signing provider not available: ' . $identifier);
+		}
 
-    /**
-     * Get a specific provider by identifier
-     *
-     * @param string $identifier The provider identifier
-     *
-     * @return SigningProviderInterface The requested provider
-     *
-     * @throws RuntimeException If the provider is not available
-     *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
-     */
-    public function getProvider(string $identifier): SigningProviderInterface
-    {
-        if (isset($this->providers[$identifier]) === false) {
-            throw new RuntimeException('Signing provider not available: '.$identifier);
-        }
+		return $this->providers[$identifier];
+	}//end getProvider()
 
-        return $this->providers[$identifier];
-
-    }//end getProvider()
-
-    /**
-     * Get all available provider identifiers
-     *
-     * @return array<string> List of provider identifiers
-     *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
-     */
-    public function getAvailableProviders(): array
-    {
-        return array_keys($this->providers);
-
-    }//end getAvailableProviders()
+	/**
+	 * Get all available provider identifiers
+	 *
+	 * @return array<string> List of provider identifiers
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
+	 */
+	public function getAvailableProviders(): array {
+		return array_keys($this->providers);
+	}//end getAvailableProviders()
 }//end class

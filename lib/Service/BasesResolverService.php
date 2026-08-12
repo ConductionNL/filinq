@@ -51,360 +51,341 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-3
  */
-class BasesResolverService
-{
+class BasesResolverService {
 
-    /**
-     * OpenRegister register slug that holds dossier objects.
-     */
-    private const REGISTER_SLUG = 'dossier';
+	/**
+	 * OpenRegister register slug that holds dossier objects.
+	 */
+	private const REGISTER_SLUG = 'dossier';
 
-    /**
-     * OpenRegister schema slug for the dossier type.
-     */
-    private const SCHEMA_SLUG = 'dossier';
+	/**
+	 * OpenRegister schema slug for the dossier type.
+	 */
+	private const SCHEMA_SLUG = 'dossier';
 
-    /**
-     * Constructor.
-     *
-     * @param LoggerInterface    $logger      Structured logger.
-     * @param IRootFolder        $rootFolder  Nextcloud root-folder API.
-     * @param IUserSession       $userSession Current-user accessor.
-     * @param IAppManager        $appManager  App-availability check.
-     * @param ContainerInterface $container   DI container (OpenRegister lookup).
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger,
-        private readonly IRootFolder $rootFolder,
-        private readonly IUserSession $userSession,
-        private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container,
-    ) {
+	/**
+	 * Constructor.
+	 *
+	 * @param LoggerInterface $logger Structured logger.
+	 * @param IRootFolder $rootFolder Nextcloud root-folder API.
+	 * @param IUserSession $userSession Current-user accessor.
+	 * @param IAppManager $appManager App-availability check.
+	 * @param ContainerInterface $container DI container (OpenRegister lookup).
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+		private readonly IRootFolder $rootFolder,
+		private readonly IUserSession $userSession,
+		private readonly IAppManager $appManager,
+		private readonly ContainerInterface $container,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Return the union of `bases[]` across all dossiers the batch belongs to.
-     *
-     * Returns a deduplicated array of UUID/slug strings. Returns `[]` when
-     * no dossier is found, when the matching dossier has no bases, or when
-     * OpenRegister is unavailable.
-     *
-     * @param array<string, mixed> $batch Batch record from BatchStateService.
-     *
-     * @return array<int, string> Deduplicated union of dossier bases.
-     *
-     * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-3
-     * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-4
-     */
-    public function resolveBasesForBatch(array $batch): array
-    {
-        $folderIds = $this->collectFolderIds(batch: $batch);
-        if (count($folderIds) === 0) {
-            return [];
-        }
+	/**
+	 * Return the union of `bases[]` across all dossiers the batch belongs to.
+	 *
+	 * Returns a deduplicated array of UUID/slug strings. Returns `[]` when
+	 * no dossier is found, when the matching dossier has no bases, or when
+	 * OpenRegister is unavailable.
+	 *
+	 * @param array<string, mixed> $batch Batch record from BatchStateService.
+	 *
+	 * @return array<int, string> Deduplicated union of dossier bases.
+	 *
+	 * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-3
+	 * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-4
+	 */
+	public function resolveBasesForBatch(array $batch): array {
+		$folderIds = $this->collectFolderIds(batch: $batch);
+		if (count($folderIds) === 0) {
+			return [];
+		}
 
-        $objectService = $this->getObjectService();
-        if ($objectService === null) {
-            return [];
-        }
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
 
-        $basesSet = [];
-        foreach ($folderIds as $folderId) {
-            foreach ($this->loadDossierBasesForFolder(objectService: $objectService, folderId: $folderId) as $base) {
-                $basesSet[(string) $base] = true;
-            }
-        }
+		$basesSet = [];
+		foreach ($folderIds as $folderId) {
+			foreach ($this->loadDossierBasesForFolder(objectService: $objectService, folderId: $folderId) as $base) {
+				$basesSet[(string)$base] = true;
+			}
+		}
 
-        return array_keys($basesSet);
+		return array_keys($basesSet);
+	}//end resolveBasesForBatch()
 
-    }//end resolveBasesForBatch()
+	/**
+	 * Collect the unique Nextcloud folder IDs that contain the batch's files.
+	 *
+	 * For a folder-based batch (`$batch['folderId']` is set), the folder ID
+	 * is taken directly. For upload batches the parent of each file is resolved
+	 * via `IRootFolder`; unique folder IDs are returned.
+	 *
+	 * @param array<string, mixed> $batch Batch record.
+	 *
+	 * @return array<int, int> Distinct folder node IDs.
+	 */
+	private function collectFolderIds(array $batch): array {
+		// Folder-based batch — parent folder is known.
+		$explicitFolderId = $this->extractExplicitFolderId(batch: $batch);
+		if ($explicitFolderId !== null) {
+			return [$explicitFolderId];
+		}
 
-    /**
-     * Collect the unique Nextcloud folder IDs that contain the batch's files.
-     *
-     * For a folder-based batch (`$batch['folderId']` is set), the folder ID
-     * is taken directly. For upload batches the parent of each file is resolved
-     * via `IRootFolder`; unique folder IDs are returned.
-     *
-     * @param array<string, mixed> $batch Batch record.
-     *
-     * @return array<int, int> Distinct folder node IDs.
-     */
-    private function collectFolderIds(array $batch): array
-    {
-        // Folder-based batch — parent folder is known.
-        $explicitFolderId = $this->extractExplicitFolderId(batch: $batch);
-        if ($explicitFolderId !== null) {
-            return [$explicitFolderId];
-        }
+		// Upload batch — resolve parent folder for each file.
+		$userFolder = $this->getUserFolder();
+		if ($userFolder === null) {
+			return [];
+		}
 
-        // Upload batch — resolve parent folder for each file.
-        $userFolder = $this->getUserFolder();
-        if ($userFolder === null) {
-            return [];
-        }
+		return $this->resolveParentFolderIds(userFolder: $userFolder, files: $batch['files']);
+	}//end collectFolderIds()
 
-        return $this->resolveParentFolderIds(userFolder: $userFolder, files: $batch['files']);
+	/**
+	 * Read the explicitly-supplied folder ID from a folder-based batch.
+	 *
+	 * Returns null when the batch carries no usable `folderId`, which signals
+	 * the caller to fall back to per-file parent resolution.
+	 *
+	 * @param array<string, mixed> $batch Batch record.
+	 *
+	 * @return int|null Positive folder node ID, or null when absent/invalid.
+	 */
+	private function extractExplicitFolderId(array $batch): ?int {
+		// An isset() check is already false for a null value, so no separate null check.
+		if (isset($batch['folderId']) === false) {
+			return null;
+		}
 
-    }//end collectFolderIds()
+		$folderId = (int)$batch['folderId'];
+		if ($folderId > 0) {
+			return $folderId;
+		}
 
-    /**
-     * Read the explicitly-supplied folder ID from a folder-based batch.
-     *
-     * Returns null when the batch carries no usable `folderId`, which signals
-     * the caller to fall back to per-file parent resolution.
-     *
-     * @param array<string, mixed> $batch Batch record.
-     *
-     * @return int|null Positive folder node ID, or null when absent/invalid.
-     */
-    private function extractExplicitFolderId(array $batch): ?int
-    {
-        // An isset() check is already false for a null value, so no separate null check.
-        if (isset($batch['folderId']) === false) {
-            return null;
-        }
+		return null;
+	}//end extractExplicitFolderId()
 
-        $folderId = (int) $batch['folderId'];
-        if ($folderId > 0) {
-            return $folderId;
-        }
+	/**
+	 * Resolve the current user's home folder.
+	 *
+	 * Returns null when there is no active user session or when the home
+	 * folder cannot be opened — callers treat that as "no folders to inspect".
+	 *
+	 * @return Folder|null The user's home folder, or null.
+	 */
+	private function getUserFolder(): ?Folder {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return null;
+		}
 
-        return null;
+		try {
+			return $this->rootFolder->getUserFolder(userId: $user->getUID());
+		} catch (\Throwable $e) {
+			$this->logger->debug(
+				'BasesResolverService: could not get user folder',
+				['error' => $e->getMessage()]
+			);
+			return null;
+		}
 
-    }//end extractExplicitFolderId()
+	}//end getUserFolder()
 
-    /**
-     * Resolve the current user's home folder.
-     *
-     * Returns null when there is no active user session or when the home
-     * folder cannot be opened — callers treat that as "no folders to inspect".
-     *
-     * @return Folder|null The user's home folder, or null.
-     */
-    private function getUserFolder(): ?Folder
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return null;
-        }
+	/**
+	 * Resolve the distinct parent folder IDs of a batch's files.
+	 *
+	 * Files that cannot be located are skipped; a failure to resolve one file
+	 * never aborts the resolution of the remaining files.
+	 *
+	 * @param Folder $userFolder The user's home folder.
+	 * @param array<int, array<string, mixed>> $files File records from the batch.
+	 *
+	 * @return array<int, int> Distinct parent folder node IDs.
+	 */
+	private function resolveParentFolderIds(Folder $userFolder, array $files): array {
+		$folderIds = [];
+		foreach ($files as $file) {
+			$fileId = (int)($file['fileId'] ?? 0);
+			if ($fileId <= 0) {
+				continue;
+			}
 
-        try {
-            return $this->rootFolder->getUserFolder(userId: $user->getUID());
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                'BasesResolverService: could not get user folder',
-                ['error' => $e->getMessage()]
-            );
-            return null;
-        }
+			try {
+				$nodes = $userFolder->getById(id: $fileId);
+				if (count($nodes) > 0) {
+					$parentId = (int)$nodes[0]->getParent()->getId();
+					$folderIds[$parentId] = $parentId;
+				}
+			} catch (\Throwable $e) {
+				$this->logger->debug(
+					'BasesResolverService: could not resolve parent folder for file',
+					['fileId' => $fileId, 'error' => $e->getMessage()]
+				);
+			}
+		}//end foreach
 
-    }//end getUserFolder()
+		return array_values($folderIds);
+	}//end resolveParentFolderIds()
 
-    /**
-     * Resolve the distinct parent folder IDs of a batch's files.
-     *
-     * Files that cannot be located are skipped; a failure to resolve one file
-     * never aborts the resolution of the remaining files.
-     *
-     * @param Folder                           $userFolder The user's home folder.
-     * @param array<int, array<string, mixed>> $files      File records from the batch.
-     *
-     * @return array<int, int> Distinct parent folder node IDs.
-     */
-    private function resolveParentFolderIds(Folder $userFolder, array $files): array
-    {
-        $folderIds = [];
-        foreach ($files as $file) {
-            $fileId = (int) ($file['fileId'] ?? 0);
-            if ($fileId <= 0) {
-                continue;
-            }
+	/**
+	 * Load the `bases[]` array from all dossiers matching a given folder ID.
+	 *
+	 * Queries OpenRegister for dossier objects whose `@self.folder` equals
+	 * `$folderId`. Returns an empty array when no dossier is found or when
+	 * the dossier's `bases` field is absent or empty.
+	 *
+	 * @param mixed $objectService OpenRegister ObjectService instance.
+	 * @param int $folderId Nextcloud folder node ID.
+	 *
+	 * @return array<int, string> Raw base references from matching dossier(s).
+	 */
+	private function loadDossierBasesForFolder(mixed $objectService, int $folderId): array {
+		try {
+			$result = $objectService->findAll(
+				config: [
+					'filters' => [
+						'register' => self::REGISTER_SLUG,
+						'schema' => self::SCHEMA_SLUG,
+						'folder' => (string)$folderId,
+					],
+				],
+				_rbac: false
+			);
+		} catch (\Throwable $e) {
+			$this->logger->debug(
+				'BasesResolverService: findAll failed for folder',
+				['folderId' => $folderId, 'error' => $e->getMessage()]
+			);
+			return [];
+		}
 
-            try {
-                $nodes = $userFolder->getById(id: $fileId);
-                if (count($nodes) > 0) {
-                    $parentId = (int) $nodes[0]->getParent()->getId();
-                    $folderIds[$parentId] = $parentId;
-                }
-            } catch (\Throwable $e) {
-                $this->logger->debug(
-                    'BasesResolverService: could not resolve parent folder for file',
-                    ['fileId' => $fileId, 'error' => $e->getMessage()]
-                );
-            }
-        }//end foreach
+		$bases = [];
+		foreach ($this->extractObjects(result: $result) as $dossier) {
+			$dossierBases = $dossier['bases'] ?? null;
+			if (is_array($dossierBases) === false) {
+				continue;
+			}
 
-        return array_values($folderIds);
+			foreach ($dossierBases as $base) {
+				if (is_string($base) === true && $base !== '') {
+					$bases[] = $base;
+				}
+			}
+		}
 
-    }//end resolveParentFolderIds()
+		return $bases;
+	}//end loadDossierBasesForFolder()
 
-    /**
-     * Load the `bases[]` array from all dossiers matching a given folder ID.
-     *
-     * Queries OpenRegister for dossier objects whose `@self.folder` equals
-     * `$folderId`. Returns an empty array when no dossier is found or when
-     * the dossier's `bases` field is absent or empty.
-     *
-     * @param mixed $objectService OpenRegister ObjectService instance.
-     * @param int   $folderId      Nextcloud folder node ID.
-     *
-     * @return array<int, string> Raw base references from matching dossier(s).
-     */
-    private function loadDossierBasesForFolder(mixed $objectService, int $folderId): array
-    {
-        try {
-            $result = $objectService->findAll(
-                config: [
-                    'filters' => [
-                        'register' => self::REGISTER_SLUG,
-                        'schema'   => self::SCHEMA_SLUG,
-                        'folder'   => (string) $folderId,
-                    ],
-                ],
-                _rbac: false
-            );
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                'BasesResolverService: findAll failed for folder',
-                ['folderId' => $folderId, 'error' => $e->getMessage()]
-            );
-            return [];
-        }
+	/**
+	 * Extract plain-array objects from an ObjectService findAll result.
+	 *
+	 * @param mixed $result Raw findAll return value.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function extractObjects(mixed $result): array {
+		$objects = [];
+		foreach ($this->extractCandidates(result: $result) as $candidate) {
+			$payload = $this->normaliseCandidate(candidate: $candidate);
+			if ($payload !== null) {
+				$objects[] = $payload;
+			}
+		}
 
-        $bases = [];
-        foreach ($this->extractObjects(result: $result) as $dossier) {
-            $dossierBases = $dossier['bases'] ?? null;
-            if (is_array($dossierBases) === false) {
-                continue;
-            }
+		return $objects;
+	}//end extractObjects()
 
-            foreach ($dossierBases as $base) {
-                if (is_string($base) === true && $base !== '') {
-                    $bases[] = $base;
-                }
-            }
-        }
+	/**
+	 * Unwrap a findAll return value into a flat list of candidate entries.
+	 *
+	 * Accepts both the paginated `['results' => [...]]` envelope and a bare
+	 * list, as well as any Traversable. Anything else yields an empty list.
+	 *
+	 * @param mixed $result Raw findAll return value.
+	 *
+	 * @return array<int|string, mixed> Candidate entries.
+	 */
+	private function extractCandidates(mixed $result): array {
+		if ($result instanceof \Traversable) {
+			return iterator_to_array(iterator: $result);
+		}
 
-        return $bases;
+		if (is_array($result) === false) {
+			return [];
+		}
 
-    }//end loadDossierBasesForFolder()
+		$candidates = $result['results'] ?? $result;
+		if (is_array($candidates) === false) {
+			return [];
+		}
 
-    /**
-     * Extract plain-array objects from an ObjectService findAll result.
-     *
-     * @param mixed $result Raw findAll return value.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function extractObjects(mixed $result): array
-    {
-        $objects = [];
-        foreach ($this->extractCandidates(result: $result) as $candidate) {
-            $payload = $this->normaliseCandidate(candidate: $candidate);
-            if ($payload !== null) {
-                $objects[] = $payload;
-            }
-        }
+		return $candidates;
+	}//end extractCandidates()
 
-        return $objects;
+	/**
+	 * Normalise a single candidate entry into a plain array payload.
+	 *
+	 * Plain arrays are returned unchanged; objects are unwrapped via
+	 * `getObject()` and then `jsonSerialize()`. Returns null when the
+	 * candidate cannot be represented as an array.
+	 *
+	 * @param mixed $candidate Candidate entry from a findAll result.
+	 *
+	 * @return array<string, mixed>|null Plain array payload, or null.
+	 */
+	private function normaliseCandidate(mixed $candidate): ?array {
+		if (is_array($candidate) === true) {
+			return $candidate;
+		}
 
-    }//end extractObjects()
+		if (is_object($candidate) === false) {
+			return null;
+		}
 
-    /**
-     * Unwrap a findAll return value into a flat list of candidate entries.
-     *
-     * Accepts both the paginated `['results' => [...]]` envelope and a bare
-     * list, as well as any Traversable. Anything else yields an empty list.
-     *
-     * @param mixed $result Raw findAll return value.
-     *
-     * @return array<int|string, mixed> Candidate entries.
-     */
-    private function extractCandidates(mixed $result): array
-    {
-        if ($result instanceof \Traversable) {
-            return iterator_to_array(iterator: $result);
-        }
+		if (method_exists($candidate, 'getObject') === true) {
+			$payload = $candidate->getObject();
+			if (is_array($payload) === true) {
+				return $payload;
+			}
+		}
 
-        if (is_array($result) === false) {
-            return [];
-        }
+		if (method_exists($candidate, 'jsonSerialize') === true) {
+			$payload = $candidate->jsonSerialize();
+			if (is_array($payload) === true) {
+				return $payload;
+			}
+		}
 
-        $candidates = $result['results'] ?? $result;
-        if (is_array($candidates) === false) {
-            return [];
-        }
+		return null;
+	}//end normaliseCandidate()
 
-        return $candidates;
+	/**
+	 * Try to obtain OpenRegister's ObjectService from the DI container.
+	 *
+	 * Returns null when OpenRegister is not installed or the service cannot
+	 * be resolved — callers treat this as "no dossier found".
+	 *
+	 * @return mixed ObjectService instance, or null.
+	 */
+	private function getObjectService(): mixed {
+		try {
+			if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+				return null;
+			}
 
-    }//end extractCandidates()
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		} catch (\Throwable $e) {
+			$this->logger->debug(
+				'BasesResolverService: ObjectService unavailable',
+				['error' => $e->getMessage()]
+			);
+			return null;
+		}
 
-    /**
-     * Normalise a single candidate entry into a plain array payload.
-     *
-     * Plain arrays are returned unchanged; objects are unwrapped via
-     * `getObject()` and then `jsonSerialize()`. Returns null when the
-     * candidate cannot be represented as an array.
-     *
-     * @param mixed $candidate Candidate entry from a findAll result.
-     *
-     * @return array<string, mixed>|null Plain array payload, or null.
-     */
-    private function normaliseCandidate(mixed $candidate): ?array
-    {
-        if (is_array($candidate) === true) {
-            return $candidate;
-        }
-
-        if (is_object($candidate) === false) {
-            return null;
-        }
-
-        if (method_exists($candidate, 'getObject') === true) {
-            $payload = $candidate->getObject();
-            if (is_array($payload) === true) {
-                return $payload;
-            }
-        }
-
-        if (method_exists($candidate, 'jsonSerialize') === true) {
-            $payload = $candidate->jsonSerialize();
-            if (is_array($payload) === true) {
-                return $payload;
-            }
-        }
-
-        return null;
-
-    }//end normaliseCandidate()
-
-    /**
-     * Try to obtain OpenRegister's ObjectService from the DI container.
-     *
-     * Returns null when OpenRegister is not installed or the service cannot
-     * be resolved — callers treat this as "no dossier found".
-     *
-     * @return mixed ObjectService instance, or null.
-     */
-    private function getObjectService(): mixed
-    {
-        try {
-            if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-                return null;
-            }
-
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                'BasesResolverService: ObjectService unavailable',
-                ['error' => $e->getMessage()]
-            );
-            return null;
-        }
-
-    }//end getObjectService()
+	}//end getObjectService()
 }//end class

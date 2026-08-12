@@ -49,51 +49,48 @@ use OCP\IUserSession;
  * The real class lives in the openregister sibling app (ADR-040) and serves
  * `GET|PUT /api/preferences/{key}` for every adopting leaf app.
  */
-class GenericPreferencesController extends Controller
-{
-    /**
-     * Construct the generic preferences controller.
-     *
-     * @param string       $appName     The calling (leaf) app id.
-     * @param IRequest     $request     HTTP request.
-     * @param IConfig      $config      The Nextcloud config (user values).
-     * @param IUserSession $userSession The user session.
-     */
-    public function __construct(
-        string $appName,
-        IRequest $request,
-        private readonly IConfig $config,
-        private readonly IUserSession $userSession
-    ) {
-        parent::__construct($appName, $request);
-    }//end __construct()
+class GenericPreferencesController extends Controller {
+	/**
+	 * Construct the generic preferences controller.
+	 *
+	 * @param string $appName The calling (leaf) app id.
+	 * @param IRequest $request HTTP request.
+	 * @param IConfig $config The Nextcloud config (user values).
+	 * @param IUserSession $userSession The user session.
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		private readonly IConfig $config,
+		private readonly IUserSession $userSession,
+	) {
+		parent::__construct($appName, $request);
+	}//end __construct()
 
-    /**
-     * Read a per-user preference value for the current user.
-     *
-     * @param string $key The preference key.
-     *
-     * @return JSONResponse `{value: string|null}`.
-     */
-    public function getPreference(string $key): JSONResponse
-    {
-        unset($key);
+	/**
+	 * Read a per-user preference value for the current user.
+	 *
+	 * @param string $key The preference key.
+	 *
+	 * @return JSONResponse `{value: string|null}`.
+	 */
+	public function getPreference(string $key): JSONResponse {
+		unset($key);
 
-        return new JSONResponse(['value' => null]);
-    }//end getPreference()
+		return new JSONResponse(['value' => null]);
+	}//end getPreference()
 
-    /**
-     * Write a per-user preference value for the current user.
-     *
-     * @param string $key   The preference key.
-     * @param string $value The value to store (empty string clears it).
-     *
-     * @return JSONResponse `{value: string|null}`.
-     */
-    public function setPreference(string $key, string $value=''): JSONResponse
-    {
-        unset($key, $value);
+	/**
+	 * Write a per-user preference value for the current user.
+	 *
+	 * @param string $key The preference key.
+	 * @param string $value The value to store (empty string clears it).
+	 *
+	 * @return JSONResponse `{value: string|null}`.
+	 */
+	public function setPreference(string $key, string $value = ''): JSONResponse {
+		unset($key, $value);
 
-        return new JSONResponse(['value' => null]);
-    }//end setPreference()
+		return new JSONResponse(['value' => null]);
+	}//end setPreference()
 }//end class

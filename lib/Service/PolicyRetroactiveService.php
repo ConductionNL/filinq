@@ -50,418 +50,403 @@ use Psr\Log\LoggerInterface;
 /**
  * Retroactive rule-mutation handler.
  */
-class PolicyRetroactiveService
-{
+class PolicyRetroactiveService {
 
-    /**
-     * Statuses considered "in-flight" — eligible for retroactive force-resolve.
-     *
-     * `anonymized` is terminal (the goal state); excluded so we don't re-write
-     * already-resolved records. `published_*` derivatives, if they existed, would
-     * also be terminal — the current schema does not surface them as `consentStatus`
-     * values, so we don't filter on them here.
-     *
-     * @var array<int, string>
-     */
-    private const IN_FLIGHT_STATUSES = [
-        'pending',
-        'consent_given',
-        'objection_received',
-        'no_response',
-    ];
+	/**
+	 * Statuses considered "in-flight" — eligible for retroactive force-resolve.
+	 *
+	 * `anonymized` is terminal (the goal state); excluded so we don't re-write
+	 * already-resolved records. `published_*` derivatives, if they existed, would
+	 * also be terminal — the current schema does not surface them as `consentStatus`
+	 * values, so we don't filter on them here.
+	 *
+	 * @var array<int, string>
+	 */
+	private const IN_FLIGHT_STATUSES = [
+		'pending',
+		'consent_given',
+		'objection_received',
+		'no_response',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param LoggerInterface       $logger          Structured log sink.
-     * @param ContainerInterface    $container       DI container for OpenRegister lookup.
-     * @param PolicyMatchService    $policyMatcher   Reusable rule-evaluation primitives.
-     * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger,
-        private readonly ContainerInterface $container,
-        private readonly PolicyMatchService $policyMatcher,
-        private readonly ObjectResultExtractor $resultExtractor=new ObjectResultExtractor()
-    ) {
+	/**
+	 * Constructor.
+	 *
+	 * @param LoggerInterface $logger Structured log sink.
+	 * @param ContainerInterface $container DI container for OpenRegister lookup.
+	 * @param PolicyMatchService $policyMatcher Reusable rule-evaluation primitives.
+	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+		private readonly ContainerInterface $container,
+		private readonly PolicyMatchService $policyMatcher,
+		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Apply a prohibition mutation retroactively to in-flight workflow records.
-     *
-     * Call this after a `publicationProhibition` has been created OR updated to
-     * `active: true` OR had its `matchRules` widened OR had `validUntil` extended
-     * — the caller decides which updates qualify; this method is the worker.
-     *
-     * @param array<string, mixed> $prohibition The prohibition record's plain data.
-     *
-     * @return int Number of in-flight records that were force-resolved.
-     */
-    public function applyProhibitionMutation(array $prohibition): int
-    {
-        if ($this->isProhibitionEligible(prohibition: $prohibition) === false) {
-            return 0;
-        }
+	/**
+	 * Apply a prohibition mutation retroactively to in-flight workflow records.
+	 *
+	 * Call this after a `publicationProhibition` has been created OR updated to
+	 * `active: true` OR had its `matchRules` widened OR had `validUntil` extended
+	 * — the caller decides which updates qualify; this method is the worker.
+	 *
+	 * @param array<string, mixed> $prohibition The prohibition record's plain data.
+	 *
+	 * @return int Number of in-flight records that were force-resolved.
+	 */
+	public function applyProhibitionMutation(array $prohibition): int {
+		if ($this->isProhibitionEligible(prohibition: $prohibition) === false) {
+			return 0;
+		}
 
-        $prohibitionUuid = $this->readRecordUuid(record: $prohibition);
-        if ($prohibitionUuid === '') {
-            $this->logger->warning(
-                'PolicyRetroactiveService: prohibition has no UUID; skipping retroactive sweep'
-            );
-            return 0;
-        }
+		$prohibitionUuid = $this->readRecordUuid(record: $prohibition);
+		if ($prohibitionUuid === '') {
+			$this->logger->warning(
+				'PolicyRetroactiveService: prohibition has no UUID; skipping retroactive sweep'
+			);
+			return 0;
+		}
 
-        $matchRules = ($prohibition['matchRules'] ?? []);
-        if (is_array($matchRules) === false || count($matchRules) === 0) {
-            return 0;
-        }
+		$matchRules = ($prohibition['matchRules'] ?? []);
+		if (is_array($matchRules) === false || count($matchRules) === 0) {
+			return 0;
+		}
 
-        $resolved = $this->sweepInFlightRecords(
-            matchRules: $matchRules,
-            entityType: (string) ($prohibition['entityType'] ?? 'OTHER'),
-            prohibitionUuid: $prohibitionUuid
-        );
+		$resolved = $this->sweepInFlightRecords(
+			matchRules: $matchRules,
+			entityType: (string)($prohibition['entityType'] ?? 'OTHER'),
+			prohibitionUuid: $prohibitionUuid
+		);
 
-        $this->policyMatcher->invalidateCache();
+		$this->policyMatcher->invalidateCache();
 
-        if ($resolved > 0) {
-            $this->logger->info(
-                'PolicyRetroactiveService: prohibition retroactively force-resolved records',
-                [
-                    'prohibitionUuid' => $prohibitionUuid,
-                    'resolved'        => $resolved,
-                ]
-            );
-        }
+		if ($resolved > 0) {
+			$this->logger->info(
+				'PolicyRetroactiveService: prohibition retroactively force-resolved records',
+				[
+					'prohibitionUuid' => $prohibitionUuid,
+					'resolved' => $resolved,
+				]
+			);
+		}
 
-        return $resolved;
+		return $resolved;
+	}//end applyProhibitionMutation()
 
-    }//end applyProhibitionMutation()
+	/**
+	 * Force-resolve every in-flight record the given rules now match.
+	 *
+	 * @param array<int, array<string, mixed>> $matchRules The prohibition's match rules.
+	 * @param string $entityType Entity type the prohibition targets.
+	 * @param string $prohibitionUuid UUID recorded on each resolved record.
+	 *
+	 * @return int Number of records that were successfully force-resolved.
+	 */
+	private function sweepInFlightRecords(
+		array $matchRules,
+		string $entityType,
+		string $prohibitionUuid,
+	): int {
+		$resolved = 0;
 
-    /**
-     * Force-resolve every in-flight record the given rules now match.
-     *
-     * @param array<int, array<string, mixed>> $matchRules      The prohibition's match rules.
-     * @param string                           $entityType      Entity type the prohibition targets.
-     * @param string                           $prohibitionUuid UUID recorded on each resolved record.
-     *
-     * @return int Number of records that were successfully force-resolved.
-     */
-    private function sweepInFlightRecords(
-        array $matchRules,
-        string $entityType,
-        string $prohibitionUuid
-    ): int {
-        $resolved = 0;
+		foreach ($this->loadInFlightDocumentRecords(entityType: $entityType) as $candidate) {
+			if ($this->candidateMatches(candidate: $candidate, matchRules: $matchRules) === false) {
+				continue;
+			}
 
-        foreach ($this->loadInFlightDocumentRecords(entityType: $entityType) as $candidate) {
-            if ($this->candidateMatches(candidate: $candidate, matchRules: $matchRules) === false) {
-                continue;
-            }
+			if ($this->forceResolveToAnonymized(
+				record: $candidate,
+				prohibitionUuid: $prohibitionUuid
+			) === true
+			) {
+				$resolved++;
+			}
+		}
 
-            if ($this->forceResolveToAnonymized(
-                record: $candidate,
-                prohibitionUuid: $prohibitionUuid
-            ) === true
-            ) {
-                $resolved++;
-            }
-        }
+		return $resolved;
+	}//end sweepInFlightRecords()
 
-        return $resolved;
+	/**
+	 * Test one in-flight record against the prohibition's match rules.
+	 *
+	 * @param array<string, mixed> $candidate The in-flight record.
+	 * @param array<int, array<string, mixed>> $matchRules The prohibition's match rules.
+	 *
+	 * @return bool True when the record's entity is covered by the rules.
+	 */
+	private function candidateMatches(array $candidate, array $matchRules): bool {
+		$entityText = (string)($candidate['entityText'] ?? '');
+		if ($entityText === '') {
+			return false;
+		}
 
-    }//end sweepInFlightRecords()
+		return $this->policyMatcher->entityMatchesAnyRule(
+			matchRules: $matchRules,
+			entityText: $entityText,
+			resolvedIdentifiers: $this->extractIdentifiers(object: $candidate)
+		);
 
-    /**
-     * Test one in-flight record against the prohibition's match rules.
-     *
-     * @param array<string, mixed>             $candidate  The in-flight record.
-     * @param array<int, array<string, mixed>> $matchRules The prohibition's match rules.
-     *
-     * @return bool True when the record's entity is covered by the rules.
-     */
-    private function candidateMatches(array $candidate, array $matchRules): bool
-    {
-        $entityText = (string) ($candidate['entityText'] ?? '');
-        if ($entityText === '') {
-            return false;
-        }
+	}//end candidateMatches()
 
-        return $this->policyMatcher->entityMatchesAnyRule(
-            matchRules: $matchRules,
-            entityText: $entityText,
-            resolvedIdentifiers: $this->extractIdentifiers(object: $candidate)
-        );
+	/**
+	 * Read a record's UUID from its `@self` envelope or its top-level keys.
+	 *
+	 * @param array<string, mixed> $record The record's plain data.
+	 *
+	 * @return string The UUID, or an empty string when the record carries none.
+	 */
+	private function readRecordUuid(array $record): string {
+		$self = ($record['@self'] ?? []);
 
-    }//end candidateMatches()
+		return (string)(
+			$self['id'] ?? $self['uuid'] ?? $record['id'] ?? $record['uuid'] ?? ''
+		);
 
-    /**
-     * Read a record's UUID from its `@self` envelope or its top-level keys.
-     *
-     * @param array<string, mixed> $record The record's plain data.
-     *
-     * @return string The UUID, or an empty string when the record carries none.
-     */
-    private function readRecordUuid(array $record): string
-    {
-        $self = ($record['@self'] ?? []);
+	}//end readRecordUuid()
 
-        return (string) (
-            $self['id'] ?? $self['uuid'] ?? $record['id'] ?? $record['uuid'] ?? ''
-        );
+	/**
+	 * Standing-consent mutations are intentionally NOT applied retroactively.
+	 *
+	 * Future detections benefit; past detections retain their already-decided
+	 * outcomes (spec §5.2). The only effect of this method is cache invalidation.
+	 *
+	 * @return void
+	 */
+	public function applyStandingConsentMutation(): void {
+		$this->policyMatcher->invalidateCache();
 
-    }//end readRecordUuid()
+	}//end applyStandingConsentMutation()
 
-    /**
-     * Standing-consent mutations are intentionally NOT applied retroactively.
-     *
-     * Future detections benefit; past detections retain their already-decided
-     * outcomes (spec §5.2). The only effect of this method is cache invalidation.
-     *
-     * @return void
-     */
-    public function applyStandingConsentMutation(): void
-    {
-        $this->policyMatcher->invalidateCache();
+	/**
+	 * Rule deletions / deactivations / expiries do NOT modify past records.
+	 *
+	 * Past `publicationConsent` records keep their final state and their
+	 * `policyMatch` reference (which becomes dangling). Spec §5.3. Cache is
+	 * invalidated so future detections see the rule absence.
+	 *
+	 * @return void
+	 */
+	public function applyRuleRemoval(): void {
+		$this->policyMatcher->invalidateCache();
 
-    }//end applyStandingConsentMutation()
+	}//end applyRuleRemoval()
 
-    /**
-     * Rule deletions / deactivations / expiries do NOT modify past records.
-     *
-     * Past `publicationConsent` records keep their final state and their
-     * `policyMatch` reference (which becomes dangling). Spec §5.3. Cache is
-     * invalidated so future detections see the rule absence.
-     *
-     * @return void
-     */
-    public function applyRuleRemoval(): void
-    {
-        $this->policyMatcher->invalidateCache();
+	/**
+	 * Decide whether a prohibition is eligible to drive a retroactive sweep.
+	 *
+	 * Inactive rules and rules outside their validity window are skipped — we
+	 * only sweep when the rule would also produce new matches.
+	 *
+	 * @param array<string, mixed> $prohibition The prohibition's plain data.
+	 *
+	 * @return bool
+	 */
+	private function isProhibitionEligible(array $prohibition): bool {
+		if (($prohibition['active'] ?? true) !== true) {
+			return false;
+		}
 
-    }//end applyRuleRemoval()
+		$now = new DateTimeImmutable();
+		$validFrom = $this->parseDateTime(value: (string)($prohibition['validFrom'] ?? ''));
+		$validUntil = $this->parseDateTime(value: (string)($prohibition['validUntil'] ?? ''));
 
-    /**
-     * Decide whether a prohibition is eligible to drive a retroactive sweep.
-     *
-     * Inactive rules and rules outside their validity window are skipped — we
-     * only sweep when the rule would also produce new matches.
-     *
-     * @param array<string, mixed> $prohibition The prohibition's plain data.
-     *
-     * @return bool
-     */
-    private function isProhibitionEligible(array $prohibition): bool
-    {
-        if (($prohibition['active'] ?? true) !== true) {
-            return false;
-        }
+		if ($validFrom !== null && $validFrom > $now) {
+			return false;
+		}
 
-        $now        = new DateTimeImmutable();
-        $validFrom  = $this->parseDateTime(value: (string) ($prohibition['validFrom'] ?? ''));
-        $validUntil = $this->parseDateTime(value: (string) ($prohibition['validUntil'] ?? ''));
+		if ($validUntil !== null && $validUntil < $now) {
+			return false;
+		}
 
-        if ($validFrom !== null && $validFrom > $now) {
-            return false;
-        }
+		return true;
+	}//end isProhibitionEligible()
 
-        if ($validUntil !== null && $validUntil < $now) {
-            return false;
-        }
+	/**
+	 * Load in-flight `scope: "document"` `publicationConsent` records.
+	 *
+	 * Filters: scope=document, consentStatus in IN_FLIGHT_STATUSES, policyMatch
+	 * not already set (records pre-empted by a different policy stay as-is and
+	 * are not re-pointed by this routine).
+	 *
+	 * @param string $entityType Optional entity-type filter.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function loadInFlightDocumentRecords(string $entityType): array {
+		try {
+			$objectService = $this->container->get(
+				'OCA\OpenRegister\Service\ObjectService'
+			);
 
-        return true;
+			// Push the scope filter down to the DB. The schema is shared
+			// with scope=entity (standing-consent) records, so a naive
+			// `findAll(register, schema)` loads every consent row across
+			// every tenant / every file and discards most in PHP. Adding
+			// `scope=document` to the filter bounds the result set to
+			// what this method actually needs. The defensive PHP scope
+			// check below is retained as a belt-and-braces.
+			$result = $objectService->findAll(
+				config: [
+					'filters' => [
+						'register' => 'consent',
+						'schema' => 'publicationConsent',
+						'scope' => 'document',
+					],
+				],
+				_rbac: false
+			);
 
-    }//end isProhibitionEligible()
+			$records = $this->resultExtractor->extractRows(result: $result);
+			return array_values(
+				array_filter(
+					$records,
+					function (array $r) use ($entityType): bool {
+						if (($r['scope'] ?? 'document') !== 'document') {
+							return false;
+						}
 
-    /**
-     * Load in-flight `scope: "document"` `publicationConsent` records.
-     *
-     * Filters: scope=document, consentStatus in IN_FLIGHT_STATUSES, policyMatch
-     * not already set (records pre-empted by a different policy stay as-is and
-     * are not re-pointed by this routine).
-     *
-     * @param string $entityType Optional entity-type filter.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function loadInFlightDocumentRecords(string $entityType): array
-    {
-        try {
-            $objectService = $this->container->get(
-                'OCA\OpenRegister\Service\ObjectService'
-            );
+						$status = (string)($r['consentStatus'] ?? '');
+						if (in_array($status, self::IN_FLIGHT_STATUSES, true) === false) {
+							return false;
+						}
 
-            // Push the scope filter down to the DB. The schema is shared
-            // with scope=entity (standing-consent) records, so a naive
-            // `findAll(register, schema)` loads every consent row across
-            // every tenant / every file and discards most in PHP. Adding
-            // `scope=document` to the filter bounds the result set to
-            // what this method actually needs. The defensive PHP scope
-            // check below is retained as a belt-and-braces.
-            $result = $objectService->findAll(
-                config: [
-                    'filters' => [
-                        'register' => 'consent',
-                        'schema'   => 'publicationConsent',
-                        'scope'    => 'document',
-                    ],
-                ],
-                _rbac: false
-            );
+						if (isset($r['policyMatch']) === true
+							&& $r['policyMatch'] !== null
+							&& $r['policyMatch'] !== ''
+						) {
+							return false;
+						}
 
-            $records = $this->resultExtractor->extractRows(result: $result);
-            return array_values(
-                    array_filter(
-                $records,
-                function (array $r) use ($entityType): bool {
-                    if (($r['scope'] ?? 'document') !== 'document') {
-                        return false;
-                    }
+						$recordType = (string)($r['entityType'] ?? '');
+						return $recordType === $entityType || $entityType === 'OTHER';
+					}
+				)
+			);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'PolicyRetroactiveService: failed to load in-flight records',
+				['error' => $e->getMessage()]
+			);
+			return [];
+		}//end try
 
-                    $status = (string) ($r['consentStatus'] ?? '');
-                    if (in_array($status, self::IN_FLIGHT_STATUSES, true) === false) {
-                        return false;
-                    }
+	}//end loadInFlightDocumentRecords()
 
-                    if (isset($r['policyMatch']) === true
-                        && $r['policyMatch'] !== null
-                        && $r['policyMatch'] !== ''
-                    ) {
-                        return false;
-                    }
+	/**
+	 * Persist the force-resolved state on a single record.
+	 *
+	 * Preserves: `notificationSentAt`, `objectionReceivedAt`, all entity fields,
+	 * and the rest of the original payload. Sets: `consentStatus: "anonymized"`,
+	 * `notificationStatus: "skipped"`, `publicationDecision: "anonymize"`,
+	 * `objectionDeadline: null`, `policyMatch: <prohibition uuid>`.
+	 *
+	 * @param array<string, mixed> $record The current record data.
+	 * @param string $prohibitionUuid UUID of the prohibition that triggered this.
+	 *
+	 * @return bool True on success, false on write failure.
+	 */
+	private function forceResolveToAnonymized(array $record, string $prohibitionUuid): bool {
+		$self = ($record['@self'] ?? []);
+		$uuid = (string)($self['id'] ?? $self['uuid'] ?? $record['id'] ?? $record['uuid'] ?? '');
+		if ($uuid === '') {
+			return false;
+		}
 
-                    $recordType = (string) ($r['entityType'] ?? '');
-                    return $recordType === $entityType || $entityType === 'OTHER';
-                }
-            )
-                    );
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'PolicyRetroactiveService: failed to load in-flight records',
-                ['error' => $e->getMessage()]
-            );
-            return [];
-        }//end try
+		try {
+			$objectService = $this->container->get(
+				'OCA\OpenRegister\Service\ObjectService'
+			);
 
-    }//end loadInFlightDocumentRecords()
+			$newData = array_merge(
+				$record,
+				[
+					'consentStatus' => 'anonymized',
+					'notificationStatus' => 'skipped',
+					'publicationDecision' => 'anonymize',
+					'objectionDeadline' => null,
+					'policyMatch' => $prohibitionUuid,
+				]
+			);
 
-    /**
-     * Persist the force-resolved state on a single record.
-     *
-     * Preserves: `notificationSentAt`, `objectionReceivedAt`, all entity fields,
-     * and the rest of the original payload. Sets: `consentStatus: "anonymized"`,
-     * `notificationStatus: "skipped"`, `publicationDecision: "anonymize"`,
-     * `objectionDeadline: null`, `policyMatch: <prohibition uuid>`.
-     *
-     * @param array<string, mixed> $record          The current record data.
-     * @param string               $prohibitionUuid UUID of the prohibition that triggered this.
-     *
-     * @return bool True on success, false on write failure.
-     */
-    private function forceResolveToAnonymized(array $record, string $prohibitionUuid): bool
-    {
-        $self = ($record['@self'] ?? []);
-        $uuid = (string) ($self['id'] ?? $self['uuid'] ?? $record['id'] ?? $record['uuid'] ?? '');
-        if ($uuid === '') {
-            return false;
-        }
+			// Strip the @self envelope before save — OR adds it back.
+			unset($newData['@self']);
 
-        try {
-            $objectService = $this->container->get(
-                'OCA\OpenRegister\Service\ObjectService'
-            );
+			$objectService->saveObject(
+				object: $newData,
+				register: 'consent',
+				schema: 'publicationConsent',
+				uuid: $uuid,
+				_rbac: false,
+				_multitenancy: false
+			);
+			return true;
+		} catch (Exception $e) {
+			$this->logger->error(
+				'PolicyRetroactiveService: failed to force-resolve record',
+				[
+					'recordUuid' => $uuid,
+					'prohibitionUuid' => $prohibitionUuid,
+					'error' => $e->getMessage(),
+				]
+			);
+			return false;
+		}//end try
 
-            $newData = array_merge(
-                $record,
-                [
-                    'consentStatus'       => 'anonymized',
-                    'notificationStatus'  => 'skipped',
-                    'publicationDecision' => 'anonymize',
-                    'objectionDeadline'   => null,
-                    'policyMatch'         => $prohibitionUuid,
-                ]
-            );
+	}//end forceResolveToAnonymized()
 
-            // Strip the @self envelope before save — OR adds it back.
-            unset($newData['@self']);
+	/**
+	 * Pull `bsn` / `kvk` identifiers from a record if present.
+	 *
+	 * The schema does not currently formalise these fields on
+	 * `publicationConsent`, but seed data and future extensions may. This
+	 * method is forward-compatible — empty result is fine.
+	 *
+	 * @param array<string, mixed> $object The record.
+	 *
+	 * @return array<string, string>
+	 */
+	private function extractIdentifiers(array $object): array {
+		$identifiers = [];
+		if (isset($object['bsn']) === true && is_string($object['bsn']) === true) {
+			$identifiers['bsn'] = $object['bsn'];
+		}
 
-            $objectService->saveObject(
-                object: $newData,
-                register: 'consent',
-                schema: 'publicationConsent',
-                uuid: $uuid,
-                _rbac: false,
-                _multitenancy: false
-            );
-            return true;
-        } catch (Exception $e) {
-            $this->logger->error(
-                'PolicyRetroactiveService: failed to force-resolve record',
-                [
-                    'recordUuid'      => $uuid,
-                    'prohibitionUuid' => $prohibitionUuid,
-                    'error'           => $e->getMessage(),
-                ]
-            );
-            return false;
-        }//end try
+		if (isset($object['kvk']) === true && is_string($object['kvk']) === true) {
+			$identifiers['kvk'] = $object['kvk'];
+		}
 
-    }//end forceResolveToAnonymized()
+		$resolved = ($object['resolvedIdentifiers'] ?? null);
+		if (is_array($resolved) === true) {
+			foreach (['bsn', 'kvk'] as $key) {
+				if (isset($resolved[$key]) === true && is_string($resolved[$key]) === true) {
+					$identifiers[$key] = $resolved[$key];
+				}
+			}
+		}
 
-    /**
-     * Pull `bsn` / `kvk` identifiers from a record if present.
-     *
-     * The schema does not currently formalise these fields on
-     * `publicationConsent`, but seed data and future extensions may. This
-     * method is forward-compatible — empty result is fine.
-     *
-     * @param array<string, mixed> $object The record.
-     *
-     * @return array<string, string>
-     */
-    private function extractIdentifiers(array $object): array
-    {
-        $identifiers = [];
-        if (isset($object['bsn']) === true && is_string($object['bsn']) === true) {
-            $identifiers['bsn'] = $object['bsn'];
-        }
+		return $identifiers;
+	}//end extractIdentifiers()
 
-        if (isset($object['kvk']) === true && is_string($object['kvk']) === true) {
-            $identifiers['kvk'] = $object['kvk'];
-        }
+	/**
+	 * Parse ISO-8601 to DateTimeImmutable; null on failure.
+	 *
+	 * @param string $value Raw value.
+	 *
+	 * @return DateTimeImmutable|null
+	 */
+	private function parseDateTime(string $value): ?DateTimeImmutable {
+		if ($value === '') {
+			return null;
+		}
 
-        $resolved = ($object['resolvedIdentifiers'] ?? null);
-        if (is_array($resolved) === true) {
-            foreach (['bsn', 'kvk'] as $key) {
-                if (isset($resolved[$key]) === true && is_string($resolved[$key]) === true) {
-                    $identifiers[$key] = $resolved[$key];
-                }
-            }
-        }
+		try {
+			return new DateTimeImmutable($value);
+		} catch (Exception) {
+			return null;
+		}
 
-        return $identifiers;
-
-    }//end extractIdentifiers()
-
-    /**
-     * Parse ISO-8601 to DateTimeImmutable; null on failure.
-     *
-     * @param string $value Raw value.
-     *
-     * @return DateTimeImmutable|null
-     */
-    private function parseDateTime(string $value): ?DateTimeImmutable
-    {
-        if ($value === '') {
-            return null;
-        }
-
-        try {
-            return new DateTimeImmutable($value);
-        } catch (Exception) {
-            return null;
-        }
-
-    }//end parseDateTime()
+	}//end parseDateTime()
 }//end class

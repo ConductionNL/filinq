@@ -29,96 +29,89 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for SupplierIdentityResolver.
  */
-class SupplierIdentityResolverTest extends TestCase
-{
+class SupplierIdentityResolverTest extends TestCase {
 
-    private SupplierIdentityResolver $resolver;
+	private SupplierIdentityResolver $resolver;
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->resolver = new SupplierIdentityResolver();
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->resolver = new SupplierIdentityResolver();
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * @return void
-     */
-    public function testKvkPreferredOverIbanAndName(): void
-    {
-        $result = $this->resolver->resolve([
-            'supplierKvk'  => '12345678',
-            'supplierIban' => 'NL91ABNA0417164300',
-            'supplierName' => 'Hostbaar B.V.',
-        ]);
+	/**
+	 * @return void
+	 */
+	public function testKvkPreferredOverIbanAndName(): void {
+		$result = $this->resolver->resolve([
+			'supplierKvk' => '12345678',
+			'supplierIban' => 'NL91ABNA0417164300',
+			'supplierName' => 'Hostbaar B.V.',
+		]);
 
-        $this->assertSame('12345678', $result['identity']);
-        $this->assertSame('kvk', $result['identityType']);
+		$this->assertSame('12345678', $result['identity']);
+		$this->assertSame('kvk', $result['identityType']);
 
-    }//end testKvkPreferredOverIbanAndName()
+	}//end testKvkPreferredOverIbanAndName()
 
-    /**
-     * @return void
-     */
-    public function testIbanUsedWhenKvkAbsent(): void
-    {
-        $result = $this->resolver->resolve([
-            'supplierKvk'  => null,
-            'supplierIban' => 'NL91ABNA0417164300',
-            'supplierName' => 'Hostbaar B.V.',
-        ]);
+	/**
+	 * @return void
+	 */
+	public function testIbanUsedWhenKvkAbsent(): void {
+		$result = $this->resolver->resolve([
+			'supplierKvk' => null,
+			'supplierIban' => 'NL91ABNA0417164300',
+			'supplierName' => 'Hostbaar B.V.',
+		]);
 
-        $this->assertSame('NL91ABNA0417164300', $result['identity']);
-        $this->assertSame('iban', $result['identityType']);
+		$this->assertSame('NL91ABNA0417164300', $result['identity']);
+		$this->assertSame('iban', $result['identityType']);
 
-    }//end testIbanUsedWhenKvkAbsent()
+	}//end testIbanUsedWhenKvkAbsent()
 
-    /**
-     * @return void
-     */
-    public function testNormalisedNameAsLastResort(): void
-    {
-        $result = $this->resolver->resolve([
-            'supplierKvk'  => null,
-            'supplierIban' => null,
-            'supplierName' => '  Lunchroom   De Hoek  ',
-        ]);
+	/**
+	 * @return void
+	 */
+	public function testNormalisedNameAsLastResort(): void {
+		$result = $this->resolver->resolve([
+			'supplierKvk' => null,
+			'supplierIban' => null,
+			'supplierName' => '  Lunchroom   De Hoek  ',
+		]);
 
-        $this->assertSame('lunchroom de hoek', $result['identity']);
-        $this->assertSame('name', $result['identityType']);
+		$this->assertSame('lunchroom de hoek', $result['identity']);
+		$this->assertSame('name', $result['identityType']);
 
-    }//end testNormalisedNameAsLastResort()
+	}//end testNormalisedNameAsLastResort()
 
-    /**
-     * @return void
-     */
-    public function testNoResolvableIdentityReturnsNull(): void
-    {
-        $result = $this->resolver->resolve([
-            'supplierKvk'  => null,
-            'supplierIban' => null,
-            'supplierName' => null,
-        ]);
+	/**
+	 * @return void
+	 */
+	public function testNoResolvableIdentityReturnsNull(): void {
+		$result = $this->resolver->resolve([
+			'supplierKvk' => null,
+			'supplierIban' => null,
+			'supplierName' => null,
+		]);
 
-        $this->assertNull($result);
+		$this->assertNull($result);
 
-    }//end testNoResolvableIdentityReturnsNull()
+	}//end testNoResolvableIdentityReturnsNull()
 
-    /**
-     * @return void
-     */
-    public function testBlankStringsTreatedAsAbsent(): void
-    {
-        $result = $this->resolver->resolve([
-            'supplierKvk'  => '   ',
-            'supplierIban' => '',
-            'supplierName' => '',
-        ]);
+	/**
+	 * @return void
+	 */
+	public function testBlankStringsTreatedAsAbsent(): void {
+		$result = $this->resolver->resolve([
+			'supplierKvk' => '   ',
+			'supplierIban' => '',
+			'supplierName' => '',
+		]);
 
-        $this->assertNull($result);
+		$this->assertNull($result);
 
-    }//end testBlankStringsTreatedAsAbsent()
+	}//end testBlankStringsTreatedAsAbsent()
 }//end class

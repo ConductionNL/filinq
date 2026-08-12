@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Guards the bootstrap invariant that keeps DocuDesk independent of app load order.
  *
@@ -60,131 +61,124 @@ use ReflectionMethod;
  * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase
  */
-class BootstrapOrderIndependenceTest extends TestCase
-{
-    /**
-     * Read the source text of one method.
-     *
-     * @param string $class  Fully-qualified class name.
-     * @param string $method Method name.
-     *
-     * @return string The method's source, or '' when the file is unreadable.
-     */
-    private function methodSource(string $class, string $method): string
-    {
-        $reflected = new ReflectionMethod($class, $method);
-        $file      = $reflected->getFileName();
-        if ($file === false) {
-            return '';
-        }
+class BootstrapOrderIndependenceTest extends TestCase {
+	/**
+	 * Read the source text of one method.
+	 *
+	 * @param string $class Fully-qualified class name.
+	 * @param string $method Method name.
+	 *
+	 * @return string The method's source, or '' when the file is unreadable.
+	 */
+	private function methodSource(string $class, string $method): string {
+		$reflected = new ReflectionMethod($class, $method);
+		$file = $reflected->getFileName();
+		if ($file === false) {
+			return '';
+		}
 
-        $lines = file($file);
-        if ($lines === false) {
-            return '';
-        }
+		$lines = file($file);
+		if ($lines === false) {
+			return '';
+		}
 
-        $start = ($reflected->getStartLine() - 1);
-        $end   = $reflected->getEndLine();
+		$start = ($reflected->getStartLine() - 1);
+		$end = $reflected->getEndLine();
 
-        return implode('', array_slice($lines, $start, ($end - $start)));
+		return implode('', array_slice($lines, $start, ($end - $start)));
+	}//end methodSource()
 
-    }//end methodSource()
+	/**
+	 * No register()-time code may probe for an OpenRegister class.
+	 *
+	 * A `class_exists()` here is always FALSE, so the guarded branch is dead
+	 * and the fallback runs unconditionally — which is exactly how seven fleet
+	 * conversions reported success while being inert.
+	 *
+	 * @param string $class Registrar class whose register() is inspected.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider registerTimeRegistrarProvider
+	 */
+	public function testRegisterTimeCodeDoesNotProbeForOpenRegister(string $class): void {
+		$source = $this->methodSource($class, 'register');
 
-    /**
-     * No register()-time code may probe for an OpenRegister class.
-     *
-     * A `class_exists()` here is always FALSE, so the guarded branch is dead
-     * and the fallback runs unconditionally — which is exactly how seven fleet
-     * conversions reported success while being inert.
-     *
-     * @param string $class Registrar class whose register() is inspected.
-     *
-     * @return void
-     *
-     * @dataProvider registerTimeRegistrarProvider
-     */
-    public function testRegisterTimeCodeDoesNotProbeForOpenRegister(string $class): void
-    {
-        $source = $this->methodSource($class, 'register');
+		$this->assertStringNotContainsString(
+			'class_exists(',
+			$source,
+			$class . '::register() must not call class_exists(): during register() the '
+			. 'OCA\OpenRegister\ prefix is not on the autoloader yet, so the probe is '
+			. 'always false and its guarded branch is dead code. Move the work to boot().'
+		);
 
-        $this->assertStringNotContainsString(
-            'class_exists(',
-            $source,
-            $class.'::register() must not call class_exists(): during register() the '
-            .'OCA\OpenRegister\ prefix is not on the autoloader yet, so the probe is '
-            .'always false and its guarded branch is dead code. Move the work to boot().'
-        );
+	}//end testRegisterTimeCodeDoesNotProbeForOpenRegister()
 
-    }//end testRegisterTimeCodeDoesNotProbeForOpenRegister()
+	/**
+	 * The filtered-listener probe must be reachable only from boot().
+	 *
+	 * @return void
+	 */
+	public function testTheFilteredListenerProbeLivesInBootNotRegister(): void {
+		$class = 'OCA\\DocuDesk\\AppInfo\\ObjectEventRegistrar';
+		$boot = $this->methodSource($class, 'boot');
+		$reg = $this->methodSource($class, 'register');
+		$needle = 'registerFilteredObjectListener(';
 
-    /**
-     * The filtered-listener probe must be reachable only from boot().
-     *
-     * @return void
-     */
-    public function testTheFilteredListenerProbeLivesInBootNotRegister(): void
-    {
-        $class  = 'OCA\\DocuDesk\\AppInfo\\ObjectEventRegistrar';
-        $boot   = $this->methodSource($class, 'boot');
-        $reg    = $this->methodSource($class, 'register');
-        $needle = 'registerFilteredObjectListener(';
+		$this->assertStringContainsString(
+			$needle,
+			$boot,
+			'ObjectEventRegistrar::boot() must be what declares the filtered listener — '
+			. 'boot() runs only after every app register() has completed, which is what '
+			. 'makes the OpenRegister guard order-independent.'
+		);
 
-        $this->assertStringContainsString(
-            $needle,
-            $boot,
-            'ObjectEventRegistrar::boot() must be what declares the filtered listener — '
-            .'boot() runs only after every app register() has completed, which is what '
-            .'makes the OpenRegister guard order-independent.'
-        );
+		$this->assertStringNotContainsString(
+			$needle,
+			$reg,
+			'ObjectEventRegistrar::register() must NOT declare the filtered listener: '
+			. 'at register() time the OpenRegister guard is always false and the listener '
+			. 'silently falls back to an UNFILTERED registration.'
+		);
 
-        $this->assertStringNotContainsString(
-            $needle,
-            $reg,
-            'ObjectEventRegistrar::register() must NOT declare the filtered listener: '
-            .'at register() time the OpenRegister guard is always false and the listener '
-            .'silently falls back to an UNFILTERED registration.'
-        );
+	}//end testTheFilteredListenerProbeLivesInBootNotRegister()
 
-    }//end testTheFilteredListenerProbeLivesInBootNotRegister()
+	/**
+	 * The MetricsEngine service must be keyed by a string, not a class constant.
+	 *
+	 * `Foo::class` on an imported name is a compile-time string and never
+	 * autoloads, but writing the OpenRegister FQCN as a literal keeps that true
+	 * even if the import is later dropped — and it is what lets an admin open
+	 * the settings page with OpenRegister absent.
+	 *
+	 * @return void
+	 */
+	public function testTheMetricsEngineIsRegisteredUnderAStringKey(): void {
+		$source = $this->methodSource('OCA\\DocuDesk\\AppInfo\\ObservabilityRegistrar', 'register');
 
-    /**
-     * The MetricsEngine service must be keyed by a string, not a class constant.
-     *
-     * `Foo::class` on an imported name is a compile-time string and never
-     * autoloads, but writing the OpenRegister FQCN as a literal keeps that true
-     * even if the import is later dropped — and it is what lets an admin open
-     * the settings page with OpenRegister absent.
-     *
-     * @return void
-     */
-    public function testTheMetricsEngineIsRegisteredUnderAStringKey(): void
-    {
-        $source = $this->methodSource('OCA\\DocuDesk\\AppInfo\\ObservabilityRegistrar', 'register');
+		$this->assertStringContainsString(
+			"'OCA\\\\OpenRegister\\\\AppHost\\\\Observability\\\\MetricsEngine'",
+			$source,
+			'ObservabilityRegistrar::register() must key the MetricsEngine service by a '
+			. 'STRING literal. Referencing the class itself would resolve the name at '
+			. 'register() time, when OpenRegister is not yet autoloadable.'
+		);
 
-        $this->assertStringContainsString(
-            "'OCA\\\\OpenRegister\\\\AppHost\\\\Observability\\\\MetricsEngine'",
-            $source,
-            'ObservabilityRegistrar::register() must key the MetricsEngine service by a '
-            .'STRING literal. Referencing the class itself would resolve the name at '
-            .'register() time, when OpenRegister is not yet autoloadable.'
-        );
+	}//end testTheMetricsEngineIsRegisteredUnderAStringKey()
 
-    }//end testTheMetricsEngineIsRegisteredUnderAStringKey()
+	/**
+	 * Registrars whose register() runs inside Application::register().
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function registerTimeRegistrarProvider(): array {
+		return [
+			'ObjectEventRegistrar' => ['OCA\\DocuDesk\\AppInfo\\ObjectEventRegistrar'],
+			'SigningEventRegistrar' => ['OCA\\DocuDesk\\AppInfo\\SigningEventRegistrar'],
+			'PdfConversionRegistrar' => ['OCA\\DocuDesk\\AppInfo\\PdfConversionRegistrar'],
+			'ObservabilityRegistrar' => ['OCA\\DocuDesk\\AppInfo\\ObservabilityRegistrar'],
+			'RegistrationBootstrap' => ['OCA\\DocuDesk\\AppInfo\\RegistrationBootstrap'],
+		];
 
-    /**
-     * Registrars whose register() runs inside Application::register().
-     *
-     * @return array<string, array{0: string}>
-     */
-    public static function registerTimeRegistrarProvider(): array
-    {
-        return [
-            'ObjectEventRegistrar'   => ['OCA\\DocuDesk\\AppInfo\\ObjectEventRegistrar'],
-            'SigningEventRegistrar'  => ['OCA\\DocuDesk\\AppInfo\\SigningEventRegistrar'],
-            'PdfConversionRegistrar' => ['OCA\\DocuDesk\\AppInfo\\PdfConversionRegistrar'],
-            'ObservabilityRegistrar' => ['OCA\\DocuDesk\\AppInfo\\ObservabilityRegistrar'],
-            'RegistrationBootstrap'  => ['OCA\\DocuDesk\\AppInfo\\RegistrationBootstrap'],
-        ];
-
-    }//end registerTimeRegistrarProvider()
+	}//end registerTimeRegistrarProvider()
 }//end class

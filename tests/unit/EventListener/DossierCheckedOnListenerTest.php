@@ -40,73 +40,69 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class DossierCheckedOnListenerTest extends TestCase
-{
+class DossierCheckedOnListenerTest extends TestCase {
 
-    /**
-     * The listener under test.
-     *
-     * @var DossierCheckedOnListener
-     */
-    private DossierCheckedOnListener $listener;
+	/**
+	 * The listener under test.
+	 *
+	 * @var DossierCheckedOnListener
+	 */
+	private DossierCheckedOnListener $listener;
 
-    /**
-     * Mock logger.
-     *
-     * @var MockObject&LoggerInterface
-     */
-    private MockObject $logger;
+	/**
+	 * Mock logger.
+	 *
+	 * @var MockObject&LoggerInterface
+	 */
+	private MockObject $logger;
 
-    /**
-     * Mock grondslagen summary service.
-     *
-     * @var MockObject&LegalBasesSummaryService
-     */
-    private MockObject $grondslagenSummaryService;
+	/**
+	 * Mock grondslagen summary service.
+	 *
+	 * @var MockObject&LegalBasesSummaryService
+	 */
+	private MockObject $grondslagenSummaryService;
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->logger                    = $this->createMock(originalClassName: LoggerInterface::class);
-        $this->grondslagenSummaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->grondslagenSummaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 
-        $this->listener = new DossierCheckedOnListener(
-            logger: $this->logger,
-            summaryService: $this->grondslagenSummaryService,
-        );
+		$this->listener = new DossierCheckedOnListener(
+			logger: $this->logger,
+			summaryService: $this->grondslagenSummaryService,
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test that listener can be instantiated with injected dependencies
-     *
-     * @return void
-     */
-    public function testListenerCanBeInstantiated(): void
-    {
-        $this->assertInstanceOf(expected: DossierCheckedOnListener::class, actual: $this->listener);
+	/**
+	 * Test that listener can be instantiated with injected dependencies
+	 *
+	 * @return void
+	 */
+	public function testListenerCanBeInstantiated(): void {
+		$this->assertInstanceOf(expected: DossierCheckedOnListener::class, actual: $this->listener);
 
-    }//end testListenerCanBeInstantiated()
+	}//end testListenerCanBeInstantiated()
 
-    /**
-     * Test that non-ObjectUpdatedEvent is silently ignored
-     *
-     * @return void
-     */
-    public function testHandleIgnoresNonObjectUpdatedEvent(): void
-    {
-        $genericEvent = $this->createMock(originalClassName: Event::class);
+	/**
+	 * Test that non-ObjectUpdatedEvent is silently ignored
+	 *
+	 * @return void
+	 */
+	public function testHandleIgnoresNonObjectUpdatedEvent(): void {
+		$genericEvent = $this->createMock(originalClassName: Event::class);
 
-        // Should not throw.
-        $this->listener->handle(event: $genericEvent);
+		// Should not throw.
+		$this->listener->handle(event: $genericEvent);
 
-        $this->addToAssertionCount(count: 1);
+		$this->addToAssertionCount(count: 1);
 
-    }//end testHandleIgnoresNonObjectUpdatedEvent()
+	}//end testHandleIgnoresNonObjectUpdatedEvent()
 }//end class

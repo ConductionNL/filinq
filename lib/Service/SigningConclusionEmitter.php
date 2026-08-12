@@ -44,82 +44,80 @@ use Throwable;
  *
  * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
  */
-class SigningConclusionEmitter
-{
-    /**
-     * Constructor.
-     *
-     * @param IEventDispatcher             $eventDispatcher Dispatches the cross-app contract event
-     * @param LoggerInterface              $logger          Logger
-     * @param SigningConcludedEventFactory $eventFactory    Maps the persisted request onto the event
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly IEventDispatcher $eventDispatcher,
-        private readonly LoggerInterface $logger,
-        private readonly SigningConcludedEventFactory $eventFactory
-    ) {
+class SigningConclusionEmitter {
+	/**
+	 * Constructor.
+	 *
+	 * @param IEventDispatcher $eventDispatcher Dispatches the cross-app contract event
+	 * @param LoggerInterface $logger Logger
+	 * @param SigningConcludedEventFactory $eventFactory Maps the persisted request onto the event
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly IEventDispatcher $eventDispatcher,
+		private readonly LoggerInterface $logger,
+		private readonly SigningConcludedEventFactory $eventFactory,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Emit a SigningConcludedEvent when a delegated request concludes.
-     *
-     * Cross-app delegated-signing contract (docudesk-signing-events): only
-     * fires for a signing request that carries provenance (`sourceApp` set and
-     * non-empty) — internal DocuDesk requests emit nothing. The outcome
-     * envelope is built from the persisted request fields (signers, signed
-     * document reference) and dispatched via IEventDispatcher so the originating
-     * consumer (e.g. shillinq) can run its own downstream side effects.
-     * Fail-soft: any dispatch error is logged and the already-persisted
-     * terminal transition is never rolled back.
-     *
-     * @param array<string, mixed> $request           The persisted (terminal) signing-request array
-     * @param string               $status            Normalised status (signed|declined|expired|cancelled)
-     * @param string|null          $signedDocumentRef Reference to the signed document, when signed
-     *
-     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
-     *
-     * @return void
-     */
-    public function emitIfDelegated(array $request, string $status, ?string $signedDocumentRef=null): void
-    {
-        $sourceApp = (string) ($request['sourceApp'] ?? '');
-        if ($sourceApp === '') {
-            // Internal request (no consumer is waiting) — emit nothing.
-            return;
-        }
+	/**
+	 * Emit a SigningConcludedEvent when a delegated request concludes.
+	 *
+	 * Cross-app delegated-signing contract (docudesk-signing-events): only
+	 * fires for a signing request that carries provenance (`sourceApp` set and
+	 * non-empty) — internal DocuDesk requests emit nothing. The outcome
+	 * envelope is built from the persisted request fields (signers, signed
+	 * document reference) and dispatched via IEventDispatcher so the originating
+	 * consumer (e.g. shillinq) can run its own downstream side effects.
+	 * Fail-soft: any dispatch error is logged and the already-persisted
+	 * terminal transition is never rolled back.
+	 *
+	 * @param array<string, mixed> $request The persisted (terminal) signing-request array
+	 * @param string $status Normalised status (signed|declined|expired|cancelled)
+	 * @param string|null $signedDocumentRef Reference to the signed document, when signed
+	 *
+	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 *
+	 * @return void
+	 */
+	public function emitIfDelegated(array $request, string $status, ?string $signedDocumentRef = null): void {
+		$sourceApp = (string)($request['sourceApp'] ?? '');
+		if ($sourceApp === '') {
+			// Internal request (no consumer is waiting) — emit nothing.
+			return;
+		}
 
-        try {
-            $event = $this->eventFactory->create(
-                request: $request,
-                status: $status,
-                signedDocumentRef: $signedDocumentRef
-            );
+		try {
+			$event = $this->eventFactory->create(
+				request: $request,
+				status: $status,
+				signedDocumentRef: $signedDocumentRef
+			);
 
-            $this->eventDispatcher->dispatchTyped($event);
+			$this->eventDispatcher->dispatchTyped($event);
 
-            $this->logger->info(
-                'DocuDesk: dispatched SigningConcludedEvent',
-                [
-                    'signingRequestId' => $event->getSigningRequestId(),
-                    'sourceApp'        => $sourceApp,
-                    'status'           => $status,
-                ]
-            );
-        } catch (Throwable $e) {
-            // The terminal transition has already persisted; a dispatch failure
-            // must not roll it back.
-            $this->logger->error(
-                'DocuDesk: signing request concluded but SigningConcludedEvent dispatch failed',
-                [
-                    'sourceApp' => $sourceApp,
-                    'status'    => $status,
-                    'exception' => $e->getMessage(),
-                ]
-            );
-        }//end try
+			$this->logger->info(
+				'DocuDesk: dispatched SigningConcludedEvent',
+				[
+					'signingRequestId' => $event->getSigningRequestId(),
+					'sourceApp' => $sourceApp,
+					'status' => $status,
+				]
+			);
+		} catch (Throwable $e) {
+			// The terminal transition has already persisted; a dispatch failure
+			// must not roll it back.
+			$this->logger->error(
+				'DocuDesk: signing request concluded but SigningConcludedEvent dispatch failed',
+				[
+					'sourceApp' => $sourceApp,
+					'status' => $status,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}//end try
 
-    }//end emitIfDelegated()
+	}//end emitIfDelegated()
 }//end class

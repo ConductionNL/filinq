@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Totals Reconciler
  *
@@ -36,43 +37,41 @@ namespace OCA\DocuDesk\Service\Extraction;
  *
  * @spec openspec/changes/financial-document-field-extraction/tasks.md#2-4
  */
-class TotalsReconciler
-{
+class TotalsReconciler {
 
-    /**
-     * Default rounding tolerance (in currency units) for reconciliation.
-     *
-     * @var float
-     */
-    private const DEFAULT_TOLERANCE = 0.01;
+	/**
+	 * Default rounding tolerance (in currency units) for reconciliation.
+	 *
+	 * @var float
+	 */
+	private const DEFAULT_TOLERANCE = 0.01;
 
-    /**
-     * Check whether totalExcl + totalVat reconciles with totalIncl.
-     *
-     * All three values must be present (non-null) for reconciliation to be
-     * possible; a missing value always yields false.
-     *
-     * @param float|null $totalExcl The excl.-VAT total, or null.
-     * @param float|null $totalVat  The VAT amount, or null.
-     * @param float|null $totalIncl The incl.-VAT total, or null.
-     * @param float      $tolerance Rounding tolerance in currency units.
-     *
-     * @return bool True when all three values are present and reconcile
-     *              within the tolerance.
-     *
-     * @spec openspec/specs/financial-document-field-extraction/spec.md
-     */
-    public function reconciles(
-        ?float $totalExcl,
-        ?float $totalVat,
-        ?float $totalIncl,
-        float $tolerance=self::DEFAULT_TOLERANCE
-    ): bool {
-        if ($totalExcl === null || $totalVat === null || $totalIncl === null) {
-            return false;
-        }
+	/**
+	 * Check whether totalExcl + totalVat reconciles with totalIncl.
+	 *
+	 * All three values must be present (non-null) for reconciliation to be
+	 * possible; a missing value always yields false.
+	 *
+	 * @param float|null $totalExcl The excl.-VAT total, or null.
+	 * @param float|null $totalVat The VAT amount, or null.
+	 * @param float|null $totalIncl The incl.-VAT total, or null.
+	 * @param float $tolerance Rounding tolerance in currency units.
+	 *
+	 * @return bool True when all three values are present and reconcile
+	 *              within the tolerance.
+	 *
+	 * @spec openspec/specs/financial-document-field-extraction/spec.md
+	 */
+	public function reconciles(
+		?float $totalExcl,
+		?float $totalVat,
+		?float $totalIncl,
+		float $tolerance = self::DEFAULT_TOLERANCE,
+	): bool {
+		if ($totalExcl === null || $totalVat === null || $totalIncl === null) {
+			return false;
+		}
 
-        return abs(($totalExcl + $totalVat) - $totalIncl) <= $tolerance;
-
-    }//end reconciles()
+		return abs(($totalExcl + $totalVat) - $totalIncl) <= $tolerance;
+	}//end reconciles()
 }//end class
