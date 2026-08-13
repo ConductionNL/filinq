@@ -22,8 +22,12 @@ import { generateUrl } from '@nextcloud/router'
  * @spec openspec/specs/document-versions/spec.md
  */
 export async function listVersions(fileId, opts = {}) {
-	const url = generateUrl('/apps/docudesk/api/documents/{fileId}/versions', { fileId })
-	const { data } = await axios.get(url, { params: { limit: opts.limit || 50, offset: opts.offset || 0 } })
+	const url = generateUrl('/apps/docudesk/api/documents/{fileId}/versions', {
+		fileId,
+	})
+	const { data } = await axios.get(url, {
+		params: { limit: opts.limit || 50, offset: opts.offset || 0 },
+	})
 	return data
 }
 

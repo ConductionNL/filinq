@@ -46,7 +46,10 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 				<template #column-fileName="{ row }">
 					<div class="my-documents-name">
-						<DdIcon :name="iconFor(row)" :size="18" class="my-documents-name__icon" />
+						<DdIcon
+							:name="iconFor(row)"
+							:size="18"
+							class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
 					</div>
 				</template>
@@ -96,13 +99,21 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 								:is="bulkSelect ? 'Cog' : 'FilterOutline'"
 								:size="20"
 								class="my-documents-filter-icon"
-								:title="bulkSelect ? t('docudesk', 'Options') : t('docudesk', 'Filter')" />
+								:title="
+									bulkSelect
+										? t('docudesk', 'Options')
+										: t('docudesk', 'Filter')
+								" />
 						</template>
 						<NcActionButton close-after-click @click="toggleBulkSelect">
 							<template #icon>
 								<CheckboxMultipleMarkedOutline :size="20" />
 							</template>
-							{{ bulkSelect ? t('docudesk', 'Cancel bulk selection') : t('docudesk', 'Bulk selection') }}
+							{{
+								bulkSelect
+									? t('docudesk', 'Cancel bulk selection')
+									: t('docudesk', 'Bulk selection')
+							}}
 						</NcActionButton>
 						<NcActionButton
 							v-if="bulkSelect && selectedIds.length > 0"
@@ -111,7 +122,11 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 							<template #icon>
 								<Delete :size="20" />
 							</template>
-							{{ t('docudesk', 'Delete selected ({count})', { count: selectedIds.length }) }}
+							{{
+								t('docudesk', 'Delete selected ({count})', {
+									count: selectedIds.length,
+								})
+							}}
 						</NcActionButton>
 					</NcActions>
 				</template>
@@ -127,31 +142,45 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 							</template>
 							{{ t('docudesk', 'Open') }}
 						</NcActionButton>
-						<NcActionButton v-if="!row.isFolder" close-after-click @click="downloadFile(row)">
+						<NcActionButton
+							v-if="!row.isFolder"
+							close-after-click
+							@click="downloadFile(row)">
 							<template #icon>
 								<Download :size="20" />
 							</template>
 							{{ t('docudesk', 'Download') }}
 						</NcActionButton>
-						<NcActionButton v-if="!row.isFolder" close-after-click @click="validateDocument(row)">
+						<NcActionButton
+							v-if="!row.isFolder"
+							close-after-click
+							@click="validateDocument(row)">
 							<template #icon>
 								<ShieldCheckOutline :size="20" />
 							</template>
 							{{ t('docudesk', 'Validate') }}
 						</NcActionButton>
-						<NcActionButton v-if="!row.isFolder" close-after-click @click="compareDocument(row)">
+						<NcActionButton
+							v-if="!row.isFolder"
+							close-after-click
+							@click="compareDocument(row)">
 							<template #icon>
 								<Compare :size="20" />
 							</template>
 							{{ t('docudesk', 'Compare…') }}
 						</NcActionButton>
-						<NcActionButton v-if="!row.isFolder" close-after-click @click="openVersions(row)">
+						<NcActionButton
+							v-if="!row.isFolder"
+							close-after-click
+							@click="openVersions(row)">
 							<template #icon>
 								<History :size="20" />
 							</template>
 							{{ t('docudesk', 'Versions') }}
 						</NcActionButton>
-						<NcActionButton close-after-click @click="confirmDelete(row)">
+						<NcActionButton
+							close-after-click
+							@click="confirmDelete(row)">
 							<template #icon>
 								<Delete :size="20" />
 							</template>
@@ -311,7 +340,9 @@ export default {
 			const query = this.searchQuery.trim().toLowerCase()
 			const docs = myDocumentsStore.visibleDocuments
 			if (!query) return docs
-			return docs.filter((d) => (d.fileName || '').toLowerCase().includes(query))
+			return docs.filter((d) =>
+				(d.fileName || '').toLowerCase().includes(query),
+			)
 		},
 		paginatedDocuments() {
 			const start = (this.currentPage - 1) * this.pageSize
@@ -340,8 +371,14 @@ export default {
 				return ''
 			}
 			return row.isFolder
-				? t('docudesk', 'Delete dossier "{name}" and all documents inside it? This cannot be undone.', { name: row.fileName })
-				: t('docudesk', 'Delete "{name}"? This cannot be undone.', { name: this.displayName(row) })
+				? t(
+						'docudesk',
+						'Delete dossier "{name}" and all documents inside it? This cannot be undone.',
+						{ name: row.fileName },
+					)
+				: t('docudesk', 'Delete "{name}"? This cannot be undone.', {
+						name: this.displayName(row),
+					})
 		},
 		/**
 		 * Body text of the bulk delete confirmation dialog.
@@ -349,7 +386,11 @@ export default {
 		 * @spec exclude Presentational string for the delete confirmation dialog.
 		 */
 		bulkDeleteMessage() {
-			return t('docudesk', 'Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone.', { count: this.bulkDeleteNames.length })
+			return t(
+				'docudesk',
+				'Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone.',
+				{ count: this.bulkDeleteNames.length },
+			)
 		},
 	},
 	/**
@@ -423,9 +464,13 @@ export default {
 		 */
 		onToggleSelectAll() {
 			const pageIds = this.paginatedDocuments.map((d) => d.fileId)
-			const allSelected = pageIds.length > 0 && pageIds.every((id) => this.selectedIds.includes(id))
+			const allSelected =
+				pageIds.length > 0
+				&& pageIds.every((id) => this.selectedIds.includes(id))
 			if (allSelected) {
-				this.selectedIds = this.selectedIds.filter((id) => !pageIds.includes(id))
+				this.selectedIds = this.selectedIds.filter(
+					(id) => !pageIds.includes(id),
+				)
 			} else {
 				this.selectedIds = [...new Set([...this.selectedIds, ...pageIds])]
 			}
@@ -468,9 +513,17 @@ export default {
 			try {
 				const failed = await myDocumentsStore.deleteDocuments(names)
 				if (failed.length > 0) {
-					showError(t('docudesk', 'Failed to delete {count} item(s)', { count: failed.length }))
+					showError(
+						t('docudesk', 'Failed to delete {count} item(s)', {
+							count: failed.length,
+						}),
+					)
 				} else {
-					showSuccess(t('docudesk', 'Deleted {count} item(s)', { count: names.length }))
+					showSuccess(
+						t('docudesk', 'Deleted {count} item(s)', {
+							count: names.length,
+						}),
+					)
 				}
 			} catch (err) {
 				console.error('Bulk delete failed:', err)
@@ -494,7 +547,9 @@ export default {
 			if (row.isFolder) {
 				await myDocumentsStore.openFolder(row.fileName)
 				this.currentPage = 1
-				const firstFile = myDocumentsStore.visibleDocuments.find((d) => !d.isFolder)
+				const firstFile = myDocumentsStore.visibleDocuments.find(
+					(d) => !d.isFolder,
+				)
 				if (firstFile) {
 					this.viewFile(firstFile)
 				}
@@ -572,10 +627,18 @@ export default {
 			this.deleting = true
 			try {
 				await myDocumentsStore.deleteDocument(row.fileName)
-				showSuccess(t('docudesk', 'Deleted "{name}"', { name: this.displayName(row) }))
+				showSuccess(
+					t('docudesk', 'Deleted "{name}"', {
+						name: this.displayName(row),
+					}),
+				)
 			} catch (err) {
 				console.error('Failed to delete document:', err)
-				showError(t('docudesk', 'Failed to delete "{name}"', { name: this.displayName(row) }))
+				showError(
+					t('docudesk', 'Failed to delete "{name}"', {
+						name: this.displayName(row),
+					}),
+				)
 			} finally {
 				this.deleteTarget = null
 				this.deleting = false
@@ -595,7 +658,9 @@ export default {
 		viewFile(row) {
 			if (!row || row.isFolder) return
 			const concept = row.isAnonymized ? myDocumentsStore.conceptFor(row) : row
-			const anonymized = row.isAnonymized ? row : myDocumentsStore.anonymizedFor(row)
+			const anonymized = row.isAnonymized
+				? row
+				: myDocumentsStore.anonymizedFor(row)
 			const base = concept || row
 			fileViewerStore.open({
 				fileId: base.fileId,
@@ -619,7 +684,12 @@ export default {
 		 */
 		downloadFile(row) {
 			if (!row || !row.fileId) return
-			window.open(generateUrl(`/apps/files/ajax/download.php?dir=/&files=${encodeURIComponent(row.fileName)}&downloadStartSecret=&ocRequest=true`), '_blank')
+			window.open(
+				generateUrl(
+					`/apps/files/ajax/download.php?dir=/&files=${encodeURIComponent(row.fileName)}&downloadStartSecret=&ocRequest=true`,
+				),
+				'_blank',
+			)
 		},
 		/**
 		 * Run on-demand validation for a document and surface the verdict +
@@ -682,7 +752,10 @@ export default {
 		 */
 		openVersions(row) {
 			if (!row || !row.fileId) return
-			this.$router.push({ name: 'Versions', query: { fileId: String(row.fileId) } })
+			this.$router.push({
+				name: 'Versions',
+				query: { fileId: String(row.fileId) },
+			})
 		},
 		/**
 		 * Pick a DocuDesk icon name based on the file's MIME type / extension.
@@ -693,7 +766,8 @@ export default {
 		iconFor(row) {
 			const mime = row.mimeType || ''
 			const name = (row.fileName || '').toLowerCase()
-			if (mime === 'httpd/unix-directory' || name.endsWith('/')) return 'folder'
+			if (mime === 'httpd/unix-directory' || name.endsWith('/'))
+				return 'folder'
 			if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
 			return 'article'
 		},
@@ -717,9 +791,13 @@ export default {
 		 */
 		kindLabel(row) {
 			if (row.isFolder) {
-				return row.allChildrenAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
+				return row.allChildrenAnonymized
+					? t('docudesk', 'Anonymized')
+					: t('docudesk', 'Concept')
 			}
-			return row.isAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
+			return row.isAnonymized
+				? t('docudesk', 'Anonymized')
+				: t('docudesk', 'Concept')
 		},
 		// TODO: re-enable when the app has a real per-document checked/reviewed
 		// status. The Status column is commented out for now (both its column
@@ -822,5 +900,4 @@ export default {
 		transition: none;
 	}
 }
-
 </style>

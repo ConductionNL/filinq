@@ -79,16 +79,20 @@ test.describe('anonymization — pipeline UI', () => {
 		await expect(page).not.toHaveURL(/\/login/)
 	})
 
-	test('anonymization widget upload zone renders (or empty state)', async ({ page }) => {
+	test('anonymization widget upload zone renders (or empty state)', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/anonymization/spec.md#complete-anonymization-workflow-in-ui
 		// @e2e openspec/specs/anonymization/spec.md#error-during-anonymization
 		await go(page, 'anonymization')
 		await expect(page).toHaveURL(/\/apps\/docudesk/)
 		// Check for upload zone / drag-drop area or file input — Vue widget renders these
 		// Accept either: mounted Vue widget OR unbuilt app (page still loads)
-		const uploadArea = page.locator(
-			'input[type="file"], [data-cy="upload-zone"], .upload-zone, .drop-zone, [class*="upload"]',
-		).first()
+		const uploadArea = page
+			.locator(
+				'input[type="file"], [data-cy="upload-zone"], .upload-zone, .drop-zone, [class*="upload"]',
+			)
+			.first()
 		const uploadVisible = await uploadArea.isVisible().catch(() => false)
 		// Whether or not Vue is fully mounted, the NC page frame is visible
 		await expect(page.locator('body')).toBeVisible()

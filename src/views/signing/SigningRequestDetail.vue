@@ -1,15 +1,30 @@
 <template>
 	<div class="signing-request-detail">
-		<NcLoadingIcon v-if="signingStore.loading && !signingStore.signingRequest" :size="44" />
+		<NcLoadingIcon
+			v-if="signingStore.loading && !signingStore.signingRequest"
+			:size="44" />
 		<template v-else-if="signingStore.signingRequest">
 			<h2>{{ signingStore.signingRequest.documentName }}</h2>
 			<div class="detail-grid">
-				<div><strong>{{ t('docudesk', 'Status') }}</strong>: {{ signingStore.signingRequest.status }}</div>
-				<div><strong>{{ t('docudesk', 'Level') }}</strong>: {{ signingStore.signingRequest.signatureLevel }}</div>
-				<div><strong>{{ t('docudesk', 'Mode') }}</strong>: {{ signingStore.signingRequest.signingMode }}</div>
-				<div><strong>{{ t('docudesk', 'Provider') }}</strong>: {{ signingStore.signingRequest.provider }}</div>
+				<div>
+					<strong>{{ t('docudesk', 'Status') }}</strong
+					>: {{ signingStore.signingRequest.status }}
+				</div>
+				<div>
+					<strong>{{ t('docudesk', 'Level') }}</strong
+					>: {{ signingStore.signingRequest.signatureLevel }}
+				</div>
+				<div>
+					<strong>{{ t('docudesk', 'Mode') }}</strong
+					>: {{ signingStore.signingRequest.signingMode }}
+				</div>
+				<div>
+					<strong>{{ t('docudesk', 'Provider') }}</strong
+					>: {{ signingStore.signingRequest.provider }}
+				</div>
 			</div>
-			<NcButton v-if="signingStore.signingRequest.documentFileId"
+			<NcButton
+				v-if="signingStore.signingRequest.documentFileId"
 				variant="secondary"
 				@click="openVerify">
 				{{ t('docudesk', 'Verify') }}
@@ -24,10 +39,18 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="entry in signingStore.auditTrail" :key="entry.id || entry.uuid">
+					<tr
+						v-for="entry in signingStore.auditTrail"
+						:key="entry.id || entry.uuid">
 						<td>{{ entry.action }}</td>
 						<td>{{ entry.actorDisplayName }}</td>
-						<td>{{ entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '-' }}</td>
+						<td>
+							{{
+								entry.timestamp
+									? new Date(entry.timestamp).toLocaleString()
+									: '-'
+							}}
+						</td>
 					</tr>
 				</tbody>
 			</table>
@@ -86,7 +109,9 @@ export default {
 		openVerify() {
 			this.$router.push({
 				name: 'SignatureVerification',
-				params: { fileId: String(this.signingStore.signingRequest.documentFileId) },
+				params: {
+					fileId: String(this.signingStore.signingRequest.documentFileId),
+				},
 			})
 		},
 	},

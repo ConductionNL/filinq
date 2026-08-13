@@ -51,7 +51,10 @@ export default {
 			// EntityReviewTable's grondslagen NcSelect).
 			matchModeOptions: [
 				{ value: 'exact', label: t('docudesk', 'Exact (case-sensitive)') },
-				{ value: 'caseInsensitive', label: t('docudesk', 'Case-insensitive') },
+				{
+					value: 'caseInsensitive',
+					label: t('docudesk', 'Case-insensitive'),
+				},
 				{ value: 'wordBoundary', label: t('docudesk', 'Word boundary') },
 			],
 		}
@@ -91,11 +94,7 @@ export default {
 </script>
 
 <template>
-	<NcDialog
-		:name="dialogTitle"
-		:open="true"
-		size="normal"
-		@update:open="onCancel">
+	<NcDialog :name="dialogTitle" :open="true" size="normal" @update:open="onCancel">
 		<div class="custom-dictionary-form">
 			<NcTextField
 				v-model="form.label"
@@ -105,14 +104,16 @@ export default {
 				v-model="form.description"
 				:label="t('docudesk', 'Description (optional)')" />
 			<div class="custom-dictionary-form__colour-row">
-				<label class="custom-dictionary-form__colour-label" for="custom-dictionary-colour">
+				<label
+					class="custom-dictionary-form__colour-label"
+					for="custom-dictionary-colour">
 					{{ t('docudesk', 'Colour') }}
 				</label>
 				<input
 					id="custom-dictionary-colour"
 					v-model="form.colour"
 					type="color"
-					class="custom-dictionary-form__colour-input">
+					class="custom-dictionary-form__colour-input" />
 				<NcTextField
 					v-model="form.colour"
 					:label="t('docudesk', 'Hex value')"
@@ -146,11 +147,14 @@ export default {
 				:input-label="t('docudesk', 'Match mode')"
 				required />
 			<p class="custom-dictionary-form__hint">
-				{{ t('docudesk', 'Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.') }}
+				{{
+					t(
+						'docudesk',
+						'Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.',
+					)
+				}}
 			</p>
-			<NcCheckboxRadioSwitch
-				v-model="form.active"
-				type="switch">
+			<NcCheckboxRadioSwitch v-model="form.active" type="switch">
 				{{ t('docudesk', 'Active (used in automatic detection)') }}
 			</NcCheckboxRadioSwitch>
 
@@ -163,7 +167,10 @@ export default {
 			<NcButton variant="tertiary" @click="onCancel">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="saving || !canSubmit" @click="submit">
+			<NcButton
+				variant="primary"
+				:disabled="saving || !canSubmit"
+				@click="submit">
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>

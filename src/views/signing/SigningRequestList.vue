@@ -15,7 +15,8 @@
 			<h2>{{ t('docudesk', 'Signing Requests') }}</h2>
 		</div>
 		<NcLoadingIcon v-if="signingStore.loading" :size="44" />
-		<NcEmptyContent v-else-if="signingStore.signingRequests.length === 0"
+		<NcEmptyContent
+			v-else-if="signingStore.signingRequests.length === 0"
 			:name="t('docudesk', 'No signing requests')" />
 		<table v-else class="signing-table">
 			<thead>
@@ -28,7 +29,8 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="request in signingStore.signingRequests"
+				<tr
+					v-for="request in signingStore.signingRequests"
 					:key="request.id || request.uuid">
 					<td>{{ request.documentName }}</td>
 					<td>
@@ -36,7 +38,13 @@
 					</td>
 					<td>{{ request.signatureLevel }}</td>
 					<td>{{ request.signingMode }}</td>
-					<td>{{ request.deadline ? new Date(request.deadline).toLocaleDateString() : '-' }}</td>
+					<td>
+						{{
+							request.deadline
+								? new Date(request.deadline).toLocaleDateString()
+								: '-'
+						}}
+					</td>
 				</tr>
 			</tbody>
 		</table>

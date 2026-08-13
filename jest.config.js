@@ -3,7 +3,8 @@ module.exports = {
 		'^.+\\.vue$': '@vue/vue3-jest',
 		'^.+\\.js$': 'babel-jest',
 		'^.+\\.ts$': 'ts-jest',
-		'.+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$': 'jest-transform-stub',
+		'.+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$':
+			'jest-transform-stub',
 	},
 	moduleFileExtensions: ['js', 'json', 'vue', 'ts'],
 	testEnvironment: 'jest-environment-jsdom',
@@ -30,9 +31,6 @@ module.exports = {
 		// local stub so resolution succeeds and the spec's factory takes over.
 		'^@nextcloud/axios$': '<rootDir>/tests/__mocks__/nextcloud-axios.js',
 	},
-	coveragePathIgnorePatterns: [
-		'index.js',
-		'index.ts',
-	],
+	coveragePathIgnorePatterns: ['index.js', 'index.ts'],
 	coverageDirectory: '<rootDir>/coverage-frontend/',
 }

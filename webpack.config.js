@@ -75,13 +75,15 @@ const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const localLibPkg = path.resolve(__dirname, '../nextcloud-vue/package.json')
 let useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
 if (useLocalLib && fs.existsSync(localLibPkg)) {
-	const localVersion = String(JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || '')
+	const localVersion = String(
+		JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || '',
+	)
 	const localMajor = parseInt(localVersion, 10)
 	if (!Number.isNaN(localMajor) && localMajor < 2) {
 		// eslint-disable-next-line no-console
 		console.warn(
 			`[docudesk] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
-			+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
+				+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
 		)
 		useLocalLib = false
 	}
@@ -90,8 +92,8 @@ if (useLocalLib && fs.existsSync(localLibPkg)) {
 webpackConfig.resolve.alias = {
 	...webpackConfig.resolve.alias,
 	...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
-	'vue$': path.resolve(__dirname, 'node_modules/vue'),
-	'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
+	vue$: path.resolve(__dirname, 'node_modules/vue'),
+	pinia$: path.resolve(__dirname, 'node_modules/pinia'),
 	// @nextcloud/vue@9, @nextcloud/dialogs@7 and vue-router@5 are ESM-only:
 	// their package.json has NO `main` and NO `module`, only an `exports` map.
 	// A Vue-2-era alias to the package DIRECTORY bypasses `exports` entirely
@@ -99,13 +101,22 @@ webpackConfig.resolve.alias = {
 	// fails with "Can't resolve '@nextcloud/vue'". Alias to the absolute FILE.
 	// The exact-match (`$`) form keeps deep imports going through the exports
 	// map.
-	'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue/dist/index.mjs'),
-	'@nextcloud/dialogs$': path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/index.mjs'),
+	'@nextcloud/vue$': path.resolve(
+		__dirname,
+		'node_modules/@nextcloud/vue/dist/index.mjs',
+	),
+	'@nextcloud/dialogs$': path.resolve(
+		__dirname,
+		'node_modules/@nextcloud/dialogs/dist/index.mjs',
+	),
 	// dialogs v7 ships its stylesheet behind the exports map at dist/style.css.
 	// Register this BEFORE any bare-package alias: enhanced-resolve takes the
 	// first match, and a directory alias would send this to a root style.css
 	// that does not exist.
-	'@nextcloud/dialogs/style.css$': path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/style.css'),
+	'@nextcloud/dialogs/style.css$': path.resolve(
+		__dirname,
+		'node_modules/@nextcloud/dialogs/dist/style.css',
+	),
 	// @nextcloud/vue@9 hard-depends on vue-router ^5.1.0 while this app is on
 	// vue-router 4, so npm installs a SECOND nested copy
 	// (node_modules/@nextcloud/vue/node_modules/vue-router). Two router
@@ -113,11 +124,17 @@ webpackConfig.resolve.alias = {
 	// RouterLink would look up a router this app never provided, and
 	// navigation dies with no console error. Force every `vue-router`
 	// specifier onto this app's single copy.
-	'vue-router$': path.resolve(__dirname, 'node_modules/vue-router/dist/vue-router.mjs'),
+	'vue-router$': path.resolve(
+		__dirname,
+		'node_modules/vue-router/dist/vue-router.mjs',
+	),
 	// @nextcloud/axios 2.6.0+ ships ESM-only (no dist/index.cjs).
 	// Point at the ESM build; webpack 5 handles it natively. Replaces the
 	// older alias that targeted dist/index.cjs (no longer present in 2.6+).
-	'@nextcloud/axios$': path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.js'),
+	'@nextcloud/axios$': path.resolve(
+		__dirname,
+		'node_modules/@nextcloud/axios/dist/index.js',
+	),
 }
 
 // @conduction/nextcloud-vue bundles a FilePicker chunk that imports node's
@@ -142,9 +159,7 @@ webpackConfig.optimization = {
 	// (15 on a 16-core machine), which OOM-kills the build inside the
 	// memory-capped WSL VM. Two workers keep peak memory bounded while
 	// still parallelizing minification.
-	minimizer: [
-		new TerserPlugin({ parallel: 2 }),
-	],
+	minimizer: [new TerserPlugin({ parallel: 2 })],
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
 		chunks: 'all',

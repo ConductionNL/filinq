@@ -1,9 +1,14 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Delete template')"
-		@closing="$emit('cancel')">
+	<NcDialog :name="t('docudesk', 'Delete template')" @closing="$emit('cancel')">
 		<template #default>
 			<p>
-				{{ t('docudesk', 'Are you sure you want to delete "{name}"? This action cannot be undone.', { name: templateName }) }}
+				{{
+					t(
+						'docudesk',
+						'Are you sure you want to delete "{name}"? This action cannot be undone.',
+						{ name: templateName },
+					)
+				}}
 			</p>
 		</template>
 		<template #actions>

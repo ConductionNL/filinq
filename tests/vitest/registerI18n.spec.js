@@ -27,7 +27,9 @@ describe('resolveI18nValue', () => {
 	})
 
 	it('resolves the active language from a per-language map', () => {
-		expect(resolveI18nValue({ en: 'Project names', nl: 'Projectnamen' })).toBe('Project names')
+		expect(resolveI18nValue({ en: 'Project names', nl: 'Projectnamen' })).toBe(
+			'Project names',
+		)
 	})
 
 	it('falls back to the only available language (the live failure case)', () => {
@@ -42,7 +44,9 @@ describe('resolveI18nValue', () => {
 
 	it('uses the fallback for null, undefined and empty maps', () => {
 		expect(resolveI18nValue(null, 'Custom dictionary')).toBe('Custom dictionary')
-		expect(resolveI18nValue(undefined, 'Custom dictionary')).toBe('Custom dictionary')
+		expect(resolveI18nValue(undefined, 'Custom dictionary')).toBe(
+			'Custom dictionary',
+		)
 		expect(resolveI18nValue({}, 'Custom dictionary')).toBe('Custom dictionary')
 	})
 

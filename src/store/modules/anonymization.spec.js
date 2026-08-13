@@ -121,7 +121,12 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		expect(axios.post).toHaveBeenCalledTimes(1)
 		expect(axios.post).toHaveBeenCalledWith(
 			'/apps/docudesk/api/anonymization/anonymize/42',
-			{ entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 }], scope: 'document' },
+			{
+				entities: [
+					{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 },
+				],
+				scope: 'document',
+			},
 		)
 		expect(entry.status).toBe('completed')
 		expect(entry.anonymizedFilePath).toBe('/files/doc-anon.pdf')
@@ -162,7 +167,10 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		// unrelated '@nextcloud/axios' resolution error.
 		expect(axios.patch).toHaveBeenCalledWith(
 			'/apps/docudesk/api/anonymization/relations/101',
-			{ bases: ['persoonsgegevens', 'strafrechtelijk'], skipAnonymization: false },
+			{
+				bases: ['persoonsgegevens', 'strafrechtelijk'],
+				skipAnonymization: false,
+			},
 		)
 		expect(axios.post).toHaveBeenCalledTimes(1)
 	})
@@ -185,12 +193,17 @@ describe('anonymiseEntry — grondslagen summary flags', () => {
 		const store = useAnonymizationStore()
 		const entry = makeEntry({ bases: null })
 
-		await store.anonymiseEntry(entry, { appendBasisSummary: true, outputFormat: 'pdf' })
+		await store.anonymiseEntry(entry, {
+			appendBasisSummary: true,
+			outputFormat: 'pdf',
+		})
 
 		expect(axios.post).toHaveBeenCalledWith(
 			'/apps/docudesk/api/anonymization/anonymize/42',
 			{
-				entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 }],
+				entities: [
+					{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 },
+				],
 				scope: 'document',
 				appendBasisSummary: true,
 				outputFormat: 'pdf',
@@ -231,7 +244,9 @@ describe('addManualEntity — add selected text as a new entity', () => {
 		axios.post.mockResolvedValue({
 			data: {
 				entity: { value: 'Kuipers', type: 'PERSON', reused: false },
-				relations: [{ id: 555, chunkId: 7, positionStart: 10, positionEnd: 17 }],
+				relations: [
+					{ id: 555, chunkId: 7, positionStart: 10, positionEnd: 17 },
+				],
 				matchCount: 1,
 				matchesSkipped: 0,
 			},
@@ -264,7 +279,12 @@ describe('addManualEntity — add selected text as a new entity', () => {
 
 		expect(axios.post).toHaveBeenCalledWith(
 			'/apps/openregister/api/files/42/manual-entities',
-			{ value: 'Kuipers', type: 'PERSON', wholeWord: true, caseSensitive: true },
+			{
+				value: 'Kuipers',
+				type: 'PERSON',
+				wholeWord: true,
+				caseSensitive: true,
+			},
 		)
 		// Prepended: newest is index 0, the original detected entity follows.
 		expect(entry.entities).toHaveLength(2)
@@ -300,23 +320,29 @@ describe('addManualEntity — add selected text as a new entity', () => {
 
 	it('does not PATCH when no grondslagen are supplied', async () => {
 		const store = useAnonymizationStore()
-		await store.addManualEntity(entryWithOne(), { value: 'Kuipers', type: 'PERSON' })
+		await store.addManualEntity(entryWithOne(), {
+			value: 'Kuipers',
+			type: 'PERSON',
+		})
 		expect(axios.patch).not.toHaveBeenCalled()
 	})
 
 	it('rejects when value or type is missing', async () => {
 		const store = useAnonymizationStore()
-		await expect(store.addManualEntity(entryWithOne(), { value: '', type: 'PERSON' }))
-			.rejects.toThrow()
-		await expect(store.addManualEntity(entryWithOne(), { value: 'x', type: '' }))
-			.rejects.toThrow()
+		await expect(
+			store.addManualEntity(entryWithOne(), { value: '', type: 'PERSON' }),
+		).rejects.toThrow()
+		await expect(
+			store.addManualEntity(entryWithOne(), { value: 'x', type: '' }),
+		).rejects.toThrow()
 		expect(axios.post).not.toHaveBeenCalled()
 	})
 
 	it('rejects when the entry has no fileId', async () => {
 		const store = useAnonymizationStore()
-		await expect(store.addManualEntity({ entities: [] }, { value: 'x', type: 'PERSON' }))
-			.rejects.toThrow()
+		await expect(
+			store.addManualEntity({ entities: [] }, { value: 'x', type: 'PERSON' }),
+		).rejects.toThrow()
 	})
 })
 
@@ -387,9 +413,13 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 		seedThree(store)
 		// Second file's anonymise POST rejects; the run must continue.
 		axios.post
-			.mockResolvedValueOnce({ data: { anonymizedFileId: 99, replacementCount: 1 } })
+			.mockResolvedValueOnce({
+				data: { anonymizedFileId: 99, replacementCount: 1 },
+			})
 			.mockRejectedValueOnce(new Error('boom'))
-			.mockResolvedValueOnce({ data: { anonymizedFileId: 99, replacementCount: 1 } })
+			.mockResolvedValueOnce({
+				data: { anonymizedFileId: 99, replacementCount: 1 },
+			})
 
 		await store.anonymiseAllExtracted()
 
@@ -410,12 +440,19 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 				return Promise.resolve({
 					data: {
 						entities: [
-							{ type: 'PERSON', value: 'X', confidence: 0.9, relationIds: [1] },
+							{
+								type: 'PERSON',
+								value: 'X',
+								confidence: 0.9,
+								relationIds: [1],
+							},
 						],
 					},
 				})
 			}
-			return Promise.resolve({ data: { anonymizedFileId: 99, replacementCount: 1 } })
+			return Promise.resolve({
+				data: { anonymizedFileId: 99, replacementCount: 1 },
+			})
 		})
 
 		await store.anonymiseAllExtracted({
@@ -437,7 +474,11 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 		const store = useAnonymizationStore()
 		store.files = [{ ...makeEntry(), id: 'file-1', fileId: 1 }]
 
-		await store.anonymiseAllExtracted({ fileIds: [1], appendBasisSummary: true, outputFormat: 'pdf' })
+		await store.anonymiseAllExtracted({
+			fileIds: [1],
+			appendBasisSummary: true,
+			outputFormat: 'pdf',
+		})
 
 		const body = axios.post.mock.calls[0][1]
 		expect(body).not.toHaveProperty('fileIds')
@@ -486,12 +527,23 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		const entry = completedEntry()
 		store.files = [entry]
 		axios.post.mockResolvedValue({
-			data: { entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, relationId: 1 }] },
+			data: {
+				entities: [
+					{
+						type: 'PERSON',
+						value: 'Claudia Fischer',
+						confidence: 0.9,
+						relationId: 1,
+					},
+				],
+			},
 		})
 
 		await store.prepareReanonymize(entry)
 
-		expect(axios.post).toHaveBeenCalledWith('/apps/docudesk/api/anonymization/extract/42')
+		expect(axios.post).toHaveBeenCalledWith(
+			'/apps/docudesk/api/anonymization/extract/42',
+		)
 		expect(entry.status).toBe('extracted')
 		expect(entry.viewMode).toBeUndefined()
 		expect(entry.entities).toHaveLength(1)
@@ -502,7 +554,16 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		const entry = completedEntry()
 		store.files = [entry]
 		axios.post.mockResolvedValue({
-			data: { entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, relationId: 1 }] },
+			data: {
+				entities: [
+					{
+						type: 'PERSON',
+						value: 'Claudia Fischer',
+						confidence: 0.9,
+						relationId: 1,
+					},
+				],
+			},
 		})
 
 		await store.prepareReanonymize(entry)
@@ -519,8 +580,19 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		axios.post.mockResolvedValue({
 			data: {
 				entities: [
-					{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, bases: ['persoonsgegevens'], relationId: 1 },
-					{ type: 'EMAIL', value: 'a@b.nl', confidence: 0.8, relationId: 2 },
+					{
+						type: 'PERSON',
+						value: 'Claudia Fischer',
+						confidence: 0.9,
+						bases: ['persoonsgegevens'],
+						relationId: 1,
+					},
+					{
+						type: 'EMAIL',
+						value: 'a@b.nl',
+						confidence: 0.8,
+						relationId: 2,
+					},
 				],
 			},
 		})
@@ -541,7 +613,16 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		const entry = completedEntry()
 		store.files = [entry]
 		axios.post.mockResolvedValue({
-			data: { entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, relationId: 1 }] },
+			data: {
+				entities: [
+					{
+						type: 'PERSON',
+						value: 'Claudia Fischer',
+						confidence: 0.9,
+						relationId: 1,
+					},
+				],
+			},
 		})
 
 		await store.prepareReanonymize(entry)

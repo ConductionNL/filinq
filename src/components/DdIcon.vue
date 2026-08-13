@@ -1,9 +1,9 @@
 <template>
-	<span
-		class="dd-icon"
-		:style="sizeStyle"
-		v-bind="$attrs">
-		<span v-if="svg" class="dd-icon__svg" v-html="svg" /><!-- eslint-disable-line vue/no-v-html -->
+	<span class="dd-icon" :style="sizeStyle" v-bind="$attrs">
+		<span
+			v-if="svg"
+			class="dd-icon__svg"
+			v-html="svg" /><!-- eslint-disable-line vue/no-v-html -->
 		<slot v-else />
 	</span>
 </template>
@@ -55,17 +55,18 @@ const ICONS = iconContext.keys().reduce((acc, key) => {
  */
 function prepareSvg(raw) {
 	if (!raw) return ''
-	return raw
-		.replace(/<svg([^>]*)>/i, (match, attrs) => {
-			const stripped = attrs
-				.replace(/\s(width|height)="[^"]*"/gi, '')
-			return `<svg${stripped} width="100%" height="100%">`
-		})
-		// Drop the <mask>…</mask> definition and the mask attribute that
-		// references it; the mask is full-coverage so removing it is safe.
-		.replace(/<mask[^>]*>[\s\S]*?<\/mask>/gi, '')
-		.replace(/\smask="url\(#[^)]*\)"/gi, '')
-		.replace(/fill="#02162E"/gi, 'fill="currentColor"')
+	return (
+		raw
+			.replace(/<svg([^>]*)>/i, (match, attrs) => {
+				const stripped = attrs.replace(/\s(width|height)="[^"]*"/gi, '')
+				return `<svg${stripped} width="100%" height="100%">`
+			})
+			// Drop the <mask>…</mask> definition and the mask attribute that
+			// references it; the mask is full-coverage so removing it is safe.
+			.replace(/<mask[^>]*>[\s\S]*?<\/mask>/gi, '')
+			.replace(/\smask="url\(#[^)]*\)"/gi, '')
+			.replace(/fill="#02162E"/gi, 'fill="currentColor"')
+	)
 }
 
 export default {

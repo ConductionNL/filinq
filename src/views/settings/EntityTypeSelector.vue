@@ -49,17 +49,25 @@ export default {
 		// True when every selectable type is enabled — the point at which the
 		// backend treats the selection as "detect all" (no whitelist sent).
 		allEnabled() {
-			return this.options.length > 0
+			return (
+				this.options.length > 0
 				&& this.options.every((type) => this.value.includes(type))
+			)
 		},
 		hint() {
 			if (this.options.length === 0) {
 				return t('docudesk', 'No entity types are available.')
 			}
 			if (this.allEnabled) {
-				return t('docudesk', 'All entity types are detected. Turn a type off to stop detecting it automatically — you can still add it manually per document.')
+				return t(
+					'docudesk',
+					'All entity types are detected. Turn a type off to stop detecting it automatically — you can still add it manually per document.',
+				)
 			}
-			return t('docudesk', 'Only the enabled types are detected automatically. Disabled types can still be added manually per document.')
+			return t(
+				'docudesk',
+				'Only the enabled types are detected automatically. Disabled types can still be added manually per document.',
+			)
 		},
 	},
 	methods: {

@@ -37,7 +37,9 @@ for (const entry of fs.readdirSync(l10nDir)) {
 	const file = path.join(l10nDir, entry)
 	if (processFile(file)) {
 		changed++
-		console.log(`sync-l10n-ellipsis: rewrote ${path.relative(process.cwd(), file)}`)
+		console.log(
+			`sync-l10n-ellipsis: rewrote ${path.relative(process.cwd(), file)}`,
+		)
 	}
 }
 

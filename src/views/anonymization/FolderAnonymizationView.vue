@@ -4,7 +4,14 @@
 
 		<!-- Step 1: Folder input -->
 		<div v-if="!store.isActive" class="input-section">
-			<p>{{ t('docudesk', 'Enter a folder path from your Nextcloud files to analyze all documents in it.') }}</p>
+			<p>
+				{{
+					t(
+						'docudesk',
+						'Enter a folder path from your Nextcloud files to analyze all documents in it.',
+					)
+				}}
+			</p>
 			<div class="folder-input">
 				<input
 					v-model="folderPath"
@@ -12,52 +19,83 @@
 					:aria-label="t('docudesk', 'Folder path to analyse')"
 					:placeholder="t('docudesk', 'e.g. Documents/contracts')"
 					class="folder-path-input"
-					@keyup.enter="startAnalysis">
-				<NcButton variant="primary" :disabled="!folderPath.trim() || store.processing" @click="startAnalysis">
-					{{ store.processing ? t('docudesk', 'Starting...') : t('docudesk', 'Analyze Folder') }}
+					@keyup.enter="startAnalysis" />
+				<NcButton
+					variant="primary"
+					:disabled="!folderPath.trim() || store.processing"
+					@click="startAnalysis">
+					{{
+						store.processing
+							? t('docudesk', 'Starting...')
+							: t('docudesk', 'Analyze Folder')
+					}}
 				</NcButton>
 			</div>
 		</div>
 
 		<!-- Step 2: Extraction progress + optional dossier creation (Wave 4a) -->
-		<div v-if="store.batchStatus === 'extracting' || store.batchStatus === 'review'" class="dossier-card">
+		<div
+			v-if="
+				store.batchStatus === 'extracting' || store.batchStatus === 'review'
+			"
+			class="dossier-card">
 			<h3>{{ t('docudesk', 'Optional: bind a dossier') }}</h3>
 			<p class="muted">
-				{{ t('docudesk', 'Creating a dossier for this folder enables the per-dossier grondslagen report after anonymisation. You can skip this and anonymise without a dossier.') }}
+				{{
+					t(
+						'docudesk',
+						'Creating a dossier for this folder enables the per-dossier grondslagen report after anonymisation. You can skip this and anonymise without a dossier.',
+					)
+				}}
 			</p>
 
 			<div v-if="!store.hasDossier">
 				<div class="row">
 					<label class="inline-label">
 						<span>{{ t('docudesk', 'Name') }}</span>
-						<input v-model="store.dossier.name"
+						<input
+							v-model="store.dossier.name"
 							type="text"
 							:placeholder="t('docudesk', 'Dossier name')"
-							class="text-input">
+							class="text-input" />
 					</label>
 					<label class="inline-label">
 						<span>{{ t('docudesk', 'Description (optional)') }}</span>
-						<input v-model="store.dossier.description"
+						<input
+							v-model="store.dossier.description"
 							type="text"
 							:placeholder="t('docudesk', 'Short description')"
-							class="text-input">
+							class="text-input" />
 					</label>
 				</div>
 				<div class="row">
 					<label class="inline-label bases-label">
-						<span>{{ t('docudesk', 'Default grondslagen (Woo Art. 5)') }}</span>
-						<select v-model="store.dossier.bases" multiple class="bases-select">
-							<option v-for="basis in store.basesOptions" :key="basis" :value="basis">
+						<span>{{
+							t('docudesk', 'Default grondslagen (Woo Art. 5)')
+						}}</span>
+						<select
+							v-model="store.dossier.bases"
+							multiple
+							class="bases-select">
+							<option
+								v-for="basis in store.basesOptions"
+								:key="basis"
+								:value="basis">
 								{{ basis }}
 							</option>
 						</select>
 					</label>
 				</div>
 				<div class="row">
-					<NcButton variant="primary"
+					<NcButton
+						variant="primary"
 						:disabled="store.dossier.creating || !store.folderId"
 						@click="store.createDossier()">
-						{{ store.dossier.creating ? t('docudesk', 'Creating dossier…') : t('docudesk', 'Create dossier for this folder') }}
+						{{
+							store.dossier.creating
+								? t('docudesk', 'Creating dossier…')
+								: t('docudesk', 'Create dossier for this folder')
+						}}
 					</NcButton>
 				</div>
 				<NcNoteCard v-if="store.dossier.error" type="error">
@@ -74,8 +112,11 @@
 					<div class="muted">
 						UUID: <code>{{ store.dossier.uuid }}</code>
 					</div>
-					<div v-if="store.dossier.bases && store.dossier.bases.length" class="muted">
-						{{ t('docudesk', 'Grondslagen') }}: {{ store.dossier.bases.join(', ') }}
+					<div
+						v-if="store.dossier.bases && store.dossier.bases.length"
+						class="muted">
+						{{ t('docudesk', 'Grondslagen') }}:
+						{{ store.dossier.bases.join(', ') }}
 					</div>
 				</NcNoteCard>
 			</div>
@@ -85,13 +126,21 @@
 			<h3>{{ t('docudesk', 'Analyzing files...') }}</h3>
 			<NcProgressBar :value="store.progress" />
 			<p class="progress-text">
-				{{ store.extractedCount }} / {{ store.totalFiles }} {{ t('docudesk', 'files processed') }}
+				{{ store.extractedCount }} / {{ store.totalFiles }}
+				{{ t('docudesk', 'files processed') }}
 			</p>
 			<div class="file-list">
-				<div v-for="f in store.files" :key="f.fileId || f.fileName" class="file-item">
+				<div
+					v-for="f in store.files"
+					:key="f.fileId || f.fileName"
+					class="file-item">
 					<span class="file-name">{{ f.fileName }}</span>
-					<span :class="'status-badge status-' + f.status">{{ f.status }}</span>
-					<span v-if="f.entityCount" class="entity-count">{{ f.entityCount }} {{ t('docudesk', 'entities') }}</span>
+					<span :class="'status-badge status-' + f.status">{{
+						f.status
+					}}</span>
+					<span v-if="f.entityCount" class="entity-count"
+						>{{ f.entityCount }} {{ t('docudesk', 'entities') }}</span
+					>
 				</div>
 			</div>
 		</div>
@@ -99,7 +148,10 @@
 		<!-- Step 3: Entity review -->
 		<div v-if="store.batchStatus === 'review'" class="review-section">
 			<h3>{{ t('docudesk', 'Review Entities') }}</h3>
-			<p>{{ t('docudesk', 'Folder') }}: <strong>{{ store.folderPath }}</strong></p>
+			<p>
+				{{ t('docudesk', 'Folder') }}:
+				<strong>{{ store.folderPath }}</strong>
+			</p>
 			<EntityReviewTable
 				:entities="store.entities"
 				:file-count="store.filesWithEntities"
@@ -110,8 +162,13 @@
 				@bases-change="store.setEntityBases($event.idx, $event.bases)"
 				@skip-change="store.setEntitySkip($event.idx, $event.skip)" />
 			<label class="flag-row">
-				<input v-model="store.appendBasisSummary" type="checkbox">
-				<span>{{ t('docudesk', 'Append a grondslagen-summary page to each anonymised PDF (Wave 4a)') }}</span>
+				<input v-model="store.appendBasisSummary" type="checkbox" />
+				<span>{{
+					t(
+						'docudesk',
+						'Append a grondslagen-summary page to each anonymised PDF (Wave 4a)',
+					)
+				}}</span>
 			</label>
 			<!-- Hard warning: per-dossier placeholder numbers are carried across
 				the folder's files, so the whole folder MUST be published as ONE
@@ -119,11 +176,26 @@
 				re-introduce the cross-publication linking key the scope-local
 				numbering exists to prevent. -->
 			<NcNoteCard type="warning">
-				{{ t('docudesk', 'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.') }}
+				{{
+					t(
+						'docudesk',
+						'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.',
+					)
+				}}
 			</NcNoteCard>
 			<div class="action-bar">
-				<NcButton variant="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeFolder()">
-					{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
+				<NcButton
+					variant="primary"
+					:disabled="store.selectedEntityCount === 0"
+					@click="store.anonymizeFolder()">
+					{{
+						n(
+							'docudesk',
+							'Anonymize %n entity',
+							'Anonymize %n entities',
+							store.selectedEntityCount,
+						)
+					}}
 				</NcButton>
 				<NcButton variant="tertiary" @click="store.reset()">
 					{{ t('docudesk', 'Cancel') }}
@@ -140,20 +212,38 @@
 		<!-- Step 5: Completed -->
 		<div v-if="store.batchStatus === 'completed'" class="completed-section">
 			<NcNoteCard type="success">
-				{{ t('docudesk', 'All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.') }}
+				{{
+					t(
+						'docudesk',
+						'All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.',
+					)
+				}}
 			</NcNoteCard>
 
 			<!-- Wave 4a: dossier grondslagen report -->
 			<div v-if="store.hasDossier" class="dossier-report-block">
 				<h4>{{ t('docudesk', 'Dossier grondslagen report') }}</h4>
 				<p class="muted">
-					{{ t('docudesk', 'Regenerates grondslagen.pdf at the dossier root, aggregating every anonymised file under this dossier.') }}
+					{{
+						t(
+							'docudesk',
+							'Regenerates grondslagen.pdf at the dossier root, aggregating every anonymised file under this dossier.',
+						)
+					}}
 				</p>
 				<div class="action-bar">
-					<NcButton variant="secondary"
+					<NcButton
+						variant="secondary"
 						:disabled="store.report.generating"
 						@click="store.generateDossierReport()">
-						{{ store.report.generating ? t('docudesk', 'Generating…') : t('docudesk', 'Generate dossier grondslagen report') }}
+						{{
+							store.report.generating
+								? t('docudesk', 'Generating…')
+								: t(
+										'docudesk',
+										'Generate dossier grondslagen report',
+									)
+						}}
 					</NcButton>
 				</div>
 				<NcNoteCard v-if="store.report.error" type="error">
@@ -161,7 +251,8 @@
 				</NcNoteCard>
 				<NcNoteCard v-if="store.report.result" type="success">
 					<div>
-						{{ t('docudesk', 'Report generated at') }}: <strong>{{ store.report.result.filePath }}</strong>
+						{{ t('docudesk', 'Report generated at') }}:
+						<strong>{{ store.report.result.filePath }}</strong>
 					</div>
 				</NcNoteCard>
 			</div>
@@ -200,7 +291,13 @@ import EntityReviewTable from './EntityReviewTable.vue'
 
 export default {
 	name: 'FolderAnonymizationView',
-	components: { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard, EntityReviewTable },
+	components: {
+		NcButton,
+		NcProgressBar,
+		NcLoadingIcon,
+		NcNoteCard,
+		EntityReviewTable,
+	},
 	/**
 	 * Expose the folder anonymization store to the Options API.
 	 *
@@ -423,5 +520,4 @@ export default {
 .dossier-report-block h4 {
 	margin-top: 0;
 }
-
 </style>

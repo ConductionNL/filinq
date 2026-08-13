@@ -60,7 +60,8 @@ export default {
 	position: sticky;
 	top: 0;
 	z-index: 1;
-	border-bottom: 1px solid var(--dd-dd-file-viewer-header-border-color, var(--color-border));
+	border-bottom: 1px solid
+		var(--dd-dd-file-viewer-header-border-color, var(--color-border));
 }
 
 .dd-file-viewer-header__icon {

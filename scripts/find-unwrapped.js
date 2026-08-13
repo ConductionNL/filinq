@@ -41,20 +41,48 @@ const SRC_DIR = path.join(ROOT, 'src')
 // This list is intentionally generous; tighten only after seeing the false
 // positives in practice.
 const PROSE_ATTRS = new Set([
-	'label', 'title', 'placeholder', 'aria-label', 'aria-description',
+	'label',
+	'title',
+	'placeholder',
+	'aria-label',
+	'aria-description',
 	'name', // NcActionCaption / NcActionInput etc. render this
-	'text', 'tooltip', 'subtitle', 'description', 'heading', 'header',
-	'caption', 'message', 'hint',
-	'entity-label', 'back-route',
-	'input-label', 'menu-name', 'item-text',
-	'error-message', 'helper-text', 'success-message',
-	'empty-content-name', 'empty-content-description',
-	'empty-title', 'empty-description',
-	'submit-button-text', 'cancel-button-text', 'confirm-button-text',
-	'button-text', 'accept-label', 'dismiss-label',
-	'no-options-text', 'loading-text', 'loading-label',
-	'select-label', 'deselect-label', 'selected-label',
-	'open-direction-text', 'tag-placeholder', 'placeholder-multiple',
+	'text',
+	'tooltip',
+	'subtitle',
+	'description',
+	'heading',
+	'header',
+	'caption',
+	'message',
+	'hint',
+	'entity-label',
+	'back-route',
+	'input-label',
+	'menu-name',
+	'item-text',
+	'error-message',
+	'helper-text',
+	'success-message',
+	'empty-content-name',
+	'empty-content-description',
+	'empty-title',
+	'empty-description',
+	'submit-button-text',
+	'cancel-button-text',
+	'confirm-button-text',
+	'button-text',
+	'accept-label',
+	'dismiss-label',
+	'no-options-text',
+	'loading-text',
+	'loading-label',
+	'select-label',
+	'deselect-label',
+	'selected-label',
+	'open-direction-text',
+	'tag-placeholder',
+	'placeholder-multiple',
 	'aria-labelled-by',
 ])
 
@@ -101,10 +129,12 @@ const COMPONENT_ATTR_OPT_OUTS = [
 function isComponentAttrOptOut(tagName, attrName) {
 	const lcAttr = attrName.toLowerCase()
 	for (const rule of COMPONENT_ATTR_OPT_OUTS) {
-		const matches = typeof rule.tag === 'string'
-			? rule.tag === tagName
-			: rule.tag.test(tagName)
-		if (matches && rule.attrs.some((a) => a.toLowerCase() === lcAttr)) return true
+		const matches =
+			typeof rule.tag === 'string'
+				? rule.tag === tagName
+				: rule.tag.test(tagName)
+		if (matches && rule.attrs.some((a) => a.toLowerCase() === lcAttr))
+			return true
 	}
 	return false
 }
@@ -132,13 +162,17 @@ function parseFlags(argv) {
 const { flags, positionals } = parseFlags(process.argv.slice(2))
 
 if (flags.help || flags.h) {
-	console.log(fs.readFileSync(__filename, 'utf8').split('\n').slice(5, 28).join('\n'))
+	console.log(
+		fs.readFileSync(__filename, 'utf8').split('\n').slice(5, 28).join('\n'),
+	)
 	process.exit(0)
 }
 
 const includeScript = !!flags['include-script']
 const asJson = !!flags.json
-const minLength = flags['min-length'] ? Math.max(1, parseInt(flags['min-length'], 10)) : 2
+const minLength = flags['min-length']
+	? Math.max(1, parseInt(flags['min-length'], 10))
+	: 2
 
 // ---------- helpers ----------
 
@@ -164,7 +198,8 @@ function looksLikeProse(s, { strictForGenericContext = false } = {}) {
 	if (/^https?:\/\//i.test(t)) return false // URL
 	if (/^[a-z]+:[\w./-]+/i.test(t)) return false // namespaced (e.g. "icon:foo")
 	if (/^#[0-9a-f]{3,8}$/i.test(t)) return false // hex color
-	if (/^[\w.-]+\.(vue|js|ts|css|scss|json|svg|png|jpg|jpeg|gif)$/i.test(t)) return false // file path
+	if (/^[\w.-]+\.(vue|js|ts|css|scss|json|svg|png|jpg|jpeg|gif)$/i.test(t))
+		return false // file path
 	if (/^\$?[a-zA-Z_][\w-]*\.[\w.-]+$/.test(t) && !/\s/.test(t)) return false // foo.bar identifier
 	if (/^\d+(\.\d+)?(px|rem|em|%|vh|vw|s|ms)$/i.test(t)) return false // CSS dim
 	if (/^v-[\w-]+$/.test(t)) return false // vue directive name
@@ -187,11 +222,35 @@ function looksLikeProse(s, { strictForGenericContext = false } = {}) {
 			// require at least 4 letters AND not match common code tokens.
 			if (strictForGenericContext && core === t) return false
 			const codeTokens = new Set([
-				'true', 'false', 'null', 'undefined', 'asc', 'desc',
-				'lg', 'md', 'sm', 'xs', 'xl',
-				'left', 'right', 'top', 'bottom', 'center', 'middle',
-				'auto', 'none', 'block', 'inline', 'flex', 'grid',
-				'primary', 'secondary', 'success', 'warning', 'error', 'info',
+				'true',
+				'false',
+				'null',
+				'undefined',
+				'asc',
+				'desc',
+				'lg',
+				'md',
+				'sm',
+				'xs',
+				'xl',
+				'left',
+				'right',
+				'top',
+				'bottom',
+				'center',
+				'middle',
+				'auto',
+				'none',
+				'block',
+				'inline',
+				'flex',
+				'grid',
+				'primary',
+				'secondary',
+				'success',
+				'warning',
+				'error',
+				'info',
 			])
 			if (codeTokens.has(core.toLowerCase())) return false
 			return true
@@ -254,7 +313,8 @@ function makePositionResolver(text) {
 		if (text.charCodeAt(i) === 10) lineStarts.push(i + 1)
 	}
 	return (pos) => {
-		let lo = 0; let hi = lineStarts.length - 1
+		let lo = 0
+		let hi = lineStarts.length - 1
 		while (lo < hi) {
 			const mid = (lo + hi + 1) >> 1
 			if (lineStarts[mid] <= pos) lo = mid
@@ -288,7 +348,7 @@ function computeTCallRanges(text, app) {
 			const c = text[i]
 			if (c === '(') depth++
 			else if (c === ')') depth--
-			else if (c === '\'' || c === '"' || c === '`') {
+			else if (c === "'" || c === '"' || c === '`') {
 				// Skip string contents.
 				const quote = c
 				i++
@@ -359,7 +419,11 @@ function looksLikeNonDisplayContext(expr, start, end) {
 		// Walk back over the operator (1–3 chars: `=`, `==`, `===`, `!=`, `!==`).
 		const opEnd = p
 		let opStart = p
-		while (opStart > 0 && (expr[opStart - 1] === '=' || expr[opStart - 1] === '!')) opStart--
+		while (
+			opStart > 0
+			&& (expr[opStart - 1] === '=' || expr[opStart - 1] === '!')
+		)
+			opStart--
 		const op = expr.slice(opStart, opEnd + 1)
 		if (op === '==' || op === '===' || op === '!=' || op === '!==') return true
 	}
@@ -396,7 +460,7 @@ function isInsideStoreCall(expr, pos) {
 				break
 			}
 			depth--
-		} else if (c === '\'' || c === '"' || c === '`') {
+		} else if (c === "'" || c === '"' || c === '`') {
 			// Skip string contents (going backward is awkward — find the matching
 			// opening quote). Walk back one quote-pair.
 			const quote = c
@@ -451,7 +515,7 @@ function findStringLiteralsInExpression(expr) {
 	let i = 0
 	while (i < expr.length) {
 		const c = expr[i]
-		if (c === '\'' || c === '"' || c === '`') {
+		if (c === "'" || c === '"' || c === '`') {
 			const quote = c
 			const start = i
 			let j = i + 1
@@ -490,7 +554,8 @@ function findStringLiteralsInExpression(expr) {
 		} else if (c === '/' && expr[i + 1] === '*') {
 			// Block comment.
 			i += 2
-			while (i + 1 < expr.length && !(expr[i] === '*' && expr[i + 1] === '/')) i++
+			while (i + 1 < expr.length && !(expr[i] === '*' && expr[i + 1] === '/'))
+				i++
 			i += 2
 		} else {
 			i++
@@ -536,7 +601,7 @@ function scanTemplate(file, fullText, tplStart, tplEnd, tCallRanges) {
 				const ch = tpl[j]
 				if (!inSingle && !inDouble && ch === '>') break
 				if (!inSingle && ch === '"') inDouble = !inDouble
-				else if (!inDouble && ch === '\'') inSingle = !inSingle
+				else if (!inDouble && ch === "'") inSingle = !inSingle
 				j++
 			}
 			const tagText = tpl.slice(tagStart, j) // "<NcButton attr='...' attr=\"...\""
@@ -554,8 +619,10 @@ function scanTemplate(file, fullText, tplStart, tplEnd, tCallRanges) {
 			if (trimmed) {
 				const leadingWs = raw.match(/^\s*/)[0].length
 				const absPos = tplStart + textStart + leadingWs
-				if (!isInsideRange(absPos, tCallRanges)
-					&& looksLikeProse(trimmed, { strictForGenericContext: true })) {
+				if (
+					!isInsideRange(absPos, tCallRanges)
+					&& looksLikeProse(trimmed, { strictForGenericContext: true })
+				) {
 					hits.push({ kind: 'text', value: trimmed, pos: absPos })
 				}
 			}
@@ -608,7 +675,8 @@ function scanTagAttrs(tagText, tagStartInTpl, tplStartInFile, tCallRanges, hits)
 		// so they belong in the prose-attr set even though they're directives.
 		// Treat them as bound (value is a JS expression — usually a single literal).
 		const isTooltipDirective = /^v-tooltip(\b|:|\.)/.test(rawName)
-		const isOtherDirective = rawName.startsWith('v-') && !isEvent && !isTooltipDirective
+		const isOtherDirective =
+			rawName.startsWith('v-') && !isEvent && !isTooltipDirective
 		if (isEvent || isOtherDirective) continue
 
 		const name = isBound ? rawName.slice(1) : rawName
@@ -673,7 +741,11 @@ function scanTagAttrs(tagText, tagStartInTpl, tplStartInFile, tCallRanges, hits)
 			const absPos = valueAbsPos + lit.offset
 			if (isInsideRange(absPos, tCallRanges)) continue
 			if (!looksLikeProse(lit.value)) continue
-			hits.push({ kind: `attr ${rawName} (in expr)`, value: lit.value, pos: absPos })
+			hits.push({
+				kind: `attr ${rawName} (in expr)`,
+				value: lit.value,
+				pos: absPos,
+			})
 		}
 	}
 }
@@ -731,7 +803,9 @@ function detectAppName() {
 
 function main() {
 	const roots = positionals.length
-		? positionals.map((p) => path.isAbsolute(p) ? p : path.join(process.cwd(), p))
+		? positionals.map((p) =>
+				path.isAbsolute(p) ? p : path.join(process.cwd(), p),
+			)
 		: [SRC_DIR]
 	const files = findVueFiles(roots)
 	const app = detectAppName()
@@ -748,14 +822,22 @@ function main() {
 		// close for the outermost template.
 		const rootTemplate = findRootTemplate(text)
 		if (rootTemplate) {
-			const hits = scanTemplate(file, text, rootTemplate.start, rootTemplate.end, tCallRanges)
+			const hits = scanTemplate(
+				file,
+				text,
+				rootTemplate.start,
+				rootTemplate.end,
+				tCallRanges,
+			)
 			for (const h of hits) {
 				const { line, column } = resolve(h.pos)
 				allHits.push({ file, line, column, ...h })
 			}
 		}
 		if (includeScript) {
-			const scriptMatches = [...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\b[^>]*>/gi)]
+			const scriptMatches = [
+				...text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\b[^>]*>/gi),
+			]
 			for (const sm of scriptMatches) {
 				const open = sm[0].indexOf('>') + 1
 				const start = sm.index + open
@@ -769,24 +851,39 @@ function main() {
 		}
 	}
 
-	allHits.sort((a, b) =>
-		a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column,
+	allHits.sort(
+		(a, b) =>
+			a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column,
 	)
 
 	if (asJson) {
-		console.log(JSON.stringify(
-			allHits.map((h) => ({ file: rel(h.file), line: h.line, column: h.column, kind: h.kind, value: h.value })),
-			null,
-			2,
-		))
+		console.log(
+			JSON.stringify(
+				allHits.map((h) => ({
+					file: rel(h.file),
+					line: h.line,
+					column: h.column,
+					kind: h.kind,
+					value: h.value,
+				})),
+				null,
+				2,
+			),
+		)
 	} else {
 		for (const h of allHits) {
-			console.log(`${rel(h.file)}:${h.line}:${h.column}\t[${h.kind}]\t${JSON.stringify(h.value)}`)
+			console.log(
+				`${rel(h.file)}:${h.line}:${h.column}\t[${h.kind}]\t${JSON.stringify(h.value)}`,
+			)
 		}
 		console.error('') // blank line on stderr separates list from summary
 		const fileCount = new Set(allHits.map((h) => h.file)).size
-		console.error(`${allHits.length} candidate(s) across ${fileCount} file(s) (heuristic — expect false positives).`)
-		console.error('Pass --include-script to also scan <script> blocks. Pass --json for machine-readable output.')
+		console.error(
+			`${allHits.length} candidate(s) across ${fileCount} file(s) (heuristic — expect false positives).`,
+		)
+		console.error(
+			'Pass --include-script to also scan <script> blocks. Pass --json for machine-readable output.',
+		)
 	}
 
 	process.exit(allHits.length ? 1 : 0)

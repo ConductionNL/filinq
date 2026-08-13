@@ -21,7 +21,9 @@ import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
 test.describe('document-register — my documents UI', () => {
-	test('My Documents page renders the Documents header and view toggle', async ({ page }) => {
+	test('My Documents page renders the Documents header and view toggle', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/document-register/spec.md#generated-correspondence-lifecycle
 		const guard = attachConsoleGuard(page)
 		await go(page, 'my-documents')
@@ -35,13 +37,17 @@ test.describe('document-register — my documents UI', () => {
 		await expect(page.getByRole('button', { name: 'Tiles' })).toBeVisible()
 
 		// DAV is the only 5xx allowed (filtered); no app-origin console errors.
-		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual([])
+		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual(
+			[],
+		)
 	})
 
 	test('My Documents exposes a search box', async ({ page }) => {
 		// @e2e openspec/specs/document-register/spec.md#generated-correspondence-lifecycle
 		await go(page, 'my-documents')
-		await expect(page.locator('input[placeholder*="Search by name"]').first()).toBeVisible()
+		await expect(
+			page.locator('input[placeholder*="Search by name"]').first(),
+		).toBeVisible()
 	})
 
 	test('switching to Tiles view keeps the page rendered', async ({ page }) => {

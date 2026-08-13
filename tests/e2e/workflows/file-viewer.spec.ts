@@ -19,7 +19,11 @@
 import { test, expect } from '@playwright/test'
 import { go } from '../spec-coverage/_helpers'
 import {
-	harvestToken, TEST_PREFIX, createDavFile, createDavFolder, deleteDavPath,
+	harvestToken,
+	TEST_PREFIX,
+	createDavFile,
+	createDavFolder,
+	deleteDavPath,
 } from './_fixtures'
 
 /** The folder MyDocumentsIndex lists by default (`myDocumentsStore.currentPath`). */
@@ -39,14 +43,19 @@ test.afterAll(async ({ request }) => {
 	await deleteDavPath(request, '', VIEWER_PATH)
 })
 
-test('FileViewerPage renders a real document opened from My Documents', async ({ page }) => {
+test('FileViewerPage renders a real document opened from My Documents', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
 	// MKCOL is 405 when the collection already exists — that is success for
 	// our purposes, so accept it explicitly rather than swallowing the status.
 	const mkcol = await createDavFolder(req, token, DOCS_FOLDER)
-	expect([201, 405], `MKCOL /${DOCS_FOLDER} (201 created / 405 already there)`).toContain(mkcol)
+	expect(
+		[201, 405],
+		`MKCOL /${DOCS_FOLDER} (201 created / 405 already there)`,
+	).toContain(mkcol)
 
 	const seeded = await createDavFile(req, token, VIEWER_PATH, VIEWER_BODY)
 	expect(seeded.status, `PUT /${VIEWER_PATH}`).toBeLessThan(300)
@@ -57,14 +66,19 @@ test('FileViewerPage renders a real document opened from My Documents', async ({
 	// so the row is identified by the stem.
 	const stem = VIEWER_FILE.replace(/\.txt$/, '')
 	const row = page.locator('tr').filter({ hasText: stem }).first()
-	await expect(row, 'the seeded document must appear in My Documents').toBeVisible()
+	await expect(
+		row,
+		'the seeded document must appear in My Documents',
+	).toBeVisible()
 	await row.click()
 
 	// FileViewerPage replaces the list inside `.my-documents-wrapper`.
 	const viewer = page.locator('.file-viewer-page')
 	await expect(viewer).toBeVisible()
 	// Its own header component, carrying the full file name (extension and all).
-	await expect(viewer.locator('.dd-file-viewer-header__title')).toHaveText(VIEWER_FILE)
+	await expect(viewer.locator('.dd-file-viewer-header__title')).toHaveText(
+		VIEWER_FILE,
+	)
 	// And the document's own text, rendered by TextViewer inside the viewer
 	// body. Nothing but a working viewer can put this string on screen.
 	await expect(viewer.locator('.text-viewer__content')).toContainText(VIEWER_BODY)

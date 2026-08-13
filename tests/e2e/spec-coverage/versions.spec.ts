@@ -22,7 +22,9 @@ import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, go } from './_helpers'
 
 test.describe('document-versions — Versies view UI', () => {
-	test('Versions view lists versions newest-first or shows the unavailable notice', async ({ page }) => {
+	test('Versions view lists versions newest-first or shows the unavailable notice', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/document-versions/spec.md#versions-are-listed-newest-first-on-the-detail-tab
 		// @e2e openspec/specs/document-versions/spec.md#filesversions-disabled-shows-a-notice-not-an-error
 		const guard = attachConsoleGuard(page)
@@ -36,11 +38,15 @@ test.describe('document-versions — Versies view UI', () => {
 		const notice = page.locator('[data-testid="versions-unavailable"]').first()
 		await expect(table.or(notice)).toBeVisible()
 
-		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual([])
+		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual(
+			[],
+		)
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
-	test('version rows expose download, restore and compare actions', async ({ page }) => {
+	test('version rows expose download, restore and compare actions', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/document-versions/spec.md#download-a-prior-version
 		// @e2e openspec/specs/document-versions/spec.md#restore-a-prior-version-preserves-the-current-state
 		// @e2e openspec/specs/document-versions/spec.md#compare-a-version-with-the-current-document
@@ -58,24 +64,36 @@ test.describe('document-versions — Versies view UI', () => {
 		// that no row could offer. The row-level check makes the precondition
 		// this scenario needs — at least one version row — explicit instead of
 		// assumed, and the empty case still asserts a real surfaced state.
-		const dataRows = table.locator('tbody tr').filter({ hasNotText: 'No items found' })
-		if (await dataRows.count() > 0) {
+		const dataRows = table
+			.locator('tbody tr')
+			.filter({ hasNotText: 'No items found' })
+		if ((await dataRows.count()) > 0) {
 			// The current version row offers Download; a prior version additionally
 			// offers Restore and (for text-extractable documents) Compare.
-			await expect(page.getByRole('button', { name: 'Download' }).first()).toBeVisible()
+			await expect(
+				page.getByRole('button', { name: 'Download' }).first(),
+			).toBeVisible()
 			const restore = page.locator('[data-testid="version-restore"]').first()
 			const compare = page.locator('[data-testid="version-compare"]').first()
 			// Restore/compare are only present when prior versions exist; assert the
 			// controls are wired (present or absent, never erroring).
-			await expect(restore.or(compare).or(page.getByRole('button', { name: 'Download' }).first())).toBeVisible()
+			await expect(
+				restore
+					.or(compare)
+					.or(page.getByRole('button', { name: 'Download' }).first()),
+			).toBeVisible()
 		} else {
 			// No rows: VersionsView must have said WHY — either the
 			// files_versions-disabled note (`versions-unavailable`) or the error
 			// note it renders for any other failure ("Document not found" when the
 			// fileId does not resolve). Never a silent empty table.
-			const unavailable = page.locator('[data-testid="versions-unavailable"]').first()
-			const errorNote = page.locator('.notecard--error, [class*="notecard"]')
-				.filter({ hasText: /not found|Could not list versions/i }).first()
+			const unavailable = page
+				.locator('[data-testid="versions-unavailable"]')
+				.first()
+			const errorNote = page
+				.locator('.notecard--error, [class*="notecard"]')
+				.filter({ hasText: /not found|Could not list versions/i })
+				.first()
 			await expect(unavailable.or(errorNote)).toBeVisible()
 		}
 	})

@@ -1,6 +1,10 @@
 <script setup>
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/store.js'
+import {
+	fileViewerStore,
+	anonymizationStore,
+	myDocumentsStore,
+} from '../store/store.js'
 </script>
 
 <template>
@@ -62,7 +66,12 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					{{ t('docudesk', 'Anonymising…') }}
 				</p>
 				<p class="anonymising-state__hint">
-					{{ t('docudesk', 'Removing the selected entities from the document. This can take a moment.') }}
+					{{
+						t(
+							'docudesk',
+							'Removing the selected entities from the document. This can take a moment.',
+						)
+					}}
 				</p>
 			</div>
 
@@ -81,7 +90,14 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				<NcNoteCard v-if="entry.complete !== false" type="success">
 					<div>{{ t('docudesk', 'Anonymisation complete') }}</div>
 					<div class="muted">
-						{{ n('docudesk', '%n entity replaced', '%n entities replaced', entry.replacementCount || 0) }}
+						{{
+							n(
+								'docudesk',
+								'%n entity replaced',
+								'%n entities replaced',
+								entry.replacementCount || 0,
+							)
+						}}
 					</div>
 					<a :href="downloadUrl" download class="download-link">
 						{{ t('docudesk', 'Download anonymised file') }}
@@ -96,14 +112,27 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				<NcNoteCard v-else type="warning">
 					<div>{{ t('docudesk', 'Anonymisation incomplete') }}</div>
 					<div class="muted">
-						{{ n('docudesk',
-							'%n entity could not be fully removed. Check the file below before using it.',
-							'%n entities could not be fully removed. Check the file below before using it.',
-							entry.residualCount || 0) }}
+						{{
+							n(
+								'docudesk',
+								'%n entity could not be fully removed. Check the file below before using it.',
+								'%n entities could not be fully removed. Check the file below before using it.',
+								entry.residualCount || 0,
+							)
+						}}
 					</div>
-					<ul v-if="entry.residualEntities && entry.residualEntities.length" class="residual-list">
-						<li v-for="(r, idx) in entry.residualEntities" :key="'res-' + idx">
-							<span class="residual-type">{{ entityTypeLabel(r.type) }}</span>: {{ r.text }}
+					<ul
+						v-if="
+							entry.residualEntities && entry.residualEntities.length
+						"
+						class="residual-list">
+						<li
+							v-for="(r, idx) in entry.residualEntities"
+							:key="'res-' + idx">
+							<span class="residual-type">{{
+								entityTypeLabel(r.type)
+							}}</span
+							>: {{ r.text }}
 						</li>
 					</ul>
 					<a :href="downloadUrl" download class="download-link">
@@ -115,7 +144,9 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				     taken out of the document, original values hidden behind an
 				     explicit reveal so the result panel doesn't silently re-expose
 				     the data the file just hid. -->
-				<DdRemovedEntitiesList v-if="removedEntities.length" :items="removedEntities" />
+				<DdRemovedEntitiesList
+					v-if="removedEntities.length"
+					:items="removedEntities" />
 			</div>
 
 			<!-- Anonymised-document view: a read-only list resolved from the
@@ -132,12 +163,19 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			     the panel). Cancel leaves without adding. -->
 			<div v-else-if="entry && isAdding" class="add-entity-panel">
 				<NcNoteCard :type="selectedText ? 'info' : 'warning'">
-					{{ selectedText
-						? t('docudesk', 'This text will be added to the anonymisation list.')
-						: t('docudesk', 'Select text in the document to add it.') }}
+					{{
+						selectedText
+							? t(
+									'docudesk',
+									'This text will be added to the anonymisation list.',
+								)
+							: t('docudesk', 'Select text in the document to add it.')
+					}}
 				</NcNoteCard>
 				<div class="add-entity-panel__field">
-					<span class="add-entity-panel__label">{{ t('docudesk', 'Selected text') }}</span>
+					<span class="add-entity-panel__label">{{
+						t('docudesk', 'Selected text')
+					}}</span>
 					<div class="add-entity-panel__selection">
 						{{ selectedText || '—' }}
 					</div>
@@ -166,7 +204,9 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			</div>
 
 			<!-- Empty state. -->
-			<div v-else-if="entry && entry.entities.length === 0" class="empty-state">
+			<div
+				v-else-if="entry && entry.entities.length === 0"
+				class="empty-state">
 				<p>{{ t('docudesk', 'No entities detected in this file.') }}</p>
 			</div>
 
@@ -185,17 +225,33 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					:editable="grondslagen"
 					:bases-options="basesOptions"
 					@toggle="onToggleEntity(idx)"
-					@set-bases="anonymizationStore.setEntityBases(entry, idx, $event)" />
+					@set-bases="
+						anonymizationStore.setEntityBases(entry, idx, $event)
+					" />
 			</div>
 			<!-- Read-only files_confidential sensitivity signal (files-confidential-labels).
 			     Informational only — carries no action, hidden when no label resolved.
 			     Independent of the state chain above so it stays visible alongside
 			     whichever review state is currently showing. -->
-			<div v-if="entry && entry.confidentialityLabel" class="confidentiality-chip-row">
+			<div
+				v-if="entry && entry.confidentialityLabel"
+				class="confidentiality-chip-row">
 				<span
-					:class="'confidentiality-chip confidentiality-level-' + (entry.confidentialityLevel ?? 0)"
-					:title="t('docudesk', 'Confidentiality label from files_confidential')">
-					{{ t('docudesk', 'Confidentiality: {label}', { label: entry.confidentialityLabel }) }}
+					:class="
+						'confidentiality-chip confidentiality-level-'
+						+ (entry.confidentialityLevel ?? 0)
+					"
+					:title="
+						t(
+							'docudesk',
+							'Confidentiality label from files_confidential',
+						)
+					">
+					{{
+						t('docudesk', 'Confidentiality: {label}', {
+							label: entry.confidentialityLabel,
+						})
+					}}
 				</span>
 			</div>
 			<ProhibitionBlockedDialog
@@ -211,7 +267,9 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		<!-- Adding process. The user selects text and picks a type, then "Add
 		     entity" adds it and closes the panel; "Cancel" leaves without
 		     adding. -->
-		<div v-if="entry && entry.status === 'extracted' && isAdding" class="sidebar-action-bar">
+		<div
+			v-if="entry && entry.status === 'extracted' && isAdding"
+			class="sidebar-action-bar">
 			<NcButton variant="tertiary" :disabled="savingNew" @click="onCancelEdit">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
@@ -230,7 +288,14 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		     and the navigation footer. Shown whenever the dossier has files to
 		     process or already-anonymised results. -->
 		<div
-			v-else-if="inDossier && (batchCount > 0 || batchState.running || completedCount > 0 || isReanonymizable || reanonReviewActive)"
+			v-else-if="
+				inDossier
+				&& (batchCount > 0
+					|| batchState.running
+					|| completedCount > 0
+					|| isReanonymizable
+					|| reanonReviewActive)
+			"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
 			<NcButton
 				v-if="batchCount > 0 || batchState.running"
@@ -273,7 +338,14 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount) }}
+				{{
+					n(
+						'docudesk',
+						'Anonymize %n entity',
+						'Anonymize %n entities',
+						includedCount,
+					)
+				}}
 			</NcButton>
 			<!-- Once files are anonymised, offer a one-click download of every
 			     result in the dossier, bundled as a single zip. -->
@@ -287,16 +359,24 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					<NcLoadingIcon v-if="zipping" :size="20" />
 					<Download v-else :size="20" />
 				</template>
-				{{ zipping
-					? t('docudesk', 'Preparing download…')
-					: t('docudesk', 'Download all anonymised files ({count})', { count: completedCount }) }}
+				{{
+					zipping
+						? t('docudesk', 'Preparing download…')
+						: t('docudesk', 'Download all anonymised files ({count})', {
+								count: completedCount,
+							})
+				}}
 			</NcButton>
-			<p v-if="zipError" class="dossier-batch-summary dossier-batch-summary--error">
+			<p
+				v-if="zipError"
+				class="dossier-batch-summary dossier-batch-summary--error">
 				{{ zipError }}
 			</p>
 		</div>
 		<!-- Single-file review: per-file anonymise button. -->
-		<div v-else-if="entry && entry.status === 'extracted'" class="sidebar-action-bar">
+		<div
+			v-else-if="entry && entry.status === 'extracted'"
+			class="sidebar-action-bar">
 			<NcButton
 				variant="primary"
 				:disabled="includedCount === 0 || isAnonymising"
@@ -304,7 +384,14 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount) }}
+				{{
+					n(
+						'docudesk',
+						'Anonymize %n entity',
+						'Anonymize %n entities',
+						includedCount,
+					)
+				}}
 			</NcButton>
 		</div>
 		<!-- Viewing the original of an already-anonymised file: offer another
@@ -331,20 +418,20 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		<div
 			v-else-if="isViewingAnonymizedResult"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
-			<NcButton
-				wide
-				variant="primary"
-				:disabled="exporting"
-				@click="onExport">
+			<NcButton wide variant="primary" :disabled="exporting" @click="onExport">
 				<template #icon>
 					<NcLoadingIcon v-if="exporting" :size="20" />
 					<Download v-else :size="20" />
 				</template>
-				{{ exporting
-					? t('docudesk', 'Preparing download…')
-					: t('docudesk', 'Export file(s)') }}
+				{{
+					exporting
+						? t('docudesk', 'Preparing download…')
+						: t('docudesk', 'Export file(s)')
+				}}
 			</NcButton>
-			<p v-if="exportError" class="dossier-batch-summary dossier-batch-summary--error">
+			<p
+				v-if="exportError"
+				class="dossier-batch-summary dossier-batch-summary--error">
 				{{ exportError }}
 			</p>
 		</div>
@@ -352,7 +439,13 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import {
+	NcAppSidebar,
+	NcButton,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+} from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 import JSZip from 'jszip'
@@ -460,9 +553,11 @@ export default {
 				return false
 			}
 			const e = this.entry
-			return !!(e
+			return !!(
+				e
 				&& e.status === 'completed'
-				&& (e.anonymizedFilePath || e.anonymizedFileId))
+				&& (e.anonymizedFilePath || e.anonymizedFileId)
+			)
 		},
 		/**
 		 * True when the viewer shows the ORIGINAL of a file that has an
@@ -499,7 +594,11 @@ export default {
 		 * @return {boolean}
 		 */
 		reanonReviewActive() {
-			return !!(this.entry && this.entry.reanonymize && this.entry.status === 'extracted')
+			return !!(
+				this.entry
+				&& this.entry.reanonymize
+				&& this.entry.status === 'extracted'
+			)
 		},
 		/**
 		 * True when the open file lives inside a dossier (a subfolder of
@@ -546,8 +645,10 @@ export default {
 					return false
 				}
 				const entry = anonymizationStore.findByFileId(d.fileId)
-				return !entry
+				return (
+					!entry
 					|| (entry.status !== 'completed' && entry.status !== 'error')
+				)
 			})
 		},
 		/**
@@ -557,7 +658,9 @@ export default {
 		 * @return {string}
 		 */
 		dossierName() {
-			const parts = (myDocumentsStore.currentPath || '').split('/').filter(Boolean)
+			const parts = (myDocumentsStore.currentPath || '')
+				.split('/')
+				.filter(Boolean)
 			return parts[parts.length - 1] || ''
 		},
 		/**
@@ -626,7 +729,9 @@ export default {
 					total: this.batchState.total,
 				})
 			}
-			return t('docudesk', 'Anonymize all files ({count})', { count: this.batchCount })
+			return t('docudesk', 'Anonymize all files ({count})', {
+				count: this.batchCount,
+			})
 		},
 		/**
 		 * One-line summary shown after a finished batch run; empty while idle
@@ -640,7 +745,10 @@ export default {
 				return ''
 			}
 			if (failed > 0) {
-				return t('docudesk', '{done} anonymized, {failed} failed.', { done, failed })
+				return t('docudesk', '{done} anonymized, {failed} failed.', {
+					done,
+					failed,
+				})
 			}
 			return t('docudesk', 'All {total} files anonymized.', { total })
 		},
@@ -659,7 +767,10 @@ export default {
 				return true
 			}
 			// Entry exists but extraction is still in flight (initial upload).
-			return this.entry?.status === 'extracting' || this.entry?.status === 'uploading'
+			return (
+				this.entry?.status === 'extracting'
+				|| this.entry?.status === 'uploading'
+			)
 		},
 		/**
 		 * True while the anonymise PATCH+POST round-trip is running for
@@ -677,7 +788,8 @@ export default {
 		 * @return {number}
 		 */
 		includedCount() {
-			return (this.entry?.entities || []).filter((e) => e.included !== false).length
+			return (this.entry?.entities || []).filter((e) => e.included !== false)
+				.length
 		},
 		/**
 		 * True for the post-anonymise result step: the run finished and a
@@ -688,7 +800,10 @@ export default {
 		 * @return {boolean}
 		 */
 		isCompletedResult() {
-			return this.entry?.status === 'completed' && !!this.entry?.anonymizedFilePath
+			return (
+				this.entry?.status === 'completed'
+				&& !!this.entry?.anonymizedFilePath
+			)
 		},
 		/**
 		 * True when the anonymised result of a standalone (non-dossier) file is
@@ -730,7 +845,10 @@ export default {
 		 * @return {Array<{label: string, value: string}>}
 		 */
 		typeOptions() {
-			return ENTITY_TYPES.map((type) => ({ label: entityTypeLabel(type), value: type }))
+			return ENTITY_TYPES.map((type) => ({
+				label: entityTypeLabel(type),
+				value: type,
+			}))
 		},
 		removedEntities() {
 			if (!this.isCompletedResult) {
@@ -741,7 +859,10 @@ export default {
 			// the file actually contains. Fall back to the pre-anonymise detected
 			// set with a reconstructed `[<TYPE>]` marker (translated, but without a
 			// number) when resolution was unavailable.
-			if (Array.isArray(this.entry.resolvedEntities) && this.entry.resolvedEntities.length) {
+			if (
+				Array.isArray(this.entry.resolvedEntities)
+				&& this.entry.resolvedEntities.length
+			) {
 				return this.entry.resolvedEntities
 			}
 			return (this.entry.entities || [])
@@ -872,7 +993,9 @@ export default {
 		 * @return {boolean}
 		 */
 		canSaveNew() {
-			return this.selectedText.trim().length > 0 && this.newTypeValue.length > 0
+			return (
+				this.selectedText.trim().length > 0 && this.newTypeValue.length > 0
+			)
 		},
 		/**
 		 * Whether to show the grondslagen toggle in the header. Only relevant
@@ -922,11 +1045,16 @@ export default {
 		 */
 		sidebarSubtitle() {
 			if (this.isAdding) {
-				return t('docudesk', 'Select text in the document, then choose a type.')
+				return t(
+					'docudesk',
+					'Select text in the document, then choose a type.',
+				)
 			}
 			if (this.entry?.viewMode === 'anonymized') {
 				if (this.entry.sourceFileName) {
-					return t('docudesk', 'Anonymised version of {source}', { source: this.entry.sourceFileName })
+					return t('docudesk', 'Anonymised version of {source}', {
+						source: this.entry.sourceFileName,
+					})
 				}
 				return t('docudesk', 'Resolved from the GDPR register.')
 			}
@@ -936,7 +1064,11 @@ export default {
 			if (this.entry?.status === 'error') {
 				return t('docudesk', 'Failed to load')
 			}
-			if (this.entry && Array.isArray(this.entry.entities) && this.entry.entities.length > 0) {
+			if (
+				this.entry
+				&& Array.isArray(this.entry.entities)
+				&& this.entry.entities.length > 0
+			) {
 				return t('docudesk', 'Automatic detection. Always verify yourself.')
 			}
 			return ''
@@ -956,7 +1088,10 @@ export default {
 			if (filesIndex >= 0) {
 				// Encode each segment so a dossier/file name containing `?`,
 				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts.slice(filesIndex + 1).map(encodeURIComponent).join('/')
+				const relativePath = parts
+					.slice(filesIndex + 1)
+					.map(encodeURIComponent)
+					.join('/')
 				return generateRemoteUrl('webdav') + '/' + relativePath
 			}
 			return generateRemoteUrl('webdav')
@@ -1030,7 +1165,12 @@ export default {
 			if (idx == null) {
 				return
 			}
-			const res = await anonymizationStore.setEntitySkip(this.entry, idx, true, true)
+			const res = await anonymizationStore.setEntitySkip(
+				this.entry,
+				idx,
+				true,
+				true,
+			)
 			if (res && res.ok) {
 				this.prohibitionOpen = false
 			} else if (res) {
@@ -1061,7 +1201,8 @@ export default {
 				// `[<TYPE>: <entity_id>]` placeholders we resolve those to the
 				// original entities directly. Falls back to detecting PII in a
 				// (still un-anonymised) source file.
-				const anonymized = await anonymizationStore.loadAnonymizedEntities(meta)
+				const anonymized =
+					await anonymizationStore.loadAnonymizedEntities(meta)
 				if (!anonymized) {
 					await anonymizationStore.ensureExtracted(meta)
 				}
@@ -1089,9 +1230,12 @@ export default {
 			// When grondslagen are on, ask the backend to append the legal-grounds
 			// summary to the output. Both flags must travel together (see
 			// anonymiseEntry) or the summary is silently skipped.
-			await anonymizationStore.anonymiseEntry(this.entry, this.grondslagen
-				? { appendBasisSummary: true, outputFormat: 'pdf-only' }
-				: {})
+			await anonymizationStore.anonymiseEntry(
+				this.entry,
+				this.grondslagen
+					? { appendBasisSummary: true, outputFormat: 'pdf-only' }
+					: {},
+			)
 			if (this.entry.status === 'completed' && this.entry.anonymizedFileId) {
 				fileViewerStore.setAnonymizedVariant({
 					fileId: this.entry.anonymizedFileId,
@@ -1149,7 +1293,12 @@ export default {
 			// When grondslagen are on, append the basis summary and render to
 			// PDF — both flags must travel together (see anonymiseEntry).
 			const options = this.grondslagen
-				? { files, fileIds, appendBasisSummary: true, outputFormat: 'pdf-only' }
+				? {
+						files,
+						fileIds,
+						appendBasisSummary: true,
+						outputFormat: 'pdf-only',
+					}
 				: { files, fileIds }
 			await anonymizationStore.anonymiseAllExtracted(options)
 			// Each run writes a new `_anonymized` file into the dossier folder;
@@ -1173,7 +1322,10 @@ export default {
 			if (filesIndex >= 0) {
 				// Encode each segment so a dossier/file name containing `?`,
 				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts.slice(filesIndex + 1).map(encodeURIComponent).join('/')
+				const relativePath = parts
+					.slice(filesIndex + 1)
+					.map(encodeURIComponent)
+					.join('/')
 				return generateRemoteUrl('webdav') + '/' + relativePath
 			}
 			return generateRemoteUrl('webdav')
@@ -1205,7 +1357,9 @@ export default {
 						continue
 					}
 					try {
-						const res = await axios.get(url, { responseType: 'arraybuffer' })
+						const res = await axios.get(url, {
+							responseType: 'arraybuffer',
+						})
 						zip.file(this.uniqueZipName(entry, usedNames), res.data)
 					} catch (err) {
 						console.error('Download-all: could not fetch', url, err)
@@ -1213,13 +1367,23 @@ export default {
 					}
 				}
 				if (!usedNames.size) {
-					this.zipError = t('docudesk', 'Could not download any of the anonymised files.')
+					this.zipError = t(
+						'docudesk',
+						'Could not download any of the anonymised files.',
+					)
 					return
 				}
 				const blob = await zip.generateAsync({ type: 'blob' })
-				this.triggerBlobDownload(blob, `${this.dossierName || 'dossier'}-anonymised.zip`)
+				this.triggerBlobDownload(
+					blob,
+					`${this.dossierName || 'dossier'}-anonymised.zip`,
+				)
 				if (failed > 0) {
-					this.zipError = t('docudesk', '{failed} file(s) could not be added to the download.', { failed })
+					this.zipError = t(
+						'docudesk',
+						'{failed} file(s) could not be added to the download.',
+						{ failed },
+					)
 				}
 			} catch (err) {
 				console.error('Download-all: zip generation failed', err)
@@ -1248,7 +1412,10 @@ export default {
 			const file = fileViewerStore.currentFile
 			const url = this.downloadUrlFor(file?.path)
 			if (!url) {
-				this.exportError = t('docudesk', 'Could not locate the file to export.')
+				this.exportError = t(
+					'docudesk',
+					'Could not locate the file to export.',
+				)
 				return
 			}
 			this.exporting = true
@@ -1274,14 +1441,17 @@ export default {
 		 * @return {string} A unique name for the zip entry.
 		 */
 		uniqueZipName(entry, used) {
-			const base = entry.anonymizedFileName || `file-${entry.anonymizedFileId || entry.fileId}`
+			const base =
+				entry.anonymizedFileName
+				|| `file-${entry.anonymizedFileId || entry.fileId}`
 			let name = base
 			let i = 1
 			while (used.has(name)) {
 				const dot = base.lastIndexOf('.')
-				name = dot > 0
-					? `${base.slice(0, dot)} (${i})${base.slice(dot)}`
-					: `${base} (${i})`
+				name =
+					dot > 0
+						? `${base.slice(0, dot)} (${i})${base.slice(dot)}`
+						: `${base} (${i})`
 				i++
 			}
 			used.add(name)
@@ -1358,7 +1528,8 @@ export default {
 				fileViewerStore.setAddMode(false)
 				this.resetNewEntityForm()
 			} catch (err) {
-				this.saveError = err?.message || t('docudesk', 'Failed to add the selected text')
+				this.saveError =
+					err?.message || t('docudesk', 'Failed to add the selected text')
 			} finally {
 				this.savingNew = false
 			}

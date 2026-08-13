@@ -53,7 +53,10 @@ function extractTCalls(files, app) {
 	const found = new Map()
 	const unanalyzable = []
 
-	const tCallRe = new RegExp(`\\b[tn]\\s*\\(\\s*(['"])${escapeRegex(app)}\\1\\s*,\\s*`, 'g')
+	const tCallRe = new RegExp(
+		`\\b[tn]\\s*\\(\\s*(['"])${escapeRegex(app)}\\1\\s*,\\s*`,
+		'g',
+	)
 
 	for (const file of files) {
 		const text = fs.readFileSync(file, 'utf8')
@@ -62,7 +65,8 @@ function extractTCalls(files, app) {
 			if (text.charCodeAt(i) === 10) lineStarts.push(i + 1)
 		}
 		const posToLine = (pos) => {
-			let lo = 0; let hi = lineStarts.length - 1
+			let lo = 0
+			let hi = lineStarts.length - 1
 			while (lo < hi) {
 				const mid = (lo + hi + 1) >> 1
 				if (lineStarts[mid] <= pos) lo = mid
@@ -77,7 +81,7 @@ function extractTCalls(files, app) {
 			const argStart = tCallRe.lastIndex
 			const line = posToLine(m.index)
 			const ch = text[argStart]
-			if (ch === '\'' || ch === '"') {
+			if (ch === "'" || ch === '"') {
 				let i = argStart + 1
 				let value = ''
 				let closed = false
@@ -92,14 +96,18 @@ function extractTCalls(files, app) {
 						i += 2
 						continue
 					}
-					if (c === ch) { closed = true; break }
+					if (c === ch) {
+						closed = true
+						break
+					}
 					if (c === '\n') break
 					value += c
 					i++
 				}
 				if (closed) {
 					let j = i + 1
-					while (j < text.length && (text[j] === ' ' || text[j] === '\t')) j++
+					while (j < text.length && (text[j] === ' ' || text[j] === '\t'))
+						j++
 					const next = text[j]
 					if (next === ',' || next === ')') {
 						if (!found.has(value)) found.set(value, [])
@@ -107,9 +115,21 @@ function extractTCalls(files, app) {
 						continue
 					}
 				}
-				unanalyzable.push({ file, line, snippet: text.slice(m.index, Math.min(m.index + 80, text.length)).replace(/\n/g, ' ') })
+				unanalyzable.push({
+					file,
+					line,
+					snippet: text
+						.slice(m.index, Math.min(m.index + 80, text.length))
+						.replace(/\n/g, ' '),
+				})
 			} else {
-				unanalyzable.push({ file, line, snippet: text.slice(m.index, Math.min(m.index + 80, text.length)).replace(/\n/g, ' ') })
+				unanalyzable.push({
+					file,
+					line,
+					snippet: text
+						.slice(m.index, Math.min(m.index + 80, text.length))
+						.replace(/\n/g, ' '),
+				})
 			}
 		}
 	}
@@ -149,7 +169,8 @@ function findUnwrapped(vueFiles, keys) {
 			if (text.charCodeAt(i) === 10) lineStarts.push(i + 1)
 		}
 		const posToLine = (pos) => {
-			let lo = 0; let hi = lineStarts.length - 1
+			let lo = 0
+			let hi = lineStarts.length - 1
 			while (lo < hi) {
 				const mid = (lo + hi + 1) >> 1
 				if (lineStarts[mid] <= pos) lo = mid
@@ -166,7 +187,12 @@ function findUnwrapped(vueFiles, keys) {
 			if (!trimmed) continue
 			if (keys.has(trimmed)) {
 				const absPos = tplOffset + tm.index + 1 + raw.indexOf(trimmed)
-				hits.push({ file, line: posToLine(absPos), key: trimmed, context: 'text' })
+				hits.push({
+					file,
+					line: posToLine(absPos),
+					key: trimmed,
+					context: 'text',
+				})
 			}
 		}
 
@@ -175,11 +201,17 @@ function findUnwrapped(vueFiles, keys) {
 		while ((tag = tagRe.exec(tpl)) !== null) {
 			const tagText = tag[0]
 			const tagAbs = tplOffset + tag.index
-			const attrRe = /(\s)([:@]?[a-zA-Z_][\w-]*|v-[\w:.-]+)\s*=\s*("([^"]*)"|'([^']*)')/g
+			const attrRe =
+				/(\s)([:@]?[a-zA-Z_][\w-]*|v-[\w:.-]+)\s*=\s*("([^"]*)"|'([^']*)')/g
 			let am
 			while ((am = attrRe.exec(tagText)) !== null) {
 				const name = am[2]
-				if (name.startsWith(':') || name.startsWith('@') || name.startsWith('v-')) continue
+				if (
+					name.startsWith(':')
+					|| name.startsWith('@')
+					|| name.startsWith('v-')
+				)
+					continue
 				if (NON_DISPLAY_ATTRS.has(name.toLowerCase())) continue
 				const value = am[4] !== undefined ? am[4] : am[5]
 				const trimmed = value.trim()
@@ -187,7 +219,12 @@ function findUnwrapped(vueFiles, keys) {
 				if (keys.has(trimmed)) {
 					const valueOffsetInTag = am.index + am[0].indexOf(am[3]) + 1
 					const absPos = tagAbs + valueOffsetInTag
-					hits.push({ file, line: posToLine(absPos), key: trimmed, context: `attr ${name}` })
+					hits.push({
+						file,
+						line: posToLine(absPos),
+						key: trimmed,
+						context: `attr ${name}`,
+					})
 				}
 			}
 		}
@@ -205,50 +242,77 @@ function main() {
 	const { app, translations } = loadJsTranslations(L10N_FILE)
 	const keys = new Set(Object.keys(translations))
 	const files = walk(SRC_DIR, ['.vue', '.js', '.ts'])
-	const vueFiles = files.filter(f => f.endsWith('.vue'))
+	const vueFiles = files.filter((f) => f.endsWith('.vue'))
 
 	const { found, unanalyzable } = extractTCalls(files, app)
 	const usedKeys = new Set(found.keys())
 
-	const missing = [...usedKeys].filter(k => !keys.has(k)).sort()
-	const unused = [...keys].filter(k => !usedKeys.has(k)).sort()
+	const missing = [...usedKeys].filter((k) => !keys.has(k)).sort()
+	const unused = [...keys].filter((k) => !usedKeys.has(k)).sort()
 	const unwrapped = findUnwrapped(vueFiles, keys)
 
 	console.log(`${BOLD}${CYAN}${app} l10n check${RESET}`)
-	console.log(`${DIM}Scanned ${files.length} files (${vueFiles.length} .vue), ${keys.size} keys in en.js${RESET}`)
+	console.log(
+		`${DIM}Scanned ${files.length} files (${vueFiles.length} .vue), ${keys.size} keys in en.js${RESET}`,
+	)
 	console.log('')
 
 	if (missing.length) {
-		const body = missing.map(k => {
-			const locs = found.get(k).map(l => `${DIM}${rel(l.file)}:${l.line}${RESET}`).join(', ')
-			return `  ${RED}•${RESET} ${JSON.stringify(k)}\n    ${locs}`
-		}).join('\n')
+		const body = missing
+			.map((k) => {
+				const locs = found
+					.get(k)
+					.map((l) => `${DIM}${rel(l.file)}:${l.line}${RESET}`)
+					.join(', ')
+				return `  ${RED}•${RESET} ${JSON.stringify(k)}\n    ${locs}`
+			})
+			.join('\n')
 		printSection(`MISSING from l10n/en.js (${missing.length})`, RED, body)
 	} else {
 		printSection('MISSING from l10n/en.js (0)', GREEN, '  ✓ none')
 	}
 
 	if (unused.length) {
-		const body = unused.map(k => `  ${YELLOW}•${RESET} ${JSON.stringify(k)}`).join('\n')
+		const body = unused
+			.map((k) => `  ${YELLOW}•${RESET} ${JSON.stringify(k)}`)
+			.join('\n')
 		printSection(`UNUSED keys in l10n/en.js (${unused.length})`, YELLOW, body)
 	} else {
 		printSection('UNUSED keys in l10n/en.js (0)', GREEN, '  ✓ none')
 	}
 
 	if (unwrapped.length) {
-		const body = unwrapped.map(h =>
-			`  ${YELLOW}•${RESET} ${JSON.stringify(h.key)} ${DIM}[${h.context}]${RESET}\n    ${DIM}${rel(h.file)}:${h.line}${RESET}`,
-		).join('\n')
-		printSection(`UNWRAPPED literals matching an l10n key (${unwrapped.length})`, YELLOW, body)
+		const body = unwrapped
+			.map(
+				(h) =>
+					`  ${YELLOW}•${RESET} ${JSON.stringify(h.key)} ${DIM}[${h.context}]${RESET}\n    ${DIM}${rel(h.file)}:${h.line}${RESET}`,
+			)
+			.join('\n')
+		printSection(
+			`UNWRAPPED literals matching an l10n key (${unwrapped.length})`,
+			YELLOW,
+			body,
+		)
 	} else {
-		printSection('UNWRAPPED literals matching an l10n key (0)', GREEN, '  ✓ none')
+		printSection(
+			'UNWRAPPED literals matching an l10n key (0)',
+			GREEN,
+			'  ✓ none',
+		)
 	}
 
 	if (unanalyzable.length) {
-		const body = unanalyzable.map(u =>
-			`  ${DIM}•${RESET} ${rel(u.file)}:${u.line}\n    ${DIM}${u.snippet}...${RESET}`,
-		).join('\n')
-		printSection(`Unanalyzable t() calls — dynamic args, skipped (${unanalyzable.length})`, DIM, body)
+		const body = unanalyzable
+			.map(
+				(u) =>
+					`  ${DIM}•${RESET} ${rel(u.file)}:${u.line}\n    ${DIM}${u.snippet}...${RESET}`,
+			)
+			.join('\n')
+		printSection(
+			`Unanalyzable t() calls — dynamic args, skipped (${unanalyzable.length})`,
+			DIM,
+			body,
+		)
 	}
 
 	const total = missing.length + unused.length + unwrapped.length

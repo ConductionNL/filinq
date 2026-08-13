@@ -1,5 +1,8 @@
 <template>
-	<div class="pdf-viewer" :class="{ 'dd-marking-cursor': isAddMode }" @mouseup="captureSelection">
+	<div
+		class="pdf-viewer"
+		:class="{ 'dd-marking-cursor': isAddMode }"
+		@mouseup="captureSelection">
 		<div v-if="loading" class="pdf-viewer__loading">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('docudesk', 'Loading document…') }}</span>
@@ -20,7 +23,10 @@
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
-import { fetchFileAsArrayBuffer, fetchUrlAsArrayBuffer } from '../../services/fileViewerService.js'
+import {
+	fetchFileAsArrayBuffer,
+	fetchUrlAsArrayBuffer,
+} from '../../services/fileViewerService.js'
 import { fileViewerStore } from '../../store/store.js'
 import { applyDomHighlights } from '../../services/highlightDom.js'
 
@@ -91,7 +97,7 @@ export default {
 		 * @return {string}
 		 */
 		pendingValue() {
-			return fileViewerStore.addMode ? (fileViewerStore.selection || '') : ''
+			return fileViewerStore.addMode ? fileViewerStore.selection || '' : ''
 		},
 		/**
 		 * Whether the viewer is in add mode — drives the marking (highlighter)
@@ -154,7 +160,9 @@ export default {
 			try {
 				const [pdfjsLib, data] = await Promise.all([
 					loadPdfjs(),
-					this.url ? fetchUrlAsArrayBuffer(this.url) : fetchFileAsArrayBuffer(this.path),
+					this.url
+						? fetchUrlAsArrayBuffer(this.url)
+						: fetchFileAsArrayBuffer(this.path),
 				])
 				const loadingTask = pdfjsLib.getDocument({ data })
 				this.pdfDoc = await loadingTask.promise
@@ -364,13 +372,15 @@ export default {
 }
 
 .pdf-viewer__page :deep(.pdf-viewer__text-layer > :not(.markedContent)),
-.pdf-viewer__page :deep(.pdf-viewer__text-layer .markedContent span:not(.markedContent)) {
+.pdf-viewer__page
+	:deep(.pdf-viewer__text-layer .markedContent span:not(.markedContent)) {
 	z-index: 1;
 	--font-height: 0;
 	font-size: calc(var(--text-scale-factor) * var(--font-height));
 	--scale-x: 1;
 	--rotate: 0deg;
-	transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+	transform: rotate(var(--rotate)) scaleX(var(--scale-x))
+		scale(var(--min-font-size-inv));
 }
 
 .pdf-viewer__page :deep(.pdf-viewer__text-layer .markedContent) {

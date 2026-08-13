@@ -64,7 +64,10 @@ async function createDictionary(
 		headers: jsonHeaders(token),
 		data,
 	})
-	expect(res.status(), `create dictionary (${await res.text().catch(() => '')})`).toBe(201)
+	expect(
+		res.status(),
+		`create dictionary (${await res.text().catch(() => '')})`,
+	).toBe(201)
 	return (await res.json()).id
 }
 
@@ -93,54 +96,87 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
 		const page = await ctx.newPage()
 		const token = await harvestToken(page)
 		if (fixtureId) {
-			const res = await ctx.request.delete(`${API}/custom-dictionaries/${fixtureId}`, {
-				headers: jsonHeaders(token),
-			}).catch(() => null)
+			const res = await ctx.request
+				.delete(`${API}/custom-dictionaries/${fixtureId}`, {
+					headers: jsonHeaders(token),
+				})
+				.catch(() => null)
 			if (res && res.status() >= 400) {
 				// eslint-disable-next-line no-console
-				console.warn(`[teardown] dictionary ${fixtureId} -> ${res.status()} (leaked)`)
+				console.warn(
+					`[teardown] dictionary ${fixtureId} -> ${res.status()} (leaked)`,
+				)
 			}
 		}
 		await ctx.close()
 	})
 
-	test('both dictionaries are listed with label, term count, match mode and active state', async ({ page }) => {
+	test('both dictionaries are listed with label, term count, match mode and active state', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/custom-dictionary-recognition/spec.md#the-dictionaries-page-lists-dictionaries-with-their-term-counts
 		await go(page, 'custom-dictionaries')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/custom-dictionaries/)
 
 		const table = page.locator('#content table, .app-content table').first()
-		await expect(table, 'the index must render a table, not an empty state').toBeVisible()
+		await expect(
+			table,
+			'the index must render a table, not an empty state',
+		).toBeVisible()
 
 		// The seeded dictionary, and the four columns the scenario names. Its
 		// term count is 2 in the shipped register seed — asserting the NUMBER
 		// (not merely that a cell exists) is what makes this a term-count test.
-		const seededRow = table.locator('tr').filter({ hasText: SEEDED_LABEL }).first()
-		await expect(seededRow, `the seeded "${SEEDED_LABEL}" dictionary must be listed`).toBeVisible()
+		const seededRow = table
+			.locator('tr')
+			.filter({ hasText: SEEDED_LABEL })
+			.first()
+		await expect(
+			seededRow,
+			`the seeded "${SEEDED_LABEL}" dictionary must be listed`,
+		).toBeVisible()
 		await expect(seededRow, 'term count column').toContainText('2')
-		await expect(seededRow, 'match mode column').toContainText('Case-insensitive')
+		await expect(seededRow, 'match mode column').toContainText(
+			'Case-insensitive',
+		)
 		await expect(seededRow, 'active state column').toContainText(/Active/i)
 
 		// The second dictionary, with a DIFFERENT match mode — so a column that
 		// renders a constant cannot satisfy both rows.
-		const fixtureRow = table.locator('tr').filter({ hasText: FIXTURE_LABEL }).first()
-		await expect(fixtureRow, 'the second dictionary must be listed too').toBeVisible()
-		await expect(fixtureRow, 'match mode column must reflect THIS row, not a constant')
-			.toContainText('Word boundary')
-		await expect(fixtureRow, 'a dictionary with no terms shows 0').toContainText('0')
+		const fixtureRow = table
+			.locator('tr')
+			.filter({ hasText: FIXTURE_LABEL })
+			.first()
+		await expect(
+			fixtureRow,
+			'the second dictionary must be listed too',
+		).toBeVisible()
+		await expect(
+			fixtureRow,
+			'match mode column must reflect THIS row, not a constant',
+		).toContainText('Word boundary')
+		await expect(fixtureRow, 'a dictionary with no terms shows 0').toContainText(
+			'0',
+		)
 	})
 
-	test('a manager creates a word-boundary dictionary through the Add dialog and it is listed', async ({ page }) => {
+	test('a manager creates a word-boundary dictionary through the Add dialog and it is listed', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/custom-dictionary-recognition/spec.md#a-permitted-manager-creates-a-dictionary
 		const uiLabel = `${P}-ui-Straatnamen`
 		await go(page, 'custom-dictionaries')
 
 		// CnActionsBar resolves the CTA label to "Add <schema title>", never the
 		// bare "Add", so target the stable testid with a name-prefix fallback.
-		const addCta = page.locator('[data-testid="cn-cta-primary"]')
+		const addCta = page
+			.locator('[data-testid="cn-cta-primary"]')
 			.or(page.getByRole('button', { name: /^Add\b/ }))
 			.first()
-		await expect(addCta, 'CustomDictionaryIndex declares :show-add="true"').toBeVisible()
+		await expect(
+			addCta,
+			'CustomDictionaryIndex declares :show-add="true"',
+		).toBeVisible()
 		await addCta.click()
 
 		const dialog = page.getByRole('dialog').first()
@@ -167,31 +203,49 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
 			dialog.locator('.vs__selected').filter({ hasText: 'Word boundary' }),
 			'the form must show the chosen match mode before submit',
 		).toBeVisible()
-		await dialog.getByRole('button', { name: /^(Create|Save)$/ }).first().click()
+		await dialog
+			.getByRole('button', { name: /^(Create|Save)$/ })
+			.first()
+			.click()
 
 		// "THEN it is persisted under organisation A and listed for them" — the
 		// listing is the observable half, and it must survive a RELOAD, which is
 		// what separates "persisted" from "optimistically added to a local array".
 		await expect(page.getByText(uiLabel).first()).toBeVisible()
 		await go(page, 'custom-dictionaries')
-		const row = page.locator('#content table tr, .app-content table tr').filter({ hasText: uiLabel }).first()
-		await expect(row, 'the new dictionary must still be listed after a full reload').toBeVisible()
-		await expect(row, 'the chosen match mode must round-trip').toContainText('Word boundary')
+		const row = page
+			.locator('#content table tr, .app-content table tr')
+			.filter({ hasText: uiLabel })
+			.first()
+		await expect(
+			row,
+			'the new dictionary must still be listed after a full reload',
+		).toBeVisible()
+		await expect(row, 'the chosen match mode must round-trip').toContainText(
+			'Word boundary',
+		)
 
 		// Clean up through the UI's own data path so a rerun's negative
 		// assertions are not poisoned by a leftover row.
 		const ctx = page.context()
 		const token = await harvestToken(page)
-		const list = await ctx.request.get(`${API}/custom-dictionaries`, { headers: jsonHeaders(token) })
+		const list = await ctx.request.get(`${API}/custom-dictionaries`, {
+			headers: jsonHeaders(token),
+		})
 		const created = (await list.json()).find(
-			(d: { label?: unknown, id?: string }) => JSON.stringify(d.label ?? '').includes(uiLabel),
+			(d: { label?: unknown; id?: string }) =>
+				JSON.stringify(d.label ?? '').includes(uiLabel),
 		)
 		if (created?.id) {
-			await ctx.request.delete(`${API}/custom-dictionaries/${created.id}`, { headers: jsonHeaders(token) })
+			await ctx.request.delete(`${API}/custom-dictionaries/${created.id}`, {
+				headers: jsonHeaders(token),
+			})
 		}
 	})
 
-	test('a CSV upload on the detail page adds the terms and reports the added count', async ({ page }) => {
+	test('a CSV upload on the detail page adds the terms and reports the added count', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/custom-dictionary-recognition/spec.md#import-through-the-admin-page
 		// `appUrl`, not a hardcoded `/index.php/...` — the router base differs
 		// between a rewriting Apache and CI's `php -S`. See `resolveAppBase`.
@@ -207,13 +261,23 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
 		// entity-publication-policies.spec.ts — wait for something that proves
 		// the page has rendered before asserting anything is absent from it,
 		// or an unloaded page satisfies the absence for free.
-		await expect(content(page), 'the detail page must have rendered')
-			.toContainText(FIXTURE_LABEL)
-		await expect(content(page), 'fixture dictionary must start with no terms')
-			.not.toContainText(`${P}-alpha`)
+		await expect(
+			content(page),
+			'the detail page must have rendered',
+		).toContainText(FIXTURE_LABEL)
+		await expect(
+			content(page),
+			'fixture dictionary must start with no terms',
+		).not.toContainText(`${P}-alpha`)
 
-		await page.getByRole('button', { name: /Import/i }).first().click()
-		const dialog = page.getByRole('dialog').filter({ hasText: 'Import terms' }).first()
+		await page
+			.getByRole('button', { name: /Import/i })
+			.first()
+			.click()
+		const dialog = page
+			.getByRole('dialog')
+			.filter({ hasText: 'Import terms' })
+			.first()
 		await expect(dialog).toBeVisible()
 
 		// Parsing MUST NOT be delegated to the browser (REQ-DDCDR-005), so this
@@ -231,7 +295,9 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
 			// That is arguably a separate question about what "total terms"
 			// means; it is not this scenario's question, so the blank line is
 			// gone rather than the assertion loosened.
-			buffer: Buffer.from(`${P}-alpha,Alpha label\n${P}-beta,Beta label\n${P}-ALPHA,duplicate\n`),
+			buffer: Buffer.from(
+				`${P}-alpha,Alpha label\n${P}-beta,Beta label\n${P}-ALPHA,duplicate\n`,
+			),
 		})
 		await dialog.getByRole('button', { name: /^Import$/ }).click()
 
@@ -240,11 +306,18 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
 		// added" would pass even if de-duplication did nothing.
 		await expect(dialog.getByText('2 added, 1 skipped, 3 total.')).toBeVisible()
 
-		await dialog.getByRole('button', { name: /Close|Cancel/i }).first().click().catch(() => {})
-		await expect(content(page), 'imported term must appear in the term table')
-			.toContainText(`${P}-alpha`)
-		await expect(content(page), 'the second imported term too')
-			.toContainText(`${P}-beta`)
+		await dialog
+			.getByRole('button', { name: /Close|Cancel/i })
+			.first()
+			.click()
+			.catch(() => {})
+		await expect(
+			content(page),
+			'imported term must appear in the term table',
+		).toContainText(`${P}-alpha`)
+		await expect(content(page), 'the second imported term too').toContainText(
+			`${P}-beta`,
+		)
 	})
 })
 

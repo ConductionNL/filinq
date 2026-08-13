@@ -21,7 +21,9 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 		<div class="dd-entity-card__header">
 			<span
 				class="dd-entity-card__type"
-				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ entityTypeLabel(item.type) }}</span>
+				:style="{ backgroundColor: entityTypeColor(item.type) }"
+				>{{ entityTypeLabel(item.type) }}</span
+			>
 			<span class="dd-entity-card__count">{{ item.count }}x</span>
 		</div>
 		<div class="dd-entity-card__value" :title="item.value || ''">
@@ -30,10 +32,20 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 		<div class="dd-entity-card__value dd-entity-card__value--hidden">
 			{{ item.placeholder }}
 		</div>
-		<div v-if="item.bases && item.bases.length" class="dd-entity-card__bases-tags">
-			<span v-for="b in item.bases" :key="b" class="dd-entity-card__basis-tag">{{ b }}</span>
+		<div
+			v-if="item.bases && item.bases.length"
+			class="dd-entity-card__bases-tags">
+			<span
+				v-for="b in item.bases"
+				:key="b"
+				class="dd-entity-card__basis-tag"
+				>{{ b }}</span
+			>
 		</div>
-		<div v-if="item._resolveError" class="dd-entity-card__error" :title="item._resolveError">
+		<div
+			v-if="item._resolveError"
+			class="dd-entity-card__error"
+			:title="item._resolveError">
 			{{ item._resolveError }}
 		</div>
 	</div>
@@ -51,18 +63,24 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 				class="dd-entity-card__checkbox"
 				:checked="item.included"
 				:aria-label="t('docudesk', 'Include in anonymisation')"
-				:disabled="!!(item.prohibitionMatch && item.prohibitionMatch.highConfidence)"
-				@change="$emit('toggle')">
+				:disabled="
+					!!(item.prohibitionMatch && item.prohibitionMatch.highConfidence)
+				"
+				@change="$emit('toggle')" />
 			<span
 				class="dd-entity-card__type"
-				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ entityTypeLabel(item.type) }}</span>
+				:style="{ backgroundColor: entityTypeColor(item.type) }"
+				>{{ entityTypeLabel(item.type) }}</span
+			>
 			<span class="dd-entity-card__confidence">
 				{{ ((item.confidence || 0) * 100).toFixed(0) }}%
 			</span>
 			<span
 				v-if="item.prohibitionMatch"
 				class="dd-entity-card__lock"
-				:title="item.prohibitionMatch.ruleName">🔒</span>
+				:title="item.prohibitionMatch.ruleName"
+				>🔒</span
+			>
 		</div>
 		<div class="dd-entity-card__value" :title="item.value">
 			{{ item.value }}
@@ -80,7 +98,10 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 				:disabled="!editable || !hasRelation"
 				@update:modelValue="$emit('set-bases', $event)" />
 		</div>
-		<div v-if="item._patchError" class="dd-entity-card__error" :title="item._patchError">
+		<div
+			v-if="item._patchError"
+			class="dd-entity-card__error"
+			:title="item._patchError">
 			{{ item._patchError }}
 		</div>
 	</div>
@@ -156,7 +177,10 @@ export default {
 		 * @return {boolean}
 		 */
 		hasRelation() {
-			return Array.isArray(this.item?.relationIds) && this.item.relationIds.length > 0
+			return (
+				Array.isArray(this.item?.relationIds)
+				&& this.item.relationIds.length > 0
+			)
 		},
 	},
 }

@@ -13,8 +13,15 @@
 				{{ t('docudesk', 'Back to custom dictionaries') }}
 			</NcButton>
 			<h2 class="custom-dictionary-detail__title">
-				<span class="custom-dictionary-detail__swatch" :style="{ backgroundColor: dictionary.colour || '#0082C9' }" />
-				{{ displayValue(dictionary.label, t('docudesk', 'Custom dictionary')) }}
+				<span
+					class="custom-dictionary-detail__swatch"
+					:style="{ backgroundColor: dictionary.colour || '#0082C9' }" />
+				{{
+					displayValue(
+						dictionary.label,
+						t('docudesk', 'Custom dictionary'),
+					)
+				}}
 			</h2>
 			<div class="custom-dictionary-detail__header-actions">
 				<NcButton variant="secondary" @click="openEditDialog">
@@ -23,11 +30,15 @@
 			</div>
 		</div>
 
-		<NcLoadingIcon v-if="customDictionaryStore.loading && !dictionary.label" :size="32" />
+		<NcLoadingIcon
+			v-if="customDictionaryStore.loading && !dictionary.label"
+			:size="32" />
 
 		<template v-else>
 			<div class="custom-dictionary-detail__meta">
-				<p v-if="dictionary.description" class="custom-dictionary-detail__description">
+				<p
+					v-if="dictionary.description"
+					class="custom-dictionary-detail__description">
 					{{ displayValue(dictionary.description) }}
 				</p>
 				<div class="custom-dictionary-detail__badges">
@@ -35,7 +46,11 @@
 						:label="matchModeLabel(dictionary.matchMode)"
 						:color-map="matchModeColorMap" />
 					<CnStatusBadge
-						:label="dictionary.active === false ? t('docudesk', 'Inactive') : t('docudesk', 'Active')"
+						:label="
+							dictionary.active === false
+								? t('docudesk', 'Inactive')
+								: t('docudesk', 'Active')
+						"
 						:color-map="activeColorMap" />
 					<span class="custom-dictionary-detail__term-count">
 						{{ t('docudesk', '{count} terms', { count: terms.length }) }}
@@ -47,7 +62,9 @@
 				<div class="custom-dictionary-detail__terms-header">
 					<h3>{{ t('docudesk', 'Terms') }}</h3>
 					<div class="custom-dictionary-detail__terms-actions">
-						<NcButton variant="secondary" @click="importDialogOpen = true">
+						<NcButton
+							variant="secondary"
+							@click="importDialogOpen = true">
 							{{ t('docudesk', 'Import…') }}
 						</NcButton>
 					</div>
@@ -62,15 +79,26 @@
 					<NcTextField
 						v-model="newTermLabel"
 						:label="t('docudesk', 'Display label (optional)')" />
-					<NcButton variant="primary" :disabled="!newTermValue.trim() || addingTerm" @click="addTerm">
+					<NcButton
+						variant="primary"
+						:disabled="!newTermValue.trim() || addingTerm"
+						@click="addTerm">
 						{{ t('docudesk', 'Add term') }}
 					</NcButton>
 				</div>
 
-				<NcLoadingIcon v-if="customDictionaryStore.termsLoading" :size="24" />
-				<NcEmptyContent v-else-if="!terms.length"
+				<NcLoadingIcon
+					v-if="customDictionaryStore.termsLoading"
+					:size="24" />
+				<NcEmptyContent
+					v-else-if="!terms.length"
 					:name="t('docudesk', 'No terms yet')"
-					:description="t('docudesk', 'Add a term above, or import a CSV / newline list.')" />
+					:description="
+						t(
+							'docudesk',
+							'Add a term above, or import a CSV / newline list.',
+						)
+					" />
 				<table v-else class="custom-dictionary-detail__terms-table">
 					<thead>
 						<tr>
@@ -80,11 +108,15 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="term in terms" :key="term['@self']?.id || term.id">
+						<tr
+							v-for="term in terms"
+							:key="term['@self']?.id || term.id">
 							<td>{{ term.value }}</td>
 							<td>{{ displayValue(term.label, '-') }}</td>
 							<td>
-								<NcButton variant="tertiary" @click="removeTerm(term)">
+								<NcButton
+									variant="tertiary"
+									@click="removeTerm(term)">
 									<template #icon>
 										<Delete :size="20" />
 									</template>
@@ -131,7 +163,13 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { CnStatusBadge, NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@conduction/nextcloud-vue'
+import {
+	CnStatusBadge,
+	NcButton,
+	NcEmptyContent,
+	NcLoadingIcon,
+	NcTextField,
+} from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import { customDictionaryStore } from '../../store/store.js'
 import { resolveI18nValue } from '../../utils/registerI18n.js'
@@ -193,7 +231,9 @@ export default {
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
 		removeMessage() {
-			return t('docudesk', 'Remove "{value}"?', { value: this.removeTarget?.value || '' })
+			return t('docudesk', 'Remove "{value}"?', {
+				value: this.removeTarget?.value || '',
+			})
 		},
 		importResult() {
 			return customDictionaryStore.importResult
@@ -238,10 +278,16 @@ export default {
 			this.savingMeta = true
 			this.metaError = ''
 			try {
-				await customDictionaryStore.updateDictionary(this.dictionaryId, formData)
+				await customDictionaryStore.updateDictionary(
+					this.dictionaryId,
+					formData,
+				)
 				this.editDialogOpen = false
 			} catch (err) {
-				this.metaError = err.response?.data?.error || err.message || t('docudesk', 'Save failed')
+				this.metaError =
+					err.response?.data?.error
+					|| err.message
+					|| t('docudesk', 'Save failed')
 			} finally {
 				this.savingMeta = false
 			}
@@ -316,7 +362,10 @@ export default {
 			try {
 				await customDictionaryStore.importTerms(this.dictionaryId, payload)
 			} catch (err) {
-				this.importError = err.response?.data?.error || err.message || t('docudesk', 'Import failed')
+				this.importError =
+					err.response?.data?.error
+					|| err.message
+					|| t('docudesk', 'Import failed')
 			} finally {
 				this.importing = false
 			}

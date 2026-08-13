@@ -73,8 +73,10 @@ export async function dismissOverlays(page: Page): Promise<void> {
 	// whole viewport and intercepts pointer events — it swallows nav clicks.
 	// Close it via its own close button, falling back to Escape.
 	const support = page.locator('[data-testid-modal="cn-support-dialog"]').first()
-	for (let i = 0; i < 3 && await support.isVisible().catch(() => false); i++) {
-		const close = support.locator('.modal-container__close, [aria-label="Close"]').first()
+	for (let i = 0; i < 3 && (await support.isVisible().catch(() => false)); i++) {
+		const close = support
+			.locator('.modal-container__close, [aria-label="Close"]')
+			.first()
 		if (await close.isVisible().catch(() => false)) {
 			await close.click().catch(() => {})
 		} else {
@@ -88,8 +90,14 @@ export async function dismissOverlays(page: Page): Promise<void> {
 	// every left-navigation click fails with "subtree intercepts pointer events"
 	// even though the target link is visible and enabled. Close it via its own
 	// button; Escape alone does not always dismiss it.
-	const walkthrough = page.locator('.cn-walkthrough, [aria-label="Welcome to DocuDesk"]').first()
-	for (let i = 0; i < 3 && await walkthrough.isVisible().catch(() => false); i++) {
+	const walkthrough = page
+		.locator('.cn-walkthrough, [aria-label="Welcome to DocuDesk"]')
+		.first()
+	for (
+		let i = 0;
+		i < 3 && (await walkthrough.isVisible().catch(() => false));
+		i++
+	) {
 		const closeTour = page.getByRole('button', { name: /close tour/i }).first()
 		if (await closeTour.isVisible().catch(() => false)) {
 			await closeTour.click().catch(() => {})
@@ -102,7 +110,8 @@ export async function dismissOverlays(page: Page): Promise<void> {
 	// Belt and braces: if any full-viewport dim layer survived the loops above,
 	// a click would still be swallowed. Wait for it to detach rather than
 	// letting the next action fail with a confusing interception error.
-	await page.locator('.cn-walkthrough__dim--full')
+	await page
+		.locator('.cn-walkthrough__dim--full')
 		.waitFor({ state: 'detached', timeout: 3000 })
 		.catch(() => {})
 }
@@ -160,7 +169,9 @@ export const APP = '/index.php/apps/docudesk'
  */
 export async function waitForAppReady(page: Page, timeout = 30_000): Promise<void> {
 	await page.locator('#docudesk-app').waitFor({ state: 'attached', timeout })
-	await page.locator('main, #app-content, .app-content, #content-vue').first()
+	await page
+		.locator('main, #app-content, .app-content, #content-vue')
+		.first()
 		.waitFor({ state: 'visible', timeout })
 }
 
@@ -179,8 +190,13 @@ export async function waitForAppReady(page: Page, timeout = 30_000): Promise<voi
  * @param timeout Wait budget in ms.
  * @return Resolves once the NC content region is visible.
  */
-export async function waitForNcContentReady(page: Page, timeout = 30_000): Promise<void> {
-	await page.locator('#content, #app-content, .app-content, main').first()
+export async function waitForNcContentReady(
+	page: Page,
+	timeout = 30_000,
+): Promise<void> {
+	await page
+		.locator('#content, #app-content, .app-content, main')
+		.first()
 		.waitFor({ state: 'visible', timeout })
 }
 
@@ -236,7 +252,7 @@ async function resolveAppBase(page: Page): Promise<string> {
 	if (!cachedAppBase) {
 		throw new Error(
 			'Could not read OC.generateUrl("/apps/docudesk") from the running app. '
-			+ `The page at ${APP} did not expose window.OC, so the SPA router base is unknown.`,
+				+ `The page at ${APP} did not expose window.OC, so the SPA router base is unknown.`,
 		)
 	}
 	return cachedAppBase
@@ -278,7 +294,11 @@ export async function navClick(page: Page, label: string): Promise<void> {
 	await dismissOverlays(page)
 	// Match on the entry's title attribute — exact, so "Documentation" can't
 	// collide with longer labels and "Dashboard" stays unambiguous.
-	const link = page.locator(`#app-navigation a[title="${label}"], .app-navigation a[title="${label}"]`).first()
+	const link = page
+		.locator(
+			`#app-navigation a[title="${label}"], .app-navigation a[title="${label}"]`,
+		)
+		.first()
 	await link.click()
 	// The click routes in-app. Re-assert the shell rather than waiting for
 	// network silence (which never arrives): a manifest route that throws

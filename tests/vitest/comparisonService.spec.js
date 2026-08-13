@@ -28,20 +28,32 @@ describe('compareDocuments', () => {
 	})
 
 	it('POSTs both subjects to the comparison endpoint and returns the payload', async () => {
-		const payload = { hunks: [], summary: { changedHunks: 0 }, crossFormat: false }
+		const payload = {
+			hunks: [],
+			summary: { changedHunks: 0 },
+			crossFormat: false,
+		}
 		postMock.mockResolvedValue({ data: payload })
 
-		const result = await compareDocuments({ fileId: 42 }, { fileId: 88, versionTimestamp: 123 })
+		const result = await compareDocuments(
+			{ fileId: 42 },
+			{ fileId: 88, versionTimestamp: 123 },
+		)
 
 		expect(postMock).toHaveBeenCalledTimes(1)
 		const [url, body] = postMock.mock.calls[0]
 		expect(url).toContain('/apps/docudesk/api/comparison/compare')
-		expect(body).toEqual({ left: { fileId: 42 }, right: { fileId: 88, versionTimestamp: 123 } })
+		expect(body).toEqual({
+			left: { fileId: 42 },
+			right: { fileId: 88, versionTimestamp: 123 },
+		})
 		expect(result).toBe(payload)
 	})
 
 	it('propagates errors from the endpoint', async () => {
 		postMock.mockRejectedValue(new Error('boom'))
-		await expect(compareDocuments({ fileId: 1 }, { fileId: 2 })).rejects.toThrow('boom')
+		await expect(compareDocuments({ fileId: 1 }, { fileId: 2 })).rejects.toThrow(
+			'boom',
+		)
 	})
 })

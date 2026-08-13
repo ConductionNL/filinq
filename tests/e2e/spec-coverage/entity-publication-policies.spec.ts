@@ -63,7 +63,10 @@ async function seed(req: APIRequestContext, token: string): Promise<void> {
 			matchRules: [{ type: 'exact', value: STANDING_NAME }],
 		},
 	})
-	expect(standing.status(), `seed standing consent (${await standing.text().catch(() => '')})`).toBe(201)
+	expect(
+		standing.status(),
+		`seed standing consent (${await standing.text().catch(() => '')})`,
+	).toBe(201)
 	created.standing = (await standing.json()).id
 
 	// scope=document — belongs on the Consent Workflow page only.
@@ -77,7 +80,10 @@ async function seed(req: APIRequestContext, token: string): Promise<void> {
 			scope: 'document',
 		},
 	})
-	expect(document.status(), `seed document consent (${await document.text().catch(() => '')})`).toBe(201)
+	expect(
+		document.status(),
+		`seed document consent (${await document.text().catch(() => '')})`,
+	).toBe(201)
 	created.document = (await document.json()).id
 
 	// publicationProhibition — a DIFFERENT schema, and belongs on
@@ -93,7 +99,10 @@ async function seed(req: APIRequestContext, token: string): Promise<void> {
 			active: true,
 		},
 	})
-	expect(prohibition.status(), `seed prohibition (${await prohibition.text().catch(() => '')})`).toBe(201)
+	expect(
+		prohibition.status(),
+		`seed prohibition (${await prohibition.text().catch(() => '')})`,
+	).toBe(201)
 	created.prohibition = (await prohibition.json()).id
 }
 
@@ -138,7 +147,10 @@ async function expectListedNotListed(
 	absent: string,
 	why: string,
 ): Promise<void> {
-	await expect(content(page), `positive control — ${present} must be listed`).toContainText(present)
+	await expect(
+		content(page),
+		`positive control — ${present} must be listed`,
+	).toContainText(present)
 	await expect(content(page), why).not.toContainText(absent)
 }
 
@@ -176,20 +188,28 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 		const page = await ctx.newPage()
 		const token = await harvestToken(page)
 		const res = await ctx.request
-			.delete(`${API}/policy/standing-consents/${created.standing}`, { headers: jsonHeaders(token) })
+			.delete(`${API}/policy/standing-consents/${created.standing}`, {
+				headers: jsonHeaders(token),
+			})
 			.catch(() => null)
 		if (res && res.status() >= 400) {
 			// eslint-disable-next-line no-console
-			console.warn(`[teardown] standing consent ${created.standing} -> ${res.status()} (leaked)`)
+			console.warn(
+				`[teardown] standing consent ${created.standing} -> ${res.status()} (leaked)`,
+			)
 		}
 		await ctx.close()
 	})
 
-	test('"Publish always" lists the scope=entity record and NOT the scope=document one', async ({ page }) => {
+	test('"Publish always" lists the scope=entity record and NOT the scope=document one', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/entity-publication-policies/spec.md#standing-publication-consents-page-filters-by-scope
 		await go(page, 'policy/standing-consents')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/standing-consents/)
-		await expect(page.getByRole('heading', { name: 'Publish always' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Publish always' }),
+		).toBeVisible()
 
 		await expectListedNotListed(
 			page,
@@ -199,7 +219,9 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 		)
 	})
 
-	test('the Consent Workflow page lists the scope=document record and NOT the scope=entity one', async ({ page }) => {
+	test('the Consent Workflow page lists the scope=document record and NOT the scope=entity one', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/entity-publication-policies/spec.md#consent-workflow-page-filters-by-scope
 		//
 		// This is the surface whose filter is CLIENT-side: `GET /api/consents`
@@ -217,11 +239,15 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 		)
 	})
 
-	test('a prohibition appears on "Publish never" and on neither consent surface', async ({ page }) => {
+	test('a prohibition appears on "Publish never" and on neither consent surface', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/entity-publication-policies/spec.md#publication-prohibitions-page-is-the-only-surface-for-prohibition-records
 		await go(page, 'policy/prohibitions')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/prohibitions/)
-		await expect(page.getByRole('heading', { name: 'Publish never' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Publish never' }),
+		).toBeVisible()
 		await expect(
 			content(page),
 			'the seeded prohibition must be listed on its own page',
@@ -248,23 +274,34 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 		)
 	})
 
-	test('the standing-consent create form blocks submit until consentMethod is set, and warns on a blank validUntil', async ({ page }) => {
+	test('the standing-consent create form blocks submit until consentMethod is set, and warns on a blank validUntil', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/entity-publication-policies/spec.md#standing-consent-create-form-requires-consentmethod
 		await go(page, 'policy/standing-consents')
 
 		// CnActionsBar renders the primary CTA with a resolved label of
 		// "Add <schema title>" — never the bare string "Add" — so target the
 		// stable testid, with a name-prefix fallback for older shells.
-		const addCta = page.locator('[data-testid="cn-cta-primary"]')
+		const addCta = page
+			.locator('[data-testid="cn-cta-primary"]')
 			.or(page.getByRole('button', { name: /^Add\b/ }))
 			.first()
-		await expect(addCta, 'StandingConsentIndex declares :show-add="true"').toBeVisible()
+		await expect(
+			addCta,
+			'StandingConsentIndex declares :show-add="true"',
+		).toBeVisible()
 		await addCta.click()
 
-		const dialog = page.getByRole('dialog').filter({ hasText: 'Add standing consent' }).first()
+		const dialog = page
+			.getByRole('dialog')
+			.filter({ hasText: 'Add standing consent' })
+			.first()
 		await expect(dialog).toBeVisible()
 
-		const submit = dialog.getByRole('button', { name: /^(Create|Save)$/ }).first()
+		const submit = dialog
+			.getByRole('button', { name: /^(Create|Save)$/ })
+			.first()
 
 		// Satisfy EVERY other precondition of `canSubmit` (entityText + one
 		// complete match rule) so the only thing still missing is

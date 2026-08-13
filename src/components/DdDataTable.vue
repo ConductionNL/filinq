@@ -7,7 +7,10 @@
 		<table v-else class="dd-data-table__table">
 			<thead>
 				<tr>
-					<th v-if="selectable" class="dd-data-table__th dd-data-table__th--select" @click.stop>
+					<th
+						v-if="selectable"
+						class="dd-data-table__th dd-data-table__th--select"
+						@click.stop>
 						<NcCheckboxRadioSwitch
 							:model-value="allSelected"
 							:indeterminate="someSelected"
@@ -29,7 +32,9 @@
 						:style="col.width ? { width: col.width } : null">
 						{{ col.label }}
 					</th>
-					<th v-if="$slots['row-actions']" class="dd-data-table__th dd-data-table__th--actions">
+					<th
+						v-if="$slots['row-actions']"
+						class="dd-data-table__th dd-data-table__th--actions">
 						<slot name="actions-header" />
 					</th>
 				</tr>
@@ -46,7 +51,10 @@
 					:key="row[rowKey]"
 					class="dd-data-table__row"
 					@click="$emit('row-click', row)">
-					<td v-if="selectable" class="dd-data-table__td dd-data-table__td--select" @click.stop>
+					<td
+						v-if="selectable"
+						class="dd-data-table__td dd-data-table__td--select"
+						@click.stop>
 						<NcCheckboxRadioSwitch
 							:aria-label="rowSelectLabel(row)"
 							:model-value="isSelected(row)"
@@ -63,7 +71,10 @@
 							{{ getCellValue(row, col.key) }}
 						</slot>
 					</td>
-					<td v-if="$slots['row-actions']" class="dd-data-table__td dd-data-table__td--actions" @click.stop>
+					<td
+						v-if="$slots['row-actions']"
+						class="dd-data-table__td dd-data-table__td--actions"
+						@click.stop>
 						<slot name="row-actions" :row="row" />
 					</td>
 				</tr>
@@ -134,9 +145,11 @@ export default {
 		 * @spec exclude Pure presentational layout calculation; no domain or persistence semantics.
 		 */
 		totalColumns() {
-			return this.columns.length
+			return (
+				this.columns.length
 				+ (this.$slots['row-actions'] ? 1 : 0)
 				+ (this.selectable ? 1 : 0)
+			)
 		},
 		/**
 		 * True when every visible row is selected (drives the header checkbox).
@@ -144,8 +157,12 @@ export default {
 		 * @spec exclude Local checkbox/selection state derivation; no domain or persistence semantics.
 		 */
 		allSelected() {
-			return this.rows.length > 0
-				&& this.rows.every((row) => this.selectedKeys.includes(row[this.rowKey]))
+			return (
+				this.rows.length > 0
+				&& this.rows.every((row) =>
+					this.selectedKeys.includes(row[this.rowKey]),
+				)
+			)
 		},
 		/**
 		 * True when some — but not all — visible rows are selected (indeterminate state).
@@ -197,10 +214,13 @@ export default {
 		 * @spec exclude Generic presentational label derivation for a table row checkbox; no domain semantics.
 		 */
 		rowSelectLabel(row) {
-			const first = this.columns.length ? this.getCellValue(row, this.columns[0].key) : undefined
-			const name = (first === undefined || first === null || first === '')
-				? row[this.rowKey]
-				: first
+			const first = this.columns.length
+				? this.getCellValue(row, this.columns[0].key)
+				: undefined
+			const name =
+				first === undefined || first === null || first === ''
+					? row[this.rowKey]
+					: first
 			return t('docudesk', 'Select {row}', { row: String(name ?? '') })
 		},
 	},
@@ -210,7 +230,7 @@ export default {
 <style scoped>
 .dd-data-table {
 	border-radius: var(--dd-data-table-border-radius, var(--dd-radius-panel));
-	border: 1px solid var(--dd-data-table-border-color, var(--dd-border, #E9E9E9));
+	border: 1px solid var(--dd-data-table-border-color, var(--dd-border, #e9e9e9));
 	overflow-x: auto;
 	box-shadow: var(--dd-shadow-panel);
 }
@@ -233,7 +253,8 @@ export default {
 	background: var(--dd-data-table-cell-background, var(--color-main-background));
 	padding: var(--dd-data-table-cell-padding, 8px);
 	text-align: left;
-	border-bottom: 1px solid var(--dd-data-table-cell-border-color, var(--color-border));
+	border-bottom: 1px solid
+		var(--dd-data-table-cell-border-color, var(--color-border));
 	vertical-align: middle;
 }
 
@@ -280,12 +301,16 @@ export default {
 }
 
 .dd-data-table__row:hover {
-	background: var(--dd-data-table-row-hover-background, var(--color-background-hover));
+	background: var(
+		--dd-data-table-row-hover-background,
+		var(--color-background-hover)
+	);
 }
 
 .dd-data-table__empty td {
 	text-align: center;
-	padding: calc(12 * var(--default-grid-baseline)) calc(6 * var(--default-grid-baseline));
+	padding: calc(12 * var(--default-grid-baseline))
+		calc(6 * var(--default-grid-baseline));
 	color: var(--dd-data-table-empty-color, var(--color-text-maxcontrast));
 }
 

@@ -25,20 +25,28 @@ import { harvestToken } from './_fixtures'
 /** Widget id — `FileEntitiesWidget::getId()` in lib/Dashboard/. */
 const WIDGET_ID = 'docudesk-file-entities'
 
-test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added to the layout', async ({ page }) => {
+test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added to the layout', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 
 	// Add the widget the way the Dashboard's own "Customize" panel does.
-	const layout = await page.request.post('/ocs/v2.php/apps/dashboard/api/v3/layout', {
-		headers: {
-			requesttoken: token,
-			'OCS-APIRequest': 'true',
-			'Content-Type': 'application/json',
-			Accept: 'application/json',
+	const layout = await page.request.post(
+		'/ocs/v2.php/apps/dashboard/api/v3/layout',
+		{
+			headers: {
+				requesttoken: token,
+				'OCS-APIRequest': 'true',
+				'Content-Type': 'application/json',
+				Accept: 'application/json',
+			},
+			data: { layout: [WIDGET_ID] },
 		},
-		data: { layout: [WIDGET_ID] },
-	})
-	expect(layout.status(), `set dashboard layout (body: ${await layout.text()})`).toBe(200)
+	)
+	expect(
+		layout.status(),
+		`set dashboard layout (body: ${await layout.text()})`,
+	).toBe(200)
 
 	await page.goto('/index.php/apps/dashboard', { waitUntil: 'domcontentloaded' })
 	// Not `networkidle` — it never settles on Nextcloud (ADR-074 rule 4 /
@@ -56,7 +64,10 @@ test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added 
 	const empty = widget.getByText('No processed files yet')
 	const table = widget.locator('table.results-table')
 	await expect(empty.or(table).first()).toBeVisible()
-	await expect(widget.locator('.error-area'), 'the widget must not surface a load error').toHaveCount(0)
+	await expect(
+		widget.locator('.error-area'),
+		'the widget must not surface a load error',
+	).toHaveCount(0)
 
 	// The widget's own footer link back into the app.
 	await expect(widget.getByRole('link', { name: 'Open DocuDesk' })).toBeVisible()

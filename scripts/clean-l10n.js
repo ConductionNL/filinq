@@ -47,7 +47,9 @@ const ENGLISH_FILE = path.join(L10N_DIR, 'en.js')
 
 const args = new Set(process.argv.slice(2))
 if (args.has('--help') || args.has('-h')) {
-	console.log(fs.readFileSync(__filename, 'utf8').split('\n').slice(2, 27).join('\n'))
+	console.log(
+		fs.readFileSync(__filename, 'utf8').split('\n').slice(2, 27).join('\n'),
+	)
 	process.exit(0)
 }
 const apply = args.has('--apply')
@@ -63,7 +65,7 @@ function main() {
 	const { app, translations: english } = loadJsTranslations(ENGLISH_FILE)
 	const existingKeys = new Set(Object.keys(english))
 	const usedKeys = collectUsedKeys(SRC_DIR, app)
-	const unused = [...existingKeys].filter(k => !usedKeys.has(k)).sort()
+	const unused = [...existingKeys].filter((k) => !usedKeys.has(k)).sort()
 
 	console.log(`${app} l10n unused-key remover`)
 	console.log(`  Used keys in src/:  ${usedKeys.size}`)
@@ -77,7 +79,9 @@ function main() {
 	}
 
 	if (!apply) {
-		console.log('Dry-run. Pass --apply to remove these keys from all l10n/*.js files.\n')
+		console.log(
+			'Dry-run. Pass --apply to remove these keys from all l10n/*.js files.\n',
+		)
 		for (const k of unused) console.log(`  - ${JSON.stringify(k)}`)
 		return
 	}
@@ -90,7 +94,10 @@ function main() {
 		const before = Object.keys(translations).length
 		for (const k of unused) delete translations[k]
 		const after = Object.keys(translations).length
-		fs.writeFileSync(file, serializeJs({ app: fileApp, translations, pluralForm }))
+		fs.writeFileSync(
+			file,
+			serializeJs({ app: fileApp, translations, pluralForm }),
+		)
 		written.push(file)
 		console.log(`${path.basename(file)}: ${before} → ${after} keys`)
 	}

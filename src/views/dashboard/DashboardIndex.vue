@@ -31,7 +31,9 @@ import { consentStore } from '../../store/store.js'
 				<RouterLink
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
-					:aria-label="t('docudesk', 'Total Consents — open the consent overview')">
+					:aria-label="
+						t('docudesk', 'Total Consents — open the consent overview')
+					">
 					<CnStatsBlock
 						:title="t('docudesk', 'Total Consents')"
 						:count="consentStore.consentStats.total"
@@ -46,7 +48,9 @@ import { consentStore } from '../../store/store.js'
 				<RouterLink
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
-					:aria-label="t('docudesk', 'Pending consents — open the consent overview')">
+					:aria-label="
+						t('docudesk', 'Pending consents — open the consent overview')
+					">
 					<CnStatsBlock
 						:title="t('docudesk', 'Pending')"
 						:count="consentStore.consentStats.pending"
@@ -61,7 +65,12 @@ import { consentStore } from '../../store/store.js'
 				<RouterLink
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
-					:aria-label="t('docudesk', 'Approved consents — open the consent overview')">
+					:aria-label="
+						t(
+							'docudesk',
+							'Approved consents — open the consent overview',
+						)
+					">
 					<CnStatsBlock
 						:title="t('docudesk', 'Approved')"
 						:count="consentStore.consentStats.approved"
@@ -76,7 +85,12 @@ import { consentStore } from '../../store/store.js'
 				<RouterLink
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
-					:aria-label="t('docudesk', 'Objected consents — open the consent overview')">
+					:aria-label="
+						t(
+							'docudesk',
+							'Objected consents — open the consent overview',
+						)
+					">
 					<CnStatsBlock
 						:title="t('docudesk', 'Objected')"
 						:count="consentStore.consentStats.objected"
@@ -91,7 +105,9 @@ import { consentStore } from '../../store/store.js'
 				<NcEmptyContent
 					v-if="!consentStore.loading && pendingConsents.length === 0"
 					:name="t('docudesk', 'No pending consents')"
-					:description="t('docudesk', 'All consents have been handled.')" />
+					:description="
+						t('docudesk', 'All consents have been handled.')
+					" />
 				<CnDataTable
 					v-else
 					:rows="pendingConsents"
@@ -110,7 +126,11 @@ import { consentStore } from '../../store/store.js'
 
 <script>
 import { NcEmptyContent } from '@nextcloud/vue'
-import { CnDashboardPage, CnStatsBlock, CnDataTable } from '@conduction/nextcloud-vue'
+import {
+	CnDashboardPage,
+	CnStatsBlock,
+	CnDataTable,
+} from '@conduction/nextcloud-vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
 
@@ -134,12 +154,58 @@ export default {
 				showWarning: false,
 			},
 			dashboardLayout: [
-				{ id: 1, widgetId: 'total-consents', gridX: 0, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 2, widgetId: 'pending', gridX: 3, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 3, widgetId: 'approved', gridX: 6, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 4, widgetId: 'objected', gridX: 9, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 5, widgetId: 'pending-consents', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 5 },
-				{ id: 6, widgetId: 'anonymization', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 5 },
+				{
+					id: 1,
+					widgetId: 'total-consents',
+					gridX: 0,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 2,
+					widgetId: 'pending',
+					gridX: 3,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 3,
+					widgetId: 'approved',
+					gridX: 6,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 4,
+					widgetId: 'objected',
+					gridX: 9,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 5,
+					widgetId: 'pending-consents',
+					gridX: 0,
+					gridY: 2,
+					gridWidth: 6,
+					gridHeight: 5,
+				},
+				{
+					id: 6,
+					widgetId: 'anonymization',
+					gridX: 6,
+					gridY: 2,
+					gridWidth: 6,
+					gridHeight: 5,
+				},
 			],
 		}
 	},
@@ -165,9 +231,7 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
 		consentColumns() {
-			return [
-				{ key: 'entity', label: t('docudesk', 'Entity') },
-			]
+			return [{ key: 'entity', label: t('docudesk', 'Entity') }]
 		},
 		/**
 		 * Consent records with status "pending", capped at 10 rows.
@@ -194,7 +258,10 @@ export default {
 		 */
 		async fetchAnonymiserBackendState() {
 			try {
-				const response = await fetch('/index.php/apps/docudesk/api/settings', { method: 'GET' })
+				const response = await fetch(
+					'/index.php/apps/docudesk/api/settings',
+					{ method: 'GET' },
+				)
 				if (response.ok === false) {
 					return
 				}
@@ -203,8 +270,10 @@ export default {
 				if (data.anonymiserBackend) {
 					this.anonymiserBackend = {
 						method: data.anonymiserBackend.method ?? 'regex',
-						appApiInstalled: data.anonymiserBackend.appApiInstalled ?? false,
-						warningDismissed: data.anonymiserBackend.warningDismissed ?? false,
+						appApiInstalled:
+							data.anonymiserBackend.appApiInstalled ?? false,
+						warningDismissed:
+							data.anonymiserBackend.warningDismissed ?? false,
 						showWarning: data.anonymiserBackend.showWarning ?? false,
 					}
 				}
@@ -232,7 +301,11 @@ export default {
 		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-8
 		 */
 		onAnonymiserWarningDismissed() {
-			this.anonymiserBackend = { ...this.anonymiserBackend, showWarning: false, warningDismissed: true }
+			this.anonymiserBackend = {
+				...this.anonymiserBackend,
+				showWarning: false,
+				warningDismissed: true,
+			}
 		},
 	},
 }

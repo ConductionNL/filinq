@@ -61,38 +61,38 @@ function renderNode(node) {
 	const inner = () => Array.from(node.childNodes).map(renderNode).join('')
 
 	switch (node.tagName) {
-	case 'text:h': {
-		const tag = headingTag(node.getAttribute('text:outline-level'))
-		return `<${tag}>${inner()}</${tag}>`
-	}
-	case 'text:p':
-		return `<p>${inner()}</p>`
-	case 'text:line-break':
-		return '<br>'
-	case 'text:tab':
-		return ' '
-	case 'text:s': {
-		const count = parseInt(node.getAttribute('text:c'), 10)
-		return ' '.repeat(Number.isNaN(count) || count < 1 ? 1 : count)
-	}
-	case 'table:table':
-		return `<table>${inner()}</table>`
-	case 'table:table-row':
-		return `<tr>${inner()}</tr>`
-	case 'table:table-cell':
-		return `<td>${inner()}</td>`
-	case 'text:list':
-		return `<ul>${inner()}</ul>`
-	case 'text:list-item':
-		return `<li>${inner()}</li>`
-	case 'draw:image':
-	case 'draw:object':
-		// Binary/embedded objects are not rendered in the preview.
-		return ''
-	default:
-		// Wrappers (office:body, office:text, text:span, text:a,
-		// table:table-header-rows, …) contribute their children only.
-		return inner()
+		case 'text:h': {
+			const tag = headingTag(node.getAttribute('text:outline-level'))
+			return `<${tag}>${inner()}</${tag}>`
+		}
+		case 'text:p':
+			return `<p>${inner()}</p>`
+		case 'text:line-break':
+			return '<br>'
+		case 'text:tab':
+			return ' '
+		case 'text:s': {
+			const count = parseInt(node.getAttribute('text:c'), 10)
+			return ' '.repeat(Number.isNaN(count) || count < 1 ? 1 : count)
+		}
+		case 'table:table':
+			return `<table>${inner()}</table>`
+		case 'table:table-row':
+			return `<tr>${inner()}</tr>`
+		case 'table:table-cell':
+			return `<td>${inner()}</td>`
+		case 'text:list':
+			return `<ul>${inner()}</ul>`
+		case 'text:list-item':
+			return `<li>${inner()}</li>`
+		case 'draw:image':
+		case 'draw:object':
+			// Binary/embedded objects are not rendered in the preview.
+			return ''
+		default:
+			// Wrappers (office:body, office:text, text:span, text:a,
+			// table:table-header-rows, …) contribute their children only.
+			return inner()
 	}
 }
 
@@ -150,5 +150,8 @@ export function odfXmlToText(xml) {
 		...Array.from(doc.getElementsByTagName('text:p')),
 		...Array.from(doc.getElementsByTagName('text:h')),
 	]
-	return paragraphs.map((p) => p.textContent || '').filter((t) => t !== '').join('\n')
+	return paragraphs
+		.map((p) => p.textContent || '')
+		.filter((t) => t !== '')
+		.join('\n')
 }

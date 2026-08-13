@@ -153,11 +153,14 @@ function loadAll() {
 function writeAll(entries) {
 	const written = []
 	for (const e of entries) {
-		fs.writeFileSync(e.file, serializeJs({
-			app: e.app,
-			translations: e.translations,
-			pluralForm: e.pluralForm,
-		}))
+		fs.writeFileSync(
+			e.file,
+			serializeJs({
+				app: e.app,
+				translations: e.translations,
+				pluralForm: e.pluralForm,
+			}),
+		)
 		written.push(e.file)
 	}
 	runEslintFix(written, { rootDir: ROOT, log: (m) => console.error(m) })
@@ -241,18 +244,26 @@ function cmdFind(args) {
 		console.log('none')
 		process.exit(1)
 	}
-	for (const k of [...seen].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))) {
+	for (const k of [...seen].sort((a, b) =>
+		a.toLowerCase().localeCompare(b.toLowerCase()),
+	)) {
 		console.log(k)
 	}
 }
 
 function cmdAdd(args) {
-	const { positionals, opts, flags } = parseArgs(args, { repeatable: new Set(['value', 'plural']) })
+	const { positionals, opts, flags } = parseArgs(args, {
+		repeatable: new Set(['value', 'plural']),
+	})
 	const [key] = positionals
-	if (!key) fail('usage: add <key> --value <lang>=<text> [--value <lang>=<text> ...] [--plural <lang>=<text> ...] [--locales=a,b] [--force]')
+	if (!key)
+		fail(
+			'usage: add <key> --value <lang>=<text> [--value <lang>=<text> ...] [--plural <lang>=<text> ...] [--locales=a,b] [--force]',
+		)
 
 	const valuePairs = opts.value || []
-	if (!valuePairs.length) fail('add: at least one --value <lang>=<text> is required')
+	if (!valuePairs.length)
+		fail('add: at least one --value <lang>=<text> is required')
 
 	let valueMap, pluralMap
 	try {
@@ -269,28 +280,45 @@ function cmdAdd(args) {
 	const entries = loadAll()
 	const allLocales = new Set(entries.map((e) => e.locale))
 	const targetLocales = opts.locales
-		? new Set(opts.locales.split(',').map((s) => s.trim()).filter(Boolean))
+		? new Set(
+				opts.locales
+					.split(',')
+					.map((s) => s.trim())
+					.filter(Boolean),
+			)
 		: allLocales
 
 	for (const lang of targetLocales) {
 		if (!allLocales.has(lang)) {
-			fail(`add: locale '${lang}' has no l10n/${lang}.js (known: ${[...allLocales].join(', ')})`)
+			fail(
+				`add: locale '${lang}' has no l10n/${lang}.js (known: ${[...allLocales].join(', ')})`,
+			)
 		}
 	}
 
 	// Surface unknown locales (typos like --value xx=...) before missing-locale errors.
-	const unknown = [...new Set([...Object.keys(valueMap), ...Object.keys(pluralMap)])].filter((l) => !allLocales.has(l))
+	const unknown = [
+		...new Set([...Object.keys(valueMap), ...Object.keys(pluralMap)]),
+	].filter((l) => !allLocales.has(l))
 	if (unknown.length) {
-		fail(`add: --value/--plural uses unknown locale(s): ${unknown.join(', ')} (known: ${[...allLocales].join(', ')})`)
+		fail(
+			`add: --value/--plural uses unknown locale(s): ${unknown.join(', ')} (known: ${[...allLocales].join(', ')})`,
+		)
 	}
-	const extras = [...new Set([...Object.keys(valueMap), ...Object.keys(pluralMap)])].filter((l) => !targetLocales.has(l))
+	const extras = [
+		...new Set([...Object.keys(valueMap), ...Object.keys(pluralMap)]),
+	].filter((l) => !targetLocales.has(l))
 	if (extras.length) {
-		fail(`add: --value/--plural provided for locale(s) not in target set: ${extras.join(', ')}`)
+		fail(
+			`add: --value/--plural provided for locale(s) not in target set: ${extras.join(', ')}`,
+		)
 	}
 	// Every targeted locale must have a value supplied. No silent English-as-Dutch fallback.
 	const missing = [...targetLocales].filter((l) => !(l in valueMap))
 	if (missing.length) {
-		fail(`add: missing --value for locale(s): ${missing.join(', ')}. Provide a translation for each, or narrow with --locales.`)
+		fail(
+			`add: missing --value for locale(s): ${missing.join(', ')}. Provide a translation for each, or narrow with --locales.`,
+		)
 	}
 	// Plural-ness is a property of the key, not a locale: every targeted locale
 	// must carry the same plural form(s), or the key would be an array in some
@@ -298,7 +326,9 @@ function cmdAdd(args) {
 	if (isPlural) {
 		const missingPlural = [...targetLocales].filter((l) => !(l in pluralMap))
 		if (missingPlural.length) {
-			fail(`add: --plural given, so every targeted locale needs plural form(s); missing for: ${missingPlural.join(', ')}.`)
+			fail(
+				`add: --plural given, so every targeted locale needs plural form(s); missing for: ${missingPlural.join(', ')}.`,
+			)
 		}
 	}
 
@@ -311,10 +341,13 @@ function cmdAdd(args) {
 		}
 	}
 	if (existing.length && !flags.force) {
-		fail(`add: key already exists in ${existing.map((l) => l + '.js').join(', ')}. Use 'set' to update or pass --force to overwrite.`)
+		fail(
+			`add: key already exists in ${existing.map((l) => l + '.js').join(', ')}. Use 'set' to update or pass --force to overwrite.`,
+		)
 	}
 
-	const valueFor = (locale) => isPlural ? [valueMap[locale], ...pluralMap[locale]] : valueMap[locale]
+	const valueFor = (locale) =>
+		isPlural ? [valueMap[locale], ...pluralMap[locale]] : valueMap[locale]
 
 	// Build mutated entries in memory; only write if every step succeeds.
 	const toWrite = []
@@ -331,16 +364,21 @@ function cmdAdd(args) {
 }
 
 function cmdSet(args) {
-	const { positionals, opts } = parseArgs(args, { repeatable: new Set(['plural']) })
+	const { positionals, opts } = parseArgs(args, {
+		repeatable: new Set(['plural']),
+	})
 	const [key] = positionals
-	if (!key) fail('usage: set <key> --locale=<lang> --value=<text> [--plural=<text> ...]')
+	if (!key)
+		fail('usage: set <key> --locale=<lang> --value=<text> [--plural=<text> ...]')
 	if (!opts.locale) fail('set: --locale is required')
 	if (opts.value === undefined) fail('set: --value is required')
 
 	const entries = loadAll()
 	const target = entries.find((e) => e.locale === opts.locale)
 	if (!target) {
-		fail(`set: locale '${opts.locale}' has no l10n/${opts.locale}.js (known: ${entries.map((e) => e.locale).join(', ')})`)
+		fail(
+			`set: locale '${opts.locale}' has no l10n/${opts.locale}.js (known: ${entries.map((e) => e.locale).join(', ')})`,
+		)
 	}
 	if (!Object.prototype.hasOwnProperty.call(target.translations, key)) {
 		fail(`set: key '${key}' not present in ${opts.locale}.js. Use 'add' first.`)
@@ -352,7 +390,9 @@ function cmdSet(args) {
 	const pluralForms = opts.plural // string (one) or array (repeated) or undefined
 	const hasPlural = pluralForms !== undefined
 	if (Array.isArray(target.translations[key]) && !hasPlural) {
-		fail(`set: key '${key}' is pluralized (array value); pass --value for the singular and --plural=<text> for each plural form.`)
+		fail(
+			`set: key '${key}' is pluralized (array value); pass --value for the singular and --plural=<text> for each plural form.`,
+		)
 	}
 
 	const nextValue = hasPlural
@@ -361,7 +401,9 @@ function cmdSet(args) {
 
 	const next = { ...target.translations, [key]: nextValue }
 	writeAll([{ ...target, translations: next }])
-	console.log(`${target.locale}.js\t${Array.isArray(nextValue) ? JSON.stringify(nextValue) : nextValue}`)
+	console.log(
+		`${target.locale}.js\t${Array.isArray(nextValue) ? JSON.stringify(nextValue) : nextValue}`,
+	)
 }
 
 function cmdRm(args) {
@@ -370,7 +412,9 @@ function cmdRm(args) {
 	if (!key) fail('usage: rm <key> [--force]')
 
 	const entries = loadAll()
-	const present = entries.filter((e) => Object.prototype.hasOwnProperty.call(e.translations, key))
+	const present = entries.filter((e) =>
+		Object.prototype.hasOwnProperty.call(e.translations, key),
+	)
 	if (!present.length) {
 		fail(`rm: key '${key}' not found in any locale .js file`)
 	}
@@ -379,9 +423,14 @@ function cmdRm(args) {
 		const app = entries[0].app
 		const refs = findKeyReferences(SRC_DIR, app, key)
 		if (refs.length) {
-			const sample = refs.slice(0, 3).map((r) => `${rel(r.file)}:${r.line}`).join(', ')
+			const sample = refs
+				.slice(0, 3)
+				.map((r) => `${rel(r.file)}:${r.line}`)
+				.join(', ')
 			const more = refs.length > 3 ? ` (+${refs.length - 3} more)` : ''
-			fail(`rm: key '${key}' is still referenced from ${sample}${more}. Pass --force to remove anyway.`)
+			fail(
+				`rm: key '${key}' is still referenced from ${sample}${more}. Pass --force to remove anyway.`,
+			)
 		}
 	}
 
@@ -402,13 +451,19 @@ function cmdRename(args) {
 	if (oldKey === newKey) fail('rename: old and new keys are identical')
 
 	const entries = loadAll()
-	const present = entries.filter((e) => Object.prototype.hasOwnProperty.call(e.translations, oldKey))
+	const present = entries.filter((e) =>
+		Object.prototype.hasOwnProperty.call(e.translations, oldKey),
+	)
 	if (!present.length) {
 		fail(`rename: key '${oldKey}' not found in any locale .js file`)
 	}
-	const collisions = entries.filter((e) => Object.prototype.hasOwnProperty.call(e.translations, newKey))
+	const collisions = entries.filter((e) =>
+		Object.prototype.hasOwnProperty.call(e.translations, newKey),
+	)
 	if (collisions.length && !flags.force) {
-		fail(`rename: target key '${newKey}' already exists in ${collisions.map((e) => e.locale + '.js').join(', ')}. Pass --force to overwrite.`)
+		fail(
+			`rename: target key '${newKey}' already exists in ${collisions.map((e) => e.locale + '.js').join(', ')}. Pass --force to overwrite.`,
+		)
 	}
 
 	const toWrite = []
@@ -462,16 +517,24 @@ function main() {
 	}
 	try {
 		switch (sub) {
-		case 'has': return cmdHas(rest)
-		case 'get': return cmdGet(rest)
-		case 'find': return cmdFind(rest)
-		case 'add': return cmdAdd(rest)
-		case 'set': return cmdSet(rest)
-		case 'rm': return cmdRm(rest)
-		case 'rename': return cmdRename(rest)
-		case 'list-locales': return cmdListLocales()
-		default:
-			fail(`unknown subcommand: ${sub}. Run --help for usage.`)
+			case 'has':
+				return cmdHas(rest)
+			case 'get':
+				return cmdGet(rest)
+			case 'find':
+				return cmdFind(rest)
+			case 'add':
+				return cmdAdd(rest)
+			case 'set':
+				return cmdSet(rest)
+			case 'rm':
+				return cmdRm(rest)
+			case 'rename':
+				return cmdRename(rest)
+			case 'list-locales':
+				return cmdListLocales()
+			default:
+				fail(`unknown subcommand: ${sub}. Run --help for usage.`)
 		}
 	} catch (err) {
 		fail(err.message || String(err))

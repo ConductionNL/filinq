@@ -45,7 +45,7 @@ export function resolveI18nValue(value, fallback = '') {
 		return String(value)
 	}
 
-	const active = typeof getLanguage === 'function' ? (getLanguage() || '') : ''
+	const active = typeof getLanguage === 'function' ? getLanguage() || '' : ''
 	const base = active.split(/[-_]/)[0]
 
 	const candidates = [active, base, 'en']

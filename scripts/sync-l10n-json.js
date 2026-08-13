@@ -39,7 +39,9 @@ const L10N_DIR = path.join(ROOT, 'l10n')
 
 const args = new Set(process.argv.slice(2))
 if (args.has('--help') || args.has('-h')) {
-	console.log(fs.readFileSync(__filename, 'utf8').split('\n').slice(6, 24).join('\n'))
+	console.log(
+		fs.readFileSync(__filename, 'utf8').split('\n').slice(6, 24).join('\n'),
+	)
 	process.exit(0)
 }
 const apply = args.has('--apply')
@@ -65,27 +67,36 @@ function main() {
 
 		const { translations, pluralForm } = loadJsTranslations(jsFile)
 		const nextJson = serializeJson({ translations, pluralForm })
-		const currentJson = fs.existsSync(jsonFile) ? fs.readFileSync(jsonFile, 'utf8') : null
+		const currentJson = fs.existsSync(jsonFile)
+			? fs.readFileSync(jsonFile, 'utf8')
+			: null
 
 		if (currentJson === nextJson) {
-			console.log(`  ✓ ${locale}.json is in sync (${Object.keys(translations).length} keys)`)
+			console.log(
+				`  ✓ ${locale}.json is in sync (${Object.keys(translations).length} keys)`,
+			)
 			continue
 		}
 
 		staleCount++
-		const keyDelta = currentJson === null
-			? 'missing'
-			: `${Object.keys(translations).length} keys in .js`
+		const keyDelta =
+			currentJson === null
+				? 'missing'
+				: `${Object.keys(translations).length} keys in .js`
 		if (apply) {
 			fs.writeFileSync(jsonFile, nextJson, 'utf8')
 			console.log(`  ↻ regenerated ${locale}.json (${keyDelta})`)
 		} else {
-			console.log(`  ✗ ${locale}.json is stale (${keyDelta}) — run with --apply to regenerate`)
+			console.log(
+				`  ✗ ${locale}.json is stale (${keyDelta}) — run with --apply to regenerate`,
+			)
 		}
 	}
 
 	if (!apply && staleCount > 0) {
-		console.log(`\n${staleCount} .json file(s) out of sync. Re-run with --apply to regenerate.`)
+		console.log(
+			`\n${staleCount} .json file(s) out of sync. Re-run with --apply to regenerate.`,
+		)
 		process.exit(1)
 	}
 	console.log(apply ? '\nDone.' : '\nAll .json files are in sync.')

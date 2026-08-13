@@ -8,7 +8,12 @@ import { standingConsentStore } from '../../store/store.js'
 		<CnIndexPage
 			ref="indexPage"
 			:title="t('docudesk', 'Publish always')"
-			:description="t('docudesk', 'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.')"
+			:description="
+				t(
+					'docudesk',
+					'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.',
+				)
+			"
 			:show-title="true"
 			:objects="standingConsentStore.standingConsents"
 			:columns="tableColumns"
@@ -71,7 +76,11 @@ import { standingConsentStore } from '../../store/store.js'
 
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="row.active === false ? t('docudesk', 'Inactive') : t('docudesk', 'Active')"
+					:label="
+						row.active === false
+							? t('docudesk', 'Inactive')
+							: t('docudesk', 'Active')
+					"
 					:color-map="activeColorMap" />
 			</template>
 
@@ -132,10 +141,7 @@ import { standingConsentStore } from '../../store/store.js'
 </template>
 
 <script>
-import {
-	NcActions,
-	NcActionButton,
-} from '@nextcloud/vue'
+import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
@@ -189,11 +195,23 @@ export default {
 	computed: {
 		tableColumns() {
 			return [
-				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
+				{
+					key: 'entityText',
+					label: t('docudesk', 'Entity'),
+					sortable: true,
+				},
 				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
 				{ key: 'matchRules', label: t('docudesk', 'Match rules') },
-				{ key: 'consentMethod', label: t('docudesk', 'Method'), sortable: true },
-				{ key: 'validUntil', label: t('docudesk', 'Valid until'), sortable: true },
+				{
+					key: 'consentMethod',
+					label: t('docudesk', 'Method'),
+					sortable: true,
+				},
+				{
+					key: 'validUntil',
+					label: t('docudesk', 'Valid until'),
+					sortable: true,
+				},
 				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
 			]
 		},
@@ -214,7 +232,9 @@ export default {
 		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
 		 */
 		deleteMessage() {
-			const name = this.deleteTarget?.entityText || t('docudesk', 'this standing consent')
+			const name =
+				this.deleteTarget?.entityText
+				|| t('docudesk', 'this standing consent')
 			return t('docudesk', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
@@ -241,7 +261,7 @@ export default {
 			if (!Array.isArray(rules) || rules.length === 0) {
 				return '-'
 			}
-			return rules.map(r => `${r.type}:${r.value}`).join(', ')
+			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
 		},
 		/**
 		 * Open the extracted standing-consent modal in create mode.
@@ -273,10 +293,11 @@ export default {
 				validUntil: row.validUntil || '',
 				active: row.active !== false,
 				matchRules: Array.isArray(row.matchRules)
-					? row.matchRules.map(r => ({ type: r.type, value: r.value }))
+					? row.matchRules.map((r) => ({ type: r.type, value: r.value }))
 					: [],
 				consentStatus: row.consentStatus || 'consent_given',
-				publicationDecision: row.publicationDecision || 'publish_with_consent',
+				publicationDecision:
+					row.publicationDecision || 'publish_with_consent',
 				notificationStatus: row.notificationStatus || 'skipped',
 			}
 			this.formError = ''
@@ -293,13 +314,19 @@ export default {
 			this.formError = ''
 			try {
 				if (this.editing) {
-					await standingConsentStore.updateStandingConsent(this.editing, formData)
+					await standingConsentStore.updateStandingConsent(
+						this.editing,
+						formData,
+					)
 				} else {
 					await standingConsentStore.createStandingConsent(formData)
 				}
 				this.dialogOpen = false
 			} catch (err) {
-				this.formError = err.response?.data?.error || err.message || t('docudesk', 'Save failed')
+				this.formError =
+					err.response?.data?.error
+					|| err.message
+					|| t('docudesk', 'Save failed')
 			} finally {
 				this.saving = false
 			}

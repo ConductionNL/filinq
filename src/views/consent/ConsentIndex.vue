@@ -7,7 +7,12 @@ import { consentStore } from '../../store/store.js'
 	<CnIndexPage
 		ref="indexPage"
 		:title="t('docudesk', 'Consent Workflow')"
-		:description="t('docudesk', 'Per-document consent records produced by the publication-clearance workflow.')"
+		:description="
+			t(
+				'docudesk',
+				'Per-document consent records produced by the publication-clearance workflow.',
+			)
+		"
 		:show-title="true"
 		:objects="workflowConsents"
 		:columns="tableColumns"
@@ -181,17 +186,39 @@ export default {
 		 */
 		tableColumns() {
 			return [
-				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
+				{
+					key: 'entityText',
+					label: t('docudesk', 'Entity'),
+					sortable: true,
+				},
 				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'consentStatus', label: t('docudesk', 'Consent Status'), sortable: true },
-				{ key: 'notificationStatus', label: t('docudesk', 'Notification'), sortable: true },
-				{ key: 'objectionDeadline', label: t('docudesk', 'Deadline'), sortable: true },
-				{ key: 'publicationDecision', label: t('docudesk', 'Decision'), sortable: true },
+				{
+					key: 'consentStatus',
+					label: t('docudesk', 'Consent Status'),
+					sortable: true,
+				},
+				{
+					key: 'notificationStatus',
+					label: t('docudesk', 'Notification'),
+					sortable: true,
+				},
+				{
+					key: 'objectionDeadline',
+					label: t('docudesk', 'Deadline'),
+					sortable: true,
+				},
+				{
+					key: 'publicationDecision',
+					label: t('docudesk', 'Decision'),
+					sortable: true,
+				},
 			]
 		},
 		// Workflow records only — scope:"entity" rows live on the Standing Consents page.
 		workflowConsents() {
-			return consentStore.consents.filter(c => (c.scope || 'document') === 'document')
+			return consentStore.consents.filter(
+				(c) => (c.scope || 'document') === 'document',
+			)
 		},
 		paginationData() {
 			const total = this.workflowConsents.length
@@ -217,7 +244,10 @@ export default {
 		 */
 		viewConsent(consent) {
 			consentStore.setConsentItem(consent)
-			this.$router.push({ name: 'ConsentDetail', params: { id: consent.id || consent.uuid } })
+			this.$router.push({
+				name: 'ConsentDetail',
+				params: { id: consent.id || consent.uuid },
+			})
 		},
 		async handleRefresh() {
 			this.isRefreshing = true

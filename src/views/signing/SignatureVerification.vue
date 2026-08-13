@@ -2,26 +2,46 @@
 	<div class="signature-verification">
 		<h2>{{ t('docudesk', 'Signature Verification') }}</h2>
 		<div class="verify-form">
-			<input v-model="verifyFileId"
+			<input
+				v-model="verifyFileId"
 				type="text"
 				:aria-label="t('docudesk', 'File ID to verify')"
-				:placeholder="t('docudesk', 'Enter file ID')">
+				:placeholder="t('docudesk', 'Enter file ID')" />
 			<NcButton variant="primary" :disabled="!verifyFileId" @click="verify">
 				{{ t('docudesk', 'Verify') }}
 			</NcButton>
 		</div>
 		<div v-if="signingStore.verificationResult" class="results">
-			<p><strong>{{ t('docudesk', 'File') }}:</strong> {{ signingStore.verificationResult.fileName }}</p>
+			<p>
+				<strong>{{ t('docudesk', 'File') }}:</strong>
+				{{ signingStore.verificationResult.fileName }}
+			</p>
 			<p>
 				<strong>{{ t('docudesk', 'Verdict') }}:</strong>
-				<span class="verdict-badge" :class="'verdict-' + verdict">{{ verdictLabel }}</span>
+				<span class="verdict-badge" :class="'verdict-' + verdict">{{
+					verdictLabel
+				}}</span>
 			</p>
-			<p><strong>{{ t('docudesk', 'Signatures') }}:</strong> {{ signingStore.verificationResult.signatures.length }}</p>
-			<ul v-if="signingStore.verificationResult.signatures.length" class="signature-list">
-				<li v-for="(signature, index) in signingStore.verificationResult.signatures" :key="index">
-					<span class="status-badge" :class="'status-' + signature.status">{{ statusLabel(signature.status) }}</span>
+			<p>
+				<strong>{{ t('docudesk', 'Signatures') }}:</strong>
+				{{ signingStore.verificationResult.signatures.length }}
+			</p>
+			<ul
+				v-if="signingStore.verificationResult.signatures.length"
+				class="signature-list">
+				<li
+					v-for="(signature, index) in signingStore.verificationResult
+						.signatures"
+					:key="index">
+					<span
+						class="status-badge"
+						:class="'status-' + signature.status"
+						>{{ statusLabel(signature.status) }}</span
+					>
 					<span class="signer">{{ signature.signer }}</span>
-					<span v-if="signature.reason" class="reason">({{ reasonLabel(signature.reason) }})</span>
+					<span v-if="signature.reason" class="reason"
+						>({{ reasonLabel(signature.reason) }})</span
+					>
 				</li>
 			</ul>
 			<p class="results__attribution">
@@ -52,7 +72,9 @@ export default {
 		return { verifyFileId: this.fileId }
 	},
 	computed: {
-		signingStore() { return useSigningStore() },
+		signingStore() {
+			return useSigningStore()
+		},
 		/**
 		 * Tri-state document verdict (signing-trust-rebuild REQ-DDSTR-005):
 		 * verified | tampered | unverifiable | mixed. Falls back to the
@@ -98,7 +120,11 @@ export default {
 		 *
 		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-signing-authoring-and-verify-are-reachable-with-trust-actions-gated-req-ddosr-004
 		 */
-		async verify() { if (this.verifyFileId) { await this.signingStore.verifyDocument(this.verifyFileId) } },
+		async verify() {
+			if (this.verifyFileId) {
+				await this.signingStore.verifyDocument(this.verifyFileId)
+			}
+		},
 		/**
 		 * Human-readable label for the document-level tri-state verdict.
 		 *
@@ -136,10 +162,22 @@ export default {
 		 */
 		reasonLabel(reason) {
 			const labels = {
-				'legacy-assertion-v1': t('docudesk', 'Legacy signature format, cannot be re-verified'),
-				'external-signature-unsupported': t('docudesk', 'External signature, not yet supported'),
-				'mac-mismatch': t('docudesk', 'Signature no longer matches the document'),
-				'signing-secret-not-configured': t('docudesk', 'Server verification secret not configured'),
+				'legacy-assertion-v1': t(
+					'docudesk',
+					'Legacy signature format, cannot be re-verified',
+				),
+				'external-signature-unsupported': t(
+					'docudesk',
+					'External signature, not yet supported',
+				),
+				'mac-mismatch': t(
+					'docudesk',
+					'Signature no longer matches the document',
+				),
+				'signing-secret-not-configured': t(
+					'docudesk',
+					'Server verification secret not configured',
+				),
 			}
 			return labels[reason] ?? reason
 		},

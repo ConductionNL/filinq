@@ -67,7 +67,9 @@ test.describe('consent-management — consent list UI', () => {
 		await expect(page).not.toHaveURL(/\/login/)
 	})
 
-	test('consent list renders page content (not a crash/blank page)', async ({ page }) => {
+	test('consent list renders page content (not a crash/blank page)', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/consent-management/spec.md#empty-consent-list
 		await go(page, 'consent')
 		// NC page body must be visible (no blank page crash)
@@ -79,7 +81,9 @@ test.describe('consent-management — consent list UI', () => {
 		expect(title).not.toMatch(/server error|500/i)
 	})
 
-	test('consent detail route is navigable (click consent to view details)', async ({ page }) => {
+	test('consent detail route is navigable (click consent to view details)', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/consent-management/spec.md#click-consent-to-view-details
 		// Navigate to consent list first
 		await go(page, 'consent')

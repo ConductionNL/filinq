@@ -86,17 +86,25 @@ export async function harvestToken(page: Page): Promise<string> {
 	// first write request.
 	await page.waitForFunction(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		() => Boolean((window as any).OC?.requestToken || document.head.dataset.requesttoken),
+		() =>
+			Boolean(
+				(window as any).OC?.requestToken
+				|| document.head.dataset.requesttoken,
+			),
 		undefined,
 		{ timeout: 30_000 },
 	)
 	const token = await page.evaluate(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		() => (window as any).OC?.requestToken
+		() =>
+			(window as any).OC?.requestToken
 			|| document.head.dataset.requesttoken
 			|| '',
 	)
-	expect(token, 'CSRF request-token must be harvestable from the running app').not.toEqual('')
+	expect(
+		token,
+		'CSRF request-token must be harvestable from the running app',
+	).not.toEqual('')
 	return token
 }
 
@@ -134,14 +142,19 @@ export async function createTemplate(
 	token: string,
 	overrides: Partial<TemplateSeed> = {},
 ): Promise<TemplateSeed> {
-	const name = overrides.name ?? `${TEST_PREFIX}-tmpl-${Math.random().toString(36).slice(2, 8)}`
+	const name =
+		overrides.name
+		?? `${TEST_PREFIX}-tmpl-${Math.random().toString(36).slice(2, 8)}`
 	const content = overrides.content ?? 'Dear {{name}}, welcome to {{org}}.'
 	const namespace = overrides.namespace ?? 'docudesk'
 	const res = await req.post(`${API}/templates`, {
 		headers: jsonHeaders(token),
 		data: { name, content, namespace },
 	})
-	expect(res.status(), `create template HTTP (body: ${await res.text().catch(() => '')})`).toBe(200)
+	expect(
+		res.status(),
+		`create template HTTP (body: ${await res.text().catch(() => '')})`,
+	).toBe(200)
 	const body = await res.json()
 	expect(body.id, 'created template must carry a persisted id').toBeTruthy()
 	expect(body.name).toBe(name)
@@ -156,8 +169,14 @@ export async function createTemplate(
  * @param id    The template id.
  * @return The HTTP status and parsed body.
  */
-export async function getTemplate(req: APIRequestContext, token: string, id: string) {
-	const res = await req.get(`${API}/templates/${id}`, { headers: jsonHeaders(token) })
+export async function getTemplate(
+	req: APIRequestContext,
+	token: string,
+	id: string,
+) {
+	const res = await req.get(`${API}/templates/${id}`, {
+		headers: jsonHeaders(token),
+	})
 	return { status: res.status(), body: await res.json().catch(() => ({})) }
 }
 
@@ -171,7 +190,10 @@ export async function getTemplate(req: APIRequestContext, token: string, id: str
 export async function listTemplates(req: APIRequestContext, token: string) {
 	const res = await req.get(`${API}/templates`, { headers: jsonHeaders(token) })
 	const body = await res.json().catch(() => ({ results: [] }))
-	return { status: res.status(), results: (body.results ?? []) as Array<Record<string, unknown>> }
+	return {
+		status: res.status(),
+		results: (body.results ?? []) as Array<Record<string, unknown>>,
+	}
 }
 
 /**
@@ -182,8 +204,14 @@ export async function listTemplates(req: APIRequestContext, token: string) {
  * @param id    The template id.
  * @return The HTTP status code.
  */
-export async function deleteTemplate(req: APIRequestContext, token: string, id: string): Promise<number> {
-	const res = await req.delete(`${API}/templates/${id}`, { headers: jsonHeaders(token) })
+export async function deleteTemplate(
+	req: APIRequestContext,
+	token: string,
+	id: string,
+): Promise<number> {
+	const res = await req.delete(`${API}/templates/${id}`, {
+		headers: jsonHeaders(token),
+	})
 	return res.status()
 }
 
@@ -197,7 +225,10 @@ export async function deleteTemplate(req: APIRequestContext, token: string, id: 
  * @param token The CSRF request-token.
  * @return Resolves once all family-prefixed templates are deleted.
  */
-export async function cleanupTemplates(req: APIRequestContext, token: string): Promise<void> {
+export async function cleanupTemplates(
+	req: APIRequestContext,
+	token: string,
+): Promise<void> {
 	const { results } = await listTemplates(req, token)
 	for (const t of results) {
 		const name = String(t.name ?? '')
@@ -232,13 +263,20 @@ export async function createDavFile(
 	contents: string,
 ): Promise<{ status: number; fileId: string }> {
 	const url = `/remote.php/dav/files/admin/${relPath}`
-	const put = await req.put(url, { headers: { requesttoken: token }, data: contents })
+	const put = await req.put(url, {
+		headers: { requesttoken: token },
+		data: contents,
+	})
 	let fileId = ''
 	if (put.status() === 201 || put.status() === 204) {
 		// PROPFIND the file to read its oc:fileid.
 		const pf = await req.fetch(url, {
 			method: 'PROPFIND',
-			headers: { requesttoken: token, Depth: '0', 'Content-Type': 'application/xml' },
+			headers: {
+				requesttoken: token,
+				Depth: '0',
+				'Content-Type': 'application/xml',
+			},
 			data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
 		})
 		const xml = await pf.text()
@@ -255,7 +293,11 @@ export async function createDavFile(
  * @param relPath The folder path under the admin Files root.
  * @return The MKCOL HTTP status code.
  */
-export async function createDavFolder(req: APIRequestContext, token: string, relPath: string): Promise<number> {
+export async function createDavFolder(
+	req: APIRequestContext,
+	token: string,
+	relPath: string,
+): Promise<number> {
 	const res = await req.fetch(`/remote.php/dav/files/admin/${relPath}`, {
 		method: 'MKCOL',
 		headers: { requesttoken: token },
@@ -271,9 +313,15 @@ export async function createDavFolder(req: APIRequestContext, token: string, rel
  * @param relPath The path under the admin Files root to delete.
  * @return Resolves once the DELETE has been attempted (errors swallowed).
  */
-export async function deleteDavPath(req: APIRequestContext, token: string, relPath: string): Promise<void> {
-	await req.fetch(`/remote.php/dav/files/admin/${relPath}`, {
-		method: 'DELETE',
-		headers: { requesttoken: token },
-	}).catch(() => {})
+export async function deleteDavPath(
+	req: APIRequestContext,
+	token: string,
+	relPath: string,
+): Promise<void> {
+	await req
+		.fetch(`/remote.php/dav/files/admin/${relPath}`, {
+			method: 'DELETE',
+			headers: { requesttoken: token },
+		})
+		.catch(() => {})
 }

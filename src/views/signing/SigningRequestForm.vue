@@ -2,15 +2,30 @@
 	<div class="signing-request-form">
 		<h2>{{ t('docudesk', 'New Signing Request') }}</h2>
 		<NcNoteCard type="info" class="signing-request-form__notice">
-			{{ t('docudesk', 'This composes a draft signing request only. Sending for signature, provider binding and signer-identity assertion are not available yet — the signature level below records your intent but is not yet cryptographically enforced.') }}
+			{{
+				t(
+					'docudesk',
+					'This composes a draft signing request only. Sending for signature, provider binding and signer-identity assertion are not available yet — the signature level below records your intent but is not yet cryptographically enforced.',
+				)
+			}}
 		</NcNoteCard>
 		<div class="form-group">
-			<label for="signing-request-document-file-id">{{ t('docudesk', 'Document File ID') }}</label>
-			<input id="signing-request-document-file-id" v-model="form.documentFileId" type="text">
+			<label for="signing-request-document-file-id">{{
+				t('docudesk', 'Document File ID')
+			}}</label>
+			<input
+				id="signing-request-document-file-id"
+				v-model="form.documentFileId"
+				type="text" />
 		</div>
 		<div class="form-group">
-			<label for="signing-request-document-name">{{ t('docudesk', 'Document Name') }}</label>
-			<input id="signing-request-document-name" v-model="form.documentName" type="text">
+			<label for="signing-request-document-name">{{
+				t('docudesk', 'Document Name')
+			}}</label>
+			<input
+				id="signing-request-document-name"
+				v-model="form.documentName"
+				type="text" />
 		</div>
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signature Level') }}</label>
@@ -37,7 +52,10 @@
 				</option>
 			</select>
 		</div>
-		<NcButton variant="primary" :disabled="!form.documentFileId || !form.documentName" @click="submit">
+		<NcButton
+			variant="primary"
+			:disabled="!form.documentFileId || !form.documentName"
+			@click="submit">
 			{{ t('docudesk', 'Create Signing Request') }}
 		</NcButton>
 	</div>
@@ -54,7 +72,13 @@ export default {
 	components: { NcButton, NcNoteCard },
 	data() {
 		return {
-			form: { documentFileId: '', documentName: '', signatureLevel: 'SES', signingMode: 'sequential', signers: [] },
+			form: {
+				documentFileId: '',
+				documentName: '',
+				signatureLevel: 'SES',
+				signingMode: 'sequential',
+				signers: [],
+			},
 		}
 	},
 	methods: {
