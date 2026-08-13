@@ -86,3 +86,10 @@ A 90-day workflow artifact named `sbom-<app>` is also produced on every successf
 ### Reporting SBOM-related issues
 
 If you spot a missing dependency, an incorrect version, or a CVE we should be alerted to, email `security@conduction.nl` per the disclosure process at the top of this document.
+
+### Gate scope
+
+Hydra Gates scan the **whole tree** on every event, not the diff (`.github#378`, `#416`). A
+one-file pull request therefore inherits the repository's entire outstanding finding count.
+That is deliberate: adding or tightening a gate is meant to block the next release until the
+existing code meets the new standard, rather than applying only to newly-touched lines.
