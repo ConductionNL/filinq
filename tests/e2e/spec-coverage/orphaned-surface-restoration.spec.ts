@@ -49,22 +49,30 @@ import { test, expect, type Page } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
 test.describe('orphaned-surface-restoration — correspondence', () => {
-	test('Correspondence is reachable via the left navigation and renders its form', async ({ page }) => {
+	test('Correspondence is reachable via the left navigation and renders its form', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#correspondence-opens-from-the-menu
 		const guard = attachConsoleGuard(page)
 		await go(page, '')
 		await navClick(page, 'Letters & correspondence')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/correspondence/)
-		await expect(page.getByRole('heading', { name: 'Letters & correspondence' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Letters & correspondence' }),
+		).toBeVisible()
 
-		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual([])
+		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual(
+			[],
+		)
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
 	test('Correspondence deep-links directly', async ({ page }) => {
 		await go(page, 'correspondence')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/correspondence/)
-		await expect(page.getByRole('heading', { name: 'Letters & correspondence' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Letters & correspondence' }),
+		).toBeVisible()
 		// Real field from CorrespondenceIndex.vue — proves the component
 		// (not a manifest-empty-state fallback) actually rendered.
 		await expect(page.getByText('Template ID')).toBeVisible()
@@ -72,13 +80,16 @@ test.describe('orphaned-surface-restoration — correspondence', () => {
 })
 
 test.describe('orphaned-surface-restoration — signing authoring + verify', () => {
-	test('"New signing request" primary action opens the signer-chain create form, not the generic Add', async ({ page }) => {
+	test('"New signing request" primary action opens the signer-chain create form, not the generic Add', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#signer-chain-create-form-opens-from-the-signing-index
 		const guard = attachConsoleGuard(page)
 		await go(page, 'signing')
 		await dismissOverlays(page)
 
-		const primaryAction = page.locator('[data-testid="cn-nav-primary-action"]')
+		const primaryAction = page
+			.locator('[data-testid="cn-nav-primary-action"]')
 			.or(page.getByRole('button', { name: 'New signing request' }))
 			.first()
 		await expect(primaryAction).toBeVisible()
@@ -92,7 +103,9 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		await page.waitForTimeout(800)
 
 		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/new/)
-		await expect(page.getByRole('heading', { name: 'New Signing Request' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'New Signing Request' }),
+		).toBeVisible()
 		// The old generic index Add wrote a bare object with no signer-chain
 		// fields — assert the real form fields are present instead.
 		// `.first()` — "Signature Level" appears both as the field label and in
@@ -104,26 +117,39 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
-	test('the Signing Requests index no longer shows the generic inline Add button', async ({ page }) => {
+	test('the Signing Requests index no longer shows the generic inline Add button', async ({
+		page,
+	}) => {
 		await go(page, 'signing')
 		// showAdd:false (config.actionToggles) — the CnIndexPage built-in Add
 		// button must be gone now that primaryAction replaces it.
-		await expect(page.getByRole('button', { name: 'Add', exact: true })).toHaveCount(0)
+		await expect(
+			page.getByRole('button', { name: 'Add', exact: true }),
+		).toHaveCount(0)
 	})
 
-	test('SignatureVerification renders the engine-attributed verdict at a deep link', async ({ page }) => {
+	test('SignatureVerification renders the engine-attributed verdict at a deep link', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#verify-page-renders-the-backend-verdict-verbatim
 		const guard = attachConsoleGuard(page)
 		await go(page, 'signing/verify/1')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/verify\/1/)
-		await expect(page.getByRole('heading', { name: 'Signature Verification' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Signature Verification' }),
+		).toBeVisible()
 		// Field is pre-filled from the :fileId route param (SignatureVerification.vue mounted() hook).
 		await expect(page.locator('.verify-form input')).toHaveValue('1')
 
-		expect(guard.server5xx.filter((e) => !e.includes('/signing/verify/1')), `unexpected 5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
+		expect(
+			guard.server5xx.filter((e) => !e.includes('/signing/verify/1')),
+			`unexpected 5xx: ${guard.server5xx.join(' | ')}`,
+		).toEqual([])
 	})
 
-	test('a signing request detail with a document file id shows a Verify action', async ({ page }) => {
+	test('a signing request detail with a document file id shows a Verify action', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#verify-page-renders-the-backend-verdict-verbatim
 		// KNOWN FAILURE — ConductionNL/docudesk#339: rows on the Signing Requests
 		// index are not clickable. Clicking one neither routes to /signing/{id}
@@ -135,9 +161,14 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		// Remove this fixme once #339 lands — do NOT weaken the assertion.
 		test.fixme(true, 'blocked by #339 — signing index rows are not clickable')
 		await go(page, 'signing')
-		const firstRow = page.locator('#content table tbody tr, .app-content table tbody tr').first()
+		const firstRow = page
+			.locator('#content table tbody tr, .app-content table tbody tr')
+			.first()
 		if (!(await firstRow.isVisible().catch(() => false))) {
-			test.skip(true, 'no signing requests seeded on this environment — nothing to open a detail for')
+			test.skip(
+				true,
+				'no signing requests seeded on this environment — nothing to open a detail for',
+			)
 			return
 		}
 		await firstRow.click()
@@ -155,14 +186,21 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		// surface renders without erroring.
 		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/.+/)
 		await expect(page.locator('#content, .app-content').first()).toBeVisible()
-		if (await verifyButton.first().isVisible().catch(() => false)) {
+		if (
+			await verifyButton
+				.first()
+				.isVisible()
+				.catch(() => false)
+		) {
 			await expect(verifyButton.first()).toBeEnabled()
 		}
 	})
 })
 
 test.describe('orphaned-surface-restoration — publication policy', () => {
-	test('Prohibitions ("Publish never") deep-links and renders its list', async ({ page }) => {
+	test('Prohibitions ("Publish never") deep-links and renders its list', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#policy-pages-are-deep-link-reachable
 		// The `test.fixme(true, 'blocked by #333 …')` that used to sit here has
 		// been REMOVED, and the assertions below are untouched.
@@ -186,26 +224,36 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 		const guard = attachConsoleGuard(page)
 		await go(page, 'policy/prohibitions')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/prohibitions/)
-		await expect(page.getByRole('heading', { name: 'Publish never' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Publish never' }),
+		).toBeVisible()
 
 		const table = page.locator('#content table, .app-content table').first()
-		const empty = page.locator('.empty-content, [class*="empty-content"]')
-			.filter({ hasText: 'No publication prohibitions' }).first()
+		const empty = page
+			.locator('.empty-content, [class*="empty-content"]')
+			.filter({ hasText: 'No publication prohibitions' })
+			.first()
 		await expect(table.or(empty)).toBeVisible()
 
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
-	test('StandingConsents ("Publish always") deep-links and renders its list', async ({ page }) => {
+	test('StandingConsents ("Publish always") deep-links and renders its list', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#policy-pages-are-deep-link-reachable
 		const guard = attachConsoleGuard(page)
 		await go(page, 'policy/standing-consents')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/standing-consents/)
-		await expect(page.getByRole('heading', { name: 'Publish always' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Publish always' }),
+		).toBeVisible()
 
 		const table = page.locator('#content table, .app-content table').first()
-		const empty = page.locator('.empty-content, [class*="empty-content"]')
-			.filter({ hasText: 'No standing publication consents' }).first()
+		const empty = page
+			.locator('.empty-content, [class*="empty-content"]')
+			.filter({ hasText: 'No standing publication consents' })
+			.first()
 		await expect(table.or(empty)).toBeVisible()
 
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
@@ -240,41 +288,62 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 	 * button (with a name-prefix fallback for older shells) and assert it hard.
 	 */
 	const addCta = (page: Page) =>
-		page.locator('[data-testid="cn-cta-primary"]')
+		page
+			.locator('[data-testid="cn-cta-primary"]')
 			.or(page.getByRole('button', { name: /^Add\b/ }))
 			.first()
 
-	test('the "Add" action on Prohibitions opens the extracted ProhibitionFormModal (not an inline dialog)', async ({ page }) => {
+	test('the "Add" action on Prohibitions opens the extracted ProhibitionFormModal (not an inline dialog)', async ({
+		page,
+	}) => {
 		await go(page, 'policy/prohibitions')
 		const addButton = addCta(page)
-		await expect(addButton, 'ProhibitionIndex declares :show-add="true" — the primary CTA must render').toBeVisible()
+		await expect(
+			addButton,
+			'ProhibitionIndex declares :show-add="true" — the primary CTA must render',
+		).toBeVisible()
 		await addButton.click()
-		await expect(page.getByRole('heading', { name: 'Add publish-never rule' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Add publish-never rule' }),
+		).toBeVisible()
 	})
 
-	test('the "Add" action on StandingConsents opens the (now-wired) StandingConsentFormModal', async ({ page }) => {
+	test('the "Add" action on StandingConsents opens the (now-wired) StandingConsentFormModal', async ({
+		page,
+	}) => {
 		// Regression guard for the modal-isolation fix: StandingConsentIndex.vue
 		// previously duplicated this form inline; it now delegates to
 		// StandingConsentFormModal.vue like ProhibitionIndex.vue does.
 		await go(page, 'policy/standing-consents')
 		const addButton = addCta(page)
-		await expect(addButton, 'StandingConsentIndex declares :show-add="true" — the primary CTA must render').toBeVisible()
+		await expect(
+			addButton,
+			'StandingConsentIndex declares :show-add="true" — the primary CTA must render',
+		).toBeVisible()
 		await addButton.click()
-		await expect(page.getByRole('heading', { name: 'Add standing consent' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Add standing consent' }),
+		).toBeVisible()
 	})
 
 	test('no policy menu entry is introduced by this change', async ({ page }) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#no-policy-menu-label-is-introduced-here
 		await go(page, '')
-		const prohibitionsLink = page.locator('#app-navigation a[title="Publish never"], .app-navigation a[title="Publish never"]')
-		const standingConsentsLink = page.locator('#app-navigation a[title="Publish always"], .app-navigation a[title="Publish always"]')
+		const prohibitionsLink = page.locator(
+			'#app-navigation a[title="Publish never"], .app-navigation a[title="Publish never"]',
+		)
+		const standingConsentsLink = page.locator(
+			'#app-navigation a[title="Publish always"], .app-navigation a[title="Publish always"]',
+		)
 		await expect(prohibitionsLink).toHaveCount(0)
 		await expect(standingConsentsLink).toHaveCount(0)
 	})
 })
 
 test.describe('orphaned-surface-restoration — dead router removal is inert', () => {
-	test('previously-existing pages still route identically after the dead router removal', async ({ page }) => {
+	test('previously-existing pages still route identically after the dead router removal', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#existing-pages-still-route-after-deletion
 		// What this scenario actually guards is ROUTING: after deleting the dead
 		// vue-router, each previously-reachable route still resolves and renders
@@ -293,7 +362,9 @@ test.describe('orphaned-surface-restoration — dead router removal is inert', (
 			await go(page, route)
 			await expect(page).toHaveURL(urlPattern)
 			// The app shell mounted and rendered content for this route.
-			await expect(page.locator('#content, .app-content').first()).toBeVisible()
+			await expect(
+				page.locator('#content, .app-content').first(),
+			).toBeVisible()
 		}
 	})
 })

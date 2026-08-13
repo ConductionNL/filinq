@@ -41,7 +41,9 @@ export const ENTITY_TYPES = Object.freeze([
  * @return {string} Lower-case key matching a `--dd-entity-color-<key>` var, or `default`.
  */
 export function normaliseEntityType(type) {
-	const upper = String(type || '').trim().toUpperCase()
+	const upper = String(type || '')
+		.trim()
+		.toUpperCase()
 	if (ENTITY_TYPES.includes(upper)) {
 		return upper.toLowerCase()
 	}
@@ -85,7 +87,9 @@ export function entityTypeColor(type) {
  * @return {string} Translated label, or the raw uppercase token when untranslated.
  */
 export function entityTypeLabel(type) {
-	const upper = String(type || '').trim().toUpperCase()
+	const upper = String(type || '')
+		.trim()
+		.toUpperCase()
 	if (upper === '') {
 		return ''
 	}

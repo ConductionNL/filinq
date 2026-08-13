@@ -29,9 +29,7 @@
 			@row-click="$emit('row-click', $event)"
 			@toggle-select="$emit('toggle-select', $event)"
 			@toggle-select-all="$emit('toggle-select-all')">
-			<template
-				v-for="col in slotColumns"
-				#[`column-${col}`]="{ row, value }">
+			<template v-for="col in slotColumns" #[`column-${col}`]="{ row, value }">
 				<slot :name="'column-' + col" :row="row" :value="value" />
 			</template>
 			<template v-if="$slots['row-actions']" #row-actions="{ row }">
@@ -256,5 +254,4 @@ export default {
 	flex: 1;
 	max-width: 360px;
 }
-
 </style>

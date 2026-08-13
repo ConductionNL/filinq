@@ -40,7 +40,7 @@ export async function fetchBaseOptions() {
 		)
 		const raw = Array.isArray(response.data)
 			? response.data
-			: (response.data?.results || [])
+			: response.data?.results || []
 		const options = raw
 			.map((obj) => {
 				const value = obj?.['@self']?.slug || obj?.slug || obj?.id

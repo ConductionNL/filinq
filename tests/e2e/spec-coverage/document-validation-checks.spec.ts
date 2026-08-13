@@ -19,7 +19,9 @@ import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, go } from './_helpers'
 
 test.describe('document-validation-checks — verdict + findings UI', () => {
-	test('My documents exposes a Validate action that opens the findings panel', async ({ page }) => {
+	test('My documents exposes a Validate action that opens the findings panel', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/document-validation-checks/spec.md#operator-sees-why-a-document-failed
 		const guard = attachConsoleGuard(page)
 		// History-mode (manifest) router: deep-link the path, not a hash.
@@ -33,7 +35,9 @@ test.describe('document-validation-checks — verdict + findings UI', () => {
 		expect(guard.server5xx, guard.server5xx.join('\n')).toHaveLength(0)
 	})
 
-	test('the findings panel renders a verdict and per-finding messages with an OCR link', async ({ page }) => {
+	test('the findings panel renders a verdict and per-finding messages with an OCR link', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/document-validation-checks/spec.md#scan-only-document-offers-the-ocr-path
 		// Render the ValidationFindingsPanel in isolation against a failed verdict
 		// carrying a text-layer-missing finding, asserting the OCR cross-link.
@@ -42,8 +46,21 @@ test.describe('document-validation-checks — verdict + findings UI', () => {
 		const result = await page.evaluate(() => {
 			const status = 'failed'
 			const findings = [
-				{ checkId: 'pdf-encrypted', severity: 'blocking', message: 'The PDF is encrypted or password-protected and cannot be anonymised.', params: {} },
-				{ checkId: 'text-layer-missing', severity: 'warning', message: 'The document has little or no extractable text; OCR may be required.', params: {}, suggestedAction: 'ocr' },
+				{
+					checkId: 'pdf-encrypted',
+					severity: 'blocking',
+					message:
+						'The PDF is encrypted or password-protected and cannot be anonymised.',
+					params: {},
+				},
+				{
+					checkId: 'text-layer-missing',
+					severity: 'warning',
+					message:
+						'The document has little or no extractable text; OCR may be required.',
+					params: {},
+					suggestedAction: 'ocr',
+				},
 			]
 			const hasOcr = findings.some((f) => f.suggestedAction === 'ocr')
 			return { status, count: findings.length, hasOcr }

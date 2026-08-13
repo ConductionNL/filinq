@@ -70,7 +70,8 @@ function updateIframe() {
 		return
 	}
 
-	const doc = iframeRef.value.contentDocument || iframeRef.value.contentWindow.document
+	const doc =
+		iframeRef.value.contentDocument || iframeRef.value.contentWindow.document
 	doc.open()
 	doc.write(previewHtml.value)
 	doc.close()
@@ -142,7 +143,10 @@ watch(previewHtml, () => {
 		<div class="print-preview__header">
 			<h2>{{ t('docudesk', 'Print Preview') }}: {{ previewTitle }}</h2>
 			<div class="print-preview__actions">
-				<button class="primary" :disabled="loading || !previewHtml" @click="handlePrint">
+				<button
+					class="primary"
+					:disabled="loading || !previewHtml"
+					@click="handlePrint">
 					{{ t('docudesk', 'Print') }}
 				</button>
 				<button :disabled="loading" @click="handleDownloadPdfA">

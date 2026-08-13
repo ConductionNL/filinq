@@ -30,12 +30,10 @@ function mountWidget(component, el, title) {
 	app.mount(el)
 }
 
-OCA.Dashboard.register(
-	'docudesk-anonymization',
-	(el, { widget }) => mountWidget(AnonymizationDashboardWidget, el, widget.title),
+OCA.Dashboard.register('docudesk-anonymization', (el, { widget }) =>
+	mountWidget(AnonymizationDashboardWidget, el, widget.title),
 )
 
-OCA.Dashboard.register(
-	'docudesk-file-entities',
-	(el, { widget }) => mountWidget(FileEntitiesDashboardWidget, el, widget.title),
+OCA.Dashboard.register('docudesk-file-entities', (el, { widget }) =>
+	mountWidget(FileEntitiesDashboardWidget, el, widget.title),
 )

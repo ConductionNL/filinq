@@ -1,8 +1,5 @@
 <template>
-	<div
-		class="dd-view-toggle"
-		role="group"
-		:aria-label="ariaLabel">
+	<div class="dd-view-toggle" role="group" :aria-label="ariaLabel">
 		<!-- Sliding white background; sits behind the active segment -->
 		<span
 			class="dd-view-toggle__thumb"

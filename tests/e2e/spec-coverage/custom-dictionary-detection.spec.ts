@@ -91,47 +91,78 @@ test.describe('custom-dictionary-recognition — a dictionary hit is detected, r
 		// 1. An active dictionary carrying the term.
 		const dict = await req.post(`${API}/custom-dictionaries`, {
 			headers: jsonHeaders(token),
-			data: { label: `${RUN}-codenames`, matchMode: 'caseInsensitive', active: true },
+			data: {
+				label: `${RUN}-codenames`,
+				matchMode: 'caseInsensitive',
+				active: true,
+			},
 		})
-		expect(dict.status(), `create dictionary (${await dict.text().catch(() => '')})`).toBe(201)
+		expect(
+			dict.status(),
+			`create dictionary (${await dict.text().catch(() => '')})`,
+		).toBe(201)
 		dictionaryId = (await dict.json()).id
 
-		const term = await req.post(`${API}/custom-dictionaries/${dictionaryId}/terms`, {
-			headers: jsonHeaders(token),
-			data: { value: TERM },
-		})
-		expect(term.status(), `create term (${await term.text().catch(() => '')})`).toBe(201)
+		const term = await req.post(
+			`${API}/custom-dictionaries/${dictionaryId}/terms`,
+			{
+				headers: jsonHeaders(token),
+				data: { value: TERM },
+			},
+		)
+		expect(
+			term.status(),
+			`create term (${await term.text().catch(() => '')})`,
+		).toBe(201)
 
 		// 2. A document containing it, in the folder My Documents lists.
 		// MKCOL is allowed to 405 — the folder normally already exists.
 		await dav(req, token, 'MKCOL', DAV_DIR).catch(() => null)
 		const put = await dav(
-			req, token, 'PUT', `${DAV_DIR}/${FILE_NAME}`,
+			req,
+			token,
+			'PUT',
+			`${DAV_DIR}/${FILE_NAME}`,
 			`Interne notitie.\n\nHet dossier vermeldt ${TERM} als codenaam voor het traject.\n`,
 		)
-		expect([201, 204], `PUT ${DAV_DIR}/${FILE_NAME} -> ${put.status()}`).toContain(put.status())
+		expect(
+			[201, 204],
+			`PUT ${DAV_DIR}/${FILE_NAME} -> ${put.status()}`,
+		).toContain(put.status())
 
 		// Resolve the numeric fileId — needed to drive extraction, and to prove
 		// the file landed rather than assuming it.
-		const propfind = await req.fetch(`/remote.php/dav/files/admin${DAV_DIR}/${FILE_NAME}`, {
-			method: 'PROPFIND',
-			headers: { requesttoken: token, Depth: '0' },
-			data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" '
-				+ 'xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
-		})
+		const propfind = await req.fetch(
+			`/remote.php/dav/files/admin${DAV_DIR}/${FILE_NAME}`,
+			{
+				method: 'PROPFIND',
+				headers: { requesttoken: token, Depth: '0' },
+				data:
+					'<?xml version="1.0"?><d:propfind xmlns:d="DAV:" '
+					+ 'xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
+			},
+		)
 		expect(propfind.status(), 'PROPFIND for the seeded file').toBe(207)
 		fileId = Number((await propfind.text()).match(/<oc:fileid>(\d+)/)?.[1] ?? 0)
-		expect(fileId, 'seeded file must resolve to a numeric fileId').toBeGreaterThan(0)
+		expect(
+			fileId,
+			'seeded file must resolve to a numeric fileId',
+		).toBeGreaterThan(0)
 
 		// 3. Extraction + detection. Asserted here rather than in the test so a
 		// backend failure is not reported as a missing DOM node later.
 		const extract = await req.post(`${API}/anonymization/extract/${fileId}`, {
 			headers: jsonHeaders(token),
 		})
-		expect(extract.status(), `extract ${fileId} (${await extract.text().catch(() => '')})`).toBe(200)
+		expect(
+			extract.status(),
+			`extract ${fileId} (${await extract.text().catch(() => '')})`,
+		).toBe(200)
 		const body = await extract.json()
 		expect(
-			(body.entities ?? []).map((e: { type: string, value: string }) => `${e.type}:${e.value}`),
+			(body.entities ?? []).map(
+				(e: { type: string; value: string }) => `${e.type}:${e.value}`,
+			),
 			'the detection pass must produce a CUSTOM_DICTIONARY occurrence for the seeded term',
 		).toContain(`CUSTOM_DICTIONARY:${TERM}`)
 
@@ -144,11 +175,15 @@ test.describe('custom-dictionary-recognition — a dictionary hit is detected, r
 		const page = await ctx.newPage()
 		const token = await harvestToken(page)
 		const res = await ctx.request
-			.delete(`${API}/custom-dictionaries/${dictionaryId}`, { headers: jsonHeaders(token) })
+			.delete(`${API}/custom-dictionaries/${dictionaryId}`, {
+				headers: jsonHeaders(token),
+			})
 			.catch(() => null)
 		if (res && res.status() >= 400) {
 			// eslint-disable-next-line no-console
-			console.warn(`[teardown] dictionary ${dictionaryId} -> ${res.status()} (leaked)`)
+			console.warn(
+				`[teardown] dictionary ${dictionaryId} -> ${res.status()} (leaked)`,
+			)
 		}
 		// The seeded document is deliberately left in place: every identifier in
 		// this file is stamped with `Date.now()`, so a leftover cannot satisfy or
@@ -157,15 +192,23 @@ test.describe('custom-dictionary-recognition — a dictionary hit is detected, r
 		await ctx.close()
 	})
 
-	test('the dictionary hit appears in the review workbench as a CUSTOM_DICTIONARY occurrence', async ({ page }) => {
+	test('the dictionary hit appears in the review workbench as a CUSTOM_DICTIONARY occurrence', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/custom-dictionary-recognition/spec.md#a-dictionary-hit-is-detected-reviewable-and-redacted
 		await go(page, 'my-documents')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/my-documents/)
 
 		// Opening the document is what sets `fileViewerStore.currentFile`, which
 		// is what mounts FileViewerPage and its sidebar (MyDocumentsIndex.vue:8).
-		const row = page.locator('#content tr, .app-content tr').filter({ hasText: FILE_BASE }).first()
-		await expect(row, 'the seeded document must be listed in /DocuDesk').toBeVisible()
+		const row = page
+			.locator('#content tr, .app-content tr')
+			.filter({ hasText: FILE_BASE })
+			.first()
+		await expect(
+			row,
+			'the seeded document must be listed in /DocuDesk',
+		).toBeVisible()
 		await row.click()
 		await waitForAppReady(page)
 
@@ -175,12 +218,20 @@ test.describe('custom-dictionary-recognition — a dictionary hit is detected, r
 		// `.dd-entity-card__value`. Assert BOTH on the SAME card — asserting them
 		// separately would pass if any card carried the type and any other card
 		// carried the value.
-		const card = page.locator('.dd-entity-card').filter({ hasText: TERM }).first()
-		await expect(card, 'a review card for the seeded term must render').toBeVisible()
+		const card = page
+			.locator('.dd-entity-card')
+			.filter({ hasText: TERM })
+			.first()
+		await expect(
+			card,
+			'a review card for the seeded term must render',
+		).toBeVisible()
 		await expect(
 			card.locator('.dd-entity-card__type'),
 			'the occurrence must be typed CUSTOM_DICTIONARY, not a generic NER type',
 		).toHaveText('CUSTOM_DICTIONARY')
-		await expect(card.locator('.dd-entity-card__value').first()).toContainText(TERM)
+		await expect(card.locator('.dd-entity-card__value').first()).toContainText(
+			TERM,
+		)
 	})
 })

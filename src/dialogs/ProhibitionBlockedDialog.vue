@@ -42,16 +42,41 @@ export default {
 		@update:open="$emit('update:open', $event)">
 		<div v-if="match" class="prohibition-blocked">
 			<p>
-				{{ t('docudesk', '“{name}” matches the prohibition rule “{rule}” and must be anonymised.', { name: match.entityName, rule: match.ruleName }) }}
+				{{
+					t(
+						'docudesk',
+						'“{name}” matches the prohibition rule “{rule}” and must be anonymised.',
+						{ name: match.entityName, rule: match.ruleName },
+					)
+				}}
 			</p>
 			<p class="confidence">
-				{{ t('docudesk', 'Detection confidence {conf}% (threshold {thr}%).', { conf: Math.round((match.confidence || 0) * 100), thr: Math.round((block.threshold || 0) * 100) }) }}
+				{{
+					t(
+						'docudesk',
+						'Detection confidence {conf}% (threshold {thr}%).',
+						{
+							conf: Math.round((match.confidence || 0) * 100),
+							thr: Math.round((block.threshold || 0) * 100),
+						},
+					)
+				}}
 			</p>
 			<p v-if="!releasable" class="warn-text">
-				{{ t('docudesk', 'This match is at or above the threshold and cannot be skipped.') }}
+				{{
+					t(
+						'docudesk',
+						'This match is at or above the threshold and cannot be skipped.',
+					)
+				}}
 			</p>
 			<p v-else>
-				{{ t('docudesk', 'You may override and skip it anyway; the override is recorded in the audit trail.') }}
+				{{
+					t(
+						'docudesk',
+						'You may override and skip it anyway; the override is recorded in the audit trail.',
+					)
+				}}
 			</p>
 		</div>
 		<template #actions>

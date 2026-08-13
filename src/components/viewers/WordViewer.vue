@@ -1,5 +1,8 @@
 <template>
-	<div class="word-viewer" :class="{ 'dd-marking-cursor': isAddMode }" @mouseup="captureSelection">
+	<div
+		class="word-viewer"
+		:class="{ 'dd-marking-cursor': isAddMode }"
+		@mouseup="captureSelection">
 		<div v-if="loading" class="word-viewer__loading">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('docudesk', 'Loading document…') }}</span>
@@ -21,7 +24,10 @@ import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { fetchFileAsArrayBuffer } from '../../services/fileViewerService.js'
 import { fileViewerStore } from '../../store/store.js'
-import { applyDomHighlights, clearDomHighlights } from '../../services/highlightDom.js'
+import {
+	applyDomHighlights,
+	clearDomHighlights,
+} from '../../services/highlightDom.js'
 
 let mammothPromise = null
 
@@ -72,7 +78,7 @@ export default {
 		 * @return {string}
 		 */
 		pendingValue() {
-			return fileViewerStore.addMode ? (fileViewerStore.selection || '') : ''
+			return fileViewerStore.addMode ? fileViewerStore.selection || '' : ''
 		},
 		/**
 		 * Whether the viewer is in add mode — drives the marking (highlighter)
@@ -147,7 +153,11 @@ export default {
 		 */
 		scheduleHighlights() {
 			this.$nextTick(() => {
-				applyDomHighlights(this.$refs.content, this.highlightEntities, this.pendingValue)
+				applyDomHighlights(
+					this.$refs.content,
+					this.highlightEntities,
+					this.pendingValue,
+				)
 			})
 		},
 		/**

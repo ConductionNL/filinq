@@ -10,11 +10,19 @@ SPDX-License-Identifier: EUPL-1.2
 		<div class="versions-view__header">
 			<h2>{{ t('docudesk', 'Versions') }}</h2>
 			<p class="versions-view__subtitle">
-				{{ t('docudesk', 'File versions of this document, read from Nextcloud. Open, download, restore, or compare a version.') }}
+				{{
+					t(
+						'docudesk',
+						'File versions of this document, read from Nextcloud. Open, download, restore, or compare a version.',
+					)
+				}}
 			</p>
 		</div>
 
-		<NcNoteCard v-if="unavailable" type="info" data-testid="versions-unavailable">
+		<NcNoteCard
+			v-if="unavailable"
+			type="info"
+			data-testid="versions-unavailable">
 			{{ t('docudesk', 'File versions are not available on this instance') }}
 		</NcNoteCard>
 
@@ -24,7 +32,8 @@ SPDX-License-Identifier: EUPL-1.2
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
-		<CnDataTable v-else-if="!unavailable"
+		<CnDataTable
+			v-else-if="!unavailable"
 			:columns="columns"
 			:rows="rows"
 			:table-label="t('docudesk', 'Versions')"
@@ -33,13 +42,15 @@ SPDX-License-Identifier: EUPL-1.2
 				<NcButton variant="tertiary" @click="download(row)">
 					{{ t('docudesk', 'Download') }}
 				</NcButton>
-				<NcButton v-if="!row.isCurrent"
+				<NcButton
+					v-if="!row.isCurrent"
 					variant="tertiary"
 					data-testid="version-restore"
 					@click="promptRestore(row)">
 					{{ t('docudesk', 'Restore') }}
 				</NcButton>
-				<NcButton v-if="canCompare(row)"
+				<NcButton
+					v-if="canCompare(row)"
 					variant="tertiary"
 					data-testid="version-compare"
 					@click="compare(row)">
@@ -48,7 +59,8 @@ SPDX-License-Identifier: EUPL-1.2
 			</template>
 		</CnDataTable>
 
-		<ConfirmRestoreVersionDialog v-if="restoreTarget"
+		<ConfirmRestoreVersionDialog
+			v-if="restoreTarget"
 			:version-number="restoreTarget.timestamp"
 			@confirm="confirmRestore"
 			@cancel="restoreTarget = null" />
@@ -57,13 +69,28 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { CnDataTable, NcButton, NcLoadingIcon, NcNoteCard } from '@conduction/nextcloud-vue'
+import {
+	CnDataTable,
+	NcButton,
+	NcLoadingIcon,
+	NcNoteCard,
+} from '@conduction/nextcloud-vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
-import { listVersions, versionDownloadUrl, restoreVersion } from '../../services/versionService.js'
+import {
+	listVersions,
+	versionDownloadUrl,
+	restoreVersion,
+} from '../../services/versionService.js'
 
 export default {
 	name: 'VersionsView',
-	components: { CnDataTable, NcButton, NcLoadingIcon, NcNoteCard, ConfirmRestoreVersionDialog },
+	components: {
+		CnDataTable,
+		NcButton,
+		NcLoadingIcon,
+		NcNoteCard,
+		ConfirmRestoreVersionDialog,
+	},
 	props: {
 		// Optional preselected document (else read from ?fileId=).
 		initialFileId: { type: [String, Number], default: '' },
@@ -72,7 +99,9 @@ export default {
 	},
 	data() {
 		return {
-			fileId: Number(this.initialFileId || (this.$route && this.$route.query.fileId) || 0),
+			fileId: Number(
+				this.initialFileId || (this.$route && this.$route.query.fileId) || 0,
+			),
 			versions: [],
 			loading: false,
 			error: '',
@@ -131,11 +160,14 @@ export default {
 				const data = await listVersions(this.fileId)
 				this.versions = data.versions || []
 			} catch (e) {
-				const reason = e && e.response && e.response.data && e.response.data.reason
+				const reason =
+					e && e.response && e.response.data && e.response.data.reason
 				if (reason === 'versions-unavailable') {
 					this.unavailable = true
 				} else {
-					this.error = (e && e.response && e.response.data && e.response.data.error) || t('docudesk', 'Could not list versions')
+					this.error =
+						(e && e.response && e.response.data && e.response.data.error)
+						|| t('docudesk', 'Could not list versions')
 				}
 			} finally {
 				this.loading = false
@@ -186,7 +218,9 @@ export default {
 				await restoreVersion(this.fileId, target.timestamp)
 				await this.load()
 			} catch (e) {
-				this.error = (e && e.response && e.response.data && e.response.data.error) || t('docudesk', 'Could not restore version')
+				this.error =
+					(e && e.response && e.response.data && e.response.data.error)
+					|| t('docudesk', 'Could not restore version')
 			}
 		},
 		/**
@@ -199,7 +233,11 @@ export default {
 		compare(row) {
 			this.$router.push({
 				name: 'Comparison',
-				query: { left: String(this.fileId), leftVersion: String(row.timestamp), right: String(this.fileId) },
+				query: {
+					left: String(this.fileId),
+					leftVersion: String(row.timestamp),
+					right: String(this.fileId),
+				},
 			})
 		},
 		/**

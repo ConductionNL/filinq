@@ -57,8 +57,8 @@ export function resolveBaseUrl(): string {
 	}
 	throw new Error(
 		`No Nextcloud target set for the e2e suite. Set one of: ${CANDIDATES.join(', ')}.\n`
-		+ 'There is no default on purpose: the previous fallback silently pointed the '
-		+ 'suite at http://localhost:8080, the SHARED dev container.\n'
-		+ 'Example: PLAYWRIGHT_BASE_URL=http://localhost:8087 npx playwright test',
+			+ 'There is no default on purpose: the previous fallback silently pointed the '
+			+ 'suite at http://localhost:8080, the SHARED dev container.\n'
+			+ 'Example: PLAYWRIGHT_BASE_URL=http://localhost:8087 npx playwright test',
 	)
 }

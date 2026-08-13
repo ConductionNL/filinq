@@ -31,19 +31,33 @@ module.exports = {
 	test: {
 		environment: 'node',
 		globals: false,
-		include: ['tests/vitest/**/*.spec.{js,ts}', 'tests/unit/reachability.spec.js'],
-		exclude: ['tests/e2e/**', 'tests/integration/**', 'src/**', 'node_modules/**'],
+		include: [
+			'tests/vitest/**/*.spec.{js,ts}',
+			'tests/unit/reachability.spec.js',
+		],
+		exclude: [
+			'tests/e2e/**',
+			'tests/integration/**',
+			'src/**',
+			'node_modules/**',
+		],
 	},
 	resolve: {
 		alias: [
 			{ find: '@', replacement: path.resolve(__dirname, 'src') },
 			{
 				find: /^@nextcloud\/router$/,
-				replacement: path.resolve(__dirname, 'tests/vitest/stubs/nextcloud-router.js'),
+				replacement: path.resolve(
+					__dirname,
+					'tests/vitest/stubs/nextcloud-router.js',
+				),
 			},
 			{
 				find: /^@nextcloud\/auth$/,
-				replacement: path.resolve(__dirname, 'tests/vitest/stubs/nextcloud-auth.js'),
+				replacement: path.resolve(
+					__dirname,
+					'tests/vitest/stubs/nextcloud-auth.js',
+				),
 			},
 		],
 	},

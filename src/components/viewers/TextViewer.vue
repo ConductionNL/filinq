@@ -1,5 +1,8 @@
 <template>
-	<div class="text-viewer" :class="{ 'dd-marking-cursor': isAddMode }" @mouseup="captureSelection">
+	<div
+		class="text-viewer"
+		:class="{ 'dd-marking-cursor': isAddMode }"
+		@mouseup="captureSelection">
 		<div v-if="loading" class="text-viewer__loading">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('docudesk', 'Loading document…') }}</span>
@@ -20,7 +23,10 @@ import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { fetchFileAsText } from '../../services/fileViewerService.js'
 import { fileViewerStore } from '../../store/store.js'
-import { buildHighlightSegments, PENDING_TYPE } from '../../services/highlightText.js'
+import {
+	buildHighlightSegments,
+	PENDING_TYPE,
+} from '../../services/highlightText.js'
 import { entityTypeColor } from '../../services/entityTypes.js'
 
 export default {
@@ -52,9 +58,10 @@ export default {
 		 */
 		segments() {
 			const entities = fileViewerStore.highlightEntities || []
-			const pending = fileViewerStore.addMode && fileViewerStore.selection
-				? [{ value: fileViewerStore.selection, type: PENDING_TYPE }]
-				: []
+			const pending =
+				fileViewerStore.addMode && fileViewerStore.selection
+					? [{ value: fileViewerStore.selection, type: PENDING_TYPE }]
+					: []
 			return buildHighlightSegments(this.content, [...pending, ...entities])
 		},
 		/**

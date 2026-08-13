@@ -1,6 +1,10 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../store/store.js'
+import {
+	anonymizationStore,
+	fileViewerStore,
+	myDocumentsStore,
+} from '../../store/store.js'
 </script>
 
 <template>
@@ -20,15 +24,23 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 				@dragover.prevent="isDragging = true"
 				@dragleave.prevent="isDragging = false"
 				@drop.prevent="handleDrop">
-				<img :src="uploadIcon" alt="" class="upload-icon">
+				<img :src="uploadIcon" alt="" class="upload-icon" />
 				<div class="drop-content">
 					<p class="drop-title">
 						{{ t('docudesk', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
-						{{ t('docudesk', 'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.') }}
+						{{
+							t(
+								'docudesk',
+								'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.',
+							)
+						}}
 					</p>
-					<button type="button" class="fake-button" @click="$refs.fileInput.click()">
+					<button
+						type="button"
+						class="fake-button"
+						@click="$refs.fileInput.click()">
 						{{ t('docudesk', '+ Select files') }}
 					</button>
 				</div>
@@ -39,12 +51,14 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					:aria-label="t('docudesk', 'Select files to anonymise')"
 					accept=".docx,.odt,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,application/pdf,message/rfc822"
 					class="file-input"
-					@change="handleFileSelect">
+					@change="handleFileSelect" />
 			</div>
 		</div>
 
 		<!-- Recent documents -->
-		<section v-if="recentLoading || recentItems.length > 0" class="recent-section">
+		<section
+			v-if="recentLoading || recentItems.length > 0"
+			class="recent-section">
 			<h3 class="recent-section__title">
 				{{ t('docudesk', 'Recent documents') }}
 			</h3>
@@ -131,7 +145,9 @@ export default {
 				return t('docudesk', 'Good morning {name},', { name: this.userName })
 			}
 			if (hour >= 12 && hour < 18) {
-				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
+				return t('docudesk', 'Good afternoon {name},', {
+					name: this.userName,
+				})
 			}
 			return t('docudesk', 'Good evening {name},', { name: this.userName })
 		},
@@ -250,7 +266,13 @@ export default {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
-				showError(t('docudesk', 'Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}', { names }))
+				showError(
+					t(
+						'docudesk',
+						'Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}',
+						{ names },
+					),
+				)
 			}
 			return accepted
 		},
@@ -282,7 +304,9 @@ export default {
 			if (this.$route?.name === 'MyDocuments') {
 				return
 			}
-			this.$router.push({ name: 'MyDocuments' }).catch(() => { /* duplicate nav */ })
+			this.$router.push({ name: 'MyDocuments' }).catch(() => {
+				/* duplicate nav */
+			})
 		},
 		/**
 		 * Open the upload dialog with a fresh state: empty dossier name,
@@ -317,7 +341,10 @@ export default {
 				const before = anonymizationStore.files.length
 
 				if (name) {
-					await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+					await anonymizationStore.addFilesAsDossier(
+						this.pendingFiles,
+						name,
+					)
 
 					// Bind the WebDAV folder to an OpenRegister dossier
 					// object (PROPFIND + POST). Best-effort: files are
@@ -344,18 +371,22 @@ export default {
 				// Open the first uploaded file in the viewer.
 				const firstEntry = anonymizationStore.files[before]
 				if (firstEntry && firstEntry.fileId) {
-					fileViewerStore.open({
-						fileId: firstEntry.fileId,
-						fileName: firstEntry.name,
-						mimeType: firstMime,
-						path: firstEntry.filePath,
-					}, { grondslagen: this.grondslagen })
+					fileViewerStore.open(
+						{
+							fileId: firstEntry.fileId,
+							fileName: firstEntry.name,
+							mimeType: firstMime,
+							path: firstEntry.filePath,
+						},
+						{ grondslagen: this.grondslagen },
+					)
 					this.gotoViewer()
 				}
 
 				this.closeDossierDialog()
 			} catch (err) {
-				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to upload'
+				this.dossierError =
+					err?.response?.data?.error || err?.message || 'Failed to upload'
 			} finally {
 				this.dossierSubmitting = false
 			}
@@ -411,7 +442,9 @@ export default {
 	background-color: var(--dd-surface, #fff);
 	box-shadow: var(--dd-shadow-panel);
 	/* Not a click target any more — the picker is opened by .fake-button. */
-	transition: border-color 0.2s, background-color 0.2s;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .drop-zone:hover {
@@ -509,5 +542,4 @@ export default {
 		transition: none;
 	}
 }
-
 </style>

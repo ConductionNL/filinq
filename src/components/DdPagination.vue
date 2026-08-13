@@ -8,13 +8,20 @@
 			<NcButton :disabled="currentPage === 1" @click="changePage(1)">
 				{{ firstLabel }}
 			</NcButton>
-			<NcButton :disabled="currentPage === 1" @click="changePage(currentPage - 1)">
+			<NcButton
+				:disabled="currentPage === 1"
+				@click="changePage(currentPage - 1)">
 				{{ previousLabel }}
 			</NcButton>
 
 			<div class="dd-pagination__numbers">
 				<template v-for="(page, idx) in visiblePages">
-					<span v-if="page === '...'" :key="'el-' + idx" class="dd-pagination__ellipsis">...</span>
+					<span
+						v-if="page === '...'"
+						:key="'el-' + idx"
+						class="dd-pagination__ellipsis"
+						>...</span
+					>
 					<NcButton
 						v-else
 						:key="page"
@@ -26,10 +33,14 @@
 				</template>
 			</div>
 
-			<NcButton :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">
+			<NcButton
+				:disabled="currentPage === totalPages"
+				@click="changePage(currentPage + 1)">
 				{{ nextLabel }}
 			</NcButton>
-			<NcButton :disabled="currentPage === totalPages" @click="changePage(totalPages)">
+			<NcButton
+				:disabled="currentPage === totalPages"
+				@click="changePage(totalPages)">
 				{{ lastLabel }}
 			</NcButton>
 		</div>
@@ -95,8 +106,10 @@ export default {
 			return 'dd-page-size-' + this._uid
 		},
 		currentPageSizeOption() {
-			return this.pageSizeOptions.find((o) => o.value === this.currentPageSize)
+			return (
+				this.pageSizeOptions.find((o) => o.value === this.currentPageSize)
 				|| this.pageSizeOptions[0]
+			)
 		},
 		pageInfoText() {
 			return this.pageInfoFormat

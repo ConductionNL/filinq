@@ -46,7 +46,9 @@ interface BackendState {
 }
 
 async function readBackendState(request: APIRequestContext): Promise<BackendState> {
-	const res = await request.get(API_SETTINGS, { headers: { 'OCS-APIRequest': 'true' } })
+	const res = await request.get(API_SETTINGS, {
+		headers: { 'OCS-APIRequest': 'true' },
+	})
 	// Print the STATUS CODE, always. A 403 body parses as an empty object and
 	// then reads as "the field is absent", which is a different finding.
 	expect(res.status(), `GET ${API_SETTINGS} must answer 200`).toBe(200)
@@ -72,16 +74,22 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 		expect(
 			state.method,
 			'PRECONDITION: these scenarios are all conditioned on regex-only mode. '
-			+ `This instance reports method="${state.method}", so an anonymiser backend IS `
-			+ 'configured and the banner is CORRECTLY hidden. Nothing below is a defect — '
-			+ 'remove the backend, or run this suite on a clean instance.',
+				+ `This instance reports method="${state.method}", so an anonymiser backend IS `
+				+ 'configured and the banner is CORRECTLY hidden. Nothing below is a defect — '
+				+ 'remove the backend, or run this suite on a clean instance.',
 		).toBe('regex')
 	})
 
-	test('the banner renders on the admin settings page with all four required elements', async ({ page, request }) => {
+	test('the banner renders on the admin settings page with all four required elements', async ({
+		page,
+		request,
+	}) => {
 		// @e2e openspec/specs/anonymization/spec.md#admin-opens-docudesk-admin-settings-with-no-backend-configured
 		const state = await readBackendState(request)
-		expect(state.warningDismissed, 'admin must not have dismissed the warning yet').toBe(false)
+		expect(
+			state.warningDismissed,
+			'admin must not have dismissed the warning yet',
+		).toBe(false)
 
 		await goSettings(page)
 		await expect(banner(page)).toBeVisible()
@@ -89,7 +97,9 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 		// The scenario names four things the banner MUST contain. Each is a
 		// separate assertion so a partial regression names which half broke.
 		await expect(
-			banner(page).locator('a[href="/settings/apps/discover/openanonymiser_light"]'),
+			banner(page).locator(
+				'a[href="/settings/apps/discover/openanonymiser_light"]',
+			),
 			'deep link to the App Store entry for openanonymiser_light',
 		).toHaveCount(1)
 		await expect(
@@ -106,7 +116,9 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 		).toBeVisible()
 	})
 
-	test('the banner renders at the top of the DocuDesk dashboard', async ({ page }) => {
+	test('the banner renders at the top of the DocuDesk dashboard', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/anonymization/spec.md#admin-opens-docudesk-dashboard-with-no-backend-configured
 		await go(page, '')
 		await expect(banner(page)).toBeVisible()
@@ -117,17 +129,25 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 		// dashboard body rather than a pixel coordinate: the banner's box must
 		// start above the dashboard page component's box.
 		const bannerBox = await banner(page).boundingBox()
-		const dashboardBox = await page.locator('.cn-dashboard-page, [class*="dashboard-page"]').first()
+		const dashboardBox = await page
+			.locator('.cn-dashboard-page, [class*="dashboard-page"]')
+			.first()
 			.boundingBox()
 		expect(bannerBox, 'banner must have a rendered box').not.toBeNull()
-		expect(dashboardBox, 'dashboard body must have a rendered box').not.toBeNull()
+		expect(
+			dashboardBox,
+			'dashboard body must have a rendered box',
+		).not.toBeNull()
 		expect(
 			bannerBox!.y,
 			'the banner must render ABOVE the dashboard body, not below it',
 		).toBeLessThan(dashboardBox!.y)
 	})
 
-	test('the banner states that AppAPI must be installed first, without hiding the ExApp CTAs', async ({ page, request }) => {
+	test('the banner states that AppAPI must be installed first, without hiding the ExApp CTAs', async ({
+		page,
+		request,
+	}) => {
 		// @e2e openspec/specs/anonymization/spec.md#appapi-is-not-installed
 		const state = await readBackendState(request)
 		expect(
@@ -141,19 +161,30 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 			banner(page).locator('.anonymiser-backend-warning__appapi-line'),
 			'the AppAPI notice line',
 		).toBeVisible()
-		await expect(banner(page).locator('.anonymiser-backend-warning__appapi-line'))
-			.toContainText('AppAPI is not installed')
+		await expect(
+			banner(page).locator('.anonymiser-backend-warning__appapi-line'),
+		).toContainText('AppAPI is not installed')
 		// "AND the deep-link CTAs to the ExApp entries remain visible" — the
 		// half of this scenario a naive implementation breaks by replacing the
 		// body with the AppAPI notice.
-		await expect(banner(page).locator('a[href="/settings/apps/discover/openanonymiser_light"]')).toBeVisible()
-		await expect(banner(page).locator('a[href="/settings/apps/discover/openanonymiser"]')).toBeVisible()
+		await expect(
+			banner(page).locator(
+				'a[href="/settings/apps/discover/openanonymiser_light"]',
+			),
+		).toBeVisible()
+		await expect(
+			banner(page).locator('a[href="/settings/apps/discover/openanonymiser"]'),
+		).toBeVisible()
 	})
 
-	test('the OpenAnonymiser Light CTA navigates to the App Store discover page and installs nothing', async ({ page }) => {
+	test('the OpenAnonymiser Light CTA navigates to the App Store discover page and installs nothing', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/anonymization/spec.md#click-on-install-openanonymiser-light
 		await goSettings(page)
-		const cta = banner(page).locator('a[href="/settings/apps/discover/openanonymiser_light"]')
+		const cta = banner(page).locator(
+			'a[href="/settings/apps/discover/openanonymiser_light"]',
+		)
 		await expect(cta).toBeVisible()
 
 		// "no install action is triggered automatically" — record every request
@@ -162,13 +193,19 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 		const installCalls: string[] = []
 		page.on('request', (r) => {
 			const u = r.url()
-			if (/\/settings\/apps\/enable|\/apps\/[^/]+\/enable|app_api\/apps\/install/.test(u)) {
+			if (
+				/\/settings\/apps\/enable|\/apps\/[^/]+\/enable|app_api\/apps\/install/.test(
+					u,
+				)
+			) {
 				installCalls.push(`${r.method()} ${u}`)
 			}
 		})
 
 		await cta.click()
-		await page.waitForURL(/\/settings\/apps\/discover\/openanonymiser_light/, { timeout: 30_000 })
+		await page.waitForURL(/\/settings\/apps\/discover\/openanonymiser_light/, {
+			timeout: 30_000,
+		})
 		await waitForNcContentReady(page)
 
 		expect(

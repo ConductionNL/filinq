@@ -8,7 +8,12 @@ import { prohibitionStore } from '../../store/store.js'
 		<CnIndexPage
 			ref="indexPage"
 			:title="t('docudesk', 'Publish never')"
-			:description="t('docudesk', 'Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.')"
+			:description="
+				t(
+					'docudesk',
+					'Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.',
+				)
+			"
 			:show-title="true"
 			:objects="prohibitionStore.prohibitions"
 			:columns="tableColumns"
@@ -71,7 +76,11 @@ import { prohibitionStore } from '../../store/store.js'
 
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="row.active === false ? t('docudesk', 'Inactive') : t('docudesk', 'Active')"
+					:label="
+						row.active === false
+							? t('docudesk', 'Inactive')
+							: t('docudesk', 'Active')
+					"
 					:color-map="activeColorMap" />
 			</template>
 
@@ -130,10 +139,7 @@ import { prohibitionStore } from '../../store/store.js'
 </template>
 
 <script>
-import {
-	NcActions,
-	NcActionButton,
-} from '@nextcloud/vue'
+import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
@@ -188,10 +194,18 @@ export default {
 	computed: {
 		tableColumns() {
 			return [
-				{ key: 'primaryName', label: t('docudesk', 'Primary name'), sortable: true },
+				{
+					key: 'primaryName',
+					label: t('docudesk', 'Primary name'),
+					sortable: true,
+				},
 				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
 				{ key: 'matchRules', label: t('docudesk', 'Match rules') },
-				{ key: 'severity', label: t('docudesk', 'Severity'), sortable: true },
+				{
+					key: 'severity',
+					label: t('docudesk', 'Severity'),
+					sortable: true,
+				},
 				{ key: 'reason', label: t('docudesk', 'Reason') },
 				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
 			]
@@ -213,7 +227,8 @@ export default {
 		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
 		 */
 		deleteMessage() {
-			const name = this.deleteTarget?.primaryName || t('docudesk', 'this prohibition')
+			const name =
+				this.deleteTarget?.primaryName || t('docudesk', 'this prohibition')
 			return t('docudesk', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
@@ -240,7 +255,7 @@ export default {
 			if (!Array.isArray(rules) || rules.length === 0) {
 				return '-'
 			}
-			return rules.map(r => `${r.type}:${r.value}`).join(', ')
+			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
 		},
 		openCreateDialog() {
 			this.editing = null
@@ -261,7 +276,7 @@ export default {
 				validUntil: row.validUntil || '',
 				active: row.active !== false,
 				matchRules: Array.isArray(row.matchRules)
-					? row.matchRules.map(r => ({ type: r.type, value: r.value }))
+					? row.matchRules.map((r) => ({ type: r.type, value: r.value }))
 					: [],
 			}
 			this.formError = ''
@@ -278,7 +293,10 @@ export default {
 				}
 				this.dialogOpen = false
 			} catch (err) {
-				this.formError = err.response?.data?.error || err.message || t('docudesk', 'Save failed')
+				this.formError =
+					err.response?.data?.error
+					|| err.message
+					|| t('docudesk', 'Save failed')
 			} finally {
 				this.saving = false
 			}

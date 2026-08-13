@@ -18,7 +18,12 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 		<CnIndexPage
 			ref="indexPage"
 			:title="t('docudesk', 'Custom dictionaries')"
-			:description="t('docudesk', 'Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.')"
+			:description="
+				t(
+					'docudesk',
+					'Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.',
+				)
+			"
 			:show-title="true"
 			:objects="customDictionaryStore.dictionaries"
 			:columns="tableColumns"
@@ -44,7 +49,9 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			@row-click="viewDictionary">
 			<template #column-label="{ row }">
 				<span class="custom-dictionary-index__label">
-					<span class="custom-dictionary-index__swatch" :style="{ backgroundColor: row.colour || '#0082C9' }" />
+					<span
+						class="custom-dictionary-index__swatch"
+						:style="{ backgroundColor: row.colour || '#0082C9' }" />
 					{{ displayLabel(row) }}
 				</span>
 			</template>
@@ -61,7 +68,11 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="row.active === false ? t('docudesk', 'Inactive') : t('docudesk', 'Active')"
+					:label="
+						row.active === false
+							? t('docudesk', 'Inactive')
+							: t('docudesk', 'Active')
+					"
 					:color-map="activeColorMap" />
 			</template>
 
@@ -161,7 +172,11 @@ export default {
 			return [
 				{ key: 'label', label: t('docudesk', 'Label'), sortable: true },
 				{ key: 'termCount', label: t('docudesk', 'Terms'), sortable: true },
-				{ key: 'matchMode', label: t('docudesk', 'Match mode'), sortable: true },
+				{
+					key: 'matchMode',
+					label: t('docudesk', 'Match mode'),
+					sortable: true,
+				},
 				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
 			]
 		},
@@ -183,7 +198,11 @@ export default {
 		 */
 		deleteMessage() {
 			const name = this.deleteTarget?.label || t('docudesk', 'this dictionary')
-			return t('docudesk', 'Delete "{name}" and all its terms? This cannot be undone.', { name })
+			return t(
+				'docudesk',
+				'Delete "{name}" and all its terms? This cannot be undone.',
+				{ name },
+			)
 		},
 	},
 	mounted() {
@@ -236,11 +255,15 @@ export default {
 			this.saving = true
 			this.formError = ''
 			try {
-				const created = await customDictionaryStore.createDictionary(formData)
+				const created =
+					await customDictionaryStore.createDictionary(formData)
 				this.dialogOpen = false
 				this.viewDictionary(created)
 			} catch (err) {
-				this.formError = err.response?.data?.error || err.message || t('docudesk', 'Save failed')
+				this.formError =
+					err.response?.data?.error
+					|| err.message
+					|| t('docudesk', 'Save failed')
 			} finally {
 				this.saving = false
 			}

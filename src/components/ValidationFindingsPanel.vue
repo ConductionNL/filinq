@@ -12,10 +12,18 @@ SPDX-License-Identifier: EUPL-1.2
 		</div>
 
 		<ul v-if="findings.length > 0" class="validation-findings__list">
-			<li v-for="(finding, index) in findings" :key="index" class="validation-findings__item">
-				<span class="validation-findings__check">{{ checkLabel(finding) }}</span>
-				<span class="validation-findings__message">{{ findingMessage(finding) }}</span>
-				<a v-if="finding.suggestedAction === 'ocr'"
+			<li
+				v-for="(finding, index) in findings"
+				:key="index"
+				class="validation-findings__item">
+				<span class="validation-findings__check">{{
+					checkLabel(finding)
+				}}</span>
+				<span class="validation-findings__message">{{
+					findingMessage(finding)
+				}}</span>
+				<a
+					v-if="finding.suggestedAction === 'ocr'"
 					class="validation-findings__ocr"
 					href="#/anonymization"
 					@click="$emit('ocr', finding)">
@@ -49,14 +57,14 @@ export default {
 		 */
 		verdictLabel() {
 			switch (this.status) {
-			case 'passed':
-				return t('docudesk', 'Validation passed')
-			case 'warnings':
-				return t('docudesk', 'Validation warnings')
-			case 'failed':
-				return t('docudesk', 'Validation failed')
-			default:
-				return t('docudesk', 'Not yet validated')
+				case 'passed':
+					return t('docudesk', 'Validation passed')
+				case 'warnings':
+					return t('docudesk', 'Validation warnings')
+				case 'failed':
+					return t('docudesk', 'Validation failed')
+				default:
+					return t('docudesk', 'Not yet validated')
 			}
 		},
 		/**

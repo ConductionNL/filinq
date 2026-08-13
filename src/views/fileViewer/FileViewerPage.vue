@@ -14,10 +14,16 @@
 					:title="toggleTitle"
 					@click="fileViewerStore.toggleAnonymized()">
 					<template #icon>
-						<EyeOffOutline v-if="fileViewerStore.showAnonymized" :size="18" />
+						<EyeOffOutline
+							v-if="fileViewerStore.showAnonymized"
+							:size="18" />
 						<Eye v-else :size="18" />
 					</template>
-					{{ fileViewerStore.showAnonymized ? t('docudesk', 'Show original') : t('docudesk', 'Show anonymised') }}
+					{{
+						fileViewerStore.showAnonymized
+							? t('docudesk', 'Show original')
+							: t('docudesk', 'Show anonymised')
+					}}
 				</NcButton>
 			</template>
 		</DdFileViewerHeader>
@@ -27,7 +33,9 @@
 				:is="viewerComponent"
 				v-if="viewerComponent && fileViewerStore.currentFile"
 				v-bind="viewerProps" />
-			<div v-else-if="fileViewerStore.currentFile" class="file-viewer-page__unsupported">
+			<div
+				v-else-if="fileViewerStore.currentFile"
+				class="file-viewer-page__unsupported">
 				<FileAlertOutline :size="48" />
 				<p>{{ t('docudesk', 'This file type cannot be previewed.') }}</p>
 				<NcButton variant="primary" @click="downloadCurrent">
@@ -72,12 +80,16 @@ function detectViewer(file) {
 	const mime = (file.mimeType || '').toLowerCase()
 	if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
 	if (
-		mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+		mime
+			=== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 		|| name.endsWith('.docx')
-	) return 'word'
-	if (mime === 'application/vnd.oasis.opendocument.text' || name.endsWith('.odt')) return 'odt'
+	)
+		return 'word'
+	if (mime === 'application/vnd.oasis.opendocument.text' || name.endsWith('.odt'))
+		return 'odt'
 	if (mime === 'message/rfc822' || name.endsWith('.eml')) return 'eml'
-	if (mime.startsWith('text/') || name.match(/\.(txt|md|markdown|log|csv)$/)) return 'text'
+	if (mime.startsWith('text/') || name.match(/\.(txt|md|markdown|log|csv)$/))
+		return 'text'
 	return null
 }
 
@@ -110,7 +122,10 @@ export default {
 		 * @return {string}
 		 */
 		pageTitle() {
-			return fileViewerStore.currentFile?.fileName || t('docudesk', 'File preview')
+			return (
+				fileViewerStore.currentFile?.fileName
+				|| t('docudesk', 'File preview')
+			)
 		},
 		/**
 		 * Resolve the viewer kind for the current file.
@@ -127,13 +142,19 @@ export default {
 		 */
 		viewerComponent() {
 			switch (this.viewerKind) {
-			case 'pdf': return 'PdfViewer'
-			case 'word': return 'WordViewer'
-			case 'odt': return 'OdtViewer'
-			case 'text': return 'TextViewer'
-			// EML is rendered as a server-side PDF preview via PdfViewer.
-			case 'eml': return 'PdfViewer'
-			default: return null
+				case 'pdf':
+					return 'PdfViewer'
+				case 'word':
+					return 'WordViewer'
+				case 'odt':
+					return 'OdtViewer'
+				case 'text':
+					return 'TextViewer'
+				// EML is rendered as a server-side PDF preview via PdfViewer.
+				case 'eml':
+					return 'PdfViewer'
+				default:
+					return null
 			}
 		},
 		/**
@@ -158,10 +179,14 @@ export default {
 		 */
 		fileTypeIcon() {
 			switch (this.viewerKind) {
-			case 'pdf': return 'FilePdfBox'
-			case 'word': return 'FileWordBox'
-			case 'odt': return 'FileWordBox'
-			default: return 'FileDocumentOutline'
+				case 'pdf':
+					return 'FilePdfBox'
+				case 'word':
+					return 'FileWordBox'
+				case 'odt':
+					return 'FileWordBox'
+				default:
+					return 'FileDocumentOutline'
 			}
 		},
 		/**

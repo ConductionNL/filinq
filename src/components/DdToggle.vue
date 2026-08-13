@@ -1,5 +1,7 @@
 <template>
-	<label class="dd-toggle" :class="{ 'dd-toggle--checked': checked, 'dd-toggle--disabled': disabled }">
+	<label
+		class="dd-toggle"
+		:class="{ 'dd-toggle--checked': checked, 'dd-toggle--disabled': disabled }">
 		<!-- Visually-hidden native checkbox keeps the control keyboard- and
 		     screen-reader-accessible; the pill below is purely presentational. -->
 		<input
@@ -7,7 +9,7 @@
 			class="dd-toggle__input"
 			:checked="checked"
 			:disabled="disabled"
-			@change="$emit('update:checked', $event.target.checked)">
+			@change="$emit('update:checked', $event.target.checked)" />
 		<span class="dd-toggle__track" aria-hidden="true">
 			<span class="dd-toggle__knob" />
 		</span>

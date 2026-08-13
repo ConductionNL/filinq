@@ -19,7 +19,8 @@ vi.mock('@nextcloud/router', () => ({
 	generateUrl: (path) => `http://localhost/index.php${path}`,
 }))
 
-const { validateFile, verdictColor } = await import('../../src/services/validationService.js')
+const { validateFile, verdictColor } =
+	await import('../../src/services/validationService.js')
 
 describe('validateFile', () => {
 	beforeEach(() => postMock.mockReset())

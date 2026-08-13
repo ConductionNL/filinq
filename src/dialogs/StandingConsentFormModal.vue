@@ -48,7 +48,12 @@ export default {
 		return {
 			form: blankForm(),
 			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
-			consentMethodOptions: ['paper', 'digital_signature', 'verbal_recorded', 'opt_in_form'],
+			consentMethodOptions: [
+				'paper',
+				'digital_signature',
+				'verbal_recorded',
+				'opt_in_form',
+			],
 			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
@@ -62,10 +67,12 @@ export default {
 				: t('docudesk', 'Add standing consent')
 		},
 		canSubmit() {
-			return this.form.entityText.trim() !== ''
+			return (
+				this.form.entityText.trim() !== ''
 				&& this.form.consentMethod !== ''
 				&& this.form.matchRules.length > 0
-				&& this.form.matchRules.every(r => r.type && r.value !== '')
+				&& this.form.matchRules.every((r) => r.type && r.value !== '')
+			)
 		},
 	},
 	watch: {
@@ -83,7 +90,7 @@ export default {
 					...blankForm(),
 					...this.editingRecord,
 					matchRules: Array.isArray(this.editingRecord.matchRules)
-						? this.editingRecord.matchRules.map(r => ({ ...r }))
+						? this.editingRecord.matchRules.map((r) => ({ ...r }))
 						: [],
 				}
 			} else {
@@ -97,7 +104,10 @@ export default {
 			this.form.matchRules.splice(idx, 1)
 		},
 		submit() {
-			this.$emit('submit', { ...this.form, matchRules: this.form.matchRules.map(r => ({ ...r })) })
+			this.$emit('submit', {
+				...this.form,
+				matchRules: this.form.matchRules.map((r) => ({ ...r })),
+			})
 		},
 		onCancel() {
 			this.$emit('update:open', false)
@@ -136,7 +146,12 @@ export default {
 				:label="t('docudesk', 'Consent document (file id or URL)')" />
 			<NcTextField
 				v-model="form.consentScope"
-				:label="t('docudesk', 'Consent scope (e.g. \'2024-2025 municipal decisions\')')" />
+				:label="
+					t(
+						'docudesk',
+						'Consent scope (e.g. \'2024-2025 municipal decisions\')',
+					)
+				" />
 			<NcTextField
 				v-model="form.legalBasis"
 				:label="t('docudesk', 'Legal basis')" />
@@ -146,21 +161,32 @@ export default {
 			<NcTextField
 				v-model="form.validUntil"
 				:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
-			<NcCheckboxRadioSwitch
-				v-model="form.active"
-				type="switch">
+			<NcCheckboxRadioSwitch v-model="form.active" type="switch">
 				{{ t('docudesk', 'Active') }}
 			</NcCheckboxRadioSwitch>
 
 			<div v-if="!form.validUntil" class="form-warning">
-				{{ t('docudesk', 'No expiry set — this standing consent will remain in force indefinitely. Consider setting a "Valid until" date.') }}
+				{{
+					t(
+						'docudesk',
+						'No expiry set — this standing consent will remain in force indefinitely. Consider setting a "Valid until" date.',
+					)
+				}}
 			</div>
 
 			<h4>{{ t('docudesk', 'Match rules') }}</h4>
 			<div v-if="!form.matchRules?.length" class="form-warning">
-				{{ t('docudesk', 'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.') }}
+				{{
+					t(
+						'docudesk',
+						'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.',
+					)
+				}}
 			</div>
-			<div v-for="(rule, idx) in form.matchRules" :key="idx" class="match-rule-row">
+			<div
+				v-for="(rule, idx) in form.matchRules"
+				:key="idx"
+				class="match-rule-row">
 				<NcSelect
 					v-model="rule.type"
 					:options="matchTypeOptions"
@@ -177,7 +203,11 @@ export default {
 				-->
 				<NcButton
 					variant="tertiary"
-					:aria-label="t('docudesk', 'Remove match rule {number}', { number: idx + 1 })"
+					:aria-label="
+						t('docudesk', 'Remove match rule {number}', {
+							number: idx + 1,
+						})
+					"
 					@click="removeRule(idx)">
 					<template #icon>
 						<Delete :size="20" />
@@ -197,7 +227,10 @@ export default {
 			<NcButton variant="tertiary" @click="onCancel">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="saving || !canSubmit" @click="submit">
+			<NcButton
+				variant="primary"
+				:disabled="saving || !canSubmit"
+				@click="submit">
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>

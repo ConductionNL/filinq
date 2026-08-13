@@ -37,10 +37,14 @@ function loadJsTranslations(file) {
 	vm.createContext(sandbox)
 	vm.runInContext(code, sandbox, { filename: file })
 	if (!captured || typeof captured !== 'object') {
-		throw new Error(`OC.L10N.register was not called with a translations object in ${file}`)
+		throw new Error(
+			`OC.L10N.register was not called with a translations object in ${file}`,
+		)
 	}
 	if (!app) {
-		throw new Error(`OC.L10N.register was not called with an app name in ${file}`)
+		throw new Error(
+			`OC.L10N.register was not called with an app name in ${file}`,
+		)
 	}
 	return {
 		app,
@@ -85,7 +89,9 @@ function serializeJson({ translations, pluralForm }) {
 		}
 		return JSON.stringify(value)
 	}
-	const entries = keys.map((k) => `        ${JSON.stringify(k)}: ${serializeValue(translations[k])}`)
+	const entries = keys.map(
+		(k) => `        ${JSON.stringify(k)}: ${serializeValue(translations[k])}`,
+	)
 	return `{\n    "translations": {\n${entries.join(',\n')}\n    },\n    "pluralForm": ${JSON.stringify(pluralForm)}\n}\n`
 }
 
@@ -119,7 +125,10 @@ function walk(dir, exts, out = []) {
 function collectUsedKeys(srcDir, app) {
 	const files = walk(srcDir, ['.vue', '.js', '.ts'])
 	const used = new Set()
-	const tCallRe = new RegExp(`\\b[tn]\\s*\\(\\s*(['"])${escapeRegex(app)}\\1\\s*,\\s*`, 'g')
+	const tCallRe = new RegExp(
+		`\\b[tn]\\s*\\(\\s*(['"])${escapeRegex(app)}\\1\\s*,\\s*`,
+		'g',
+	)
 
 	for (const file of files) {
 		const text = fs.readFileSync(file, 'utf8')
@@ -127,7 +136,7 @@ function collectUsedKeys(srcDir, app) {
 		while (tCallRe.exec(text) !== null) {
 			const argStart = tCallRe.lastIndex
 			const ch = text[argStart]
-			if (ch !== '\'' && ch !== '"') continue
+			if (ch !== "'" && ch !== '"') continue
 			let i = argStart + 1
 			let value = ''
 			let closed = false
@@ -142,7 +151,10 @@ function collectUsedKeys(srcDir, app) {
 					i += 2
 					continue
 				}
-				if (c === ch) { closed = true; break }
+				if (c === ch) {
+					closed = true
+					break
+				}
 				if (c === '\n') break
 				value += c
 				i++
@@ -165,7 +177,10 @@ function collectUsedKeys(srcDir, app) {
 function findKeyReferences(srcDir, app, key) {
 	const files = walk(srcDir, ['.vue', '.js', '.ts'])
 	const hits = []
-	const tCallRe = new RegExp(`\\b[tn]\\s*\\(\\s*(['"])${escapeRegex(app)}\\1\\s*,\\s*`, 'g')
+	const tCallRe = new RegExp(
+		`\\b[tn]\\s*\\(\\s*(['"])${escapeRegex(app)}\\1\\s*,\\s*`,
+		'g',
+	)
 
 	for (const file of files) {
 		const text = fs.readFileSync(file, 'utf8')
@@ -174,7 +189,8 @@ function findKeyReferences(srcDir, app, key) {
 			if (text.charCodeAt(i) === 10) lineStarts.push(i + 1)
 		}
 		const posToLine = (pos) => {
-			let lo = 0; let hi = lineStarts.length - 1
+			let lo = 0
+			let hi = lineStarts.length - 1
 			while (lo < hi) {
 				const mid = (lo + hi + 1) >> 1
 				if (lineStarts[mid] <= pos) lo = mid
@@ -188,7 +204,7 @@ function findKeyReferences(srcDir, app, key) {
 		while ((m = tCallRe.exec(text)) !== null) {
 			const argStart = tCallRe.lastIndex
 			const ch = text[argStart]
-			if (ch !== '\'' && ch !== '"') continue
+			if (ch !== "'" && ch !== '"') continue
 			let i = argStart + 1
 			let value = ''
 			let closed = false
@@ -203,7 +219,10 @@ function findKeyReferences(srcDir, app, key) {
 					i += 2
 					continue
 				}
-				if (c === ch) { closed = true; break }
+				if (c === ch) {
+					closed = true
+					break
+				}
 				if (c === '\n') break
 				value += c
 				i++
@@ -239,7 +258,9 @@ function runEslintFix(files, { rootDir, log = () => {} } = {}) {
 		stdio: 'inherit',
 	})
 	if (result.status !== 0) {
-		log(`eslint exited with status ${result.status} — files may still have lint issues, but the fixable ones have been corrected.`)
+		log(
+			`eslint exited with status ${result.status} — files may still have lint issues, but the fixable ones have been corrected.`,
+		)
 	}
 }
 
@@ -249,7 +270,8 @@ function runEslintFix(files, { rootDir, log = () => {} } = {}) {
  */
 function listJsLocaleFiles(l10nDir) {
 	if (!fs.existsSync(l10nDir)) return []
-	return fs.readdirSync(l10nDir)
+	return fs
+		.readdirSync(l10nDir)
 		.filter((f) => f.endsWith('.js'))
 		.sort()
 		.map((f) => path.join(l10nDir, f))

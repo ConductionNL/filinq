@@ -10,7 +10,12 @@ SPDX-License-Identifier: EUPL-1.2
 		<div class="comparison-view__header">
 			<h2>{{ t('docudesk', 'Document comparison') }}</h2>
 			<p class="comparison-view__subtitle">
-				{{ t('docudesk', 'Compare two versions of a file or two distinct files side by side.') }}
+				{{
+					t(
+						'docudesk',
+						'Compare two versions of a file or two distinct files side by side.',
+					)
+				}}
 			</p>
 		</div>
 
@@ -20,22 +25,29 @@ SPDX-License-Identifier: EUPL-1.2
 
 		<div class="comparison-view__pickers">
 			<div class="comparison-view__field">
-				<NcTextField v-model="leftFileId"
+				<NcTextField
+					v-model="leftFileId"
 					:label="t('docudesk', 'Left file ID')"
 					type="number" />
-				<NcTextField v-model="leftVersion"
+				<NcTextField
+					v-model="leftVersion"
 					:label="t('docudesk', 'Left version timestamp (optional)')"
 					type="number" />
 			</div>
 			<div class="comparison-view__field">
-				<NcTextField v-model="rightFileId"
+				<NcTextField
+					v-model="rightFileId"
 					:label="t('docudesk', 'Right file ID')"
 					type="number" />
-				<NcTextField v-model="rightVersion"
+				<NcTextField
+					v-model="rightVersion"
 					:label="t('docudesk', 'Right version timestamp (optional)')"
 					type="number" />
 			</div>
-			<NcButton variant="primary" :disabled="loading || !canCompare" @click="runComparison">
+			<NcButton
+				variant="primary"
+				:disabled="loading || !canCompare"
+				@click="runComparison">
 				{{ t('docudesk', 'Compare') }}
 			</NcButton>
 		</div>
@@ -43,15 +55,34 @@ SPDX-License-Identifier: EUPL-1.2
 		<NcLoadingIcon v-if="loading" :size="32" />
 
 		<NcNoteCard v-if="result && result.crossFormat" type="warning">
-			{{ t('docudesk', 'The two subjects have different formats; layout-derived differences may appear as noise.') }}
+			{{
+				t(
+					'docudesk',
+					'The two subjects have different formats; layout-derived differences may appear as noise.',
+				)
+			}}
 		</NcNoteCard>
 
-		<NcNoteCard v-if="result && result.redactionAnnotation === 'unavailable'" type="info">
-			{{ t('docudesk', 'Redaction annotation is unavailable (OpenRegister not reachable).') }}
+		<NcNoteCard
+			v-if="result && result.redactionAnnotation === 'unavailable'"
+			type="info">
+			{{
+				t(
+					'docudesk',
+					'Redaction annotation is unavailable (OpenRegister not reachable).',
+				)
+			}}
 		</NcNoteCard>
 
 		<div v-if="unredactedEntities.length > 0" class="comparison-view__advisory">
-			<h3>{{ t('docudesk', 'Verify manually — entities with no detected change') }}</h3>
+			<h3>
+				{{
+					t(
+						'docudesk',
+						'Verify manually — entities with no detected change',
+					)
+				}}
+			</h3>
 			<ul>
 				<li v-for="entity in unredactedEntities" :key="entity.entityId">
 					{{ entity.entityName }}
@@ -62,19 +93,31 @@ SPDX-License-Identifier: EUPL-1.2
 		<div v-if="result" ref="diffPanes" class="comparison-view__diff">
 			<div class="comparison-view__pane" @scroll="syncScroll('left', $event)">
 				<template v-for="(hunk, index) in result.hunks">
-					<span v-if="hunk.leftText !== undefined"
+					<span
+						v-if="hunk.leftText !== undefined"
 						:key="'l' + index"
 						:class="hunkClass(hunk, 'left')">
-						{{ hunk.leftText }}<span v-if="hunk.redaction" class="comparison-view__badge">{{ hunk.redaction.entityType }}</span>
+						{{ hunk.leftText
+						}}<span
+							v-if="hunk.redaction"
+							class="comparison-view__badge"
+							>{{ hunk.redaction.entityType }}</span
+						>
 					</span>
 				</template>
 			</div>
 			<div class="comparison-view__pane" @scroll="syncScroll('right', $event)">
 				<template v-for="(hunk, index) in result.hunks">
-					<span v-if="hunk.rightText !== undefined"
+					<span
+						v-if="hunk.rightText !== undefined"
 						:key="'r' + index"
 						:class="hunkClass(hunk, 'right')">
-						{{ hunk.rightText }}<span v-if="hunk.redaction" class="comparison-view__badge">{{ hunk.redaction.entityType }}</span>
+						{{ hunk.rightText
+						}}<span
+							v-if="hunk.redaction"
+							class="comparison-view__badge"
+							>{{ hunk.redaction.entityType }}</span
+						>
 					</span>
 				</template>
 			</div>
@@ -221,12 +264,15 @@ export default {
 			this.syncing = true
 			const panes = this.$refs.diffPanes
 			if (panes) {
-				const other = source === 'left' ? panes.children[1] : panes.children[0]
+				const other =
+					source === 'left' ? panes.children[1] : panes.children[0]
 				if (other) {
 					other.scrollTop = event.target.scrollTop
 				}
 			}
-			this.$nextTick(() => { this.syncing = false })
+			this.$nextTick(() => {
+				this.syncing = false
+			})
 		},
 	},
 }

@@ -2,7 +2,9 @@ import { buildHighlightSegments, PENDING_TYPE } from './highlightText.js'
 
 describe('buildHighlightSegments', () => {
 	it('returns nothing for empty text', () => {
-		expect(buildHighlightSegments('', [{ value: 'x', type: 'PERSON' }])).toEqual([])
+		expect(buildHighlightSegments('', [{ value: 'x', type: 'PERSON' }])).toEqual(
+			[],
+		)
 	})
 
 	it('returns a single plain segment when there are no entities', () => {
@@ -12,7 +14,9 @@ describe('buildHighlightSegments', () => {
 	})
 
 	it('wraps a single match and keeps the surrounding text plain', () => {
-		const segments = buildHighlightSegments('Hi Kuipers!', [{ value: 'Kuipers', type: 'PERSON' }])
+		const segments = buildHighlightSegments('Hi Kuipers!', [
+			{ value: 'Kuipers', type: 'PERSON' },
+		])
 		expect(segments).toEqual([
 			{ text: 'Hi ', type: null },
 			{ text: 'Kuipers', type: 'PERSON' },
@@ -21,7 +25,9 @@ describe('buildHighlightSegments', () => {
 	})
 
 	it('matches case-insensitively but preserves the original casing', () => {
-		const segments = buildHighlightSegments('see KUIPERS now', [{ value: 'kuipers', type: 'PERSON' }])
+		const segments = buildHighlightSegments('see KUIPERS now', [
+			{ value: 'kuipers', type: 'PERSON' },
+		])
 		expect(segments).toEqual([
 			{ text: 'see ', type: null },
 			{ text: 'KUIPERS', type: 'PERSON' },
@@ -30,7 +36,9 @@ describe('buildHighlightSegments', () => {
 	})
 
 	it('matches every occurrence', () => {
-		const segments = buildHighlightSegments('a a', [{ value: 'a', type: 'OTHER' }])
+		const segments = buildHighlightSegments('a a', [
+			{ value: 'a', type: 'OTHER' },
+		])
 		expect(segments.filter((s) => s.type === 'OTHER')).toHaveLength(2)
 	})
 

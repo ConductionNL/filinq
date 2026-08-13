@@ -53,40 +53,64 @@ const ABSENT_ID = '00000000-0000-4000-8000-000000000000'
 // ---------------------------------------------------------------------------
 
 test.describe('page components — anonymization', () => {
-	test('AnonymizationIndex paints its own page heading at /anonymization', async ({ page }) => {
+	test('AnonymizationIndex paints its own page heading at /anonymization', async ({
+		page,
+	}) => {
 		await go(page, 'anonymization')
 		// `.anonymization-page__title` exists in exactly one template in the
 		// app. The SPA shell renders no such element, so this cannot pass on
 		// the bare shell.
-		await expect(page.locator('.anonymization-page__title')).toHaveText('Anonymization')
+		await expect(page.locator('.anonymization-page__title')).toHaveText(
+			'Anonymization',
+		)
 	})
 
-	test('AnonymizationWidget paints its upload drop zone inside /anonymization', async ({ page }) => {
+	test('AnonymizationWidget paints its upload drop zone inside /anonymization', async ({
+		page,
+	}) => {
 		await go(page, 'anonymization')
 		const widget = page.locator('.anonymization-page .anonymization-widget')
 		await expect(widget).toBeVisible()
-		await expect(widget.locator('.drop-title'))
-			.toHaveText('Drag and drop one or more documents')
+		await expect(widget.locator('.drop-title')).toHaveText(
+			'Drag and drop one or more documents',
+		)
 		// ODT appears in THIS widget's subtitle and NOT in the dashboard
 		// widget's (which lists only .docx/PDF/TXT), so this assertion pins the
 		// test to the component it names.
-		await expect(widget.locator('.drop-subtitle'))
-			.toHaveText('Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.')
-		await expect(widget.getByRole('button', { name: '+ Select files' })).toBeVisible()
-		await expect(widget.locator('input[type="file"]'))
-			.toHaveAttribute('aria-label', 'Select files to anonymise')
+		await expect(widget.locator('.drop-subtitle')).toHaveText(
+			'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.',
+		)
+		await expect(
+			widget.getByRole('button', { name: '+ Select files' }),
+		).toBeVisible()
+		await expect(widget.locator('input[type="file"]')).toHaveAttribute(
+			'aria-label',
+			'Select files to anonymise',
+		)
 	})
 
-	test('FolderAnonymizationView paints its folder-path form at /folder-anonymization', async ({ page }) => {
+	test('FolderAnonymizationView paints its folder-path form at /folder-anonymization', async ({
+		page,
+	}) => {
 		await go(page, 'folder-anonymization')
 		const view = page.locator('.folder-anonymization')
-		await expect(view.getByRole('heading', { name: 'Folder Analysis & Anonymization' })).toBeVisible()
-		await expect(view.getByText('Enter a folder path from your Nextcloud files to analyze all documents in it.')).toBeVisible()
+		await expect(
+			view.getByRole('heading', { name: 'Folder Analysis & Anonymization' }),
+		).toBeVisible()
+		await expect(
+			view.getByText(
+				'Enter a folder path from your Nextcloud files to analyze all documents in it.',
+			),
+		).toBeVisible()
 		// Step 1 of the view — the only step reachable without a completed
 		// extraction run.
-		await expect(view.locator('input.folder-path-input'))
-			.toHaveAttribute('aria-label', 'Folder path to analyse')
-		await expect(view.getByRole('button', { name: 'Analyze Folder' })).toBeVisible()
+		await expect(view.locator('input.folder-path-input')).toHaveAttribute(
+			'aria-label',
+			'Folder path to analyse',
+		)
+		await expect(
+			view.getByRole('button', { name: 'Analyze Folder' }),
+		).toBeVisible()
 	})
 })
 
@@ -95,26 +119,41 @@ test.describe('page components — anonymization', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — dashboard', () => {
-	test('DashboardIndex paints its consent KPI links at the app root', async ({ page }) => {
+	test('DashboardIndex paints its consent KPI links at the app root', async ({
+		page,
+	}) => {
 		await go(page, '')
 		// The KPI tiles are <RouterLink>s with explicit aria-labels written in
 		// DashboardIndex's template — the shell has no such links.
-		await expect(page.getByRole('link', { name: /^Total Consents/ })).toBeVisible()
-		await expect(page.getByRole('link', { name: /^Pending consents/ })).toBeVisible()
-		await expect(page.getByRole('link', { name: /^Approved consents/ })).toBeVisible()
-		await expect(page.getByRole('link', { name: /^Objected consents/ })).toBeVisible()
+		await expect(
+			page.getByRole('link', { name: /^Total Consents/ }),
+		).toBeVisible()
+		await expect(
+			page.getByRole('link', { name: /^Pending consents/ }),
+		).toBeVisible()
+		await expect(
+			page.getByRole('link', { name: /^Approved consents/ }),
+		).toBeVisible()
+		await expect(
+			page.getByRole('link', { name: /^Objected consents/ }),
+		).toBeVisible()
 	})
 
-	test('AnonymizationDashboardWidget paints its quick-anonymisation panel on the dashboard', async ({ page }) => {
+	test('AnonymizationDashboardWidget paints its quick-anonymisation panel on the dashboard', async ({
+		page,
+	}) => {
 		await go(page, '')
 		const widget = page.locator('.docudesk-anon-widget')
 		await expect(widget).toBeVisible()
 		// The dashboard widget's supported-format line omits ODT; the in-app
 		// AnonymizationWidget's includes it. Asserting the exact string keeps
 		// the two components' tests non-interchangeable.
-		await expect(widget.locator('.drop-subtitle'))
-			.toHaveText('Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.')
-		await expect(widget.getByRole('button', { name: '+ Select files' })).toBeVisible()
+		await expect(widget.locator('.drop-subtitle')).toHaveText(
+			'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.',
+		)
+		await expect(
+			widget.getByRole('button', { name: '+ Select files' }),
+		).toBeVisible()
 	})
 })
 
@@ -123,15 +162,24 @@ test.describe('page components — dashboard', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — consent', () => {
-	test('ConsentIndex paints its workflow description and record list at /consent', async ({ page }) => {
+	test('ConsentIndex paints its workflow description and record list at /consent', async ({
+		page,
+	}) => {
 		await go(page, 'consent')
 		// The description is ConsentIndex's own `description` prop on
 		// CnIndexPage; no other page and no shell chrome carries this string.
-		await expect(page.getByText('Per-document consent records produced by the publication-clearance workflow.')).toBeVisible()
+		await expect(
+			page.getByText(
+				'Per-document consent records produced by the publication-clearance workflow.',
+			),
+		).toBeVisible()
 		// The list itself: real rows, or this page's own `empty-text`.
 		const table = page.locator('#content table, .app-content table').first()
 		const empty = page.getByText('No consent records found')
-		await expect(table.or(empty).first(), 'the consent list must render rows or its empty state').toBeVisible()
+		await expect(
+			table.or(empty).first(),
+			'the consent list must render rows or its empty state',
+		).toBeVisible()
 
 		// TWO THINGS THIS PAGE DECLARES AND DOES NOT RENDER — measured from the
 		// accessibility snapshot of run 31335736716, where `<main>` was exactly:
@@ -157,11 +205,15 @@ test.describe('page components — consent', () => {
 		// a coverage PR — so they are recorded here and not asserted.
 	})
 
-	test('ConsentDetail paints its no-record state at /consent/<absent-id>', async ({ page }) => {
+	test('ConsentDetail paints its no-record state at /consent/<absent-id>', async ({
+		page,
+	}) => {
 		await go(page, `consent/${ABSENT_ID}`)
 		// CnDetailPage's error slot, filled by ConsentDetail with its own copy.
 		await expect(page.getByText('No consent record selected.')).toBeVisible()
-		await expect(page.getByRole('button', { name: 'Back to Consents' }).first()).toBeVisible()
+		await expect(
+			page.getByRole('button', { name: 'Back to Consents' }).first(),
+		).toBeVisible()
 	})
 })
 
@@ -170,16 +222,24 @@ test.describe('page components — consent', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — custom dictionaries', () => {
-	test('CustomDictionaryIndex paints its list description at /custom-dictionaries', async ({ page }) => {
+	test('CustomDictionaryIndex paints its list description at /custom-dictionaries', async ({
+		page,
+	}) => {
 		await go(page, 'custom-dictionaries')
 		await expect(page.getByText(/Organisation-managed term lists/)).toBeVisible()
-		await expect(page.getByText(/add an extra recognizer alongside Presidio and regex/)).toBeVisible()
+		await expect(
+			page.getByText(/add an extra recognizer alongside Presidio and regex/),
+		).toBeVisible()
 	})
 
-	test('CustomDictionaryDetail paints its term-management panel at /custom-dictionaries/<absent-id>', async ({ page }) => {
+	test('CustomDictionaryDetail paints its term-management panel at /custom-dictionaries/<absent-id>', async ({
+		page,
+	}) => {
 		await go(page, `custom-dictionaries/${ABSENT_ID}`)
 		const detail = page.locator('.custom-dictionary-detail')
-		await expect(detail.getByRole('button', { name: 'Back to custom dictionaries' })).toBeVisible()
+		await expect(
+			detail.getByRole('button', { name: 'Back to custom dictionaries' }),
+		).toBeVisible()
 		await expect(detail.getByRole('heading', { name: 'Terms' })).toBeVisible()
 		await expect(detail.getByRole('button', { name: 'Add term' })).toBeVisible()
 		// No dictionary resolved, so the terms panel shows its empty state.
@@ -192,31 +252,52 @@ test.describe('page components — custom dictionaries', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — standalone pages', () => {
-	test('ComparisonView paints its two file pickers at /comparison', async ({ page }) => {
+	test('ComparisonView paints its two file pickers at /comparison', async ({
+		page,
+	}) => {
 		await go(page, 'comparison')
 		const view = page.locator('.comparison-view')
-		await expect(view.getByRole('heading', { name: 'Document comparison' })).toBeVisible()
-		await expect(view.locator('.comparison-view__subtitle'))
-			.toHaveText('Compare two versions of a file or two distinct files side by side.')
+		await expect(
+			view.getByRole('heading', { name: 'Document comparison' }),
+		).toBeVisible()
+		await expect(view.locator('.comparison-view__subtitle')).toHaveText(
+			'Compare two versions of a file or two distinct files side by side.',
+		)
 		await expect(view.locator('.comparison-view__pickers')).toBeVisible()
-		await expect(view.getByRole('button', { name: 'Compare', exact: true })).toBeVisible()
+		await expect(
+			view.getByRole('button', { name: 'Compare', exact: true }),
+		).toBeVisible()
 	})
 
-	test('ComponentGallery paints its masthead and component sections at /gallery', async ({ page }) => {
+	test('ComponentGallery paints its masthead and component sections at /gallery', async ({
+		page,
+	}) => {
 		await go(page, 'gallery')
 		const gallery = page.locator('.dd-gallery')
-		await expect(gallery.getByRole('heading', { name: 'DocuDesk component gallery', level: 1 })).toBeVisible()
-		await expect(gallery.getByRole('navigation', { name: 'Components' })).toBeVisible()
+		await expect(
+			gallery.getByRole('heading', {
+				name: 'DocuDesk component gallery',
+				level: 1,
+			}),
+		).toBeVisible()
+		await expect(
+			gallery.getByRole('navigation', { name: 'Components' }),
+		).toBeVisible()
 		// A section heading, not the table-of-contents link of the same name.
-		await expect(gallery.getByRole('heading', { name: 'DdPageHeader' })).toBeVisible()
+		await expect(
+			gallery.getByRole('heading', { name: 'DdPageHeader' }),
+		).toBeVisible()
 	})
 
-	test('MyDocumentsIndex paints its documents header and search bar at /my-documents', async ({ page }) => {
+	test('MyDocumentsIndex paints its documents header and search bar at /my-documents', async ({
+		page,
+	}) => {
 		await go(page, 'my-documents')
 		const view = page.locator('.my-documents-wrapper')
 		await expect(view.locator('.dd-page-header__title')).toHaveText('Documents')
-		await expect(view.locator('.my-documents-search input').first())
-			.toHaveAttribute('placeholder', 'Search by name')
+		await expect(
+			view.locator('.my-documents-search input').first(),
+		).toHaveAttribute('placeholder', 'Search by name')
 	})
 })
 
@@ -225,15 +306,20 @@ test.describe('page components — standalone pages', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — admin settings', () => {
-	test('EntityTypeSelector paints its detection hint on the DocuDesk admin settings page', async ({ page }) => {
-		await page.goto('/index.php/settings/admin/docudesk', { waitUntil: 'domcontentloaded' })
+	test('EntityTypeSelector paints its detection hint on the DocuDesk admin settings page', async ({
+		page,
+	}) => {
+		await page.goto('/index.php/settings/admin/docudesk', {
+			waitUntil: 'domcontentloaded',
+		})
 		await waitForNcContentReady(page)
 		await dismissOverlays(page)
 		const selector = page.locator('.entity-type-selector')
 		await expect(selector).toBeVisible()
 		// The component computes one of three hints; all three name entity
 		// types, and none of them is rendered by the settings shell around it.
-		await expect(selector.locator('.entity-type-selector__hint'))
-			.toHaveText(/entity types (are|available)|Only the enabled types are detected/i)
+		await expect(selector.locator('.entity-type-selector__hint')).toHaveText(
+			/entity types (are|available)|Only the enabled types are detected/i,
+		)
 	})
 })

@@ -1,7 +1,5 @@
 <template>
-	<NcDialog :name="name"
-		:can-close="!busy"
-		@closing="$emit('cancel')">
+	<NcDialog :name="name" :can-close="!busy" @closing="$emit('cancel')">
 		<template #default>
 			<p class="confirm-action-dialog__message">
 				{{ message }}

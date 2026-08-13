@@ -12,7 +12,8 @@ The selected language persists across navigation via the template store (REQ-I18
 -->
 <template>
 	<div class="language-selector">
-		<NcSelect v-if="hasMultipleLanguages"
+		<NcSelect
+			v-if="hasMultipleLanguages"
 			:model-value="currentOption"
 			:options="languageOptions"
 			:clearable="false"
@@ -72,7 +73,7 @@ export default {
 			return this.availableLanguages.length >= 2
 		},
 		languageOptions() {
-			return this.availableLanguages.map(lang => ({
+			return this.availableLanguages.map((lang) => ({
 				value: lang,
 				label: LANGUAGE_LABELS[lang] || lang.toUpperCase(),
 			}))
@@ -81,7 +82,11 @@ export default {
 			if (!this.selectedLanguage) {
 				return this.languageOptions[0] || null
 			}
-			return this.languageOptions.find(o => o.value === this.selectedLanguage) || this.languageOptions[0] || null
+			return (
+				this.languageOptions.find((o) => o.value === this.selectedLanguage)
+				|| this.languageOptions[0]
+				|| null
+			)
 		},
 	},
 	methods: {

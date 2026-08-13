@@ -1,12 +1,15 @@
 <template>
-	<NcDialog :name="dialogName"
+	<NcDialog
+		:name="dialogName"
 		:can-close="!submitting"
 		size="normal"
 		@closing="$emit('cancel')">
 		<div class="dossier-dialog">
 			<!-- Single file: read-only filename, no dossier name -->
 			<div v-if="singleFile" class="single-file">
-				<span class="single-file__label">{{ t('docudesk', 'Document') }}</span>
+				<span class="single-file__label">{{
+					t('docudesk', 'Document')
+				}}</span>
 				<span class="single-file__name">{{ fileName }}</span>
 				<NcNoteCard v-if="error" type="error">
 					{{ error }}
@@ -14,7 +17,8 @@
 			</div>
 			<!-- Multiple files: dossier name input -->
 			<template v-else>
-				<NcTextField ref="dossierInput"
+				<NcTextField
+					ref="dossierInput"
 					:model-value="dossierName"
 					:label="t('docudesk', 'Dossier name')"
 					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
@@ -24,26 +28,43 @@
 					@update:model-value="$emit('update:dossierName', $event)"
 					@keyup.enter="$emit('confirm')" />
 				<NcNoteCard type="info">
-					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+					{{
+						t(
+							'docudesk',
+							'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.',
+						)
+					}}
 				</NcNoteCard>
 			</template>
 
 			<!-- Grondslagen toggle: drives whether entities are editable in the viewer -->
-			<NcCheckboxRadioSwitch :model-value="grondslagen"
+			<NcCheckboxRadioSwitch
+				:model-value="grondslagen"
 				type="switch"
 				:disabled="submitting"
 				@update:model-value="$emit('update:grondslagen', $event)">
 				{{ t('docudesk', 'Establish legal grounds (grondslagen)') }}
 			</NcCheckboxRadioSwitch>
 			<NcNoteCard type="info">
-				{{ t('docudesk', 'When enabled, you can review and adjust the legal grounds for each detected entity before anonymizing. When disabled, default grounds are applied and you can anonymize right away.') }}
+				{{
+					t(
+						'docudesk',
+						'When enabled, you can review and adjust the legal grounds for each detected entity before anonymizing. When disabled, default grounds are applied and you can anonymize right away.',
+					)
+				}}
 			</NcNoteCard>
 		</div>
 		<template #actions>
-			<NcButton variant="tertiary" :disabled="submitting" @click="$emit('cancel')">
+			<NcButton
+				variant="tertiary"
+				:disabled="submitting"
+				@click="$emit('cancel')">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="submitting" @click="$emit('confirm')">
+			<NcButton
+				variant="primary"
+				:disabled="submitting"
+				@click="$emit('confirm')">
 				<template v-if="submitting" #icon>
 					<NcLoadingIcon :size="18" />
 				</template>
@@ -55,7 +76,14 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcDialog,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcTextField,
+} from '@nextcloud/vue'
 
 /**
  * Upload-confirmation dialog for the DocuDesk anonymisation surface.

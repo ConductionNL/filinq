@@ -16,7 +16,9 @@ import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
 test.describe('template-management — templates list UI', () => {
-	test('Templates page renders heading, primary action and list/empty-state', async ({ page }) => {
+	test('Templates page renders heading, primary action and list/empty-state', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
 		const guard = attachConsoleGuard(page)
 		await go(page, 'templates')
@@ -31,10 +33,15 @@ test.describe('template-management — templates list UI', () => {
 
 		// Either a populated table OR the empty-state — never a blank page.
 		const table = page.locator('#content table, .app-content table').first()
-		const empty = page.locator('.empty-content, [class*="empty-content"]').filter({ hasText: 'No templates found' }).first()
+		const empty = page
+			.locator('.empty-content, [class*="empty-content"]')
+			.filter({ hasText: 'No templates found' })
+			.first()
 		await expect(table.or(empty)).toBeVisible()
 
-		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual([])
+		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual(
+			[],
+		)
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
@@ -56,12 +63,22 @@ test.describe('template-management — templates list UI', () => {
 		const table = page.locator('#content table, .app-content table').first()
 		await expect(table).toBeVisible()
 
-		for (const name of ['Name', 'Category', 'Page format', 'Namespace', 'Description']) {
-			await expect(page.getByRole('columnheader', { name, exact: true })).toBeVisible()
+		for (const name of [
+			'Name',
+			'Category',
+			'Page format',
+			'Namespace',
+			'Description',
+		]) {
+			await expect(
+				page.getByRole('columnheader', { name, exact: true }),
+			).toBeVisible()
 		}
 		// Nothing claims a Status column; assert its absence so the manifest and
 		// this spec cannot drift apart silently in either direction.
-		await expect(page.getByRole('columnheader', { name: 'Status', exact: true })).toHaveCount(0)
+		await expect(
+			page.getByRole('columnheader', { name: 'Status', exact: true }),
+		).toHaveCount(0)
 	})
 
 	test('"New template" opens a create surface', async ({ page }) => {

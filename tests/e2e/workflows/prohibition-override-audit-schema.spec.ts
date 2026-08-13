@@ -38,23 +38,33 @@ import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures'
 
 const OR = '/index.php/apps/openregister/api/objects/consent'
 
-test('the prohibition-override audit schema resolves and accepts the committer\'s payload', async ({ page, request }) => {
+test("the prohibition-override audit schema resolves and accepts the committer's payload", async ({
+	page,
+	request,
+}) => {
 	const token = await harvestToken(page)
 
 	// POSITIVE CONTROL FIRST. If the consent register itself were missing or
 	// the seed had not run, the assertion below would fail for a reason that
 	// has nothing to do with #428 — and a bare 404 cannot tell the two apart.
-	const sibling = await request.get(`${OR}/publicationProhibition`, { headers: jsonHeaders(token) })
-	expect(sibling.status(),
+	const sibling = await request.get(`${OR}/publicationProhibition`, {
+		headers: jsonHeaders(token),
+	})
+	expect(
+		sibling.status(),
 		`positive control — GET ${OR}/publicationProhibition must answer 200 before the `
-		+ 'assertion below means anything').toBe(200)
+			+ 'assertion below means anything',
+	).toBe(200)
 
-	const res = await request.get(`${OR}/prohibitionOverrideAudit`, { headers: jsonHeaders(token) })
-	expect(res.status(),
+	const res = await request.get(`${OR}/prohibitionOverrideAudit`, {
+		headers: jsonHeaders(token),
+	})
+	expect(
+		res.status(),
 		`GET ${OR}/prohibitionOverrideAudit must answer 200. A 404 here means the schema `
-		+ 'is undeclared again and ProhibitionOverrideCommitter::writeAudit() is fail-closed '
-		+ `on it, so EVERY acknowledged override 500s. Body: ${(await res.text()).slice(0, 200)}`)
-		.toBe(200)
+			+ 'is undeclared again and ProhibitionOverrideCommitter::writeAudit() is fail-closed '
+			+ `on it, so EVERY acknowledged override 500s. Body: ${(await res.text()).slice(0, 200)}`,
+	).toBe(200)
 
 	// The store resolving is necessary but not sufficient: the committer writes
 	// a specific six-field shape, and a schema that rejects it is the same
@@ -70,11 +80,18 @@ test('the prohibition-override audit schema resolves and accepts the committer\'
 			acknowledgedAt: new Date().toISOString(),
 		},
 	})
-	expect(write.status(),
+	expect(
+		write.status(),
 		`POST ${OR}/prohibitionOverrideAudit with the exact payload writeAudit() sends must be `
-		+ `accepted. Body: ${(await write.text()).slice(0, 300)}`).toBe(201)
+			+ `accepted. Body: ${(await write.text()).slice(0, 300)}`,
+	).toBe(201)
 
 	const created = await write.json()
-	expect(created.ruleId, 'the audit entry must round-trip its ruleId').toBe(`${TEST_PREFIX}-rule`)
-	expect(created.acknowledgedBy, 'the audit entry must round-trip the acting user').toBe('admin')
+	expect(created.ruleId, 'the audit entry must round-trip its ruleId').toBe(
+		`${TEST_PREFIX}-rule`,
+	)
+	expect(
+		created.acknowledgedBy,
+		'the audit entry must round-trip the acting user',
+	).toBe('admin')
 })

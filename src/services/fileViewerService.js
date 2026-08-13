@@ -22,7 +22,10 @@ export function buildWebdavUrl(path) {
 		throw new Error('User not authenticated')
 	}
 	const normalised = toUserRelativePath(path, user.uid)
-	const segments = normalised.split('/').map((s) => encodeURIComponent(s)).join('/')
+	const segments = normalised
+		.split('/')
+		.map((s) => encodeURIComponent(s))
+		.join('/')
 	return generateRemoteUrl(`dav/files/${user.uid}${segments}`)
 }
 
@@ -79,7 +82,9 @@ export async function fetchUrlAsArrayBuffer(url) {
  * @return {string} App-relative URL of the preview endpoint.
  */
 export function emlPreviewUrl(fileId) {
-	return generateUrl('/apps/docudesk/api/anonymization/eml-preview/{fileId}', { fileId })
+	return generateUrl('/apps/docudesk/api/anonymization/eml-preview/{fileId}', {
+		fileId,
+	})
 }
 
 /**
@@ -166,7 +171,11 @@ function isPdf(mime, name) {
  * @return {boolean}
  */
 function isWord(mime, name) {
-	return mime.includes('wordprocessingml') || mime.includes('msword') || /\.docx?$/i.test(name)
+	return (
+		mime.includes('wordprocessingml')
+		|| mime.includes('msword')
+		|| /\.docx?$/i.test(name)
+	)
 }
 
 /**

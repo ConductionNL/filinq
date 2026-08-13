@@ -8,7 +8,12 @@ import { consentStore } from '../../store/store.js'
 		<CnIndexPage
 			ref="indexPage"
 			:title="t('docudesk', 'Standing Publication Consents')"
-			:description="t('docudesk', 'Manage entity-level standing publication consent records')"
+			:description="
+				t(
+					'docudesk',
+					'Manage entity-level standing publication consent records',
+				)
+			"
 			:show-title="true"
 			:objects="entityConsents"
 			:columns="tableColumns"
@@ -111,9 +116,7 @@ import { consentStore } from '../../store/store.js'
 						</template>
 						{{ t('docudesk', 'Expire') }}
 					</NcActionButton>
-					<NcActionButton
-						close-after-click
-						@click="revokeConsent(row)">
+					<NcActionButton close-after-click @click="revokeConsent(row)">
 						<template #icon>
 							<Cancel :size="20" />
 						</template>
@@ -137,7 +140,12 @@ import { consentStore } from '../../store/store.js'
 		<ConfirmActionDialog
 			v-if="revokeTarget"
 			:name="t('docudesk', 'Revoke standing consent')"
-			:message="t('docudesk', 'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.')"
+			:message="
+				t(
+					'docudesk',
+					'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.',
+				)
+			"
 			:confirm-label="t('docudesk', 'Revoke')"
 			:busy="revoking"
 			@confirm="executeRevoke"
@@ -207,7 +215,7 @@ export default {
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		entityConsents() {
-			return consentStore.consents.filter(c => c.scope === 'entity')
+			return consentStore.consents.filter((c) => c.scope === 'entity')
 		},
 		/**
 		 * Count of active entity consents.
@@ -215,7 +223,7 @@ export default {
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		activeCount() {
-			return this.entityConsents.filter(c => c.active === true).length
+			return this.entityConsents.filter((c) => c.active === true).length
 		},
 		/**
 		 * Count of inactive entity consents.
@@ -223,7 +231,7 @@ export default {
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		inactiveCount() {
-			return this.entityConsents.filter(c => c.active !== true).length
+			return this.entityConsents.filter((c) => c.active !== true).length
 		},
 		/**
 		 * Column definitions for the standing consent records table.
@@ -232,13 +240,33 @@ export default {
 		 */
 		tableColumns() {
 			return [
-				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
+				{
+					key: 'entityText',
+					label: t('docudesk', 'Entity'),
+					sortable: true,
+				},
 				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'consentMethod', label: t('docudesk', 'Consent Method'), sortable: true },
-				{ key: 'validFrom', label: t('docudesk', 'Valid From'), sortable: true },
-				{ key: 'validUntil', label: t('docudesk', 'Valid Until'), sortable: true },
+				{
+					key: 'consentMethod',
+					label: t('docudesk', 'Consent Method'),
+					sortable: true,
+				},
+				{
+					key: 'validFrom',
+					label: t('docudesk', 'Valid From'),
+					sortable: true,
+				},
+				{
+					key: 'validUntil',
+					label: t('docudesk', 'Valid Until'),
+					sortable: true,
+				},
 				{ key: 'active', label: t('docudesk', 'Active'), sortable: true },
-				{ key: 'consentStatus', label: t('docudesk', 'Status'), sortable: true },
+				{
+					key: 'consentStatus',
+					label: t('docudesk', 'Status'),
+					sortable: true,
+				},
 			]
 		},
 		/**
@@ -348,7 +376,11 @@ export default {
 			const id = consent.id || consent.uuid
 			this.revoking = true
 			try {
-				await consentStore.updateConsent(id, { ...consent, consentStatus: 'anonymized', active: false })
+				await consentStore.updateConsent(id, {
+					...consent,
+					consentStatus: 'anonymized',
+					active: false,
+				})
 				this.revokeTarget = null
 			} finally {
 				this.revoking = false

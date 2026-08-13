@@ -43,7 +43,9 @@ async function dismissOverlays(page: Page): Promise<void> {
 async function goSettings(page: Page): Promise<void> {
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
-	await page.goto('/index.php/settings/admin/docudesk', { waitUntil: 'domcontentloaded' })
+	await page.goto('/index.php/settings/admin/docudesk', {
+		waitUntil: 'domcontentloaded',
+	})
 	// Wait for exactly what these specs read next: the settings content region
 	// (`#app-content, .app-content, #content` — asserted verbatim below). The
 	// old `waitForLoadState('networkidle').catch(() => {})` could not settle
@@ -69,18 +71,24 @@ test.describe('admin-settings — admin panel integration', () => {
 		await expect(page).not.toHaveURL(/\/login/)
 	})
 
-	test('admin settings page renders content (Vue component mounted)', async ({ page }) => {
+	test('admin settings page renders content (Vue component mounted)', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/admin-settings/spec.md#settings-page-renders-vue-component
 		await goSettings(page)
 		// NC admin settings chrome should be visible
-		await expect(page.locator('#app-content, .app-content, #content').first()).toBeVisible()
+		await expect(
+			page.locator('#app-content, .app-content, #content').first(),
+		).toBeVisible()
 		// URL confirms we're on the admin settings page
 		await expect(page).toHaveURL(/\/settings\/admin/)
 	})
 
 	test('DocuDesk appears in admin settings navigation', async ({ page }) => {
 		// @e2e openspec/specs/admin-settings/spec.md#admin-opens-docudesk-settings-section
-		await page.goto('/index.php/settings/admin', { waitUntil: 'domcontentloaded' })
+		await page.goto('/index.php/settings/admin', {
+			waitUntil: 'domcontentloaded',
+		})
 		// The admin settings overview must have painted its content region
 		// before the assertions below mean anything. Not `networkidle`: it
 		// never settles on Nextcloud (ADR-074 rule 4 / gate-58), and the
@@ -99,15 +107,21 @@ test.describe('admin-settings — admin panel integration', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('admin-settings — access control', () => {
-	test('admin user can reach docudesk settings without being blocked', async ({ page }) => {
+	test('admin user can reach docudesk settings without being blocked', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/admin-settings/spec.md#non-admin-cannot-access-settings
 		// We are logged in as admin; verify page is accessible (as admin)
 		await goSettings(page)
 		// Admin should see the page, not a 403
 		await expect(page.locator('body')).toBeVisible()
 		// A 403 page typically shows "Access denied" or redirects to login
-		const bodyText = await page.locator('body').innerText().catch(() => '')
-		const is403 = /access denied|403/i.test(bodyText) && !/docudesk/i.test(bodyText)
+		const bodyText = await page
+			.locator('body')
+			.innerText()
+			.catch(() => '')
+		const is403 =
+			/access denied|403/i.test(bodyText) && !/docudesk/i.test(bodyText)
 		expect(is403).toBe(false)
 	})
 })
@@ -117,7 +131,9 @@ test.describe('admin-settings — access control', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('admin-settings — OpenRegister configuration', () => {
-	test('settings page loads even with OpenRegister installed (resilient)', async ({ page }) => {
+	test('settings page loads even with OpenRegister installed (resilient)', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/admin-settings/spec.md#settings-page-resilient-to-openregister-failures
 		// @e2e openspec/specs/admin-settings/spec.md#configure-consent-register-and-schema
 		// @e2e openspec/specs/admin-settings/spec.md#openregister-not-installed
@@ -182,7 +198,9 @@ test.describe('admin-settings — documentation links', () => {
 		await goSettings(page)
 		await expect(page.locator('body')).toBeVisible()
 		// Look for any anchor linking to docudesk documentation
-		const docLinks = page.locator('a[href*="docudesk"], a[href*="conduction.gitbook"]')
+		const docLinks = page.locator(
+			'a[href*="docudesk"], a[href*="conduction.gitbook"]',
+		)
 		const count = await docLinks.count()
 		// If Vue is mounted, a doc link should be present
 		if (count > 0) {
@@ -201,34 +219,52 @@ test.describe('admin-settings — documentation links', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('admin-settings — AVG Art. 30 processing-activity register', () => {
-	test('compliance section surfaces the register scoped to docudesk', async ({ page }) => {
+	test('compliance section surfaces the register scoped to docudesk', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-docudesk
 		await goSettings(page)
 		await expect(page.locator('body')).toBeVisible()
 		await expect(page).not.toHaveURL(/\/login/)
 
-		const bodyText = await page.locator('body').innerText().catch(() => '')
+		const bodyText = await page
+			.locator('body')
+			.innerText()
+			.catch(() => '')
 		// If Vue is mounted, the compliance section + its export action should be present.
 		if (/Processing Activity Register|Art\. 30/i.test(bodyText)) {
 			await expect(
-				page.getByText(/Open processing-activity log in OpenRegister|Per-subject .* extract/i).first(),
+				page
+					.getByText(
+						/Open processing-activity log in OpenRegister|Per-subject .* extract/i,
+					)
+					.first(),
 			).toBeVisible()
 			// The four declared activities should be listed.
-			await expect(page.getByText(/Anonymisation of documents/i).first()).toBeVisible()
+			await expect(
+				page.getByText(/Anonymisation of documents/i).first(),
+			).toBeVisible()
 		}
 	})
 
-	test('unconfigured controller identity prompts to configure, does not block', async ({ page }) => {
+	test('unconfigured controller identity prompts to configure, does not block', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/processing-activity-export/spec.md#unconfigured-identity-prompts-not-blocks
 		await goSettings(page)
 		await expect(page.locator('body')).toBeVisible()
 
-		const bodyText = await page.locator('body').innerText().catch(() => '')
+		const bodyText = await page
+			.locator('body')
+			.innerText()
+			.catch(() => '')
 		if (/Processing Activity Register|Art\. 30/i.test(bodyText)) {
 			// A configure prompt for the OR-maintained controller identity is shown,
 			// and the section still renders the export entry point (does not block).
 			await expect(
-				page.getByText(/Configure controller identity in OpenRegister/i).first(),
+				page
+					.getByText(/Configure controller identity in OpenRegister/i)
+					.first(),
 			).toBeVisible()
 		}
 	})

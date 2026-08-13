@@ -40,9 +40,14 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	}),
 	getters: {
 		isActive: (state) => state.batchId !== null,
-		selectedEntityCount: (state) => state.entities.filter((e) => e.included).length,
-		filesWithEntities: (state) => state.files.filter((f) => (f.entityCount || 0) > 0).length,
-		extractedCount: (state) => state.files.filter((f) => f.status === 'extracted' || f.status === 'error').length,
+		selectedEntityCount: (state) =>
+			state.entities.filter((e) => e.included).length,
+		filesWithEntities: (state) =>
+			state.files.filter((f) => (f.entityCount || 0) > 0).length,
+		extractedCount: (state) =>
+			state.files.filter(
+				(f) => f.status === 'extracted' || f.status === 'error',
+			).length,
 		basesOptions: () => WOO_BASES,
 		hasDossier: (state) => state.dossier.uuid !== null,
 	},
@@ -65,7 +70,9 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 				// Default the dossier name to the folder's basename so the
 				// operator just hits "Create" if they're happy with defaults.
 				if (!this.dossier.name) {
-					this.dossier.name = this.folderPath.split('/').filter(Boolean).pop() || this.folderPath
+					this.dossier.name =
+						this.folderPath.split('/').filter(Boolean).pop()
+						|| this.folderPath
 				}
 
 				this.startPolling()
@@ -88,7 +95,8 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 */
 		async createDossier() {
 			if (!this.folderId) {
-				this.dossier.error = 'No folder bound yet — start the folder batch first.'
+				this.dossier.error =
+					'No folder bound yet — start the folder batch first.'
 				return
 			}
 			this.dossier.creating = true
@@ -105,9 +113,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					payload,
 				)
 				const data = r.data
-				this.dossier.uuid = data?.['@self']?.id || data?.id || data?.uuid || null
+				this.dossier.uuid =
+					data?.['@self']?.id || data?.id || data?.uuid || null
 				if (!this.dossier.uuid) {
-					this.dossier.error = 'Dossier created but UUID not found in response.'
+					this.dossier.error =
+						'Dossier created but UUID not found in response.'
 				}
 			} catch (e) {
 				this.dossier.error = e.response?.data?.error || e.message
@@ -132,7 +142,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			if (!this.batchId) return
 			try {
 				const r = await axios.get(
-					generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/status'),
+					generateUrl(
+						'/apps/docudesk/api/anonymization/batch/'
+							+ this.batchId
+							+ '/status',
+					),
 				)
 				this.batchStatus = r.data.batchStatus
 				this.files = r.data.files || this.files
@@ -150,7 +164,10 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 
 		async fetchEntities() {
 			try {
-				let url = '/apps/docudesk/api/anonymization/batch/' + this.batchId + '/entities'
+				let url =
+					'/apps/docudesk/api/anonymization/batch/'
+					+ this.batchId
+					+ '/entities'
 				if (this.minConfidence > 0) {
 					url += '?minConfidence=' + this.minConfidence
 				}
@@ -186,7 +203,9 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 
 		setEntityBases(index, bases) {
 			if (this.entities[index]) {
-				this.entities[index]._decisionBases = Array.isArray(bases) ? [...bases] : []
+				this.entities[index]._decisionBases = Array.isArray(bases)
+					? [...bases]
+					: []
 				this.entities[index]._patchError = null
 			}
 		},
@@ -226,15 +245,20 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 						continue
 					}
 
-					const hasBases = Array.isArray(entity._decisionBases) && entity._decisionBases.length > 0
+					const hasBases =
+						Array.isArray(entity._decisionBases)
+						&& entity._decisionBases.length > 0
 					const hasSkip = !!entity._decisionSkip
 					if (!hasBases && !hasSkip) {
 						continue
 					}
 
-					const relationIds = Array.isArray(entity.relationIds) ? entity.relationIds : []
+					const relationIds = Array.isArray(entity.relationIds)
+						? entity.relationIds
+						: []
 					if (relationIds.length === 0) {
-						entity._patchError = 'No relation ids — decisions cannot persist.'
+						entity._patchError =
+							'No relation ids — decisions cannot persist.'
 						continue
 					}
 
@@ -245,11 +269,14 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					for (const relationId of relationIds) {
 						try {
 							await axios.patch(
-								generateUrl(`/apps/openregister/api/entity-relations/${relationId}`),
+								generateUrl(
+									`/apps/openregister/api/entity-relations/${relationId}`,
+								),
 								payload,
 							)
 						} catch (err) {
-							entity._patchError = err.response?.data?.error || err.message
+							entity._patchError =
+								err.response?.data?.error || err.message
 							// Continue with other relations + entities — partial
 							// application beats all-or-nothing in a review flow.
 						}
@@ -270,7 +297,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 				// anonymization.js.)
 				const selected = this.entities
 					.filter((e) => e.included)
-					.map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence }))
+					.map((e) => ({
+						type: e.type,
+						value: e.value,
+						confidence: e.highestConfidence,
+					}))
 					.sort((a, b) => (b.value || '').length - (a.value || '').length)
 
 				// Only files that extracted successfully carry entities to redact;
@@ -281,7 +312,9 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 				for (const file of targets) {
 					try {
 						const r = await axios.post(
-							generateUrl(`/apps/docudesk/api/anonymization/anonymize/${file.fileId}`),
+							generateUrl(
+								`/apps/docudesk/api/anonymization/anonymize/${file.fileId}`,
+							),
 							{
 								entities: selected,
 								// Dossier scope keeps placeholder numbering consistent
@@ -291,14 +324,19 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 								// consistent across these separate single-file calls.
 								// Aligns with the @self.folder used in createDossier().
 								// Omit when unknown → OR falls back to the parent folder.
-								...(this.folderId ? { dossierKey: String(this.folderId) } : {}),
+								...(this.folderId
+									? { dossierKey: String(this.folderId) }
+									: {}),
 								// Wave 4a flag — when true, each per-file anonymise call
 								// gets a grondslagen-summary page appended to its output.
 								// The summary is only produced when appendBasisSummary
 								// and outputFormat travel together, so send the format
 								// alongside the flag (omit both when summarising is off).
 								...(this.appendBasisSummary
-									? { appendBasisSummary: true, outputFormat: 'pdf-only' }
+									? {
+											appendBasisSummary: true,
+											outputFormat: 'pdf-only',
+										}
 									: {}),
 							},
 						)
@@ -313,10 +351,14 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 						// Continue with the remaining files — partial application
 						// beats all-or-nothing in a review flow.
 						file.status = 'error'
-						file.anonymizeError = err.response?.data?.error || err.message
+						file.anonymizeError =
+							err.response?.data?.error || err.message
 						lastError = file.anonymizeError
 					}
-					this.progress = targets.length > 0 ? Math.round((succeeded / targets.length) * 100) : 100
+					this.progress =
+						targets.length > 0
+							? Math.round((succeeded / targets.length) * 100)
+							: 100
 				}
 
 				if (succeeded > 0) {
@@ -351,7 +393,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			this.report.result = null
 			try {
 				const r = await axios.post(
-					generateUrl('/apps/docudesk/api/anonymization/dossier/' + this.dossier.uuid + '/grondslagen-pdf'),
+					generateUrl(
+						'/apps/docudesk/api/anonymization/dossier/'
+							+ this.dossier.uuid
+							+ '/grondslagen-pdf',
+					),
 				)
 				this.report.result = r.data
 			} catch (e) {

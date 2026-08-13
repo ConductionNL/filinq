@@ -1,10 +1,12 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Create dossier')"
+	<NcDialog
+		:name="t('docudesk', 'Create dossier')"
 		:can-close="!submitting"
 		size="normal"
 		@closing="$emit('cancel')">
 		<div class="dossier-dialog">
-			<NcTextField ref="dossierInput"
+			<NcTextField
+				ref="dossierInput"
 				:model-value="modelValue"
 				:label="t('docudesk', 'Dossier name')"
 				:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
@@ -14,14 +16,25 @@
 				@update:model-value="$emit('update:modelValue', $event)"
 				@keyup.enter="$emit('confirm')" />
 			<NcNoteCard type="info">
-				{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+				{{
+					t(
+						'docudesk',
+						'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.',
+					)
+				}}
 			</NcNoteCard>
 		</div>
 		<template #actions>
-			<NcButton variant="tertiary" :disabled="submitting" @click="$emit('cancel')">
+			<NcButton
+				variant="tertiary"
+				:disabled="submitting"
+				@click="$emit('cancel')">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="submitting" @click="$emit('confirm')">
+			<NcButton
+				variant="primary"
+				:disabled="submitting"
+				@click="$emit('confirm')">
 				<template v-if="submitting" #icon>
 					<NcLoadingIcon :size="18" />
 				</template>
@@ -33,7 +46,13 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDialog,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcTextField,
+} from '@nextcloud/vue'
 
 /**
  * Dossier-name prompt shown when two or more files are dropped on the

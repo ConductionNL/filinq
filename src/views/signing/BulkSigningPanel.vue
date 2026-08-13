@@ -14,10 +14,14 @@
 	<div class="bulk-signing-panel">
 		<h2>{{ t('docudesk', 'Bulk Signing') }}</h2>
 		<NcLoadingIcon v-if="signingStore.loading" :size="44" />
-		<NcEmptyContent v-else-if="pending.length === 0"
+		<NcEmptyContent
+			v-else-if="pending.length === 0"
 			:name="t('docudesk', 'No pending signing requests')" />
 		<template v-else>
-			<NcButton variant="primary" :disabled="selected.length === 0" @click="bulkSign">
+			<NcButton
+				variant="primary"
+				:disabled="selected.length === 0"
+				@click="bulkSign">
 				{{ t('docudesk', 'Sign Selected') }} ({{ selected.length }})
 			</NcButton>
 			<table class="bulk-table">
@@ -31,11 +35,19 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="req in pending" :key="req.id || req.uuid" @click="toggle(req.id || req.uuid)">
+					<tr
+						v-for="req in pending"
+						:key="req.id || req.uuid"
+						@click="toggle(req.id || req.uuid)">
 						<td>
-							<input type="checkbox"
-								:aria-label="t('docudesk', 'Select {document}', { document: req.documentName })"
-								:checked="selected.includes(req.id || req.uuid)">
+							<input
+								type="checkbox"
+								:aria-label="
+									t('docudesk', 'Select {document}', {
+										document: req.documentName,
+									})
+								"
+								:checked="selected.includes(req.id || req.uuid)" />
 						</td>
 						<td>{{ req.documentName }}</td>
 						<td>{{ req.signatureLevel }}</td>
@@ -55,22 +67,32 @@ import { showSuccess } from '@nextcloud/dialogs'
 export default {
 	name: 'BulkSigningPanel',
 	components: { NcButton, NcLoadingIcon, NcEmptyContent },
-	data() { return { selected: [] } },
+	data() {
+		return { selected: [] }
+	},
 	computed: {
 		/**
 		 * Pinia signing store accessor for the bulk-signing panel.
 		 *
 		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-5
 		 */
-		signingStore() { return useSigningStore() },
+		signingStore() {
+			return useSigningStore()
+		},
 		/**
 		 * Requests eligible for bulk signing (PENDING or IN_PROGRESS).
 		 *
 		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-5
 		 */
-		pending() { return this.signingStore.signingRequests.filter((r) => ['PENDING', 'IN_PROGRESS'].includes(r.status)) },
+		pending() {
+			return this.signingStore.signingRequests.filter((r) =>
+				['PENDING', 'IN_PROGRESS'].includes(r.status),
+			)
+		},
 	},
-	mounted() { this.signingStore.fetchSigningRequests() },
+	mounted() {
+		this.signingStore.fetchSigningRequests()
+	},
 	methods: {
 		t,
 		/**
@@ -81,7 +103,11 @@ export default {
 		 */
 		toggle(id) {
 			const idx = this.selected.indexOf(id)
-			if (idx === -1) { this.selected.push(id) } else { this.selected.splice(idx, 1) }
+			if (idx === -1) {
+				this.selected.push(id)
+			} else {
+				this.selected.splice(idx, 1)
+			}
 		},
 		/**
 		 * Submit the selected requests for batch signing.
@@ -122,5 +148,4 @@ export default {
 .bulk-table tr:hover {
 	background: var(--color-background-hover);
 }
-
 </style>

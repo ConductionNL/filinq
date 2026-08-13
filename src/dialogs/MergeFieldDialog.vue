@@ -1,8 +1,8 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Insert merge field')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('docudesk', 'Insert merge field')" @closing="$emit('close')">
 		<template #default>
-			<NcTextField v-model="fieldName"
+			<NcTextField
+				v-model="fieldName"
 				:label="t('docudesk', 'Field name')"
 				:placeholder="t('docudesk', 'e.g. name, address, date')" />
 			<p class="merge-field-dialog__hint">
@@ -39,7 +39,9 @@ export default {
 		 */
 		hintText() {
 			const name = this.fieldName || 'field'
-			return t('docudesk', 'This inserts {placeholder} into the template.', { placeholder: '{{ ' + name + ' }}' })
+			return t('docudesk', 'This inserts {placeholder} into the template.', {
+				placeholder: '{{ ' + name + ' }}',
+			})
 		},
 	},
 	methods: {

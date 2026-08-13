@@ -13,7 +13,9 @@
 
 				<!-- Entity Type -->
 				<div class="form-field">
-					<label class="form-label">{{ t('docudesk', 'Entity Type') }}</label>
+					<label class="form-label">{{
+						t('docudesk', 'Entity Type')
+					}}</label>
 					<NcSelect
 						v-model="form.entityType"
 						:options="entityTypeOptions"
@@ -55,7 +57,12 @@
 
 				<!-- Warning when validUntil is blank -->
 				<NcNoteCard v-if="!form.validUntil" type="warning">
-					{{ t('docudesk', 'No expiry date set — this consent will remain active indefinitely unless explicitly revoked.') }}
+					{{
+						t(
+							'docudesk',
+							'No expiry date set — this consent will remain active indefinitely unless explicitly revoked.',
+						)
+					}}
 				</NcNoteCard>
 
 				<!-- Match Rules -->
@@ -76,11 +83,12 @@
 					<NcButton @click="$emit('close')">
 						{{ t('docudesk', 'Cancel') }}
 					</NcButton>
-					<NcButton
-						variant="primary"
-						type="submit"
-						:disabled="saving">
-						{{ saving ? t('docudesk', 'Saving…') : t('docudesk', 'Create') }}
+					<NcButton variant="primary" type="submit" :disabled="saving">
+						{{
+							saving
+								? t('docudesk', 'Saving…')
+								: t('docudesk', 'Create')
+						}}
 					</NcButton>
 				</div>
 			</form>
@@ -90,7 +98,14 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcModal, NcTextField, NcTextArea, NcSelect, NcNoteCard, NcButton } from '@nextcloud/vue'
+import {
+	NcModal,
+	NcTextField,
+	NcTextArea,
+	NcSelect,
+	NcNoteCard,
+	NcButton,
+} from '@nextcloud/vue'
 
 export default {
 	name: 'CreateStandingConsentModal',
@@ -135,8 +150,14 @@ export default {
 			],
 			consentMethodOptions: [
 				{ label: t('docudesk', 'Paper'), value: 'paper' },
-				{ label: t('docudesk', 'Digital signature'), value: 'digital_signature' },
-				{ label: t('docudesk', 'Verbal (recorded)'), value: 'verbal_recorded' },
+				{
+					label: t('docudesk', 'Digital signature'),
+					value: 'digital_signature',
+				},
+				{
+					label: t('docudesk', 'Verbal (recorded)'),
+					value: 'verbal_recorded',
+				},
 				{ label: t('docudesk', 'Opt-in form'), value: 'opt_in_form' },
 			],
 		}
@@ -151,19 +172,24 @@ export default {
 			this.errors.consentMethod = ''
 
 			if (this.form.consentMethod === null || this.form.consentMethod === '') {
-				this.errors.consentMethod = t('docudesk', 'Consent method is required.')
+				this.errors.consentMethod = t(
+					'docudesk',
+					'Consent method is required.',
+				)
 				return
 			}
 
 			const matchRules = this.matchRulesText
 				.split('\n')
-				.map(line => line.trim())
-				.filter(line => line.length > 0)
+				.map((line) => line.trim())
+				.filter((line) => line.length > 0)
 
 			const payload = {
 				entityText: this.form.entityText,
 				entityType: this.form.entityType ? this.form.entityType.value : '',
-				consentMethod: this.form.consentMethod ? this.form.consentMethod.value : '',
+				consentMethod: this.form.consentMethod
+					? this.form.consentMethod.value
+					: '',
 				matchRules,
 				validFrom: this.form.validFrom || null,
 				validUntil: this.form.validUntil || null,

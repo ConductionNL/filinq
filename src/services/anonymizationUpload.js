@@ -41,7 +41,8 @@ export const ALLOWED_MIMES = new Set([
  *
  * @type {string}
  */
-export const ACCEPT_ATTR = '.docx,.odt,.txt,.pdf,.eml,'
+export const ACCEPT_ATTR =
+	'.docx,.odt,.txt,.pdf,.eml,'
 	+ 'application/vnd.openxmlformats-officedocument.wordprocessingml.document,'
 	+ 'application/vnd.oasis.opendocument.text,'
 	+ 'text/plain,application/pdf,message/rfc822'

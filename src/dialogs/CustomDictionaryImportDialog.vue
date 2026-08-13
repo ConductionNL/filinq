@@ -9,7 +9,12 @@
 -->
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcLoadingIcon, NcTextArea } from '@conduction/nextcloud-vue'
+import {
+	NcButton,
+	NcDialog,
+	NcLoadingIcon,
+	NcTextArea,
+} from '@conduction/nextcloud-vue'
 
 export default {
 	name: 'CustomDictionaryImportDialog',
@@ -65,17 +70,24 @@ export default {
 		@update:open="onClose">
 		<div class="custom-dictionary-import">
 			<p class="custom-dictionary-import__hint">
-				{{ t('docudesk', 'Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.') }}
+				{{
+					t(
+						'docudesk',
+						'Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.',
+					)
+				}}
 			</p>
 
-			<label class="custom-dictionary-import__file-label" for="custom-dictionary-import-file">
+			<label
+				class="custom-dictionary-import__file-label"
+				for="custom-dictionary-import-file">
 				{{ t('docudesk', 'CSV file') }}
 			</label>
 			<input
 				id="custom-dictionary-import-file"
 				type="file"
 				accept=".csv,text/csv"
-				@change="onFileChange">
+				@change="onFileChange" />
 
 			<div class="custom-dictionary-import__divider">
 				{{ t('docudesk', 'or paste a newline-separated list') }}
@@ -85,11 +97,19 @@ export default {
 				v-model="pastedContent"
 				:disabled="selectedFile !== null"
 				:label="t('docudesk', 'Terms (one per line)')"
-				:placeholder="t('docudesk', 'Operatie Zilverreiger\nDossier Karekiet')"
+				:placeholder="
+					t('docudesk', 'Operatie Zilverreiger\nDossier Karekiet')
+				"
 				:rows="6" />
 
 			<div v-if="result" class="custom-dictionary-import__result">
-				{{ t('docudesk', '{added} added, {skipped} skipped, {total} total.', result) }}
+				{{
+					t(
+						'docudesk',
+						'{added} added, {skipped} skipped, {total} total.',
+						result,
+					)
+				}}
 			</div>
 
 			<div v-if="importError" class="custom-dictionary-import__error">
@@ -101,7 +121,10 @@ export default {
 			<NcButton variant="tertiary" @click="onClose">
 				{{ t('docudesk', 'Close') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="importing || !canSubmit" @click="submit">
+			<NcButton
+				variant="primary"
+				:disabled="importing || !canSubmit"
+				@click="submit">
 				<template v-if="importing" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>

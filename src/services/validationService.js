@@ -38,13 +38,13 @@ export async function validateFile(fileId, documentType) {
  */
 export function verdictColor(status) {
 	switch (status) {
-	case 'passed':
-		return 'success'
-	case 'warnings':
-		return 'warning'
-	case 'failed':
-		return 'error'
-	default:
-		return 'info'
+		case 'passed':
+			return 'success'
+		case 'warnings':
+			return 'warning'
+		case 'failed':
+			return 'error'
+		default:
+			return 'info'
 	}
 }

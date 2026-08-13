@@ -36,7 +36,11 @@ import { anonymizationStore } from '../../store/store.js'
 							<span v-else :title="file.name">{{ file.name }}</span>
 						</td>
 						<td class="col-number">
-							<template v-if="file.status === 'completed' || file.status === 'anonymizing'">
+							<template
+								v-if="
+									file.status === 'completed'
+									|| file.status === 'anonymizing'
+								">
 								{{ file.entityCount }}
 							</template>
 							<template v-else-if="file.status === 'error'">
@@ -51,23 +55,34 @@ import { anonymizationStore } from '../../store/store.js'
 							<template v-else-if="file.status === 'error'">
 								&mdash;
 							</template>
-							<NcLoadingIcon v-else-if="file.status === 'anonymizing'" :size="16" />
-							<template v-else>
-								&mdash;
-							</template>
+							<NcLoadingIcon
+								v-else-if="file.status === 'anonymizing'"
+								:size="16" />
+							<template v-else> &mdash; </template>
 						</td>
 						<td class="col-action">
 							<a
-								v-if="file.status === 'completed' && file.anonymizedFilePath"
+								v-if="
+									file.status === 'completed'
+									&& file.anonymizedFilePath
+								"
 								:href="downloadUrl(file.anonymizedFilePath)"
 								download
 								class="download-link">
 								{{ t('docudesk', 'Download') }}
 							</a>
-							<span v-else-if="file.status === 'completed' && !file.anonymizedFilePath" class="status-clean">
+							<span
+								v-else-if="
+									file.status === 'completed'
+									&& !file.anonymizedFilePath
+								"
+								class="status-clean">
 								{{ t('docudesk', 'Clean') }}
 							</span>
-							<span v-else-if="file.status === 'error'" class="status-error" :title="file.error">
+							<span
+								v-else-if="file.status === 'error'"
+								class="status-error"
+								:title="file.error">
 								{{ t('docudesk', 'Error') }}
 							</span>
 							<span v-else class="status-label">
@@ -94,22 +109,39 @@ import { anonymizationStore } from '../../store/store.js'
 				@dragover.prevent="isDragging = true"
 				@dragleave.prevent="isDragging = false"
 				@drop.prevent="handleDrop">
-				<img v-if="!anonymizationStore.hasFiles"
+				<img
+					v-if="!anonymizationStore.hasFiles"
 					:src="uploadIcon"
 					alt=""
-					class="upload-icon">
+					class="upload-icon" />
 				<div class="drop-content">
 					<p class="drop-title">
-						{{ anonymizationStore.hasFiles
-							? t('docudesk', 'Drop more files to anonymize')
-							: t('docudesk', 'Drag and drop one or more documents')
+						{{
+							anonymizationStore.hasFiles
+								? t('docudesk', 'Drop more files to anonymize')
+								: t(
+										'docudesk',
+										'Drag and drop one or more documents',
+									)
 						}}
 					</p>
 					<p v-if="!anonymizationStore.hasFiles" class="drop-subtitle">
-						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
+						{{
+							t(
+								'docudesk',
+								'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.',
+							)
+						}}
 					</p>
-					<button type="button" class="fake-button" @click="$refs.fileInput.click()">
-						{{ anonymizationStore.hasFiles ? t('docudesk', '+ Add more files') : t('docudesk', '+ Select files') }}
+					<button
+						type="button"
+						class="fake-button"
+						@click="$refs.fileInput.click()">
+						{{
+							anonymizationStore.hasFiles
+								? t('docudesk', '+ Add more files')
+								: t('docudesk', '+ Select files')
+						}}
 					</button>
 				</div>
 				<input
@@ -119,7 +151,7 @@ import { anonymizationStore } from '../../store/store.js'
 					:aria-label="t('docudesk', 'Select files to anonymise')"
 					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
 					class="file-input"
-					@change="handleFileSelect">
+					@change="handleFileSelect" />
 			</div>
 		</div>
 
@@ -239,7 +271,13 @@ export default {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
-				showError(t('docudesk', 'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}', { names }))
+				showError(
+					t(
+						'docudesk',
+						'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}',
+						{ names },
+					),
+				)
 			}
 			return accepted
 		},
@@ -292,7 +330,10 @@ export default {
 			try {
 				const before = anonymizationStore.files.length
 				if (name) {
-					await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+					await anonymizationStore.addFilesAsDossier(
+						this.pendingFiles,
+						name,
+					)
 					try {
 						await anonymizationStore.bindDossier(name)
 					} catch (err) {
@@ -307,7 +348,8 @@ export default {
 				}
 				this.closeDossierDialog()
 			} catch (err) {
-				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to upload'
+				this.dossierError =
+					err?.response?.data?.error || err?.message || 'Failed to upload'
 			} finally {
 				this.dossierSubmitting = false
 			}
@@ -331,9 +373,15 @@ export default {
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
 				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
-				const dir = relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
-				const file = relativePath.substring(relativePath.lastIndexOf('/') + 1)
-				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', { dir, file })
+				const dir =
+					relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
+				const file = relativePath.substring(
+					relativePath.lastIndexOf('/') + 1,
+				)
+				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', {
+					dir,
+					file,
+				})
 			}
 			return generateUrl('/apps/files')
 		},
@@ -476,7 +524,9 @@ export default {
 	padding: 32px;
 	background-color: var(--color-main-background);
 	/* Not a click target any more — the picker is opened by .fake-button. */
-	transition: border-color 0.2s, background-color 0.2s;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .upload-area.compact .drop-zone {

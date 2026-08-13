@@ -71,7 +71,13 @@ export default defineConfig({
 	// guaranteeing both a tally and the artifacts that explain it.
 	globalTimeout: 38 * 60_000,
 	reporter: [
-		['html', { open: 'never', outputFolder: path.join(APP_ROOT, 'playwright-report') }],
+		[
+			'html',
+			{
+				open: 'never',
+				outputFolder: path.join(APP_ROOT, 'playwright-report'),
+			},
+		],
 		['list'],
 	],
 	outputDir: path.join(APP_ROOT, 'test-results'),

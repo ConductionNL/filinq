@@ -1,14 +1,18 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Insert conditional section')"
+	<NcDialog
+		:name="t('docudesk', 'Insert conditional section')"
 		@closing="$emit('close')">
 		<template #default>
-			<NcTextField v-model="condField"
+			<NcTextField
+				v-model="condField"
 				:label="t('docudesk', 'Field name')"
 				:placeholder="t('docudesk', 'e.g. zaaktype')" />
-			<NcSelect v-model="condOp"
+			<NcSelect
+				v-model="condOp"
 				:options="opOptions"
 				:input-label="t('docudesk', 'Operator')" />
-			<NcTextField v-if="needsValue"
+			<NcTextField
+				v-if="needsValue"
 				v-model="condValue"
 				:label="t('docudesk', 'Value')"
 				:placeholder="t('docudesk', 'e.g. omgevingsvergunning')" />

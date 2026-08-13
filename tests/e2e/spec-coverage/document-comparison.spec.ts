@@ -19,7 +19,9 @@ import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, go } from './_helpers'
 
 test.describe('document-comparison — side-by-side view', () => {
-	test('comparison view renders its heading, pickers and Compare action', async ({ page }) => {
+	test('comparison view renders its heading, pickers and Compare action', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/document-comparison/spec.md#operator-picks-two-versions
 		//
 		// ANCHOR REPAIR: this used to name
@@ -35,14 +37,18 @@ test.describe('document-comparison — side-by-side view', () => {
 		// History-mode (manifest) router: deep-link the path, not a hash.
 		await go(page, 'comparison')
 
-		await expect(page.getByRole('heading', { name: 'Document comparison' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Document comparison' }),
+		).toBeVisible()
 
 		// File-ID pickers for both subjects.
 		await expect(page.getByText('Left file ID')).toBeVisible()
 		await expect(page.getByText('Right file ID')).toBeVisible()
 
 		// Compare action present (disabled until both subjects are chosen).
-		await expect(page.getByRole('button', { name: 'Compare', exact: true })).toBeVisible()
+		await expect(
+			page.getByRole('button', { name: 'Compare', exact: true }),
+		).toBeVisible()
 
 		expect(guard.server5xx, guard.server5xx.join('\n')).toHaveLength(0)
 	})
@@ -63,7 +69,9 @@ test.describe('document-comparison — side-by-side view', () => {
 		await go(page, 'comparison?left=1&right=2')
 
 		// Preselected subjects auto-run; the heading remains and no JS error fires.
-		await expect(page.getByRole('heading', { name: 'Document comparison' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Document comparison' }),
+		).toBeVisible()
 		expect(guard.errors, guard.errors.join('\n')).toHaveLength(0)
 	})
 })

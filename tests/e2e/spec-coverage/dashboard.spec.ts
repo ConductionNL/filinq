@@ -41,7 +41,11 @@ async function dismissOverlays(page: Page): Promise<void> {
 }
 
 async function go(page: Page, route = ''): Promise<void> {
-	const url = route.startsWith('/') ? route : (route === '' ? APP : `${APP}/${route}`)
+	const url = route.startsWith('/')
+		? route
+		: route === ''
+			? APP
+			: `${APP}/${route}`
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
@@ -76,7 +80,9 @@ test.describe('dashboard — main view', () => {
 		// @e2e openspec/specs/dashboard/spec.md#dashboard-with-no-data
 		await go(page)
 		// NC content area is always present
-		const content = page.locator('#content, #content-vue, #app-content, .app-content').first()
+		const content = page
+			.locator('#content, #content-vue, #app-content, .app-content')
+			.first()
 		await expect(content).toBeVisible()
 	})
 
@@ -95,9 +101,13 @@ test.describe('dashboard — main view', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('dashboard — NC dashboard widgets', () => {
-	test('Nextcloud Dashboard page is accessible and DocuDesk widgets can be added', async ({ page }) => {
+	test('Nextcloud Dashboard page is accessible and DocuDesk widgets can be added', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/dashboard/spec.md#widgets-available-on-nextcloud-dashboard
-		await page.goto('/index.php/apps/dashboard', { waitUntil: 'domcontentloaded' })
+		await page.goto('/index.php/apps/dashboard', {
+			waitUntil: 'domcontentloaded',
+		})
 		// Nextcloud's own Dashboard app, not the DocuDesk SPA — wait for NC's
 		// authenticated content region. Not `networkidle`: it never settles on
 		// Nextcloud, and the `.catch(() => {})` this line used to carry turned
@@ -147,7 +157,9 @@ test.describe('dashboard — navigation menu', () => {
 		await expect(appNav).toBeVisible()
 	})
 
-	test('navigating to a different view changes the page content', async ({ page }) => {
+	test('navigating to a different view changes the page content', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/dashboard/spec.md#navigate-between-views
 		await go(page)
 		// Navigate to anonymization route
@@ -162,7 +174,9 @@ test.describe('dashboard — navigation menu', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('dashboard — status badges', () => {
-	test('consent list view renders without crashing (badge rendering)', async ({ page }) => {
+	test('consent list view renders without crashing (badge rendering)', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/dashboard/spec.md#status-badge-color-mapping
 		// @e2e openspec/specs/dashboard/spec.md#all-status-badges
 		// @e2e openspec/specs/dashboard/spec.md#badge-consistency-across-views
@@ -179,10 +193,14 @@ test.describe('dashboard — status badges', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('dashboard — icon files', () => {
-	test('DocuDesk admin settings page loads (settings icon uses app-dark.svg)', async ({ page }) => {
+	test('DocuDesk admin settings page loads (settings icon uses app-dark.svg)', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/dashboard/spec.md#dashboard-widget-icon
 		// @e2e openspec/specs/dashboard/spec.md#admin-settings-section-icon
-		await page.goto('/index.php/settings/admin/docudesk', { waitUntil: 'domcontentloaded' })
+		await page.goto('/index.php/settings/admin/docudesk', {
+			waitUntil: 'domcontentloaded',
+		})
 		// NC admin settings, not the DocuDesk SPA — wait for NC's authenticated
 		// content region instead of `networkidle`, which never fires here
 		// (ADR-074 rule 4 / gate-58) and was swallowed when it timed out.

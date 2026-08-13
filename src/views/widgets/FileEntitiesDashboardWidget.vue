@@ -64,7 +64,10 @@ import axios from '@nextcloud/axios'
 							{{ file.entityCount }}
 						</td>
 						<td class="col-risk">
-							<span :class="'risk-badge risk-' + (file.riskLevel || 'none')">
+							<span
+								:class="
+									'risk-badge risk-' + (file.riskLevel || 'none')
+								">
 								{{ riskLevelLabel(file.riskLevel) }}
 							</span>
 						</td>
@@ -74,7 +77,8 @@ import axios from '@nextcloud/axios'
 							</span>
 						</td>
 						<td class="col-ocr">
-							<span v-if="file.ocrProcessed"
+							<span
+								v-if="file.ocrProcessed"
 								class="ocr-badge"
 								:title="t('docudesk', 'Processed with OCR')">
 								{{ t('docudesk', 'OCR') }}
@@ -160,9 +164,15 @@ export default {
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
 				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
-				const dir = relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
-				const file = relativePath.substring(relativePath.lastIndexOf('/') + 1)
-				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', { dir, file })
+				const dir =
+					relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
+				const file = relativePath.substring(
+					relativePath.lastIndexOf('/') + 1,
+				)
+				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', {
+					dir,
+					file,
+				})
 			}
 			return generateUrl('/apps/files')
 		},

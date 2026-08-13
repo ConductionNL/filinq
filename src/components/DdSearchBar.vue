@@ -9,7 +9,7 @@
 			:placeholder="placeholder"
 			:aria-label="ariaLabel || placeholder"
 			@input="onInput"
-			@keydown.esc="clear">
+			@keydown.esc="clear" />
 		<button
 			v-if="clearable && hasValue"
 			type="button"
@@ -159,16 +159,18 @@ export default {
 .dd-search-bar__input {
 	width: 100%;
 	padding: 10px 40px 10px 48px;
-	border: 1px solid var(--dd-search-bar-border, var(--dd-border, #D9D9D9));
+	border: 1px solid var(--dd-search-bar-border, var(--dd-border, #d9d9d9));
 	border-radius: var(--dd-radius-pill-full);
-	background: var(--color-main-background, #FFF);
+	background: var(--color-main-background, #fff);
 	font-size: 14px;
 	font-weight: 300;
 	box-shadow: var(--dd-shadow-panel);
 	min-width: 392px;
 	max-width: 100%;
 	min-height: 40px;
-	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+	transition:
+		box-shadow 0.15s ease,
+		border-color 0.15s ease;
 }
 
 .dd-search-bar__input::placeholder {
@@ -194,7 +196,9 @@ export default {
 	background: transparent;
 	color: var(--color-text-maxcontrast);
 	cursor: pointer;
-	transition: background-color 0.15s ease, color 0.15s ease;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
 }
 
 .dd-search-bar__clear:hover {

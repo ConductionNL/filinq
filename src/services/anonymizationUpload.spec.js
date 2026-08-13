@@ -36,7 +36,9 @@ describe('anonymizationUpload allow-list', () => {
 	})
 
 	it('keeps accepting the previously-supported formats', () => {
-		expect(ALLOWED_EXTENSIONS).toEqual(expect.arrayContaining(['docx', 'txt', 'pdf', 'eml']))
+		expect(ALLOWED_EXTENSIONS).toEqual(
+			expect.arrayContaining(['docx', 'txt', 'pdf', 'eml']),
+		)
 	})
 })
 
@@ -55,7 +57,10 @@ describe('partitionFiles', () => {
 
 	it('accepts a mix of supported formats including odt', () => {
 		const { accepted, rejected } = partitionFiles([
-			file('a.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+			file(
+				'a.docx',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+			),
 			file('b.odt', ODT_MIME),
 			file('c.pdf', 'application/pdf'),
 			file('d.txt', 'text/plain'),
@@ -68,7 +73,10 @@ describe('partitionFiles', () => {
 	it('rejects unsupported formats while accepting odt in the same batch', () => {
 		const { accepted, rejected } = partitionFiles([
 			file('keep.odt', ODT_MIME),
-			file('drop.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+			file(
+				'drop.xlsx',
+				'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			),
 			file('drop.png', 'image/png'),
 		])
 		expect(accepted.map((f) => f.name)).toEqual(['keep.odt'])

@@ -32,7 +32,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(__dirname, '../..')
 const SRC_DIR = path.join(REPO_ROOT, 'src')
 
-const RECOGNISED_KINDS = new Set(['page', 'modal', 'widget', 'form-field', 'cell-renderer'])
+const RECOGNISED_KINDS = new Set([
+	'page',
+	'modal',
+	'widget',
+	'form-field',
+	'cell-renderer',
+])
 
 /**
  * The three webpack entry points (webpack.config.js `entry`) that mount a
@@ -64,13 +70,21 @@ const KNOWN_HEADLESS = [
 		kind: 'headless-backend',
 		id: 'financial-extraction',
 		reason: 'backend live, no built UI, tracked separately (net-new UI is a distinct change from this restoration)',
-		routes: ["'name' => 'extraction#financial'", "'name' => 'extraction#corrections'", "'name' => 'glAccountSuggestion#suggestAccount'"],
+		routes: [
+			"'name' => 'extraction#financial'",
+			"'name' => 'extraction#corrections'",
+			"'name' => 'glAccountSuggestion#suggestAccount'",
+		],
 	},
 	{
 		kind: 'headless-backend',
 		id: 'print-queue',
 		reason: 'backend live, no built UI, tracked separately (net-new UI is a distinct change from this restoration)',
-		routes: ["'name' => 'printJob#create'", "'name' => 'printJob#show'", "'name' => 'printJob#updateStatus'"],
+		routes: [
+			"'name' => 'printJob#create'",
+			"'name' => 'printJob#show'",
+			"'name' => 'printJob#updateStatus'",
+		],
 	},
 	{
 		kind: 'orphaned-view',
@@ -111,7 +125,12 @@ const KNOWN_HEADLESS = [
  */
 function resolveRelativeImport(fromDir, specifier) {
 	const base = path.resolve(fromDir, specifier)
-	const candidates = [base, `${base}.vue`, `${base}.js`, path.join(base, 'index.js')]
+	const candidates = [
+		base,
+		`${base}.vue`,
+		`${base}.js`,
+		path.join(base, 'index.js'),
+	]
 	for (const candidate of candidates) {
 		try {
 			if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
@@ -228,7 +247,9 @@ function parseRegistrySource(registryText, registryDir) {
 	while ((m = entryRe.exec(registryText)) !== null) {
 		const [, key, kind, componentName] = m
 		const importPath = imports[componentName]
-		const resolvedPath = importPath ? resolveRelativeImport(registryDir, importPath) : null
+		const resolvedPath = importPath
+			? resolveRelativeImport(registryDir, importPath)
+			: null
 		entries[key] = { kind, componentName, resolvedPath }
 	}
 	return entries
@@ -258,7 +279,7 @@ function crossCheckManifestRegistry(manifest, registryEntries) {
 	)
 
 	const missingRegistryEntry = []
-	for (const page of (manifest.pages || [])) {
+	for (const page of manifest.pages || []) {
 		if (page.type !== 'custom' || typeof page.component !== 'string') continue
 		if (!pageKindKeys.has(page.component)) {
 			missingRegistryEntry.push(`${page.id} → component "${page.component}"`)
@@ -287,7 +308,9 @@ function crossCheckManifestRegistry(manifest, registryEntries) {
  */
 function findOrphanedViews(viewFilesAbsolute, reachableSet, allowList) {
 	const allowedFiles = new Set(
-		allowList.filter((e) => e.kind === 'orphaned-view').map((e) => path.resolve(REPO_ROOT, e.file)),
+		allowList
+			.filter((e) => e.kind === 'orphaned-view')
+			.map((e) => path.resolve(REPO_ROOT, e.file)),
 	)
 	const orphans = []
 	for (const file of viewFilesAbsolute) {
@@ -333,7 +356,9 @@ function findShadowedRoutes(manifest) {
 				(seg, i) => seg.startsWith(':') || seg === segs[i],
 			)
 			if (matches && prevSegs.some((s) => s.startsWith(':'))) {
-				shadowed.push(`"${route}" is shadowed by earlier route "${routes[earlier]}"`)
+				shadowed.push(
+					`"${route}" is shadowed by earlier route "${routes[earlier]}"`,
+				)
 				break
 			}
 		}
@@ -347,11 +372,16 @@ function findShadowedRoutes(manifest) {
 // ---------------------------------------------------------------------------
 
 describe('reachability guard — current repo state', () => {
-	const manifest = JSON.parse(fs.readFileSync(path.join(SRC_DIR, 'manifest.json'), 'utf8'))
+	const manifest = JSON.parse(
+		fs.readFileSync(path.join(SRC_DIR, 'manifest.json'), 'utf8'),
+	)
 	const registryText = fs.readFileSync(path.join(SRC_DIR, 'registry.js'), 'utf8')
 	const registryEntries = parseRegistrySource(registryText, SRC_DIR)
 	const reachableSet = buildReachableSet(ROOT_FILES)
-	const routesPhpText = fs.readFileSync(path.join(REPO_ROOT, 'appinfo', 'routes.php'), 'utf8')
+	const routesPhpText = fs.readFileSync(
+		path.join(REPO_ROOT, 'appinfo', 'routes.php'),
+		'utf8',
+	)
 
 	it('registry integrity: every entry resolves a component with a recognised kind', () => {
 		const problems = []
@@ -360,7 +390,9 @@ describe('reachability guard — current repo state', () => {
 				problems.push(`${key}: unrecognised kind "${entry.kind}"`)
 			}
 			if (!entry.resolvedPath) {
-				problems.push(`${key}: component "${entry.componentName}" does not resolve to a file`)
+				problems.push(
+					`${key}: component "${entry.componentName}" does not resolve to a file`,
+				)
 			}
 		}
 		expect(problems, problems.join('\n')).toEqual([])
@@ -370,9 +402,16 @@ describe('reachability guard — current repo state', () => {
 	})
 
 	it('manifest ↔ registry: every custom page component has a page registry entry, and vice versa (no dangling registrations)', () => {
-		const { missingRegistryEntry, danglingRegistryEntries } = crossCheckManifestRegistry(manifest, registryEntries)
-		expect(missingRegistryEntry, `manifest pages with no registry entry:\n${missingRegistryEntry.join('\n')}`).toEqual([])
-		expect(danglingRegistryEntries, `registry kind:"page" entries referenced by no manifest page:\n${danglingRegistryEntries.join('\n')}`).toEqual([])
+		const { missingRegistryEntry, danglingRegistryEntries } =
+			crossCheckManifestRegistry(manifest, registryEntries)
+		expect(
+			missingRegistryEntry,
+			`manifest pages with no registry entry:\n${missingRegistryEntry.join('\n')}`,
+		).toEqual([])
+		expect(
+			danglingRegistryEntries,
+			`registry kind:"page" entries referenced by no manifest page:\n${danglingRegistryEntries.join('\n')}`,
+		).toEqual([])
 	})
 
 	it('no shadowed routes: a static page route is never preceded by a matching :param route', () => {
@@ -384,9 +423,15 @@ describe('reachability guard — current repo state', () => {
 	})
 
 	it('no hidden orphans: every src/views/** file is reachable or explicitly allow-listed', () => {
-		const viewFiles = walkFiles(path.join(SRC_DIR, 'views'), (ext) => ext === '.vue')
+		const viewFiles = walkFiles(
+			path.join(SRC_DIR, 'views'),
+			(ext) => ext === '.vue',
+		)
 		const orphans = findOrphanedViews(viewFiles, reachableSet, KNOWN_HEADLESS)
-		expect(orphans, `unreachable, non-allow-listed views:\n${orphans.join('\n')}`).toEqual([])
+		expect(
+			orphans,
+			`unreachable, non-allow-listed views:\n${orphans.join('\n')}`,
+		).toEqual([])
 	})
 
 	it('known-headless backends remain visibly tracked: their routes are still live', () => {
@@ -405,13 +450,18 @@ describe('reachability guard — current repo state', () => {
 	})
 
 	it('every orphaned-view allow-list entry names a file that actually exists (no stale exemptions)', () => {
-		const orphanedViewEntries = KNOWN_HEADLESS.filter((e) => e.kind === 'orphaned-view')
+		const orphanedViewEntries = KNOWN_HEADLESS.filter(
+			(e) => e.kind === 'orphaned-view',
+		)
 		expect(orphanedViewEntries.length).toBeGreaterThan(0)
 		for (const entry of orphanedViewEntries) {
 			expect(typeof entry.reason).toBe('string')
 			expect(entry.reason.length).toBeGreaterThan(0)
 			const abs = path.resolve(REPO_ROOT, entry.file)
-			expect(fs.existsSync(abs), `allow-listed file does not exist: ${entry.file}`).toBe(true)
+			expect(
+				fs.existsSync(abs),
+				`allow-listed file does not exist: ${entry.file}`,
+			).toBe(true)
 		}
 	})
 })
@@ -428,13 +478,24 @@ describe('reachability guard — detector correctness (synthetic cases)', () => 
 			'/repo/src/views/known/Reachable.vue',
 			'/repo/src/views/rogue/UnregisteredOrphan.vue',
 		]
-		const fakeAllowList = [{ kind: 'orphaned-view', file: 'src/views/allowed/Allowed.vue', reason: 'test fixture' }]
+		const fakeAllowList = [
+			{
+				kind: 'orphaned-view',
+				file: 'src/views/allowed/Allowed.vue',
+				reason: 'test fixture',
+			},
+		]
 
 		// findOrphanedViews resolves allow-list `file` entries relative to
 		// REPO_ROOT, so exercise it through a REPO_ROOT-relative fake root.
 		const relOrphans = fakeCandidates
 			.filter((f) => !fakeReachable.has(f))
-			.filter((f) => !fakeAllowList.some((e) => path.resolve(REPO_ROOT, e.file) === f))
+			.filter(
+				(f) =>
+					!fakeAllowList.some(
+						(e) => path.resolve(REPO_ROOT, e.file) === f,
+					),
+			)
 		expect(relOrphans).toEqual(['/repo/src/views/rogue/UnregisteredOrphan.vue'])
 	})
 
@@ -446,23 +507,38 @@ describe('reachability guard — detector correctness (synthetic cases)', () => 
 			],
 		}
 		const fakeRegistry = { RealView: { kind: 'page' } }
-		const { missingRegistryEntry } = crossCheckManifestRegistry(fakeManifest, fakeRegistry)
+		const { missingRegistryEntry } = crossCheckManifestRegistry(
+			fakeManifest,
+			fakeRegistry,
+		)
 		expect(missingRegistryEntry).toEqual(['Ghost → component "GhostView"'])
 	})
 
 	it('flags a registry kind:"page" entry referenced by no manifest page (danglingRegistryEntries)', () => {
-		const fakeManifest = { pages: [{ id: 'Real', type: 'custom', component: 'RealView' }] }
+		const fakeManifest = {
+			pages: [{ id: 'Real', type: 'custom', component: 'RealView' }],
+		}
 		const fakeRegistry = {
 			RealView: { kind: 'page' },
 			OrphanedRegistration: { kind: 'page' },
 		}
-		const { danglingRegistryEntries } = crossCheckManifestRegistry(fakeManifest, fakeRegistry)
+		const { danglingRegistryEntries } = crossCheckManifestRegistry(
+			fakeManifest,
+			fakeRegistry,
+		)
 		expect(danglingRegistryEntries).toEqual(['OrphanedRegistration'])
 	})
 
 	it('known-headless allow-listed views do not trip orphan detection', () => {
-		const allowListedAbs = path.resolve(REPO_ROOT, 'src/views/signing/BulkSigningPanel.vue')
-		const orphans = findOrphanedViews([allowListedAbs], new Set(), KNOWN_HEADLESS)
+		const allowListedAbs = path.resolve(
+			REPO_ROOT,
+			'src/views/signing/BulkSigningPanel.vue',
+		)
+		const orphans = findOrphanedViews(
+			[allowListedAbs],
+			new Set(),
+			KNOWN_HEADLESS,
+		)
 		expect(orphans).toEqual([])
 	})
 
@@ -480,24 +556,31 @@ describe('reachability guard — detector correctness (synthetic cases)', () => 
 	})
 
 	it('findShadowedRoutes accepts the corrected order and differing segment counts', () => {
-		expect(findShadowedRoutes({
-			pages: [
-				{ route: '/signing' },
-				{ route: '/signing/new' },
-				{ route: '/signing/:id' },
-				// 3 segments — cannot be swallowed by the 2-segment :id route.
-				{ route: '/signing/verify/:fileId' },
-			],
-		})).toEqual([])
+		expect(
+			findShadowedRoutes({
+				pages: [
+					{ route: '/signing' },
+					{ route: '/signing/new' },
+					{ route: '/signing/:id' },
+					// 3 segments — cannot be swallowed by the 2-segment :id route.
+					{ route: '/signing/verify/:fileId' },
+				],
+			}),
+		).toEqual([])
 	})
 
 	it('extractRelativeImportSpecifiers finds a brace-wrapped multi-line import', () => {
-		const text = "import {\n\tFoo,\n\tBar,\n} from '../store/store.js'\nimport Baz from './Baz.vue'\n"
-		expect(extractRelativeImportSpecifiers(text)).toEqual(['../store/store.js', './Baz.vue'])
+		const text =
+			"import {\n\tFoo,\n\tBar,\n} from '../store/store.js'\nimport Baz from './Baz.vue'\n"
+		expect(extractRelativeImportSpecifiers(text)).toEqual([
+			'../store/store.js',
+			'./Baz.vue',
+		])
 	})
 
 	it('ignores non-relative (npm package) import specifiers', () => {
-		const text = "import Vue from 'vue'\nimport { NcButton } from '@nextcloud/vue'\nimport Local from './Local.vue'\n"
+		const text =
+			"import Vue from 'vue'\nimport { NcButton } from '@nextcloud/vue'\nimport Local from './Local.vue'\n"
 		expect(extractRelativeImportSpecifiers(text)).toEqual(['./Local.vue'])
 	})
 })

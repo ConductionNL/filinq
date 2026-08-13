@@ -4,11 +4,7 @@
 		class="dd-button"
 		:class="`dd-button--${variant}`"
 		v-bind="$attrs">
-		<DdIcon
-			v-if="icon"
-			:name="icon"
-			:size="iconSize"
-			class="dd-button__icon" />
+		<DdIcon v-if="icon" :name="icon" :size="iconSize" class="dd-button__icon" />
 		<span class="dd-button__label">
 			<slot>{{ label }}</slot>
 		</span>
@@ -113,7 +109,7 @@ export default {
    The fill stays brand-blue in both themes, so the border/text/highlights
    that sit on it remain fixed light colours (not theme-aware). */
 .dd-button--primary {
-	border-color: var(--dd-color-white-70, rgba(255, 255, 255, 0.70));
+	border-color: var(--dd-color-white-70, rgba(255, 255, 255, 0.7));
 	background: var(--dd-color-blue, #2874d1);
 	color: var(--dd-on-primary, #fff);
 	box-shadow:
@@ -129,7 +125,7 @@ export default {
 .dd-button--primary:hover,
 .dd-button--primary:focus {
 	background: var(--dd-color-blue, #2874d1) !important;
-	border-color: var(--dd-color-white-70, rgba(255, 255, 255, 0.70)) !important;
+	border-color: var(--dd-color-white-70, rgba(255, 255, 255, 0.7)) !important;
 	color: var(--dd-on-primary, #fff) !important;
 	box-shadow:
 		0 -2px 7px 0 var(--dd-color-blue-bright, #4698fc) inset,
@@ -138,7 +134,7 @@ export default {
 }
 
 .dd-button--primary:focus-visible {
-	outline: 2px solid var(--dd-color-white-70, rgba(255, 255, 255, 0.70)) !important;
+	outline: 2px solid var(--dd-color-white-70, rgba(255, 255, 255, 0.7)) !important;
 	outline-offset: 2px;
 }
 
@@ -152,7 +148,7 @@ export default {
 .dd-button--secondary:hover,
 .dd-button--secondary:focus {
 	border-color: var(--dd-ink, #02162e) !important;
-	background: var(--dd-surface-subtle, rgba(247, 247, 247, 0.70)) !important;
+	background: var(--dd-surface-subtle, rgba(247, 247, 247, 0.7)) !important;
 	color: var(--dd-ink, #02162e) !important;
 }
 
@@ -167,7 +163,7 @@ export default {
    raised look reads correctly on a dark background too. */
 .dd-button--tertiary {
 	border-color: var(--dd-surface, #fff);
-	background: var(--dd-surface-subtle, rgba(247, 247, 247, 0.70));
+	background: var(--dd-surface-subtle, rgba(247, 247, 247, 0.7));
 	box-shadow:
 		0 -2px 7px 0 var(--dd-elevated-highlight, #fff) inset,
 		0 5px 8px 0 var(--dd-elevated-highlight, #fff) inset,

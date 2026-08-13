@@ -101,7 +101,10 @@ describe('myDocuments store — concept/anonymized collapsing (via links)', () =
 	it('conceptFor() resolves the original of an anonymized file via the link', () => {
 		const store = useMyDocumentsStore()
 		const original = doc('report.pdf', { fileId: 1 })
-		const anonymized = doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true })
+		const anonymized = doc('report_anonymized.pdf', {
+			fileId: 2,
+			isAnonymized: true,
+		})
 		store.documents = [original, anonymized]
 		store.anonymizationLinks = [link(1, 2)]
 		// Strict identity against the entry the store HOLDS. Vue 3 wraps
@@ -118,7 +121,10 @@ describe('myDocuments store — concept/anonymized collapsing (via links)', () =
 	it('anonymizedFor() resolves the anonymized copy of a concept file via the link', () => {
 		const store = useMyDocumentsStore()
 		const original = doc('report.pdf', { fileId: 1 })
-		const anonymized = doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true })
+		const anonymized = doc('report_anonymized.pdf', {
+			fileId: 2,
+			isAnonymized: true,
+		})
 		store.documents = [original, anonymized]
 		store.anonymizationLinks = [link(1, 2)]
 		expect(store.anonymizedFor(original)).toBe(store.documents[1])
@@ -147,8 +153,16 @@ describe('myDocuments store — duplicate anonymized outputs (feat #107, dedupe)
 		const store = useMyDocumentsStore()
 		store.documents = [
 			doc('report.pdf', { fileId: 1, modified: 10 }),
-			doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 }),
-			doc('report_anonymized (2).pdf', { fileId: 3, isAnonymized: true, modified: 200 }),
+			doc('report_anonymized.pdf', {
+				fileId: 2,
+				isAnonymized: true,
+				modified: 100,
+			}),
+			doc('report_anonymized (2).pdf', {
+				fileId: 3,
+				isAnonymized: true,
+				modified: 200,
+			}),
 		]
 		// Two runs of the same source left two outputs behind.
 		store.anonymizationLinks = [link(1, 2), link(1, 3)]
@@ -159,8 +173,16 @@ describe('myDocuments store — duplicate anonymized outputs (feat #107, dedupe)
 	it('anonymizedFor() resolves the newest present output of a re-anonymized source', () => {
 		const store = useMyDocumentsStore()
 		const source = doc('report.pdf', { fileId: 1, modified: 10 })
-		const oldOutput = doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 })
-		const newOutput = doc('report_anonymized (2).pdf', { fileId: 3, isAnonymized: true, modified: 200 })
+		const oldOutput = doc('report_anonymized.pdf', {
+			fileId: 2,
+			isAnonymized: true,
+			modified: 100,
+		})
+		const newOutput = doc('report_anonymized (2).pdf', {
+			fileId: 3,
+			isAnonymized: true,
+			modified: 200,
+		})
 		store.documents = [source, oldOutput, newOutput]
 		store.anonymizationLinks = [link(1, 2), link(1, 3)]
 		// documents[2] is newOutput — the NEWER of the two outputs. Asserting
@@ -194,19 +216,37 @@ describe('myDocuments store — orphaned outputs after a re-upload', () => {
 		store.documents = [
 			doc('example-anonymization.pdf', { fileId: 319, modified: 200 }),
 			doc('example-anonymization-docx.docx', { fileId: 318, modified: 200 }),
-			doc('example-anonymization_anonymized.pdf', { fileId: 316, isAnonymized: true, modified: 100 }),
-			doc('example-anonymization-docx_anonymized.pdf', { fileId: 313, isAnonymized: true, modified: 100 }),
+			doc('example-anonymization_anonymized.pdf', {
+				fileId: 316,
+				isAnonymized: true,
+				modified: 100,
+			}),
+			doc('example-anonymization-docx_anonymized.pdf', {
+				fileId: 313,
+				isAnonymized: true,
+				modified: 100,
+			}),
 		]
 		store.anonymizationLinks = [
-			{ sourceFileId: 305, anonymizedFileId: 316, sourceFileName: 'example-anonymization.pdf' },
-			{ sourceFileId: 304, anonymizedFileId: 313, sourceFileName: 'example-anonymization-docx.docx' },
+			{
+				sourceFileId: 305,
+				anonymizedFileId: 316,
+				sourceFileName: 'example-anonymization.pdf',
+			},
+			{
+				sourceFileId: 304,
+				anonymizedFileId: 313,
+				sourceFileName: 'example-anonymization-docx.docx',
+			},
 		]
 		// The fresh re-uploads are shown as concepts; the orphaned outputs are not.
 		expect(store.visibleDocuments.map((d) => d.fileName).sort()).toEqual([
 			'example-anonymization-docx.docx',
 			'example-anonymization.pdf',
 		])
-		expect([...store.orphanedOutputIds].sort((a, b) => a - b)).toEqual([313, 316])
+		expect([...store.orphanedOutputIds].sort((a, b) => a - b)).toEqual([
+			313, 316,
+		])
 	})
 
 	it('keeps a standalone anonymized output (source deleted, NOT re-uploaded)', () => {
@@ -221,19 +261,28 @@ describe('myDocuments store — orphaned outputs after a re-upload', () => {
 			{ sourceFileId: 9, anonymizedFileId: 2, sourceFileName: 'report.pdf' },
 		]
 		expect(store.orphanedOutputIds.size).toBe(0)
-		expect(store.visibleDocuments.map((d) => d.fileName)).toEqual(['draft.pdf', 'report_anonymized.pdf'])
+		expect(store.visibleDocuments.map((d) => d.fileName)).toEqual([
+			'draft.pdf',
+			'report_anonymized.pdf',
+		])
 	})
 
 	it('keeps a live source↔output pair (source present) untouched', () => {
 		const store = useMyDocumentsStore()
 		store.documents = [
 			doc('report.pdf', { fileId: 302, modified: 10 }),
-			doc('report_anonymized.pdf', { fileId: 306, isAnonymized: true, modified: 100 }),
+			doc('report_anonymized.pdf', {
+				fileId: 306,
+				isAnonymized: true,
+				modified: 100,
+			}),
 		]
 		store.anonymizationLinks = [link(302, 306)]
 		// Source present → not an orphan; overview collapses to the output as usual.
 		expect(store.orphanedOutputIds.size).toBe(0)
-		expect(store.visibleDocuments.map((d) => d.fileName)).toEqual(['report_anonymized.pdf'])
+		expect(store.visibleDocuments.map((d) => d.fileName)).toEqual([
+			'report_anonymized.pdf',
+		])
 	})
 
 	it('keeps a standalone output when an unrelated file shares the source name but predates it', () => {
@@ -245,7 +294,11 @@ describe('myDocuments store — orphaned outputs after a re-upload', () => {
 		// must stay visible.
 		store.documents = [
 			doc('report.pdf', { fileId: 1, modified: 50 }),
-			doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 }),
+			doc('report_anonymized.pdf', {
+				fileId: 2,
+				isAnonymized: true,
+				modified: 100,
+			}),
 		]
 		store.anonymizationLinks = [
 			{ sourceFileId: 9, anonymizedFileId: 2, sourceFileName: 'report.pdf' },
@@ -263,7 +316,11 @@ describe('myDocuments store — orphaned outputs after a re-upload', () => {
 		// coincides with ANOTHER anonymized output present in the listing. That
 		// output is not a concept re-upload, so it must not trigger a hide.
 		store.documents = [
-			doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 }),
+			doc('report_anonymized.pdf', {
+				fileId: 2,
+				isAnonymized: true,
+				modified: 100,
+			}),
 			doc('report.pdf', { fileId: 3, isAnonymized: true, modified: 200 }),
 		]
 		store.anonymizationLinks = [

@@ -10,7 +10,11 @@
 import './setPublicPath.js'
 import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
+import {
+	translate as t,
+	translatePlural as n,
+	loadTranslations,
+} from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	CnPageRenderer,
@@ -54,7 +58,10 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn('[docudesk] registerTranslations failed; falling back to English', e)
+	console.warn(
+		'[docudesk] registerTranslations failed; falling back to English',
+		e,
+	)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs only allow the
@@ -65,7 +72,10 @@ function tryLoadTranslations() {
 	try {
 		const result = loadTranslations('docudesk', () => {})
 		if (result && typeof result.then === 'function') {
-			result.then(() => {}, () => {})
+			result.then(
+				() => {},
+				() => {},
+			)
 		}
 	} catch {
 		// no-op
@@ -93,10 +103,26 @@ function mergeMenuItems(target, incoming) {
 	incoming.forEach((item) => {
 		const existing = target.find((t) => t.id === item.id)
 		if (!existing) {
-			target.push({ ...item, children: Array.isArray(item.children) ? [...item.children] : item.children })
+			target.push({
+				...item,
+				children: Array.isArray(item.children)
+					? [...item.children]
+					: item.children,
+			})
 			return
 		}
-		for (const key of ['label', 'icon', 'route', 'order', 'section', 'featureFlag', 'permission', 'visibleIf', 'href', 'action']) {
+		for (const key of [
+			'label',
+			'icon',
+			'route',
+			'order',
+			'section',
+			'featureFlag',
+			'permission',
+			'visibleIf',
+			'href',
+			'action',
+		]) {
 			if (existing[key] === undefined && item[key] !== undefined) {
 				existing[key] = item[key]
 			}
@@ -146,7 +172,8 @@ function applyMenuRelocations(menu, relocations) {
 				const child = node.children[j]
 				const childTarget = relocations[child.id]
 				if (!childTarget) continue
-				if (childTarget === node.id && !Array.isArray(child.children)) continue
+				if (childTarget === node.id && !Array.isArray(child.children))
+					continue
 				node.children.splice(j, 1)
 				moves.push({ node: child, target: childTarget })
 			}
@@ -166,8 +193,14 @@ function applyMenuRelocations(menu, relocations) {
 			}
 		})
 	}
-	return menu.filter((m) => m.type === 'caption' || m.route || m.href || m.action
-		|| (Array.isArray(m.children) && m.children.length > 0))
+	return menu.filter(
+		(m) =>
+			m.type === 'caption'
+			|| m.route
+			|| m.href
+			|| m.action
+			|| (Array.isArray(m.children) && m.children.length > 0),
+	)
 }
 
 /**
@@ -205,7 +238,9 @@ function applyMenuRemovals(menu, removals) {
 	const isLeaf = (n) => !Array.isArray(n.children) || n.children.length === 0
 	menu.forEach((node) => {
 		if (Array.isArray(node.children)) {
-			node.children = node.children.filter((c) => !(drop.has(c.id) && isLeaf(c)))
+			node.children = node.children.filter(
+				(c) => !(drop.has(c.id) && isLeaf(c)),
+			)
 		}
 	})
 	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
@@ -229,23 +264,30 @@ function applyMenuRemovals(menu, removals) {
 function applySettingsSection(menu, settingsIds) {
 	if (!Array.isArray(settingsIds) || settingsIds.length === 0) return menu
 	const want = new Set(settingsIds)
-	const isClickable = (n) => n.route !== undefined || n.href !== undefined || n.action !== undefined
+	const isClickable = (n) =>
+		n.route !== undefined || n.href !== undefined || n.action !== undefined
 	const lifted = []
-	const strip = (nodes) => nodes.reduce((acc, n) => {
-		if (want.has(n.id)) {
-			const { children, ...leaf } = n
-			lifted.push({ ...leaf, section: 'settings' })
+	const strip = (nodes) =>
+		nodes.reduce((acc, n) => {
+			if (want.has(n.id)) {
+				const { children, ...leaf } = n
+				lifted.push({ ...leaf, section: 'settings' })
+				return acc
+			}
+			if (Array.isArray(n.children)) {
+				const children = strip(n.children)
+				if (
+					children.length === 0
+					&& n.children.length > 0
+					&& !isClickable(n)
+				)
+					return acc
+				acc.push({ ...n, children })
+				return acc
+			}
+			acc.push(n)
 			return acc
-		}
-		if (Array.isArray(n.children)) {
-			const children = strip(n.children)
-			if (children.length === 0 && n.children.length > 0 && !isClickable(n)) return acc
-			acc.push({ ...n, children })
-			return acc
-		}
-		acc.push(n)
-		return acc
-	}, [])
+		}, [])
 	const remaining = strip(menu)
 	return [...remaining, ...lifted]
 }
@@ -338,10 +380,13 @@ const customComponentsProp = Object.fromEntries(
 try {
 	const result = initializeStores()
 	if (result && typeof result.then === 'function') {
-		result.then(() => {}, (e) => {
-			// eslint-disable-next-line no-console
-			console.warn('[docudesk] initializeStores failed', e)
-		})
+		result.then(
+			() => {},
+			(e) => {
+				// eslint-disable-next-line no-console
+				console.warn('[docudesk] initializeStores failed', e)
+			},
+		)
 	}
 } catch (e) {
 	// eslint-disable-next-line no-console
@@ -358,12 +403,13 @@ try {
 // — and with two `#content` elements it is undefined which one is matched.
 // A dedicated host id removes the ambiguity entirely.
 const app = createApp({
-	render: () => h(App, {
-		manifest,
-		customComponents: customComponentsProp,
-		pageTypes: pageTypesProp,
-		registry: registryProp,
-	}),
+	render: () =>
+		h(App, {
+			manifest,
+			customComponents: customComponentsProp,
+			pageTypes: pageTypesProp,
+			registry: registryProp,
+		}),
 })
 
 app.mixin({ methods: { t, n } })

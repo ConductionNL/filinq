@@ -24,10 +24,7 @@ import singleFileIcon from '../assets/single-file.png'
 			@update:modelValue="$emit('toggle-select', item)"
 			@click.stop />
 		<figure class="dd-document-card__icon">
-			<img
-				:src="iconSrc"
-				:alt="''"
-				class="dd-document-card__icon-img">
+			<img :src="iconSrc" :alt="''" class="dd-document-card__icon-img" />
 		</figure>
 		<div class="dd-document-card__title" :title="displayName">
 			{{ displayName }}
@@ -35,9 +32,7 @@ import singleFileIcon from '../assets/single-file.png'
 		<div class="dd-document-card__date">
 			{{ formattedDate }}
 		</div>
-		<CnStatusBadge
-			:label="pillLabel"
-			:color-map="pillColorMap" />
+		<CnStatusBadge :label="pillLabel" :color-map="pillColorMap" />
 	</article>
 </template>
 
@@ -171,7 +166,8 @@ export default {
 	flex-direction: column;
 	align-items: flex-start;
 	gap: var(--dd-card-gap);
-	padding: var(--dd-card-padding-block-start) var(--dd-card-padding-inline) var(--dd-card-padding-block-end);
+	padding: var(--dd-card-padding-block-start) var(--dd-card-padding-inline)
+		var(--dd-card-padding-block-end);
 	border: var(--dd-card-border);
 	border-radius: var(--dd-card-radius);
 	background: var(--dd-card-bg);
@@ -180,7 +176,9 @@ export default {
 	text-align: start;
 	inline-size: 100%;
 	block-size: 100%;
-	transition: box-shadow 0.15s ease, transform 0.15s ease;
+	transition:
+		box-shadow 0.15s ease,
+		transform 0.15s ease;
 
 	> * {
 		cursor: pointer;
