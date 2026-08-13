@@ -106,6 +106,7 @@
 .publishedIcon > svg {
 	fill: var(--color-success);
 }
+
 .warningIcon > svg {
 	fill: var(--color-warning);
 }
@@ -131,6 +132,7 @@
 .successMessage {
 	color: var(--color-success);
 }
+
 .errorMessage {
 	color: var(--color-error);
 }
@@ -165,9 +167,6 @@
 
 .filesListDragDropNoticeTitle {
 	margin: 12px 0;
-}
-
-.filesListDragDropNoticeTitle {
 	margin-left: 16px;
 	color: inherit;
 }

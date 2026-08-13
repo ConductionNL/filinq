@@ -336,7 +336,7 @@ export default {
  * anchored on `.pdf-viewer__page` — which IS a template element and does carry
  * the hash — and wrapped in `:deep()`.
  *
- * This block used to live in a second, unscoped <style> tag. That leaked every
+ * This block used to live in a second, unscoped `style` tag. That leaked every
  * rule below into the whole page: `.pdf-viewer__text-layer ::selection` in
  * particular is not namespaced by anything Vue enforces, and an unscoped
  * `::selection` rule applies wherever a matching ancestor exists. Scoping it
