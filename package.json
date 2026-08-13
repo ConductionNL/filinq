@@ -23,7 +23,8 @@
     "check:manifest": "node tests/validate-manifest.js",
     "test:e2e": "playwright test",
     "test:e2e:docs": "playwright test --project docs-capture",
-    "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
+    "stylelint": "stylelint \"{src,css}/**/*.{vue,scss,css}\"",
+    "stylelint:fix": "stylelint \"{src,css}/**/*.{vue,scss,css}\" --fix",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
     "prepare": "git config core.hooksPath .githooks || true"
