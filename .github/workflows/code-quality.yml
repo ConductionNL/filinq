@@ -74,7 +74,20 @@ jobs:
       # validation and the l10n key check had NEVER executed on a pull request.
       # Each entry becomes its own "Frontend Check (<script>)" job and must
       # exist in package.json and be self-contained.
-      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n"]'
+      #
+      # `format` (prettier --check) is listed because the shared workflow has NO
+      # prettier job of its own — `quality.yml` runs eslint and stylelint and
+      # mentions prettier ZERO times. This repo already carries
+      # `@nextcloud/prettier-config` and a `format` script, so without this leg
+      # `npm run format` never runs outside a developer's editor and the tree
+      # drifts straight back out of format between merges — the same inert-
+      # formatter failure mode that made the old `.prettierrc` worth deleting.
+      # Centralising the config never stopped drift; the gate does.
+      # Measured on this tree before enabling: PASSES, 174 of 203 tracked
+      # frontend files in scope (phpmetrics/, docs/ and l10n/ excluded via
+      # .prettierignore — phpmetrics/ is tracked despite being gitignored, so
+      # the explicit entry is what keeps 15 generated report files out).
+      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n", "format"]'
       enable-phpunit: true
       # OpenRegister is a hard dependency: DocuDesk stores every template,
       # signing request and consent record as an OpenRegister object, and
