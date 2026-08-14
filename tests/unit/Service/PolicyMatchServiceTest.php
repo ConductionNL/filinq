@@ -22,7 +22,6 @@ use OCP\App\IAppManager;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionProperty;
 
@@ -270,14 +269,9 @@ class PolicyMatchServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 		$appMan = $this->createMock(IAppManager::class);
-		$container = $this->createMock(ContainerInterface::class);
-		$container
-			->method('get')
-			->with('OCA\\OpenRegister\\Service\\ObjectService')
-			->willReturn($fakeObjectService);
 		$config = $this->createMock(IAppConfig::class);
 
-		return new PolicyMatchService($logger, $appMan, $config, $this->createMock(ObjectService::class));
+		return new PolicyMatchService($logger, $appMan, $config, $fakeObjectService);
 	}//end buildService()
 
 	/**

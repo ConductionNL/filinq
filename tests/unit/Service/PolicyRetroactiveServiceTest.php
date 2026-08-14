@@ -25,7 +25,6 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\DocuDesk\Service\PolicyRetroactiveService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -54,9 +53,9 @@ class PolicyRetroactiveServiceTest extends TestCase {
 	/**
 	 * Mock DI container.
 	 *
-	 * @var ContainerInterface|MockObject
+	 * @var ObjectService|MockObject
 	 */
-	private ContainerInterface|MockObject $mockContainer;
+	private ObjectService|MockObject $mockObjectService;
 
 	/**
 	 * Mock policy matcher.
@@ -74,7 +73,7 @@ class PolicyRetroactiveServiceTest extends TestCase {
 		parent::setUp();
 
 		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
-		$this->mockContainer = $this->createMock(originalClassName: ContainerInterface::class);
+		$this->mockObjectService = $this->createMock(originalClassName: ObjectService::class);
 		$this->mockPolicyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
 
 	}//end setUp()
@@ -88,7 +87,7 @@ class PolicyRetroactiveServiceTest extends TestCase {
 		return new PolicyRetroactiveService(
 			logger: $this->mockLogger,
 			policyMatcher: $this->mockPolicyMatcher,
-			objectService: $this->createMock(ObjectService::class)
+			objectService: $this->mockObjectService
 		);
 
 	}//end makeService()
@@ -99,7 +98,7 @@ class PolicyRetroactiveServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testInactiveProhibitionResolvesNothing(): void {
-		$this->mockContainer->expects($this->never())->method('get');
+		$this->mockObjectService->expects($this->never())->method('searchObjectsBySlug');
 
 		$service = $this->makeService();
 		$result = $service->applyProhibitionMutation(
@@ -121,7 +120,7 @@ class PolicyRetroactiveServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testFutureProhibitionResolvesNothing(): void {
-		$this->mockContainer->expects($this->never())->method('get');
+		$this->mockObjectService->expects($this->never())->method('searchObjectsBySlug');
 
 		$service = $this->makeService();
 		$result = $service->applyProhibitionMutation(
@@ -166,7 +165,7 @@ class PolicyRetroactiveServiceTest extends TestCase {
 	 */
 	public function testStandingConsentMutationOnlyInvalidatesCache(): void {
 		$this->mockPolicyMatcher->expects($this->once())->method('invalidateCache');
-		$this->mockContainer->expects($this->never())->method('get');
+		$this->mockObjectService->expects($this->never())->method('searchObjectsBySlug');
 
 		$this->makeService()->applyStandingConsentMutation();
 
@@ -179,7 +178,7 @@ class PolicyRetroactiveServiceTest extends TestCase {
 	 */
 	public function testRuleRemovalOnlyInvalidatesCache(): void {
 		$this->mockPolicyMatcher->expects($this->once())->method('invalidateCache');
-		$this->mockContainer->expects($this->never())->method('get');
+		$this->mockObjectService->expects($this->never())->method('searchObjectsBySlug');
 
 		$this->makeService()->applyRuleRemoval();
 
