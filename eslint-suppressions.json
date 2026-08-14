@@ -107,6 +107,11 @@
       "count": 1
     }
   },
+  "src/dialogs/ProhibitionFormModal.vue": {
+    "@nextcloud/l10n-non-breaking-space": {
+      "count": 1
+    }
+  },
   "src/entities/index.js": {
     "import/export": {
       "count": 1
@@ -191,6 +196,9 @@
   "src/views/anonymization/FolderAnonymizationView.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 3
+    },
+    "@nextcloud/l10n-non-breaking-space": {
+      "count": 1
     }
   },
   "src/views/consent/ConsentDetail.vue": {
@@ -287,6 +295,9 @@
     }
   },
   "src/views/settings/Settings.vue": {
+    "@nextcloud/l10n-non-breaking-space": {
+      "count": 1
+    },
     "@nextcloud/no-deprecated-library-props": {
       "count": 1
     },

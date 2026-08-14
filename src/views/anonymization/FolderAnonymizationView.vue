@@ -179,7 +179,7 @@
 				{{
 					t(
 						'docudesk',
-						'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.',
+						'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.',
 					)
 				}}
 			</NcNoteCard>

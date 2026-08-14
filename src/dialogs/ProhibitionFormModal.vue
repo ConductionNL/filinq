@@ -163,7 +163,7 @@ export default {
 			<NcTextField
 				v-model="form.legalAuthority"
 				:label="
-					t('docudesk', 'Legal authority (court order, statute, …)')
+					t('docudesk', 'Legal authority (court order, statute, …)')
 				" />
 			<NcTextField
 				v-model="form.caseReference"
