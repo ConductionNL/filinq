@@ -228,8 +228,8 @@ class DocumentValidationServiceTest extends TestCase {
 
 		$file = $this->file('x', 'text/plain', 'a.txt');
 
-		$factuur = $this->service()->validate($file, [], 'factuur');
-		$this->assertContains('metadata-incomplete', array_column($factuur['validationFindings'], 'checkId'));
+		$invoice = $this->service()->validate($file, [], 'factuur');
+		$this->assertContains('metadata-incomplete', array_column($invoice['validationFindings'], 'checkId'));
 
 		$other = $this->service()->validate($file, [], 'brief');
 		$this->assertNotContains('metadata-incomplete', array_column($other['validationFindings'], 'checkId'));

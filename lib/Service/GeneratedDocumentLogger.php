@@ -92,7 +92,7 @@ class GeneratedDocumentLogger {
 				'generatedAt' => date('c'),
 				'generatedBy' => $userId,
 				'warnings' => $outcome['warnings'],
-				'zaakId' => $outcome['zaakId'],
+				'caseId' => $outcome['caseId'],
 				'errorMessage' => $outcome['errorMessage'],
 				'fileId' => ($outcome['fileId'] ?? null),
 				'filePath' => ($outcome['filePath'] ?? null),

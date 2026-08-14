@@ -577,11 +577,11 @@ class OcrService {
 		try {
 			$output = [];
 			$returnCode = 0;
-			$langArgs = str_replace('+', '+', $languages);
+			$longArgs = str_replace('+', '+', $languages);
 			$command = sprintf(
 				'tesseract %s stdout -l %s --dpi %d -c hocr_font_info=0 hocr 2>/dev/null',
 				escapeshellarg($filePath),
-				escapeshellarg($langArgs),
+				escapeshellarg($longArgs),
 				$dpi
 			);
 			exec($command, $output, $returnCode);

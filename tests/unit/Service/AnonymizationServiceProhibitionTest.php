@@ -137,13 +137,13 @@ class AnonymizationServiceProhibitionTest extends TestCase {
 		$mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
 		$mockMapper->method('findEntitiesForFile')->willReturn($rawEntities);
 
-		$mockGrondslag = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
-		$mockGrondslag->method('getEntityTypeWhitelist')->willReturn(null);
+		$mockBasis = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
+		$mockBasis->method('getEntityTypeWhitelist')->willReturn(null);
 		// enrichEntitiesWithBases must return its entities argument unchanged.
-		$mockGrondslag->method('enrichEntitiesWithBases')->willReturnArgument(0);
+		$mockBasis->method('enrichEntitiesWithBases')->willReturnArgument(0);
 
 		$this->mockContainer->method('get')->willReturnCallback(
-			function (string $class) use ($mockExtractor, $mockMapper, $mockGrondslag, $policyService) {
+			function (string $class) use ($mockExtractor, $mockMapper, $mockBasis, $policyService) {
 				if ($class === 'OCA\OpenRegister\Service\TextExtractionService') {
 					return $mockExtractor;
 				}
@@ -153,7 +153,7 @@ class AnonymizationServiceProhibitionTest extends TestCase {
 				}
 
 				if ($class === 'OCA\DocuDesk\Service\LegalBasisProposalService') {
-					return $mockGrondslag;
+					return $mockBasis;
 				}
 
 				if ($class === 'OCA\DocuDesk\Service\PolicyMatchService') {

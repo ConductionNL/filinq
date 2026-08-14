@@ -83,7 +83,7 @@ class SettingsServiceTest extends TestCase {
 	/**
 	 * @var LegalBasisProposalService|MockObject
 	 */
-	private LegalBasisProposalService|MockObject $mockGrondslagProposal;
+	private LegalBasisProposalService|MockObject $mockBasisProposal;
 
 	/**
 	 * Set up test environment
@@ -98,7 +98,7 @@ class SettingsServiceTest extends TestCase {
 		$this->mockDiscoveryService = $this->createMock(RegisterDiscoveryService::class);
 		$this->mockInitializer = $this->createMock(SettingsInitializer::class);
 		$this->mockOcrService = $this->createMock(OcrService::class);
-		$this->mockGrondslagProposal = $this->createMock(LegalBasisProposalService::class);
+		$this->mockBasisProposal = $this->createMock(LegalBasisProposalService::class);
 		$this->mockOpenRegister = $this->createMock(OpenRegisterAvailabilityService::class);
 
 		$this->settingsService = new SettingsService(
@@ -107,7 +107,7 @@ class SettingsServiceTest extends TestCase {
 			$this->mockDiscoveryService,
 			$this->mockInitializer,
 			$this->mockOcrService,
-			$this->mockGrondslagProposal,
+			$this->mockBasisProposal,
 			$this->mockOpenRegister
 		);
 
