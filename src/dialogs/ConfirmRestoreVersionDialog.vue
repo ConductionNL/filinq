@@ -23,8 +23,8 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'ConfirmRestoreVersionDialog',
@@ -35,6 +35,7 @@ export default {
 			default: 0,
 		},
 	},
+
 	emits: ['confirm', 'cancel'],
 	methods: { t },
 }

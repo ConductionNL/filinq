@@ -12,7 +12,7 @@
 				v-model="selectedCategory"
 				:options="categoryOptions"
 				:placeholder="t('docudesk', 'Filter by category')"
-				:input-label="t('docudesk', 'Category filter')"
+				:inputLabel="t('docudesk', 'Category filter')"
 				class="template-index__filter-select"
 				@update:modelValue="applyFilters" />
 			<NcTextField
@@ -97,14 +97,13 @@
 
 		<ConfirmDeleteTemplateDialog
 			v-if="deleteTarget"
-			:template-name="deleteTarget.name"
+			:templateName="deleteTarget.name"
 			@confirm="executeDelete"
 			@cancel="deleteTarget = null" />
 	</div>
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcEmptyContent,
@@ -112,8 +111,9 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@conduction/nextcloud-vue'
-import { useTemplateStore } from '../../store/modules/template.js'
+import { translate as t } from '@nextcloud/l10n'
 import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
+import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
 	name: 'TemplateIndex',
@@ -125,6 +125,7 @@ export default {
 		NcTextField,
 		ConfirmDeleteTemplateDialog,
 	},
+
 	data() {
 		return {
 			selectedCategory: null,
@@ -132,6 +133,7 @@ export default {
 			deleteTarget: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Pinia template store accessor for the index view.
@@ -141,6 +143,7 @@ export default {
 		templateStore() {
 			return useTemplateStore()
 		},
+
 		/**
 		 * Build the category filter dropdown options from loaded templates.
 		 *
@@ -156,9 +159,11 @@ export default {
 			]
 		},
 	},
+
 	mounted() {
 		this.templateStore.fetchTemplates()
 	},
+
 	methods: {
 		t,
 		/**
@@ -176,6 +181,7 @@ export default {
 			}
 			this.templateStore.fetchTemplates(filters)
 		},
+
 		/**
 		 * Open the selected template in the detail editor.
 		 *
@@ -186,6 +192,7 @@ export default {
 			this.templateStore.templateItem = tmpl
 			this.$router.push({ name: 'TemplateDetail', params: { id: tmpl.id } })
 		},
+
 		/**
 		 * Open the detail editor for a brand-new template.
 		 *
@@ -195,6 +202,7 @@ export default {
 			this.templateStore.templateItem = null
 			this.$router.push({ name: 'TemplateDetail', params: { id: 'new' } })
 		},
+
 		/**
 		 * Duplicate a template and refresh the list.
 		 *
@@ -207,6 +215,7 @@ export default {
 				await this.templateStore.fetchTemplates()
 			}
 		},
+
 		/**
 		 * Open the delete confirmation dialog for a template.
 		 *
@@ -216,6 +225,7 @@ export default {
 		confirmDelete(tmpl) {
 			this.deleteTarget = tmpl
 		},
+
 		/**
 		 * Execute deletion after user confirmed in the dialog.
 		 *

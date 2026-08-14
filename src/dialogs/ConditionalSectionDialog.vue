@@ -10,7 +10,7 @@
 			<NcSelect
 				v-model="condOp"
 				:options="opOptions"
-				:input-label="t('docudesk', 'Operator')" />
+				:inputLabel="t('docudesk', 'Operator')" />
 			<NcTextField
 				v-if="needsValue"
 				v-model="condValue"
@@ -32,8 +32,8 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog, NcSelect, NcTextField } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'ConditionalSectionDialog',
@@ -46,6 +46,7 @@ export default {
 			condValue: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * Conditional operator options for the dialog dropdown.
@@ -61,6 +62,7 @@ export default {
 				{ label: t('docudesk', 'is not empty'), value: 'is_not_empty' },
 			]
 		},
+
 		/**
 		 * Whether the selected operator requires a comparison value.
 		 *
@@ -70,6 +72,7 @@ export default {
 			const op = this.condOp?.value || this.condOp
 			return op !== 'is_empty' && op !== 'is_not_empty'
 		},
+
 		/**
 		 * Live Twig-syntax preview of the conditional section.
 		 *
@@ -89,6 +92,7 @@ export default {
 			return `{% if ${field} ${labels[op] || op} %}…{% endif %}`
 		},
 	},
+
 	methods: {
 		t,
 		/**

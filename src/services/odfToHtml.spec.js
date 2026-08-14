@@ -7,16 +7,19 @@
 
 import { odfXmlToHtml, odfXmlToText } from './odfToHtml.js'
 
-const content = (body) =>
-	'<?xml version="1.0" encoding="UTF-8"?>'
-	+ '<office:document-content'
-	+ ' xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"'
-	+ ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"'
-	+ ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0">'
-	+ '<office:body><office:text>'
-	+ body
-	+ '</office:text></office:body>'
-	+ '</office:document-content>'
+function content(body) {
+	return (
+		'<?xml version="1.0" encoding="UTF-8"?>'
+		+ '<office:document-content'
+		+ ' xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"'
+		+ ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"'
+		+ ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0">'
+		+ '<office:body><office:text>'
+		+ body
+		+ '</office:text></office:body>'
+		+ '</office:document-content>'
+	)
+}
 
 describe('odfXmlToHtml', () => {
 	it('renders headings with the outline level', () => {

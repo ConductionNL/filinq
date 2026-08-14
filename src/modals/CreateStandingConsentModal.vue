@@ -20,9 +20,9 @@
 						v-model="form.entityType"
 						:options="entityTypeOptions"
 						:placeholder="t('docudesk', 'Select entity type')"
-						:input-label="t('docudesk', 'Entity Type')"
+						:inputLabel="t('docudesk', 'Entity Type')"
 						label="label"
-						track-by="value" />
+						trackBy="value" />
 				</div>
 
 				<!-- Consent Method (required) -->
@@ -35,9 +35,9 @@
 						v-model="form.consentMethod"
 						:options="consentMethodOptions"
 						:placeholder="t('docudesk', 'Select consent method')"
-						:input-label="t('docudesk', 'Consent Method')"
+						:inputLabel="t('docudesk', 'Consent Method')"
 						label="label"
-						track-by="value" />
+						trackBy="value" />
 					<span v-if="errors.consentMethod" class="field-error">
 						{{ errors.consentMethod }}
 					</span>
@@ -99,12 +99,12 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import {
-	NcModal,
-	NcTextField,
-	NcTextArea,
-	NcSelect,
-	NcNoteCard,
 	NcButton,
+	NcModal,
+	NcNoteCard,
+	NcSelect,
+	NcTextArea,
+	NcTextField,
 } from '@nextcloud/vue'
 
 export default {
@@ -117,12 +117,14 @@ export default {
 		NcNoteCard,
 		NcButton,
 	},
+
 	props: {
 		show: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'created'],
 	data() {
 		return {
@@ -135,9 +137,11 @@ export default {
 				validFrom: '',
 				validUntil: '',
 			},
+
 			errors: {
 				consentMethod: '',
 			},
+
 			// Match the publicationConsent schema enum exactly. The legacy
 			// lowercase / synonym values (`person`, `written`, `verbal`,
 			// `digital`, `implicit`) silently passed storage validation
@@ -148,6 +152,7 @@ export default {
 				{ label: t('docudesk', 'Person'), value: 'PERSON' },
 				{ label: t('docudesk', 'Organization'), value: 'ORGANIZATION' },
 			],
+
 			consentMethodOptions: [
 				{ label: t('docudesk', 'Paper'), value: 'paper' },
 				{
@@ -162,6 +167,7 @@ export default {
 			],
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate and submit the create-standing-consent form.
@@ -190,6 +196,7 @@ export default {
 				consentMethod: this.form.consentMethod
 					? this.form.consentMethod.value
 					: '',
+
 				matchRules,
 				validFrom: this.form.validFrom || null,
 				validUntil: this.form.validUntil || null,
@@ -199,6 +206,7 @@ export default {
 
 			this.$emit('created', payload)
 		},
+
 		/**
 		 * Reset the form to its initial state.
 		 *

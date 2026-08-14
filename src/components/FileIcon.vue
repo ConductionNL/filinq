@@ -21,6 +21,7 @@ export default {
 	components: {
 		FileOutline,
 	},
+
 	props: {
 		/**
 		 * File extension to determine which icon to display (currently not used)
@@ -29,6 +30,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Size of the icon
 		 */

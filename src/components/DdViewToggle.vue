@@ -46,6 +46,7 @@ export default {
 	components: {
 		DdIcon,
 	},
+
 	// Vue 3 removed `model: { prop, event }`; a bare `v-model` always binds
 	// `modelValue` + `update:modelValue`, so the prop and emit are renamed
 	// rather than remapped. `change` is kept as a separate notification event.
@@ -56,22 +57,26 @@ export default {
 			default: 'tiles',
 			validator: (v) => ['tiles', 'list'].includes(v),
 		},
+
 		/** Label for the tiles segment. */
 		tilesLabel: {
 			type: String,
 			default: 'Tiles',
 		},
+
 		/** Label for the list segment. */
 		listLabel: {
 			type: String,
 			default: 'List',
 		},
+
 		/** Accessible name for the toggle group. */
 		ariaLabel: {
 			type: String,
 			default: 'View mode',
 		},
 	},
+
 	emits: ['update:modelValue', 'change'],
 	methods: {
 		/**

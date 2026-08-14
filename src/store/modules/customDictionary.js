@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 /**
  * Custom dictionary store — backs the "Custom dictionaries" admin page
  * (custom-dictionary-recognition).
@@ -11,8 +13,6 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 import { defineStore } from 'pinia'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 
 const baseUrl = '/apps/docudesk/api/custom-dictionaries'
 

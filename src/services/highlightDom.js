@@ -8,8 +8,8 @@
  * pending selection changes.
  */
 
-import { buildHighlightSegments, PENDING_TYPE } from './highlightText.js'
 import { entityTypeColor } from './entityTypes.js'
+import { buildHighlightSegments, PENDING_TYPE } from './highlightText.js'
 
 /**
  * Remove all highlight spans previously injected by `applyDomHighlights`,

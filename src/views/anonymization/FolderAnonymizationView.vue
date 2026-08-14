@@ -154,13 +154,13 @@
 			</p>
 			<EntityReviewTable
 				:entities="store.entities"
-				:file-count="store.filesWithEntities"
-				:default-bases="store.dossier.bases || []"
+				:fileCount="store.filesWithEntities"
+				:defaultBases="store.dossier.bases || []"
 				@toggle="store.toggleEntity($event)"
-				@bulk-select="store.setVisibleEntities($event, true)"
-				@bulk-deselect="store.setVisibleEntities($event, false)"
-				@bases-change="store.setEntityBases($event.idx, $event.bases)"
-				@skip-change="store.setEntitySkip($event.idx, $event.skip)" />
+				@bulkSelect="store.setVisibleEntities($event, true)"
+				@bulkDeselect="store.setVisibleEntities($event, false)"
+				@basesChange="store.setEntityBases($event.idx, $event.bases)"
+				@skipChange="store.setEntitySkip($event.idx, $event.skip)" />
 			<label class="flag-row">
 				<input v-model="store.appendBasisSummary" type="checkbox" />
 				<span>{{
@@ -179,7 +179,7 @@
 				{{
 					t(
 						'docudesk',
-						'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.',
+						'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.',
 					)
 				}}
 			</NcNoteCard>
@@ -283,11 +283,12 @@
 		</div>
 	</div>
 </template>
+
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { folderAnonymizationStore } from '../../store/store.js'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcProgressBar } from '@nextcloud/vue'
 import EntityReviewTable from './EntityReviewTable.vue'
+import { folderAnonymizationStore } from '../../store/store.js'
 
 export default {
 	name: 'FolderAnonymizationView',
@@ -298,6 +299,7 @@ export default {
 		NcNoteCard,
 		EntityReviewTable,
 	},
+
 	/**
 	 * Expose the folder anonymization store to the Options API.
 	 *
@@ -306,9 +308,11 @@ export default {
 	setup() {
 		return { store: folderAnonymizationStore }
 	},
+
 	data() {
 		return { folderPath: '' }
 	},
+
 	methods: {
 		t,
 		/**
@@ -331,6 +335,7 @@ export default {
 	},
 }
 </script>
+
 <style scoped>
 .folder-anonymization {
 	padding: 20px;

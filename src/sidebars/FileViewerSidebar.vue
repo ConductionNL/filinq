@@ -1,8 +1,8 @@
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import {
-	fileViewerStore,
 	anonymizationStore,
+	fileViewerStore,
 	myDocumentsStore,
 } from '../store/store.js'
 </script>
@@ -30,7 +30,7 @@ import {
 					v-model="searchQuery"
 					class="entity-search"
 					:placeholder="t('docudesk', 'Search by letter or type')"
-					:clear-label="t('docudesk', 'Clear')" />
+					:clearLabel="t('docudesk', 'Clear')" />
 				<!-- Toggle (left) + Add button (right). The toggle switches the
 				     cards between editable review and read-only defaults; Add
 				     opens the add-entity panel. -->
@@ -186,7 +186,7 @@ import {
 					:options="typeOptions"
 					label="label"
 					:reduce="(o) => o.value"
-					:input-label="t('docudesk', 'Type')"
+					:inputLabel="t('docudesk', 'Type')"
 					:placeholder="t('docudesk', 'Pick a type…')" />
 				<NcSelect
 					v-if="grondslagen"
@@ -196,7 +196,7 @@ import {
 					label="label"
 					:reduce="(o) => o.value"
 					:multiple="true"
-					:input-label="t('docudesk', 'Grondslagen')"
+					:inputLabel="t('docudesk', 'Grondslagen')"
 					:placeholder="t('docudesk', 'Pick grondslagen…')" />
 				<NcNoteCard v-if="saveError" type="error">
 					{{ saveError }}
@@ -223,9 +223,9 @@ import {
 					:item="item"
 					mode="review"
 					:editable="grondslagen"
-					:bases-options="basesOptions"
+					:basesOptions="basesOptions"
 					@toggle="onToggleEntity(idx)"
-					@set-bases="
+					@setBases="
 						anonymizationStore.setEntityBases(entry, idx, $event)
 					" />
 			</div>
@@ -439,6 +439,8 @@ import {
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { generateRemoteUrl } from '@nextcloud/router'
 import {
 	NcAppSidebar,
 	NcButton,
@@ -446,17 +448,15 @@ import {
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
-import { generateRemoteUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 import JSZip from 'jszip'
+import Download from 'vue-material-design-icons/Download.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldRefreshOutline from 'vue-material-design-icons/ShieldRefreshOutline.vue'
-import Download from 'vue-material-design-icons/Download.vue'
 import DdEntityCard from '../components/DdEntityCard.vue'
 import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
-import DdToggle from '../components/DdToggle.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
+import DdToggle from '../components/DdToggle.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
@@ -479,6 +479,7 @@ export default {
 		ShieldRefreshOutline,
 		Download,
 	},
+
 	data() {
 		return {
 			basesOptions: [],
@@ -509,6 +510,7 @@ export default {
 			exportError: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * Id of the file currently open in the viewer, or null. Watched to
@@ -520,6 +522,7 @@ export default {
 		currentFileId() {
 			return fileViewerStore.currentFile?.fileId ?? null
 		},
+
 		/**
 		 * The queue entry for the file currently displayed in the viewer.
 		 * Updated reactively whenever `anonymizationStore.files` mutates
@@ -534,6 +537,7 @@ export default {
 			}
 			return anonymizationStore.findByFileId(file.fileId)
 		},
+
 		/**
 		 * True when the viewer is showing the ORIGINAL of a file that has
 		 * already been anonymised this session — the state in which the user
@@ -559,6 +563,7 @@ export default {
 				&& (e.anonymizedFilePath || e.anonymizedFileId)
 			)
 		},
+
 		/**
 		 * True when the viewer shows the ORIGINAL of a file that has an
 		 * anonymised output, so a "Re-anonymize" action should be offered —
@@ -584,6 +589,7 @@ export default {
 			const file = fileViewerStore.currentFile
 			return !!(file && myDocumentsStore.anonymizedFor(file))
 		},
+
 		/**
 		 * True while a re-anonymise sub-flow is mid-review: `prepareReanonymize`
 		 * re-extracted the source and flagged the entry, so the per-file review
@@ -600,6 +606,7 @@ export default {
 				&& this.entry.status === 'extracted'
 			)
 		},
+
 		/**
 		 * True when the open file lives inside a dossier (a subfolder of
 		 * /DocuDesk). Mirrors App.vue's `inDossier`: in this mode the action
@@ -610,6 +617,7 @@ export default {
 		inDossier() {
 			return myDocumentsStore.currentPath !== '/DocuDesk'
 		},
+
 		/**
 		 * The dossier's source files: every listed file that isn't a folder
 		 * or an already-anonymised `_anonymized` output. This is the full set
@@ -624,6 +632,7 @@ export default {
 				(d) => !d.isFolder && !d.isAnonymized,
 			)
 		},
+
 		/**
 		 * Dossier source files still awaiting anonymisation. Drives the batch
 		 * button count and visibility, so it must reflect the whole dossier —
@@ -651,6 +660,7 @@ export default {
 				)
 			})
 		},
+
 		/**
 		 * Display name of the current dossier (last path segment) — used as the
 		 * zip file name for the "Download all" bundle.
@@ -663,6 +673,7 @@ export default {
 				.filter(Boolean)
 			return parts[parts.length - 1] || ''
 		},
+
 		/**
 		 * Live batch-run progress from the anonymization store.
 		 *
@@ -671,6 +682,7 @@ export default {
 		batchState() {
 			return anonymizationStore.batch
 		},
+
 		/**
 		 * Number of dossier files still awaiting anonymisation. Counts the
 		 * listing's pending source files (see `pendingSourceFiles`) rather than
@@ -682,6 +694,7 @@ export default {
 		batchCount() {
 			return this.pendingSourceFiles.length
 		},
+
 		/**
 		 * Anonymised outputs in the current dossier, ready to bundle into the
 		 * "Download all" zip. Read from the durable listing
@@ -706,6 +719,7 @@ export default {
 					anonymizedFilePath: `files${myDocumentsStore.currentPath}/${d.fileName}`,
 				}))
 		},
+
 		/**
 		 * Number of anonymised dossier files available to download.
 		 *
@@ -714,6 +728,7 @@ export default {
 		completedCount() {
 			return this.completedEntries.length
 		},
+
 		/**
 		 * Label for the dossier batch button: a live progress count while
 		 * running, otherwise "Anonymize all files (N)". Mirrors
@@ -733,6 +748,7 @@ export default {
 				count: this.batchCount,
 			})
 		},
+
 		/**
 		 * One-line summary shown after a finished batch run; empty while idle
 		 * or running. Mirrors FolderFilesNavigation.
@@ -752,6 +768,7 @@ export default {
 			}
 			return t('docudesk', 'All {total} files anonymized.', { total })
 		},
+
 		/**
 		 * True while `ensureExtracted` is running for the current file —
 		 * drives the skeleton placeholders.
@@ -772,6 +789,7 @@ export default {
 				|| this.entry?.status === 'uploading'
 			)
 		},
+
 		/**
 		 * True while the anonymise PATCH+POST round-trip is running for
 		 * this file.
@@ -781,6 +799,7 @@ export default {
 		isAnonymising() {
 			return this.entry?.status === 'anonymising'
 		},
+
 		/**
 		 * Number of entities the user has currently marked for anonymisation
 		 * — drives the action-button label and disabled state.
@@ -791,6 +810,7 @@ export default {
 			return (this.entry?.entities || []).filter((e) => e.included !== false)
 				.length
 		},
+
 		/**
 		 * True for the post-anonymise result step: the run finished and a
 		 * downloadable output exists. Gates the completed result view (note +
@@ -805,6 +825,7 @@ export default {
 				&& !!this.entry?.anonymizedFilePath
 			)
 		},
+
 		/**
 		 * True when the anonymised result of a standalone (non-dossier) file is
 		 * currently on screen — the state in which the "Export files" footer
@@ -827,6 +848,7 @@ export default {
 			}
 			return this.isCompletedResult && fileViewerStore.showAnonymized
 		},
+
 		/**
 		 * Entities actually removed by the just-finished run, mapped onto the
 		 * anonymised-card shape so the result step can show the same reveal
@@ -850,6 +872,7 @@ export default {
 				value: type,
 			}))
 		},
+
 		removedEntities() {
 			if (!this.isCompletedResult) {
 				return []
@@ -876,6 +899,7 @@ export default {
 					_resolveError: null,
 				}))
 		},
+
 		/**
 		 * The anonymised-card list currently on screen: the re-opened document's
 		 * resolved entities, or the just-finished run's removed entities. Backs
@@ -893,6 +917,7 @@ export default {
 			}
 			return []
 		},
+
 		/**
 		 * Unique values in the anonymised view — one per card. Matches the number
 		 * of rows the user can count.
@@ -902,6 +927,7 @@ export default {
 		summaryFound() {
 			return this.anonymizedSummaryList.length
 		},
+
 		/**
 		 * Review entities filtered by the header search, paired with their
 		 * original index in `entry.entities` so the store mutators
@@ -923,6 +949,7 @@ export default {
 				return value.includes(query) || type.includes(query)
 			})
 		},
+
 		/**
 		 * Entities to highlight in the document viewer — the detected values
 		 * with their type, fed to the viewer via `setHighlightEntities`. Only
@@ -939,6 +966,7 @@ export default {
 				.filter((e) => e && e.value)
 				.map((e) => ({ value: e.value, type: e.type }))
 		},
+
 		/**
 		 * Whether the user may edit the detected entities. Mirrors the
 		 * shared viewer state set by the upload modal and the header switch.
@@ -951,6 +979,7 @@ export default {
 		grondslagen() {
 			return fileViewerStore.grondslagen
 		},
+
 		/**
 		 * Whether the "Add new data" panel is active — the add mode set by the
 		 * Bewerken button. Only meaningful during the review step.
@@ -960,6 +989,7 @@ export default {
 		isAdding() {
 			return fileViewerStore.addMode && this.entry?.status === 'extracted'
 		},
+
 		/**
 		 * The text the user selected in the document viewer — the candidate
 		 * value for the new manual entity.
@@ -969,6 +999,7 @@ export default {
 		selectedText() {
 			return fileViewerStore.selection || ''
 		},
+
 		/**
 		 * Selected type unwrapped to a plain string. NcSelect may bind a plain
 		 * string or a `{ value, label }` object; we feed plain strings but
@@ -986,6 +1017,7 @@ export default {
 			}
 			return ''
 		},
+
 		/**
 		 * Whether the new-entity form can be saved: a non-empty selection and a
 		 * chosen type. Grondslagen are optional.
@@ -997,6 +1029,7 @@ export default {
 				this.selectedText.trim().length > 0 && this.newTypeValue.length > 0
 			)
 		},
+
 		/**
 		 * Whether to show the grondslagen toggle in the header. Only relevant
 		 * while reviewing a freshly extracted file — hidden for the
@@ -1008,6 +1041,7 @@ export default {
 		showGrondslagenToggle() {
 			return this.entry?.status === 'extracted' && !this.isAdding
 		},
+
 		/**
 		 * Sidebar header title — detected-entity count once extraction has
 		 * produced a result, otherwise fall back to the file name.
@@ -1036,6 +1070,7 @@ export default {
 			}
 			return fileViewerStore.currentFile?.fileName || t('docudesk', 'Entities')
 		},
+
 		/**
 		 * Sidebar subtitle — loading/error status while extraction is still
 		 * resolving, otherwise the "verify the auto-detected entities"
@@ -1073,6 +1108,7 @@ export default {
 			}
 			return ''
 		},
+
 		/**
 		 * WebDAV download URL for the anonymised result, when available.
 		 *
@@ -1097,6 +1133,7 @@ export default {
 			return generateRemoteUrl('webdav')
 		},
 	},
+
 	watch: {
 		/**
 		 * React to the viewer opening a different file. We watch the local
@@ -1114,8 +1151,10 @@ export default {
 				}
 				this.loadEntitiesForCurrentFile(file)
 			},
+
 			immediate: true,
 		},
+
 		/**
 		 * Push the current detected-entity values to the viewer so it can
 		 * highlight them in the rendered document (T09). Fires on load and
@@ -1127,15 +1166,18 @@ export default {
 			handler(list) {
 				fileViewerStore.setHighlightEntities(list)
 			},
+
 			deep: true,
 			immediate: true,
 		},
 	},
+
 	async created() {
 		// Grondslagen options come from the register (label = name, value = slug),
 		// with a slug fallback on error. See services/bases.js.
 		this.basesOptions = await fetchBaseOptions()
 	},
+
 	methods: {
 		entityTypeLabel,
 		/**
@@ -1154,6 +1196,7 @@ export default {
 				this.prohibitionOpen = true
 			}
 		},
+
 		/**
 		 * Dialog force action: retry the pending skip with force=true. Only
 		 * releases sub-threshold matches; absolute ones are refused again.
@@ -1177,6 +1220,7 @@ export default {
 				this.prohibitionBlock = res.body
 			}
 		},
+
 		/**
 		 * Ensure the store has entities for the currently open file.
 		 * Skips when the entry is already loaded or being loaded.
@@ -1212,6 +1256,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * Anonymise the current entry. Wraps the store action so the
 		 * footer button has a single click handler. On success, attach
@@ -1249,6 +1294,7 @@ export default {
 				await myDocumentsStore.fetchDocuments()
 			}
 		},
+
 		/**
 		 * Re-open the current (already-anonymised) file's source for another
 		 * anonymisation run. Delegates to the store, which re-extracts the
@@ -1269,6 +1315,7 @@ export default {
 				this.reanonymising = false
 			}
 		},
+
 		/**
 		 * Anonymise every extracted file in the current dossier in one action.
 		 * The dossier sidebar variant of `onAnonymise` — scopes the run to this
@@ -1305,6 +1352,7 @@ export default {
 			// refresh so the results show up without leaving and re-entering.
 			await myDocumentsStore.fetchDocuments()
 		},
+
 		/**
 		 * Build the WebDAV download URL for an anonymised result path. Mirrors
 		 * the per-file `downloadUrl` computed: strip the leading `.../files/`
@@ -1330,6 +1378,7 @@ export default {
 			}
 			return generateRemoteUrl('webdav')
 		},
+
 		/**
 		 * Download every anonymised result in the dossier as a single zip.
 		 *
@@ -1392,6 +1441,7 @@ export default {
 				this.zipping = false
 			}
 		},
+
 		/**
 		 * Export (download) the single anonymised file currently open.
 		 *
@@ -1431,6 +1481,7 @@ export default {
 				this.exporting = false
 			}
 		},
+
 		/**
 		 * Pick a collision-free entry name for the zip. Anonymised results can
 		 * share a file name across the dossier, which would otherwise overwrite
@@ -1457,6 +1508,7 @@ export default {
 			used.add(name)
 			return name
 		},
+
 		/**
 		 * Save a Blob to disk via a transient object-URL anchor.
 		 *
@@ -1473,6 +1525,7 @@ export default {
 			document.body.removeChild(link)
 			URL.revokeObjectURL(url)
 		},
+
 		/**
 		 * Enter the "Add new data" panel: switch the viewer into add mode so
 		 * text selection drives a pending highlight, and reset the form.
@@ -1483,6 +1536,7 @@ export default {
 			this.resetNewEntityForm()
 			fileViewerStore.setAddMode(true)
 		},
+
 		/**
 		 * Leave the adding process without adding — back to the review list.
 		 * `setAddMode(false)` also clears the pending selection.
@@ -1493,6 +1547,7 @@ export default {
 			fileViewerStore.setAddMode(false)
 			this.resetNewEntityForm()
 		},
+
 		/**
 		 * Reset the add-entity form fields.
 		 *
@@ -1503,6 +1558,7 @@ export default {
 			this.newBases = []
 			this.saveError = null
 		},
+
 		/**
 		 * Add the current selection as a new manual entity via the store.
 		 * Persists it, prepends it to the list, then closes the adding process

@@ -10,18 +10,23 @@ import {
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 
-const blankForm = () => ({
-	primaryName: '',
-	entityType: 'PERSON',
-	reason: '',
-	legalAuthority: '',
-	caseReference: '',
-	severity: 'medium', // matches the publicationProhibition.severity default in docudesk_register.json
-	jurisdiction: '',
-	validUntil: '',
-	active: true,
-	matchRules: [],
-})
+/**
+ *
+ */
+function blankForm() {
+	return {
+		primaryName: '',
+		entityType: 'PERSON',
+		reason: '',
+		legalAuthority: '',
+		caseReference: '',
+		severity: 'medium', // matches the publicationProhibition.severity default in docudesk_register.json
+		jurisdiction: '',
+		validUntil: '',
+		active: true,
+		matchRules: [],
+	}
+}
 
 export default {
 	name: 'ProhibitionFormModal',
@@ -34,12 +39,14 @@ export default {
 		NcTextField,
 		Delete,
 	},
+
 	props: {
 		open: { type: Boolean, required: true },
 		editingRecord: { type: Object, default: null },
 		saving: { type: Boolean, default: false },
 		formError: { type: String, default: '' },
 	},
+
 	emits: ['update:open', 'submit', 'cancel'],
 	data() {
 		return {
@@ -53,15 +60,18 @@ export default {
 			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
+
 	computed: {
 		editing() {
 			return this.editingRecord !== null
 		},
+
 		dialogTitle() {
 			return this.editing
 				? t('docudesk', 'Edit publish-never rule')
 				: t('docudesk', 'Add publish-never rule')
 		},
+
 		canSubmit() {
 			return (
 				this.form.primaryName.trim() !== ''
@@ -70,6 +80,7 @@ export default {
 				&& this.form.matchRules.every((r) => r.type && r.value !== '')
 			)
 		},
+
 		onlyNameRules() {
 			if (this.form.matchRules.length === 0) {
 				return false
@@ -79,6 +90,7 @@ export default {
 			)
 		},
 	},
+
 	watch: {
 		open(now) {
 			if (now) {
@@ -86,6 +98,7 @@ export default {
 			}
 		},
 	},
+
 	methods: {
 		t,
 		resetForm() {
@@ -101,18 +114,22 @@ export default {
 				this.form = blankForm()
 			}
 		},
+
 		addRule() {
 			this.form.matchRules.push({ type: 'exact', value: '' })
 		},
+
 		removeRule(idx) {
 			this.form.matchRules.splice(idx, 1)
 		},
+
 		submit() {
 			this.$emit('submit', {
 				...this.form,
 				matchRules: this.form.matchRules.map((r) => ({ ...r })),
 			})
 		},
+
 		onCancel() {
 			this.$emit('update:open', false)
 			this.$emit('cancel')
@@ -136,7 +153,7 @@ export default {
 			<NcSelect
 				v-model="form.entityType"
 				:options="entityTypeOptions"
-				:input-label="t('docudesk', 'Entity type')"
+				:inputLabel="t('docudesk', 'Entity type')"
 				:label="t('docudesk', 'Entity type')"
 				required />
 			<NcTextField
@@ -146,7 +163,7 @@ export default {
 			<NcTextField
 				v-model="form.legalAuthority"
 				:label="
-					t('docudesk', 'Legal authority (court order, statute, …)')
+					t('docudesk', 'Legal authority (court order, statute, …)')
 				" />
 			<NcTextField
 				v-model="form.caseReference"
@@ -154,7 +171,7 @@ export default {
 			<NcSelect
 				v-model="form.severity"
 				:options="severityOptions"
-				:input-label="t('docudesk', 'Severity')"
+				:inputLabel="t('docudesk', 'Severity')"
 				:label="t('docudesk', 'Severity')" />
 			<NcTextField
 				v-model="form.jurisdiction"
@@ -182,7 +199,7 @@ export default {
 				<NcSelect
 					v-model="rule.type"
 					:options="matchTypeOptions"
-					:input-label="t('docudesk', 'Match type')"
+					:inputLabel="t('docudesk', 'Match type')"
 					:label="t('docudesk', 'Match type')" />
 				<NcTextField
 					v-model="rule.value"

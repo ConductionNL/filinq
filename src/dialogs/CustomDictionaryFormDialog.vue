@@ -7,7 +7,6 @@
 	CustomDictionaryDetail (edit) — ADR-004 gate-13, own file, not inline.
 -->
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -16,14 +15,20 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
-const blankForm = () => ({
-	label: '',
-	description: '',
-	colour: '#0082C9',
-	matchMode: 'caseInsensitive',
-	active: true,
-})
+/**
+ *
+ */
+function blankForm() {
+	return {
+		label: '',
+		description: '',
+		colour: '#0082C9',
+		matchMode: 'caseInsensitive',
+		active: true,
+	}
+}
 
 export default {
 	name: 'CustomDictionaryFormDialog',
@@ -35,11 +40,13 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		editingRecord: { type: Object, default: null },
 		saving: { type: Boolean, default: false },
 		formError: { type: String, default: '' },
 	},
+
 	emits: ['submit', 'cancel'],
 	data() {
 		return {
@@ -59,22 +66,27 @@ export default {
 			],
 		}
 	},
+
 	computed: {
 		editing() {
 			return this.editingRecord !== null
 		},
+
 		dialogTitle() {
 			return this.editing
 				? t('docudesk', 'Edit dictionary')
 				: t('docudesk', 'Add custom dictionary')
 		},
+
 		canSubmit() {
 			return this.form.label.trim() !== ''
 		},
 	},
+
 	created() {
 		this.resetForm()
 	},
+
 	methods: {
 		t,
 		resetForm() {
@@ -82,10 +94,12 @@ export default {
 				? { ...blankForm(), ...this.editingRecord }
 				: blankForm()
 		},
+
 		submit() {
 			if (!this.canSubmit) return
 			this.$emit('submit', { ...this.form })
 		},
+
 		onCancel() {
 			this.$emit('cancel')
 		},
@@ -144,7 +158,7 @@ export default {
 				label="label"
 				:reduce="(o) => o.value"
 				:clearable="false"
-				:input-label="t('docudesk', 'Match mode')"
+				:inputLabel="t('docudesk', 'Match mode')"
 				required />
 			<p class="custom-dictionary-form__hint">
 				{{

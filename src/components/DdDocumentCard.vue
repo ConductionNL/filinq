@@ -1,6 +1,6 @@
 <script setup>
-import { translate as t } from '@nextcloud/l10n'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import dossierIcon from '../assets/dossier.png'
 import singleFileIcon from '../assets/single-file.png'
@@ -19,12 +19,12 @@ import singleFileIcon from '../assets/single-file.png'
 		<NcCheckboxRadioSwitch
 			v-if="selectable"
 			class="dd-document-card__select"
-			:model-value="selected"
+			:modelValue="selected"
 			:aria-label="t('docudesk', 'Select')"
 			@update:modelValue="$emit('toggle-select', item)"
 			@click.stop />
 		<figure class="dd-document-card__icon">
-			<img :src="iconSrc" :alt="''" class="dd-document-card__icon-img" />
+			<img :src="iconSrc" alt="" class="dd-document-card__icon-img" />
 		</figure>
 		<div class="dd-document-card__title" :title="displayName">
 			{{ displayName }}
@@ -32,7 +32,7 @@ import singleFileIcon from '../assets/single-file.png'
 		<div class="dd-document-card__date">
 			{{ formattedDate }}
 		</div>
-		<CnStatusBadge :label="pillLabel" :color-map="pillColorMap" />
+		<CnStatusBadge :label="pillLabel" :colorMap="pillColorMap" />
 	</article>
 </template>
 
@@ -57,17 +57,20 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/** Show the bulk-selection checkbox in the top-left corner. */
 		selectable: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Whether this card's item is currently selected. */
 		selected: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['click', 'toggle-select'],
 	data() {
 		return {
@@ -82,6 +85,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Asset icon source — dossier.png for folders, single-file.png
@@ -93,6 +97,7 @@ export default {
 		iconSrc() {
 			return this.item.isFolder ? this.dossierIconSrc : this.singleFileIconSrc
 		},
+
 		/**
 		 * Filename with the trailing extension stripped, so the title
 		 * stays scannable. Folders keep their full name.
@@ -103,6 +108,7 @@ export default {
 			const name = this.item.fileName || ''
 			return this.item.isFolder ? name : name.replace(/\.[^./]+$/, '')
 		},
+
 		/**
 		 * Pill label for the kind of document. Mirrors the labels used
 		 * by `MyDocumentsIndex` so the color map stays consistent.
@@ -114,6 +120,7 @@ export default {
 			if (this.item.isAnonymized) return t('docudesk', 'Anonymized')
 			return t('docudesk', 'Concept')
 		},
+
 		/**
 		 * DD-MM-YYYY for the date row. Accepts unix seconds or ISO strings;
 		 * returns '-' for missing values.
@@ -130,6 +137,7 @@ export default {
 			const yyyy = d.getFullYear()
 			return `${dd}-${mm}-${yyyy}`
 		},
+
 		/**
 		 * Accessible label combining kind + name for screen readers.
 		 *

@@ -62,10 +62,10 @@
 </template>
 
 <script>
-import { NcButton, NcNoteCard } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcNoteCard } from '@nextcloud/vue'
 import { useSigningStore } from '../../store/modules/signing.js'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'SigningRequestForm',
@@ -81,6 +81,7 @@ export default {
 			},
 		}
 	},
+
 	methods: {
 		t,
 		/**

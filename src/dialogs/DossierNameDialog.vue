@@ -1,19 +1,19 @@
 <template>
 	<NcDialog
 		:name="t('docudesk', 'Create dossier')"
-		:can-close="!submitting"
+		:canClose="!submitting"
 		size="normal"
 		@closing="$emit('cancel')">
 		<div class="dossier-dialog">
 			<NcTextField
 				ref="dossierInput"
-				:model-value="modelValue"
+				:modelValue="modelValue"
 				:label="t('docudesk', 'Dossier name')"
 				:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
 				:disabled="submitting"
 				:error="!!error"
-				:helper-text="error"
-				@update:model-value="$emit('update:modelValue', $event)"
+				:helperText="error"
+				@update:modelValue="$emit('update:modelValue', $event)"
 				@keyup.enter="$emit('confirm')" />
 			<NcNoteCard type="info">
 				{{
@@ -75,6 +75,7 @@ export default {
 		NcNoteCard,
 		NcTextField,
 	},
+
 	props: {
 		/**
 		 * The dossier name being typed. Empty means "keep the files separate".
@@ -83,6 +84,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * True while the parent's upload is in flight — locks the inputs and
 		 * suppresses closing so a half-finished upload cannot be abandoned.
@@ -91,6 +93,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/**
 		 * Upload error to surface on the name field. Empty means no error.
 		 */
@@ -99,6 +102,7 @@ export default {
 			default: '',
 		},
 	},
+
 	emits: ['update:modelValue', 'confirm', 'cancel'],
 	/**
 	 * Focus the dossier-name field as the dialog appears.
@@ -113,6 +117,7 @@ export default {
 			this.$refs.dossierInput?.focus?.()
 		})
 	},
+
 	methods: {
 		t,
 	},

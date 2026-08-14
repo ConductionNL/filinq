@@ -52,8 +52,8 @@
 </template>
 
 <script>
-import { NcLoadingIcon, NcEmptyContent } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {

@@ -40,6 +40,7 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		/** Optional sub-line shown below the title. */
 		description: {
 			type: String,

@@ -103,12 +103,12 @@
 					<td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
 						<NcSelect
-							:model-value="item.e._decisionBases || []"
+							:modelValue="item.e._decisionBases || []"
 							:options="basesOptions"
 							label="label"
 							:reduce="(o) => o.value"
 							:multiple="true"
-							:input-label="t('docudesk', 'Grondslagen')"
+							:inputLabel="t('docudesk', 'Grondslagen')"
 							:placeholder="t('docudesk', 'Pick grondslagen…')"
 							:disabled="
 								!Array.isArray(item.e.relationIds)
@@ -142,7 +142,7 @@
 									entity: item.e.value,
 								})
 							"
-							:model-value="!!item.e._decisionSkip"
+							:modelValue="!!item.e._decisionSkip"
 							:disabled="
 								!Array.isArray(item.e.relationIds)
 								|| item.e.relationIds.length === 0
@@ -163,13 +163,14 @@
 			@force="onForceSkip" />
 	</div>
 </template>
+
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
-import { entityTypeLabel } from '../../services/entityTypes.js'
 import ProhibitionBlockedDialog from '../../dialogs/ProhibitionBlockedDialog.vue'
-import { anonymizationStore } from '../../store/store.js'
 import { fetchBaseOptions } from '../../services/bases.js'
+import { entityTypeLabel } from '../../services/entityTypes.js'
+import { anonymizationStore } from '../../store/store.js'
 
 export default {
 	name: 'EntityReviewTable',
@@ -179,6 +180,7 @@ export default {
 		NcSelect,
 		ProhibitionBlockedDialog,
 	},
+
 	props: {
 		entities: { type: Array, required: true },
 		fileCount: { type: Number, default: 0 },
@@ -187,6 +189,7 @@ export default {
 		// visible entity's _decisionBases gets set to this list.
 		defaultBases: { type: Array, default: () => [] },
 	},
+
 	emits: [
 		'toggle',
 		'bulk-select',
@@ -195,6 +198,7 @@ export default {
 		'skip-change',
 		'confidence-change',
 	],
+
 	data() {
 		return {
 			searchQuery: '',
@@ -207,6 +211,7 @@ export default {
 			pendingSkipIdx: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Count of entities currently included for anonymization.
@@ -216,6 +221,7 @@ export default {
 		selectedCount() {
 			return this.entities.filter((e) => e.included).length
 		},
+
 		/**
 		 * Distinct sorted list of entity types for the type filter dropdown.
 		 *
@@ -224,6 +230,7 @@ export default {
 		availableTypes() {
 			return [...new Set(this.entities.map((e) => e.type))].sort()
 		},
+
 		/**
 		 * Entities filtered by search query and type, then sorted.
 		 *
@@ -249,11 +256,13 @@ export default {
 				})
 		},
 	},
+
 	async created() {
 		// Grondslagen options come from the register (label = name, value = slug),
 		// with a slug fallback on error. See services/bases.js.
 		this.basesOptions = await fetchBaseOptions()
 	},
+
 	methods: {
 		t,
 		entityTypeLabel,
@@ -265,6 +274,7 @@ export default {
 				this.sa = false
 			}
 		},
+
 		onBasesChange(idx, value) {
 			const entity = this.entities[idx]
 			if (!entity) {
@@ -272,6 +282,7 @@ export default {
 			}
 			this.persistBases(entity, Array.isArray(value) ? value : [])
 		},
+
 		// Persist a bases change on every relation immediately (bases are never
 		// prohibition-guarded); skipAnonymization is left at its current value.
 		persistBases(entity, bases) {
@@ -307,10 +318,12 @@ export default {
 				return { ok: true, status: 200, body: {} }
 			})
 		},
+
 		// The "included" checkbox is the skip control: unchecking = skip.
 		onIncludedChange(idx, checked) {
 			return this.onSkipChange(idx, !checked)
 		},
+
 		async onSkipChange(idx, checked) {
 			const entity = this.entities[idx]
 			if (!entity) {
@@ -323,6 +336,7 @@ export default {
 				this.blockOpen = true
 			}
 		},
+
 		// Persist one entity's skip/include across all its relations through
 		// the guarded endpoint; only mutate local state on success so a blocked
 		// skip leaves the toggle reverted.
@@ -356,6 +370,7 @@ export default {
 				return { ok: true, status: 200, body: {} }
 			})
 		},
+
 		// Dialog force action: retry the pending skip with force=true.
 		onForceSkip() {
 			const idx = this.pendingSkipIdx
@@ -369,6 +384,7 @@ export default {
 				}
 			})
 		},
+
 		applyDefaultBasesToVisible() {
 			const visibleIdx = this.filteredEntities.map((i) => i.idx)
 			for (const idx of visibleIdx) {
@@ -378,6 +394,7 @@ export default {
 	},
 }
 </script>
+
 <style scoped>
 .entity-review {
 	margin: 16px 0;

@@ -59,10 +59,10 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcEmptyContent } from '@nextcloud/vue'
-import { translate as t } from '@nextcloud/l10n'
-import { useSigningStore } from '../../store/modules/signing.js'
 import { showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
 	name: 'BulkSigningPanel',
@@ -70,6 +70,7 @@ export default {
 	data() {
 		return { selected: [] }
 	},
+
 	computed: {
 		/**
 		 * Pinia signing store accessor for the bulk-signing panel.
@@ -79,6 +80,7 @@ export default {
 		signingStore() {
 			return useSigningStore()
 		},
+
 		/**
 		 * Requests eligible for bulk signing (PENDING or IN_PROGRESS).
 		 *
@@ -90,9 +92,11 @@ export default {
 			)
 		},
 	},
+
 	mounted() {
 		this.signingStore.fetchSigningRequests()
 	},
+
 	methods: {
 		t,
 		/**
@@ -109,6 +113,7 @@ export default {
 				this.selected.splice(idx, 1)
 			}
 		},
+
 		/**
 		 * Submit the selected requests for batch signing.
 		 *

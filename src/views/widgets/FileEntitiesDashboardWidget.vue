@@ -1,7 +1,7 @@
 <script setup>
+import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 </script>
 
 <template>
@@ -106,12 +106,14 @@ export default {
 		NcLoadingIcon,
 		FileDocumentOutline,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			files: [],
@@ -119,6 +121,7 @@ export default {
 			error: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Deep link to the DocuDesk app from the widget footer.
@@ -129,9 +132,11 @@ export default {
 			return generateUrl('/apps/docudesk')
 		},
 	},
+
 	mounted() {
 		this.fetchFiles()
 	},
+
 	methods: {
 		/**
 		 * Fetch the processed-file list with risk assessment for the widget.
@@ -153,6 +158,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Build a Files-app link to a processed file.
 		 *
@@ -176,6 +182,7 @@ export default {
 			}
 			return generateUrl('/apps/files')
 		},
+
 		/**
 		 * Localized label for a file's personal-data risk level.
 		 *
@@ -192,6 +199,7 @@ export default {
 			}
 			return labels[level] || labels.none
 		},
+
 		/**
 		 * Localized label for a file's processing status.
 		 *

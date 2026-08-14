@@ -51,16 +51,19 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Show a loading spinner instead of the grid. */
 		loading: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Property name used as unique identifier (and Vue list key). */
 		rowKey: {
 			type: String,
 			default: 'id',
 		},
+
 		/** Text shown when objects is empty and not loading. */
 		emptyText: {
 			type: String,

@@ -8,7 +8,7 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<div class="validation-findings">
 		<div class="validation-findings__header">
-			<CnStatusBadge :label="verdictLabel" :color-map="colorMap" />
+			<CnStatusBadge :label="verdictLabel" :colorMap="colorMap" />
 		</div>
 
 		<ul v-if="findings.length > 0" class="validation-findings__list">
@@ -48,6 +48,7 @@ export default {
 		status: { type: String, default: '' },
 		findings: { type: Array, default: () => [] },
 	},
+
 	computed: {
 		/**
 		 * Localised verdict label for the status chip.
@@ -67,6 +68,7 @@ export default {
 					return t('docudesk', 'Not yet validated')
 			}
 		},
+
 		/**
 		 * Colour-map for the status chip keyed by the verdict label.
 		 *
@@ -77,6 +79,7 @@ export default {
 			return { [this.verdictLabel]: verdictColor(this.status) }
 		},
 	},
+
 	methods: {
 		/**
 		 * Human-readable label for a finding's check id.
@@ -96,6 +99,7 @@ export default {
 			}
 			return map[finding.checkId] || finding.checkId
 		},
+
 		/**
 		 * Translate a finding's English source message + interpolate its
 		 * (non-content) placeholder params.

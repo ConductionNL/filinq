@@ -77,10 +77,10 @@ import {
 		<!-- Upload dialog (single document or dossier) — src/dialogs/ per ADR-004 -->
 		<AnonymizationUploadDialog
 			v-if="showDossierDialog"
-			v-model:dossier-name="dossierName"
+			v-model:dossierName="dossierName"
 			v-model:grondslagen="grondslagen"
-			:single-file="isSingleFile"
-			:file-name="singleFileName"
+			:singleFile="isSingleFile"
+			:fileName="singleFileName"
 			:submitting="dossierSubmitting"
 			:error="dossierError"
 			@confirm="confirmDossier"
@@ -89,11 +89,11 @@ import {
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
-import AnonymizationUploadDialog from '../../dialogs/AnonymizationUploadDialog.vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
+import AnonymizationUploadDialog from '../../dialogs/AnonymizationUploadDialog.vue'
 import uploadIcon from '../../assets/upload.png'
 import { partitionFiles } from '../../services/anonymizationUpload.js'
 
@@ -108,6 +108,7 @@ export default {
 		NcLoadingIcon,
 		DdDocumentCard,
 	},
+
 	data() {
 		return {
 			isDragging: false,
@@ -122,6 +123,7 @@ export default {
 			recentLoading: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * Display name of the currently logged-in Nextcloud user.
@@ -132,6 +134,7 @@ export default {
 			const user = getCurrentUser()
 			return user?.displayName || user?.uid || ''
 		},
+
 		/**
 		 * Time-of-day greeting interpolated with the user's display name.
 		 *
@@ -151,6 +154,7 @@ export default {
 			}
 			return t('docudesk', 'Good evening {name},', { name: this.userName })
 		},
+
 		/**
 		 * Whether the upload modal is showing a single document (no dossier).
 		 *
@@ -159,6 +163,7 @@ export default {
 		isSingleFile() {
 			return this.pendingFiles.length === 1
 		},
+
 		/**
 		 * Filename of the single pending file, shown read-only in the modal.
 		 *
@@ -168,9 +173,11 @@ export default {
 			return this.pendingFiles[0]?.name || ''
 		},
 	},
+
 	mounted() {
 		this.loadRecent()
 	},
+
 	methods: {
 		/**
 		 * Fetch the most-recent anonymized files and dossier folders under
@@ -190,6 +197,7 @@ export default {
 				this.recentLoading = false
 			}
 		},
+
 		/**
 		 * Open a recent item: dossier folder → navigate to that folder in
 		 * My Documents; anonymized file → open in the file viewer + route
@@ -220,6 +228,7 @@ export default {
 			})
 			this.gotoViewer()
 		},
+
 		/**
 		 * Drop handler for the drag-and-drop zone.
 		 * Delegates to dispatchFiles so the dossier-dialog logic applies.
@@ -237,6 +246,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * Change handler for the hidden file input.
 		 * Resets the input value so the same file(s) can be picked again.
@@ -254,6 +264,7 @@ export default {
 			}
 			event.target.value = ''
 		},
+
 		/**
 		 * Drop files whose extension/MIME isn't in the supported set.
 		 * Surfaces a toast naming each rejected file so the user knows why
@@ -276,6 +287,7 @@ export default {
 			}
 			return accepted
 		},
+
 		/**
 		 * Always open the upload modal so the user confirms the grondslagen
 		 * choice before anonymization, regardless of file count:
@@ -293,6 +305,7 @@ export default {
 			}
 			this.openDossierDialog(files)
 		},
+
 		/**
 		 * Route to the file-viewer host page when not already there.
 		 * Hash-mode router throws NavigationDuplicated if we push the same
@@ -308,6 +321,7 @@ export default {
 				/* duplicate nav */
 			})
 		},
+
 		/**
 		 * Open the upload dialog with a fresh state: empty dossier name,
 		 * grondslagen defaulting to AAN. AnonymizationUploadDialog focuses
@@ -323,6 +337,7 @@ export default {
 			this.grondslagen = true
 			this.showDossierDialog = true
 		},
+
 		/**
 		 * Confirm handler for the dossier dialog. With a title the files are
 		 * grouped into a new dossier folder and bound to OpenRegister; with
@@ -391,6 +406,7 @@ export default {
 				this.dossierSubmitting = false
 			}
 		},
+
 		/**
 		 * Cancel handler — ignored while a submit is in flight to avoid
 		 * leaving the store in a half-created state.
@@ -399,6 +415,7 @@ export default {
 			if (this.dossierSubmitting) return
 			this.closeDossierDialog()
 		},
+
 		/** Reset all dialog state back to its initial values. */
 		closeDossierDialog() {
 			this.showDossierDialog = false

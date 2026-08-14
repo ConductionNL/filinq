@@ -1,7 +1,7 @@
 <template>
 	<NcDialog
 		:name="dialogName"
-		:can-close="!submitting"
+		:canClose="!submitting"
 		size="normal"
 		@closing="$emit('cancel')">
 		<div class="dossier-dialog">
@@ -19,13 +19,13 @@
 			<template v-else>
 				<NcTextField
 					ref="dossierInput"
-					:model-value="dossierName"
+					:modelValue="dossierName"
 					:label="t('docudesk', 'Dossier name')"
 					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
 					:disabled="submitting"
 					:error="!!error"
-					:helper-text="error"
-					@update:model-value="$emit('update:dossierName', $event)"
+					:helperText="error"
+					@update:modelValue="$emit('update:dossierName', $event)"
 					@keyup.enter="$emit('confirm')" />
 				<NcNoteCard type="info">
 					{{
@@ -39,10 +39,10 @@
 
 			<!-- Grondslagen toggle: drives whether entities are editable in the viewer -->
 			<NcCheckboxRadioSwitch
-				:model-value="grondslagen"
+				:modelValue="grondslagen"
 				type="switch"
 				:disabled="submitting"
-				@update:model-value="$emit('update:grondslagen', $event)">
+				@update:modelValue="$emit('update:grondslagen', $event)">
 				{{ t('docudesk', 'Establish legal grounds (grondslagen)') }}
 			</NcCheckboxRadioSwitch>
 			<NcNoteCard type="info">
@@ -109,6 +109,7 @@ export default {
 		NcNoteCard,
 		NcTextField,
 	},
+
 	props: {
 		/**
 		 * True when exactly one document was picked — no dossier name is asked.
@@ -117,6 +118,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/**
 		 * Name of that single document. Ignored unless `singleFile` is true.
 		 */
@@ -124,6 +126,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * The dossier title being typed. Empty means "keep them separate".
 		 */
@@ -131,6 +134,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Whether the user wants to establish legal grounds per entity.
 		 */
@@ -138,6 +142,7 @@ export default {
 			type: Boolean,
 			default: true,
 		},
+
 		/**
 		 * True while the parent's upload is in flight — locks the inputs and
 		 * suppresses closing so a half-finished upload cannot be abandoned.
@@ -146,6 +151,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/**
 		 * Upload error to surface. Empty means no error.
 		 */
@@ -154,6 +160,7 @@ export default {
 			default: '',
 		},
 	},
+
 	emits: ['update:dossierName', 'update:grondslagen', 'confirm', 'cancel'],
 	computed: {
 		/**
@@ -168,6 +175,7 @@ export default {
 				: t('docudesk', 'Create dossier')
 		},
 	},
+
 	/**
 	 * Focus the dossier-name field as the dialog appears.
 	 *
@@ -182,6 +190,7 @@ export default {
 			this.$refs.dossierInput?.focus?.()
 		})
 	},
+
 	methods: {
 		t,
 	},

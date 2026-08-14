@@ -20,14 +20,14 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import { fetchFileAsArrayBuffer } from '../../services/fileViewerService.js'
-import { fileViewerStore } from '../../store/store.js'
 import {
 	applyDomHighlights,
 	clearDomHighlights,
 } from '../../services/highlightDom.js'
+import { fileViewerStore } from '../../store/store.js'
 
 let mammothPromise = null
 
@@ -49,12 +49,14 @@ export default {
 	components: {
 		NcLoadingIcon,
 	},
+
 	props: {
 		path: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -62,6 +64,7 @@ export default {
 			html: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * Entities the sidebar asked to mark in the document. Read through a
@@ -72,6 +75,7 @@ export default {
 		highlightEntities() {
 			return fileViewerStore.highlightEntities || []
 		},
+
 		/**
 		 * Pending selection to mark distinctly — only while in add mode.
 		 *
@@ -80,6 +84,7 @@ export default {
 		pendingValue() {
 			return fileViewerStore.addMode ? fileViewerStore.selection || '' : ''
 		},
+
 		/**
 		 * Whether the viewer is in add mode — drives the marking (highlighter)
 		 * cursor so it is obvious the user can select text to add an entity.
@@ -90,6 +95,7 @@ export default {
 			return fileViewerStore.addMode
 		},
 	},
+
 	watch: {
 		path: {
 			immediate: true,
@@ -97,19 +103,23 @@ export default {
 				this.load()
 			},
 		},
+
 		highlightEntities: {
 			deep: true,
 			handler() {
 				this.scheduleHighlights()
 			},
 		},
+
 		pendingValue() {
 			this.scheduleHighlights()
 		},
 	},
+
 	beforeUnmount() {
 		clearDomHighlights(this.$refs.content)
 	},
+
 	methods: {
 		/**
 		 * Fetch the docx as ArrayBuffer and convert it to HTML via mammoth.
@@ -145,6 +155,7 @@ export default {
 				this.scheduleHighlights()
 			}
 		},
+
 		/**
 		 * Re-apply the entity highlights after the DOM has rendered the latest
 		 * mammoth HTML / store change.
@@ -160,6 +171,7 @@ export default {
 				)
 			})
 		},
+
 		/**
 		 * Push the current text selection into the viewer store so future
 		 * features (e.g. "send selection to anonymisation") can pick it up.

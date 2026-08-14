@@ -21,14 +21,14 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import {
 	fetchFileAsArrayBuffer,
 	fetchUrlAsArrayBuffer,
 } from '../../services/fileViewerService.js'
-import { fileViewerStore } from '../../store/store.js'
 import { applyDomHighlights } from '../../services/highlightDom.js'
+import { fileViewerStore } from '../../store/store.js'
 
 let pdfjsLibPromise = null
 
@@ -59,11 +59,13 @@ export default {
 	components: {
 		NcLoadingIcon,
 	},
+
 	props: {
 		path: {
 			type: String,
 			required: true,
 		},
+
 		// Optional: fetch the PDF bytes from this URL instead of deriving a
 		// WebDAV URL from `path`. Used for server-rendered content that isn't a
 		// plain file — e.g. the EML original preview endpoint.
@@ -72,6 +74,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -81,6 +84,7 @@ export default {
 			pageRefs: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * Entities the sidebar asked to mark in the document. Read through a
@@ -91,6 +95,7 @@ export default {
 		highlightEntities() {
 			return fileViewerStore.highlightEntities || []
 		},
+
 		/**
 		 * Pending selection to mark distinctly — only while in add mode.
 		 *
@@ -99,6 +104,7 @@ export default {
 		pendingValue() {
 			return fileViewerStore.addMode ? fileViewerStore.selection || '' : ''
 		},
+
 		/**
 		 * Whether the viewer is in add mode — drives the marking (highlighter)
 		 * cursor so it is obvious the user can select text to add an entity.
@@ -109,6 +115,7 @@ export default {
 			return fileViewerStore.addMode
 		},
 	},
+
 	watch: {
 		path: {
 			immediate: true,
@@ -116,25 +123,30 @@ export default {
 				this.load()
 			},
 		},
+
 		url() {
 			this.load()
 		},
+
 		highlightEntities: {
 			deep: true,
 			handler() {
 				this.scheduleHighlights()
 			},
 		},
+
 		pendingValue() {
 			this.scheduleHighlights()
 		},
 	},
+
 	beforeUnmount() {
 		if (this.pdfDoc) {
 			this.pdfDoc.destroy()
 			this.pdfDoc = null
 		}
 	},
+
 	methods: {
 		/**
 		 * Store a ref to each page wrapper so we can render into it once pdfjs
@@ -149,6 +161,7 @@ export default {
 				this.pageRefs[page] = el
 			}
 		},
+
 		/**
 		 * Fetch the PDF, parse it, then render every page sequentially.
 		 *
@@ -178,6 +191,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Render one page at a fixed CSS scale and overlay a text layer so the
 		 * user can select text (and we can hand the selection off to anonymisation later).
@@ -246,6 +260,7 @@ export default {
 			// whole document.
 			this.applyHighlightsTo(textLayerDiv)
 		},
+
 		/**
 		 * Re-apply entity highlights to every rendered page after the entity
 		 * list or the pending selection changed. pdfjs spans live outside Vue's
@@ -261,6 +276,7 @@ export default {
 				layers.forEach((layer) => this.applyHighlightsTo(layer))
 			})
 		},
+
 		/**
 		 * Wrap matching entity values inside one page's transparent text layer
 		 * in highlight spans. The spans sit over the canvas glyphs; `multiply`
@@ -277,6 +293,7 @@ export default {
 		applyHighlightsTo(layer) {
 			applyDomHighlights(layer, this.highlightEntities, this.pendingValue)
 		},
+
 		/**
 		 * Push the current text selection into the viewer store so the
 		 * "add selection as entity" flow can pick it up.

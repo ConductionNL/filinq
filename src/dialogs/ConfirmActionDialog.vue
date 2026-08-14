@@ -1,5 +1,5 @@
 <template>
-	<NcDialog :name="name" :can-close="!busy" @closing="$emit('cancel')">
+	<NcDialog :name="name" :canClose="!busy" @closing="$emit('cancel')">
 		<template #default>
 			<p class="confirm-action-dialog__message">
 				{{ message }}
@@ -17,8 +17,8 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 /**
  * Generic "are you sure?" dialog.
@@ -41,32 +41,38 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		/** Body text explaining what is about to happen. */
 		message: {
 			type: String,
 			default: '',
 		},
+
 		/** Label of the confirming button. Defaults to "Delete". */
 		confirmLabel: {
 			type: String,
 			default: '',
 		},
+
 		/** Label of the dismissing button. Defaults to "Cancel". */
 		cancelLabel: {
 			type: String,
 			default: '',
 		},
+
 		/** NcButton variant for the confirming button. */
 		variant: {
 			type: String,
 			default: 'error',
 		},
+
 		/** Disable both buttons while the confirmed action is in flight. */
 		busy: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['confirm', 'cancel'],
 	methods: { t },
 }
