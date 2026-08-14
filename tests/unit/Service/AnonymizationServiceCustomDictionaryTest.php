@@ -67,7 +67,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 	/**
 	 * @var LegalBasisProposalService|MockObject
 	 */
-	private LegalBasisProposalService|MockObject $mockGrondslag;
+	private LegalBasisProposalService|MockObject $mockBasis;
 
 	/**
 	 * Set up shared container wiring for OR's non-custom-dictionary services.
@@ -83,8 +83,8 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 			[['entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen', 'confidence' => 0.95]]
 		);
 
-		$this->mockGrondslag = $this->createMock(LegalBasisProposalService::class);
-		$this->mockGrondslag->method('enrichEntitiesWithBases')->willReturnArgument(0);
+		$this->mockBasis = $this->createMock(LegalBasisProposalService::class);
+		$this->mockBasis->method('enrichEntitiesWithBases')->willReturnArgument(0);
 
 	}//end setUp()
 
@@ -105,7 +105,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 		?ChunkMapper $chunkMapper = null,
 		?GdprEntityMapper $gdprEntityMapper = null,
 	): AnonymizationService {
-		$this->mockGrondslag->method('getEntityTypeWhitelist')->willReturn($whitelist);
+		$this->mockBasis->method('getEntityTypeWhitelist')->willReturn($whitelist);
 
 		$mockExtractor = $this->createMock(TextExtractionService::class);
 
@@ -120,7 +120,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 				}
 
 				if ($class === 'OCA\DocuDesk\Service\LegalBasisProposalService') {
-					return $this->mockGrondslag;
+					return $this->mockBasis;
 				}
 
 				if ($class === 'OCA\OpenRegister\Db\ChunkMapper' && $chunkMapper !== null) {

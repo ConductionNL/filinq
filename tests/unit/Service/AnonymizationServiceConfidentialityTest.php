@@ -104,16 +104,16 @@ class AnonymizationServiceConfidentialityTest extends TestCase {
 			[['entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen', 'confidence' => 0.95]]
 		);
 
-		$mockGrondslag = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
-		$mockGrondslag->method('getEntityTypeWhitelist')->willReturn(null);
-		$mockGrondslag->method('enrichEntitiesWithBases')->willReturnArgument(0);
+		$mockBasis = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
+		$mockBasis->method('getEntityTypeWhitelist')->willReturn(null);
+		$mockBasis->method('enrichEntitiesWithBases')->willReturnArgument(0);
 
 		$this->mockContainer->method('get')->willReturnCallback(
-			function (string $class) use ($mockExtractor, $mockMapper, $mockGrondslag) {
+			function (string $class) use ($mockExtractor, $mockMapper, $mockBasis) {
 				return match ($class) {
 					'OCA\OpenRegister\Service\TextExtractionService' => $mockExtractor,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mockMapper,
-					'OCA\DocuDesk\Service\LegalBasisProposalService' => $mockGrondslag,
+					'OCA\DocuDesk\Service\LegalBasisProposalService' => $mockBasis,
 					'OCA\DocuDesk\Service\PolicyMatchService' => throw new \Exception('PolicyMatchService not registered'),
 					default => throw new \Exception("Unknown service: $class"),
 				};

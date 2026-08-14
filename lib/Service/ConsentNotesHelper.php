@@ -123,9 +123,9 @@ class ConsentNotesHelper {
 		// Pattern matches an optional run of newlines before the begin-sentinel,
 		// then everything up to (and including) the end-sentinel. The `s` flag
 		// (DOTALL) lets `.` cross newline boundaries so multi-line regions match.
-		$begin = preg_quote(str: self::SENTINEL_BEGIN, delimiter: '/');
+		$start = preg_quote(str: self::SENTINEL_BEGIN, delimiter: '/');
 		$end = preg_quote(str: self::SENTINEL_END, delimiter: '/');
-		$pattern = '/\n*' . $begin . '.*?' . $end . '/su';
+		$pattern = '/\n*' . $start . '.*?' . $end . '/su';
 		$result = preg_replace(pattern: $pattern, replacement: '', subject: $notes);
 		return $result ?? $notes;
 	}//end stripSentinelRegion()

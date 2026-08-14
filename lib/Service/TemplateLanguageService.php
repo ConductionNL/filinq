@@ -88,7 +88,7 @@ class TemplateLanguageService {
 			return self::DEFAULT_LANGUAGE;
 		}
 
-		$userLang = $this->config->getUserValue(
+		$userLong = $this->config->getUserValue(
 			userId: $user->getUID(),
 			appName: 'core',
 			key: 'lang',
@@ -96,7 +96,7 @@ class TemplateLanguageService {
 		);
 
 		// Strip region subtag (e.g. 'en_US' → 'en', 'nl_NL' → 'nl').
-		$base = strtolower(explode('_', explode('-', $userLang)[0])[0]);
+		$base = strtolower(explode('_', explode('-', $userLong)[0])[0]);
 
 		if ($base !== '' && in_array($base, self::SUPPORTED_LANGUAGES, strict: true) === true) {
 			return $base;
@@ -186,14 +186,14 @@ class TemplateLanguageService {
 	public function buildAcceptLanguageHeader(string $preferred): string {
 		$others = array_filter(
 			self::SUPPORTED_LANGUAGES,
-			static fn ($lang) => $lang !== $preferred
+			static fn ($long) => $long !== $preferred
 		);
 
 		$parts = [$preferred];
 		$quality = 0.9;
 
-		foreach ($others as $lang) {
-			$parts[] = sprintf('%s;q=%.1f', $lang, $quality);
+		foreach ($others as $long) {
+			$parts[] = sprintf('%s;q=%.1f', $long, $quality);
 			$quality -= 0.1;
 		}
 

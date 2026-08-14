@@ -214,7 +214,7 @@ class DocumentService {
 			outcome: [
 				'status' => 'generated',
 				'warnings' => $warnings,
-				'zaakId' => ($options['zaakId'] ?? null),
+				'caseId' => ($options['caseId'] ?? null),
 				'errorMessage' => null,
 				'fileId' => $stored['fileId'],
 				'filePath' => $stored['path'],
@@ -716,7 +716,7 @@ class DocumentService {
 					outcome: [
 						'status' => 'failed',
 						'warnings' => [],
-						'zaakId' => null,
+						'caseId' => null,
 						'errorMessage' => $e->getMessage(),
 						'fileId' => null,
 						'filePath' => null,
