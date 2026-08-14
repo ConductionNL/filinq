@@ -1576,6 +1576,17 @@ interface IDBConnection {
 	public function prepare(string $sql, ?int $limit = null, ?int $offset = null): mixed;
 	public function executeQuery(string $sql, array $params = [], array $types = []): mixed;
 	public function executeStatement(string $sql, array $params = [], array $types = []): int;
+
+	/**
+	 * The active database platform.
+	 *
+	 * Real OCP declares this and RenameDutchColumns calls it to quote identifiers.
+	 * A stub that omits a method the production code calls does not fail loudly —
+	 * the mock simply has no such method, and the test errors somewhere unrelated.
+	 *
+	 * @return mixed
+	 */
+	public function getDatabasePlatform(): mixed;
 }//end interface
 
 /**
@@ -1804,3 +1815,160 @@ class Task implements \JsonSerializable {
  */
 class FreePromptTaskType {
 }//end class
+
+namespace OCP\DB;
+
+/**
+ * Stub for OCP\DB\Exception.
+ *
+ * The real class extends Doctrine\DBAL\Exception, and this app ships
+ * doctrine/deprecations but not doctrine/dbal — so the real file cannot be
+ * loaded in the serverless unit suite.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Exception extends \RuntimeException {
+}//end class
+
+/**
+ * Stub for OCP\DB\IResult.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IResult {
+	/**
+	 * Close the cursor.
+	 *
+	 * @return bool
+	 */
+	public function closeCursor(): bool;
+
+	/**
+	 * Fetch the next row.
+	 *
+	 * @param int $fetchMode PDO fetch mode.
+	 *
+	 * @return mixed
+	 */
+	public function fetch(int $fetchMode = 2): mixed;
+
+	/**
+	 * Fetch every remaining row.
+	 *
+	 * @param int $fetchMode PDO fetch mode.
+	 *
+	 * @return array<int, mixed>
+	 */
+	public function fetchAll(int $fetchMode = 2): array;
+
+	/**
+	 * Fetch the first column of the next row.
+	 *
+	 * @return mixed
+	 */
+	public function fetchColumn(): mixed;
+
+	/**
+	 * Fetch a single value.
+	 *
+	 * @return mixed
+	 */
+	public function fetchOne(): mixed;
+
+	/**
+	 * Number of rows.
+	 *
+	 * @return int
+	 */
+	public function rowCount(): int;
+}//end interface
+
+/**
+ * Stub for OCP\DB\IPreparedStatement.
+ *
+ * bindValue() drops the real signature's Doctrine ParameterType default; the
+ * type argument is untyped here so nothing in the stub reaches for a package
+ * this app does not ship.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IPreparedStatement {
+	/**
+	 * Close the cursor.
+	 *
+	 * @return bool
+	 */
+	public function closeCursor(): bool;
+
+	/**
+	 * Fetch the next row.
+	 *
+	 * @param int $fetchMode PDO fetch mode.
+	 *
+	 * @return mixed
+	 */
+	public function fetch(int $fetchMode = 2): mixed;
+
+	/**
+	 * Fetch every remaining row.
+	 *
+	 * @param int $fetchMode PDO fetch mode.
+	 *
+	 * @return array<int, mixed>
+	 */
+	public function fetchAll(int $fetchMode = 2): array;
+
+	/**
+	 * Fetch the first column of the next row.
+	 *
+	 * @return mixed
+	 */
+	public function fetchColumn(): mixed;
+
+	/**
+	 * Fetch a single value.
+	 *
+	 * @return mixed
+	 */
+	public function fetchOne(): mixed;
+
+	/**
+	 * Bind a value to a placeholder.
+	 *
+	 * @param mixed $param Placeholder name or position.
+	 * @param mixed $value Value to bind.
+	 * @param mixed $type  Parameter type; untyped here so the stub never reaches
+	 *                     for Doctrine's ParameterType, which this app does not ship.
+	 *
+	 * @return bool
+	 */
+	public function bindValue(mixed $param, mixed $value, mixed $type = null): bool;
+
+	/**
+	 * Execute the statement.
+	 *
+	 * @param mixed $params Optional bound parameters.
+	 *
+	 * @return mixed
+	 */
+	public function execute(mixed $params = null): mixed;
+
+	/**
+	 * Number of affected rows.
+	 *
+	 * @return int
+	 */
+	public function rowCount(): int;
+}//end interface

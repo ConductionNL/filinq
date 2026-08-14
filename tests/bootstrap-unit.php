@@ -49,6 +49,27 @@ if (is_dir($ocpEventDispatcherDir) === true) {
 // CustomDictionaryService (custom-dictionary-recognition) throw/catch the
 // real class so a 404 maps correctly; same "real file, not classmapped"
 // situation as the EventDispatcher contracts above.
+// OCP\DB is deliberately NOT required from vendor/nextcloud/ocp here, unlike the
+// contracts above. Its IPreparedStatement::bindValue() defaults the type
+// argument to Doctrine\DBAL\ParameterType::STRING and OCP\DB\Exception extends
+// a Doctrine base class, but this app ships doctrine/deprecations only — there
+// is no doctrine/dbal in vendor. Loading the real file therefore fails at the
+// moment PHPUnit tries to create the mock, and RenameDutchColumns CATCHES the
+// resulting Throwable, so the failure surfaced as "no shard tables found" —
+// a green-looking no-op. The stubs live in NextcloudStubs.php instead.
+
+// The repair-step contracts the step itself implements are plain interfaces
+// with no Doctrine dependency, so those come from vendor.
+$ocpMigrationDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Migration';
+if (is_dir($ocpMigrationDir) === true) {
+	foreach (['IOutput.php', 'IRepairStep.php'] as $ocpMigrationContract) {
+		$ocpMigrationPath = $ocpMigrationDir . '/' . $ocpMigrationContract;
+		if (is_file($ocpMigrationPath) === true) {
+			require_once $ocpMigrationPath;
+		}
+	}
+}
+
 $ocpDbExceptionDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/AppFramework/Db';
 if (is_dir($ocpDbExceptionDir) === true) {
 	foreach (['IMapperException.php', 'DoesNotExistException.php'] as $ocpDbFile) {
