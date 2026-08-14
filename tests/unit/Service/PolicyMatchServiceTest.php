@@ -19,6 +19,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\PolicyMatchService;
 use OCP\App\IAppManager;
+use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -55,9 +56,9 @@ class PolicyMatchServiceTest extends TestCase {
 
 		$service = new PolicyMatchService(
 			$this->createMock(LoggerInterface::class),
-			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
-			$config
+			$config,
+			$this->createMock(ObjectService::class)
 		);
 
 		// Seed the private rule cache so matching runs without OpenRegister.
@@ -276,7 +277,7 @@ class PolicyMatchServiceTest extends TestCase {
 			->willReturn($fakeObjectService);
 		$config = $this->createMock(IAppConfig::class);
 
-		return new PolicyMatchService($logger, $container, $appMan, $config);
+		return new PolicyMatchService($logger, $appMan, $config, $this->createMock(ObjectService::class));
 	}//end buildService()
 
 	/**

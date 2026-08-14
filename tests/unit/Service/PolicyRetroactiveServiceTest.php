@@ -21,6 +21,7 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\PolicyMatchService;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\DocuDesk\Service\PolicyRetroactiveService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -86,8 +87,8 @@ class PolicyRetroactiveServiceTest extends TestCase {
 	private function makeService(): PolicyRetroactiveService {
 		return new PolicyRetroactiveService(
 			logger: $this->mockLogger,
-			container: $this->mockContainer,
-			policyMatcher: $this->mockPolicyMatcher
+			policyMatcher: $this->mockPolicyMatcher,
+			objectService: $this->createMock(ObjectService::class)
 		);
 
 	}//end makeService()
