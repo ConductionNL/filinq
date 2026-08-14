@@ -46,10 +46,13 @@ use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\Security\Bruteforce\IThrottler;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -59,6 +62,17 @@ use Throwable;
  * @spec openspec/specs/portal-signing-actions/spec.md
  */
 class PortalSigningReceiverController extends Controller {
+	/**
+	 * Brute-force throttler action for rejected portal signing assertions.
+	 *
+	 * One action across sign / decline / viewDocument: they share
+	 * `authoriseAct()`, so a caller must not be able to spread guesses over
+	 * three endpoints to stay under a per-endpoint ceiling.
+	 *
+	 * @var string
+	 */
+	private const THROTTLE_ACTION = 'docudesk_portal_signing_assertion';
+
 	/**
 	 * Minimum eIDAS-aligned portal trust required to act (mirrors
 	 * `PortalContributionProvider::SIGNING_MIN_TRUST` — re-checked here as
@@ -101,6 +115,7 @@ class PortalSigningReceiverController extends Controller {
 		private readonly OpenRegisterResolver $registerResolver,
 		private readonly LoggerInterface $logger,
 		private readonly PortalSigningDocumentResolver $documentResolver,
+		private readonly IThrottler $throttler,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -122,6 +137,8 @@ class PortalSigningReceiverController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 20, period: 60)]
+	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
 	public function signDocument(): JSONResponse {
 		$context = $this->authoriseAct();
 		if ($context instanceof JSONResponse) {
@@ -172,6 +189,8 @@ class PortalSigningReceiverController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 20, period: 60)]
+	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
 	public function declineDocument(): JSONResponse {
 		$context = $this->authoriseAct();
 		if ($context instanceof JSONResponse) {
@@ -217,6 +236,8 @@ class PortalSigningReceiverController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 60, period: 60)]
+	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
 	public function viewDocument(): JSONResponse {
 		$context = $this->authoriseAct();
 		if ($context instanceof JSONResponse) {
@@ -270,6 +291,9 @@ class PortalSigningReceiverController extends Controller {
 		// 1. Verify — the assertion is the ONLY credential (fail-closed 401).
 		$claims = $this->verifier->verify((string)$this->request->getHeader(PortalAssertionVerifier::HEADER));
 		if ($claims === null) {
+			// The assertion is the only credential, so a failed verify is a
+			// presented-secret failure -- exactly what the counter is for.
+			$this->registerRejectedAssertion();
 			return new JSONResponse(['error' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
@@ -478,8 +502,39 @@ class PortalSigningReceiverController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function forbidden(): JSONResponse {
+		// A verified assertion that fails the audience or trust check is still
+		// a rejected credential presentation: the signature held but the claims
+		// did not authorise this act. Counted with the 401s, since an attacker
+		// probing for a usable assertion sees both.
+		$this->registerRejectedAssertion();
 		return new JSONResponse(['error' => 'forbidden'], Http::STATUS_FORBIDDEN);
 	}//end forbidden()
+
+	/**
+	 * Record a rejected assertion with the brute-force throttler.
+	 *
+	 * This is the half that COUNTS. The half that ENFORCES is the
+	 * `#[BruteForceProtection]` attribute on sign / decline / viewDocument —
+	 * `BruteForceMiddleware` only calls `sleepDelayOrThrowOnMax()` when that
+	 * attribute is present, so registering without it writes a counter nothing
+	 * ever reads. Both are required; see ADR-082.
+	 *
+	 * @return void
+	 */
+	private function registerRejectedAssertion(): void {
+		try {
+			$this->throttler->registerAttempt(
+				action: self::THROTTLE_ACTION,
+				ip: $this->request->getRemoteAddress()
+			);
+		} catch (\Throwable $throttlerFailure) {
+			// Never let throttler bookkeeping change a fail-closed 401/403 into
+			// a 500 — the fail-closed answer is the security-relevant one.
+			$this->logger->warning(
+				'PortalSigningReceiverController: registerAttempt failed: ' . $throttlerFailure->getMessage()
+			);
+		}
+	}//end registerRejectedAssertion()
 
 	/**
 	 * Relay a downstream/OpenRegister failure as 502 — never leaking
