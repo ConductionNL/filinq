@@ -46,8 +46,8 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Detection-time policy matcher.
@@ -102,9 +102,9 @@ class PolicyMatchService {
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
+		private readonly ObjectService $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 		private readonly TextNormaliser $textNormaliser = new TextNormaliser(),
 		private readonly PolicyRuleNormaliser $ruleNormaliser = new PolicyRuleNormaliser(),
@@ -389,16 +389,12 @@ class PolicyMatchService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function loadProhibitions(): array {
-		$objectService = $this->container->get(
-			'OCA\OpenRegister\Service\ObjectService'
-		);
-
 		// OR's findAll/searchObjects require NUMERIC register/schema ids and
 		// silently return nothing for slugs; searchObjectsBySlug resolves the
 		// slugs first (same call PolicyCrudService uses for the admin list).
 		// _multitenancy is off so this safety policy is not scoped away by the
 		// active organisation.
-		$result = $objectService->searchObjectsBySlug(
+		$result = $this->objectService->searchObjectsBySlug(
 			registerSlug: 'consent',
 			schemaSlug: 'publicationProhibition',
 			_rbac: false,
@@ -428,10 +424,6 @@ class PolicyMatchService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function loadStandingConsents(): array {
-		$objectService = $this->container->get(
-			'OCA\OpenRegister\Service\ObjectService'
-		);
-
 		// Push the scope filter down to the DB. The schema is shared with
 		// scope=document records, so a naive `findAll(register, schema)` loads
 		// every consent record across every tenant and every file, then
@@ -439,7 +431,7 @@ class PolicyMatchService {
 		// bounds the result to standing-consent rows and lets ObjectService
 		// index on the column. The defensive PHP scope check is retained as
 		// a belt-and-braces in case the filter is later dropped.
-		$result = $objectService->searchObjectsBySlug(
+		$result = $this->objectService->searchObjectsBySlug(
 			registerSlug: 'consent',
 			schemaSlug: 'publicationConsent',
 			filters: ['scope' => 'entity', 'active' => true],
