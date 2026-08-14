@@ -1,4 +1,7 @@
 /* eslint-disable no-console */
+import { getCurrentUser } from '@nextcloud/auth'
+import axios from '@nextcloud/axios'
+import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
 /**
  * Anonymisation store — queue-based pipeline with a manual review step
  * and optional dossier-folder placement.
@@ -29,9 +32,6 @@
  * is done reviewing.
  */
 import { defineStore } from 'pinia'
-import axios from '@nextcloud/axios'
-import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
-import { getCurrentUser } from '@nextcloud/auth'
 import { extractDocumentText } from '../../services/fileViewerService.js'
 
 let fileCounter = 0

@@ -8,8 +8,8 @@ import { consentStore } from '../../store/store.js'
 		<!-- Anonymiser backend warning banner — admin-only, sits above the dashboard grid -->
 		<AnonymiserBackendWarning
 			v-if="isAdmin"
-			:show-warning="anonymiserBackend.showWarning"
-			:app-api-installed="anonymiserBackend.appApiInstalled"
+			:showWarning="anonymiserBackend.showWarning"
+			:appApiInstalled="anonymiserBackend.appApiInstalled"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<CnDashboardPage
@@ -37,9 +37,9 @@ import { consentStore } from '../../store/store.js'
 					<CnStatsBlock
 						:title="t('docudesk', 'Total Consents')"
 						:count="consentStore.consentStats.total"
-						:count-label="t('docudesk', 'records')"
+						:countLabel="t('docudesk', 'records')"
 						variant="default"
-						show-zero-count />
+						showZeroCount />
 				</RouterLink>
 			</template>
 
@@ -54,9 +54,9 @@ import { consentStore } from '../../store/store.js'
 					<CnStatsBlock
 						:title="t('docudesk', 'Pending')"
 						:count="consentStore.consentStats.pending"
-						:count-label="t('docudesk', 'pending')"
+						:countLabel="t('docudesk', 'pending')"
 						variant="warning"
-						show-zero-count />
+						showZeroCount />
 				</RouterLink>
 			</template>
 
@@ -74,9 +74,9 @@ import { consentStore } from '../../store/store.js'
 					<CnStatsBlock
 						:title="t('docudesk', 'Approved')"
 						:count="consentStore.consentStats.approved"
-						:count-label="t('docudesk', 'approved')"
+						:countLabel="t('docudesk', 'approved')"
 						variant="success"
-						show-zero-count />
+						showZeroCount />
 				</RouterLink>
 			</template>
 
@@ -94,9 +94,9 @@ import { consentStore } from '../../store/store.js'
 					<CnStatsBlock
 						:title="t('docudesk', 'Objected')"
 						:count="consentStore.consentStats.objected"
-						:count-label="t('docudesk', 'objected')"
+						:countLabel="t('docudesk', 'objected')"
 						variant="error"
-						show-zero-count />
+						showZeroCount />
 				</RouterLink>
 			</template>
 
@@ -113,24 +113,24 @@ import { consentStore } from '../../store/store.js'
 					:rows="pendingConsents"
 					:columns="consentColumns"
 					borderless
-					@row-click="navigateToPendingConsent" />
+					@rowClick="navigateToPendingConsent" />
 			</template>
 
 			<!-- Quick Anonymization -->
 			<template #widget-anonymization>
-				<AnonymizationDashboardWidget :in-app="true" />
+				<AnonymizationDashboardWidget :inApp="true" />
 			</template>
 		</CnDashboardPage>
 	</div>
 </template>
 
 <script>
-import { NcEmptyContent } from '@nextcloud/vue'
 import {
 	CnDashboardPage,
-	CnStatsBlock,
 	CnDataTable,
+	CnStatsBlock,
 } from '@conduction/nextcloud-vue'
+import { NcEmptyContent } from '@nextcloud/vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
 
@@ -144,6 +144,7 @@ export default {
 		AnonymizationDashboardWidget,
 		AnonymiserBackendWarning,
 	},
+
 	data() {
 		return {
 			isAdmin: false,
@@ -153,6 +154,7 @@ export default {
 				warningDismissed: false,
 				showWarning: false,
 			},
+
 			dashboardLayout: [
 				{
 					id: 1,
@@ -209,6 +211,7 @@ export default {
 			],
 		}
 	},
+
 	computed: {
 		/**
 		 * Widget definitions for CnDashboardPage.
@@ -225,6 +228,7 @@ export default {
 				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
 			]
 		},
+
 		/**
 		 * Column definitions for the Pending Consents CnDataTable.
 		 *
@@ -233,6 +237,7 @@ export default {
 		consentColumns() {
 			return [{ key: 'entity', label: t('docudesk', 'Entity') }]
 		},
+
 		/**
 		 * Consent records with status "pending", capped at 10 rows.
 		 * The `id` field is retained so row-click can navigate to ConsentDetail.
@@ -246,10 +251,12 @@ export default {
 				.map((c) => ({ id: c.id || c.uuid, entity: c.entityText || '—' }))
 		},
 	},
+
 	mounted() {
 		consentStore.fetchConsents()
 		this.fetchAnonymiserBackendState()
 	},
+
 	methods: {
 		/**
 		 * Fetch anonymiser backend state to decide whether to show the warning banner.
@@ -272,8 +279,10 @@ export default {
 						method: data.anonymiserBackend.method ?? 'regex',
 						appApiInstalled:
 							data.anonymiserBackend.appApiInstalled ?? false,
+
 						warningDismissed:
 							data.anonymiserBackend.warningDismissed ?? false,
+
 						showWarning: data.anonymiserBackend.showWarning ?? false,
 					}
 				}

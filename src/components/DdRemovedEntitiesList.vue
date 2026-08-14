@@ -28,6 +28,7 @@ export default {
 	components: {
 		DdEntityCard,
 	},
+
 	props: {
 		/**
 		 * Anonymised-card rows to render. Each item follows the

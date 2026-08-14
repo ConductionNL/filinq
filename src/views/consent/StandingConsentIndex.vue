@@ -14,27 +14,27 @@ import { consentStore } from '../../store/store.js'
 					'Manage entity-level standing publication consent records',
 				)
 			"
-			:show-title="true"
+			:showTitle="true"
 			:objects="entityConsents"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="consentStore.loading"
 			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="false"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-view-toggle="false"
-			:show-add="true"
-			row-key="id"
-			:empty-text="emptyContentName"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			:showViewToggle="false"
+			:showAdd="true"
+			rowKey="id"
+			:emptyText="emptyContentName"
 			:refreshing="isRefreshing"
 			@refresh="handleRefresh"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
+			@pageChanged="onPageChanged"
+			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateModal">
 			<!-- Stats above the table -->
 			<template #above-table>
@@ -42,24 +42,24 @@ import { consentStore } from '../../store/store.js'
 					<CnStatsBlock
 						:title="t('docudesk', 'Total')"
 						:count="entityConsents.length"
-						:count-label="t('docudesk', 'records')"
+						:countLabel="t('docudesk', 'records')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
 						:title="t('docudesk', 'Active')"
 						:count="activeCount"
-						:count-label="t('docudesk', 'active')"
+						:countLabel="t('docudesk', 'active')"
 						variant="success"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
 						:title="t('docudesk', 'Inactive')"
 						:count="inactiveCount"
-						:count-label="t('docudesk', 'inactive')"
+						:countLabel="t('docudesk', 'inactive')"
 						variant="warning"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 				</div>
 			</template>
 
@@ -67,14 +67,14 @@ import { consentStore } from '../../store/store.js'
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
 					:label="row.entityType || t('docudesk', 'Unknown')"
-					:color-map="entityTypeColorMap" />
+					:colorMap="entityTypeColorMap" />
 			</template>
 
 			<!-- Consent method badge -->
 			<template #column-consentMethod="{ row }">
 				<CnStatusBadge
 					:label="formatConsentMethod(row.consentMethod)"
-					:color-map="consentMethodColorMap" />
+					:colorMap="consentMethodColorMap" />
 			</template>
 
 			<!-- Valid From column -->
@@ -91,14 +91,14 @@ import { consentStore } from '../../store/store.js'
 			<template #column-active="{ row }">
 				<CnStatusBadge
 					:label="row.active ? t('docudesk', 'Yes') : t('docudesk', 'No')"
-					:color-map="activeColorMap" />
+					:colorMap="activeColorMap" />
 			</template>
 
 			<!-- Consent status badge -->
 			<template #column-consentStatus="{ row }">
 				<CnStatusBadge
 					:label="formatStatus(row.consentStatus)"
-					:color-map="consentStatusColorMap" />
+					:colorMap="consentStatusColorMap" />
 			</template>
 
 			<!-- Row actions -->
@@ -108,7 +108,7 @@ import { consentStore } from '../../store/store.js'
 						<DotsHorizontal :size="20" />
 					</template>
 					<NcActionButton
-						close-after-click
+						closeAfterClick
 						:disabled="row.active === false"
 						@click="expireConsent(row)">
 						<template #icon>
@@ -116,7 +116,7 @@ import { consentStore } from '../../store/store.js'
 						</template>
 						{{ t('docudesk', 'Expire') }}
 					</NcActionButton>
-					<NcActionButton close-after-click @click="revokeConsent(row)">
+					<NcActionButton closeAfterClick @click="revokeConsent(row)">
 						<template #icon>
 							<Cancel :size="20" />
 						</template>
@@ -146,7 +146,7 @@ import { consentStore } from '../../store/store.js'
 					'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.',
 				)
 			"
-			:confirm-label="t('docudesk', 'Revoke')"
+			:confirmLabel="t('docudesk', 'Revoke')"
 			:busy="revoking"
 			@confirm="executeRevoke"
 			@cancel="cancelRevoke" />
@@ -154,14 +154,13 @@ import { consentStore } from '../../store/store.js'
 </template>
 
 <script>
-import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
-import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
-import ClockRemove from 'vue-material-design-icons/ClockRemove.vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
-
-import CreateStandingConsentModal from '../../modals/CreateStandingConsentModal.vue'
+import ClockRemove from 'vue-material-design-icons/ClockRemove.vue'
+import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import CreateStandingConsentModal from '../../modals/CreateStandingConsentModal.vue'
 
 export default {
 	name: 'StandingConsentIndex',
@@ -177,6 +176,7 @@ export default {
 		CreateStandingConsentModal,
 		ConfirmActionDialog,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
@@ -189,16 +189,19 @@ export default {
 				person: 'warning',
 				organization: 'primary',
 			},
+
 			consentMethodColorMap: {
 				[t('docudesk', 'Written')]: 'success',
 				[t('docudesk', 'Verbal')]: 'primary',
 				[t('docudesk', 'Digital')]: 'default',
 				[t('docudesk', 'Implicit')]: 'warning',
 			},
+
 			activeColorMap: {
 				[t('docudesk', 'Yes')]: 'success',
 				[t('docudesk', 'No')]: 'error',
 			},
+
 			consentStatusColorMap: {
 				[t('docudesk', 'Pending')]: 'default',
 				[t('docudesk', 'Approved')]: 'success',
@@ -208,6 +211,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Filter the loaded consents to only entity-scope standing consents.
@@ -217,6 +221,7 @@ export default {
 		entityConsents() {
 			return consentStore.consents.filter((c) => c.scope === 'entity')
 		},
+
 		/**
 		 * Count of active entity consents.
 		 *
@@ -225,6 +230,7 @@ export default {
 		activeCount() {
 			return this.entityConsents.filter((c) => c.active === true).length
 		},
+
 		/**
 		 * Count of inactive entity consents.
 		 *
@@ -233,6 +239,7 @@ export default {
 		inactiveCount() {
 			return this.entityConsents.filter((c) => c.active !== true).length
 		},
+
 		/**
 		 * Column definitions for the standing consent records table.
 		 *
@@ -269,6 +276,7 @@ export default {
 				},
 			]
 		},
+
 		/**
 		 * Pagination metadata derived from the loaded entity consent list.
 		 *
@@ -279,6 +287,7 @@ export default {
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
 		/**
 		 * Empty-state message, surfacing any store error when present.
 		 *
@@ -291,9 +300,11 @@ export default {
 			return t('docudesk', 'No standing consent records found')
 		},
 	},
+
 	mounted() {
 		consentStore.fetchConsents()
 	},
+
 	methods: {
 		/**
 		 * Open the create standing consent modal.
@@ -303,6 +314,7 @@ export default {
 		openCreateModal() {
 			this.showCreateModal = true
 		},
+
 		/**
 		 * Close the create standing consent modal.
 		 *
@@ -311,6 +323,7 @@ export default {
 		closeCreateModal() {
 			this.showCreateModal = false
 		},
+
 		/**
 		 * Persist a new standing consent record returned by the create modal.
 		 *
@@ -326,6 +339,7 @@ export default {
 				// Error is stored on consentStore.error — the empty-state text will show it.
 			}
 		},
+
 		/**
 		 * Set the consent's active flag to false (expire it).
 		 *
@@ -336,6 +350,7 @@ export default {
 			const id = consent.id || consent.uuid
 			await consentStore.updateConsent(id, { ...consent, active: false })
 		},
+
 		/**
 		 * Ask for confirmation before revoking a standing consent.
 		 *
@@ -350,6 +365,7 @@ export default {
 		revokeConsent(consent) {
 			this.revokeTarget = consent
 		},
+
 		/**
 		 * Dismiss the revoke confirmation without changing anything.
 		 *
@@ -358,6 +374,7 @@ export default {
 		cancelRevoke() {
 			this.revokeTarget = null
 		},
+
 		/**
 		 * Apply the confirmed revocation.
 		 *
@@ -386,6 +403,7 @@ export default {
 				this.revoking = false
 			}
 		},
+
 		/**
 		 * Reload the consent list from the backend.
 		 *
@@ -399,6 +417,7 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		/**
 		 * Update the current page index of the consent table.
 		 *
@@ -408,6 +427,7 @@ export default {
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		/**
 		 * Update the page size and reset to the first page.
 		 *
@@ -418,6 +438,7 @@ export default {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		/**
 		 * Map a consent method code to a localized label.
 		 *
@@ -433,6 +454,7 @@ export default {
 			}
 			return map[method] || method || t('docudesk', 'Unknown')
 		},
+
 		/**
 		 * Map a consent status code to a localized label.
 		 *
@@ -449,6 +471,7 @@ export default {
 			}
 			return map[status] || status || t('docudesk', 'Unknown')
 		},
+
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *

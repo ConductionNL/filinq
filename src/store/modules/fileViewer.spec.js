@@ -1,5 +1,4 @@
-import { setActivePinia, createPinia } from 'pinia'
-
+import { createPinia, setActivePinia } from 'pinia'
 import { useFileViewerStore } from './fileViewer.js'
 
 /**

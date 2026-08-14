@@ -1,7 +1,6 @@
-/* eslint-disable no-console */
+import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
-import { getCurrentUser } from '@nextcloud/auth'
 import { odfXmlToText } from './odfToHtml.js'
 
 /**

@@ -14,12 +14,12 @@ The selected language persists across navigation via the template store (REQ-I18
 	<div class="language-selector">
 		<NcSelect
 			v-if="hasMultipleLanguages"
-			:model-value="currentOption"
+			:modelValue="currentOption"
 			:options="languageOptions"
 			:clearable="false"
-			:input-label="t('docudesk', 'Content language')"
+			:inputLabel="t('docudesk', 'Content language')"
 			label="label"
-			track-by="value"
+			trackBy="value"
 			class="language-selector__select"
 			@update:modelValue="onLanguageChange" />
 		<span v-if="isFallbackLanguage" class="language-selector__fallback-badge">
@@ -51,6 +51,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * Currently selected language code.
 		 */
@@ -58,6 +59,7 @@ export default {
 			type: String,
 			default: null,
 		},
+
 		/**
 		 * Whether the content is being shown in a fallback language (REQ-I18N-012).
 		 */
@@ -66,18 +68,21 @@ export default {
 			default: false,
 		},
 	},
+
 	emits: ['language-change'],
 	computed: {
 		/** True when the template has translations in more than one language. */
 		hasMultipleLanguages() {
 			return this.availableLanguages.length >= 2
 		},
+
 		languageOptions() {
 			return this.availableLanguages.map((lang) => ({
 				value: lang,
 				label: LANGUAGE_LABELS[lang] || lang.toUpperCase(),
 			}))
 		},
+
 		currentOption() {
 			if (!this.selectedLanguage) {
 				return this.languageOptions[0] || null
@@ -89,6 +94,7 @@ export default {
 			)
 		},
 	},
+
 	methods: {
 		t,
 		onLanguageChange(option) {

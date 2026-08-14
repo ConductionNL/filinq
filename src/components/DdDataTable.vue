@@ -12,7 +12,7 @@
 						class="dd-data-table__th dd-data-table__th--select"
 						@click.stop>
 						<NcCheckboxRadioSwitch
-							:model-value="allSelected"
+							:modelValue="allSelected"
 							:indeterminate="someSelected"
 							:aria-label="selectAllLabel"
 							@update:modelValue="$emit('toggle-select-all')" />
@@ -57,7 +57,7 @@
 						@click.stop>
 						<NcCheckboxRadioSwitch
 							:aria-label="rowSelectLabel(row)"
-							:model-value="isSelected(row)"
+							:modelValue="isSelected(row)"
 							@update:modelValue="$emit('toggle-select', row)" />
 					</td>
 					<td
@@ -85,7 +85,7 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcLoadingIcon, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { NcCheckboxRadioSwitch, NcLoadingIcon } from '@nextcloud/vue'
 
 /**
  * Data table for DocuDesk index views.
@@ -104,42 +104,50 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Row data array. Rows must have a unique `rowKey` field. */
 		rows: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Show a loading spinner instead of the table body. */
 		loading: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Property name used as unique row identifier. */
 		rowKey: {
 			type: String,
 			default: 'id',
 		},
+
 		/** Text shown when rows is empty and not loading. */
 		emptyText: {
 			type: String,
 			default: 'No items found',
 		},
+
 		/** Show a leading checkbox column for bulk selection. */
 		selectable: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Row keys (`row[rowKey]`) that are currently selected. */
 		selectedKeys: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Accessible label for the select-all header checkbox. */
 		selectAllLabel: {
 			type: String,
 			default: 'Select all',
 		},
 	},
+
 	computed: {
 		/**
 		 * @spec exclude Pure presentational layout calculation; no domain or persistence semantics.
@@ -151,6 +159,7 @@ export default {
 				+ (this.selectable ? 1 : 0)
 			)
 		},
+
 		/**
 		 * True when every visible row is selected (drives the header checkbox).
 		 *
@@ -164,6 +173,7 @@ export default {
 				)
 			)
 		},
+
 		/**
 		 * True when some — but not all — visible rows are selected (indeterminate state).
 		 *
@@ -173,6 +183,7 @@ export default {
 			return this.selectedKeys.length > 0 && !this.allSelected
 		},
 	},
+
 	methods: {
 		/**
 		 * Whether a given row is currently selected.
@@ -183,6 +194,7 @@ export default {
 		isSelected(row) {
 			return this.selectedKeys.includes(row[this.rowKey])
 		},
+
 		/**
 		 * Resolve a cell value, supporting dot-notation keys.
 		 *
@@ -198,6 +210,7 @@ export default {
 			}
 			return row[key]
 		},
+
 		/**
 		 * Accessible name for a row's select checkbox.
 		 *

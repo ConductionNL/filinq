@@ -139,11 +139,13 @@ export default {
 		NcNoteCard,
 		NcTextField,
 	},
+
 	props: {
 		// Optional preselected subjects (e.g. original-vs-anonymised shortcut).
 		initialLeftFileId: { type: [String, Number], default: '' },
 		initialRightFileId: { type: [String, Number], default: '' },
 	},
+
 	data() {
 		return {
 			leftFileId: String(this.initialLeftFileId || ''),
@@ -156,6 +158,7 @@ export default {
 			syncing: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * Whether both subjects have a file id selected.
@@ -166,6 +169,7 @@ export default {
 		canCompare() {
 			return this.leftFileId !== '' && this.rightFileId !== ''
 		},
+
 		/**
 		 * Advisory list of entities that produced no change hunk.
 		 *
@@ -176,6 +180,7 @@ export default {
 			return (this.result && this.result.unredactedEntities) || []
 		},
 	},
+
 	/**
 	 * Auto-run the comparison when both subjects are preselected (shortcut).
 	 *
@@ -187,6 +192,7 @@ export default {
 			this.runComparison()
 		}
 	},
+
 	methods: {
 		/**
 		 * Build a subject payload from a file id and optional version.
@@ -203,6 +209,7 @@ export default {
 			}
 			return subject
 		},
+
 		/**
 		 * Request the structured comparison from the backend and store the result.
 		 *
@@ -225,6 +232,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Resolve the CSS class for a hunk on a given side (added/removed/changed).
 		 *
@@ -249,6 +257,7 @@ export default {
 			}
 			return base
 		},
+
 		/**
 		 * Synchronise scrolling between the two diff panes.
 		 *

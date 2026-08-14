@@ -62,8 +62,8 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
@@ -87,6 +87,7 @@ export default {
 		 */
 		id: { type: String, required: true },
 	},
+
 	/**
 	 * Load the signing request and its audit trail on mount.
 	 *
@@ -99,6 +100,7 @@ export default {
 		signingStore.fetchAuditTrail(props.id)
 		return { signingStore, t }
 	},
+
 	methods: {
 		/**
 		 * Navigate to the restored SignatureVerification page for this

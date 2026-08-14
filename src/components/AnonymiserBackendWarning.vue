@@ -69,8 +69,8 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
-import { NcNoteCard, NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { NcButton, NcNoteCard } from '@nextcloud/vue'
 
 export default {
 	name: 'AnonymiserBackendWarning',
@@ -89,6 +89,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/**
 		 * Whether AppAPI is installed on this Nextcloud instance.
 		 * When false, a leading notice instructs the admin to install AppAPI first.

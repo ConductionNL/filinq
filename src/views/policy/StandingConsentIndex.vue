@@ -14,64 +14,64 @@ import { standingConsentStore } from '../../store/store.js'
 					'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.',
 				)
 			"
-			:show-title="true"
+			:showTitle="true"
 			:objects="standingConsentStore.standingConsents"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="standingConsentStore.loading"
 			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="false"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-view-toggle="false"
-			:show-add="true"
-			row-key="id"
-			:empty-text="emptyText"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			:showViewToggle="false"
+			:showAdd="true"
+			rowKey="id"
+			:emptyText="emptyText"
 			:refreshing="isRefreshing"
 			@refresh="handleRefresh"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
+			@pageChanged="onPageChanged"
+			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateDialog">
 			<template #above-table>
 				<div class="policy-stats">
 					<CnStatsBlock
 						:title="t('docudesk', 'Total')"
 						:count="standingConsentStore.standingConsentStats.total"
-						:count-label="t('docudesk', 'rules')"
+						:countLabel="t('docudesk', 'rules')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
 						:title="t('docudesk', 'Active')"
 						:count="standingConsentStore.standingConsentStats.active"
-						:count-label="t('docudesk', 'active')"
+						:countLabel="t('docudesk', 'active')"
 						variant="success"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
 						:title="t('docudesk', 'Inactive')"
 						:count="standingConsentStore.standingConsentStats.inactive"
-						:count-label="t('docudesk', 'inactive')"
+						:countLabel="t('docudesk', 'inactive')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 				</div>
 			</template>
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
 					:label="row.entityType || t('docudesk', 'Unknown')"
-					:color-map="entityTypeColorMap" />
+					:colorMap="entityTypeColorMap" />
 			</template>
 
 			<template #column-consentMethod="{ row }">
 				<CnStatusBadge
 					:label="row.consentMethod || '-'"
-					:color-map="methodColorMap" />
+					:colorMap="methodColorMap" />
 			</template>
 
 			<template #column-active="{ row }">
@@ -81,7 +81,7 @@ import { standingConsentStore } from '../../store/store.js'
 							? t('docudesk', 'Inactive')
 							: t('docudesk', 'Active')
 					"
-					:color-map="activeColorMap" />
+					:colorMap="activeColorMap" />
 			</template>
 
 			<template #column-matchRules="{ row }">
@@ -93,13 +93,13 @@ import { standingConsentStore } from '../../store/store.js'
 					<template #icon>
 						<DotsHorizontal :size="20" />
 					</template>
-					<NcActionButton close-after-click @click="openEditDialog(row)">
+					<NcActionButton closeAfterClick @click="openEditDialog(row)">
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
 						{{ t('docudesk', 'Edit') }}
 					</NcActionButton>
-					<NcActionButton close-after-click @click="confirmDelete(row)">
+					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
@@ -118,9 +118,9 @@ import { standingConsentStore } from '../../store/store.js'
 		-->
 		<StandingConsentFormModal
 			:open="dialogOpen"
-			:editing-record="editingRecord"
+			:editingRecord="editingRecord"
 			:saving="saving"
-			:form-error="formError"
+			:formError="formError"
 			@update:open="dialogOpen = $event"
 			@submit="onModalSubmit"
 			@cancel="dialogOpen = false" />
@@ -141,13 +141,13 @@ import { standingConsentStore } from '../../store/store.js'
 </template>
 
 <script>
-import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import StandingConsentFormModal from '../../dialogs/StandingConsentFormModal.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import StandingConsentFormModal from '../../dialogs/StandingConsentFormModal.vue'
 
 export default {
 	name: 'StandingConsentIndex',
@@ -163,6 +163,7 @@ export default {
 		DotsHorizontal,
 		Pencil,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
@@ -180,18 +181,21 @@ export default {
 				ORGANIZATION: 'primary',
 				OTHER: 'default',
 			},
+
 			methodColorMap: {
 				paper: 'default',
 				digital_signature: 'primary',
 				verbal_recorded: 'warning',
 				opt_in_form: 'success',
 			},
+
 			activeColorMap: {
 				[t('docudesk', 'Active')]: 'success',
 				[t('docudesk', 'Inactive')]: 'default',
 			},
 		}
 	},
+
 	computed: {
 		tableColumns() {
 			return [
@@ -215,17 +219,20 @@ export default {
 				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
 			]
 		},
+
 		paginationData() {
 			const total = standingConsentStore.standingConsents.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
 		emptyText() {
 			if (standingConsentStore.error) {
 				return standingConsentStore.error
 			}
 			return t('docudesk', 'No standing publication consents defined.')
 		},
+
 		/**
 		 * Body text of the delete confirmation dialog.
 		 *
@@ -238,9 +245,11 @@ export default {
 			return t('docudesk', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
+
 	mounted() {
 		standingConsentStore.fetchStandingConsents()
 	},
+
 	methods: {
 		async handleRefresh() {
 			this.isRefreshing = true
@@ -250,19 +259,23 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		formatMatchRules(rules) {
 			if (!Array.isArray(rules) || rules.length === 0) {
 				return '-'
 			}
 			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
 		},
+
 		/**
 		 * Open the extracted standing-consent modal in create mode.
 		 *
@@ -274,6 +287,7 @@ export default {
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Open the extracted standing-consent modal in edit mode for a row.
 		 *
@@ -295,14 +309,17 @@ export default {
 				matchRules: Array.isArray(row.matchRules)
 					? row.matchRules.map((r) => ({ type: r.type, value: r.value }))
 					: [],
+
 				consentStatus: row.consentStatus || 'consent_given',
 				publicationDecision:
 					row.publicationDecision || 'publish_with_consent',
+
 				notificationStatus: row.notificationStatus || 'skipped',
 			}
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Persist the modal form via the standing-consent store (create or update).
 		 *
@@ -331,6 +348,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Ask for confirmation before deleting a standing consent.
 		 *
@@ -342,6 +360,7 @@ export default {
 		confirmDelete(row) {
 			this.deleteTarget = row
 		},
+
 		/**
 		 * Dismiss the delete confirmation without deleting anything.
 		 *
@@ -350,6 +369,7 @@ export default {
 		cancelDelete() {
 			this.deleteTarget = null
 		},
+
 		/**
 		 * Delete the confirmed standing consent. Reachable only from the
 		 * dialog's @confirm, so the record is never removed without an

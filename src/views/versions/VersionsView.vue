@@ -36,7 +36,7 @@ SPDX-License-Identifier: EUPL-1.2
 			v-else-if="!unavailable"
 			:columns="columns"
 			:rows="rows"
-			:table-label="t('docudesk', 'Versions')"
+			:tableLabel="t('docudesk', 'Versions')"
 			data-testid="versions-table">
 			<template #actions="{ row }">
 				<NcButton variant="tertiary" @click="download(row)">
@@ -61,25 +61,25 @@ SPDX-License-Identifier: EUPL-1.2
 
 		<ConfirmRestoreVersionDialog
 			v-if="restoreTarget"
-			:version-number="restoreTarget.timestamp"
+			:versionNumber="restoreTarget.timestamp"
 			@confirm="confirmRestore"
 			@cancel="restoreTarget = null" />
 	</div>
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import {
 	CnDataTable,
 	NcButton,
 	NcLoadingIcon,
 	NcNoteCard,
 } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import {
 	listVersions,
-	versionDownloadUrl,
 	restoreVersion,
+	versionDownloadUrl,
 } from '../../services/versionService.js'
 
 export default {
@@ -91,17 +91,20 @@ export default {
 		NcNoteCard,
 		ConfirmRestoreVersionDialog,
 	},
+
 	props: {
 		// Optional preselected document (else read from ?fileId=).
 		initialFileId: { type: [String, Number], default: '' },
 		// Whether the document's versions are text-extractable (enables compare).
 		textExtractable: { type: Boolean, default: true },
 	},
+
 	data() {
 		return {
 			fileId: Number(
 				this.initialFileId || (this.$route && this.$route.query.fileId) || 0,
 			),
+
 			versions: [],
 			loading: false,
 			error: '',
@@ -109,6 +112,7 @@ export default {
 			restoreTarget: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Table columns for the version list.
@@ -124,6 +128,7 @@ export default {
 				{ key: 'current', label: t('docudesk', 'Current') },
 			]
 		},
+
 		/**
 		 * Rows for the CnDataTable, newest first, current marked.
 		 *
@@ -139,11 +144,13 @@ export default {
 			}))
 		},
 	},
+
 	mounted() {
 		if (this.fileId > 0) {
 			this.load()
 		}
 	},
+
 	methods: {
 		t,
 		/**
@@ -173,6 +180,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Whether the compare action is offered for a row (text-extractable only).
 		 *
@@ -183,6 +191,7 @@ export default {
 		canCompare(row) {
 			return this.textExtractable && !row.isCurrent
 		},
+
 		/**
 		 * Open/download a version's bytes.
 		 *
@@ -194,6 +203,7 @@ export default {
 			const ts = row.isCurrent ? 0 : row.timestamp
 			window.open(versionDownloadUrl(this.fileId, ts), '_blank')
 		},
+
 		/**
 		 * Prompt to restore a prior version.
 		 *
@@ -204,6 +214,7 @@ export default {
 		promptRestore(row) {
 			this.restoreTarget = row
 		},
+
 		/**
 		 * Confirm and perform the restore, then reload.
 		 *
@@ -223,6 +234,7 @@ export default {
 					|| t('docudesk', 'Could not restore version')
 			}
 		},
+
 		/**
 		 * Hand the version to the existing comparison flow (fileId + timestamp).
 		 *
@@ -240,6 +252,7 @@ export default {
 				},
 			})
 		},
+
 		/**
 		 * Format a UNIX timestamp for display.
 		 *
@@ -250,6 +263,7 @@ export default {
 			if (!ts) return ''
 			return new Date(Number(ts) * 1000).toLocaleString()
 		},
+
 		/**
 		 * Human-readable byte size.
 		 *

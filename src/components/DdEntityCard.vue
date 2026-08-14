@@ -88,12 +88,12 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 		<div class="dd-entity-card__controls">
 			<NcSelect
 				class="dd-entity-card__bases"
-				:model-value="item._decisionBases || []"
+				:modelValue="item._decisionBases || []"
 				:options="basesOptions"
 				label="label"
 				:reduce="(o) => o.value"
 				:multiple="true"
-				:input-label="t('docudesk', 'Grondslagen')"
+				:inputLabel="t('docudesk', 'Grondslagen')"
 				:placeholder="t('docudesk', 'Pick grondslagen…')"
 				:disabled="!editable || !hasRelation"
 				@update:modelValue="$emit('set-bases', $event)" />
@@ -133,6 +133,7 @@ export default {
 			type: Object,
 			default: null,
 		},
+
 		/**
 		 * Which card variant to render: 'review' (editable) or 'anonymized'
 		 * (read-only). Ignored when `loading` is true.
@@ -142,6 +143,7 @@ export default {
 			default: 'review',
 			validator: (v) => ['review', 'anonymized'].includes(v),
 		},
+
 		/**
 		 * Render the skeleton placeholder instead of an entity.
 		 */
@@ -149,6 +151,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/**
 		 * Review view only — options for the grondslagen multiselect.
 		 */
@@ -156,6 +159,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * Review view only — whether grondslagen are editable. When `false`
 		 * (grondslagen toggle off) the grondslagen select is disabled and no
@@ -168,6 +172,7 @@ export default {
 			default: true,
 		},
 	},
+
 	emits: ['toggle', 'set-bases'],
 	computed: {
 		/**

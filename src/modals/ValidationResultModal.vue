@@ -27,7 +27,7 @@ SPDX-License-Identifier: EUPL-1.2
 <script>
 // @nextcloud/vue v9 dropped the `dist/Components/Nc*.js` path layout in
 // favour of an exports map; the old deep specifiers resolve to nothing.
-import { NcModal, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
 import ValidationFindingsPanel from '../components/ValidationFindingsPanel.vue'
 
 export default {

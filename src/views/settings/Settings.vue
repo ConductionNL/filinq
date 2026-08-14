@@ -1,14 +1,14 @@
 <template>
 	<CnAdminSettingsShell
-		app-id="docudesk"
-		app-name="DocuDesk"
-		doc-url="https://docudesk.app"
-		:show-reimport="false">
+		appId="docudesk"
+		appName="DocuDesk"
+		docUrl="https://docudesk.app"
+		:showReimport="false">
 		<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->
 		<AnonymiserBackendWarning
 			v-if="isAdmin"
-			:show-warning="anonymiserBackend.showWarning"
-			:app-api-installed="anonymiserBackend.appApiInstalled"
+			:showWarning="anonymiserBackend.showWarning"
+			:appApiInstalled="anonymiserBackend.appApiInstalled"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<NcSettingsSection
@@ -56,7 +56,7 @@
 				</div>
 				<NcCheckboxRadioSwitch
 					:aria-label="t('docudesk', 'Show anonymiser backend warning')"
-					:model-value="false"
+					:modelValue="false"
 					type="switch"
 					@update:modelValue="resetAnonymiserWarning" />
 				<div class="setting-description">
@@ -79,7 +79,7 @@
 					}}
 				</div>
 				<NcCheckboxRadioSwitch
-					:model-value="
+					:modelValue="
 						settings['docudesk.anonymisation.default_output_format']
 					"
 					value="pdf-only"
@@ -97,7 +97,7 @@
 					}}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
-					:model-value="
+					:modelValue="
 						settings['docudesk.anonymisation.default_output_format']
 					"
 					value="pdf"
@@ -110,7 +110,7 @@
 					{{ t('docudesk', 'PDF and native file — keep both') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
-					:model-value="
+					:modelValue="
 						settings['docudesk.anonymisation.default_output_format']
 					"
 					value="preserve"
@@ -175,9 +175,9 @@
 					<NcSelect
 						:options="grondslagBaseOptions"
 						:multiple="true"
-						:close-on-select="false"
-						:model-value="selectedBasesFor(entityType)"
-						:input-label="t('docudesk', 'Proposed legal basis')"
+						:closeOnSelect="false"
+						:modelValue="selectedBasesFor(entityType)"
+						:inputLabel="t('docudesk', 'Proposed legal basis')"
 						:placeholder="t('docudesk', 'No proposal')"
 						@update:modelValue="onBasesChange(entityType, $event)" />
 				</div>
@@ -211,7 +211,7 @@
 				</div>
 				<NcCheckboxRadioSwitch
 					:aria-label="t('docudesk', 'Language Detection')"
-					:model-value="settings.enable_language_detection"
+					:modelValue="settings.enable_language_detection"
 					type="switch"
 					@update:modelValue="
 						settings.enable_language_detection = $event
@@ -232,7 +232,7 @@
 				</div>
 				<NcCheckboxRadioSwitch
 					:aria-label="t('docudesk', 'Keyword Extraction')"
-					:model-value="settings.enable_keyword_extraction"
+					:modelValue="settings.enable_keyword_extraction"
 					type="switch"
 					@update:modelValue="
 						settings.enable_keyword_extraction = $event
@@ -253,7 +253,7 @@
 				</div>
 				<NcCheckboxRadioSwitch
 					:aria-label="t('docudesk', 'Topic Classification')"
-					:model-value="settings.enable_topic_classification"
+					:modelValue="settings.enable_topic_classification"
 					type="switch"
 					@update:modelValue="
 						settings.enable_topic_classification = $event
@@ -300,7 +300,7 @@
 				</div>
 				<NcCheckboxRadioSwitch
 					:aria-label="t('docudesk', 'Enable OCR')"
-					:model-value="settings.ocr_enabled"
+					:modelValue="settings.ocr_enabled"
 					type="switch"
 					@update:modelValue="settings.ocr_enabled = $event" />
 				<div class="setting-description">
@@ -320,22 +320,22 @@
 				</div>
 				<div class="ocr-languages">
 					<NcCheckboxRadioSwitch
-						:model-value="ocrLanguages.nld"
+						:modelValue="ocrLanguages.nld"
 						@update:modelValue="ocrLanguages.nld = $event">
 						{{ t('docudesk', 'Dutch (nld)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
-						:model-value="ocrLanguages.eng"
+						:modelValue="ocrLanguages.eng"
 						@update:modelValue="ocrLanguages.eng = $event">
 						{{ t('docudesk', 'English (eng)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
-						:model-value="ocrLanguages.deu"
+						:modelValue="ocrLanguages.deu"
 						@update:modelValue="ocrLanguages.deu = $event">
 						{{ t('docudesk', 'German (deu)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
-						:model-value="ocrLanguages.fra"
+						:modelValue="ocrLanguages.fra"
 						@update:modelValue="ocrLanguages.fra = $event">
 						{{ t('docudesk', 'French (fra)') }}
 					</NcCheckboxRadioSwitch>
@@ -402,7 +402,7 @@
 							'Prioritise higher-confidentiality files in batch/folder analysis',
 						)
 					"
-					:model-value="
+					:modelValue="
 						settings['docudesk.confidentiality.prioritise_analysis']
 					"
 					type="switch"
@@ -491,7 +491,7 @@
 						<NcSelect
 							v-bind="availableRegistersOptions"
 							v-model="sections[type].selectedRegister"
-							:input-label="t('docudesk', 'Register')"
+							:inputLabel="t('docudesk', 'Register')"
 							:loading="sections[type].loading"
 							:disabled="loading || sections[type].loading"
 							@update:modelValue="onRegisterChange(type)" />
@@ -504,7 +504,7 @@
 								]
 							"
 							v-model="sections[type].selectedSchema"
-							:input-label="t('docudesk', 'Schema')"
+							:inputLabel="t('docudesk', 'Schema')"
 							:loading="sections[type].loading"
 							:disabled="loading || sections[type].loading" />
 
@@ -551,7 +551,7 @@
 				</div>
 				<NcCheckboxRadioSwitch
 					:aria-label="t('docudesk', 'Enable Digital Signing')"
-					:model-value="settings.signing_enabled"
+					:modelValue="settings.signing_enabled"
 					type="switch"
 					@update:modelValue="settings.signing_enabled = $event" />
 				<div class="setting-description">
@@ -674,7 +674,7 @@
 					'DocuDesk\'s document-processing activities are recorded in OpenRegister\'s platform processing-activity register. The Art. 30 register, per-access logging, exports, and access control are provided by OpenRegister; DocuDesk contributes the four activity categories.',
 				)
 			"
-			doc-url="https://conduction.gitbook.io/docudesk-nextcloud/">
+			docUrl="https://conduction.gitbook.io/docudesk-nextcloud/">
 			<div v-if="!openRegisterInstalled" class="setting-item">
 				<NcNoteCard type="warning">
 					{{
@@ -810,21 +810,21 @@
 </template>
 
 <script>
+import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
-	NcSettingsSection,
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
-	NcButton,
-	NcLoadingIcon,
-	NcCheckboxRadioSwitch,
+	NcSettingsSection,
 } from '@nextcloud/vue'
-import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
+import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
+import FileExportOutline from 'vue-material-design-icons/FileExportOutline.vue'
+import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
-import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
-import FileExportOutline from 'vue-material-design-icons/FileExportOutline.vue'
-import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 
@@ -846,6 +846,7 @@ export default {
 		AccountSearchOutline,
 		EntityTypeSelector,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -858,6 +859,7 @@ export default {
 				warningDismissed: false,
 				showWarning: false,
 			},
+
 			settingsData: {},
 			availableRegisters: [],
 			availableRegistersOptions: { options: [] },
@@ -894,6 +896,7 @@ export default {
 					Secret: 3,
 				},
 			},
+
 			// Editable JSON text backing 'docudesk.confidentiality.label_vocabulary'
 			// — kept separate from `settings` so an in-progress edit can be
 			// invalid JSON without corrupting the object that gets submitted.
@@ -905,12 +908,14 @@ export default {
 				deu: false,
 				fra: false,
 			},
+
 			ocrStatus: {
 				tesseractAvailable: false,
 				tesseractVersion: null,
 			},
 		}
 	},
+
 	computed: {
 		// `base` records as NcSelect options (value = slug, label = name).
 		grondslagBaseOptions() {
@@ -919,6 +924,7 @@ export default {
 				label: base.name,
 			}))
 		},
+
 		/**
 		 * The four DocuDesk processing activities surfaced in the AVG Art. 30
 		 * compliance section. Mirrors the x-openregister-processing catalogue
@@ -937,6 +943,7 @@ export default {
 						'docudesk',
 						'Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.',
 					),
+
 					retention: t(
 						'docudesk',
 						'P7Y (selectielijst category to be confirmed)',
@@ -949,6 +956,7 @@ export default {
 						'docudesk',
 						'Extract machine-readable text from scanned documents and images.',
 					),
+
 					retention: t('docudesk', 'not declared'),
 				},
 				{
@@ -958,6 +966,7 @@ export default {
 						'docudesk',
 						'Language detection, keyword extraction, and topic classification.',
 					),
+
 					retention: t('docudesk', 'not declared'),
 				},
 				{
@@ -967,6 +976,7 @@ export default {
 						'docudesk',
 						'Maintain a tamper-evident audit trail of electronic signing activities.',
 					),
+
 					retention: t(
 						'docudesk',
 						'P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)',
@@ -975,9 +985,11 @@ export default {
 			]
 		},
 	},
+
 	mounted() {
 		this.fetchAll()
 	},
+
 	methods: {
 		// Currently-selected base options for an entity type, derived from
 		// the slug[] mapping so the multi-select reflects saved state.
@@ -987,6 +999,7 @@ export default {
 				slugs.includes(option.value),
 			)
 		},
+
 		// Persist a multi-select change back to the slug[] mapping. Replacing
 		// the object (rather than mutating a key) keeps Vue 2 reactivity.
 		onBasesChange(entityType, selectedOptions) {
@@ -999,6 +1012,7 @@ export default {
 			}
 			this.entityTypeBases = next
 		},
+
 		/**
 		 * Reset the selected schema when the register for a type changes.
 		 *
@@ -1014,6 +1028,7 @@ export default {
 				},
 			}
 		},
+
 		/**
 		 * Load all settings, available registers and OpenRegister status.
 		 *
@@ -1169,6 +1184,7 @@ export default {
 					this.loading = false
 				})
 		},
+
 		/**
 		 * Save the register/schema configuration for a single object type.
 		 *
@@ -1182,6 +1198,7 @@ export default {
 			const payload = {
 				[`${type}_register`]:
 					this.sections[type].selectedRegister?.value || '',
+
 				[`${type}_schema`]: this.sections[type].selectedSchema?.value || '',
 				[`${type}_source`]: 'openregister',
 			}
@@ -1204,6 +1221,7 @@ export default {
 					this.sections[type].loading = false
 				})
 		},
+
 		/**
 		 * Save all DocuDesk settings (consent period, feature toggles, OCR, registers).
 		 *
@@ -1223,16 +1241,20 @@ export default {
 				publication_objection_period_days: String(
 					this.settings.publication_objection_period_days,
 				),
+
 				enable_language_detection: this.settings.enable_language_detection
 					? '1'
 					: '0',
+
 				enable_keyword_extraction: this.settings.enable_keyword_extraction
 					? '1'
 					: '0',
+
 				enable_topic_classification: this.settings
 					.enable_topic_classification
 					? '1'
 					: '0',
+
 				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
@@ -1242,6 +1264,7 @@ export default {
 				signing_request_expiry_days: String(
 					this.settings.signing_request_expiry_days || 30,
 				),
+
 				'docudesk.anonymisation.default_output_format': [
 					'pdf-only',
 					'pdf',
@@ -1251,11 +1274,13 @@ export default {
 				)
 					? this.settings['docudesk.anonymisation.default_output_format']
 					: 'pdf-only',
+
 				// Sent as an object; the backend json-encodes it for storage.
 				'docudesk.grondslagen.entity_type_bases': this.entityTypeBases,
 				// Sent as an array; the backend json-encodes it for storage.
 				'docudesk.anonymisation.enabled_entity_types':
 					this.enabledEntityTypes,
+
 				// files-confidential-labels — off by default; reorders analysis
 				// only, never gates/blocks/redacts (design.md D3).
 				'docudesk.confidentiality.prioritise_analysis': this.settings[
@@ -1263,6 +1288,7 @@ export default {
 				]
 					? '1'
 					: '0',
+
 				// Sent as an object; the backend json-encodes it for storage.
 				'docudesk.confidentiality.label_vocabulary':
 					this.settings['docudesk.confidentiality.label_vocabulary'],
@@ -1294,6 +1320,7 @@ export default {
 					this.saving = false
 				})
 		},
+
 		/**
 		 * Validate + commit the edited confidentiality-label vocabulary JSON.
 		 *

@@ -48,17 +48,20 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Trailing label text. Ignored when the default slot is used. */
 		label: {
 			type: String,
 			default: '',
 		},
+
 		/** Disables interaction and dims the control. */
 		disabled: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['update:checked'],
 }
 </script>

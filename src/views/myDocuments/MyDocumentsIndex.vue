@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
+import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -15,33 +15,33 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				:columns="tableColumns"
 				:pagination="paginationData"
 				:loading="myDocumentsStore.loading"
-				:view-mode="viewMode"
-				row-key="fileId"
-				:empty-text="emptyContentName"
-				:table-label="t('docudesk', 'List')"
-				:cards-label="t('docudesk', 'Tiles')"
-				:view-toggle-label="t('docudesk', 'View mode')"
-				:items-per-page-label="t('docudesk', 'Items per page:')"
-				:page-info-format="t('docudesk', 'Page {current} of {total}')"
-				:first-label="t('docudesk', 'First')"
-				:previous-label="t('docudesk', 'Previous')"
-				:next-label="t('docudesk', 'Next')"
-				:last-label="t('docudesk', 'Last')"
+				:viewMode="viewMode"
+				rowKey="fileId"
+				:emptyText="emptyContentName"
+				:tableLabel="t('docudesk', 'List')"
+				:cardsLabel="t('docudesk', 'Tiles')"
+				:viewToggleLabel="t('docudesk', 'View mode')"
+				:itemsPerPageLabel="t('docudesk', 'Items per page:')"
+				:pageInfoFormat="t('docudesk', 'Page {current} of {total}')"
+				:firstLabel="t('docudesk', 'First')"
+				:previousLabel="t('docudesk', 'Previous')"
+				:nextLabel="t('docudesk', 'Next')"
+				:lastLabel="t('docudesk', 'Last')"
 				:selectable="bulkSelect"
-				:selected-keys="selectedIds"
-				:select-all-label="t('docudesk', 'Select all')"
-				@page-changed="onPageChanged"
-				@page-size-changed="onPageSizeChanged"
-				@update:view-mode="onViewModeChange"
-				@row-click="onRowClick"
-				@toggle-select="onToggleSelect"
-				@toggle-select-all="onToggleSelectAll">
+				:selectedKeys="selectedIds"
+				:selectAllLabel="t('docudesk', 'Select all')"
+				@pageChanged="onPageChanged"
+				@pageSizeChanged="onPageSizeChanged"
+				@update:viewMode="onViewModeChange"
+				@rowClick="onRowClick"
+				@toggleSelect="onToggleSelect"
+				@toggleSelectAll="onToggleSelectAll">
 				<template #header-actions>
 					<DdSearchBar
 						v-model="searchQuery"
 						class="my-documents-search"
 						:placeholder="t('docudesk', 'Search by name')"
-						:clear-label="t('docudesk', 'Clear search')" />
+						:clearLabel="t('docudesk', 'Clear search')" />
 				</template>
 
 				<template #column-fileName="{ row }">
@@ -57,7 +57,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				<template #column-kind="{ row }">
 					<CnStatusBadge
 						:label="kindLabel(row)"
-						:color-map="kindColorMap" />
+						:colorMap="kindColorMap" />
 				</template>
 
 				<!-- TODO: re-enable the Status column once a real per-document
@@ -86,13 +86,13 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						:selectable="bulkSelect"
 						:selected="selectedIds.includes(object.fileId)"
 						@click="onRowClick"
-						@toggle-select="onToggleSelect" />
+						@toggleSelect="onToggleSelect" />
 				</template>
 
 				<template #actions-header>
 					<NcActions
 						class="my-documents-options"
-						force-menu
+						forceMenu
 						:aria-label="t('docudesk', 'Options')">
 						<template #icon>
 							<component
@@ -105,7 +105,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 										: t('docudesk', 'Filter')
 								" />
 						</template>
-						<NcActionButton close-after-click @click="toggleBulkSelect">
+						<NcActionButton closeAfterClick @click="toggleBulkSelect">
 							<template #icon>
 								<CheckboxMultipleMarkedOutline :size="20" />
 							</template>
@@ -117,7 +117,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						</NcActionButton>
 						<NcActionButton
 							v-if="bulkSelect && selectedIds.length > 0"
-							close-after-click
+							closeAfterClick
 							@click="bulkDelete">
 							<template #icon>
 								<Delete :size="20" />
@@ -136,7 +136,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						<template #icon>
 							<DotsHorizontal :size="24" />
 						</template>
-						<NcActionButton close-after-click @click="onRowClick(row)">
+						<NcActionButton closeAfterClick @click="onRowClick(row)">
 							<template #icon>
 								<Eye :size="20" />
 							</template>
@@ -144,7 +144,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
-							close-after-click
+							closeAfterClick
 							@click="downloadFile(row)">
 							<template #icon>
 								<Download :size="20" />
@@ -153,7 +153,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
-							close-after-click
+							closeAfterClick
 							@click="validateDocument(row)">
 							<template #icon>
 								<ShieldCheckOutline :size="20" />
@@ -162,7 +162,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
-							close-after-click
+							closeAfterClick
 							@click="compareDocument(row)">
 							<template #icon>
 								<Compare :size="20" />
@@ -171,16 +171,14 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
-							close-after-click
+							closeAfterClick
 							@click="openVersions(row)">
 							<template #icon>
 								<History :size="20" />
 							</template>
 							{{ t('docudesk', 'Versions') }}
 						</NcActionButton>
-						<NcActionButton
-							close-after-click
-							@click="confirmDelete(row)">
+						<NcActionButton closeAfterClick @click="confirmDelete(row)">
 							<template #icon>
 								<Delete :size="20" />
 							</template>
@@ -224,32 +222,32 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 </template>
 
 <script>
-import { generateUrl } from '@nextcloud/router'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
-import DdSearchBar from '../../components/DdSearchBar.vue'
-import DdPageHeader from '../../components/DdPageHeader.vue'
-import DdIndexPage from '../../components/DdIndexPage.vue'
-import DdDocumentCard from '../../components/DdDocumentCard.vue'
-import DdIcon from '../../components/DdIcon.vue'
-import FileViewerPage from '../fileViewer/FileViewerPage.vue'
-import ValidationResultModal from '../../modals/ValidationResultModal.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
-import { validateFile } from '../../services/validationService.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
+import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
+import Cog from 'vue-material-design-icons/Cog.vue'
+import Compare from 'vue-material-design-icons/Compare.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
-import Eye from 'vue-material-design-icons/Eye.vue'
 // TODO: re-enable with the Status column (commented out until a real
 // per-document checked status exists).
 // import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
-import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
-import Compare from 'vue-material-design-icons/Compare.vue'
-import History from 'vue-material-design-icons/History.vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
-import Cog from 'vue-material-design-icons/Cog.vue'
-import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
+import Eye from 'vue-material-design-icons/Eye.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
+import History from 'vue-material-design-icons/History.vue'
+import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
+import DdDocumentCard from '../../components/DdDocumentCard.vue'
+import DdIcon from '../../components/DdIcon.vue'
+import DdIndexPage from '../../components/DdIndexPage.vue'
+import DdPageHeader from '../../components/DdPageHeader.vue'
+import DdSearchBar from '../../components/DdSearchBar.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import ValidationResultModal from '../../modals/ValidationResultModal.vue'
+import FileViewerPage from '../fileViewer/FileViewerPage.vue'
+import { validateFile } from '../../services/validationService.js'
 
 const VIEW_MODE_STORAGE_KEY = 'docudesk:myDocuments:viewMode'
 const VALID_VIEW_MODES = ['table', 'cards']
@@ -299,6 +297,7 @@ export default {
 		CheckboxMultipleMarkedOutline,
 		FilterOutline,
 	},
+
 	data() {
 		return {
 			currentPage: 1,
@@ -315,15 +314,18 @@ export default {
 				findings: [],
 				fileId: null,
 			},
+
 			kindColorMap: {
 				[t('docudesk', 'Concept')]: 'warning',
 				[t('docudesk', 'Anonymized')]: 'success',
 			},
+
 			deleteTarget: null, // row awaiting delete confirmation, or null
 			bulkDeleteNames: [], // file names awaiting bulk-delete confirmation
 			deleting: false,
 		}
 	},
+
 	computed: {
 		tableColumns() {
 			return [
@@ -336,6 +338,7 @@ export default {
 				{ key: 'fileSize', label: t('docudesk', 'Size') },
 			]
 		},
+
 		filteredDocuments() {
 			const query = this.searchQuery.trim().toLowerCase()
 			const docs = myDocumentsStore.visibleDocuments
@@ -344,22 +347,26 @@ export default {
 				(d.fileName || '').toLowerCase().includes(query),
 			)
 		},
+
 		paginatedDocuments() {
 			const start = (this.currentPage - 1) * this.pageSize
 			const end = start + this.pageSize
 			return this.filteredDocuments.slice(start, end)
 		},
+
 		paginationData() {
 			const total = this.filteredDocuments.length
 			const pages = Math.ceil(total / this.pageSize) || 1
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
 		emptyContentName() {
 			if (myDocumentsStore.error) {
 				return myDocumentsStore.error
 			}
 			return t('docudesk', 'No documents found')
 		},
+
 		/**
 		 * Body text of the single-item delete confirmation dialog.
 		 *
@@ -380,6 +387,7 @@ export default {
 						name: this.displayName(row),
 					})
 		},
+
 		/**
 		 * Body text of the bulk delete confirmation dialog.
 		 *
@@ -393,6 +401,7 @@ export default {
 			)
 		},
 	},
+
 	/**
 	 * @spec exclude Lifecycle bootstrap (fetch + keyboard listener wiring).
 	 */
@@ -400,9 +409,11 @@ export default {
 		myDocumentsStore.fetchDocuments()
 		window.addEventListener('keydown', this.onKeydown)
 	},
+
 	beforeUnmount() {
 		window.removeEventListener('keydown', this.onKeydown)
 	},
+
 	methods: {
 		/**
 		 * Global keydown handler. Escape cancels bulk-selection mode so the
@@ -417,6 +428,7 @@ export default {
 				this.cancelBulkSelect()
 			}
 		},
+
 		/**
 		 * Leave bulk-selection mode and clear any pending selection.
 		 *
@@ -426,6 +438,7 @@ export default {
 			this.bulkSelect = false
 			this.selectedIds = []
 		},
+
 		/**
 		 * Toggle bulk-selection mode on/off. Turning it off clears any
 		 * existing selection so the checkboxes don't linger as hidden state.
@@ -439,6 +452,7 @@ export default {
 				this.bulkSelect = true
 			}
 		},
+
 		/**
 		 * Toggle a single document's selection by fileId.
 		 *
@@ -455,6 +469,7 @@ export default {
 				this.selectedIds = this.selectedIds.filter((id) => id !== row.fileId)
 			}
 		},
+
 		/**
 		 * Select-all toggle for the table header checkbox. Operates on the
 		 * documents visible on the current page: if all are already selected
@@ -475,6 +490,7 @@ export default {
 				this.selectedIds = [...new Set([...this.selectedIds, ...pageIds])]
 			}
 		},
+
 		/**
 		 * Confirm and delete every selected document/dossier in one bulk
 		 * operation. Dossiers and their contents are removed recursively.
@@ -490,6 +506,7 @@ export default {
 			if (names.length === 0) return
 			this.bulkDeleteNames = names
 		},
+
 		/**
 		 * Dismiss the bulk-delete confirmation without deleting anything.
 		 *
@@ -498,8 +515,10 @@ export default {
 		cancelBulkDelete() {
 			this.bulkDeleteNames = []
 		},
+
 		/**
 		 * Delete the confirmed selection. Reachable only from the dialog's
+		 *
 		 * @confirm, so nothing is removed without an explicit confirmation.
 		 *
 		 * @return {Promise<void>}
@@ -534,6 +553,7 @@ export default {
 				this.deleting = false
 			}
 		},
+
 		/**
 		 * Click handler for the entire table row / card.
 		 * Files open directly in the in-app viewer. Folders (dossiers) are flat
@@ -557,6 +577,7 @@ export default {
 			}
 			this.viewFile(row)
 		},
+
 		/**
 		 * Pagination: track which page is active.
 		 *
@@ -565,6 +586,7 @@ export default {
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		/**
 		 * Pagination: apply new page size and reset to first page.
 		 *
@@ -574,6 +596,7 @@ export default {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		/**
 		 * Toggle between 'table' and 'cards' (Tegels/Lijst in the design)
 		 * and persist the choice so it survives reloads / navigation.
@@ -590,6 +613,7 @@ export default {
 				// localStorage can throw in private mode / sandboxed iframes
 			}
 		},
+
 		/**
 		 * Confirm and delete a file or dossier. Deleting a dossier (folder)
 		 * removes the folder and all documents inside it. After a successful
@@ -604,6 +628,7 @@ export default {
 			if (!row || !row.fileName) return
 			this.deleteTarget = row
 		},
+
 		/**
 		 * Dismiss the delete confirmation without deleting anything.
 		 *
@@ -612,6 +637,7 @@ export default {
 		cancelDelete() {
 			this.deleteTarget = null
 		},
+
 		/**
 		 * Delete the confirmed file or dossier. Reachable only from the
 		 * dialog's @confirm, so nothing is removed without an explicit
@@ -644,6 +670,7 @@ export default {
 				this.deleting = false
 			}
 		},
+
 		/**
 		 * Preview the file inline using DocuDesk's own file viewer modal
 		 * (PDF / docx / text). Folders are ignored.
@@ -677,6 +704,7 @@ export default {
 				})
 			}
 		},
+
 		/**
 		 * Download the file via the classic Files app download endpoint.
 		 *
@@ -691,6 +719,7 @@ export default {
 				'_blank',
 			)
 		},
+
 		/**
 		 * Run on-demand validation for a document and surface the verdict +
 		 * findings in a modal. Nothing is persisted by this call.
@@ -716,6 +745,7 @@ export default {
 				this.validation.loading = false
 			}
 		},
+
 		/**
 		 * Handle an OCR cross-link from a text-layer-missing finding.
 		 *
@@ -726,6 +756,7 @@ export default {
 			this.validation.show = false
 			this.$router.push({ name: 'Anonymization' })
 		},
+
 		/**
 		 * Open the side-by-side comparison view with this document preselected
 		 * on the left. The anonymised output (when present) is offered as the
@@ -743,6 +774,7 @@ export default {
 			}
 			this.$router.push({ name: 'Comparison', query })
 		},
+
 		/**
 		 * Open the document's Nextcloud file versions (Versies) view.
 		 *
@@ -757,6 +789,7 @@ export default {
 				query: { fileId: String(row.fileId) },
 			})
 		},
+
 		/**
 		 * Pick a DocuDesk icon name based on the file's MIME type / extension.
 		 *
@@ -771,6 +804,7 @@ export default {
 			if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
 			return 'article'
 		},
+
 		/**
 		 * Strip the file extension for cleaner display (folders show full name).
 		 *
@@ -781,6 +815,7 @@ export default {
 			const name = row.fileName || ''
 			return row.isFolder ? name : name.replace(/\.[^./]+$/, '')
 		},
+
 		/**
 		 * Badge label for the "Soort" column. Files are tagged by their own
 		 * state; a dossier (folder) reflects its contents — "Anonymized" once
@@ -799,6 +834,7 @@ export default {
 				? t('docudesk', 'Anonymized')
 				: t('docudesk', 'Concept')
 		},
+
 		// TODO: re-enable when the app has a real per-document checked/reviewed
 		// status. The Status column is commented out for now (both its column
 		// definition and template) because this was hardcoded to "Not checked".
@@ -824,6 +860,7 @@ export default {
 				return String(ts)
 			}
 		},
+
 		/**
 		 * Human-readable size (e.g. "12 MB") from a raw byte count.
 		 *

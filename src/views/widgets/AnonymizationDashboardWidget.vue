@@ -172,10 +172,10 @@ import { anonymizationStore } from '../../store/store.js'
 </template>
 
 <script>
+import { showError } from '@nextcloud/dialogs'
+import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import DossierNameDialog from '../../dialogs/DossierNameDialog.vue'
-import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
 import uploadIcon from '../../assets/upload.png'
 
 const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
@@ -185,6 +185,10 @@ const ALLOWED_MIMES = new Set([
 	'application/pdf',
 ])
 
+/**
+ *
+ * @param files
+ */
 function partitionFiles(files) {
 	const accepted = []
 	const rejected = []
@@ -205,11 +209,13 @@ export default {
 		DossierNameDialog,
 		NcLoadingIcon,
 	},
+
 	props: {
 		title: {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Set to true when embedded in the in-app dashboard to hide the
 		 * "Open DocuDesk" footer link (redundant when already in the app).
@@ -219,6 +225,7 @@ export default {
 			default: false,
 		},
 	},
+
 	data() {
 		return {
 			isDragging: false,
@@ -230,6 +237,7 @@ export default {
 			uploadIcon,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
@@ -238,6 +246,7 @@ export default {
 			return generateUrl('/apps/docudesk')
 		},
 	},
+
 	methods: {
 		/**
 		 * @param event
@@ -253,6 +262,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @param event
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
@@ -267,6 +277,7 @@ export default {
 			}
 			event.target.value = ''
 		},
+
 		filterAllowed(files) {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
@@ -281,6 +292,7 @@ export default {
 			}
 			return accepted
 		},
+
 		async dispatchFiles(fileList) {
 			const files = Array.from(fileList)
 			if (files.length >= 2) {
@@ -295,10 +307,12 @@ export default {
 				this.gotoViewer(entry, mimeType)
 			}
 		},
+
 		/**
 		 * Navigate to the file-viewer when inside the DocuDesk app.
 		 * Safe to call from the NC dashboard context — $router is absent there
 		 * and the optional chaining prevents any error.
+		 *
 		 * @param entry
 		 * @param mimeType
 		 */
@@ -308,6 +322,7 @@ export default {
 				this.$router.push({ name: 'MyDocuments' }).catch(() => {})
 			}
 		},
+
 		/**
 		 * Open the dossier-name dialog for a multi-file drop.
 		 *
@@ -323,6 +338,7 @@ export default {
 			// the boundary for it.
 			this.showDossierDialog = true
 		},
+
 		async confirmDossier() {
 			const name = this.dossierName.trim()
 			this.dossierSubmitting = true
@@ -354,16 +370,19 @@ export default {
 				this.dossierSubmitting = false
 			}
 		},
+
 		cancelDossier() {
 			if (this.dossierSubmitting) return
 			this.closeDossierDialog()
 		},
+
 		closeDossierDialog() {
 			this.showDossierDialog = false
 			this.pendingFiles = []
 			this.dossierName = ''
 			this.dossierError = ''
 		},
+
 		/**
 		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
@@ -385,6 +404,7 @@ export default {
 			}
 			return generateUrl('/apps/files')
 		},
+
 		/**
 		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
@@ -398,6 +418,7 @@ export default {
 			}
 			return generateRemoteUrl('webdav')
 		},
+
 		/**
 		 * @param status
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02

@@ -161,12 +161,12 @@
 			</div>
 			<div class="dd-demo">
 				<DdPagination
-					:current-page="pager.page"
-					:total-pages="pager.pages"
-					:total-items="pager.total"
-					:current-page-size="pager.limit"
-					@page-changed="onPageChanged"
-					@page-size-changed="onPageSizeChanged" />
+					:currentPage="pager.page"
+					:totalPages="pager.pages"
+					:totalItems="pager.total"
+					:currentPageSize="pager.limit"
+					@pageChanged="onPageChanged"
+					@pageSizeChanged="onPageSizeChanged" />
 			</div>
 		</section>
 
@@ -182,7 +182,7 @@
 				</p>
 			</div>
 			<div class="dd-demo">
-				<DdCardGrid :objects="documents" row-key="id">
+				<DdCardGrid :objects="documents" rowKey="id">
 					<template #card="{ object }">
 						<div class="dd-mini-card">
 							<DdIcon
@@ -216,7 +216,7 @@
 						selectable
 						:selected="true"
 						@click="noop"
-						@toggle-select="noop" />
+						@toggleSelect="noop" />
 				</div>
 			</div>
 		</section>
@@ -234,11 +234,11 @@
 				<DdDataTable
 					:columns="tableColumns"
 					:rows="documents"
-					row-key="id"
+					rowKey="id"
 					selectable
-					:selected-keys="selectedKeys"
-					@update:selected-keys="onSelect"
-					@row-click="noop">
+					:selectedKeys="selectedKeys"
+					@update:selectedKeys="onSelect"
+					@rowClick="noop">
 					<template #column-kind="{ row }">
 						<span class="dd-tag">{{
 							row.isFolder
@@ -273,9 +273,9 @@
 						:item="reviewEntity"
 						mode="review"
 						:editable="true"
-						:bases-options="basesOptions"
+						:basesOptions="basesOptions"
 						@toggle="noop"
-						@set-bases="noop" />
+						@setBases="noop" />
 				</div>
 				<div>
 					<span class="dd-demo__label"
@@ -285,7 +285,7 @@
 						:item="reviewEntity"
 						mode="review"
 						:editable="false"
-						:bases-options="basesOptions" />
+						:basesOptions="basesOptions" />
 				</div>
 				<div>
 					<span class="dd-demo__label">mode="anonymized"</span>
@@ -312,8 +312,8 @@
 					:columns="tableColumns"
 					:objects="documents"
 					:pagination="{ page: 1, pages: 3, total: 24, limit: 10 }"
-					row-key="id"
-					view-mode="table">
+					rowKey="id"
+					viewMode="table">
 					<template #header-actions>
 						<DdSearchBar v-model="indexSearch" placeholder="Filter…" />
 					</template>
@@ -344,17 +344,17 @@
 
 <script>
 import DdButton from '../../components/DdButton.vue'
-import DdIcon from '../../components/DdIcon.vue'
-import DdViewToggle from '../../components/DdViewToggle.vue'
-import DdSearchBar from '../../components/DdSearchBar.vue'
-import DdSkeleton from '../../components/DdSkeleton.vue'
-import DdPagination from '../../components/DdPagination.vue'
 import DdCardGrid from '../../components/DdCardGrid.vue'
 import DdDataTable from '../../components/DdDataTable.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import DdEntityCard from '../../components/DdEntityCard.vue'
-import DdPageHeader from '../../components/DdPageHeader.vue'
+import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
+import DdPageHeader from '../../components/DdPageHeader.vue'
+import DdPagination from '../../components/DdPagination.vue'
+import DdSearchBar from '../../components/DdSearchBar.vue'
+import DdSkeleton from '../../components/DdSkeleton.vue'
+import DdViewToggle from '../../components/DdViewToggle.vue'
 
 /**
  * Component gallery for DocuDesk.
@@ -384,6 +384,7 @@ export default {
 		DdPageHeader,
 		DdIndexPage,
 	},
+
 	data() {
 		return {
 			// Table of contents entries (id must match each section's id).
@@ -401,6 +402,7 @@ export default {
 				{ id: 'dd-entity-card', label: 'EntityCard' },
 				{ id: 'dd-index-page', label: 'IndexPage' },
 			],
+
 			// All SVG icons currently in src/assets/icons (png assets excluded —
 			// DdIcon only registers .svg files).
 			iconNames: [
@@ -421,6 +423,7 @@ export default {
 				'tiles',
 				'visibility_off',
 			],
+
 			// Interactive demo state.
 			viewToggle: 'tiles',
 			searchValue: '',
@@ -454,17 +457,20 @@ export default {
 					mimeType: 'application/pdf',
 				},
 			],
+
 			// Column defs for the table demos.
 			tableColumns: [
 				{ key: 'fileName', label: 'Name' },
 				{ key: 'kind', label: 'Kind', width: '160px' },
 			],
+
 			// Entity-card demo data.
 			basesOptions: [
 				{ id: 'consent', label: 'Consent' },
 				{ id: 'contract', label: 'Contract' },
 				{ id: 'legal', label: 'Legal obligation' },
 			],
+
 			reviewEntity: {
 				type: 'PERSON',
 				value: 'Jane Doe',
@@ -474,6 +480,7 @@ export default {
 				relationIds: ['rel-1'],
 				_patchError: null,
 			},
+
 			anonymizedEntity: {
 				type: 'PERSON',
 				value: 'Jane Doe',
@@ -484,6 +491,7 @@ export default {
 			},
 		}
 	},
+
 	methods: {
 		/** No-op handler so interactive demos can emit without side effects. */
 		noop() {},
@@ -495,6 +503,7 @@ export default {
 		onPageChanged(page) {
 			this.pager = { ...this.pager, page }
 		},
+
 		/**
 		 * Reflect a page-size change in the local demo state.
 		 *
@@ -503,6 +512,7 @@ export default {
 		onPageSizeChanged(limit) {
 			this.pager = { ...this.pager, limit, page: 1 }
 		},
+
 		/**
 		 * Reflect a table selection change in the local demo state.
 		 *

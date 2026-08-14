@@ -24,29 +24,29 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 					'Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.',
 				)
 			"
-			:show-title="true"
+			:showTitle="true"
 			:objects="customDictionaryStore.dictionaries"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="customDictionaryStore.loading"
 			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="false"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-view-toggle="false"
-			:show-add="true"
-			row-key="id"
-			:empty-text="emptyText"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			:showViewToggle="false"
+			:showAdd="true"
+			rowKey="id"
+			:emptyText="emptyText"
 			:refreshing="isRefreshing"
 			@refresh="handleRefresh"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
+			@pageChanged="onPageChanged"
+			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateDialog"
-			@row-click="viewDictionary">
+			@rowClick="viewDictionary">
 			<template #column-label="{ row }">
 				<span class="custom-dictionary-index__label">
 					<span
@@ -63,7 +63,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			<template #column-matchMode="{ row }">
 				<CnStatusBadge
 					:label="matchModeLabel(row.matchMode)"
-					:color-map="matchModeColorMap" />
+					:colorMap="matchModeColorMap" />
 			</template>
 
 			<template #column-active="{ row }">
@@ -73,7 +73,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 							? t('docudesk', 'Inactive')
 							: t('docudesk', 'Active')
 					"
-					:color-map="activeColorMap" />
+					:colorMap="activeColorMap" />
 			</template>
 
 			<template #row-actions="{ row }">
@@ -81,13 +81,13 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 					<template #icon>
 						<DotsHorizontal :size="20" />
 					</template>
-					<NcActionButton close-after-click @click="viewDictionary(row)">
+					<NcActionButton closeAfterClick @click="viewDictionary(row)">
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
 						{{ t('docudesk', 'Manage terms') }}
 					</NcActionButton>
-					<NcActionButton close-after-click @click="confirmDelete(row)">
+					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
@@ -101,7 +101,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 		<CustomDictionaryFormDialog
 			v-if="dialogOpen"
 			:saving="saving"
-			:form-error="formError"
+			:formError="formError"
 			@submit="onCreateSubmit"
 			@cancel="dialogOpen = false" />
 
@@ -124,14 +124,14 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 import {
 	CnIndexPage,
 	CnStatusBadge,
-	NcActions,
 	NcActionButton,
+	NcActions,
 } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 
 export default {
 	name: 'CustomDictionaryIndex',
@@ -146,6 +146,7 @@ export default {
 		DotsHorizontal,
 		Pencil,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
@@ -161,12 +162,14 @@ export default {
 				caseInsensitive: 'primary',
 				wordBoundary: 'success',
 			},
+
 			activeColorMap: {
 				[t('docudesk', 'Active')]: 'success',
 				[t('docudesk', 'Inactive')]: 'default',
 			},
 		}
 	},
+
 	computed: {
 		tableColumns() {
 			return [
@@ -180,17 +183,20 @@ export default {
 				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
 			]
 		},
+
 		paginationData() {
 			const total = customDictionaryStore.dictionaries.length
 			const pages = Math.ceil(total / this.pageSize) || 1
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
 		emptyText() {
 			if (customDictionaryStore.error) {
 				return customDictionaryStore.error
 			}
 			return t('docudesk', 'No custom dictionaries defined yet.')
 		},
+
 		/**
 		 * Body text of the delete confirmation dialog.
 		 *
@@ -205,9 +211,11 @@ export default {
 			)
 		},
 	},
+
 	mounted() {
 		customDictionaryStore.fetchDictionaries()
 	},
+
 	methods: {
 		t,
 		/**
@@ -220,6 +228,7 @@ export default {
 		displayLabel(row) {
 			return resolveI18nValue(row.label, t('docudesk', 'Custom dictionary'))
 		},
+
 		matchModeLabel(mode) {
 			const labels = {
 				exact: t('docudesk', 'Exact'),
@@ -228,6 +237,7 @@ export default {
 			}
 			return labels[mode] || mode || t('docudesk', 'Case-insensitive')
 		},
+
 		async handleRefresh() {
 			this.isRefreshing = true
 			try {
@@ -236,21 +246,26 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		viewDictionary(row) {
 			const id = row['@self']?.id || row.id || row.uuid
 			this.$router.push({ name: 'CustomDictionaryDetail', params: { id } })
 		},
+
 		openCreateDialog() {
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
 		async onCreateSubmit(formData) {
 			this.saving = true
 			this.formError = ''
@@ -268,6 +283,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Ask for confirmation before deleting a dictionary.
 		 *
@@ -279,6 +295,7 @@ export default {
 		confirmDelete(row) {
 			this.deleteTarget = row
 		},
+
 		/**
 		 * Dismiss the delete confirmation without deleting anything.
 		 *
@@ -287,6 +304,7 @@ export default {
 		cancelDelete() {
 			this.deleteTarget = null
 		},
+
 		/**
 		 * Delete the confirmed dictionary and all its terms. Reachable only
 		 * from the dialog's @confirm, so the record is never removed without

@@ -33,24 +33,21 @@
 		<!-- Tab navigation -->
 		<div class="template-detail__tabs">
 			<button
-				:class="['template-detail__tab', { active: activeTab === 'edit' }]"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'edit' }]"
 				@click="activeTab = 'edit'">
 				{{ t('docudesk', 'Editor') }}
 			</button>
 			<button
-				:class="[
-					'template-detail__tab',
-					{ active: activeTab === 'preview' },
-				]"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'preview' }]"
 				@click="loadPreview">
 				{{ t('docudesk', 'Preview') }}
 			</button>
 			<button
 				v-if="!isNew"
-				:class="[
-					'template-detail__tab',
-					{ active: activeTab === 'versions' },
-				]"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'versions' }]"
 				@click="loadVersions">
 				{{ t('docudesk', 'Versions') }}
 			</button>
@@ -206,7 +203,7 @@
 				<NcTextField
 					v-model="sampleDataJson"
 					:label="t('docudesk', 'Sample data (JSON)')"
-					:placeholder="'{ &quot;name&quot;: &quot;Jan de Vries&quot; }'"
+					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
 			</div>
 			<NcLoadingIcon v-if="previewLoading" />
@@ -280,24 +277,24 @@
 
 		<ConfirmRestoreVersionDialog
 			v-if="restoreTarget"
-			:version-number="restoreTarget ? restoreTarget.version : 0"
+			:versionNumber="restoreTarget ? restoreTarget.version : 0"
 			@confirm="executeRestore"
 			@cancel="restoreTarget = null" />
 	</div>
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcTextField,
 } from '@conduction/nextcloud-vue'
-import { useTemplateStore } from '../../store/modules/template.js'
+import { translate as t } from '@nextcloud/l10n'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
-import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
+import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
+import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
 	name: 'TemplateDetail',
@@ -310,6 +307,7 @@ export default {
 		MergeFieldDialog,
 		ConfirmRestoreVersionDialog,
 	},
+
 	data() {
 		return {
 			activeTab: 'edit',
@@ -324,6 +322,7 @@ export default {
 				format: 'A4',
 				orientation: 'P',
 			},
+
 			// WYSIWYG
 			editorHtml: '',
 			showRaw: false,
@@ -345,6 +344,7 @@ export default {
 			restoreTarget: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Pinia template store accessor for the detail editor.
@@ -354,12 +354,15 @@ export default {
 		templateStore() {
 			return useTemplateStore()
 		},
+
 		isNew() {
 			return this.templateStore.templateItem === null
 		},
+
 		isLockMine() {
 			return this.lockOwner === null || this.lockOwner === this.currentUserId
 		},
+
 		/**
 		 * Current Nextcloud user ID, used for lock ownership checks.
 		 *
@@ -369,6 +372,7 @@ export default {
 			return window.OC?.currentUser || ''
 		},
 	},
+
 	/**
 	 * Hydrate the editor form from the selected template and acquire its edit lock.
 	 *
@@ -395,9 +399,11 @@ export default {
 			}
 		}
 	},
+
 	async beforeUnmount() {
 		await this.releaseLockIfMine()
 	},
+
 	methods: {
 		t,
 		/**
@@ -409,6 +415,7 @@ export default {
 			await this.releaseLockIfMine()
 			this.$router.push({ name: 'Templates' })
 		},
+
 		/**
 		 * Release the edit lock if the current user owns it.
 		 *
@@ -420,6 +427,7 @@ export default {
 				await this.templateStore.releaseLock(tmpl.id)
 			}
 		},
+
 		/**
 		 * Apply an inline formatting command in the WYSIWYG editor.
 		 *
@@ -430,6 +438,7 @@ export default {
 			document.execCommand(cmd, false, null)
 			this.syncFromEditor()
 		},
+
 		/**
 		 * Apply a block-level format (heading) in the WYSIWYG editor.
 		 *
@@ -440,6 +449,7 @@ export default {
 			document.execCommand('formatBlock', false, tag)
 			this.syncFromEditor()
 		},
+
 		/**
 		 * Sync the form content from the WYSIWYG editor's HTML.
 		 *
@@ -450,6 +460,7 @@ export default {
 				this.form.content = this.$refs.editor.innerHTML
 			}
 		},
+
 		/**
 		 * Sync the form content from the raw HTML textarea.
 		 *
@@ -460,6 +471,7 @@ export default {
 			this.form.content = event.target.value
 			this.editorHtml = event.target.value
 		},
+
 		/**
 		 * Render a live preview of the current template content with sample data.
 		 *
@@ -486,6 +498,7 @@ export default {
 				this.previewLoading = false
 			}
 		},
+
 		/**
 		 * Load the version history for the current template.
 		 *
@@ -501,6 +514,7 @@ export default {
 			this.versions = result?.results || []
 			this.versionsLoading = false
 		},
+
 		/**
 		 * Open the restore confirmation dialog for a version.
 		 *
@@ -510,6 +524,7 @@ export default {
 		restoreVersion(ver) {
 			this.restoreTarget = ver
 		},
+
 		/**
 		 * Execute restore after user confirmed in the dialog.
 		 *
@@ -530,6 +545,7 @@ export default {
 				this.activeTab = 'edit'
 			}
 		},
+
 		/**
 		 * Persist the template (create or update), release the lock and return to the list.
 		 *
@@ -568,6 +584,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Insert a merge-field token at the cursor in the editor.
 		 *
@@ -579,6 +596,7 @@ export default {
 			document.execCommand('insertText', false, token)
 			this.syncFromEditor()
 		},
+
 		/**
 		 * Insert a conditional section block (data-condition attributes) at the cursor.
 		 *

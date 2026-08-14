@@ -48,12 +48,12 @@
 		<div class="dd-pagination__page-size">
 			<label :for="pageSizeId">{{ itemsPerPageLabel }}</label>
 			<NcSelect
-				:input-id="pageSizeId"
+				:inputId="pageSizeId"
 				class="dd-pagination__page-size-select"
-				:model-value="currentPageSizeOption"
+				:modelValue="currentPageSizeOption"
 				:options="pageSizeOptions"
 				:clearable="false"
-				:input-label="itemsPerPageLabel"
+				:inputLabel="itemsPerPageLabel"
 				@option:selected="changePageSize" />
 		</div>
 	</div>
@@ -91,6 +91,7 @@ export default {
 				{ value: 100, label: '100' },
 			],
 		},
+
 		/** Hide the control entirely below this item count when on a single page. */
 		minItemsToShow: { type: Number, default: 10 },
 		firstLabel: { type: String, default: 'First' },
@@ -101,21 +102,25 @@ export default {
 		/** `{current}` and `{total}` placeholders are interpolated. */
 		pageInfoFormat: { type: String, default: 'Page {current} of {total}' },
 	},
+
 	computed: {
 		pageSizeId() {
 			return 'dd-page-size-' + this._uid
 		},
+
 		currentPageSizeOption() {
 			return (
 				this.pageSizeOptions.find((o) => o.value === this.currentPageSize)
 				|| this.pageSizeOptions[0]
 			)
 		},
+
 		pageInfoText() {
 			return this.pageInfoFormat
 				.replace('{current}', this.currentPage)
 				.replace('{total}', this.totalPages)
 		},
+
 		/**
 		 * Compact page-number list with leading/trailing ellipses for large
 		 * page counts. Always includes the first and last page when truncated.
@@ -145,6 +150,7 @@ export default {
 			return pages
 		},
 	},
+
 	methods: {
 		/**
 		 * Emit a page change if it differs from the current page and is in range.
@@ -156,6 +162,7 @@ export default {
 				this.$emit('page-changed', page)
 			}
 		},
+
 		/**
 		 * Emit a page-size change.
 		 *

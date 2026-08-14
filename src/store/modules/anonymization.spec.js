@@ -1,8 +1,6 @@
-/* eslint-disable no-console */
-import { setActivePinia, createPinia } from 'pinia'
-
-import { useAnonymizationStore } from './anonymization.js'
 import axios from '@nextcloud/axios'
+import { createPinia, setActivePinia } from 'pinia'
+import { useAnonymizationStore } from './anonymization.js'
 
 // The store reaches for these Nextcloud helpers and the file-viewer service
 // at module load / inside actions. Mock them so the store can be exercised

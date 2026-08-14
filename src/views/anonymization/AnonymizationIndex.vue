@@ -26,6 +26,7 @@ export default {
 	components: {
 		AnonymizationWidget,
 	},
+
 	methods: {
 		t,
 	},

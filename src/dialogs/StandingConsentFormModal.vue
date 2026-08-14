@@ -10,21 +10,26 @@ import {
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 
-const blankForm = () => ({
-	entityText: '',
-	entityType: 'PERSON',
-	consentMethod: '',
-	consentDocument: '',
-	consentScope: '',
-	legalBasis: '',
-	validFrom: '',
-	validUntil: '',
-	active: true,
-	matchRules: [],
-	consentStatus: 'consent_given',
-	publicationDecision: 'publish_with_consent',
-	notificationStatus: 'skipped',
-})
+/**
+ *
+ */
+function blankForm() {
+	return {
+		entityText: '',
+		entityType: 'PERSON',
+		consentMethod: '',
+		consentDocument: '',
+		consentScope: '',
+		legalBasis: '',
+		validFrom: '',
+		validUntil: '',
+		active: true,
+		matchRules: [],
+		consentStatus: 'consent_given',
+		publicationDecision: 'publish_with_consent',
+		notificationStatus: 'skipped',
+	}
+}
 
 export default {
 	name: 'StandingConsentFormModal',
@@ -37,12 +42,14 @@ export default {
 		NcTextField,
 		Delete,
 	},
+
 	props: {
 		open: { type: Boolean, required: true },
 		editingRecord: { type: Object, default: null },
 		saving: { type: Boolean, default: false },
 		formError: { type: String, default: '' },
 	},
+
 	emits: ['update:open', 'submit', 'cancel'],
 	data() {
 		return {
@@ -54,18 +61,22 @@ export default {
 				'verbal_recorded',
 				'opt_in_form',
 			],
+
 			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
+
 	computed: {
 		editing() {
 			return this.editingRecord !== null
 		},
+
 		dialogTitle() {
 			return this.editing
 				? t('docudesk', 'Edit standing consent')
 				: t('docudesk', 'Add standing consent')
 		},
+
 		canSubmit() {
 			return (
 				this.form.entityText.trim() !== ''
@@ -75,6 +86,7 @@ export default {
 			)
 		},
 	},
+
 	watch: {
 		open(now) {
 			if (now) {
@@ -82,6 +94,7 @@ export default {
 			}
 		},
 	},
+
 	methods: {
 		t,
 		resetForm() {
@@ -97,18 +110,22 @@ export default {
 				this.form = blankForm()
 			}
 		},
+
 		addRule() {
 			this.form.matchRules.push({ type: 'exact', value: '' })
 		},
+
 		removeRule(idx) {
 			this.form.matchRules.splice(idx, 1)
 		},
+
 		submit() {
 			this.$emit('submit', {
 				...this.form,
 				matchRules: this.form.matchRules.map((r) => ({ ...r })),
 			})
 		},
+
 		onCancel() {
 			this.$emit('update:open', false)
 			this.$emit('cancel')
@@ -132,13 +149,13 @@ export default {
 			<NcSelect
 				v-model="form.entityType"
 				:options="entityTypeOptions"
-				:input-label="t('docudesk', 'Entity type')"
+				:inputLabel="t('docudesk', 'Entity type')"
 				:label="t('docudesk', 'Entity type')"
 				required />
 			<NcSelect
 				v-model="form.consentMethod"
 				:options="consentMethodOptions"
-				:input-label="t('docudesk', 'Consent method')"
+				:inputLabel="t('docudesk', 'Consent method')"
 				:label="t('docudesk', 'Consent method')"
 				required />
 			<NcTextField
@@ -190,7 +207,7 @@ export default {
 				<NcSelect
 					v-model="rule.type"
 					:options="matchTypeOptions"
-					:input-label="t('docudesk', 'Match type')"
+					:inputLabel="t('docudesk', 'Match type')"
 					:label="t('docudesk', 'Match type')" />
 				<NcTextField
 					v-model="rule.value"
