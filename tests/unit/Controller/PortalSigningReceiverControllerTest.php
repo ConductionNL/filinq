@@ -50,6 +50,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use OCP\Security\Bruteforce\IThrottler;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -162,7 +163,8 @@ class PortalSigningReceiverControllerTest extends TestCase {
 			// away would remove exactly the behaviour under test.
 			registerResolver: new OpenRegisterResolver(settingsService: $this->mockSettingsService),
 			logger: $this->mockLogger,
-			documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder)
+			documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder),
+			throttler: $this->createMock(IThrottler::class)
 		);
 
 	}//end controller()

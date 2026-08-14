@@ -72,6 +72,21 @@ if (is_dir($ocpSystemTagDir) === true) {
 	}
 }
 
+// Load OCP's brute-force throttler contract (PortalSigningReceiverController
+// registers rejected portal assertions against it) — same "real file, not
+// classmapped" situation as the EventDispatcher/AppFramework\Db/SystemTag
+// contracts above. Without this, createMock(IThrottler::class) raises
+// UnknownTypeException and every test in that class errors out.
+$ocpBruteforceDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Security/Bruteforce';
+if (is_dir($ocpBruteforceDir) === true) {
+	foreach (['MaxDelayReached.php', 'IThrottler.php'] as $ocpBruteforceFile) {
+		$ocpBruteforcePath = $ocpBruteforceDir . '/' . $ocpBruteforceFile;
+		if (is_file($ocpBruteforcePath) === true) {
+			require_once $ocpBruteforcePath;
+		}
+	}
+}
+
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
 
