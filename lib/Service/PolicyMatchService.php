@@ -93,7 +93,6 @@ class PolicyMatchService {
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
-	 * @param ContainerInterface $container DI container for OpenRegister lookup.
 	 * @param IAppManager $appManager App manager (used to confirm OR is installed).
 	 * @param IAppConfig $config App config (prohibition high-confidence threshold).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.

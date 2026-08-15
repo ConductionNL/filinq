@@ -73,7 +73,6 @@ class PolicyRetroactiveService {
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
-	 * @param ContainerInterface $container DI container for OpenRegister lookup.
 	 * @param PolicyMatchService $policyMatcher Reusable rule-evaluation primitives.
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 */
