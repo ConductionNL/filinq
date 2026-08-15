@@ -66,24 +66,49 @@ webpackConfig.entry = {
 // is present — without it a local build can never reproduce what CI and production
 // build (they have no sibling, so they always resolve the npm dist).
 //
-// ⚠️ USE_LOCAL_LIB is opt-OUT, and the shared apps-extra checkout of
-// nextcloud-vue sits on the Vue 2 (beta.*) line. Defaulting to "on" therefore
-// compiles Vue 2 library sources into this Vue 3 app, silently, with a clean
-// build. Guard on the sibling's MAJOR version instead of trusting the default:
-// a v1.x sibling is the Vue 2 line and must be ignored.
+// ⚠️ USE_LOCAL_LIB is opt-IN (ADR-090). Building against a developer's working
+// checkout is the wrong default for a build that can ship.
+//
+// The sibling is validated against THIS app's own declared range. The previous
+// test was `major < 2`, on the premise that a bad sibling would be 1.x. The
+// sibling today is 2.0.5 while this app declares 2.2.0-vue3.16 — both major 2 —
+// so the test waved through a version the app never asked for.
+//
+// The failure that skew produces is not obvious from the version alone. Building
+// against the sibling also pulls packages out of the SIBLING's node_modules, and
+// a stale vue-demi shim there (its postinstall picks v2/v2.7/v3 and does not
+// re-run on `npm install`) yields errors of the form
+//   export 'default' (imported as 'Vue') was not found in 'vue'
+// — a Vue-2-shaped failure from a library that is itself Vue 3.
+//
+// Fail CLOSED: if the check cannot run, the sibling is refused. A guard that
+// degrades to "allow" is not a guard.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const localLibPkg = path.resolve(__dirname, '../nextcloud-vue/package.json')
-let useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
-if (useLocalLib && fs.existsSync(localLibPkg)) {
-	const localVersion = String(
-		JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || '',
-	)
-	const localMajor = parseInt(localVersion, 10)
-	if (!Number.isNaN(localMajor) && localMajor < 2) {
+let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
+if (useLocalLib) {
+	let localVersion = 'unreadable'
+	let satisfied = false
+	try {
+		// eslint-disable-next-line n/no-extraneous-require
+		const semver = require('semver')
+		const required =
+			require('./package.json').dependencies['@conduction/nextcloud-vue']
+		localVersion = String(
+			JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || '',
+		)
+		satisfied = semver.satisfies(localVersion, required, {
+			includePrerelease: true,
+		})
+	} catch (e) {
+		satisfied = false
+	}
+
+	if (!satisfied) {
 		// eslint-disable-next-line no-console
 		console.warn(
 			`[docudesk] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
-				+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
+				+ 'it does not satisfy this app\'s declared range. Building against the npm dist.',
 		)
 		useLocalLib = false
 	}
