@@ -351,8 +351,18 @@ test.describe('agent document editing', () => {
 		})
 		expect(res.status()).toBe(200)
 
-		const tools = (await res.json()).result.tools as Array<{ name: string }>
-		const docudesk = tools.map(t => t.name).filter(n => n.startsWith('docudesk.'))
+		// ⚠️ Assert on `id`, NOT on `name`. `tools/list` carries BOTH: `id` is the
+		// dotted registry id (`docudesk.readDocument`, `openconnector.endpoint.search`)
+		// and `name` is the MCP-safe local name (`readDocument`, `endpoint_search`).
+		// `tools/call` takes the dotted id, which makes `name` easy to reach for by
+		// mistake — a filter on `name.startsWith('docudesk.')` matches NOTHING and
+		// the "no write verb is exposed" assertion below then passes over an empty
+		// list, reporting a guarantee it never checked. Measured against the live
+		// endpoint before relying on it.
+		const tools = (await res.json()).result.tools as Array<{ id?: string, name: string }>
+		const docudesk = tools
+			.map(t => String(t.id ?? ''))
+			.filter(id => id.startsWith('docudesk.'))
 
 		// POSITIVE CONTROL: if the register had not imported, this list would be
 		// empty and every assertion below would pass vacuously.
