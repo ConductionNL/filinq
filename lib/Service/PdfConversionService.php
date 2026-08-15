@@ -53,6 +53,8 @@ use Throwable;
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
  */
 class PdfConversionService {
 	/**
@@ -76,6 +78,8 @@ class PdfConversionService {
 	 * @return File The newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException When no backend in the cascade succeeded.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
 	 */
 	public function convertToPdf(File $source): File {
 		return $this->convertToPdfReporting(source: $source)['file'];
@@ -95,6 +99,8 @@ class PdfConversionService {
 	 * @return array{file: File, backend: string} The PDF and the backend that produced it.
 	 *
 	 * @throws ConversionFailedException When no backend in the cascade succeeded.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
 	 */
 	public function convertToPdfReporting(File $source): array {
 		$mimeType = (string)$source->getMimeType();

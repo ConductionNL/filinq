@@ -80,6 +80,31 @@ class DocumentAgentService {
 
 	}//end __construct()
 
+	// ⚠️ ATTRIBUTE BEFORE DOCBLOCK, deliberately, on all three tools below.
+	//
+	// The idiomatic order (docblock, then attribute, then declaration) makes
+	// hydra gate-16 report these methods as missing `@spec` when they are not:
+	// `check_spec_coverage.py::_docblock_block()` walks up from the declaration
+	// skipping lines that start with `#[` or `]`, and a multi-line attribute
+	// closes on `)]` — which matches neither, so the walk stops there and never
+	// reaches the docblock holding the tag.
+	//
+	// Both orders are valid PHP and reflection reads the attribute and the
+	// docblock identically either way (verified). Putting the attribute first is
+	// the smaller price than dropping the multi-line form, which cannot hold
+	// these descriptions inside the 150-column limit. Revert once the gate
+	// handles `)]`.
+
+	#[McpTool(
+		name: 'readDocument',
+		description: 'Read a Word (.docx) or OpenDocument (.odt) file as a list of anchored text blocks, '
+			. 'one per paragraph. Use this before editDocument: it returns the anchors and the version '
+			. 'that editDocument requires. Returns text, never the file bytes.',
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'read'
+	)]
 	/**
 	 * Read the editable text of a Word or OpenDocument text file, block by block.
 	 *
@@ -97,21 +122,23 @@ class DocumentAgentService {
 	 *
 	 * @spec openspec/specs/document-editing/spec.md#requirement-edits-address-stable-anchors-never-positional-indexes
 	 */
-	#[McpTool(
-		name: 'readDocument',
-		description: 'Read a Word (.docx) or OpenDocument (.odt) file as a list of anchored text blocks, '
-			. 'one per paragraph. Use this before editDocument: it returns the anchors and the version '
-			. 'that editDocument requires. Returns text, never the file bytes.',
-		readOnlyHint: true,
-		destructiveHint: false,
-		idempotentHint: true,
-		scope: 'read'
-	)]
 	public function readDocument(int $fileId): array {
 		return $this->editSession->openForAgent(uid: $this->requireUid(), fileId: $fileId);
 
 	}//end readDocument()
 
+	#[McpTool(
+		name: 'editDocument',
+		description: 'Change the text of a Word (.docx) or OpenDocument (.odt) file by replacing, inserting '
+			. 'after, or deleting anchored paragraphs. Call readDocument first to get the anchors and version. '
+			. 'Writes into the file by default (restorable via Nextcloud file versions); pass outputMode '
+			. '"sibling" to write a new file instead. Refuses if the document changed since it was read, if it '
+			. 'is open in an editor, if it is under a signing request, or if it is anonymisation output.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: false,
+		scope: 'update'
+	)]
 	/**
 	 * Change the text of a Word or OpenDocument text file.
 	 *
@@ -138,18 +165,6 @@ class DocumentAgentService {
 	 * @spec openspec/specs/document-editing/spec.md#requirement-editing-writes-in-place-by-default-with-a-recoverable-prior-version
 	 * @spec openspec/specs/document-editing/spec.md#requirement-every-produced-file-is-recorded-with-its-identity-and-without-its-content
 	 */
-	#[McpTool(
-		name: 'editDocument',
-		description: 'Change the text of a Word (.docx) or OpenDocument (.odt) file by replacing, inserting '
-			. 'after, or deleting anchored paragraphs. Call readDocument first to get the anchors and version. '
-			. 'Writes into the file by default (restorable via Nextcloud file versions); pass outputMode '
-			. '"sibling" to write a new file instead. Refuses if the document changed since it was read, if it '
-			. 'is open in an editor, if it is under a signing request, or if it is anonymisation output.',
-		readOnlyHint: false,
-		destructiveHint: true,
-		idempotentHint: false,
-		scope: 'update'
-	)]
 	public function editDocument(int $fileId, array $edits, string $version, string $outputMode = ''): array {
 		$uid = $this->requireUid();
 
@@ -180,6 +195,16 @@ class DocumentAgentService {
 
 	}//end editDocument()
 
+	#[McpTool(
+		name: 'convertDocumentToPdf',
+		description: 'Convert a document in the user\'s files to PDF, writing a new PDF file and leaving the '
+			. 'source untouched. Reports which conversion backend produced the PDF. The produced file is '
+			. 'tagged "Agent authored" in Files.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
 	/**
 	 * Convert a document to PDF, leaving the source untouched.
 	 *
@@ -196,16 +221,6 @@ class DocumentAgentService {
 	 *
 	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
 	 */
-	#[McpTool(
-		name: 'convertDocumentToPdf',
-		description: 'Convert a document in the user\'s files to PDF, writing a new PDF file and leaving the '
-			. 'source untouched. Reports which conversion backend produced the PDF. The produced file is '
-			. 'tagged "Agent authored" in Files.',
-		readOnlyHint: false,
-		destructiveHint: false,
-		idempotentHint: false,
-		scope: 'create'
-	)]
 	public function convertDocumentToPdf(int $fileId): array {
 		$uid = $this->requireUid();
 		$source = $this->resolveReadableFile(uid: $uid, fileId: $fileId);
