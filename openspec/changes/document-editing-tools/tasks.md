@@ -49,4 +49,15 @@
 
 - **3.3 Euro-Office portability** — untestable here; the ADR-087 claim stays unverified.
 - **An end-to-end run driven by the chat window's LLM.** The tools are live, granted and correctly classified, and the full read → edit → tag → version → refusal loop is proven against a real file through the real MCP endpoint. What is not proven is a *model* choosing to call them: this instance's `chatProvider` is `anthropic` with `executionMode: cli`, and in that mode the model is offered the CLI transport's own tool namespace rather than Hermiq's registry. Switching to Ollama for a test produced an empty reply from `qwen2.5:3b` (the only tool-capable model present). Neither is a defect in this change; both are instance/provider configuration.
-- **The `generatedDocument` audit row is not being written on this instance.** `GeneratedDocumentLogger::log()` fails with "The required properties (documentType, employeeId) are missing" although the only schema slugged `generatedDocument` (id 5023) requires neither — a register-resolution problem that predates this change. `DocumentAgentService::record()` logs and swallows it by design (the file is already written and tagged, so throwing would report a failure that did not happen), and the authoritative half of ADR-088 — Hermiq's `artefact` record — is unaffected. Needs its own fix.
+- **The `generatedDocument` audit row is not being written on this instance — ROOT CAUSE FOUND, and it is not DocuDesk's code.** `GeneratedDocumentLogger::log()` fails with "The required properties (documentType, employeeId) are missing", which DocuDesk's own `generatedDocument` (schema id 5023) requires neither.
+
+  Measured on the dev instance:
+  1. `lib/Settings/docudesk_register.json` correctly declares the `document` register with all ten of its schemas, `generatedDocument` among them.
+  2. The LIVE `document` register (id 6) has **zero schemas attached**. So has 29 of the instance's 200 registers.
+  3. With no register scope to resolve within, OpenRegister falls back to resolving the schema slug **globally and case-insensitively** — and the instance carries a foreign `GeneratedDocument` (id 1467, title "Generated document", `required: [documentType, employeeId, status]`) belonging to another app's fixtures. That is what the write hits.
+
+  ⚠️ **The dangerous half is not the failure — it is that the fallback resolves ANOTHER APP'S SCHEMA BY SLUG.** This write failed only because the foreign schema happened to have stricter `required` fields. A foreign schema with looser ones would have accepted DocuDesk's audit row silently, into another app's register.
+
+  Two fixes, neither of them here: OpenRegister's slug resolution should be register-scoped (or at least case-sensitive) rather than falling back to a global match, and the register→schema linkage needs repairing on this instance. Not attempted from this branch because the shared checkout was switched to another workstream mid-session, so re-running the import would have imported THEIR register file, not this one.
+
+  `DocumentAgentService::record()` logs and swallows the failure by design — the file is already written and tagged, so throwing would report a failure that did not happen — and ADR-088's authoritative half, Hermiq's `artefact` record, is unaffected.
