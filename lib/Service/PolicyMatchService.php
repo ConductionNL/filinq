@@ -47,7 +47,7 @@ use Exception;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Detection-time policy matcher.
@@ -104,7 +104,7 @@ class PolicyMatchService {
 		private readonly LoggerInterface $logger,
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 		private readonly TextNormaliser $textNormaliser = new TextNormaliser(),
 		private readonly PolicyRuleNormaliser $ruleNormaliser = new PolicyRuleNormaliser(),

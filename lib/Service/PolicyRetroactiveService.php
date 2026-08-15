@@ -45,7 +45,7 @@ namespace OCA\DocuDesk\Service;
 use DateTimeImmutable;
 use Exception;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Retroactive rule-mutation handler.
@@ -80,7 +80,7 @@ class PolicyRetroactiveService {
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly PolicyMatchService $policyMatcher,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 	) {
 

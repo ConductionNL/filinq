@@ -21,7 +21,7 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\PolicyMatchService;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\DocuDesk\Service\PolicyRetroactiveService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +31,7 @@ use Psr\Log\LoggerInterface;
  * Cover the contract of PolicyRetroactiveService.
  *
  * Spec §5 of entity-publication-policies. We exercise the public API directly
- * with stubs — the OpenRegister ObjectService is mocked.
+ * with stubs — OpenRegister's published ObjectServiceInterface is mocked (ADR-084).
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -53,9 +53,9 @@ class PolicyRetroactiveServiceTest extends TestCase {
 	/**
 	 * Mock DI container.
 	 *
-	 * @var ObjectService|MockObject
+	 * @var ObjectServiceInterface|MockObject
 	 */
-	private ObjectService|MockObject $mockObjectService;
+	private ObjectServiceInterface|MockObject $mockObjectService;
 
 	/**
 	 * Mock policy matcher.
@@ -73,7 +73,7 @@ class PolicyRetroactiveServiceTest extends TestCase {
 		parent::setUp();
 
 		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
-		$this->mockObjectService = $this->createMock(originalClassName: ObjectService::class);
+		$this->mockObjectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->mockPolicyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
 
 	}//end setUp()

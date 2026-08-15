@@ -282,7 +282,7 @@ class MetadataService {
 	 * declaring `authorization` on the schemas (ConductionNL/openregister#2011),
 	 * not changing anything here.
 	 *
-	 * @param \OCA\OpenRegister\Service\ObjectService $objectService The resolved OpenRegister object service
+	 * @param \OCA\OpenRegister\Contract\ObjectServiceInterface $objectService The resolved OpenRegister object service
 	 * @param string $objectId The object UUID in OpenRegister
 	 * @param string $register The register ID
 	 * @param string $schema The schema ID
@@ -293,7 +293,7 @@ class MetadataService {
 	 * @throws Exception If the object cannot be found.
 	 */
 	private function persistEnrichedMetadata(
-		\OCA\OpenRegister\Service\ObjectService $objectService,
+		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
 		string $objectId,
 		string $register,
 		string $schema,
