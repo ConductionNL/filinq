@@ -34,7 +34,7 @@
   ],
   "dependencies": {
     "@babel/core": "^7.29.0",
-    "@conduction/nextcloud-vue": "2.2.0-vue3.16",
+    "@conduction/nextcloud-vue": "^2.3.0",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
@@ -144,10 +144,7 @@
       "picomatch": "^2.3.2"
     },
     "brace-expansion@1": "^1.1.18",
-    "vite": "^7.3.6",
-    "@conduction/nextcloud-vue": {
-      "eslint": "$eslint"
-    }
+    "vite": "^7.3.6"
   },
   "prettier": "@nextcloud/prettier-config"
 }
