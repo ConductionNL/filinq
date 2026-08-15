@@ -374,6 +374,17 @@ test.describe('agent document editing', () => {
 
 		// The standing refusals, as a shape rather than a promise: no schema-derived
 		// write verb, and no batch or signing tool.
+		//
+		// ⚠️ HOW STRONG THIS ASSERTION ACTUALLY IS. Measured on the dev instance:
+		// across all 109 tools from every installed app, ZERO ids end in
+		// `.create`/`.update`/`.delete` — no app enables a derived write verb at
+		// all. So this expectation cannot currently be falsified by live data, and
+		// on its own it would pass just as happily against a broken filter. The
+		// regex was therefore checked in isolation (it matches
+		// `docudesk.template.create` and not `docudesk.template.search` or
+		// `docudesk.readDocument`), and the real guard is the non-empty check
+		// above: if the surface is missing entirely, the test fails there rather
+		// than reporting this invariant it never got to evaluate.
 		const writeVerbs = docudesk.filter(n => /\.(create|update|delete)$/.test(n))
 		expect(writeVerbs, 'no DocuDesk schema may expose a derived write verb').toEqual([])
 		expect(docudesk.filter(n => /batch|sign/i.test(n)), 'batch and signing stay unreachable').toEqual([])
