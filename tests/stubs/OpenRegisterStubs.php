@@ -1575,6 +1575,19 @@ interface Folder extends Node {
 	 * @return string A non-colliding filename
 	 */
 	public function getNonExistingName(string $name): string;
+
+	/**
+	 * The first node with this id the folder can reach, or null.
+	 *
+	 * Resolving through the USER folder is the IDOR boundary for the agent
+	 * document tools: an id the user cannot reach returns null rather than a
+	 * node they were never entitled to.
+	 *
+	 * @param int $id The file id.
+	 *
+	 * @return \OCP\Files\Node|null
+	 */
+	public function getFirstNodeById(int $id): ?\OCP\Files\Node;
 }//end interface
 
 /**
@@ -1602,6 +1615,23 @@ interface Node {
 	public function getSize();
 
 	public function getOwner(): ?\OCP\IUser;
+
+	/**
+	 * The node's entity tag, which changes whenever its content does.
+	 *
+	 * Untyped, mirroring OCP — a stub that narrows the real signature is green
+	 * locally and red only in CI.
+	 *
+	 * @return string
+	 */
+	public function getEtag();
+
+	/**
+	 * Whether the acting user may write to this node.
+	 *
+	 * @return bool
+	 */
+	public function isUpdateable();
 }//end interface
 
 /**
@@ -1637,6 +1667,13 @@ interface File extends Node {
 	 * @return \OCP\Files\Node The moved node.
 	 */
 	public function move(string $targetPath): \OCP\Files\Node;
+
+	/**
+	 * The file's extension without the leading dot.
+	 *
+	 * @return string
+	 */
+	public function getExtension(): string;
 }//end interface
 
 /**
@@ -2149,3 +2186,70 @@ class Routes {
 		return ['routes' => $merged];
 	}//end standard()
 }//end class
+
+namespace OCA\OpenRegister\Mcp;
+
+if (interface_exists(IMcpScannableServices::class) === false) {
+	/**
+	 * Stub for IMcpScannableServices (ADR-063 chain 3/3).
+	 *
+	 * Mirrors openregister's real interface so DocudeskScannableServices can be
+	 * loaded and asserted on in a standalone unit run where the openregister app
+	 * is not installed. DocuDesk has no composer dependency on openregister.
+	 *
+	 * @category Tests
+	 * @package  OCA\OpenRegister\Mcp
+	 * @author   Conduction B.V. <info@conduction.nl>
+	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+	 * @link     https://www.DocuDesk.app
+	 */
+	interface IMcpScannableServices {
+		/**
+		 * The app's own service classes eligible for `#[McpTool]` reflection.
+		 *
+		 * @return list<class-string> Fully-qualified service class names owned by this app.
+		 */
+		public function getScannableServiceClasses(): array;
+	}//end interface
+}//end if
+
+namespace OCA\OpenRegister\Mcp\Attribute;
+
+if (class_exists(McpTool::class) === false) {
+	/**
+	 * Stub for the #[McpTool] attribute (ADR-063 chain 3/3).
+	 *
+	 * The constructor signature MUST mirror the real attribute's: an attribute is
+	 * only ever resolved by reflection, so a drift here is invisible until
+	 * `ReflectionMethod::getAttributes()->newInstance()` throws in a test that
+	 * asserts on the declared tool surface.
+	 *
+	 * @category Tests
+	 * @package  OCA\OpenRegister\Mcp\Attribute
+	 * @author   Conduction B.V. <info@conduction.nl>
+	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+	 * @link     https://www.DocuDesk.app
+	 */
+	#[\Attribute(\Attribute::TARGET_METHOD)]
+	final class McpTool {
+		/**
+		 * Constructor.
+		 *
+		 * @param string|null $name Local tool name; defaults to the method name.
+		 * @param string|null $description LLM-facing description.
+		 * @param bool|null $readOnlyHint MCP annotation hint.
+		 * @param bool|null $destructiveHint MCP annotation hint.
+		 * @param bool|null $idempotentHint MCP annotation hint.
+		 * @param string|null $scope Advisory scope.
+		 */
+		public function __construct(
+			public readonly ?string $name = null,
+			public readonly ?string $description = null,
+			public readonly ?bool $readOnlyHint = null,
+			public readonly ?bool $destructiveHint = null,
+			public readonly ?bool $idempotentHint = null,
+			public readonly ?string $scope = null,
+		) {
+		}//end __construct()
+	}//end class
+}//end if

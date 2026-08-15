@@ -1649,6 +1649,29 @@ interface ILockingProvider {
  * @link     https://www.DocuDesk.app
  */
 class LockedException extends \Exception {
+	/**
+	 * Constructor mirroring OCP's four-argument signature.
+	 *
+	 * `OwnerLockedException` (loaded from vendor/nextcloud/ocp, not stubbed)
+	 * calls `parent::__construct($path, null, $owner, $readablePath)`. A stub
+	 * that inherits \Exception's three-argument constructor therefore raises
+	 * ArgumentCountError the moment anything constructs a real lock conflict —
+	 * a stub drifting from the class it stands in for.
+	 *
+	 * @param string $path The locked path.
+	 * @param \Throwable|null $previous The previous exception.
+	 * @param string|null $existingLock The existing lock's owner.
+	 * @param string|null $readablePath A human-readable path.
+	 */
+	public function __construct(
+		string $path = '',
+		?\Throwable $previous = null,
+		?string $existingLock = null,
+		?string $readablePath = null,
+	) {
+		unset($readablePath);
+		parent::__construct('"' . $path . '" is locked' . ($existingLock === null ? '' : ' by ' . $existingLock), 0, $previous);
+	}//end __construct()
 }//end class
 
 namespace OCP\Files\Conversion;

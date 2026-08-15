@@ -593,7 +593,29 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "description",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search DocuDesk document templates. Use to answer 'which letter template do we have for X?' before generating correspondence. Returns template metadata only, never rendered document content.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "name",
+                                    "namespace",
+                                    "category",
+                                    "format",
+                                    "orientation"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single document template by id, including its category, page format and owning app namespace.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": true
             },
@@ -888,7 +910,31 @@
                 "configuration": {
                     "objectNameField": "templateName",
                     "objectDescriptionField": "status",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search the correspondence audit log — which letters were generated, from which template, for which recipient, and whether generation succeeded. This is the record of what was produced, not the produced document.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "templateId",
+                                    "recipientId",
+                                    "recipientType",
+                                    "caseReference",
+                                    "status",
+                                    "format",
+                                    "generatedBy"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single correspondence audit record by id, including its status and any error message.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": false,
                 "x-openregister-archival": {
@@ -992,7 +1038,7 @@
                         "order": 5,
                         "facetable": true,
                         "title": "Format",
-                        "enum": ["pdf", "odf", "html"]
+                        "enum": ["pdf", "odf", "html", "docx"]
                     },
                     "status": {
                         "description": "Status van de documentgeneratie",
@@ -1087,7 +1133,31 @@
                 "configuration": {
                     "objectNameField": "templateName",
                     "objectDescriptionField": "status",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search generated documents — the audit trail of every document DocuDesk produced, including the Nextcloud file id and path where it was stored. Use to find the artefact an earlier generation, conversion or agent edit produced.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "templateId",
+                                    "templateVersion",
+                                    "status",
+                                    "format",
+                                    "caseId",
+                                    "generatedBy",
+                                    "fileId"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single generated-document record by id, including its file id, path, warnings and error message.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": false
             },
@@ -1671,7 +1741,25 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "primaryColor",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search branding (huisstijl) configurations — the organisation letterheads, colours and margins available when generating correspondence.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "name"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single branding configuration by id, including its header and footer templates and default margins.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": false
             },
@@ -1849,7 +1937,30 @@
                 "configuration": {
                     "objectNameField": "documentName",
                     "objectDescriptionField": "status",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search signing requests — answers 'has that contract been signed yet?'. Read-only: an agent can report on a signature process but can never start, advance or sign one.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "documentFileId",
+                                    "initiatorUserId",
+                                    "signatureLevel",
+                                    "signingMode",
+                                    "status",
+                                    "provider"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single signing request by id, including its status, eIDAS level and deadline. Returns no signature material.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": true,
                 "x-openregister-lifecycle": {
@@ -2558,7 +2669,25 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "description",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search Woo Article 5 legal bases — the grounds under which data is anonymised before a document is published.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "name"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single legal basis by id, including its explanation and statutory reference.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": false
             },
@@ -2636,7 +2765,25 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "description",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search dossiers — Nextcloud folders whose contents fall under one or more Woo Article 5 legal bases.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "name"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single dossier by id, including the legal bases it is filed under and when it was last reviewed.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": false
             },
@@ -2777,7 +2924,27 @@
                 "configuration": {
                     "objectNameField": "templateName",
                     "objectDescriptionField": "status",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-mcp": {
+                        "enabled": true,
+                        "tools": {
+                            "search": {
+                                "description": "Search batch correspondence jobs — answers 'did the mail-merge finish?'. Read-only: an agent can report on a batch but can never start one.",
+                                "scope": "read",
+                                "readOnlyHint": true,
+                                "filters": [
+                                    "templateId",
+                                    "status",
+                                    "initiatedBy"
+                                ]
+                            },
+                            "get": {
+                                "description": "Get a single batch correspondence job by id, including completed and error counts.",
+                                "scope": "read",
+                                "readOnlyHint": true
+                            }
+                        }
+                    }
                 },
                 "searchable": false,
                 "x-openregister-archival": {

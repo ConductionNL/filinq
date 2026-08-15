@@ -1,0 +1,357 @@
+<?php
+
+/**
+ * Document Agent Service
+ *
+ * DocuDesk's curated, agent-reachable document operations: read a document's
+ * anchored blocks, apply anchored edits to it, and convert it to PDF.
+ *
+ * These are the only document-editing tools an agent sees. Everything the
+ * operations need -- locking, the version precondition, the codec, the ADR-088
+ * mark, the refusals -- happens below this class and is never separately
+ * callable, so there is no sequence of tool calls that arrives at a write
+ * without passing through the guards.
+ *
+ * @category  Service
+ * @package   OCA\DocuDesk\Service\Editing
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/document-editing-tools/tasks.md#task-2-5
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\DocuDesk\Service\Editing;
+
+use OCA\DocuDesk\Service\GeneratedDocumentLogger;
+use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCP\Files\File;
+use OCP\Files\IRootFolder;
+use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
+use Throwable;
+
+/**
+ * The agent-facing document operations.
+ *
+ * @category Service
+ * @package  OCA\DocuDesk\Service\Editing
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/specs/document-editing/spec.md#requirement-no-document-attachment-or-signature-bytes-leave-through-this-capability
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
+class DocumentAgentService {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param EditSessionService $editSession The edit session owner.
+	 * @param PdfConversionService $pdfConversion The PDF conversion cascade.
+	 * @param AgentArtefactMarker $marker The ADR-088 artefact marker.
+	 * @param GeneratedDocumentLogger $documentLogger The generated-document audit logger.
+	 * @param IRootFolder $rootFolder The Nextcloud root folder.
+	 * @param IUserSession $userSession The acting user's session.
+	 * @param LoggerInterface $logger Logger for diagnostics.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly EditSessionService $editSession,
+		private readonly PdfConversionService $pdfConversion,
+		private readonly AgentArtefactMarker $marker,
+		private readonly GeneratedDocumentLogger $documentLogger,
+		private readonly IRootFolder $rootFolder,
+		private readonly IUserSession $userSession,
+		private readonly LoggerInterface $logger,
+	) {
+
+	}//end __construct()
+
+	/**
+	 * Read the editable text of a Word or OpenDocument text file, block by block.
+	 *
+	 * Returns one entry per paragraph, each with a stable `anchor` derived from
+	 * that paragraph's own text. Pass those anchors, and the `version` this call
+	 * returns, back to `editDocument` to change the document. Anchors change
+	 * whenever the text does, so an anchor from an out-of-date read is refused
+	 * rather than applied to the wrong paragraph.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document to read.
+	 *
+	 * @return array<string, mixed> The document's name, format, version and anchored blocks.
+	 *
+	 * @throws RuntimeException When the file cannot be read or is not an editable format.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-edits-address-stable-anchors-never-positional-indexes
+	 */
+	#[McpTool(
+		name: 'readDocument',
+		description: 'Read a Word (.docx) or OpenDocument (.odt) file as a list of anchored text blocks, '
+			. 'one per paragraph. Use this before editDocument: it returns the anchors and the version '
+			. 'that editDocument requires. Returns text, never the file bytes.',
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'read'
+	)]
+	public function readDocument(int $fileId): array {
+		return $this->editSession->openForAgent(uid: $this->requireUid(), fileId: $fileId);
+
+	}//end readDocument()
+
+	/**
+	 * Change the text of a Word or OpenDocument text file.
+	 *
+	 * Each edit names an `anchor` from a preceding `readDocument`, an `action`
+	 * (`replace`, `insertAfter` or `delete`) and, for the first two, the `text`
+	 * to use. The whole set is applied or none of it is.
+	 *
+	 * By default the change is written into the file itself, producing a
+	 * Nextcloud file version that can be restored. Pass `outputMode` as
+	 * `sibling` to write a new file beside the original instead, leaving the
+	 * original untouched.
+	 *
+	 * Every file this produces is tagged "Agent authored" in Files.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document to change.
+	 * @param array<int, array{anchor: string, action?: string, text?: string}> $edits The edits to apply.
+	 * @param string $version The `version` returned by the `readDocument` call these anchors came from.
+	 * @param string $outputMode Either `inPlace` (default) or `sibling`. May narrow the configured mode, never widen it.
+	 *
+	 * @return array<string, mixed> The produced file's id, name, path and applied anchors.
+	 *
+	 * @throws RuntimeException On any refusal. Nothing is written when this throws.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-editing-writes-in-place-by-default-with-a-recoverable-prior-version
+	 * @spec openspec/specs/document-editing/spec.md#requirement-every-produced-file-is-recorded-with-its-identity-and-without-its-content
+	 */
+	#[McpTool(
+		name: 'editDocument',
+		description: 'Change the text of a Word (.docx) or OpenDocument (.odt) file by replacing, inserting '
+			. 'after, or deleting anchored paragraphs. Call readDocument first to get the anchors and version. '
+			. 'Writes into the file by default (restorable via Nextcloud file versions); pass outputMode '
+			. '"sibling" to write a new file instead. Refuses if the document changed since it was read, if it '
+			. 'is open in an editor, if it is under a signing request, or if it is anonymisation output.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: false,
+		scope: 'update'
+	)]
+	public function editDocument(int $fileId, array $edits, string $version, string $outputMode = ''): array {
+		$uid = $this->requireUid();
+
+		// An omitted argument means "use the configured mode", not "an unknown
+		// mode" — the empty string is how MCP delivers "not supplied".
+		$requestedMode = $outputMode;
+		if ($requestedMode === '') {
+			$requestedMode = null;
+		}
+
+		$result = $this->editSession->editForAgent(
+			uid: $uid,
+			fileId: $fileId,
+			edits: $edits,
+			version: $version,
+			requestedMode: $requestedMode
+		);
+
+		$this->record(
+			uid: $uid,
+			fileId: (int)$result['fileId'],
+			path: (string)$result['path'],
+			format: 'docx',
+			note: sprintf('Agent edit of file %d (%s output)', $fileId, (string)$result['outputMode'])
+		);
+
+		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
+
+	}//end editDocument()
+
+	/**
+	 * Convert a document to PDF, leaving the source untouched.
+	 *
+	 * The conversion backend is chosen by DocuDesk's cascade, not by the caller
+	 * -- so the tool cannot be steered onto a particular process -- but the
+	 * backend that claimed the conversion IS reported, because an office-app
+	 * conversion and the built-in fallback differ visibly in fidelity.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document to convert.
+	 *
+	 * @return array<string, mixed> The produced PDF's id, name and path, and the backend that produced it.
+	 *
+	 * @throws RuntimeException When no backend in the cascade can convert this file.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 */
+	#[McpTool(
+		name: 'convertDocumentToPdf',
+		description: 'Convert a document in the user\'s files to PDF, writing a new PDF file and leaving the '
+			. 'source untouched. Reports which conversion backend produced the PDF. The produced file is '
+			. 'tagged "Agent authored" in Files.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
+	public function convertDocumentToPdf(int $fileId): array {
+		$uid = $this->requireUid();
+		$source = $this->resolveReadableFile(uid: $uid, fileId: $fileId);
+
+		try {
+			$converted = $this->pdfConversion->convertToPdfReporting(source: $source);
+		} catch (Throwable $e) {
+			throw new RuntimeException(
+				sprintf('"%s" could not be converted to PDF: %s', $source->getName(), $e->getMessage()),
+				0,
+				$e
+			);
+		}
+
+		$pdf = $converted['file'];
+		$this->marker->mark(fileId: $pdf->getId());
+
+		$path = $this->relativePath(uid: $uid, file: $pdf);
+		$this->record(
+			uid: $uid,
+			fileId: $pdf->getId(),
+			path: $path,
+			format: 'pdf',
+			note: sprintf('Agent conversion of file %d via %s', $fileId, (string)$converted['backend'])
+		);
+
+		return [
+			'fileId' => $pdf->getId(),
+			'name' => $pdf->getName(),
+			'path' => $path,
+			'backend' => $converted['backend'],
+			'agentAuthoredTag' => AgentArtefactMarker::TAG_NAME,
+			'artefact' => [
+				'type' => 'file',
+				'id' => (string)$pdf->getId(),
+			],
+		];
+
+	}//end convertDocumentToPdf()
+
+	/**
+	 * Record the produced artefact in the generated-document audit trail.
+	 *
+	 * There is no template behind an agent edit or a conversion, so `templateId`
+	 * is genuinely empty rather than filled with a plausible-looking id. The row
+	 * exists so the artefact is findable from DocuDesk's own register; the
+	 * authoritative account of who asked for it is Hermiq's invocation record,
+	 * which the returned `artefact` descriptor feeds.
+	 *
+	 * A failure to record is logged and swallowed: the file is already written
+	 * and already tagged, and throwing here would report a failure that did not
+	 * happen.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The produced file id.
+	 * @param string $path The produced file path.
+	 * @param string $format The produced format.
+	 * @param string $note A human-readable note about the operation.
+	 *
+	 * @return void
+	 */
+	private function record(string $uid, int $fileId, string $path, string $format, string $note): void {
+		try {
+			$this->documentLogger->log(
+				template: [
+					'id' => '',
+					'version' => 0,
+					'name' => $note,
+				],
+				dataRefs: [],
+				format: $format,
+				outcome: [
+					'status' => 'generated',
+					'warnings' => [$note],
+					'caseId' => null,
+					'errorMessage' => null,
+					'fileId' => $fileId,
+					'filePath' => $path,
+				],
+				userId: $uid
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning('DocuDesk could not record an agent document artefact: ' . $e->getMessage());
+		}
+
+	}//end record()
+
+	/**
+	 * Resolve a file the acting user can read.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return File The file.
+	 *
+	 * @throws RuntimeException When the id names nothing the user can reach.
+	 */
+	private function resolveReadableFile(string $uid, int $fileId): File {
+		try {
+			$node = $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId);
+		} catch (Throwable $e) {
+			throw new RuntimeException('Could not open file ' . $fileId . ': ' . $e->getMessage(), 0, $e);
+		}
+
+		if (($node instanceof File) === false) {
+			throw new RuntimeException('File ' . $fileId . ' was not found in your files.');
+		}
+
+		return $node;
+
+	}//end resolveReadableFile()
+
+	/**
+	 * Express a file's path relative to the acting user's root.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param File $file The file.
+	 *
+	 * @return string The relative path, or the file name when it cannot be derived.
+	 */
+	private function relativePath(string $uid, File $file): string {
+		try {
+			return $this->rootFolder->getUserFolder($uid)->getRelativePath($file->getPath()) ?? $file->getName();
+		} catch (Throwable) {
+			return $file->getName();
+		}
+
+	}//end relativePath()
+
+	/**
+	 * The acting user, or a refusal.
+	 *
+	 * These tools run in the caller's ambient Nextcloud session (ADR-041). There
+	 * is no service user and no impersonation, so no session means no operation.
+	 *
+	 * @return string The acting user id.
+	 *
+	 * @throws RuntimeException When there is no signed-in user.
+	 */
+	private function requireUid(): string {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			throw new RuntimeException('Document tools require a signed-in user.');
+		}
+
+		return $user->getUID();
+
+	}//end requireUid()
+}//end class
