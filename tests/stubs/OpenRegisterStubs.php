@@ -2253,3 +2253,142 @@ if (class_exists(McpTool::class) === false) {
 		}//end __construct()
 	}//end class
 }//end if
+
+namespace OCA\OpenRegister\Contract;
+
+if (interface_exists(ObjectEntityInterface::class) === false) {
+	/**
+	 * Stub for OpenRegister's published ObjectEntityInterface (ADR-084).
+	 *
+	 * Mirrors openregister/lib/Contract/ObjectEntityInterface.php verbatim. Keep
+	 * the two in sync: PHPUnit's createMock() binds to the METHOD SURFACE, so a
+	 * stub that has drifted from the real interface is green here and red only
+	 * in an environment that loads the real one.
+	 *
+	 * @category Tests
+	 * @package  OCA\OpenRegister\Contract
+	 * @author   Conduction B.V. <info@conduction.nl>
+	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+	 * @link     https://www.DocuDesk.app
+	 */
+	interface ObjectEntityInterface {
+		/**
+		 * The object's UUID.
+		 *
+		 * @return string|null
+		 */
+		public function getUuid(): ?string;
+
+		/**
+		 * The object's data payload.
+		 *
+		 * @return array<string, mixed>
+		 */
+		public function getObject(): array;
+
+		/**
+		 * The owning register.
+		 *
+		 * @return string|null
+		 */
+		public function getRegister(): ?string;
+
+		/**
+		 * The owning schema.
+		 *
+		 * @return string|null
+		 */
+		public function getSchema(): ?string;
+
+		/**
+		 * The owning organisation.
+		 *
+		 * @return string|null
+		 */
+		public function getOrganisation(): ?string;
+
+		/**
+		 * The owning user.
+		 *
+		 * @return string|null
+		 */
+		public function getOwner(): ?string;
+	}//end interface
+}//end if
+
+if (interface_exists(ObjectServiceInterface::class) === false) {
+	/**
+	 * Stub for OpenRegister's published ObjectServiceInterface (ADR-084).
+	 *
+	 * Mirrors openregister/lib/Contract/ObjectServiceInterface.php verbatim,
+	 * including every optional parameter and its default. DocuDesk services
+	 * type-hint this interface rather than OR's concrete class, and the binding
+	 * is stated in RegistrationBootstrap — but the interface lives in
+	 * openregister, which this app has no composer dependency on. Without this
+	 * stub, `createMock(ObjectServiceInterface::class)` raises UnknownTypeException
+	 * and every test touching PolicyMatchService / PolicyRetroactiveService /
+	 * MetadataService errors out.
+	 *
+	 * The signatures are transcribed rather than approximated on purpose: a mock
+	 * of a narrower signature accepts calls the real service would reject.
+	 *
+	 * @category Tests
+	 * @package  OCA\OpenRegister\Contract
+	 * @author   Conduction B.V. <info@conduction.nl>
+	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+	 * @link     https://www.DocuDesk.app
+	 *
+	 * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+	 */
+	interface ObjectServiceInterface {
+		public function saveObject(array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, bool $silent = false, bool $_validation = true, ?array $uploadedFiles = null, ?\OCP\IUser $currentUser = null, bool $failIfExists = false): ObjectEntityInterface;
+
+		public function setRegister(string|int $register): static;
+
+		public function find(int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_render = true, bool $_audit = true): ?ObjectEntityInterface;
+
+		public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array;
+
+		public function setSchema(string|int $schema): static;
+
+		public function searchObjects(array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null, ?string $uses = null, ?array $views = null): array|int;
+
+		public function deleteObject(string $uuid, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false, ?\OCP\IUser $currentUser = null, bool $permanent = false): bool;
+
+		public function searchObjectsPaginated(array $query = [], bool $_rbac = true, bool $_multitenancy = true, bool $deleted = false, ?array $ids = null, ?string $uses = null, ?array $views = null): array;
+
+		public function searchObjectsBySlug(string $registerSlug, string $schemaSlug, array $filters = [], bool $_rbac = true, bool $_multitenancy = true): array|int;
+
+		public function clearCurrents(): void;
+
+		public function buildSearchQuery(array $requestParams, int|string|array|null $register = null, int|string|array|null $schema = null, ?array $ids = null): array;
+
+		public function saveObjects(array $objects, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $validation = false, bool $events = false, bool $deduplicateIds = true, bool $enrich = true, bool $_audit = true): array;
+
+		public function runAsSystem(callable $operation);
+
+		public function count(array $config = []): int;
+
+		public function unlockObject(string|int $identifier, bool $advisory = false): bool;
+
+		public function lockObject(string $identifier, ?string $process = null, ?int $duration = null, bool $advisory = false): array;
+
+		public function deleteObjects(array $uuids = [], bool $_rbac = true, bool $_multitenancy = true): array;
+
+		public function getLogs(string $uuid, array $filters = [], bool $_rbac = true, bool $_multitenancy = true): array;
+
+		public function updateObject(string $objectId, array $data, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
+
+		public function getObjectUses(string $objectId, array $query = [], bool $_rbac = true, bool $_multitenancy = true): array;
+
+		public function getObjectUsedBy(string $objectId, array $query = [], bool $_rbac = true, bool $_multitenancy = true): array;
+
+		public function findByRelations(string $search, bool $partialMatch = true): array;
+
+		public function findSilent(string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
+
+		public function countSearchObjects(array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null, ?string $uses = null): int;
+
+		public function getObject(): ?ObjectEntityInterface;
+	}//end interface
+}//end if
