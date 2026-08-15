@@ -48,7 +48,13 @@
 ## Not delivered
 
 - **3.3 Euro-Office portability** — untestable here; the ADR-087 claim stays unverified.
-- **An end-to-end run driven by the chat window's LLM.** The tools are live, granted and correctly classified, and the full read → edit → tag → version → refusal loop is proven against a real file through the real MCP endpoint. What is not proven is a *model* choosing to call them: this instance's `chatProvider` is `anthropic` with `executionMode: cli`, and in that mode the model is offered the CLI transport's own tool namespace rather than Hermiq's registry. Switching to Ollama for a test produced an empty reply from `qwen2.5:3b` (the only tool-capable model present). Neither is a defect in this change; both are instance/provider configuration.
+- ~~An end-to-end run driven by the chat window's LLM.~~ **DELIVERED 2026-08-16, and the blocker was worth finding.**
+
+  The first attempt failed with the model reporting it had no document tools and naming its own CLI built-ins instead. Cause: `executionMode: cli` hands the CLI a governed MCP config whose URL comes from `linkToRouteAbsolute()` — the origin Nextcloud publishes to BROWSERS. On this instance that is `http://localhost:8080`, and inside the runner container `localhost` is the container itself. The CLI connected to nothing, `tools/list` never served Hermiq's tools, and the run exited 0 with an empty stderr. Fixed by setting `occ config:app:set hermiq mcp_run_base_url --value="http://nextcloud"`, the container-facing origin.
+
+  Verified end to end afterwards: asked in the chat window to change "binnen acht weken" to "binnen zes weken" in a real `.docx`, Claude called `readDocument` then `editDocument` itself, and the bytes on disk changed on exactly that paragraph with `pStyle` and the bold run intact, the `Agent authored` tag present, and a restorable prior version created.
+
+  ⚠️ The silent-degradation itself is now fixed upstream: hermiq PR #318 makes a governed turn PREFLIGHT its MCP endpoint and refuse to spawn when it is unreachable, naming `mcp_run_base_url` in the message. A governed turn that cannot reach its governance is not degraded, it is ungoverned.
 - **The `generatedDocument` audit row is not being written on this instance — ROOT CAUSE FOUND, and it is not DocuDesk's code.** `GeneratedDocumentLogger::log()` fails with "The required properties (documentType, employeeId) are missing", which DocuDesk's own `generatedDocument` (schema id 5023) requires neither.
 
   Measured on the dev instance:
