@@ -201,7 +201,9 @@ class PackageCodec {
 	 *
 	 * @param string $packageBytes The raw package bytes.
 	 * @param string $extension The file extension, without a leading dot.
-	 * @param array<int, array{anchor: string, action: string, text?: string}> $edits The edits to apply.
+	 * @param array<int, array<string, mixed>> $edits The edits to apply, each
+	 *        `{anchor, action?, text?}`. Loosely typed because they arrive as
+	 *        decoded JSON from a model; `resolveEdits()` validates them.
 	 *
 	 * @return array{bytes: string, applied: array<int, string>}
 	 *
@@ -260,7 +262,12 @@ class PackageCodec {
 	 * partially applied edit set leaves a document in a state neither the user
 	 * nor the agent asked for, and no caller can tell which half landed.
 	 *
-	 * @param array<int, array{anchor: string, action: string, text?: string}> $edits The requested edits.
+	 * The declared shape is deliberately loose: these arrive as decoded JSON from
+	 * a language model, so `anchor` and `action` may be absent, and this method
+	 * is the thing that finds out. Typing them as present would make the checks
+	 * below look redundant to a static analyser and invite their removal.
+	 *
+	 * @param array<int, array<string, mixed>> $edits The requested edits.
 	 * @param array<int, string> $anchors The anchors of the current blocks, in document order.
 	 *
 	 * @return array<int, array{index: int, anchor: string, action: string, text: string}>

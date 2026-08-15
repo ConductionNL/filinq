@@ -32,6 +32,12 @@ parameters:
         # Application::register() passes to the engine constructor.
         # The real class lives in openregister/lib/AppHost/Controller/.
         - tests/stubs/openregister-apphost.stub.php
+        # OpenRegister's MCP contracts (ADR-063 chain 3/3), for the same reason:
+        # PHPStan refuses to silence "implements unknown interface" through
+        # ignoreErrors and points at excludePaths, which would stop analysing
+        # DocudeskScannableServices entirely. The stub also type-checks the named
+        # arguments every #[McpTool] declaration passes.
+        - tests/stubs/openregister-mcp.stub.php
 
     ignoreErrors:
         # @template-implements IEventListener<OCA\OpenRegister\Event\*> in listeners:

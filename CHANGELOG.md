@@ -9,6 +9,26 @@
 
 ### Added
 
+- **DocuDesk is reachable by agents, and agents can change documents (`docudesk-mcp-adoption`, `document-editing-tools`).** DocuDesk had no MCP surface at all, so it was invisible to Hermiq; and no tool in the fleet could read a `.docx`/`.odt` as text and write a change back.
+
+  **The MCP surface (ADR-063)** is deliberately narrow and read-biased. Eight of twenty-one schemas — `template`, `huisstijl`, `correspondence`, `generatedDocument`, `batchCorrespondenceJob`, `signingRequest`, `dossier`, `base` — declare `x-openregister-mcp` with `search` + `get` only. **No DocuDesk schema exposes a derived `create`/`update`/`delete` verb**: templates and huisstijl are governance artefacts, the correspondence and batch rows are audit records, and `signingRequest` is the legal spine of a signature process. The remaining thirteen schemas stay off entirely (signature material, citizen contact data, re-identification links, extracted invoice content). `lib/Mcp/DocudeskScannableServices.php` is the per-app `#[McpTool]` scan opt-in.
+
+  **Four curated tools.** `docudesk.generateCorrespondence` (one letter, from a template, for one recipient); `docudesk.readDocument`, `docudesk.editDocument` and `docudesk.convertDocumentToPdf`. `generateBatch()` is **not** exposed — an agent-triggerable mail-merge over N recipients is a spam and exfiltration primitive — and no signing service carries a tool attribute, because applying an electronic signature has legal effect and stays a deliberate human action.
+
+  **Editing is byte-surgical.** `PackageCodec` rewrites only the byte range of the targeted paragraph inside the one body part of the ODF/OOXML package. Comments, tracked changes, headers, styles, embedded objects and every other package entry survive because they are never re-serialised — losses invisible in a diff of the visible text are made structurally impossible rather than guarded. Edits address **content-hash anchors** recomputed on every read, never positional indexes; editing a paragraph spends its anchor, so a stale edit is refused instead of landing in the wrong place. (`w14:paraId` was measured and does **not** survive a Collabora round trip, which is why native ids are not used.)
+
+  **Concurrency, and why this is not a WOPI client.** `richdocuments`' `WopiController::lock()` ignores `X-WOPI-Lock` and takes an `ILockManager` `TYPE_APP` lock owned by the literal string `richdocuments`; `files_lock` **extends** a lock whose type and owner both match. A WOPI client's lock would therefore be indistinguishable from Collabora's own, and a document open in the editor would have its lock silently extended rather than refusing — exactly the data-loss case the lock exists to prevent. The session instead takes an in-process `TYPE_APP` lock owned by `docudesk`, which conflicts with Collabora's (the refusal) while staying distinct from it, and needs no self-addressed HTTP call. Lock contention is a **structured refusal** — never a poll, a queue, a retry, or a stolen lock. A file etag re-read immediately before the write closes the remaining out-of-session race: a version that moved is refused, never merged.
+
+  **Output mode.** In place by default, producing a restorable Nextcloud file version; `sibling` writes a new file beside the original. Configuration (`docudesk.agent_edit_output_mode`) sets the **ceiling** and a tool argument may only narrow it — an agent cannot widen its own blast radius.
+
+  **Marking and recording (ADR-088).** Every produced file gets the fleet-wide `Agent authored` system tag, applied **before** the write and rolled back if the write then fails — so neither an unmarked agent artefact nor a mark on an unchanged file can survive the operation. Results carry an `artefact` descriptor that Hermiq lifts into its run trace, and a `generatedDocument` row records the file id. No tool returns document, attachment or signature bytes.
+
+  **Refusals:** a document under a non-cancelled `signingRequest` (fails **closed** when the register is unreachable); anonymisation output; unsupported formats; oversized packages; read-only files; a file outside the acting user's folder; no signed-in user.
+
+- **`PdfConversionService::convertToPdfReporting()`** returns the PDF *and* the backend that claimed it, so an office-app conversion can be told from the built-in fallback in a log after the fact. `convertToPdf()` is unchanged.
+
+- **`generatedDocument.format`** accepts `docx`, which an agent edit produces.
+
 - **Output destinations for document generation
   (`document-output-destinations-and-bulk-retention`).**
   `POST /apps/docudesk/api/documents/generate` accepts a new
