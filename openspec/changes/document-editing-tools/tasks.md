@@ -61,3 +61,34 @@
   Two fixes, neither of them here: OpenRegister's slug resolution should be register-scoped (or at least case-sensitive) rather than falling back to a global match, and the register→schema linkage needs repairing on this instance. Not attempted from this branch because the shared checkout was switched to another workstream mid-session, so re-running the import would have imported THEIR register file, not this one.
 
   `DocumentAgentService::record()` logs and swallows the failure by design — the file is already written and tagged, so throwing would report a failure that did not happen — and ADR-088's authoritative half, Hermiq's `artefact` record, is unaffected.
+
+## Pre-existing debt cleared alongside this change
+
+Two long-standing failures that predate this branch and were failing on
+`development` itself:
+
+- **22 PHPUnit errors** — `ObjectServiceInterface` and `ObjectEntityInterface`
+  (ADR-084) had no test stub, so `createMock()` raised `UnknownTypeException`
+  and every test touching `PolicyMatchService`, `PolicyRetroactiveService` and
+  `MetadataService` errored out. Both interfaces are now stubbed **verbatim**
+  from `openregister/lib/Contract/`, defaults included, rather than reduced to
+  the methods today's tests happen to call: a mock built from a narrower
+  signature accepts calls the real service would reject. Suite: **1361 tests,
+  0 errors** (was 1361 / 22).
+- **9 phpcs errors in `lib/`** — all docblock defects (a line comment between a
+  docblock and an attribute list, a lower-case long description, and constructor
+  promoted properties added without their `@param` lines). `lib/` now reports
+  **0 errors**.
+
+## Hydra-gate debt NOT cleared, and why
+
+Four gates fail on this branch and fail **identically on `development`** — same
+four names, same finding counts, so this change adds nothing to any of them.
+They are a separate programme, deliberately not attempted here:
+
+| Gate | Finding | Why not tonight |
+|---|---|---|
+| gate-7 `no-admin-idor` | 9 methods | Security-sensitive, and the gate's own text says the checker sees ONLY the controller body — a guard enforced in a service or query builder reads as a miss. It also warns that a `401` preamble is NOT the fix. Each candidate needs the storage path traced; guessing risks either a false fix or a real regression. |
+| gate-19 `e2e-coverage` | 396 scenarios | A multi-day authoring programme, not a defect. |
+| gate-26 `visual-coverage` | 6 components | Baselines are host-font/GPU specific; the repo's own config comments say a CI Linux runner will not byte-match a dev-container baseline. Generating them here would produce baselines that fail in CI. |
+| gate-57 `orphaned-write-capability` | 3 methods | Small, but not reproducible locally without CI's diff scope, so a fix could not be verified before pushing. |
