@@ -2,7 +2,7 @@
 
 ## 0. Phase 0 — measure before building (hard gate)
 
-- [ ] 0.1 Measure `w14:paraId` survival: author a `.docx` with known ids, round-trip it through Collabora (open, edit elsewhere in the doc, save), diff the attributes. Repeat for ODF `xml:id`. Record the result in design.md §Anchors and select native-id or content-hash anchoring accordingly.
+- [x] 0.1 ~~Measure `w14:paraId` survival.~~ **DONE 2026-08-15 — NEGATIVE.** Round-tripped a `.docx` with three known ids through Collabora's own `soffice` (inside `richdocumentscode`'s AppImage): all three paragraphs survived, **zero** `w14:` attributes did, while the `w14` namespace is still declared in the output. Native-id anchoring is ruled out; the codec MUST use content-hash anchors with a re-anchor on every `open`. See design.md §Phase 0.1 result.
 - [ ] 0.2 Determine from richdocuments' WOPI token issuance whether a background job can obtain a file-scoped token for its initiating user. If the only route is a service user with broad file access, STOP and raise an ADR before writing editing code.
 - [ ] 0.3 Stand up a WOPI host in the dev environment (richdocuments + an office app profile in `.github/docker-compose.yml`) — nothing below is testable without one.
 
