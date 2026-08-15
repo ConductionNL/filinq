@@ -44,8 +44,8 @@ namespace OCA\DocuDesk\Service;
 
 use DateTimeImmutable;
 use Exception;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Retroactive rule-mutation handler.
@@ -73,14 +73,13 @@ class PolicyRetroactiveService {
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
-	 * @param ContainerInterface $container DI container for OpenRegister lookup.
 	 * @param PolicyMatchService $policyMatcher Reusable rule-evaluation primitives.
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly ContainerInterface $container,
 		private readonly PolicyMatchService $policyMatcher,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 	) {
 
@@ -277,10 +276,6 @@ class PolicyRetroactiveService {
 	 */
 	private function loadInFlightDocumentRecords(string $entityType): array {
 		try {
-			$objectService = $this->container->get(
-				'OCA\OpenRegister\Service\ObjectService'
-			);
-
 			// Push the scope filter down to the DB. The schema is shared
 			// with scope=entity (standing-consent) records, so a naive
 			// `findAll(register, schema)` loads every consent row across
@@ -288,7 +283,7 @@ class PolicyRetroactiveService {
 			// `scope=document` to the filter bounds the result set to
 			// what this method actually needs. The defensive PHP scope
 			// check below is retained as a belt-and-braces.
-			$result = $objectService->findAll(
+			$result = $this->objectService->findAll(
 				config: [
 					'filters' => [
 						'register' => 'consent',
@@ -356,10 +351,6 @@ class PolicyRetroactiveService {
 		}
 
 		try {
-			$objectService = $this->container->get(
-				'OCA\OpenRegister\Service\ObjectService'
-			);
-
 			$newData = array_merge(
 				$record,
 				[
@@ -374,7 +365,7 @@ class PolicyRetroactiveService {
 			// Strip the @self envelope before save — OR adds it back.
 			unset($newData['@self']);
 
-			$objectService->saveObject(
+			$this->objectService->saveObject(
 				object: $newData,
 				register: 'consent',
 				schema: 'publicationConsent',

@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -69,11 +70,16 @@ class MetadataService {
 	/**
 	 * Get the ObjectService from OpenRegister
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService The ObjectService instance
+	 * Returns the published CONTRACT, not the concrete class (ADR-084). This is
+	 * an availability-guarded lookup — the ADR-083 rule-1 exception — so the
+	 * lookup itself stays, but what it hands back is a type this app can name
+	 * without depending on a class it cannot load.
+	 *
+	 * @return ObjectServiceInterface The object service.
 	 *
 	 * @throws \RuntimeException If OpenRegister is not available
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): ObjectServiceInterface {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
 			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		}
@@ -282,7 +288,7 @@ class MetadataService {
 	 * declaring `authorization` on the schemas (ConductionNL/openregister#2011),
 	 * not changing anything here.
 	 *
-	 * @param \OCA\OpenRegister\Service\ObjectService $objectService The resolved OpenRegister object service
+	 * @param \OCA\OpenRegister\Contract\ObjectServiceInterface $objectService The resolved OpenRegister object service
 	 * @param string $objectId The object UUID in OpenRegister
 	 * @param string $register The register ID
 	 * @param string $schema The schema ID
@@ -293,7 +299,7 @@ class MetadataService {
 	 * @throws Exception If the object cannot be found.
 	 */
 	private function persistEnrichedMetadata(
-		\OCA\OpenRegister\Service\ObjectService $objectService,
+		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
 		string $objectId,
 		string $register,
 		string $schema,

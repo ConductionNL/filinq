@@ -26,6 +26,7 @@ namespace OCA\DocuDesk\AppInfo;
 use Exception;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\SettingsService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Container\ContainerInterface;
 
@@ -50,6 +51,23 @@ class RegistrationBootstrap {
 		(new ObjectEventRegistrar())->register(context: $context);
 		(new SigningEventRegistrar())->register(context: $context);
 		(new PdfConversionRegistrar())->register(context: $context);
+
+		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never
+		// its concrete class, so a leaf app's unit tests can mock a type they
+		// are able to load. Nextcloud autowires concrete classes across apps but
+		// not interfaces, so the binding has to be stated — and the composition
+		// root is the right place to state it.
+		//
+		// An ALIAS, not a factory: it is resolved when something actually asks
+		// for the interface, so an instance without OpenRegister fails at the
+		// route that needed the data rather than at registration. Both class
+		// names are `::class` strings here and neither triggers an autoload,
+		// which is what keeps ADR-083 rule 3's promise that the start screen
+		// still boots.
+		$context->registerServiceAlias(
+			ObjectServiceInterface::class,
+			'OCA\OpenRegister\Service\ObjectService'
+		);
 
 		// Background jobs are declared in appinfo/info.xml under
 		// <background-jobs>; Nextcloud auto-registers them with the IJobList.
