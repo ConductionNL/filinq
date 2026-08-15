@@ -186,6 +186,175 @@ class PackageCodecTest extends TestCase {
 
 	}//end entry()
 
+
+	/**
+	 * A .docx as COLLABORA ACTUALLY WRITES ONE, base64-encoded.
+	 *
+	 * Produced by round-tripping a document through the real
+	 * `soffice --convert-to docx` shipped in richdocumentscode 26.4.104, then
+	 * captured verbatim. Ten package entries — styles, theme, fontTable,
+	 * settings, docProps — against the four of a hand-built fixture.
+	 *
+	 * WHY THIS EXISTS SEPARATELY FROM `docx()`
+	 * ---------------------------------------
+	 * `docx()` is authored to be hostile in specific ways (a comment range, a
+	 * tracked insert and delete, a text box, a table). This one is hostile in the
+	 * way real files are: markup nobody chose, in an order nobody predicted, with
+	 * a run and paragraph structure an office suite produced rather than a test.
+	 * A codec that passes a fixture it was written alongside and fails a real
+	 * document is the normal outcome, not a surprising one.
+	 *
+	 * @var array<int, string>
+	 */
+	private const COLLABORA_DOCX_B64 = [
+		'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',
+		'fwIAAKwRAAAAAA==',
+	];
+
+	/**
+	 * Decode the real-Collabora fixture.
+	 *
+	 * @return string The package bytes.
+	 */
+	private function collaboraDocx(): string {
+		return (string)base64_decode(implode('', self::COLLABORA_DOCX_B64));
+
+	}//end collaboraDocx()
+
+	/**
+	 * The codec reads and edits a document COLLABORA wrote, not just one this
+	 * test authored, and leaves every other part of that real package alone.
+	 *
+	 * The entry count is asserted so the fixture cannot silently decay into a
+	 * trivial package and keep passing.
+	 *
+	 * @return void
+	 */
+	public function testARealCollaboraDocumentRoundTrips(): void {
+		$before = $this->collaboraDocx();
+
+		$read = $this->codec->readBlocks($before, 'docx');
+		$texts = array_column($read['blocks'], 'text');
+
+		$this->assertContains('Subsidieverzoek 2026 - concept', $texts);
+		$target = null;
+		foreach ($read['blocks'] as $block) {
+			if (str_contains($block['text'], 'weken') === true) {
+				$target = $block;
+				break;
+			}
+		}
+
+		$this->assertNotNull($target, 'the fixture must carry the paragraph under test');
+
+		$after = $this->codec->applyEdits(
+			$before,
+			'docx',
+			[['anchor' => $target['anchor'], 'action' => 'replace', 'text' => 'Binnen vier weken.']]
+		)['bytes'];
+
+		$this->assertContains('Binnen vier weken.', array_column($this->codec->readBlocks($after, 'docx')['blocks'], 'text'));
+
+		// Every entry except the body part comes back byte-identical — on a package
+		// this codec did not author.
+		$path = tempnam(sys_get_temp_dir(), 'docudesk-test-');
+		$this->spilled[] = $path;
+		file_put_contents($path, $before);
+		$zip = new ZipArchive();
+		$zip->open($path);
+		$names = [];
+		for ($i = 0; $i < $zip->numFiles; $i++) {
+			$names[] = (string)$zip->getNameIndex($i);
+		}
+
+		$zip->close();
+
+		$this->assertGreaterThanOrEqual(10, count($names), 'the fixture must stay a REAL package, not decay to a stub');
+
+		foreach ($names as $entry) {
+			if ($entry === 'word/document.xml') {
+				continue;
+			}
+
+			$this->assertSame(
+				$this->entry($before, $entry),
+				$this->entry($after, $entry),
+				$entry . ' must survive an edit to the document body byte-identical'
+			);
+		}
+
+		$this->assertNotFalse(simplexml_load_string((string)$this->entry($after, 'word/document.xml')));
+
+	}//end testARealCollaboraDocumentRoundTrips()
+
 	/**
 	 * Only word-processing packages are addressable. A spreadsheet's block is a
 	 * cell, not a paragraph, so accepting `.xlsx` here would hand back anchors
