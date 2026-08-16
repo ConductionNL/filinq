@@ -464,7 +464,7 @@ class ChartCodec {
 		preg_match_all('#Id="rId(\d+)"#', $relsXml, $matches);
 
 		$highest = 0;
-		foreach (($matches[1] ?? []) as $value) {
+		foreach ($matches[1] as $value) {
 			$highest = max($highest, (int)$value);
 		}
 

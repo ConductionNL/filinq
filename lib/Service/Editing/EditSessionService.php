@@ -213,20 +213,12 @@ class EditSessionService {
 		string $version,
 		?string $requestedMode = null,
 	): array {
-		if (trim($version) === '') {
-			throw new RuntimeException(
-				'A version is required. Read the document first and pass back the version it returned.'
-			);
-		}
-
-		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
-		$mode = $this->resolveMode(requested: $requestedMode);
-
-		$this->refuseIfGuarded(file: $file);
-
-		if ($mode === self::MODE_IN_PLACE && $file->isUpdateable() === false) {
-			throw new RuntimeException('You do not have permission to change this file.');
-		}
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: $requestedMode
+		);
 
 		return $this->runSession(
 			uid: $uid,
@@ -298,20 +290,12 @@ class EditSessionService {
 		string $version,
 		?string $requestedMode = null,
 	): array {
-		if (trim($version) === '') {
-			throw new RuntimeException(
-				'A version is required. Read the document metadata first and pass back the version it returned.'
-			);
-		}
-
-		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
-		$mode = $this->resolveMode(requested: $requestedMode);
-
-		$this->refuseIfGuarded(file: $file);
-
-		if ($mode === self::MODE_IN_PLACE && $file->isUpdateable() === false) {
-			throw new RuntimeException('You do not have permission to change this file.');
-		}
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: $requestedMode
+		);
 
 		return $this->runSession(
 			uid: $uid,
@@ -356,20 +340,12 @@ class EditSessionService {
 		?string $afterAnchor = null,
 		?string $requestedMode = null,
 	): array {
-		if (trim($version) === '') {
-			throw new RuntimeException(
-				'A version is required. Read the document first and pass back the version it returned.'
-			);
-		}
-
-		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
-		$mode = $this->resolveMode(requested: $requestedMode);
-
-		$this->refuseIfGuarded(file: $file);
-
-		if ($mode === self::MODE_IN_PLACE && $file->isUpdateable() === false) {
-			throw new RuntimeException('You do not have permission to change this file.');
-		}
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: $requestedMode
+		);
 
 		return $this->runSession(
 			uid: $uid,
@@ -385,6 +361,45 @@ class EditSessionService {
 		);
 
 	}//end embedChartForAgent()
+
+	/**
+	 * The checks every agent write shares, run in the order they must run in.
+	 *
+	 * Extracted because three entry points -- text edits, metadata and charts --
+	 * repeated it verbatim. Triplicated preconditions drift: the third copy is
+	 * where someone eventually omits `refuseIfGuarded()` and a document under a
+	 * signing request becomes editable through the newest tool only.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 * @param string $version The version the caller is writing against.
+	 * @param string|null $requestedMode The requested output mode, or null.
+	 *
+	 * @return array{0: File, 1: string} The resolved file and output mode.
+	 *
+	 * @throws RuntimeException When the version is absent, the file is guarded, or it is not writable.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
+	 */
+	private function prepareWrite(string $uid, int $fileId, string $version, ?string $requestedMode): array {
+		if (trim($version) === '') {
+			throw new RuntimeException(
+				'A version is required. Read the document first and pass back the version it returned.'
+			);
+		}
+
+		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
+		$mode = $this->resolveMode(requested: $requestedMode);
+
+		$this->refuseIfGuarded(file: $file);
+
+		if ($mode === self::MODE_IN_PLACE && $file->isUpdateable() === false) {
+			throw new RuntimeException('You do not have permission to change this file.');
+		}
+
+		return [$file, $mode];
+
+	}//end prepareWrite()
 
 	/**
 	 * Hold the lock across the whole read-modify-write, and release it on every exit path.
