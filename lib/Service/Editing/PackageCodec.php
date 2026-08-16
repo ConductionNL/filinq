@@ -34,7 +34,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service\Editing;
 
 use RuntimeException;
-use ZipArchive;
 
 /**
  * Byte-surgical reader/editor for ODF and OOXML word-processing packages.
@@ -112,21 +111,42 @@ class PackageCodec {
 	public const ACTION_DELETE = 'delete';
 
 	/**
+	 * Edit action: change the anchored paragraph's style or layout, not its text.
+	 *
+	 * Separate from `replace` on purpose. Restyling and rewording are different
+	 * intentions, and folding them together would mean a caller that wanted bold
+	 * had to resend the text — which, when the caller is a language model, is an
+	 * invitation to paraphrase the paragraph while "only" making it bold.
+	 *
+	 * @var string
+	 */
+	public const ACTION_STYLE = 'style';
+
+	/**
 	 * Every action this codec understands.
 	 *
 	 * @var array<int, string>
 	 */
-	public const ACTIONS = [self::ACTION_REPLACE, self::ACTION_INSERT_AFTER, self::ACTION_DELETE];
+	public const ACTIONS = [
+		self::ACTION_REPLACE,
+		self::ACTION_INSERT_AFTER,
+		self::ACTION_DELETE,
+		self::ACTION_STYLE,
+	];
 
 	/**
 	 * Constructor.
 	 *
 	 * @param XmlBlockScanner $scanner The element-span scanner.
+	 * @param BlockStyleCodec $styles  The paragraph style/layout codec.
+	 * @param PackagePartIo   $io      The package part reader/writer.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly XmlBlockScanner $scanner = new XmlBlockScanner(),
+		private readonly BlockStyleCodec $styles = new BlockStyleCodec(),
+		private readonly PackagePartIo $io = new PackagePartIo(),
 	) {
 
 	}//end __construct()
@@ -177,7 +197,7 @@ class PackageCodec {
 	 */
 	public function readBlocks(string $packageBytes, string $extension): array {
 		$package = $this->packageFor(extension: $extension);
-		$xml = $this->readPart(packageBytes: $packageBytes, part: $package['part']);
+		$xml = $this->io->readPart(packageBytes: $packageBytes, part: $package['part']);
 
 		$blocks = [];
 		foreach ($this->scanner->spans(xml:$xml, tag: $package['tag']) as $span) {
@@ -218,7 +238,7 @@ class PackageCodec {
 		}
 
 		$package = $this->packageFor(extension: $extension);
-		$xml = $this->readPart(packageBytes: $packageBytes, part: $package['part']);
+		$xml = $this->io->readPart(packageBytes: $packageBytes, part: $package['part']);
 
 		$spans = $this->scanner->spans(xml:$xml, tag: $package['tag']);
 		$texts = [];
@@ -245,7 +265,7 @@ class PackageCodec {
 		}
 
 		return [
-			'bytes' => $this->writePart(
+			'bytes' => $this->io->writePart(
 				packageBytes: $packageBytes,
 				part: $package['part'],
 				xml: $xml
@@ -300,9 +320,24 @@ class PackageCodec {
 			}
 
 			$text = (string)($edit['text'] ?? '');
-			if ($action !== self::ACTION_DELETE && $text === '') {
+			$textless = [self::ACTION_DELETE, self::ACTION_STYLE];
+			if (in_array($action, $textless, true) === false && $text === '') {
 				throw new RuntimeException(
 					sprintf('Edit %d: action "%s" requires non-empty text.', ((int)$position + 1), $action)
+				);
+			}
+
+			// A style edit carries no text by design — see ACTION_STYLE. It must
+			// carry style properties instead, or it is a request to change nothing
+			// that would otherwise report success.
+			$style = ($edit['style'] ?? []);
+			if ($action === self::ACTION_STYLE && (is_array($style) === false || $style === [])) {
+				throw new RuntimeException(
+					sprintf(
+						'Edit %d: action "style" requires a non-empty "style" object. Supported properties: %s.',
+						((int)$position + 1),
+						implode(', ', BlockStyleCodec::STYLE_KEYS)
+					)
 				);
 			}
 
@@ -311,6 +346,7 @@ class PackageCodec {
 				'anchor' => $anchor,
 				'action' => $action,
 				'text' => $text,
+				'style' => (array)$style,
 			];
 		}//end foreach
 
@@ -336,6 +372,11 @@ class PackageCodec {
 			self::ACTION_INSERT_AFTER => $markup . $this->setText(
 				markup: $markup,
 				text: $edit['text'],
+				format: $format
+			),
+			self::ACTION_STYLE => $this->styles->applyStyle(
+				markup: $markup,
+				style: $edit['style'],
 				format: $format
 			),
 			default => $this->setText(markup: $markup, text: $edit['text'], format: $format),
@@ -371,103 +412,13 @@ class PackageCodec {
 	}//end packageFor()
 
 	/**
-	 * Read one entry out of a ZIP package held in memory.
+	 * Package part IO moved to {@see PackagePartIo}.
 	 *
-	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part The entry name.
-	 *
-	 * @return string The entry contents.
-	 *
-	 * @throws RuntimeException When the package or the entry cannot be read.
+	 * Metadata lives in a different part from the body, so the choice was one
+	 * shared reader or two divergent copies of the same ZipArchive dance. The
+	 * property that untouched parts survive an edit byte-identical is a property
+	 * of exactly that code, and it should exist once.
 	 */
-	private function readPart(string $packageBytes, string $part): string {
-		$path = $this->spill(bytes: $packageBytes);
-
-		try {
-			$zip = new ZipArchive();
-			if ($zip->open($path) !== true) {
-				throw new RuntimeException('The file is not a readable document package.');
-			}
-
-			$xml = $zip->getFromName($part);
-			$zip->close();
-
-			if ($xml === false) {
-				throw new RuntimeException(
-					sprintf('The document package has no "%s" part; it may be corrupt.', $part)
-				);
-			}
-
-			return $xml;
-		} finally {
-			unlink($path);
-		}
-
-	}//end readPart()
-
-	/**
-	 * Write one entry back into a ZIP package, leaving every other entry as-is.
-	 *
-	 * `ZipArchive` copies untouched entries' raw compressed data rather than
-	 * recompressing them, which is what keeps the rest of the package -- and
-	 * ODF's uncompressed leading `mimetype` entry -- intact.
-	 *
-	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part The entry name.
-	 * @param string $xml The new entry contents.
-	 *
-	 * @return string The rewritten package bytes.
-	 *
-	 * @throws RuntimeException When the package cannot be rewritten.
-	 */
-	private function writePart(string $packageBytes, string $part, string $xml): string {
-		$path = $this->spill(bytes: $packageBytes);
-
-		try {
-			$zip = new ZipArchive();
-			if ($zip->open($path) !== true) {
-				throw new RuntimeException('The file is not a writable document package.');
-			}
-
-			if ($zip->addFromString($part, $xml) === false) {
-				$zip->close();
-				throw new RuntimeException(sprintf('Could not rewrite the "%s" part.', $part));
-			}
-
-			$zip->close();
-
-			$bytes = file_get_contents($path);
-			if ($bytes === false) {
-				throw new RuntimeException('Could not read the rewritten document package.');
-			}
-
-			return $bytes;
-		} finally {
-			unlink($path);
-		}
-
-	}//end writePart()
-
-	/**
-	 * Spill bytes to a temporary file, because `ZipArchive` has no in-memory mode.
-	 *
-	 * @param string $bytes The bytes to spill.
-	 *
-	 * @return string The temporary file path.
-	 *
-	 * @throws RuntimeException When no temporary file can be created.
-	 */
-	private function spill(string $bytes): string {
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-pkg-');
-		if ($path === false) {
-			throw new RuntimeException('Could not create a temporary file for the document package.');
-		}
-
-		file_put_contents($path, $bytes);
-
-		return $path;
-
-	}//end spill()
 
 	/**
 	 * Extract a block's visible text from its markup.
