@@ -25,6 +25,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service\Signing;
 
 use OCA\DocuDesk\Service\Signing\ValidSignProvider;
 use OCP\IAppConfig;
+use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -170,14 +171,45 @@ class ValidSignProviderTest extends TestCase {
 	}//end testDownloadSignedDocumentAlwaysThrows()
 
 	/**
-	 * cancelSigning() returns true (stub).
+	 * cancelSigning() REFUSES rather than claiming a withdrawal it did not perform.
+	 *
+	 * This test previously asserted `assertTrue($result)` against a body that was,
+	 * in full, `return true;` — no call to ValidSign. It was green BECAUSE of the
+	 * defect: it pinned in place a method that tells a user their signing request
+	 * is withdrawn while it stays live at the provider, with signatories still able
+	 * to sign and produce a legally valid signature.
+	 *
+	 * openspec/changes/signing-cancellation.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 	 */
-	public function testCancelSigningReturnsTrue(): void {
-		$result = $this->provider->cancelSigning(externalId: 'validsign-abc123');
+	public function testCancelSigningRefusesRatherThanClaimingSuccess(): void {
+		$this->expectException(SigningCancellationNotSupportedException::class);
+		$this->expectExceptionMessageMatches('/ValidSign.*still live.*can still sign/s');
 
-		$this->assertTrue($result);
+		$this->provider->cancelSigning(externalId: 'validsign-abc123');
 
-	}//end testCancelSigningReturnsTrue()
+	}//end testCancelSigningRefusesRatherThanClaimingSuccess()
+
+	/**
+	 * The refusal tells the user what to do instead.
+	 *
+	 * A refusal a user cannot act on is only marginally better than the lie it
+	 * replaced — they still do not know their request is live.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testTheRefusalNamesTheRemedy(): void {
+		try {
+			$this->provider->cancelSigning(externalId: 'validsign-abc123');
+			$this->fail('ValidSign cancellation must refuse');
+		} catch (SigningCancellationNotSupportedException $e) {
+			$this->assertStringContainsString('Withdraw it directly with the provider', $e->getMessage());
+		}
+
+	}//end testTheRefusalNamesTheRemedy()
 }//end class
