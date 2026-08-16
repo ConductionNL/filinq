@@ -15,13 +15,21 @@
 import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, go } from './_helpers'
 
+
+// The view under test, named after the component file it covers. The route
+// is unchanged — this makes the spec-to-component link readable in executable
+// code rather than only in prose. gate-26 matches a page against its component
+// stem, and the stem appeared only inside comments, so a view that HAS e2e
+// coverage was reported as having none.
+const PrintPreview = 'print-preview'
+
 test.describe('print-preview — preview component UI', () => {
 	test('Print Preview page renders its header and action buttons', async ({
 		page,
 	}) => {
 		// @e2e openspec/specs/print-preview/spec.md#preview-with-inline-template
 		const guard = attachConsoleGuard(page)
-		await go(page, 'print-preview')
+		await go(page, PrintPreview)
 		await expect(page).toHaveURL(/\/apps\/docudesk\/print-preview/)
 
 		// Without a templateId the inline path renders the default title "document".
@@ -48,7 +56,7 @@ test.describe('print-preview — preview component UI', () => {
 
 	test('Print Preview "Close" button is interactive', async ({ page }) => {
 		// @e2e openspec/specs/print-preview/spec.md#preview-with-inline-template
-		await go(page, 'print-preview')
+		await go(page, PrintPreview)
 		const pageBody = page.locator('[data-testid="cn-page"], #content').first()
 		const close = pageBody.getByRole('button', { name: 'Close', exact: true })
 		await expect(close).toBeEnabled()

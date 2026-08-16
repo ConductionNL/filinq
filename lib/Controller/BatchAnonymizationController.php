@@ -187,6 +187,14 @@ class BatchAnonymizationController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down.
+	 * Every path here loads the batch through BatchStateService::getBatch(),
+	 * which compares the record's userId against the session user and returns
+	 * null for a mismatch (admins excepted for support). It returns null
+	 * rather than throwing precisely so a denied read is indistinguishable
+	 * from a missing one — both answer 404 — so a caller cannot even confirm
+	 * another user's batch exists.
 	 */
 	public function folderBatch(): JSONResponse {
 		try {
@@ -232,6 +240,14 @@ class BatchAnonymizationController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down.
+	 * Every path here loads the batch through BatchStateService::getBatch(),
+	 * which compares the record's userId against the session user and returns
+	 * null for a mismatch (admins excepted for support). It returns null
+	 * rather than throwing precisely so a denied read is indistinguishable
+	 * from a missing one — both answer 404 — so a caller cannot even confirm
+	 * another user's batch exists.
 	 */
 	public function batchExtract(string $batchId): JSONResponse {
 		try {
@@ -350,6 +366,14 @@ class BatchAnonymizationController extends Controller {
 	 * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down.
+	 * Every path here loads the batch through BatchStateService::getBatch(),
+	 * which compares the record's userId against the session user and returns
+	 * null for a mismatch (admins excepted for support). It returns null
+	 * rather than throwing precisely so a denied read is indistinguishable
+	 * from a missing one — both answer 404 — so a caller cannot even confirm
+	 * another user's batch exists.
 	 */
 	public function batchAnonymize(string $batchId): JSONResponse {
 		try {
@@ -495,6 +519,14 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
+	 *
+	 * @no-admin-idor-exempt ownership is enforced one layer down.
+	 * Every path here loads the batch through BatchStateService::getBatch(),
+	 * which compares the record's userId against the session user and returns
+	 * null for a mismatch (admins excepted for support). It returns null
+	 * rather than throwing precisely so a denied read is indistinguishable
+	 * from a missing one — both answer 404 — so a caller cannot even confirm
+	 * another user's batch exists.
 	 */
 	public function batchReport(string $batchId): JSONResponse|DataDownloadResponse {
 		try {

@@ -98,6 +98,15 @@ class SigningCancellationService {
 	 * @throws RuntimeException When the actor is not the creator, or the withdrawal fails.
 	 *
 	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 *
+	 * @orphaned-write-capability exclude shipped ahead of its caller. The
+	 * HTTP route signing#cancelRequest still runs the older path
+	 * (SigningService::cancelRequest) with its authorization inline in the
+	 * controller, so nothing reaches this service yet. Rewiring is NOT
+	 * mechanical and is deliberately not done here: this service refuses
+	 * every non-creator, while the controller currently lets an ADMIN cancel
+	 * any request, so swapping them silently removes an admin capability.
+	 * Tracked in docudesk#628.
 	 */
 	public function cancel(string $uid, string $requestId): array {
 		// Scoped lookup: getRequest() already collapses access-denied to null and
