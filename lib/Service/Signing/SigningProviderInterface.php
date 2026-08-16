@@ -21,6 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service\Signing;
 
+use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
+use RuntimeException;
+
 /**
  * Interface for signing providers
  *
@@ -88,6 +91,33 @@ interface SigningProviderInterface {
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
 	 */
 	public function downloadSignedDocument(string $externalId): string;
+
+	/**
+	 * Withdraw an ongoing signing flow.
+	 *
+	 * VOID OR THROW, deliberately, and not `bool`.
+	 *
+	 * The previous `: bool` contract is what allowed `ValidSignProvider` to ship
+	 * `return true;` with no call to ValidSign at all — an implementation-shaped
+	 * statement that a user's request had been withdrawn when it was still live and
+	 * still signable. A boolean invites one caller to write `if ($ok)` and the next
+	 * to ignore it, and neither is wrong under the type.
+	 *
+	 * An implementation MUST either complete the withdrawal against its backend or
+	 * raise. A provider with no cancellation capability MUST throw
+	 * {@see SigningCancellationNotSupportedException} rather than return, so the
+	 * caller can tell the user the truth.
+	 *
+	 * @param string $externalId The external signing flow identifier.
+	 *
+	 * @return void
+	 *
+	 * @throws SigningCancellationNotSupportedException When the provider cannot cancel at all.
+	 * @throws RuntimeException When the provider could be reached but refused or failed.
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function cancelSigning(string $externalId): void;
 
 	/**
 	 * Check if this provider supports a given signature level
