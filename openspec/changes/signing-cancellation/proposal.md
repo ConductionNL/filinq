@@ -63,20 +63,33 @@ attached.
   invites `if ($ok)` at one call site and a bare call at another, and the stub above
   is what a `bool` contract encourages.
 
-## The decision this change needs from a human
+## The authorisation rule — DECIDED 2026-08-16
 
-**Who may cancel a signing request?** The candidates are not equivalent:
+**Only the request's creator may cancel it. Not an app admin. Not a user with write
+access to the document.**
 
-| Candidate | Argument for | Argument against |
-|---|---|---|
-| The request's creator only | Simplest, clearly authorised | A creator on leave blocks everyone |
-| Creator + anyone with write on the document | Matches Nextcloud's sharing model | Write access to a file is not obviously authority to withdraw a legal process |
-| Creator + app admin | Gives an escape hatch | Admin is not a role in the signing domain |
+The alternatives were considered and rejected:
 
-This is not a detail to be picked by whoever implements it. Cancelling a signing
-request is a legally meaningful act, and the wrong answer is either an
-authorisation hole or an operational dead end. **The proposal deliberately does not
-choose.**
+| Candidate | Why not |
+|---|---|
+| Creator + write access on the document | Write permission on a file is not authority to withdraw a legal process from every signatory. The two happen to coincide often, which is what makes the conflation easy and wrong. |
+| Creator + app admin | Admin is not a role in the signing domain. A DocuDesk administrator administers an application; they are not a party to an agreement between a requester and its signatories. |
+
+### The consequence, stated rather than discovered
+
+**A creator who has left the organisation, or is on long leave, blocks cancellation
+of their requests permanently.** There is no in-app escape hatch by design.
+
+That is accepted, and it is the honest reading of the rule rather than an oversight
+to be quietly patched later. Two things follow, and the implementation MUST NOT
+paper over either:
+
+1. The refusal message MUST name the creator, so a blocked user knows who to ask
+   rather than concluding the feature is broken.
+2. A future "the creator has left" escape hatch is a **separate change with its own
+   authorisation argument** — not a quiet widening of this rule. Widening an
+   authorisation rule in a follow-up commit, on operational grounds, is how the
+   admin path gets in through the back door.
 
 ## Capabilities
 

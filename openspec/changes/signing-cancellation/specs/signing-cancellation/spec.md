@@ -40,32 +40,80 @@ provider" error, so the caller can tell the user the truth.
 - **THEN** it MUST throw an error naming the provider and the unsupported operation
 - **AND** MUST NOT silently succeed
 
-### Requirement: Cancellation MUST be authorised, and the rule MUST be explicit
+### Requirement: Only the creator of a signing request may cancel it
 
-Every cancellation MUST pass an authorisation check before the provider is called.
-The rule MUST be stated in one place and MUST NOT be inferred from file permissions
-by accident.
+The system MUST permit cancellation **only** by the user who created the signing
+request. An app administrator MUST NOT be able to cancel. A user holding write
+access to the underlying document MUST NOT be able to cancel on that basis.
 
-Cancelling a signing request withdraws a legal process from every signatory. The
-authority to do that is a domain decision, not a consequence of holding write
-permission on a file.
+Cancelling withdraws a legal process from every signatory. Write permission on a
+file is not authority to do that — the two coincide often, which is precisely what
+makes the conflation easy and wrong. An administrator administers an application;
+they are not a party to an agreement between a requester and its signatories.
 
-Until the rule is settled by a human (see the proposal), the implementation MUST
-refuse rather than default to a permissive answer. A default that lets too many
-people cancel is an authorisation hole; refusing is merely an inconvenience.
+The rule MUST live in one place and MUST NOT be reachable by any other path, so
+adding a second caller cannot accidentally introduce a second, laxer rule.
+
+#### Scenario: An app administrator is refused
+
+- **GIVEN** a signing request created by user `alice`
+- **AND** an app administrator `root` who did not create it
+- **WHEN** `root` attempts to cancel it
+- **THEN** the attempt MUST be refused
+- **AND** the provider MUST NOT be contacted
+
+#### Scenario: Write access to the document does not confer cancellation
+
+- **GIVEN** a signing request created by `alice` over a document shared with `bob` with write permission
+- **WHEN** `bob` attempts to cancel it
+- **THEN** the attempt MUST be refused
+
+#### Scenario: The creator may cancel
+
+- **GIVEN** a signing request created by `alice`
+- **WHEN** `alice` cancels it
+- **THEN** the cancellation MUST proceed
 
 #### Scenario: An unauthorised actor is refused before the provider is contacted
 
-- **GIVEN** an actor who does not satisfy the authorisation rule
-- **WHEN** they attempt to cancel a signing request
-- **THEN** the attempt MUST be refused
-- **AND** the provider MUST NOT be contacted, so no partial cancellation can occur
+- **GIVEN** an actor who is not the creator
+- **WHEN** they attempt to cancel
+- **THEN** the provider MUST NOT be contacted, so no partial cancellation can occur
 
-#### Scenario: The authorisation check runs first
+#### Scenario: The authorisation check runs before the request is resolved
 
-- **GIVEN** a cancellation request that is both unauthorised and names an unknown request id
+- **GIVEN** a cancellation that is both unauthorised and names an unknown request id
 - **WHEN** it is processed
 - **THEN** the authorisation refusal MUST take precedence, so an unauthorised caller cannot use error messages to learn which request ids exist
+
+### Requirement: A blocked cancellation MUST name the creator
+
+When cancellation is refused because the actor is not the creator, the refusal MUST
+name the creator.
+
+An absent creator — someone who has left the organisation or is on long leave —
+permanently blocks cancellation of their requests. That is the accepted consequence
+of the creator-only rule, not a defect. But a bare "not permitted" leaves the user
+concluding the feature is broken, when what they actually need is to know who to
+ask.
+
+The system MUST NOT provide an administrative override for this case. An escape
+hatch for an absent creator is a separate change with its own authorisation
+argument; adding one here on operational grounds is how the administrator path
+returns through the back door.
+
+#### Scenario: The refusal says who can do it
+
+- **GIVEN** a signing request created by `alice`
+- **WHEN** `bob` attempts to cancel it
+- **THEN** the refusal MUST name `alice` as the only user who can cancel it
+
+#### Scenario: No administrative override exists
+
+- **GIVEN** a signing request whose creator's account is disabled
+- **WHEN** an administrator attempts to cancel it
+- **THEN** the attempt MUST be refused
+- **AND** no configuration option MUST exist that would permit it
 
 ### Requirement: A cancelled request MUST be visibly cancelled and MUST NOT be re-signable
 

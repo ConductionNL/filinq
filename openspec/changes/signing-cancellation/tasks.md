@@ -1,11 +1,12 @@
 # Tasks
 
-## 0. Settle the authorisation rule — BLOCKING
+## 0. Authorisation rule — DECIDED 2026-08-16
 
-- [ ] Get a human decision on who may cancel a signing request (see the proposal's table) and record it in the spec
+**Only the request's creator may cancel. Not an admin. Not a holder of write access.**
 
-Acceptance criteria:
-- Nothing below ships until this is answered. A guessed rule is an authorisation hole in a legal process, and the refusal in task 2 is the deliberate placeholder until then.
+No longer blocking. The accepted consequence: an absent creator permanently blocks
+cancellation of their requests, with no in-app override. The refusal names the
+creator so a blocked user knows who to ask.
 
 ## 1. Make the contract honest
 
@@ -22,7 +23,8 @@ Acceptance criteria:
 
 - [ ] Add `SigningCancellationService` — authorise, resolve, call provider, record, transition
 - [ ] Authorise BEFORE contacting the provider and before resolving the request id
-- [ ] Refuse when the authorisation rule is unsettled, rather than defaulting permissive
+- [ ] Enforce creator-only: refuse admins and refuse write-access holders, with the refusal naming the creator
+- [ ] Add a test asserting NO configuration option can permit an administrative override
 - [ ] Make an already-cancelled request idempotent, and a completed request a refusal
 - [ ] Check whether the signing request schema carries `x-openregister-lifecycle`; if it does, the transition belongs there (ADR-031), not in a hand-set status field
 
