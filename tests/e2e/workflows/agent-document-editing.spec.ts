@@ -619,9 +619,36 @@ test.describe('agent document editing', () => {
 			writeVerbs,
 			'no DocuDesk schema may expose a derived write verb',
 		).toEqual([])
+		// ⚠️ WHAT "batch and signing stay unreachable" ACTUALLY MEANS. An earlier
+		// version of this check filtered every id matching /batch|sign/ and expected
+		// nothing — and it FAILED against the real surface on
+		// `docudesk.batchCorrespondenceJob.get`. The TEST was at fault, not the
+		// product: `batchCorrespondenceJob` and `signingRequest` are two of the
+		// eight deliberately exposed READ schemas, and "did the mail-merge finish?"
+		// and "has that contract been signed yet?" are the questions the proposal
+		// names as motivating the entire surface. Worse than failing on correct
+		// behaviour: had the product ever regressed to hide those reads, the old
+		// check would have gone GREEN.
+		//
+		// The refusal is about ACTIONS — no curated tool that RUNS a batch or
+		// applies a signature. Curated tools are two-segment
+		// (`docudesk.generateCorrespondence`); a three-segment id is a
+		// schema-derived verb, already covered by the write-verb check above.
+		const curated = docudesk.filter((n) => n.split('.').length === 2)
 		expect(
-			docudesk.filter((n) => /batch|sign/i.test(n)),
-			'batch and signing stay unreachable',
+			curated.filter((n) => /batch|sign/i.test(n)),
+			'no curated tool may run a batch or apply a signature',
 		).toEqual([])
+
+		// And the converse, asserted positively, so a future over-broad "refusal"
+		// cannot quietly remove these and call it hardening.
+		expect(
+			docudesk,
+			'the batch audit record stays readable — that is the point of the surface',
+		).toContain('docudesk.batchCorrespondenceJob.get')
+		expect(
+			docudesk,
+			'the signing request stays readable, so an agent can report on it',
+		).toContain('docudesk.signingRequest.get')
 	})
 })
