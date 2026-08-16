@@ -48,7 +48,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
-
 // The views under test, named after the component files they cover. Routes are
 // unchanged — this makes the spec-to-component link readable in executable code
 // rather than only in prose (gate-26 matches a page against its component stem).
