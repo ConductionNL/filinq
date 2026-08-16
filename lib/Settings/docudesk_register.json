@@ -1740,14 +1740,14 @@
                         "maxLength": 64
                     },
                     "userId": {
-                        "description": "Nextcloud user ID that owns the batch. BatchStateService refuses a read by any other non-admin user.",
+                        "description": "Nextcloud user ID that owns the batch. BatchStateService refuses a read by any other non-admin user. maxLength is 255, not 64: measured on the dev instance, OpenRegister enforces `required`, `enum` and property constraints EVEN WHEN `hardValidation` is false, so a long externally-provisioned uid over the limit would fail the batch write closed — the exact failure mode this schema exists to remove.",
                         "type": "string",
                         "required": true,
                         "visible": true,
                         "order": 2,
                         "facetable": true,
                         "title": "Owner",
-                        "maxLength": 64
+                        "maxLength": 255
                     },
                     "status": {
                         "description": "Phase the batch as a whole is in.",

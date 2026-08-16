@@ -83,6 +83,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Controller/PortalSigningReceiverController.php' => 1,
 		'lib/Service/BaseLabelResolver.php'                  => 1,
 		'lib/Service/BasesResolverService.php'               => 1,
+		'lib/Service/BatchStateRepository.php'               => 3,
 		'lib/Service/ConsentPolicyReferentValidator.php'     => 2,
 		'lib/Service/CustomDictionaryRepository.php'         => 4,
 		'lib/Service/DossierObjectRepository.php'            => 3,

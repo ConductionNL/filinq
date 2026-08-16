@@ -20,6 +20,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\BatchStateRepository;
 use OCA\DocuDesk\Service\BatchStateService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -93,6 +94,18 @@ class BatchStateServiceTest extends TestCase {
 	private IGroupManager|MockObject $mockGroupManager;
 
 	/**
+	 * Mocked BatchStateRepository — the OpenRegister store of record.
+	 *
+	 * Left as a bare mock here on purpose: this class covers the cache-facing
+	 * behaviour of BatchStateService, so every test either hits the cache or
+	 * expects a miss, and the store answers null. The store-backed behaviour is
+	 * covered with real fakes in BatchStateServicePersistenceTest.
+	 *
+	 * @var BatchStateRepository|MockObject
+	 */
+	private BatchStateRepository|MockObject $mockRepository;
+
+	/**
 	 * Set up test environment
 	 *
 	 * @return void
@@ -100,6 +113,7 @@ class BatchStateServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
+		$this->mockRepository = $this->createMock(originalClassName: BatchStateRepository::class);
 		$this->mockCache = $this->createMock(originalClassName: ICache::class);
 		$this->mockAppConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
@@ -116,7 +130,8 @@ class BatchStateServiceTest extends TestCase {
 			appConfig: $this->mockAppConfig,
 			logger: $this->mockLogger,
 			userSession: $this->mockUserSession,
-			groupManager: $this->mockGroupManager
+			groupManager: $this->mockGroupManager,
+			repository: $this->mockRepository
 		);
 
 	}//end setUp()

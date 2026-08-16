@@ -54,6 +54,8 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  */
 class BatchStateService {
 	private const CACHE_TTL = 7200;
