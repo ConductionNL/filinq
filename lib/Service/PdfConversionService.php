@@ -53,6 +53,8 @@ use Throwable;
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
  */
 class PdfConversionService {
 	/**
@@ -76,8 +78,31 @@ class PdfConversionService {
 	 * @return File The newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException When no backend in the cascade succeeded.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
 	 */
 	public function convertToPdf(File $source): File {
+		return $this->convertToPdfReporting(source: $source)['file'];
+
+	}//end convertToPdf()
+
+	/**
+	 * Convert to PDF and report WHICH backend claimed the conversion.
+	 *
+	 * Same cascade, same failure. The difference is that the caller learns
+	 * whether an office app produced the PDF or the mPDF fallback did -- two
+	 * results with visibly different fidelity that are otherwise
+	 * indistinguishable to anyone reading a log after the fact.
+	 *
+	 * @param File $source Source file (any supported input format).
+	 *
+	 * @return array{file: File, backend: string} The PDF and the backend that produced it.
+	 *
+	 * @throws ConversionFailedException When no backend in the cascade succeeded.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 */
+	public function convertToPdfReporting(File $source): array {
 		$mimeType = (string)$source->getMimeType();
 		$ext = $this->extractExtension(name: $source->getName());
 
@@ -134,7 +159,10 @@ class PdfConversionService {
 						'output' => $result->getPath(),
 					]
 				);
-				return $result;
+				return [
+					'file' => $result,
+					'backend' => $backendName,
+				];
 			} catch (Throwable $e) {
 				$attempts[] = [
 					'name' => $backendName,
@@ -161,7 +189,7 @@ class PdfConversionService {
 			attempts: $attempts
 		);
 
-	}//end convertToPdf()
+	}//end convertToPdfReporting()
 
 	/**
 	 * Return the lowercased extension of $name without the leading dot.

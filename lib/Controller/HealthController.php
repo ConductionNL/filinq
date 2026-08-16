@@ -110,13 +110,15 @@ class HealthController extends Controller {
 	 * the endpoint still ANSWERS (the entire point of a health probe):
 	 * `status: degraded`, `checks: {openregister: unavailable}`, HTTP 200.
 	 *
+	 * Rate limiting is an anonymous CEILING rather than a per-account counter,
+	 * because a liveness probe carries no credential to count against.
+	 *
 	 * @return JSONResponse `{status, app, version, checks}`.
 	 *
 	 * @spec openspec/specs/adopt-apphost/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Liveness probe — no credential, so a ceiling rather than a counter.
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		$body = $this->engineBody();
