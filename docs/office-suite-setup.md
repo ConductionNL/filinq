@@ -140,7 +140,7 @@ mistake: there, a browser-facing origin was used where a container-internal one 
 needed. Here a container-internal one was used where the browser needed it. Both
 fail without saying which way round the problem is.
 
-### 3. Enable WOPI — the step that is not optional
+### 4. Enable WOPI — the step that is not optional
 
 ```bash
 docker exec nextcloud php occ config:app:set onlyoffice enableSharing --value="true"
@@ -150,7 +150,7 @@ For a Euro-Office deployment proper, set `wopi.enable` to `true` in the server's
 `local.json` and restart it. On the ONLYOFFICE image used here, WOPI is served at
 `/hosting/wopi` once the app is connected.
 
-### 4. Verify with the probe
+### 5. Verify with the probe
 
 ```bash
 docker exec nextcloud php occ docudesk:office:probe
