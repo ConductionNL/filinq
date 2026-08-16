@@ -1995,3 +1995,77 @@ interface IPreparedStatement {
 	 */
 	public function rowCount(): int;
 }//end interface
+
+namespace OCP\Http\Client;
+
+/**
+ * Stub of OCP\Http\Client\IResponse.
+ *
+ * Signatures transcribed from server lib/public/Http/Client/IResponse.php.
+ * getBody() is deliberately UNTYPED there (it returns string|resource), and the
+ * stub must not "tidy" that to `string` — a stub tightened past the real class is
+ * how a test starts asserting a contract the runtime does not have.
+ */
+interface IResponse {
+
+	/**
+	 * The response body.
+	 *
+	 * @return string|resource
+	 */
+	public function getBody();
+
+	/**
+	 * The HTTP status code.
+	 *
+	 * @return int
+	 */
+	public function getStatusCode(): int;
+
+	/**
+	 * A single response header.
+	 *
+	 * @param string $key The header name.
+	 *
+	 * @return string
+	 */
+	public function getHeader(string $key): string;
+
+	/**
+	 * All response headers.
+	 *
+	 * @return array
+	 */
+	public function getHeaders(): array;
+}//end interface
+
+/**
+ * Stub of OCP\Http\Client\IClient.
+ *
+ * Only the verbs DocuDesk uses are declared.
+ */
+interface IClient {
+
+	/**
+	 * Issue a GET request.
+	 *
+	 * @param string $uri     The URI.
+	 * @param array  $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function get(string $uri, array $options = []): IResponse;
+}//end interface
+
+/**
+ * Stub of OCP\Http\Client\IClientService.
+ */
+interface IClientService {
+
+	/**
+	 * Build a client.
+	 *
+	 * @return IClient
+	 */
+	public function newClient(): IClient;
+}//end interface

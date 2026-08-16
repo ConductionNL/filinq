@@ -149,10 +149,40 @@ with no error.
 
 Preference order, resolved at Phase 0 (see §Verification):
 
-1. **Native persistent ids** — OOXML `w14:paraId`, ODF `xml:id`. Purpose-built
-   for exactly this, *if* the suite preserves them.
-2. **Content-hash anchors** with a re-anchoring pass on every `open` — the
-   fallback if (1) does not survive a save.
+1. ~~**Native persistent ids** — OOXML `w14:paraId`, ODF `xml:id`.~~ **RULED OUT
+   BY MEASUREMENT, 2026-08-15.**
+2. **Content-hash anchors** with a re-anchoring pass on every `open` — now the
+   only option, not the fallback.
+
+### 🔴 Phase 0.1 result: `paraId` does NOT survive Collabora
+
+Measured, not inferred. A `.docx` carrying three known `w14:paraId` values was
+round-tripped through Collabora's own LibreOffice core (the `soffice` binary
+inside `richdocumentscode`'s `Collabora_Online.AppImage`, i.e. exactly the filter
+a save goes through):
+
+```
+BEFORE: ['1A2B3C4D', '5E6F7A8B', '9C0D1E2F']
+AFTER : []
+```
+
+All three paragraphs survived; **zero** `w14:` attributes did. The `w14`
+namespace is still *declared* in the output — which is the trap: a reader
+checking for the namespace would conclude the extension round-trips. It does not.
+Collabora's OOXML export drops Microsoft's extension attributes wholesale.
+
+**Consequences for the implementation:**
+
+- The codec MUST use content-hash anchors, and `open` MUST re-anchor every time.
+  There is no native id to fall back to.
+- An anchor computed before a Collabora save is void after it, so an edit session
+  cannot span a save it did not perform.
+- ODF `xml:id` is untested and cannot be assumed to behave differently — but it
+  does not rescue the `.docx` path either way, so it changes nothing about the
+  design.
+
+This is precisely why the gate existed: discovering it after the codec was built
+would have meant rewriting the addressing model rather than choosing it.
 
 This is the single largest unknown in the change and it is measured before any
 codec code is written. It is recorded as a known unknown in ADR-087.
