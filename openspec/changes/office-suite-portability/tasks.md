@@ -8,7 +8,7 @@
 - [ ] Surface the result as a capability so the feature degrades visibly (ADR-075 §4)
 
 Acceptance criteria:
-- An installed-but-WOPI-disabled suite — Euro-Office's shipped default — resolves ABSENT.
+- An installed-but-WOPI-disabled suite — ONLYOFFICE's shipped default — resolves ABSENT.
 - The probe does not run on app load; no app in this fleet resolves configuration there.
 - The recorded reason distinguishes "probe failed" from "no suite installed".
 
@@ -25,7 +25,7 @@ Acceptance criteria:
 
 - [ ] Add `docker-compose.office.yml` with `onlyoffice` and `collabora` profiles, neither running by default
 - [ ] Write `docs/office-suite-setup.md` covering bring-up, connector config and verification for BOTH suites
-- [ ] Document Euro-Office's `wopi.enable: false` default and how to turn it on
+- [ ] Document ONLYOFFICE's `wopi.enable: false` default and how to turn it on
 - [ ] Give the reader one command whose output distinguishes available from absent
 
 Acceptance criteria:
@@ -50,4 +50,4 @@ Acceptance criteria:
 - [ ] `composer check:strict` clean; hydra gates measured against the base run, not against zero
 
 Acceptance criteria:
-- The no-suite E2E is the real portability proof — it is the configuration Euro-Office users who have not enabled WOPI actually run.
+- The no-suite E2E is the real portability proof — it is the configuration users who have not enabled WOPI actually run.

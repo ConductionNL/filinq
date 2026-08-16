@@ -86,7 +86,7 @@ When no suite is reachable the test MUST report **not run** and MUST NOT pass.
 ### Requirement: Both supported suites MUST be reproducibly documented
 
 The repository MUST document bring-up, connection and probe-based verification for
-Collabora and Euro-Office/ONLYOFFICE, MUST state Euro-Office's WOPI-disabled
+Collabora and ONLYOFFICE, MUST state ONLYOFFICE's WOPI-disabled
 default, and MUST start neither suite by default.
 
 #### Scenario: Neither suite starts by default
@@ -94,3 +94,42 @@ default, and MUST start neither suite by default.
 - **GIVEN** the environment is started with no profile selected
 - **WHEN** running containers are listed
 - **THEN** neither office suite MUST be running
+
+### Requirement: A suite MUST NOT be claimed as supported until it has been run
+
+A suite may be named as a portability *target* freely. It MUST NOT be described as
+supported, verified, or tested unless that specific product has been started and
+probed. A measurement taken against one suite MUST be attributed to the suite it was
+taken against.
+
+Two products being related — even correctly — does not transfer a measurement from
+one to the other. Whether they are related is itself a claim that needs a source
+outside the document making it.
+
+Measured failure, 2026-08-16: the portability work ran
+`onlyoffice/documentserver`, labelled it "Euro-Office / ONLYOFFICE" throughout its
+documentation, compose file and pull-request text, and justified the substitution by
+citing ADR-087 — which is where the "Euro-Office is an ONLYOFFICE fork" claim had
+been introduced by the same programme days earlier. **Euro-Office was never
+installed or run.** The WOPI 404→200 flip, the anchor round-trip and the chart
+render are all ONLYOFFICE results.
+
+#### Scenario: A measurement names the product it was taken on
+
+- **GIVEN** a finding measured against a specific office suite image
+- **WHEN** it is written into documentation or an ADR
+- **THEN** it MUST name that image or product
+- **AND** MUST NOT be attributed to a different suite believed to be related
+
+#### Scenario: An unexercised suite is listed as unexercised
+
+- **GIVEN** a suite named as a portability target that has never been started
+- **WHEN** the supported-suite status is documented
+- **THEN** it MUST be recorded as not installed, not configured and not verified
+- **AND** MUST NOT appear in a list of verified suites
+
+#### Scenario: A document may not be its own evidence
+
+- **GIVEN** a claim introduced by an ADR in this programme
+- **WHEN** that same programme relies on the claim to justify a substitution
+- **THEN** the reliance MUST be treated as unsupported, because the ADR is where the claim entered rather than a source corroborating it

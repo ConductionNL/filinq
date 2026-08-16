@@ -29,9 +29,12 @@ one, it is a bug — see the conformance test in
 
 ## The one thing that will waste your afternoon
 
-> **Euro-Office ships with WOPI disabled.**
+> **ONLYOFFICE Document Server ships with WOPI disabled.**
 
-`wopi.enable` is `false` by default in Euro-Office's `local.json`. This means:
+Measured 2026-08-16 on `onlyoffice/documentserver:latest`: `default.json` carries
+`"wopi": { "enable": false }`. Attributed here to the image it was measured on —
+an earlier version of this document credited the finding to Euro-Office, which was
+never tested. This means:
 
 - the container starts,
 - the port answers,
@@ -53,7 +56,7 @@ Both suites live in `docker-compose.office.yml` in this repository, each behind 
 own profile. Neither starts by default.
 
 ```bash
-# Euro-Office / ONLYOFFICE
+# ONLYOFFICE
 docker compose -f docker-compose.office.yml --profile onlyoffice up -d
 
 # Collabora
@@ -73,14 +76,27 @@ docker inspect nextcloud --format '{{range $k,$v := .NetworkSettings.Networks}}{
 
 ---
 
-## Euro-Office / ONLYOFFICE
+## ONLYOFFICE
 
-Euro-Office is the ONLYOFFICE fork announced 2026-03-27 by a nine-company European
-consortium (IONOS, Nextcloud, Proton, XWiki, OpenProject, EuroStack, Soverin,
-Abilian, BTactic), GA 2026-06-09, and is now the engine behind Nextcloud Office. It
-is API-compatible with ONLYOFFICE Document Server, which is what the overlay runs —
-the upstream image is public, the consortium build is not separately published for
-local development.
+> ### ⚠️ This section sets up ONLYOFFICE. It does NOT set up Euro-Office.
+>
+> An earlier version of this document was titled "Euro-Office / ONLYOFFICE" and
+> asserted that Euro-Office *"is the ONLYOFFICE fork … API-compatible with ONLYOFFICE
+> Document Server, which is what the overlay runs."*
+>
+> **That equivalence was never verified and should not be relied on.** The second
+> half of it — "API-compatible … the consortium build is not separately published for
+> local development" — was written to justify substituting one product for the other,
+> not from any measurement or source. ONLYOFFICE is Ascensio System SIA's product.
+> Whether Euro-Office is derived from it, related to it, or a separate product
+> entirely is **an open question in this repository**, and nothing here answers it.
+>
+> Everything verified below was verified against **`onlyoffice/documentserver`** and
+> is claimed only for that. See "What is NOT set up here" at the end of this section.
+
+ONLYOFFICE Document Server is a WOPI-capable office suite that registers with
+Nextcloud's `IConversionManager`. It is what this overlay runs and what the
+end-to-end evidence in this document was gathered against.
 
 ### 1. Start it
 
@@ -146,8 +162,8 @@ fail without saying which way round the problem is.
 docker exec nextcloud php occ config:app:set onlyoffice enableSharing --value="true"
 ```
 
-For a Euro-Office deployment proper, set `wopi.enable` to `true` in the server's
-`local.json` and restart it. On the ONLYOFFICE image used here, WOPI is served at
+For any deployment where the env var is not available, set `wopi.enable` to `true`
+in the server's `local.json` and restart it. On the ONLYOFFICE image used here, WOPI is served at
 `/hosting/wopi` once the app is connected.
 
 ### 5. Verify with the probe
@@ -159,7 +175,7 @@ docker exec nextcloud php occ docudesk:office:probe
 Expected when it works:
 
 ```
-WOPI: available (suite reported: ONLYOFFICE/Euro-Office)
+WOPI: available (suite reported: ONLYOFFICE)
 ```
 
 Expected when the suite is installed but WOPI is off — the state this document
@@ -177,7 +193,7 @@ hands.
 
 ## Collabora Online
 
-LibreOffice-based, the incumbent Nextcloud Office engine, and unlike Euro-Office it
+LibreOffice-based, the incumbent Nextcloud Office engine, and unlike ONLYOFFICE it
 serves WOPI out of the box.
 
 ### 1. Start it
@@ -219,7 +235,7 @@ curl -s http://localhost:9980/hosting/discovery | head -5     # should be WOPI X
 |---|---|
 | **"ONLYOFFICE cannot be reached" in the browser, container healthy** | `DocumentServerUrl` is a container name. The *browser* must be able to resolve it — see the three-URL section. |
 | Editor loads but cannot save | `StorageUrl` wrong: the document server cannot reach Nextcloud to write the file back. |
-| Admin page green, editing fails | WOPI disabled. Euro-Office's default. Run the probe. |
+| Admin page green, editing fails | WOPI disabled — ONLYOFFICE's shipped default. Run the probe. |
 | Probe says absent, container healthy | `DocumentServerInternalUrl` points at a browser origin. From inside Nextcloud, `localhost` is Nextcloud. |
 | Probe times out | The suite is on a different docker network. Check with `docker inspect`. |
 | Conversion works, sessions do not | Expected and fine. Conversion goes through `IConversionManager`; sessions need WOPI. |
@@ -246,7 +262,7 @@ check the test output says it ran.
 
 ## Verified end to end, 2026-08-16
 
-The full path — Nextcloud document, opened in Euro-Office, altered from the Hermiq
+The full path — Nextcloud document, opened in **ONLYOFFICE**, altered from the Hermiq
 chat window — was exercised on `localhost:8080`. Recorded here because each step
 below is a place it can fail silently.
 
@@ -258,7 +274,7 @@ below is a place it can fail silently.
 | Tools reachable by the model | `tools/list` → 120 tools, 6 of them `docudesk.*Document*` |
 | Chat drove the edit | runner log: `provider=anthropic model=claude-opus-4-8 governed=yes`, `exit=0` |
 | The bytes changed | `word/document.xml` contains `vier weken`, no longer `zes weken` |
-| Euro-Office reads the edit | converting the edited file through the document server yields text containing *"binnen vier weken"* |
+| ONLYOFFICE reads the edit | converting the edited file through the document server yields text containing *"binnen vier weken"* |
 | It is accountable | file carries the `Agent authored` tag; the pre-edit version is restorable |
 
 ### Two failures hit during that run, both worth knowing
@@ -272,3 +288,37 @@ accepted the message, showed no error, and simply never replied. There is no
 returned by the first. That is correct: writing the file changes its etag, and the
 tag write changes it again. Re-read before each write rather than caching a version
 across calls.
+
+---
+
+## What is NOT set up here
+
+**Euro-Office.** It is named throughout this repository as a portability target, and
+it is not installed, not configured and not tested by anything in this document.
+
+The reason matters. An earlier revision claimed Euro-Office was an ONLYOFFICE fork
+and therefore that running `onlyoffice/documentserver` amounted to running
+Euro-Office. That claim originated in ADR-087 — written in this same programme, not
+from an external source — and was then cited as the justification for the
+substitution. A claim used as evidence for itself is not evidence.
+
+So, precisely:
+
+| | Status |
+|---|---|
+| ONLYOFFICE Document Server | installed, configured, **verified end to end** |
+| Collabora Online | documented, **not verified in this programme** |
+| **Euro-Office** | **not installed, not configured, not verified — and its relationship to ONLYOFFICE is unestablished** |
+
+To actually support Euro-Office, someone has to obtain it and answer three questions
+against the real product, none of which this document answers:
+
+1. Does it expose WOPI, and at which paths?
+2. Does it register with Nextcloud's `IConversionManager`, so ADR-087 §1's "adding a
+   suite is zero work" holds for it?
+3. Does a save through it preserve content-hash anchors? The round-trip measurement
+   in this programme was performed on ONLYOFFICE and says nothing about Euro-Office.
+
+Until then, DocuDesk's portability claim is a claim about **format independence**
+(ODF/OOXML edited in-package with no suite in the call path), which is real and
+tested — not a claim that any particular second suite has been exercised.

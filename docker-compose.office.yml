@@ -36,20 +36,23 @@ networks:
 services:
 
   # ===========================================================================
-  # Euro-Office / ONLYOFFICE Document Server
+  # ONLYOFFICE Document Server
   #
-  # Euro-Office is the ONLYOFFICE fork from the nine-company European
-  # consortium (GA 2026-06-09) and is now the engine behind Nextcloud Office.
-  # It is API-compatible with ONLYOFFICE Document Server, which is what runs
-  # here — the upstream image is public and the consortium build is not
-  # separately published for local development.
+  # ⚠️ THIS IS NOT EURO-OFFICE. An earlier version of this file said it was --
+  #    "Euro-Office is the ONLYOFFICE fork ... API-compatible with ONLYOFFICE
+  #    Document Server, which is what the overlay runs". That equivalence was
+  #    never verified. It came from ADR-087, written in this same programme, and
+  #    was then used to justify substituting one product for the other. A claim
+  #    cited as evidence for itself is not evidence.
   #
-  # ⚠️  WOPI IS DISABLED BY DEFAULT in Euro-Office's local.json. That is the
-  #     single most important fact in this file: the container starts, the
-  #     port answers, the Nextcloud admin page goes green, and WOPI serves
-  #     nothing. "The app is installed" is NOT the probe — a successful
-  #     CheckFileInfo is (ADR-087 §3).
-  # ===========================================================================
+  #    ONLYOFFICE is Ascensio System SIA's product. Whether Euro-Office is
+  #    derived from it, related to it, or separate is an open question here.
+  #    Nothing in this repository runs or tests Euro-Office.
+  #
+  # ⚠️ WOPI IS DISABLED BY DEFAULT in this image's default.json (measured
+  #    2026-08-16). The container starts, the port answers, the Nextcloud admin
+  #    page goes green, and WOPI serves nothing. "The app is installed" is NOT
+  #    the probe -- a successful CheckFileInfo is (ADR-087 §3).
   onlyoffice:
     profiles:
       - onlyoffice
@@ -92,7 +95,7 @@ services:
   # Collabora Online (CODE)
   #
   # LibreOffice-based, the incumbent Nextcloud Office engine, WOPI client.
-  # Unlike Euro-Office it serves WOPI out of the box.
+  # Unlike ONLYOFFICE it serves WOPI out of the box.
   # ===========================================================================
   collabora:
     profiles:
