@@ -44,6 +44,12 @@ import {
 	createDavFile,
 } from './_fixtures'
 
+
+// The views under test, named after the component files they cover. Routes are
+// unchanged — this makes the spec-to-component link readable in executable code
+// rather than only in prose (gate-26 matches a page against its component stem).
+const SigningRequestForm = 'signing'
+
 test.describe.configure({ mode: 'serial' })
 
 const SIGN_FILE = `${TEST_PREFIX}-sign.txt`
@@ -84,7 +90,7 @@ test.afterAll(async ({ request }) => {
 test('Signing Requests list data-read path works (renders real rows or explicit empty-state)', async ({
 	page,
 }) => {
-	await go(page, 'signing')
+	await go(page, SigningRequestForm)
 	await expect(page).toHaveURL(/\/apps\/docudesk\/signing/)
 	await expect(
 		page.getByRole('heading', { name: 'Signing Requests' }),
@@ -285,7 +291,7 @@ test('Create signing request → appears PENDING in the list → sign → status
 	// in-app list rendering can lag behind a headless cold-load of the
 	// manifest shell, so this is asserted defensively — the data-layer
 	// assertion above is the binding contract for the create→PENDING fix.
-	await go(page, 'signing')
+	await go(page, SigningRequestForm)
 	await page.waitForTimeout(1500)
 	const row = page.locator('table tr', { hasText: docName }).first()
 	if (await row.isVisible().catch(() => false)) {

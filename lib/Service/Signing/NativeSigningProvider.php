@@ -220,6 +220,13 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 * @throws RuntimeException If session not found
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
+	 *
+	 * @orphaned-write-capability exclude implements SigningProviderInterface::cancelSigning(), which every provider must
+	 * declare. The cancel surface itself (a controller route and a UI
+	 * affordance) has not shipped yet, so no caller reaches it — but a
+	 * provider that silently omitted the method would break the contract the
+	 * interface exists to hold, and the gap is in the surface above it, not
+	 * here.
 	 */
 	public function cancelSigning(string $externalId): bool {
 		$session = $this->loadSessionByExternalId(externalId: $externalId);

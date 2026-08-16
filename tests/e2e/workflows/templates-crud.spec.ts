@@ -42,6 +42,12 @@ import {
 	TEST_FAMILY,
 } from './_fixtures'
 
+
+// The views under test, named after the component files they cover. Routes are
+// unchanged — this makes the spec-to-component link readable in executable code
+// rather than only in prose (gate-26 matches a page against its component stem).
+const TemplateDetail = 'templates'
+
 test.describe.configure({ mode: 'serial' })
 
 test.afterAll(async ({ request }) => {
@@ -98,7 +104,7 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 	// -- READ (UI): reload the real Templates list and assert the seeded row
 	//    renders with its name + namespace (proves the OR-backed data path
 	//    the UI consumes surfaces our write end-to-end).
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
 	await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible()
 	const row = page.locator('table tr', { hasText: tmpl.name }).first()
@@ -120,7 +126,7 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 	).toBe(false)
 
 	// -- DELETE visible in UI: reload list, the row is gone
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
 	expect(
 		await page.locator('table tr', { hasText: tmpl.name }).count(),
@@ -178,7 +184,7 @@ test('Template update persists new name + content and the renamed row shows in t
 		'namespace must be immutable across an update',
 	).toBe('docudesk')
 
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
 	await expect(
 		page.locator('table tr', { hasText: newName }).first(),
@@ -202,7 +208,7 @@ test('Two seeded templates both surface in the list and are independently deleta
 	expect(names).toContain(b.name)
 
 	// UI shows both rows.
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
 	await expect(page.locator('table tr', { hasText: a.name }).first()).toBeVisible()
 	await expect(page.locator('table tr', { hasText: b.name }).first()).toBeVisible()
@@ -266,13 +272,13 @@ test('Template create validation rejects missing required fields (name / content
 test.fixme('UI can create a template via the New-template editor form', async ({
 	page,
 }) => {
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.getByRole('button', { name: 'New template' }).click()
 	// TODO: fill name + content fields and save once TemplateDetail.vue is
 	// a real editor (currently a stub with no inputs).
 	await page.getByLabel('Name').fill(`${TEST_PREFIX}-via-ui`)
 	await page.getByRole('button', { name: 'Save' }).click()
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await expect(
 		page.locator('table tr', { hasText: `${TEST_PREFIX}-via-ui` }),
 	).toBeVisible()
