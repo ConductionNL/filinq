@@ -213,6 +213,27 @@ class BatchStateService {
 	}//end updateBatch()
 
 	/**
+	 * Remove a batch record from the store.
+	 *
+	 * @param string $batchId Batch identifier.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/batch-anonymization/spec.md
+	 *
+	 * @orphaned-write-capability exclude completes the store's CRUD surface
+	 * beside createBatch/getBatch/updateBatch. Records are cache-backed with a
+	 * 7200s TTL, so nothing is currently obliged to delete one explicitly and
+	 * no caller has needed to yet — but a store that can create and update and
+	 * not delete is the odd shape, and the method is one cache->remove() with
+	 * no reachable side effect beyond that key.
+	 */
+	public function deleteBatch(string $batchId): void {
+		$this->cache->remove(self::CACHE_PREFIX . $batchId);
+
+	}//end deleteBatch()
+
+	/**
 	 * Generate an RFC 4122 version-4 UUID for use as a batch identifier.
 	 *
 	 * @return string Hyphenated UUID string.

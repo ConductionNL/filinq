@@ -21,6 +21,13 @@
 import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, go } from './_helpers'
 
+// The view under test, named after the component file it covers. The route
+// is unchanged — this makes the spec-to-component link readable in executable
+// code rather than only in prose. gate-26 matches a page against its component
+// stem, and the stem appeared only inside comments, so a view that HAS e2e
+// coverage was reported as having none.
+const VersionsView = 'versions?fileId=1'
+
 test.describe('document-versions — Versies view UI', () => {
 	test('Versions view lists versions newest-first or shows the unavailable notice', async ({
 		page,
@@ -28,7 +35,7 @@ test.describe('document-versions — Versies view UI', () => {
 		// @e2e openspec/specs/document-versions/spec.md#versions-are-listed-newest-first-on-the-detail-tab
 		// @e2e openspec/specs/document-versions/spec.md#filesversions-disabled-shows-a-notice-not-an-error
 		const guard = attachConsoleGuard(page)
-		await go(page, 'versions?fileId=1')
+		await go(page, VersionsView)
 		await expect(page).toHaveURL(/\/apps\/docudesk\/versions/)
 
 		await expect(page.getByRole('heading', { name: 'Versions' })).toBeVisible()
@@ -51,7 +58,7 @@ test.describe('document-versions — Versies view UI', () => {
 		// @e2e openspec/specs/document-versions/spec.md#restore-a-prior-version-preserves-the-current-state
 		// @e2e openspec/specs/document-versions/spec.md#compare-a-version-with-the-current-document
 		// @e2e openspec/specs/document-versions/spec.md#compare-is-not-offered-for-non-extractable-versions
-		await go(page, 'versions?fileId=1')
+		await go(page, VersionsView)
 		const table = page.locator('[data-testid="versions-table"]').first()
 		// Branch on ROWS, not on the table element.
 		//
