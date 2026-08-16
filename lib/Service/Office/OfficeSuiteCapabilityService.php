@@ -106,7 +106,99 @@ class OfficeSuiteCapabilityService {
 	}//end __construct()
 
 	/**
-	 * Probe a WOPI host.
+	 * Probe a WOPI host's DISCOVERY endpoint.
+	 *
+	 * ADR-087 §3 says "a successful `CheckFileInfo` is the probe". That is not
+	 * achievable at capability-resolution time and the ADR was wrong to require it:
+	 * `CheckFileInfo` is a PER-FILE call authenticated by a short-lived access token
+	 * the host mints when a user opens a specific document. There is no file and no
+	 * token when a capability is being resolved.
+	 *
+	 * WOPI **discovery** is the endpoint that answers "is there a usable WOPI host
+	 * here" without a file: it returns XML listing the actions the host supports. A
+	 * suite with WOPI switched off does not serve it — measured on ONLYOFFICE
+	 * 2026-08-16, `/hosting/discovery` returned 404 until `WOPI_ENABLED=true`, so
+	 * discovery separates "installed" from "usable" exactly as intended.
+	 *
+	 * This method was originally written to validate a `CheckFileInfo` JSON body and
+	 * was then pointed at a discovery URL, so it reported every working suite as
+	 * absent for "missing the required field BaseFileName" — a probe failing on the
+	 * shape of a response it was never given.
+	 *
+	 * @param string $discoveryUrl Absolute WOPI discovery URL to probe.
+	 *
+	 * @return array{available:bool, reason:string, suite:string|null} The verdict.
+	 *
+	 * @spec openspec/specs/office-suite-portability/spec.md
+	 */
+	public function probeDiscovery(string $discoveryUrl): array {
+		if (trim($discoveryUrl) === '') {
+			return $this->absent(reason: 'no WOPI endpoint configured');
+		}
+
+		try {
+			$response = $this->clientService->newClient()->get(
+				$discoveryUrl,
+				[
+					'timeout'         => self::TIMEOUT_SECONDS,
+					'connect_timeout' => self::TIMEOUT_SECONDS,
+					'allow_redirects' => false,
+					'http_errors'     => false,
+				]
+			);
+		} catch (Throwable $e) {
+			return $this->absent(reason: 'probe could not complete: ' . $e->getMessage());
+		}
+
+		$status = $response->getStatusCode();
+		if ($status < 200 || $status >= 300) {
+			return $this->absent(reason: sprintf('discovery returned %d', $status));
+		}
+
+		$body = (string)$response->getBody();
+
+		// A WOPI discovery document declares `wopi-discovery` and at least one
+		// `action`. A 200 carrying an error page or a login form has neither, and
+		// accepting the status alone would report those hosts as usable.
+		if (str_contains($body, 'wopi-discovery') === false) {
+			return $this->absent(reason: 'response is not a WOPI discovery document');
+		}
+
+		if (str_contains($body, '<action') === false) {
+			return $this->absent(reason: 'WOPI discovery declares no actions');
+		}
+
+		return [
+			'available' => true,
+			'reason'    => 'WOPI discovery served',
+			'suite'     => $this->identifyFromDiscovery(body: $body),
+		];
+	}//end probeDiscovery()
+
+	/**
+	 * Name the suite from its discovery document, when it says.
+	 *
+	 * Reporting only. Nothing branches on which suite answered — a capability that
+	 * behaved differently per suite would be the per-suite driver set ADR-087 §5
+	 * bans.
+	 *
+	 * @param string $body The discovery XML.
+	 *
+	 * @return string|null The suite name, or null.
+	 */
+	private function identifyFromDiscovery(string $body): ?string {
+		if (preg_match('/<app\s+name="([^"]+)"/', $body, $m) === 1) {
+			return $m[1];
+		}
+
+		return null;
+	}//end identifyFromDiscovery()
+
+	/**
+	 * Probe a WOPI host's CheckFileInfo for a specific file.
+	 *
+	 * Only usable where a real file and access token exist — i.e. inside a session,
+	 * not at capability-resolution time. See {@see probeDiscovery()}.
 	 *
 	 * @param string $checkFileInfoUrl Absolute CheckFileInfo URL to probe.
 	 *

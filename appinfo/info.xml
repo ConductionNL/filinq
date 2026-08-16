@@ -94,4 +94,7 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
             <icon>app.svg</icon>
         </navigation>
     </navigations>
+    <commands>
+        <command>OCA\DocuDesk\Command\OfficeProbeCommand</command>
+    </commands>
 </info>
