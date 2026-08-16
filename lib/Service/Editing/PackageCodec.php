@@ -290,7 +290,7 @@ class PackageCodec {
 	 * @param array<int, array<string, mixed>> $edits The requested edits.
 	 * @param array<int, string> $anchors The anchors of the current blocks, in document order.
 	 *
-	 * @return array<int, array{index: int, anchor: string, action: string, text: string}>
+	 * @return array<int, array{index: int, anchor: string, action: string, text: string, style: array<string, mixed>}>
 	 *
 	 * @throws RuntimeException When an anchor is unknown or an action is not supported.
 	 */
@@ -359,7 +359,7 @@ class PackageCodec {
 	 *
 	 * @param string $xml The part XML.
 	 * @param array{0: int, 1: int} $span The span offset and length.
-	 * @param array{action: string, text: string} $edit The edit to apply.
+	 * @param array{action: string, text: string, style: array<string, mixed>} $edit The edit to apply.
 	 * @param string $format The package family.
 	 *
 	 * @return string The rewritten part XML.

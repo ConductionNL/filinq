@@ -167,6 +167,22 @@ class BlockStyleCodec {
 			}
 		}
 
+		$this->assertKnownValues(style: $style);
+	}//end assertKnownKeys()
+
+	/**
+	 * Reject values that name something the codec cannot express.
+	 *
+	 * Split from {@see assertKnownKeys()} to keep both under phpmd's complexity
+	 * threshold; the behaviour is unchanged.
+	 *
+	 * @param array $style The style properties.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When a value is not understood.
+	 */
+	private function assertKnownValues(array $style): void {
 		$alignment = ($style['alignment'] ?? null);
 		if ($alignment !== null && isset(self::ALIGNMENTS[(string)$alignment]) === false) {
 			throw new RuntimeException(
@@ -179,10 +195,14 @@ class BlockStyleCodec {
 		}
 
 		$heading = ($style['heading'] ?? null);
-		if ($heading !== null && (is_numeric($heading) === false || (int)$heading < 0 || (int)$heading > 9)) {
+		if ($heading === null) {
+			return;
+		}
+
+		if (is_numeric($heading) === false || (int)$heading < 0 || (int)$heading > 9) {
 			throw new RuntimeException('Heading level must be between 0 (body text) and 9.');
 		}
-	}//end assertKnownKeys()
+	}//end assertKnownValues()
 
 	/**
 	 * Apply the paragraph-level properties.
@@ -193,41 +213,8 @@ class BlockStyleCodec {
 	 * @return string The rewritten markup.
 	 */
 	private function applyParagraphProperties(string $markup, array $style): string {
-		$properties = '';
-		$removals   = [];
-
-		if (isset($style['heading']) === true) {
-			$level = (int)$style['heading'];
-			if ($level > 0) {
-				$properties .= sprintf('<w:pStyle w:val="Heading%d"/>', $level);
-			} else {
-				// Level 0 means body text. This is a REMOVAL, not an absence: an
-				// early return here would leave an existing <w:pStyle> in place and
-				// report the restyle as applied while changing nothing — which is
-				// precisely what the first version of this method did.
-				$removals[] = 'w:pStyle';
-			}
-		}
-
-		if (isset($style['list']) === true && (bool)$style['list'] === false) {
-			$removals[] = 'w:numPr';
-		}
-
-		if (isset($style['pageBreakBefore']) === true && (bool)$style['pageBreakBefore'] === false) {
-			$removals[] = 'w:pageBreakBefore';
-		}
-
-		if (isset($style['list']) === true && (bool)$style['list'] === true) {
-			$properties .= '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>';
-		}
-
-		if (isset($style['pageBreakBefore']) === true && (bool)$style['pageBreakBefore'] === true) {
-			$properties .= '<w:pageBreakBefore/>';
-		}
-
-		if (isset($style['alignment']) === true) {
-			$properties .= sprintf('<w:jc w:val="%s"/>', self::ALIGNMENTS[(string)$style['alignment']]);
-		}
+		$properties = $this->paragraphAdditions(style: $style);
+		$removals   = $this->paragraphRemovals(style: $style);
 
 		if ($properties === '' && $removals === []) {
 			return $markup;
@@ -239,6 +226,66 @@ class BlockStyleCodec {
 			removals: $removals
 		);
 	}//end applyParagraphProperties()
+
+	/**
+	 * The paragraph properties this style adds.
+	 *
+	 * @param array $style The style properties.
+	 *
+	 * @return string The property markup.
+	 */
+	private function paragraphAdditions(array $style): string {
+		$properties = '';
+
+		$heading = (int)($style['heading'] ?? 0);
+		if ($heading > 0) {
+			$properties .= sprintf('<w:pStyle w:val="Heading%d"/>', $heading);
+		}
+
+		if (($style['list'] ?? false) === true) {
+			$properties .= '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>';
+		}
+
+		if (($style['pageBreakBefore'] ?? false) === true) {
+			$properties .= '<w:pageBreakBefore/>';
+		}
+
+		if (isset($style['alignment']) === true) {
+			$properties .= sprintf('<w:jc w:val="%s"/>', self::ALIGNMENTS[(string)$style['alignment']]);
+		}
+
+		return $properties;
+	}//end paragraphAdditions()
+
+	/**
+	 * The paragraph properties this style REMOVES.
+	 *
+	 * Switching a property off is a removal, not an absence. Treating it as
+	 * "nothing to add" leaves the existing element in place and reports the
+	 * restyle as applied while changing nothing — which is exactly what the first
+	 * version of this codec did with `heading: 0`.
+	 *
+	 * @param array $style The style properties.
+	 *
+	 * @return array<int, string> The element names to remove.
+	 */
+	private function paragraphRemovals(array $style): array {
+		$removals = [];
+
+		if (isset($style['heading']) === true && (int)$style['heading'] === 0) {
+			$removals[] = 'w:pStyle';
+		}
+
+		if (isset($style['list']) === true && (bool)$style['list'] === false) {
+			$removals[] = 'w:numPr';
+		}
+
+		if (isset($style['pageBreakBefore']) === true && (bool)$style['pageBreakBefore'] === false) {
+			$removals[] = 'w:pageBreakBefore';
+		}
+
+		return $removals;
+	}//end paragraphRemovals()
 
 	/**
 	 * Merge properties into the paragraph's `<w:pPr>`, creating it when absent.
