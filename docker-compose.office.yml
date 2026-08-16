@@ -171,12 +171,17 @@ services:
     restart: unless-stopped
     ports:
       - "8094:2004"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:2004/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
+    # NO HEALTHCHECK, deliberately.
+    #
+    # This server answers 404 to EVERY GET -- `/`, `/request`, `/health`, `/healthz`
+    # (measured 2026-08-16). It only responds to a multipart POST on /request. There
+    # is no GET a healthcheck can assert on, and two attempts at one both reported
+    # UNHEALTHY while the server was converting documents perfectly well.
+    #
+    # A healthcheck that cannot pass is not a safety net; it is a permanently red
+    # light that trains people to ignore red lights. Readiness is asserted where it
+    # is meaningful instead -- by the conversion check in
+    # docs/office-suites/verify-suite.sh, which does the POST that actually works.
 
   # ===========================================================================
   # Collabora Online (CODE)

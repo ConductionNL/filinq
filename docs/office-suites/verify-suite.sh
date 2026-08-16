@@ -97,15 +97,28 @@ if [ "${conv#ok}" = "$conv" ]; then
   done
 fi
 
-if [ "${conv#ok}" != "$conv" ]; then pass "conversion (docx->odt)" "$conv"; else fail "conversion (docx->odt)" "$conv"; fi
+# Family C — LibreOffice unoserver: multipart, and `convert-to` is a FORM FIELD.
+# Passing it as a query parameter returns 400 "Field validation for 'ConvertTo'
+# failed on the 'required' tag". Third API, third shape; a harness that knew only
+# the first two would report LibreOffice as "conversion unsupported", which would
+# be the third time this script blamed a suite for its own limits.
+if [ "${conv#ok}" = "$conv" ]; then
+  size=$(docker exec "$NC" sh -c \
+    "curl -s --max-time 90 -F 'file=@/tmp/officefx/probe.docx' -F 'convert-to=pdf' '$BASE/request' -o /tmp/conv-out.pdf -w '%{size_download}'" 2>/dev/null || echo 0)
+  if [ "${size:-0}" -gt 1000 ]; then conv="ok at /request (multipart form-field, ${size}B pdf)"; fi
+fi
+
+if [ "${conv#ok}" != "$conv" ]; then pass "conversion" "$conv"; else fail "conversion" "$conv"; fi
 
 # 6. Is a Nextcloud connector app installed for this suite?
 app=$(docker exec "$NC" php occ app:list 2>/dev/null | grep -iE "^\s+- (onlyoffice|richdocuments|eurooffice|collabora)" | tr -d ' ' | tr '\n' ' ')
 info "NC connector apps present" "${app:-none}"
 
-# 7. DocuDesk's own capability probe, which is the thing that gates the feature.
-probe=$(docker exec "$NC" php occ docudesk:office:probe 2>/dev/null | head -1 || echo "command unavailable")
-info "docudesk probe" "$probe"
+# 7. DocuDesk's own capability probe, for THIS suite only. Asking for one suite
+#    keeps the row about the suite the row is about -- the whole-fleet output
+#    printed here would mix another suite's verdict into this one's report.
+probe=$(docker exec "$NC" php occ docudesk:office:probe --suite="$SUITE" 2>/dev/null | head -1 || true)
+info "docudesk probe" "${probe:-not covered by the probe (WOPI suites only)}"
 
 # 8. What the suite reports itself as. A suite that names itself is one less
 #    thing anyone has to assume.
