@@ -93,22 +93,54 @@ First boot takes 1–3 minutes. The port answers well before the converters are 
 which is why the healthcheck greps for the literal `true` from `/healthcheck` rather
 than accepting a 200.
 
-### 2. Connect Nextcloud
+### 2. Install the connector
+
+The app is **not on the Nextcloud appstore for NC 34**. Install it from the
+upstream release:
 
 ```bash
-docker exec nextcloud php occ app:install onlyoffice
+curl -sL -o onlyoffice.tar.gz \
+  https://github.com/ONLYOFFICE/onlyoffice-nextcloud/releases/download/v10.1.2/onlyoffice.tar.gz
+tar -xzf onlyoffice.tar.gz
+docker cp onlyoffice nextcloud:/var/www/html/custom_apps/
+docker exec nextcloud chown -R www-data:www-data /var/www/html/custom_apps/onlyoffice
 docker exec nextcloud php occ app:enable onlyoffice
-docker exec nextcloud php occ config:app:set onlyoffice DocumentServerUrl \
-    --value="http://docudesk-onlyoffice/"
 ```
 
-`DocumentServerUrl` is resolved **from inside the Nextcloud container**, so it is the
-container name — not `localhost:8092`, which from Nextcloud's perspective is
-Nextcloud itself. This is the same class of mistake as the Hermiq
-`mcp_run_base_url` trap: a browser-facing origin used where a container-internal one
-is needed, failing silently.
+### 3. Three URLs, three directions — this is the step that bites
 
-### 3. Enable WOPI — the step that is not optional
+There are **three** connections, and they do not share an origin. Setting one and
+assuming the others follow is the single most common way to end up staring at
+*"ONLYOFFICE cannot be reached"*:
+
+```bash
+# 1. BROWSER  -> document server. The user's browser loads the editor from here,
+#    so it must be an origin the HOST can reach. NOT a container name.
+docker exec nextcloud php occ config:app:set onlyoffice DocumentServerUrl \
+    --value="http://localhost:8092/"
+
+# 2. NEXTCLOUD -> document server. Resolved inside the container, so it IS the
+#    container name. `localhost` here is Nextcloud itself.
+docker exec nextcloud php occ config:app:set onlyoffice DocumentServerInternalUrl \
+    --value="http://docudesk-onlyoffice/"
+
+# 3. DOCUMENT SERVER -> Nextcloud, to fetch and save the file.
+docker exec nextcloud php occ config:app:set onlyoffice StorageUrl \
+    --value="http://nextcloud/"
+```
+
+Measured 2026-08-16: with only `DocumentServerUrl` set to the container name, the
+editor page renders and immediately shows **"ONLYOFFICE cannot be reached. Please
+contact admin"** — because the *browser* cannot resolve `docudesk-onlyoffice`. The
+container is healthy, Nextcloud can reach it, and the document server is serving
+WOPI. Everything is right except the direction.
+
+This is the same shape as the Hermiq `mcp_run_base_url` trap, and the inverse
+mistake: there, a browser-facing origin was used where a container-internal one was
+needed. Here a container-internal one was used where the browser needed it. Both
+fail without saying which way round the problem is.
+
+### 4. Enable WOPI — the step that is not optional
 
 ```bash
 docker exec nextcloud php occ config:app:set onlyoffice enableSharing --value="true"
@@ -118,7 +150,7 @@ For a Euro-Office deployment proper, set `wopi.enable` to `true` in the server's
 `local.json` and restart it. On the ONLYOFFICE image used here, WOPI is served at
 `/hosting/wopi` once the app is connected.
 
-### 4. Verify with the probe
+### 5. Verify with the probe
 
 ```bash
 docker exec nextcloud php occ docudesk:office:probe
@@ -185,8 +217,10 @@ curl -s http://localhost:9980/hosting/discovery | head -5     # should be WOPI X
 
 | Symptom | Cause |
 |---|---|
+| **"ONLYOFFICE cannot be reached" in the browser, container healthy** | `DocumentServerUrl` is a container name. The *browser* must be able to resolve it — see the three-URL section. |
+| Editor loads but cannot save | `StorageUrl` wrong: the document server cannot reach Nextcloud to write the file back. |
 | Admin page green, editing fails | WOPI disabled. Euro-Office's default. Run the probe. |
-| Probe says absent, container healthy | `DocumentServerUrl` / `wopi_url` points at a browser origin. From inside Nextcloud, `localhost` is Nextcloud. |
+| Probe says absent, container healthy | `DocumentServerInternalUrl` points at a browser origin. From inside Nextcloud, `localhost` is Nextcloud. |
 | Probe times out | The suite is on a different docker network. Check with `docker inspect`. |
 | Conversion works, sessions do not | Expected and fine. Conversion goes through `IConversionManager`; sessions need WOPI. |
 | `healthcheck` never goes healthy | First boot can take 3 minutes. After that, check `docker logs docudesk-onlyoffice`. |
@@ -207,3 +241,34 @@ converts an open question into a false answer.
 
 If you are reading this because you want the measurement, start a suite first and
 check the test output says it ran.
+
+---
+
+## Verified end to end, 2026-08-16
+
+The full path — Nextcloud document, opened in Euro-Office, altered from the Hermiq
+chat window — was exercised on `localhost:8080`. Recorded here because each step
+below is a place it can fail silently.
+
+| Step | Evidence |
+|---|---|
+| Document server up | `docker inspect docudesk-onlyoffice` → `healthy`; `/healthcheck` → `true` |
+| WOPI actually served | `/hosting/discovery` → **200** with `WOPI_ENABLED=true`; **404** without it |
+| Editor opens the file | page title becomes `subsidiebesluit.docx - Nextcloud`, editor iframe with toolbar |
+| Tools reachable by the model | `tools/list` → 120 tools, 6 of them `docudesk.*Document*` |
+| Chat drove the edit | runner log: `provider=anthropic model=claude-opus-4-8 governed=yes`, `exit=0` |
+| The bytes changed | `word/document.xml` contains `vier weken`, no longer `zes weken` |
+| Euro-Office reads the edit | converting the edited file through the document server yields text containing *"binnen vier weken"* |
+| It is accountable | file carries the `Agent authored` tag; the pre-edit version is restorable |
+
+### Two failures hit during that run, both worth knowing
+
+**The LLM runner container must be up.** `hermiq-llm-runner` had stopped. The chat
+accepted the message, showed no error, and simply never replied. There is no
+"runner unavailable" surface — the message just sits there. Check
+`docker ps --filter name=hermiq-llm-runner` before debugging anything else.
+
+**The version precondition will refuse a second write** that reuses the version
+returned by the first. That is correct: writing the file changes its etag, and the
+tag write changes it again. Re-read before each write rather than caching a version
+across calls.
