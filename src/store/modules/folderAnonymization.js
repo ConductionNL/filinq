@@ -1,7 +1,6 @@
-import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-
+import { defineStore } from 'pinia'
 import { WOO_BASES } from '../../constants/grondslagen.js'
 
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {

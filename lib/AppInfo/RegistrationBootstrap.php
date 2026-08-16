@@ -24,8 +24,10 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\AppInfo;
 
 use Exception;
+use OCA\DocuDesk\Mcp\DocudeskScannableServices;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\SettingsService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Container\ContainerInterface;
 
@@ -50,6 +52,39 @@ class RegistrationBootstrap {
 		(new ObjectEventRegistrar())->register(context: $context);
 		(new SigningEventRegistrar())->register(context: $context);
 		(new PdfConversionRegistrar())->register(context: $context);
+
+		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never
+		// its concrete class, so a leaf app's unit tests can mock a type they
+		// are able to load. Nextcloud autowires concrete classes across apps but
+		// not interfaces, so the binding has to be stated — and the composition
+		// root is the right place to state it.
+		//
+		// An ALIAS, not a factory: it is resolved when something actually asks
+		// for the interface, so an instance without OpenRegister fails at the
+		// route that needed the data rather than at registration. Both class
+		// names are `::class` strings here and neither triggers an autoload,
+		// which is what keeps ADR-083 rule 3's promise that the start screen
+		// still boots.
+		$context->registerServiceAlias(
+			ObjectServiceInterface::class,
+			'OCA\OpenRegister\Service\ObjectService'
+		);
+
+		// ADR-063 chain 3/3: the per-app opt-in telling OpenRegister which of our
+		// service classes its AttributeToolScanner may reflect for `#[McpTool]`
+		// methods. The alias KEY is the discovery convention -- OR enumerates
+		// `IMcpScannableServices::<appId>` -- so the string matters as much as
+		// the class it points at.
+		//
+		// An alias, not a factory, for the same reason as the binding above: it
+		// resolves only when something asks, so an instance without OpenRegister
+		// still boots. DocuDesk ships no hand-written IMcpToolProvider; the read
+		// surface comes from the `x-openregister-mcp` blocks in the schema
+		// register instead.
+		$context->registerServiceAlias(
+			'OCA\\OpenRegister\\Mcp\\IMcpScannableServices::docudesk',
+			DocudeskScannableServices::class
+		);
 
 		// Background jobs are declared in appinfo/info.xml under
 		// <background-jobs>; Nextcloud auto-registers them with the IJobList.

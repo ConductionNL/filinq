@@ -8,9 +8,9 @@
 
 			<DdViewToggle
 				v-if="showViewToggle"
-				:model-value="toggleValue"
-				:tiles-label="cardsLabel"
-				:list-label="tableLabel"
+				:modelValue="toggleValue"
+				:tilesLabel="cardsLabel"
+				:listLabel="tableLabel"
 				:aria-label="viewToggleLabel"
 				@update:modelValue="onToggle" />
 		</div>
@@ -21,14 +21,14 @@
 			:columns="columns"
 			:rows="objects"
 			:loading="loading"
-			:row-key="rowKey"
-			:empty-text="emptyText"
+			:rowKey="rowKey"
+			:emptyText="emptyText"
 			:selectable="selectable"
-			:selected-keys="selectedKeys"
-			:select-all-label="selectAllLabel"
-			@row-click="$emit('row-click', $event)"
-			@toggle-select="$emit('toggle-select', $event)"
-			@toggle-select-all="$emit('toggle-select-all')">
+			:selectedKeys="selectedKeys"
+			:selectAllLabel="selectAllLabel"
+			@rowClick="$emit('row-click', $event)"
+			@toggleSelect="$emit('toggle-select', $event)"
+			@toggleSelectAll="$emit('toggle-select-all')">
 			<template v-for="col in slotColumns" #[`column-${col}`]="{ row, value }">
 				<slot :name="'column-' + col" :row="row" :value="value" />
 			</template>
@@ -50,8 +50,8 @@
 			v-else
 			:objects="objects"
 			:loading="loading"
-			:row-key="rowKey"
-			:empty-text="emptyText">
+			:rowKey="rowKey"
+			:emptyText="emptyText">
 			<template v-if="$slots.card" #card="{ object }">
 				<slot name="card" :object="object" />
 			</template>
@@ -60,26 +60,26 @@
 		<!-- Pagination -->
 		<DdPagination
 			v-if="pagination"
-			:current-page="pagination.page || 1"
-			:total-pages="pagination.pages || 1"
-			:total-items="pagination.total || 0"
-			:current-page-size="pagination.limit || 20"
-			:items-per-page-label="itemsPerPageLabel"
-			:page-info-format="pageInfoFormat"
-			:first-label="firstLabel"
-			:previous-label="previousLabel"
-			:next-label="nextLabel"
-			:last-label="lastLabel"
-			@page-changed="$emit('page-changed', $event)"
-			@page-size-changed="$emit('page-size-changed', $event)" />
+			:currentPage="pagination.page || 1"
+			:totalPages="pagination.pages || 1"
+			:totalItems="pagination.total || 0"
+			:currentPageSize="pagination.limit || 20"
+			:itemsPerPageLabel="itemsPerPageLabel"
+			:pageInfoFormat="pageInfoFormat"
+			:firstLabel="firstLabel"
+			:previousLabel="previousLabel"
+			:nextLabel="nextLabel"
+			:lastLabel="lastLabel"
+			@pageChanged="$emit('page-changed', $event)"
+			@pageSizeChanged="$emit('page-size-changed', $event)" />
 	</div>
 </template>
 
 <script>
-import DdViewToggle from './DdViewToggle.vue'
-import DdDataTable from './DdDataTable.vue'
 import DdCardGrid from './DdCardGrid.vue'
+import DdDataTable from './DdDataTable.vue'
 import DdPagination from './DdPagination.vue'
+import DdViewToggle from './DdViewToggle.vue'
 
 /**
  * Top-level index-page component for DocuDesk list views.
@@ -103,63 +103,75 @@ export default {
 		DdCardGrid,
 		DdPagination,
 	},
+
 	props: {
 		/** Column definitions for the table view: `{ key, label, sortable?, width? }`. */
 		columns: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Page of items being displayed (already paginated by the consumer). */
 		objects: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Pagination state: `{ page, pages, total, limit }`. Pass `null` to hide. */
 		pagination: {
 			type: Object,
 			default: null,
 		},
+
 		/** Show a loading state in the body. */
 		loading: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Initial / external view mode (`table` or `cards`). */
 		viewMode: {
 			type: String,
 			default: 'table',
 			validator: (v) => ['table', 'cards'].includes(v),
 		},
+
 		/** Property name used as unique row identifier. */
 		rowKey: {
 			type: String,
 			default: 'id',
 		},
+
 		/** Text shown when objects is empty. */
 		emptyText: {
 			type: String,
 			default: 'No items found',
 		},
+
 		/** Show the table/cards toggle in the toolbar. */
 		showViewToggle: {
 			type: Boolean,
 			default: true,
 		},
+
 		/** Enable bulk-selection checkboxes (leading column in the table view). */
 		selectable: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Row keys (`row[rowKey]`) currently selected. */
 		selectedKeys: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Accessible label for the table's select-all checkbox. */
 		selectAllLabel: {
 			type: String,
 			default: 'Select all',
 		},
+
 		tableLabel: { type: String, default: 'List' },
 		cardsLabel: { type: String, default: 'Tiles' },
 		viewToggleLabel: { type: String, default: 'View mode' },
@@ -170,11 +182,13 @@ export default {
 		nextLabel: { type: String, default: 'Next' },
 		lastLabel: { type: String, default: 'Last' },
 	},
+
 	data() {
 		return {
 			currentViewMode: this.viewMode,
 		}
 	},
+
 	computed: {
 		/**
 		 * Map the internal `table`/`cards` mode to DdViewToggle's `list`/`tiles`.
@@ -184,6 +198,7 @@ export default {
 		toggleValue() {
 			return this.currentViewMode === 'cards' ? 'tiles' : 'list'
 		},
+
 		/** Names of `column-*` slots provided by the parent, for pass-through. */
 		slotColumns() {
 			return Object.keys(this.$slots)
@@ -191,6 +206,7 @@ export default {
 				.map((name) => name.replace('column-', ''))
 		},
 	},
+
 	watch: {
 		/**
 		 * Sync external `viewMode` prop changes into the local mirror.
@@ -203,6 +219,7 @@ export default {
 			this.currentViewMode = val
 		},
 	},
+
 	methods: {
 		/**
 		 * Translate a DdViewToggle selection back to the internal mode.
@@ -214,6 +231,7 @@ export default {
 		onToggle(mode) {
 			this.setViewMode(mode === 'tiles' ? 'cards' : 'table')
 		},
+
 		/**
 		 * Switch the active view mode and notify the parent so it can persist
 		 * the choice (e.g. via `:view-mode.sync` or `@update:view-mode`).

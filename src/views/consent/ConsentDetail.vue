@@ -9,13 +9,13 @@ import { consentStore } from '../../store/store.js'
 			consentStore.consentItem?.entityText || t('docudesk', 'Consent Detail')
 		"
 		:loading="consentStore.loading"
-		:loading-label="t('docudesk', 'Loading consent record...')"
+		:loadingLabel="t('docudesk', 'Loading consent record...')"
 		:error="!consentStore.consentItem"
-		:error-message="t('docudesk', 'No consent record selected.')"
-		:stats-title="
+		:errorMessage="t('docudesk', 'No consent record selected.')"
+		:statsTitle="
 			consentStore.consentItem ? t('docudesk', 'Entity Information') : ''
 		"
-		:stats-columns="
+		:statsColumns="
 			consentStore.consentItem
 				? [
 						{ key: 'field', label: t('docudesk', 'Field') },
@@ -54,7 +54,7 @@ import { consentStore } from '../../store/store.js'
 							consentStore.consentItem.entityType
 							|| t('docudesk', 'Unknown')
 						"
-						:color-map="entityTypeColorMap" />
+						:colorMap="entityTypeColorMap" />
 				</td>
 			</tr>
 			<tr v-if="consentStore.consentItem.entityKey">
@@ -138,7 +138,7 @@ import { consentStore } from '../../store/store.js'
 						<NcSelect
 							v-model="editData.consentStatus"
 							:options="consentStatusOptions"
-							:input-label="t('docudesk', 'Consent Status')" />
+							:inputLabel="t('docudesk', 'Consent Status')" />
 					</td>
 				</tr>
 				<tr>
@@ -149,7 +149,7 @@ import { consentStore } from '../../store/store.js'
 						<NcSelect
 							v-model="editData.notificationStatus"
 							:options="notificationStatusOptions"
-							:input-label="t('docudesk', 'Notification Status')" />
+							:inputLabel="t('docudesk', 'Notification Status')" />
 					</td>
 				</tr>
 				<tr>
@@ -160,7 +160,7 @@ import { consentStore } from '../../store/store.js'
 						<NcSelect
 							v-model="editData.publicationDecision"
 							:options="publicationDecisionOptions"
-							:input-label="t('docudesk', 'Publication Decision')" />
+							:inputLabel="t('docudesk', 'Publication Decision')" />
 					</td>
 				</tr>
 				<tr>
@@ -223,18 +223,18 @@ import { consentStore } from '../../store/store.js'
 </template>
 
 <script>
+import { CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
-	NcSelect,
 	NcLoadingIcon,
+	NcSelect,
 } from '@nextcloud/vue'
-import { CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'ConsentDetail',
@@ -248,12 +248,14 @@ export default {
 		ArrowLeft,
 		ContentSave,
 	},
+
 	props: {
 		consentId: {
 			type: String,
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			editData: {
@@ -261,12 +263,14 @@ export default {
 				notificationStatus: null,
 				publicationDecision: null,
 			},
+
 			anonymiseToggle: false,
 			policyMatchKind: null,
 			entityTypeColorMap: {
 				person: 'warning',
 				organization: 'primary',
 			},
+
 			consentStatusOptions: [
 				{ label: t('docudesk', 'Pending'), value: 'pending' },
 				{ label: t('docudesk', 'Consent Given'), value: 'consent_given' },
@@ -277,6 +281,7 @@ export default {
 				{ label: t('docudesk', 'No Response'), value: 'no_response' },
 				{ label: t('docudesk', 'Anonymized'), value: 'anonymized' },
 			],
+
 			notificationStatusOptions: [
 				{ label: t('docudesk', 'Pending'), value: 'pending' },
 				{ label: t('docudesk', 'Sent'), value: 'sent' },
@@ -284,6 +289,7 @@ export default {
 				{ label: t('docudesk', 'Failed'), value: 'failed' },
 				{ label: t('docudesk', 'Skipped'), value: 'skipped' },
 			],
+
 			publicationDecisionOptions: [
 				{ label: t('docudesk', 'Pending'), value: 'pending' },
 				{ label: t('docudesk', 'Anonymize'), value: 'anonymize' },
@@ -299,11 +305,13 @@ export default {
 			],
 		}
 	},
+
 	computed: {
 		toggleLocked() {
 			return this.policyMatchKind === 'prohibition'
 		},
 	},
+
 	watch: {
 		'consentStore.consentItem': {
 			immediate: true,
@@ -332,11 +340,13 @@ export default {
 			},
 		},
 	},
+
 	created() {
 		if (this.consentId && !consentStore.consentItem) {
 			consentStore.fetchConsent(this.consentId)
 		}
 	},
+
 	methods: {
 		/**
 		 * Clear the selected consent and return to the consent list.
@@ -347,6 +357,7 @@ export default {
 			consentStore.clearConsentItem()
 			this.$router.push({ name: 'Consent' })
 		},
+
 		/**
 		 * Resolve the policyMatch UUID into a kind for toggle behaviour.
 		 *
@@ -392,11 +403,13 @@ export default {
 
 			this.anonymiseToggle = item?.publicationDecision === 'anonymize'
 		},
+
 		/**
 		 * Handle toggle clicks. For standing-consent matches, flipping ON
 		 * records an override: publicationDecision=anonymize while consentStatus
 		 * stays consent_given and policyMatch is preserved. The audit trail
 		 * comes from OpenRegister's mapper-level history.
+		 *
 		 * @param checked
 		 */
 		async onToggleAnonymise(checked) {
@@ -423,6 +436,7 @@ export default {
 				this.anonymiseToggle = !checked
 			}
 		},
+
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *
@@ -437,6 +451,7 @@ export default {
 				return dateStr
 			}
 		},
+
 		/**
 		 * Persist edited consent status/decision fields for the record.
 		 *

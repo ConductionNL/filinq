@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 /**
  * Prohibition store — backs the Publication Prohibitions admin page.
  *
@@ -7,8 +9,6 @@
  * mirror each other.
  */
 import { defineStore } from 'pinia'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 
 const baseUrl = '/apps/docudesk/api/policy/prohibitions'
 

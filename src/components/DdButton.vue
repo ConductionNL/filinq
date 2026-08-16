@@ -40,6 +40,7 @@ export default {
 	components: {
 		DdIcon,
 	},
+
 	inheritAttrs: false,
 	props: {
 		/** Button text. Ignored when the default slot is used. */
@@ -47,6 +48,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Leading icon name — matches an SVG in `src/assets/icons/`
 		 * (see `DdIcon`). Empty string renders no icon.
@@ -55,17 +57,20 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/** Square icon size in pixels. */
 		iconSize: {
 			type: [Number, String],
 			default: 20,
 		},
+
 		/** Native button `type`. */
 		type: {
 			type: String,
 			default: 'button',
 			validator: (v) => ['button', 'submit', 'reset'].includes(v),
 		},
+
 		/** Visual variant: `'primary'`, `'secondary'` or `'tertiary'`. */
 		variant: {
 			type: String,

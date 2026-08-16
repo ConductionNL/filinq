@@ -11,12 +11,12 @@
 -->
 <template>
 	<CnAppRoot
-		:ai-companion="true"
+		:aiCompanion="true"
 		:manifest="manifest"
-		:custom-components="customComponents"
-		:page-types="pageTypes"
+		:customComponents="customComponents"
+		:pageTypes="pageTypes"
 		:registry="registry"
-		app-id="docudesk"
+		appId="docudesk"
 		:translate="translateForApp"
 		:permissions="permissions">
 		<!--
@@ -35,10 +35,10 @@
 </template>
 
 <script>
-import { translate as ncT } from '@nextcloud/l10n'
 import { CnAppRoot } from '@conduction/nextcloud-vue'
-import Modals from './modals/Modals.vue'
+import { translate as ncT } from '@nextcloud/l10n'
 import Dialogs from './dialogs/Dialogs.vue'
+import Modals from './modals/Modals.vue'
 import SideBars from './sidebars/SideBars.vue'
 
 export default {
@@ -61,6 +61,7 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/**
 		 * Registry of consumer-injected components used by type:"custom" pages
 		 * (page.component) and other CnPageRenderer overrides.
@@ -69,6 +70,7 @@ export default {
 			type: Object,
 			default: () => ({}),
 		},
+
 		/**
 		 * Page-type registry — `{ index, detail, dashboard, settings, ... }`.
 		 * Wired through to descendant CnPageRenderer instances via
@@ -78,6 +80,7 @@ export default {
 			type: Object,
 			default: null,
 		},
+
 		/**
 		 * 5-kind component registry for v2 manifests (hydra ADR-036).
 		 * Map of registry key → `{ kind, component, ...metadata }`.

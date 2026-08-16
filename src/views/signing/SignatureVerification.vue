@@ -52,8 +52,8 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton } from '@nextcloud/vue'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
@@ -68,13 +68,16 @@ export default {
 		 */
 		fileId: { type: String, default: '' },
 	},
+
 	data() {
 		return { verifyFileId: this.fileId }
 	},
+
 	computed: {
 		signingStore() {
 			return useSigningStore()
 		},
+
 		/**
 		 * Tri-state document verdict (signing-trust-rebuild REQ-DDSTR-005):
 		 * verified | tampered | unverifiable | mixed. Falls back to the
@@ -95,6 +98,7 @@ export default {
 
 			return result.isValid ? 'verified' : 'unverifiable'
 		},
+
 		/**
 		 * Human-readable label for the current verdict.
 		 *
@@ -104,11 +108,13 @@ export default {
 			return this.verdictLabel_(this.verdict)
 		},
 	},
+
 	mounted() {
 		if (this.verifyFileId) {
 			this.verify()
 		}
 	},
+
 	methods: {
 		t,
 		/**
@@ -125,6 +131,7 @@ export default {
 				await this.signingStore.verifyDocument(this.verifyFileId)
 			}
 		},
+
 		/**
 		 * Human-readable label for the document-level tri-state verdict.
 		 *
@@ -140,6 +147,7 @@ export default {
 			}
 			return labels[verdict] ?? verdict
 		},
+
 		/**
 		 * Human-readable label for a per-signature tri-state status.
 		 *
@@ -154,6 +162,7 @@ export default {
 			}
 			return labels[status] ?? status
 		},
+
 		/**
 		 * Human-readable label for a machine-readable verification reason.
 		 *
@@ -166,14 +175,17 @@ export default {
 					'docudesk',
 					'Legacy signature format, cannot be re-verified',
 				),
+
 				'external-signature-unsupported': t(
 					'docudesk',
 					'External signature, not yet supported',
 				),
+
 				'mac-mismatch': t(
 					'docudesk',
 					'Signature no longer matches the document',
 				),
+
 				'signing-secret-not-configured': t(
 					'docudesk',
 					'Server verification secret not configured',

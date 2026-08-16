@@ -1,5 +1,4 @@
-import { setActivePinia, createPinia } from 'pinia'
-
+import { createPinia, setActivePinia } from 'pinia'
 import { useMyDocumentsStore } from './myDocuments.js'
 
 // The store reaches for these Nextcloud helpers at module load / inside

@@ -70,7 +70,7 @@ class RenameDutchColumns implements IRepairStep {
 	/**
 	 * Slug prefix of the registers in scope.
 	 *
-	 * docudesk declares FIVE registers in one settings file and the renamed
+	 * DocuDesk declares FIVE registers in one settings file and the renamed
 	 * property could sit under any of them, so all five are listed. Picking one
 	 * silently skips the rest.
 	 *

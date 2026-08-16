@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
@@ -14,19 +13,19 @@
 // See openspec/changes/docudesk-store-migration/design.md for the
 // pattern rationale and the Phase 2 cutover triggers.
 
-import { generateUrl } from '@nextcloud/router'
 import { createObjectStore } from '@conduction/nextcloud-vue'
+import { generateUrl } from '@nextcloud/router'
 import pinia from '../pinia.js'
-import { useNavigationStore } from './modules/navigation.ts'
-import { useConsentStore } from './modules/consent.js'
 import { useAnonymizationStore } from './modules/anonymization.js'
+import { useConsentStore } from './modules/consent.js'
+import { useCustomDictionaryStore } from './modules/customDictionary.js'
+import { useFileViewerStore } from './modules/fileViewer.js'
 import { useFolderAnonymizationStore } from './modules/folderAnonymization.js'
 import { useMyDocumentsStore } from './modules/myDocuments.js'
-import { useFileViewerStore } from './modules/fileViewer.js'
+import { useNavigationStore } from './modules/navigation.ts'
 import { useProhibitionStore } from './modules/prohibition.js'
-import { useStandingConsentStore } from './modules/standingConsent.js'
-import { useCustomDictionaryStore } from './modules/customDictionary.js'
 import { useSettingsStore } from './modules/settings.js'
+import { useStandingConsentStore } from './modules/standingConsent.js'
 
 // Lib store — registered exactly once at module load with the
 // docudesk-specific Pinia id `'docudesk-objects'`. Mirrors the
@@ -114,20 +113,20 @@ async function initializeStores() {
 }
 
 export {
+	anonymizationStore,
+	consentStore,
+	customDictionaryStore,
+	fileViewerStore,
+	folderAnonymizationStore,
+	initializeStores,
+	myDocumentsStore,
+	// Legacy docudesk-specific stores — preserved for Phase 1 compatibility.
+	navigationStore,
+	prohibitionStore,
+	standingConsentStore,
 	// Lib store — adopt for new code, manifest pages, and any consumer
 	// needing the lib's sub-resource plugins (live updates, audit, files,
 	// relations).
 	useObjectStore,
-	// Legacy docudesk-specific stores — preserved for Phase 1 compatibility.
-	navigationStore,
-	consentStore,
-	anonymizationStore,
-	folderAnonymizationStore,
-	myDocumentsStore,
-	fileViewerStore,
-	prohibitionStore,
-	standingConsentStore,
-	customDictionaryStore,
 	useSettingsStore,
-	initializeStores,
 }

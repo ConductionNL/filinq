@@ -7,9 +7,9 @@
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-5
  */
 
-import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 export const useCorrespondenceStore = defineStore('correspondence', {
 	state: () => ({

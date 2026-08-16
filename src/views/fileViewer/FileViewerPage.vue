@@ -50,23 +50,23 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton } from '@nextcloud/vue'
+import Download from 'vue-material-design-icons/Download.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
-import Download from 'vue-material-design-icons/Download.vue'
+import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
+import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
-import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
-import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
-import { fileViewerStore } from '../../store/store.js'
-import { emlPreviewUrl } from '../../services/fileViewerService.js'
 import DdFileViewerHeader from '../../components/DdFileViewerHeader.vue'
-import PdfViewer from '../../components/viewers/PdfViewer.vue'
-import WordViewer from '../../components/viewers/WordViewer.vue'
 import OdtViewer from '../../components/viewers/OdtViewer.vue'
+import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
+import WordViewer from '../../components/viewers/WordViewer.vue'
+import { emlPreviewUrl } from '../../services/fileViewerService.js'
+import { fileViewerStore } from '../../store/store.js'
 
 /**
  * Match a file (by MIME + name) to one of the supported in-app viewers.
@@ -110,11 +110,13 @@ export default {
 		OdtViewer,
 		TextViewer,
 	},
+
 	data() {
 		return {
 			fileViewerStore,
 		}
 	},
+
 	computed: {
 		/**
 		 * Page title — current file name with a generic fallback.
@@ -127,6 +129,7 @@ export default {
 				|| t('docudesk', 'File preview')
 			)
 		},
+
 		/**
 		 * Resolve the viewer kind for the current file.
 		 *
@@ -135,6 +138,7 @@ export default {
 		viewerKind() {
 			return detectViewer(fileViewerStore.currentFile)
 		},
+
 		/**
 		 * Map viewer kind to the actual component name.
 		 *
@@ -157,6 +161,7 @@ export default {
 					return null
 			}
 		},
+
 		/**
 		 * Props bound to the active viewer component. EML routes through
 		 * PdfViewer but loads its bytes from the server-rendered preview
@@ -172,6 +177,7 @@ export default {
 			}
 			return { path: file.path }
 		},
+
 		/**
 		 * Icon shown in the header next to the file name.
 		 *
@@ -189,6 +195,7 @@ export default {
 					return 'FileDocumentOutline'
 			}
 		},
+
 		/**
 		 * The toggle is rendered for any previewable type so the placement
 		 * is consistent; the button is only enabled when both the original
@@ -199,6 +206,7 @@ export default {
 		canToggleAnonymized() {
 			return this.viewerComponent !== null
 		},
+
 		/**
 		 * Tooltip for the toggle button — explains the disabled state when
 		 * the anonymised variant is not (yet) available.
@@ -214,6 +222,7 @@ export default {
 				: t('docudesk', 'Switch to the anonymised file')
 		},
 	},
+
 	methods: {
 		t,
 		/** Download the currently previewed file via Nextcloud's file URL. */

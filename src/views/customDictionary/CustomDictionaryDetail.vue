@@ -44,14 +44,14 @@
 				<div class="custom-dictionary-detail__badges">
 					<CnStatusBadge
 						:label="matchModeLabel(dictionary.matchMode)"
-						:color-map="matchModeColorMap" />
+						:colorMap="matchModeColorMap" />
 					<CnStatusBadge
 						:label="
 							dictionary.active === false
 								? t('docudesk', 'Inactive')
 								: t('docudesk', 'Active')
 						"
-						:color-map="activeColorMap" />
+						:colorMap="activeColorMap" />
 					<span class="custom-dictionary-detail__term-count">
 						{{ t('docudesk', '{count} terms', { count: terms.length }) }}
 					</span>
@@ -131,16 +131,16 @@
 
 		<CustomDictionaryFormDialog
 			v-if="editDialogOpen"
-			:editing-record="dictionary"
+			:editingRecord="dictionary"
 			:saving="savingMeta"
-			:form-error="metaError"
+			:formError="metaError"
 			@submit="onEditSubmit"
 			@cancel="editDialogOpen = false" />
 
 		<CustomDictionaryImportDialog
 			v-if="importDialogOpen"
 			:importing="importing"
-			:import-error="importError"
+			:importError="importError"
 			:result="importResult"
 			@submit="onImportSubmit"
 			@cancel="closeImportDialog" />
@@ -154,7 +154,7 @@
 			v-if="removeTarget"
 			:name="t('docudesk', 'Remove term')"
 			:message="removeMessage"
-			:confirm-label="t('docudesk', 'Remove')"
+			:confirmLabel="t('docudesk', 'Remove')"
 			:busy="removing"
 			@confirm="executeRemoveTerm"
 			@cancel="cancelRemoveTerm" />
@@ -162,7 +162,6 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import {
 	CnStatusBadge,
 	NcButton,
@@ -170,12 +169,13 @@ import {
 	NcLoadingIcon,
 	NcTextField,
 } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import Delete from 'vue-material-design-icons/Delete.vue'
-import { customDictionaryStore } from '../../store/store.js'
-import { resolveI18nValue } from '../../utils/registerI18n.js'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 import CustomDictionaryImportDialog from '../../dialogs/CustomDictionaryImportDialog.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import { customDictionaryStore } from '../../store/store.js'
+import { resolveI18nValue } from '../../utils/registerI18n.js'
 
 export default {
 	name: 'CustomDictionaryDetail',
@@ -190,6 +190,7 @@ export default {
 		CustomDictionaryImportDialog,
 		ConfirmActionDialog,
 	},
+
 	data() {
 		return {
 			customDictionaryStore,
@@ -209,22 +210,27 @@ export default {
 				caseInsensitive: 'primary',
 				wordBoundary: 'success',
 			},
+
 			activeColorMap: {
 				[t('docudesk', 'Active')]: 'success',
 				[t('docudesk', 'Inactive')]: 'default',
 			},
 		}
 	},
+
 	computed: {
 		dictionaryId() {
 			return this.$route.params.id
 		},
+
 		dictionary() {
 			return customDictionaryStore.dictionaryItem || {}
 		},
+
 		terms() {
 			return customDictionaryStore.terms
 		},
+
 		/**
 		 * Body text of the term-removal confirmation dialog.
 		 *
@@ -235,17 +241,21 @@ export default {
 				value: this.removeTarget?.value || '',
 			})
 		},
+
 		importResult() {
 			return customDictionaryStore.importResult
 		},
 	},
+
 	async mounted() {
 		await customDictionaryStore.fetchDictionary(this.dictionaryId)
 		await customDictionaryStore.fetchTerms(this.dictionaryId)
 	},
+
 	beforeUnmount() {
 		customDictionaryStore.clearDictionaryItem()
 	},
+
 	methods: {
 		t,
 		/**
@@ -259,6 +269,7 @@ export default {
 		displayValue(value, fallback = '') {
 			return resolveI18nValue(value, fallback)
 		},
+
 		matchModeLabel(mode) {
 			const labels = {
 				exact: t('docudesk', 'Exact'),
@@ -267,13 +278,16 @@ export default {
 			}
 			return labels[mode] || mode || t('docudesk', 'Case-insensitive')
 		},
+
 		handleBack() {
 			this.$router.push({ name: 'CustomDictionary' })
 		},
+
 		openEditDialog() {
 			this.metaError = ''
 			this.editDialogOpen = true
 		},
+
 		async onEditSubmit(formData) {
 			this.savingMeta = true
 			this.metaError = ''
@@ -292,6 +306,7 @@ export default {
 				this.savingMeta = false
 			}
 		},
+
 		async addTerm() {
 			const value = this.newTermValue.trim()
 			if (!value) return
@@ -309,6 +324,7 @@ export default {
 				this.addingTerm = false
 			}
 		},
+
 		/**
 		 * Ask for confirmation before removing a term.
 		 *
@@ -320,6 +336,7 @@ export default {
 		removeTerm(term) {
 			this.removeTarget = term
 		},
+
 		/**
 		 * Dismiss the removal confirmation without removing anything.
 		 *
@@ -328,8 +345,10 @@ export default {
 		cancelRemoveTerm() {
 			this.removeTarget = null
 		},
+
 		/**
 		 * Remove the confirmed term. Reachable only from the dialog's
+		 *
 		 * @confirm, so a term is never removed without an explicit
 		 * confirmation.
 		 *
@@ -352,10 +371,12 @@ export default {
 				this.removing = false
 			}
 		},
+
 		closeImportDialog() {
 			this.importDialogOpen = false
 			this.importError = ''
 		},
+
 		async onImportSubmit(payload) {
 			this.importing = true
 			this.importError = ''

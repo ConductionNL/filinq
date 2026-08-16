@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "license": "EUPL-1.2",
   "engines": {
-    "node": "^20.0.0",
-    "npm": "^10.0.0"
+    "node": "^22.14 || ^24 || >=26",
+    "npm": "^11.0.0"
   },
   "scripts": {
     "test:l10n": "node tests/l10n/check-l10n.js",
@@ -34,7 +34,7 @@
   ],
   "dependencies": {
     "@babel/core": "^7.29.0",
-    "@conduction/nextcloud-vue": "2.2.0-vue3.16",
+    "@conduction/nextcloud-vue": "^2.3.0",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
@@ -67,14 +67,9 @@
     "webpack-cli": "^6.0.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.28.6",
     "@babel/preset-env": "^7.25.3",
-    "@eslint/config-helpers": "^0.4.2",
-    "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.39.1",
     "@nextcloud/browserslist-config": "^3.0.1",
-    "@nextcloud/eslint-config": "^8.4.1",
-    "@nextcloud/eslint-plugin": "^2.2.1",
+    "@nextcloud/eslint-config": "^9.0.1",
     "@nextcloud/prettier-config": "^1.2.0",
     "@nextcloud/stylelint-config": "^2.4.0",
     "@nextcloud/webpack-vue-config": "^7.0.2",
@@ -82,21 +77,12 @@
     "@playwright/test": "^1.59.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.14.12",
+    "@typescript-eslint/parser": "^8.67.0",
     "@vitest/coverage-v8": "^3.2.7",
-    "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/vue3-jest": "^29.2.6",
-    "eslint": "^8.57.0",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-import-resolver-alias": "^1.1.2",
-    "eslint-import-resolver-exports": "^1.0.0-beta.5",
-    "eslint-import-resolver-typescript": "^3.10.1",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsdoc": "^46.10.1",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.6.0",
-    "eslint-plugin-vue": "^9.21.1",
-    "eslint-webpack-plugin": "^4.2.0",
+    "eslint-webpack-plugin": "^6.0.0",
     "jest": "^29.0.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-transform-stub": "^2.0.0",
@@ -105,7 +91,7 @@
     "postcss-html": "^1.5.0",
     "prettier": "^3.9.6",
     "sass": "^1.99.0",
-    "sass-loader": "^16.0.8",
+    "sass-loader": "^17.0.0",
     "stylelint": "^15.11.0",
     "stylelint-config-recommended-scss": "^13.1.0",
     "stylelint-config-recommended-vue": "^1.5.0",
@@ -114,10 +100,9 @@
     "ts-loader": "^9.5.1",
     "typescript": "^5.5.4",
     "vitest": "^3.2.7",
-    "vue-eslint-parser": "^9.4.3"
+    "vue-eslint-parser": "^10.3.0"
   },
   "overrides": {
-    "eslint-plugin-import-x": "4.13.3",
     "sha.js": "^2.4.12",
     "cipher-base": "^1.0.7",
     "elliptic": "^6.6.1",
@@ -133,17 +118,11 @@
     "lodash": "^4.18.1",
     "immutable": "^4.3.8",
     "flatted": "^3.4.2",
-    "@nextcloud/eslint-plugin": {
-      "fast-xml-parser": "^4.5.6"
-    },
     "js-beautify": {
       "glob": "^10.5.0",
       "minimatch": "^9.0.7"
     },
     "webdav": {
-      "minimatch": "^9.0.7"
-    },
-    "@typescript-eslint/typescript-estree": {
       "minimatch": "^9.0.7"
     },
     "editorconfig": {

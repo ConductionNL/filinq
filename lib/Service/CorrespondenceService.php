@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
@@ -183,7 +184,20 @@ class CorrespondenceService {
 	 * @throws Exception If generation fails
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
+	 * @spec openspec/changes/docudesk-mcp-adoption/tasks.md#task-2-1
 	 */
+	#[McpTool(
+		name: 'generateCorrespondence',
+		description: 'Generate one letter from a DocuDesk template for one recipient: resolves the '
+			. 'recipient\'s data from OpenRegister, applies the organisation huisstijl, renders the '
+			. 'template and logs the result to the correspondence register. Use searchTemplate first '
+			. 'to find the template id. Generates a single letter only -- batch mail-merge is not '
+			. 'available to agents.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
 	public function generate(string $templateId, array $dataRefs, array $options = []): array {
 		$format = $options['format'] ?? $this->getDefaultFormat();
 		$this->validateFormat(format: $format);

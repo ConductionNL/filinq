@@ -47,7 +47,7 @@ use Exception;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Detection-time policy matcher.
@@ -93,9 +93,9 @@ class PolicyMatchService {
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
-	 * @param ContainerInterface $container DI container for OpenRegister lookup.
 	 * @param IAppManager $appManager App manager (used to confirm OR is installed).
 	 * @param IAppConfig $config App config (prohibition high-confidence threshold).
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object contract (ADR-084).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 * @param TextNormaliser $textNormaliser Accent-stripping text normaliser.
 	 * @param PolicyRuleNormaliser $ruleNormaliser Admission + normalisation of stored policy rows.
@@ -104,7 +104,7 @@ class PolicyMatchService {
 		private readonly LoggerInterface $logger,
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 		private readonly TextNormaliser $textNormaliser = new TextNormaliser(),
 		private readonly PolicyRuleNormaliser $ruleNormaliser = new PolicyRuleNormaliser(),

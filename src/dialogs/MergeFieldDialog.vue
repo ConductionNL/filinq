@@ -21,8 +21,8 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog, NcTextField } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'MergeFieldDialog',
@@ -31,6 +31,7 @@ export default {
 	data() {
 		return { fieldName: '' }
 	},
+
 	computed: {
 		/**
 		 * Hint text showing the merge-field placeholder that will be inserted.
@@ -44,6 +45,7 @@ export default {
 			})
 		},
 	},
+
 	methods: {
 		t,
 		/**

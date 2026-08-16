@@ -19,7 +19,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\PolicyMatchService;
 use OCP\App\IAppManager;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -57,7 +57,7 @@ class PolicyMatchServiceTest extends TestCase {
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(IAppManager::class),
 			$config,
-			$this->createMock(ObjectService::class)
+			$this->createMock(ObjectServiceInterface::class)
 		);
 
 		// Seed the private rule cache so matching runs without OpenRegister.
@@ -222,50 +222,36 @@ class PolicyMatchServiceTest extends TestCase {
 	 * @return PolicyMatchService
 	 */
 	private function buildService(array $prohibitions, array $standing = []): PolicyMatchService {
-		$fakeObjectService = new class($prohibitions, $standing) {
-
-			/**
-			 * Constructor for the fake object service.
-			 *
-			 * @param array<int, array<string, mixed>> $prohibitions Prohibition rows to return.
-			 * @param array<int, array<string, mixed>> $standing Standing-consent rows to return.
-			 */
-			public function __construct(
-				private readonly array $prohibitions,
-				private readonly array $standing,
-			) {
-			}
-
-			/**
-			 * Mimic ObjectService::searchObjectsBySlug used by the merged
-			 * PolicyMatchService (Robert resolves slugs before querying rather
-			 * than passing numeric ids to findAll). Parameter names match the
-			 * prod named-argument call sites exactly.
-			 *
-			 * @param string $registerSlug Register slug (e.g. 'consent').
-			 * @param string $schemaSlug Schema slug selecting the row set.
-			 * @param array<string, mixed> $filters Optional query filters — ignored here.
-			 * @param bool $_rbac RBAC bypass flag — ignored in the double.
-			 * @param bool $_multitenancy Multitenancy flag — ignored in the double.
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function searchObjectsBySlug(
+		// ADR-084: mock the PUBLISHED interface, not a hand-rolled shape.
+		//
+		// This used to be an anonymous class declaring one method, which worked
+		// only because the constructor parameter was untyped — the double could
+		// not have BEEN an ObjectService, since that class does not load in a
+		// leaf app's test environment. Now the parameter is typed, and
+		// ObjectServiceInterface is loadable (hydra-gates ships it), so the
+		// double is a real mock of the real contract.
+		//
+		// It also means the signature is checked. The old double declared
+		// `searchObjectsBySlug(): array`; the contract says `array|int`, and
+		// nothing was verifying that the two agreed.
+		$fakeObjectService = $this->createMock(ObjectServiceInterface::class);
+		$fakeObjectService->method('searchObjectsBySlug')->willReturnCallback(
+			static function (
 				string $registerSlug,
 				string $schemaSlug,
 				array $filters = [],
 				bool $_rbac = true,
 				bool $_multitenancy = true,
-			): array {
+			) use ($prohibitions, $standing): array {
 				if ($schemaSlug === 'publicationProhibition') {
-					return $this->prohibitions;
+					return $prohibitions;
 				}
 				if ($schemaSlug === 'publicationConsent') {
-					return $this->standing;
+					return $standing;
 				}
 				return [];
 			}
-		};
+		);
 
 		$logger = $this->createMock(LoggerInterface::class);
 		$appMan = $this->createMock(IAppManager::class);

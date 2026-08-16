@@ -1,0 +1,357 @@
+{
+  "src/components/AnonymiserBackendWarning.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/DdDataTable.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 3
+    },
+    "vue/slot-name-casing": {
+      "count": 2
+    }
+  },
+  "src/components/DdDocumentCard.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/components/DdEntityCard.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/components/DdIndexPage.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 7
+    },
+    "vue/slot-name-casing": {
+      "count": 3
+    }
+  },
+  "src/components/DdPagination.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 2
+    }
+  },
+  "src/components/DdRemovedEntitiesList.vue": {
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/components/DdSearchBar.vue": {
+    "eqeqeq": {
+      "count": 1
+    }
+  },
+  "src/components/LanguageSelector.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 1
+    }
+  },
+  "src/components/PrintPreview.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 1
+    }
+  },
+  "src/components/viewers/OdtViewer.vue": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/components/viewers/PdfViewer.vue": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/components/viewers/TextViewer.vue": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/components/viewers/WordViewer.vue": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/dialogs/AnonymizationUploadDialog.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    }
+  },
+  "src/dialogs/ConfirmActionDialog.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    }
+  },
+  "src/dialogs/Dialogs.vue": {
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "src/dialogs/DossierNameDialog.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    }
+  },
+  "src/dialogs/ProhibitionFormModal.vue": {
+    "@nextcloud/l10n-non-breaking-space": {
+      "count": 1
+    }
+  },
+  "src/entities/index.js": {
+    "n/no-missing-import": {
+      "count": 1
+    }
+  },
+  "src/main.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/modals/Modals.vue": {
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "src/services/bases.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/sidebars/FileViewerSidebar.vue": {
+    "eqeqeq": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 3
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/store/modules/anonymization.js": {
+    "eqeqeq": {
+      "count": 6
+    }
+  },
+  "src/store/modules/myDocuments.js": {
+    "eqeqeq": {
+      "count": 8
+    }
+  },
+  "src/store/modules/navigation.spec.ts": {
+    "import-extensions/extensions": {
+      "count": 1
+    }
+  },
+  "src/store/modules/settings.js": {
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/views/anonymization/AnonymizationWidget.vue": {
+    "no-console": {
+      "count": 3
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/anonymization/EntityReviewTable.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 1
+    },
+    "eqeqeq": {
+      "count": 3
+    },
+    "vue/custom-event-name-casing": {
+      "count": 5
+    }
+  },
+  "src/views/anonymization/FolderAnonymizationView.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 3
+    },
+    "@nextcloud/l10n-non-breaking-space": {
+      "count": 1
+    }
+  },
+  "src/views/consent/ConsentDetail.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 4
+    },
+    "jsdoc/require-param-type": {
+      "count": 3
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/consent/ConsentIndex.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 6
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/consent/StandingConsentIndex.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "jsdoc/require-param-type": {
+      "count": 8
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/customDictionary/CustomDictionaryDetail.vue": {
+    "jsdoc/check-tag-names": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/views/customDictionary/CustomDictionaryIndex.vue": {
+    "no-console": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/dashboard/DashboardIndex.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/myDocuments/MyDocumentsIndex.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 3
+    },
+    "jsdoc/check-tag-names": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 2
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/policy/ProhibitionIndex.vue": {
+    "jsdoc/check-tag-names": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/policy/StandingConsentIndex.vue": {
+    "no-console": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/settings/Settings.vue": {
+    "@nextcloud/l10n-non-breaking-space": {
+      "count": 1
+    },
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 4
+    },
+    "no-console": {
+      "count": 3
+    },
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "src/views/signing/BulkSigningPanel.vue": {
+    "jsdoc/require-param-type": {
+      "count": 1
+    }
+  },
+  "src/views/signing/SigningRequestDetail.vue": {
+    "jsdoc/require-param-type": {
+      "count": 1
+    }
+  },
+  "src/views/templates/TemplateDetail.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 10
+    }
+  },
+  "src/views/templates/TemplateIndex.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 3
+    }
+  },
+  "src/views/widgets/AnonymizationDashboardWidget.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "jsdoc/require-param-type": {
+      "count": 8
+    },
+    "no-console": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/views/widgets/FileEntitiesDashboardWidget.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 3
+    },
+    "no-console": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  }
+}

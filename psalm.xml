@@ -81,12 +81,27 @@
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
+                <!--
+                  ADR-084's published contract. Services type-hint this interface
+                  rather than OR's concrete class, and the binding is stated in
+                  RegistrationBootstrap — but the interface itself lives in
+                  openregister, which this repo does not depend on, so psalm
+                  cannot resolve it. Same category as the classes around it.
+                -->
+                <referencedClass name="OCA\OpenRegister\Contract\ObjectServiceInterface"/>
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
                 <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
                 <referencedClass name="OCA\OpenRegister\Service\File\PlaceholderIdTranslator"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!--
+                  ADR-063 chain 3/3. DocudeskScannableServices implements this
+                  interface in production and the stub in tests/stubs; the app
+                  has no composer dependency on openregister, and must still be
+                  loadable when openregister is absent.
+                -->
+                <referencedClass name="OCA\OpenRegister\Mcp\IMcpScannableServices"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
                 <!--
@@ -157,6 +172,15 @@
                 <referencedClass name="PhpOffice\PhpWord\IOFactory"/>
             </errorLevel>
         </UndefinedClass>
+        <!--
+          `#[McpTool]` is OpenRegister's attribute (ADR-063 chain 3/3). PHP only
+          resolves an attribute class when something reflects it, so an absent
+          openregister does not stop this app loading — but psalm resolves it
+          statically and cannot see a cross-app class this repo does not depend
+          on. Same category as the UndefinedClass suppressions above; unlike
+          those, psalm's attribute check takes no per-class filter.
+        -->
+        <UndefinedAttributeClass errorLevel="suppress"/>
         <UndefinedMagicMethod errorLevel="suppress"/>
         <UnusedClass errorLevel="suppress"/>
         <PossiblyUnusedMethod errorLevel="suppress"/>

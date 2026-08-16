@@ -7,7 +7,7 @@
 			<NcCheckboxRadioSwitch
 				v-for="type in options"
 				:key="type"
-				:model-value="isEnabled(type)"
+				:modelValue="isEnabled(type)"
 				type="switch"
 				@update:modelValue="toggle(type, $event)">
 				{{ entityTypeLabel(type) }}
@@ -33,18 +33,21 @@ export default {
 	components: {
 		NcCheckboxRadioSwitch,
 	},
+
 	props: {
 		// Entity types currently enabled for automatic detection.
 		value: {
 			type: Array,
 			default: () => [],
 		},
+
 		// All selectable entity types (the curated list from the backend).
 		options: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	computed: {
 		// True when every selectable type is enabled — the point at which the
 		// backend treats the selection as "detect all" (no whitelist sent).
@@ -54,6 +57,7 @@ export default {
 				&& this.options.every((type) => this.value.includes(type))
 			)
 		},
+
 		hint() {
 			if (this.options.length === 0) {
 				return t('docudesk', 'No entity types are available.')
@@ -70,11 +74,13 @@ export default {
 			)
 		},
 	},
+
 	methods: {
 		entityTypeLabel,
 		isEnabled(type) {
 			return this.value.includes(type)
 		},
+
 		// Emit a fresh array (never mutate the prop) in the canonical option
 		// order, so reactivity holds and the stored order is stable.
 		toggle(type, checked) {

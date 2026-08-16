@@ -8,13 +8,13 @@
 	it never trims/dedupes/splits client-side.
 -->
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcDialog,
 	NcLoadingIcon,
 	NcTextArea,
 } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'CustomDictionaryImportDialog',
@@ -24,11 +24,13 @@ export default {
 		NcLoadingIcon,
 		NcTextArea,
 	},
+
 	props: {
 		importing: { type: Boolean, default: false },
 		importError: { type: String, default: '' },
 		result: { type: Object, default: null },
 	},
+
 	emits: ['submit', 'cancel'],
 	data() {
 		return {
@@ -36,16 +38,19 @@ export default {
 			selectedFile: null,
 		}
 	},
+
 	computed: {
 		canSubmit() {
 			return this.selectedFile !== null || this.pastedContent.trim() !== ''
 		},
 	},
+
 	methods: {
 		t,
 		onFileChange(event) {
 			this.selectedFile = event.target.files?.[0] || null
 		},
+
 		submit() {
 			if (!this.canSubmit) return
 			if (this.selectedFile !== null) {
@@ -55,6 +60,7 @@ export default {
 
 			this.$emit('submit', { content: this.pastedContent, format: 'newline' })
 		},
+
 		onClose() {
 			this.$emit('cancel')
 		},

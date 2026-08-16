@@ -13,20 +13,24 @@ export default {
 		open: { type: Boolean, default: false },
 		block: { type: Object, default: null },
 	},
+
 	emits: ['update:open', 'force'],
 	computed: {
 		match() {
 			return this.block?.prohibitionMatch ?? null
 		},
+
 		releasable() {
 			return this.match ? this.match.absolute === false : false
 		},
 	},
+
 	methods: {
 		t,
 		close() {
 			this.$emit('update:open', false)
 		},
+
 		confirmForce() {
 			this.$emit('force')
 			this.$emit('update:open', false)

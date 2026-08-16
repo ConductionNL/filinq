@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 /**
  * Standing-consent store — backs the Standing Publication Consents admin page.
  *
@@ -7,8 +9,6 @@
  * to re-filter rows it receives.
  */
 import { defineStore } from 'pinia'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 
 const baseUrl = '/apps/docudesk/api/policy/standing-consents'
 

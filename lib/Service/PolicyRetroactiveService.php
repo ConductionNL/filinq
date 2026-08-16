@@ -45,7 +45,7 @@ namespace OCA\DocuDesk\Service;
 use DateTimeImmutable;
 use Exception;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Retroactive rule-mutation handler.
@@ -73,14 +73,14 @@ class PolicyRetroactiveService {
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
-	 * @param ContainerInterface $container DI container for OpenRegister lookup.
 	 * @param PolicyMatchService $policyMatcher Reusable rule-evaluation primitives.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object contract (ADR-084).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly PolicyMatchService $policyMatcher,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 	) {
 

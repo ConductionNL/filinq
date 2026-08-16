@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
-import { defineStore } from 'pinia'
+import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
-import { getCurrentUser } from '@nextcloud/auth'
+import { defineStore } from 'pinia'
 
 /**
  * URL-encode each segment of a path while preserving the `/` separators.

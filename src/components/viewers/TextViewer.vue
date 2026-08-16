@@ -19,27 +19,29 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcLoadingIcon } from '@nextcloud/vue'
+import { entityTypeColor } from '../../services/entityTypes.js'
 import { fetchFileAsText } from '../../services/fileViewerService.js'
-import { fileViewerStore } from '../../store/store.js'
 import {
 	buildHighlightSegments,
 	PENDING_TYPE,
 } from '../../services/highlightText.js'
-import { entityTypeColor } from '../../services/entityTypes.js'
+import { fileViewerStore } from '../../store/store.js'
 
 export default {
 	name: 'TextViewer',
 	components: {
 		NcLoadingIcon,
 	},
+
 	props: {
 		path: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -47,6 +49,7 @@ export default {
 			content: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * The document text split into highlight segments. Combines the
@@ -64,6 +67,7 @@ export default {
 					: []
 			return buildHighlightSegments(this.content, [...pending, ...entities])
 		},
+
 		/**
 		 * Whether the viewer is in add mode — drives the marking (highlighter)
 		 * cursor so it is obvious the user can select text to add an entity.
@@ -74,6 +78,7 @@ export default {
 			return fileViewerStore.addMode
 		},
 	},
+
 	watch: {
 		path: {
 			immediate: true,
@@ -82,6 +87,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Class for a highlight segment: plain text gets none, detected
@@ -96,6 +102,7 @@ export default {
 			}
 			return seg.type === PENDING_TYPE ? 'dd-hl dd-hl--pending' : 'dd-hl'
 		},
+
 		/**
 		 * Inline style for a highlight segment — the per-type background colour
 		 * for detected entities; nothing for plain text or the pending span
@@ -110,6 +117,7 @@ export default {
 			}
 			return { backgroundColor: entityTypeColor(seg.type) }
 		},
+
 		/**
 		 * Fetch the file as plain text.
 		 *
@@ -127,6 +135,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Push the current text selection into the viewer store so future
 		 * features (e.g. "send selection to anonymisation") can pick it up.

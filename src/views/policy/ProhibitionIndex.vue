@@ -14,64 +14,64 @@ import { prohibitionStore } from '../../store/store.js'
 					'Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.',
 				)
 			"
-			:show-title="true"
+			:showTitle="true"
 			:objects="prohibitionStore.prohibitions"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="prohibitionStore.loading"
 			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="false"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-view-toggle="false"
-			:show-add="true"
-			row-key="id"
-			:empty-text="emptyText"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			:showViewToggle="false"
+			:showAdd="true"
+			rowKey="id"
+			:emptyText="emptyText"
 			:refreshing="isRefreshing"
 			@refresh="handleRefresh"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
+			@pageChanged="onPageChanged"
+			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateDialog">
 			<template #above-table>
 				<div class="policy-stats">
 					<CnStatsBlock
 						:title="t('docudesk', 'Total')"
 						:count="prohibitionStore.prohibitionStats.total"
-						:count-label="t('docudesk', 'rules')"
+						:countLabel="t('docudesk', 'rules')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
 						:title="t('docudesk', 'Active')"
 						:count="prohibitionStore.prohibitionStats.active"
-						:count-label="t('docudesk', 'active')"
+						:countLabel="t('docudesk', 'active')"
 						variant="error"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
 						:title="t('docudesk', 'Inactive')"
 						:count="prohibitionStore.prohibitionStats.inactive"
-						:count-label="t('docudesk', 'inactive')"
+						:countLabel="t('docudesk', 'inactive')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 				</div>
 			</template>
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
 					:label="row.entityType || t('docudesk', 'Unknown')"
-					:color-map="entityTypeColorMap" />
+					:colorMap="entityTypeColorMap" />
 			</template>
 
 			<template #column-severity="{ row }">
 				<CnStatusBadge
 					:label="row.severity || '-'"
-					:color-map="severityColorMap" />
+					:colorMap="severityColorMap" />
 			</template>
 
 			<template #column-active="{ row }">
@@ -81,7 +81,7 @@ import { prohibitionStore } from '../../store/store.js'
 							? t('docudesk', 'Inactive')
 							: t('docudesk', 'Active')
 					"
-					:color-map="activeColorMap" />
+					:colorMap="activeColorMap" />
 			</template>
 
 			<template #column-matchRules="{ row }">
@@ -93,13 +93,13 @@ import { prohibitionStore } from '../../store/store.js'
 					<template #icon>
 						<DotsHorizontal :size="20" />
 					</template>
-					<NcActionButton close-after-click @click="openEditDialog(row)">
+					<NcActionButton closeAfterClick @click="openEditDialog(row)">
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
 						{{ t('docudesk', 'Edit') }}
 					</NcActionButton>
-					<NcActionButton close-after-click @click="confirmDelete(row)">
+					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
@@ -116,9 +116,9 @@ import { prohibitionStore } from '../../store/store.js'
 		-->
 		<ProhibitionFormModal
 			:open="dialogOpen"
-			:editing-record="editingRecord"
+			:editingRecord="editingRecord"
 			:saving="saving"
-			:form-error="formError"
+			:formError="formError"
 			@update:open="dialogOpen = $event"
 			@submit="onModalSubmit"
 			@cancel="dialogOpen = false" />
@@ -139,13 +139,13 @@ import { prohibitionStore } from '../../store/store.js'
 </template>
 
 <script>
-import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ProhibitionFormModal from '../../dialogs/ProhibitionFormModal.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import ProhibitionFormModal from '../../dialogs/ProhibitionFormModal.vue'
 
 export default {
 	name: 'ProhibitionIndex',
@@ -161,6 +161,7 @@ export default {
 		DotsHorizontal,
 		Pencil,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
@@ -178,6 +179,7 @@ export default {
 				ORGANIZATION: 'primary',
 				OTHER: 'default',
 			},
+
 			// Severity values must mirror the publicationProhibition schema
 			// enum (`high` / `medium` / `low`) in docudesk_register.json.
 			severityColorMap: {
@@ -185,12 +187,14 @@ export default {
 				medium: 'warning',
 				low: 'default',
 			},
+
 			activeColorMap: {
 				[t('docudesk', 'Active')]: 'error',
 				[t('docudesk', 'Inactive')]: 'default',
 			},
 		}
 	},
+
 	computed: {
 		tableColumns() {
 			return [
@@ -210,17 +214,20 @@ export default {
 				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
 			]
 		},
+
 		paginationData() {
 			const total = prohibitionStore.prohibitions.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
 		emptyText() {
 			if (prohibitionStore.error) {
 				return prohibitionStore.error
 			}
 			return t('docudesk', 'No publication prohibitions defined.')
 		},
+
 		/**
 		 * Body text of the delete confirmation dialog.
 		 *
@@ -232,9 +239,11 @@ export default {
 			return t('docudesk', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
+
 	mounted() {
 		prohibitionStore.fetchProhibitions()
 	},
+
 	methods: {
 		async handleRefresh() {
 			this.isRefreshing = true
@@ -244,25 +253,30 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		formatMatchRules(rules) {
 			if (!Array.isArray(rules) || rules.length === 0) {
 				return '-'
 			}
 			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
 		},
+
 		openCreateDialog() {
 			this.editing = null
 			this.editingRecord = null
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
 		openEditDialog(row) {
 			this.editing = row['@self']?.id || row.id || row.uuid
 			this.editingRecord = {
@@ -282,6 +296,7 @@ export default {
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
 		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''
@@ -301,6 +316,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Ask for confirmation before deleting a prohibition.
 		 *
@@ -312,6 +328,7 @@ export default {
 		confirmDelete(row) {
 			this.deleteTarget = row
 		},
+
 		/**
 		 * Dismiss the delete confirmation without deleting anything.
 		 *
@@ -320,8 +337,10 @@ export default {
 		cancelDelete() {
 			this.deleteTarget = null
 		},
+
 		/**
 		 * Delete the confirmed prohibition. Reachable only from the dialog's
+		 *
 		 * @confirm, so the record is never removed without an explicit
 		 * confirmation.
 		 *

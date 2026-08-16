@@ -82,6 +82,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Square size in pixels. Defaults to 24 (24x24).
 		 */
@@ -90,10 +91,12 @@ export default {
 			default: 24,
 		},
 	},
+
 	computed: {
 		svg() {
 			return ICONS[(this.name || '').toLowerCase()] || ''
 		},
+
 		sizeStyle() {
 			const px = typeof this.size === 'number' ? `${this.size}px` : this.size
 			return { width: px, height: px }

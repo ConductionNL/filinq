@@ -46,32 +46,38 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/** Placeholder text shown when the input is empty. */
 		placeholder: {
 			type: String,
 			default: '',
 		},
+
 		/** Optional aria-label; falls back to placeholder. */
 		ariaLabel: {
 			type: String,
 			default: '',
 		},
+
 		/** Show a clear (X) button when there is a value. */
 		clearable: {
 			type: Boolean,
 			default: true,
 		},
+
 		/** Debounce in ms before emitting the new value. 0 disables debounce. */
 		debounce: {
 			type: Number,
 			default: 200,
 		},
+
 		/** Translated label for the clear button (and aria). */
 		clearLabel: {
 			type: String,
 			default: 'Clear',
 		},
 	},
+
 	emits: ['update:modelValue'],
 	data() {
 		return {
@@ -79,11 +85,13 @@ export default {
 			debounceTimer: null,
 		}
 	},
+
 	computed: {
 		hasValue() {
 			return this.localValue !== '' && this.localValue != null
 		},
 	},
+
 	watch: {
 		/**
 		 * Sync external value changes (e.g. parent reset) into the local copy
@@ -97,11 +105,13 @@ export default {
 			}
 		},
 	},
+
 	beforeUnmount() {
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer)
 		}
 	},
+
 	methods: {
 		/**
 		 * Schedule a debounced emit; with debounce=0 emits immediately.
@@ -118,6 +128,7 @@ export default {
 				this.$emit('update:modelValue', this.localValue)
 			}, this.debounce)
 		},
+
 		/**
 		 * Clear the input, emit the empty value immediately (bypassing debounce),
 		 * and refocus the input so the user can keep typing.
@@ -133,6 +144,7 @@ export default {
 				this.$refs.input?.focus?.()
 			})
 		},
+
 		/** Programmatic focus, exposed to parents via $refs. */
 		focus() {
 			this.$refs.input?.focus?.()
