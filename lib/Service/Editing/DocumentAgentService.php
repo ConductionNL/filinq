@@ -129,11 +129,15 @@ class DocumentAgentService {
 
 	#[McpTool(
 		name: 'editDocument',
-		description: 'Change the text of a Word (.docx) or OpenDocument (.odt) file by replacing, inserting '
-			. 'after, or deleting anchored paragraphs. Call readDocument first to get the anchors and version. '
-			. 'Writes into the file by default (restorable via Nextcloud file versions); pass outputMode '
-			. '"sibling" to write a new file instead. Refuses if the document changed since it was read, if it '
-			. 'is open in an editor, if it is under a signing request, or if it is anonymisation output.',
+		description: 'Change a Word (.docx) or OpenDocument (.odt) file by replacing, inserting after, or '
+			. 'deleting anchored paragraphs, or by restyling one with action "style". A style edit carries a '
+			. '"style" object instead of text: bold, italic, underline (true/false), alignment '
+			. '(left/center/right/justify), heading (0-9, where 0 means body text), list (true/false), '
+			. 'pageBreakBefore (true/false). Style edits need a .docx -- .odt is refused by name. Call '
+			. 'readDocument first to get the anchors and version. Writes into the file by default (restorable '
+			. 'via Nextcloud file versions); pass outputMode "sibling" to write a new file instead. Refuses if '
+			. 'the document changed since it was read, if it is open in an editor, if it is under a signing '
+			. 'request, or if it is anonymisation output.',
 		readOnlyHint: false,
 		destructiveHint: true,
 		idempotentHint: false,
@@ -194,6 +198,158 @@ class DocumentAgentService {
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
 
 	}//end editDocument()
+
+	#[McpTool(
+		name: 'addDocumentChart',
+		description: 'Add a bar, line or pie chart to a Word (.docx) file. The chart is a real chart the user '
+			. 'can select and resize in Word or Nextcloud Office, not a picture. Give it a type, a title, a list '
+			. 'of categories, and one or more series each carrying exactly one value per category (a pie chart '
+			. 'takes one series). Call readDocument first and pass back the version; pass an anchor to place the '
+			. 'chart after that paragraph, or omit it to append at the end. Charts need a .docx -- .odt is '
+			. 'refused by name. The file is tagged "Agent authored" and the previous version stays restorable.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'update'
+	)]
+	/**
+	 * Add a chart to a Word document.
+	 *
+	 * The chart is native DrawingML: the user can select, resize and restyle it in
+	 * the office suite. Its values are carried in the chart's own cache, which is
+	 * what every suite renders from -- so it draws correctly, but "Edit data" has
+	 * no worksheet to open, because no embedded workbook is written.
+	 *
+	 * Verified 2026-08-16 against a live ONLYOFFICE: rendering the same document
+	 * with and without the chart produced a 25,793-byte and a 51,777-byte PDF. The
+	 * chart is drawn, not skipped.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document to change.
+	 * @param array<string, mixed> $chart The chart: type, title, categories, series.
+	 * @param string $version The `version` returned by the preceding readDocument.
+	 * @param string $afterAnchor An anchor to place the chart after, or empty to append.
+	 * @param string $outputMode Empty for the configured default, or "sibling" to write a new file.
+	 *
+	 * @return array<string, mixed> The written file's id, name, path and version.
+	 *
+	 * @throws RuntimeException When the version is stale, the definition is invalid, or the write is refused.
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function addDocumentChart(
+		int $fileId,
+		array $chart,
+		string $version,
+		string $afterAnchor = '',
+		string $outputMode = ''
+	): array {
+		$anchor = null;
+		if ($afterAnchor !== '') {
+			$anchor = $afterAnchor;
+		}
+
+		$mode = null;
+		if ($outputMode !== '') {
+			$mode = $outputMode;
+		}
+
+		return $this->editSession->embedChartForAgent(
+			uid: $this->requireUid(),
+			fileId: $fileId,
+			chart: $chart,
+			version: $version,
+			afterAnchor: $anchor,
+			requestedMode: $mode
+		);
+
+	}//end addDocumentChart()
+
+	#[McpTool(
+		name: 'readDocumentMetadata',
+		description: 'Read a Word (.docx) or OpenDocument (.odt) file\'s document properties: title, subject, '
+			. 'creator, keywords and description. Use this before setDocumentMetadata: it returns the version '
+			. 'that call requires. A property the document does not carry comes back as an empty string.',
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'read'
+	)]
+	/**
+	 * Read a document's properties.
+	 *
+	 * Fields are named format-neutrally (`title`, `subject`, `creator`, `keywords`,
+	 * `description`). The caller never sees that OOXML stores keywords as
+	 * `cp:keywords` and ODF as `meta:keyword` -- a caller that had to know would be
+	 * writing per-format code, which ADR-087 §2 exists to prevent.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document to read.
+	 *
+	 * @return array<string, mixed> The document's name, version and metadata fields.
+	 *
+	 * @throws RuntimeException When the file cannot be read or the format has no metadata part.
+	 *
+	 * @spec openspec/specs/document-rich-editing/spec.md
+	 */
+	public function readDocumentMetadata(int $fileId): array {
+		return $this->editSession->readMetadataForAgent(uid: $this->requireUid(), fileId: $fileId);
+
+	}//end readDocumentMetadata()
+
+	#[McpTool(
+		name: 'setDocumentMetadata',
+		description: 'Set a Word (.docx) or OpenDocument (.odt) file\'s document properties. Supported fields: '
+			. 'title, subject, creator, keywords, description. Call readDocumentMetadata first and pass back '
+			. 'the version it returned. Fields you do not name are left unchanged. Created and modified '
+			. 'timestamps cannot be set. The file is tagged "Agent authored" and the previous version stays '
+			. 'restorable in Nextcloud.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'update'
+	)]
+	/**
+	 * Set a document's properties.
+	 *
+	 * Goes through the same editing session as a text change: same lock, same
+	 * version recheck immediately before the write, same agent-authored tag applied
+	 * before the bytes become visible. Metadata is a smaller change than a
+	 * paragraph rewrite, not a less accountable one.
+	 *
+	 * `created` and `modified` are deliberately not writable. They record what
+	 * happened to the document, and an agent that could set them would turn that
+	 * record from a fact into a claim.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document to change.
+	 * @param array<string, string> $metadata Field name => new value.
+	 * @param string $version The version returned by readDocumentMetadata.
+	 * @param string $outputMode Empty for the configured default, or "sibling" to write a new file.
+	 *
+	 * @return array<string, mixed> The written file's id, name, path, version and the fields written.
+	 *
+	 * @throws RuntimeException When the version is stale, a field is unknown, or the write is refused.
+	 *
+	 * @spec openspec/specs/document-rich-editing/spec.md
+	 */
+	public function setDocumentMetadata(
+		int $fileId,
+		array $metadata,
+		string $version,
+		string $outputMode = ''
+	): array {
+		$mode = null;
+		if ($outputMode !== '') {
+			$mode = $outputMode;
+		}
+
+		return $this->editSession->setMetadataForAgent(
+			uid: $this->requireUid(),
+			fileId: $fileId,
+			values: $metadata,
+			version: $version,
+			requestedMode: $mode
+		);
+
+	}//end setDocumentMetadata()
 
 	#[McpTool(
 		name: 'convertDocumentToPdf',
