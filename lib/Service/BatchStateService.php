@@ -3,9 +3,20 @@
 /**
  * Batch State Service
  *
- * Persists short-lived anonymization batch state in Nextcloud's distributed
- * cache. Each batch is keyed by UUID, JSON-encoded, and refreshed on every
- * read so active batches survive human review without stalling due to TTL.
+ * Persists anonymization batch state in OpenRegister, with Nextcloud's
+ * distributed cache in front of it as a read fast path. Each batch is keyed by
+ * UUID; the cached copy is refreshed on every read so an active batch never
+ * has to fall back to the store during human review.
+ *
+ * ⚠️ OPENREGISTER IS THE SOURCE OF TRUTH, NOT THE CACHE.
+ * `ICacheFactory::createDistributed()` degrades to the local cache class, and
+ * that defaults to `OC\Memcache\NullCache` on any instance without
+ * `memcache.local` configured — a cache that discards every write and returns
+ * null for every read. A cache-only batch store therefore loses the record the
+ * moment the creating request ends, so the folder-batch POST answered 200 with
+ * a batchId and the very next call on that batchId answered 404. Per
+ * ADR-022/ADR-083 the batch is persisted through OpenRegister's object
+ * abstraction, which makes the flow correct with no cache configured at all.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -35,13 +46,16 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Read/write store for anonymization batch state backed by the distributed cache.
+ * Read/write store for anonymization batch state, backed by OpenRegister and
+ * fronted by the distributed cache.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  */
 class BatchStateService {
 	private const CACHE_TTL = 7200;
@@ -63,6 +77,11 @@ class BatchStateService {
 	 * @param LoggerInterface $logger Logger for lifecycle events.
 	 * @param IUserSession $userSession User session for ownership checks.
 	 * @param IGroupManager $groupManager Group manager for admin bypass.
+	 * @param BatchStateRepository $repository OpenRegister-backed store of record
+	 *                                         for batch state. Injected via the
+	 *                                         constructor (ADR-083) so the
+	 *                                         dependency is declared where a
+	 *                                         reader and a gate can both see it.
 	 *
 	 * @return void
 	 */
@@ -72,6 +91,7 @@ class BatchStateService {
 		private readonly LoggerInterface $logger,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
+		private readonly BatchStateRepository $repository,
 	) {
 		$this->cache = $cacheFactory->createDistributed('docudesk');
 
@@ -135,6 +155,8 @@ class BatchStateService {
 	 *
 	 * @return array<string, mixed> The newly created batch record.
 	 *
+	 * @throws RuntimeException When the batch cannot be persisted.
+	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
 	 */
 	public function createBatch(string $userId, array $files): array {
@@ -146,6 +168,11 @@ class BatchStateService {
 			'files' => $files,
 			'createdAt' => time(),
 		];
+
+		// Store of record FIRST. If this throws, no batchId is handed to the
+		// caller, which is the honest outcome: a batchId that resolves to
+		// nothing on the next request is worse than an error here.
+		$this->repository->save(batchId: $batchId, batch: $batch);
 		$this->cache->set(self::CACHE_PREFIX . $batchId, json_encode($batch), $this->getCacheTtl());
 		$this->logger->info('Batch created', ['batchId' => $batchId, 'fileCount' => count($files)]);
 		return $batch;
@@ -161,13 +188,8 @@ class BatchStateService {
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
 	 */
 	public function getBatch(string $batchId): ?array {
-		$data = $this->cache->get(self::CACHE_PREFIX . $batchId);
-		if ($data === null) {
-			return null;
-		}
-
-		$batch = json_decode($data, true);
-		if (is_array($batch) === false) {
+		$batch = $this->readThrough(batchId: $batchId);
+		if ($batch === null) {
 			return null;
 		}
 
@@ -192,10 +214,44 @@ class BatchStateService {
 			}
 		}
 
-		// Reset TTL on read (keep-alive pattern) so active batches don't expire during human review.
-		$this->cache->set(self::CACHE_PREFIX . $batchId, $data, $this->getCacheTtl());
+		// Reset TTL on read (keep-alive pattern) so active batches don't expire
+		// during human review, and warm the cache after a store read. Harmless
+		// against a NullCache: it discards the write and the next read falls
+		// through to OpenRegister again.
+		$this->cache->set(self::CACHE_PREFIX . $batchId, json_encode($batch), $this->getCacheTtl());
 		return $batch;
 	}//end getBatch()
+
+	/**
+	 * Load a batch record from the cache, falling back to OpenRegister.
+	 *
+	 * The cache is a fast path only. A miss — or a corrupt/legacy entry that
+	 * does not decode to an array — falls through to the store of record
+	 * rather than being reported as "no such batch", because on an instance
+	 * with no distributed cache configured EVERY read is a miss.
+	 *
+	 * @param string $batchId Batch identifier.
+	 *
+	 * @return array<string, mixed>|null The batch record, or null when absent.
+	 *
+	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
+	 */
+	private function readThrough(string $batchId): ?array {
+		$data = $this->cache->get(self::CACHE_PREFIX . $batchId);
+		if ($data !== null) {
+			$cached = json_decode($data, true);
+			if (is_array($cached) === true) {
+				return $cached;
+			}
+
+			$this->logger->warning(
+				'Discarding an undecodable cached batch entry; reading the store instead',
+				['batchId' => $batchId]
+			);
+		}
+
+		return $this->repository->find(batchId: $batchId);
+	}//end readThrough()
 
 	/**
 	 * Persist an updated batch record.
@@ -205,9 +261,14 @@ class BatchStateService {
 	 *
 	 * @return void
 	 *
+	 * @throws RuntimeException When the batch cannot be persisted.
+	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md
 	 */
 	public function updateBatch(string $batchId, array $batch): void {
+		// Store of record first, cache second — so a cache that accepted the
+		// write can never be the only place the new state exists.
+		$this->repository->save(batchId: $batchId, batch: $batch);
 		$this->cache->set(self::CACHE_PREFIX . $batchId, json_encode($batch), $this->getCacheTtl());
 
 	}//end updateBatch()
@@ -222,14 +283,15 @@ class BatchStateService {
 	 * @spec openspec/specs/batch-anonymization/spec.md
 	 *
 	 * @orphaned-write-capability exclude completes the store's CRUD surface
-	 * beside createBatch/getBatch/updateBatch. Records are cache-backed with a
-	 * 7200s TTL, so nothing is currently obliged to delete one explicitly and
-	 * no caller has needed to yet — but a store that can create and update and
-	 * not delete is the odd shape, and the method is one cache->remove() with
-	 * no reachable side effect beyond that key.
+	 * beside createBatch/getBatch/updateBatch. No caller has needed it yet —
+	 * but a store that can create and update and not delete is the odd shape,
+	 * and now that records outlive the request in OpenRegister rather than
+	 * expiring with a cache TTL, the ability to remove one is the only way a
+	 * batch ever leaves the store.
 	 */
 	public function deleteBatch(string $batchId): void {
 		$this->cache->remove(self::CACHE_PREFIX . $batchId);
+		$this->repository->delete(batchId: $batchId);
 
 	}//end deleteBatch()
 

@@ -20,6 +20,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\BatchStateRepository;
 use OCA\DocuDesk\Service\BatchStateService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -93,6 +94,18 @@ class BatchStateServiceTest extends TestCase {
 	private IGroupManager|MockObject $mockGroupManager;
 
 	/**
+	 * Mocked BatchStateRepository — the OpenRegister store of record.
+	 *
+	 * Left as a bare mock here on purpose: this class covers the cache-facing
+	 * behaviour of BatchStateService, so every test either hits the cache or
+	 * expects a miss, and the store answers null. The store-backed behaviour is
+	 * covered with real fakes in BatchStateServicePersistenceTest.
+	 *
+	 * @var BatchStateRepository|MockObject
+	 */
+	private BatchStateRepository|MockObject $mockRepository;
+
+	/**
 	 * Set up test environment
 	 *
 	 * @return void
@@ -100,6 +113,7 @@ class BatchStateServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
+		$this->mockRepository = $this->createMock(originalClassName: BatchStateRepository::class);
 		$this->mockCache = $this->createMock(originalClassName: ICache::class);
 		$this->mockAppConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
@@ -116,7 +130,8 @@ class BatchStateServiceTest extends TestCase {
 			appConfig: $this->mockAppConfig,
 			logger: $this->mockLogger,
 			userSession: $this->mockUserSession,
-			groupManager: $this->mockGroupManager
+			groupManager: $this->mockGroupManager,
+			repository: $this->mockRepository
 		);
 
 	}//end setUp()
@@ -156,6 +171,55 @@ class BatchStateServiceTest extends TestCase {
 		$this->assertSame(expected: 100, actual: $result);
 
 	}//end testGetMaxFilesReturnsDefault()
+
+	/**
+	 * The legacy key still wins when the canonical one is unset.
+	 *
+	 * `batch.max_files_per_run` is the manifest-declared key; the legacy
+	 * `docudesk_batch_max_files` is kept as a one-release fallback so an admin
+	 * who set the old key before the rename does not silently get the built-in
+	 * default instead of their own limit. That fallback is only reachable when
+	 * the canonical key reads empty, which is why the two tests above never
+	 * enter it — and a fallback nothing exercises is a fallback nobody would
+	 * notice losing.
+	 *
+	 * @return void
+	 */
+	public function testGetMaxFilesFallsBackToTheLegacyKeyWhenTheCanonicalOneIsUnset(): void {
+		$this->mockAppConfig->method('getValueString')
+			->willReturnMap(
+				[
+					['docudesk', 'batch.max_files_per_run', '', false, ''],
+					['docudesk', 'docudesk_batch_max_files', '100', false, '250'],
+				]
+			);
+
+		$this->assertSame(
+			expected: 250,
+			actual: $this->service->getMaxFiles(),
+			message: 'An admin-set legacy limit was ignored in favour of the built-in default.'
+		);
+
+	}//end testGetMaxFilesFallsBackToTheLegacyKeyWhenTheCanonicalOneIsUnset()
+
+	/**
+	 * With neither key set, the in-class default is what app-config is asked
+	 * for and what comes back.
+	 *
+	 * @return void
+	 */
+	public function testGetMaxFilesUsesTheInClassDefaultWhenNeitherKeyIsSet(): void {
+		$this->mockAppConfig->method('getValueString')
+			->willReturnMap(
+				[
+					['docudesk', 'batch.max_files_per_run', '', false, ''],
+					['docudesk', 'docudesk_batch_max_files', '100', false, '100'],
+				]
+			);
+
+		$this->assertSame(expected: 100, actual: $this->service->getMaxFiles());
+
+	}//end testGetMaxFilesUsesTheInClassDefaultWhenNeitherKeyIsSet()
 
 	/**
 	 * Test createBatch stores a batch in cache with uploading status

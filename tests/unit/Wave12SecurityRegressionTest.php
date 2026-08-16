@@ -25,6 +25,7 @@ namespace OCA\DocuDesk\Tests\Unit;
 
 use OCA\DocuDesk\Controller\CorrespondenceController;
 use OCA\DocuDesk\Controller\SigningController;
+use OCA\DocuDesk\Service\BatchStateRepository;
 use OCA\DocuDesk\Service\BatchStateService;
 use OCA\DocuDesk\Service\CorrespondenceService;
 use OCA\DocuDesk\Service\SigningAuditService;
@@ -581,7 +582,8 @@ class Wave12SecurityRegressionTest extends TestCase {
 			$this->createMock(IAppConfig::class),
 			$this->createMock(LoggerInterface::class),
 			$this->makeSession($this->makeUser('eve')),
-			$this->makeGroupManager([])
+			$this->makeGroupManager([]),
+			$this->createMock(BatchStateRepository::class)
 		);
 
 		// Must return null — NOT throw RuntimeException.
@@ -609,7 +611,8 @@ class Wave12SecurityRegressionTest extends TestCase {
 			$this->createMock(IAppConfig::class),
 			$this->createMock(LoggerInterface::class),
 			$this->makeSession($this->makeUser('mallory')),
-			$this->makeGroupManager([])
+			$this->makeGroupManager([]),
+			$this->createMock(BatchStateRepository::class)
 		);
 
 		// This call must not throw — the caller (controller) gets null and returns 404.
