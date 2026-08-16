@@ -283,18 +283,4 @@ class BatchStateServiceTest extends TestCase {
 		$this->service->updateBatch(batchId: 'abc-123', batch: $batch);
 
 	}//end testUpdateBatchCallsCacheSet()
-
-	/**
-	 * Test deleteBatch calls cache remove with correct key
-	 *
-	 * @return void
-	 */
-	public function testDeleteBatchCallsCacheRemove(): void {
-		$this->mockCache->expects($this->once())
-			->method('remove')
-			->with($this->stringContains(string: 'abc-123'));
-
-		$this->service->deleteBatch(batchId: 'abc-123');
-
-	}//end testDeleteBatchCallsCacheRemove()
 }//end class

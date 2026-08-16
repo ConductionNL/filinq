@@ -144,19 +144,6 @@ class ValidSignProvider implements SigningProviderInterface {
 	}//end downloadSignedDocument()
 
 	/**
-	 * Cancel a ValidSign signing flow (stub)
-	 *
-	 * @param string $externalId The ValidSign package identifier
-	 *
-	 * @return bool True if cancelled
-	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
-	 */
-	public function cancelSigning(string $externalId): bool {
-		return true;
-	}//end cancelSigning()
-
-	/**
 	 * Check if this provider supports the given signature level
 	 *
 	 * @param string $level The signature level to check

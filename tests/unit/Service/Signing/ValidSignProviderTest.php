@@ -4,7 +4,7 @@
  * Unit tests for ValidSignProvider
  *
  * Covers identifier, level support, and the stub behaviour of initiateSigning,
- * checkStatus, downloadSignedDocument, and cancelSigning per REQ-SIGN-03.
+ * checkStatus and downloadSignedDocument per REQ-SIGN-03.
  *
  * @category  Tests
  * @package   OCA\DocuDesk\Tests\Unit\Service\Signing
@@ -168,16 +168,4 @@ class ValidSignProviderTest extends TestCase {
 		$this->provider->downloadSignedDocument(externalId: 'validsign-abc123');
 
 	}//end testDownloadSignedDocumentAlwaysThrows()
-
-	/**
-	 * cancelSigning() returns true (stub).
-	 *
-	 * @return void
-	 */
-	public function testCancelSigningReturnsTrue(): void {
-		$result = $this->provider->cancelSigning(externalId: 'validsign-abc123');
-
-		$this->assertTrue($result);
-
-	}//end testCancelSigningReturnsTrue()
 }//end class

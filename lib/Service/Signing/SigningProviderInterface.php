@@ -90,17 +90,6 @@ interface SigningProviderInterface {
 	public function downloadSignedDocument(string $externalId): string;
 
 	/**
-	 * Cancel an ongoing signing flow
-	 *
-	 * @param string $externalId The external signing flow identifier
-	 *
-	 * @return bool True if cancellation succeeded
-	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
-	 */
-	public function cancelSigning(string $externalId): bool;
-
-	/**
 	 * Check if this provider supports a given signature level
 	 *
 	 * @param string $level The signature level (SES, AdES, QES)

@@ -143,7 +143,7 @@ retention configuration in the document schema's register definition.
 
 The `SigningProviderInterface` async-flow methods SHALL be classified as a
 pluggable extension seam implemented by external signing providers, namely
-`initiateSigning`, `checkStatus`, `downloadSignedDocument` and `cancelSigning`. These
+`initiateSigning`, `checkStatus` and `downloadSignedDocument`. These
 methods SHALL NOT be treated as authorization guards: none makes an access
 decision, and `checkStatus` in particular is a status **read** returning
 `status`/`signers`/`completedAt`. The current app signing path is synchronous
@@ -152,6 +152,21 @@ the async-flow methods have no native caller by design and are invoked only by
 external-provider plugins. The live "get sign status" surface for clients SHALL
 remain OR's `ApprovalChain` read via the authenticated, per-UID-authorized
 `SigningController::showRequest`, never `provider->checkStatus`.
+
+The seam SHALL NOT declare a cancellation method. Cancelling a signing request
+is already a live capability served by `SigningController::cancelRequest`
+(`DELETE /api/signing/requests/{id}`, initiator-or-admin authorized) driving
+`SigningService::cancelRequest()`. A second, provider-level cancellation entry
+point would duplicate that capability without its per-object guard.
+
+#### Scenario: Cancellation has exactly one entry point
+
+- GIVEN a signing request `{id}` that the caller initiated
+- WHEN the caller issues `DELETE /api/signing/requests/{id}`
+- THEN `SigningController::cancelRequest` SHALL authorize the caller as the
+  initiator or an admin and SHALL drive `SigningService::cancelRequest()`
+- AND `SigningProviderInterface` SHALL declare no cancellation method, so no
+  unguarded provider-level cancellation path exists
 
 #### Scenario: checkStatus is a status read, not an authorization guard
 

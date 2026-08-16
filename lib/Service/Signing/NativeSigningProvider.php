@@ -211,26 +211,6 @@ class NativeSigningProvider implements SigningProviderInterface {
 	}//end downloadSignedDocument()
 
 	/**
-	 * Cancel a native signing session
-	 *
-	 * @param string $externalId The signing session identifier
-	 *
-	 * @return bool True if cancelled
-	 *
-	 * @throws RuntimeException If session not found
-	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
-	 */
-	public function cancelSigning(string $externalId): bool {
-		$session = $this->loadSessionByExternalId(externalId: $externalId);
-
-		$session['status'] = 'cancelled';
-		$this->persistSession(session: $session);
-
-		return true;
-	}//end cancelSigning()
-
-	/**
 	 * Check if this provider supports the given signature level
 	 *
 	 * @param string $level The signature level to check
