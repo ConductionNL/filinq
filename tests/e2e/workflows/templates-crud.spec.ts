@@ -42,7 +42,6 @@ import {
 	TEST_FAMILY,
 } from './_fixtures'
 
-
 // The views under test, named after the component files they cover. Routes are
 // unchanged — this makes the spec-to-component link readable in executable code
 // rather than only in prose (gate-26 matches a page against its component stem).

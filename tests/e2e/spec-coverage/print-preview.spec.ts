@@ -15,7 +15,6 @@
 import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, go } from './_helpers'
 
-
 // The view under test, named after the component file it covers. The route
 // is unchanged — this makes the spec-to-component link readable in executable
 // code rather than only in prose. gate-26 matches a page against its component
