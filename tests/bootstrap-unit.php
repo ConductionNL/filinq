@@ -142,3 +142,8 @@ require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
 // tests/unit/ directory segment, so non-test helper classes under tests/unit
 // are required explicitly (PHPUnit loads *Test.php files by path).
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
+
+// Batch-state fakes (NullCache / in-memory OpenRegister ObjectService) shared
+// by BatchStateServicePersistenceTest and BatchStateRepositoryTest. Same
+// "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
+require_once __DIR__ . '/unit/Service/BatchStateTestDoubles.php';
