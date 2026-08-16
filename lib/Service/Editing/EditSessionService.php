@@ -126,6 +126,8 @@ class EditSessionService {
 	 * @param DocumentGuard $guard The standing refusals.
 	 * @param IAppConfig $appConfig App configuration.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param PackageMetadataCodec $metadata The document metadata codec.
+	 * @param ChartCodec $charts The chart embedding codec.
 	 *
 	 * @return void
 	 */
@@ -137,6 +139,8 @@ class EditSessionService {
 		private readonly DocumentGuard $guard,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly PackageMetadataCodec $metadata = new PackageMetadataCodec(),
+		private readonly ChartCodec $charts = new ChartCodec(),
 	) {
 
 	}//end __construct()
@@ -209,6 +213,175 @@ class EditSessionService {
 		string $version,
 		?string $requestedMode = null,
 	): array {
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: $requestedMode
+		);
+
+		return $this->runSession(
+			uid: $uid,
+			file: $file,
+			transform: fn (string $bytes, string $extension): array => $this->codec->applyEdits(
+				packageBytes: $bytes,
+				extension: $extension,
+				edits: $edits
+			),
+			version: $version,
+			mode: $mode
+		);
+
+	}//end editForAgent()
+
+	/**
+	 * Read a document's metadata.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed> The document's name, format, version and metadata.
+	 *
+	 * @throws RuntimeException When the file cannot be read or the format is unsupported.
+	 *
+	 * @spec openspec/specs/document-rich-editing/spec.md
+	 */
+	public function readMetadataForAgent(string $uid, int $fileId): array {
+		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
+
+		return [
+			'fileId' => $file->getId(),
+			'name' => $file->getName(),
+			'path' => $this->userPath(uid: $uid, file: $file),
+			'version' => $file->getEtag(),
+			'editable' => ($file->isUpdateable() === true),
+			'metadata' => $this->metadata->readMetadata(
+				packageBytes: $this->readBytes(file: $file),
+				extension: $file->getExtension()
+			),
+		];
+
+	}//end readMetadataForAgent()
+
+	/**
+	 * Write a document's metadata.
+	 *
+	 * Runs through the same session as a body edit -- same lock, same version
+	 * recheck immediately before the write, same agent-authored tag applied before
+	 * the bytes become visible. Metadata is a smaller change than a paragraph
+	 * rewrite, not a less accountable one.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 * @param array<string, string> $values Field name => new value.
+	 * @param string $version The version returned by the preceding read.
+	 * @param string|null $requestedMode The requested output mode, or null for the configured default.
+	 *
+	 * @return array<string, mixed> The write result.
+	 *
+	 * @throws RuntimeException On any refusal or failure.
+	 *
+	 * @spec openspec/specs/document-rich-editing/spec.md
+	 */
+	public function setMetadataForAgent(
+		string $uid,
+		int $fileId,
+		array $values,
+		string $version,
+		?string $requestedMode = null,
+	): array {
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: $requestedMode
+		);
+
+		return $this->runSession(
+			uid: $uid,
+			file: $file,
+			transform: fn (string $bytes, string $extension): array => $this->metadata->writeMetadata(
+				packageBytes: $bytes,
+				extension: $extension,
+				values: $values
+			),
+			version: $version,
+			mode: $mode
+		);
+
+	}//end setMetadataForAgent()
+
+	/**
+	 * Embed a chart into a document.
+	 *
+	 * Runs through the same session as a text edit -- same lock, same version
+	 * recheck, same agent-authored tag. A chart adds package PARTS rather than
+	 * rewriting one, which makes the version precondition more important rather
+	 * than less: a half-applied multi-part write is a document no suite will open.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 * @param array<string, mixed> $chart The chart definition.
+	 * @param string $version The version returned by the preceding read.
+	 * @param string|null $afterAnchor The anchor to place the chart after, or null for the end.
+	 * @param string|null $requestedMode The requested output mode, or null for the configured default.
+	 *
+	 * @return array<string, mixed> The write result.
+	 *
+	 * @throws RuntimeException On any refusal or failure.
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function embedChartForAgent(
+		string $uid,
+		int $fileId,
+		array $chart,
+		string $version,
+		?string $afterAnchor = null,
+		?string $requestedMode = null,
+	): array {
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: $requestedMode
+		);
+
+		return $this->runSession(
+			uid: $uid,
+			file: $file,
+			transform: fn (string $bytes, string $extension): array => $this->charts->embedChart(
+				packageBytes: $bytes,
+				extension: $extension,
+				chart: $chart,
+				afterAnchor: $afterAnchor
+			),
+			version: $version,
+			mode: $mode
+		);
+
+	}//end embedChartForAgent()
+
+	/**
+	 * The checks every agent write shares, run in the order they must run in.
+	 *
+	 * Extracted because three entry points -- text edits, metadata and charts --
+	 * repeated it verbatim. Triplicated preconditions drift: the third copy is
+	 * where someone eventually omits `refuseIfGuarded()` and a document under a
+	 * signing request becomes editable through the newest tool only.
+	 *
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 * @param string $version The version the caller is writing against.
+	 * @param string|null $requestedMode The requested output mode, or null.
+	 *
+	 * @return array{0: File, 1: string} The resolved file and output mode.
+	 *
+	 * @throws RuntimeException When the version is absent, the file is guarded, or it is not writable.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
+	 */
+	private function prepareWrite(string $uid, int $fileId, string $version, ?string $requestedMode): array {
 		if (trim($version) === '') {
 			throw new RuntimeException(
 				'A version is required. Read the document first and pass back the version it returned.'
@@ -224,22 +397,16 @@ class EditSessionService {
 			throw new RuntimeException('You do not have permission to change this file.');
 		}
 
-		return $this->runSession(
-			uid: $uid,
-			file: $file,
-			edits: $edits,
-			version: $version,
-			mode: $mode
-		);
+		return [$file, $mode];
 
-	}//end editForAgent()
+	}//end prepareWrite()
 
 	/**
 	 * Hold the lock across the whole read-modify-write, and release it on every exit path.
 	 *
 	 * @param string $uid The acting user id.
 	 * @param File $file The source file.
-	 * @param array<int, array<string, mixed>> $edits The edits.
+	 * @param callable $transform Given (bytes, extension), returns the rewritten package.
 	 * @param string $version The expected version.
 	 * @param string $mode The resolved output mode.
 	 *
@@ -247,7 +414,7 @@ class EditSessionService {
 	 *
 	 * @throws RuntimeException On any refusal or failure.
 	 */
-	private function runSession(string $uid, File $file, array $edits, string $version, string $mode): array {
+	private function runSession(string $uid, File $file, callable $transform, string $version, string $mode): array {
 		$lock = new LockContext($file, ILock::TYPE_APP, Application::APP_ID);
 		$held = $this->acquire(lock: $lock, file: $file);
 		$warnings = [];
@@ -258,12 +425,13 @@ class EditSessionService {
 		}
 
 		try {
+			// The transform is a parameter rather than a fixed call so that a
+			// metadata write gets the IDENTICAL lock, version-recheck, tag-then-write
+			// and unlock path as a body edit. Copying this method for metadata would
+			// have meant two copies of the only code that stops an agent clobbering
+			// a concurrent human edit — and the copy would drift.
 			$bytes = $this->readBytes(file: $file);
-			$edited = $this->codec->applyEdits(
-				packageBytes: $bytes,
-				extension: $file->getExtension(),
-				edits: $edits
-			);
+			$edited = $transform($bytes, $file->getExtension());
 
 			// Re-read the version immediately before the write. The lock excludes
 			// another editing SESSION; this closes the remaining window in which
@@ -284,7 +452,8 @@ class EditSessionService {
 				'name' => $written['name'],
 				'path' => $written['path'],
 				'outputMode' => $mode,
-				'appliedAnchors' => $edited['applied'],
+				'appliedAnchors' => ($edited['applied'] ?? []),
+				'metadataWritten' => ($edited['written'] ?? []),
 				'version' => $written['version'],
 				'agentAuthoredTag' => AgentArtefactMarker::TAG_NAME,
 				'warnings' => $warnings,
