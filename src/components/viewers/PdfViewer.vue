@@ -41,7 +41,6 @@ let pdfjsLibPromise = null
 async function loadPdfjs() {
 	if (!pdfjsLibPromise) {
 		pdfjsLibPromise = (async () => {
-			// eslint-disable-next-line import/no-unresolved
 			const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs')
 			const workerUrl = new URL(
 				'pdfjs-dist/build/pdf.worker.min.mjs',
