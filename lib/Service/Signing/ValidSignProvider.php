@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service\Signing;
 
+use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
 use OCP\IAppConfig;
 use RuntimeException;
 
@@ -144,16 +145,37 @@ class ValidSignProvider implements SigningProviderInterface {
 	}//end downloadSignedDocument()
 
 	/**
-	 * Cancel a ValidSign signing flow (stub)
+	 * Withdraw a ValidSign signing flow — NOT IMPLEMENTED, and it says so.
 	 *
-	 * @param string $externalId The ValidSign package identifier
+	 * This method previously was, in full, `return true;`. No call to ValidSign.
+	 * Nothing in this app invoked it, so the lie was dormant — but connected to a
+	 * cancel button it would have told a user their request was withdrawn while it
+	 * stayed live at ValidSign, with signatories still able to open it and produce a
+	 * legally valid signature. DocuDesk would have shown no trace of the
+	 * discrepancy.
 	 *
-	 * @return bool True if cancelled
+	 * It now throws. Throwing is not a regression from `return true`: it is the
+	 * difference between a user who knows they must withdraw the request in
+	 * ValidSign's own interface, and a user who believes it is already done.
 	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
+	 * ValidSign's cancellation API has not been integrated. Per the direction set
+	 * 2026-08-16, ValidSign is not the strategic provider — an own signing service
+	 * via Portaliq is — so this is deliberately left unimplemented rather than
+	 * half-built against an API we intend to stop using.
+	 *
+	 * @param string $externalId The ValidSign package identifier.
+	 *
+	 * @return void
+	 *
+	 * @throws SigningCancellationNotSupportedException Always.
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 	 */
-	public function cancelSigning(string $externalId): bool {
-		return true;
+	public function cancelSigning(string $externalId): void {
+		throw new SigningCancellationNotSupportedException(
+			provider: 'ValidSign',
+			reason: 'DocuDesk does not integrate ValidSign\'s cancellation API.'
+		);
 	}//end cancelSigning()
 
 	/**
