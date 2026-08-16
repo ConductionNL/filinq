@@ -108,6 +108,32 @@ if (is_dir($ocpBruteforceDir) === true) {
 	}
 }
 
+// Load OCP's file-lock contracts (the agent document-editing session takes an
+// ILockManager lock so a document open in Collabora refuses the edit rather
+// than losing the human's changes) — same "real file, not classmapped"
+// situation as the SystemTag/EventDispatcher contracts above.
+// `OCP\Lock\LockedException` — which OwnerLockedException extends — is already
+// declared in NextcloudStubs.php above, so it is deliberately NOT required from
+// vendor here: doing so is a fatal redeclare, not a no-op.
+$ocpLockDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Files/Lock';
+if (is_dir($ocpLockDir) === true) {
+	foreach (
+		[
+			'ILock.php',
+			'LockContext.php',
+			'ILockProvider.php',
+			'ILockManager.php',
+			'NoLockProviderException.php',
+			'OwnerLockedException.php',
+		] as $ocpLockFile
+	) {
+		$ocpLockPath = $ocpLockDir . '/' . $ocpLockFile;
+		if (is_file($ocpLockPath) === true) {
+			require_once $ocpLockPath;
+		}
+	}
+}
+
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
 

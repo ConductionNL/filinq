@@ -74,6 +74,7 @@ class PolicyRetroactiveService {
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
 	 * @param PolicyMatchService $policyMatcher Reusable rule-evaluation primitives.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object contract (ADR-084).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 */
 	public function __construct(

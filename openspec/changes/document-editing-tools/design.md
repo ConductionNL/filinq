@@ -106,6 +106,41 @@ condition. It does **not** poll, queue, retry, or use `UnlockAndRelock` to take 
 lock it did not create — an agent stealing a human's editing lock is a data-loss
 primitive.
 
+## MEASURED 2026-08-15: the WOPI route cannot deliver the lock guard
+
+**The session is in-process, not a WOPI client.** This reverses §The two curated
+tools' `Lock`/`GetFile`/`PutFile` sequence and tasks 2.1–2.3. It is a measurement,
+not a preference — read out of `richdocuments` 11.1.0 before any code was written:
+
+- `WopiController::lock()` **ignores the `X-WOPI-Lock` value entirely** and takes
+  an `ILockManager` lock of `ILock::TYPE_APP` owned by the literal string
+  `richdocuments` (`richdocuments/lib/Controller/WopiController.php`).
+- `files_lock`'s `LockService::lock()` **EXTENDS** an existing lock when
+  `$known->getType() === $lockScope->getType() && $known->getOwner() === $lockScope->getOwner()`,
+  and throws `OwnerLockedException` only otherwise.
+
+So a WOPI client's lock is **indistinguishable from Collabora's own**. Guard 1
+("the lock is held across the whole read-modify-write") and the lock-contention
+refusal both become unachievable through that route: a document open in the
+editor would have its lock *silently extended* rather than refusing — precisely
+the data-loss case the lock exists to prevent.
+
+An in-process `LockContext($file, ILock::TYPE_APP, 'docudesk')` conflicts with
+Collabora's lock (the refusal we want) **and** stays distinct from it (which WOPI
+cannot give us). It also drops a self-addressed HTTP call carrying a bearer
+token, which ADR-041's in-process posture argues against anyway.
+
+What is *not* lost: the in-screen editor still interoperates, because
+`ILockManager` is the same registry `richdocuments` writes its WOPI locks into.
+`richdocuments` stops being a hard dependency for agent editing.
+
+Consequences for the rest of this document: guard 2 (the `Version`
+precondition) is unchanged in spirit and implemented as a **file etag** re-read
+immediately before the write; guard 3 (the ADR-088 tag) is unchanged. Task 3.1's
+`CheckFileInfo` probe is replaced by a format-support check plus a visible
+`warnings[]` entry when no lock provider is installed. Phase 0.2's finding stands
+but is no longer load-bearing: no WOPI token is minted at all.
+
 ## Anchors
 
 Edits address **stable block anchors**, never array indexes: a human inserting a

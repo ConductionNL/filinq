@@ -103,6 +103,7 @@ class PortalSigningReceiverController extends Controller {
 	 * @param OpenRegisterResolver $registerResolver Resolves register/schema bindings, failing closed.
 	 * @param LoggerInterface $logger Logger.
 	 * @param PortalSigningDocumentResolver $documentResolver Resolves the target document for viewDocument.
+	 * @param IThrottler $throttler Brute-force throttler; rejected portal assertions are registered against it.
 	 *
 	 * @return void
 	 */

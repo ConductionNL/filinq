@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\AppInfo;
 
 use Exception;
+use OCA\DocuDesk\Mcp\DocudeskScannableServices;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -67,6 +68,22 @@ class RegistrationBootstrap {
 		$context->registerServiceAlias(
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
+		);
+
+		// ADR-063 chain 3/3: the per-app opt-in telling OpenRegister which of our
+		// service classes its AttributeToolScanner may reflect for `#[McpTool]`
+		// methods. The alias KEY is the discovery convention -- OR enumerates
+		// `IMcpScannableServices::<appId>` -- so the string matters as much as
+		// the class it points at.
+		//
+		// An alias, not a factory, for the same reason as the binding above: it
+		// resolves only when something asks, so an instance without OpenRegister
+		// still boots. DocuDesk ships no hand-written IMcpToolProvider; the read
+		// surface comes from the `x-openregister-mcp` blocks in the schema
+		// register instead.
+		$context->registerServiceAlias(
+			'OCA\\OpenRegister\\Mcp\\IMcpScannableServices::docudesk',
+			DocudeskScannableServices::class
 		);
 
 		// Background jobs are declared in appinfo/info.xml under

@@ -38,7 +38,6 @@ let mammothPromise = null
  */
 async function loadMammoth() {
 	if (!mammothPromise) {
-		// eslint-disable-next-line import/no-unresolved
 		mammothPromise = import('mammoth/mammoth.browser.js')
 	}
 	return mammothPromise

@@ -95,6 +95,7 @@ class PolicyMatchService {
 	 * @param LoggerInterface $logger Structured log sink.
 	 * @param IAppManager $appManager App manager (used to confirm OR is installed).
 	 * @param IAppConfig $config App config (prohibition high-confidence threshold).
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object contract (ADR-084).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 * @param TextNormaliser $textNormaliser Accent-stripping text normaliser.
 	 * @param PolicyRuleNormaliser $ruleNormaliser Admission + normalisation of stored policy rows.
