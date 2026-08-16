@@ -12,6 +12,14 @@
  * - {@see InMemoryObjectServiceFake} reproduces just enough of OpenRegister's
  *   ObjectService to store, retrieve and delete an object across calls, and to
  *   serialise it the way OpenRegister does (data + `@self` + a top-level `id`).
+ * - {@see FixedResultObjectServiceFake} answers reads with a value the test
+ *   chooses, so the repository can be driven through OpenRegister's OTHER miss
+ *   shape (the contract's nullable `find()`) and through result shapes the
+ *   in-memory fake never produces.
+ * - {@see RefusingObjectServiceFake} refuses every write, so the failure paths
+ *   are exercised rather than assumed.
+ * - {@see RecordingLoggerFake} keeps what it was told, so a swallowed failure
+ *   can be asserted on its only evidence.
  *
  * ⚠️ THESE ARE SUBCLASSES / IMPLEMENTATIONS, NOT PHPUnit MOCKS, ON PURPOSE.
  * A PHPUnit mock cannot observe named arguments — it reports its own parameter
@@ -42,6 +50,9 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\ICache;
+use Psr\Log\AbstractLogger;
+use RuntimeException;
+use Stringable;
 
 /**
  * A cache that discards everything, exactly like `OC\Memcache\NullCache`.
@@ -372,4 +383,198 @@ class InMemoryObjectServiceFake extends ObjectService {
 	private function key(string $register, string $schema, string $uuid): string {
 		return $register . '/' . $schema . '/' . $uuid;
 	}//end key()
+}//end class
+
+/**
+ * An ObjectService whose `find()` answers with a value the caller chooses.
+ *
+ * ⚠️ WHY A SECOND READ FAKE EXISTS. `InMemoryObjectServiceFake` models one
+ * miss shape — the mapper's `DoesNotExistException` — but OpenRegister has
+ * TWO, and they are reached through the same `->find(...)` spelling:
+ * `Contract\ObjectServiceInterface::find()` is declared
+ * `?ObjectEntityInterface` and returns **null** on a miss, while the entity
+ * mappers inherit Nextcloud's `QBMapper::find()`, which **throws**. A
+ * repository that only ever met the throwing one would take its not-found
+ * branch on one deployment and return a serialised `null` on the other.
+ *
+ * It also carries the two hits nothing else produces: a result that is
+ * already a plain array, and a result that is an object with no
+ * `jsonSerialize()` — both of which the repository must normalise rather
+ * than fatal on.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class FixedResultObjectServiceFake extends ObjectService {
+
+	/**
+	 * How many reads were served — asserted on so a test cannot pass because
+	 * the repository never reached the store at all.
+	 *
+	 * @var int
+	 */
+	public int $findCalls = 0;
+
+	/**
+	 * Construct a read fake.
+	 *
+	 * @param mixed $result The value every `find()` answers with.
+	 */
+	public function __construct(private readonly mixed $result) {
+
+	}//end __construct()
+
+	/**
+	 * Answer with the configured result.
+	 *
+	 * @param string $id Object UUID.
+	 * @param string $register Register slug.
+	 * @param string $schema Schema slug.
+	 * @param bool $_rbac RBAC bypass flag.
+	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 *
+	 * @return mixed The configured result.
+	 */
+	public function find(
+		string $id = '',
+		string $register = '',
+		string $schema = '',
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+	) {
+		$this->findCalls++;
+		return $this->result;
+	}//end find()
+}//end class
+
+/**
+ * An ObjectService that refuses every write, the way a live OpenRegister
+ * refuses one it cannot satisfy.
+ *
+ * A refused write is not hypothetical here: OpenRegister enforces `required`
+ * and `enum` even on a schema declaring `hardValidation: false`, so a batch
+ * record carrying a status the schema does not list fails on save. The
+ * repository must convert that into a loud failure, never into a silent
+ * "saved".
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class RefusingObjectServiceFake extends ObjectService {
+
+	/**
+	 * The UUIDs a delete was attempted for, in order.
+	 *
+	 * @var array<int, string>
+	 */
+	public array $attemptedDeletes = [];
+
+	/**
+	 * Refuse the write.
+	 *
+	 * @param array $object Object data.
+	 * @param string $register Register slug.
+	 * @param string $schema Schema slug.
+	 * @param string|null $uuid Object UUID.
+	 * @param bool $_rbac RBAC bypass flag.
+	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 *
+	 * @return mixed Never returns.
+	 *
+	 * @throws RuntimeException Always.
+	 */
+	public function saveObject(
+		array $object = [],
+		string $register = '',
+		string $schema = '',
+		?string $uuid = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+	) {
+		throw new RuntimeException('ValidationException: property status is not one of the declared values');
+	}//end saveObject()
+
+	/**
+	 * Refuse the delete.
+	 *
+	 * @param string $uuid Object UUID.
+	 * @param string $register Register slug.
+	 * @param string $schema Schema slug.
+	 * @param bool $_rbac RBAC bypass flag.
+	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 *
+	 * @return bool Never returns.
+	 *
+	 * @throws RuntimeException Always.
+	 */
+	public function deleteObject(
+		string $uuid = '',
+		string $register = '',
+		string $schema = '',
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+	) {
+		$this->attemptedDeletes[] = $uuid;
+		throw new RuntimeException('The object store is unreachable');
+	}//end deleteObject()
+}//end class
+
+/**
+ * A logger that keeps what it was told, so a test can assert the record
+ * rather than a recorded expectation.
+ *
+ * A `createMock(LoggerInterface::class)` would satisfy the type hint while
+ * observing nothing, and the whole point of a swallowed failure is that the
+ * log line is the ONLY evidence it happened.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class RecordingLoggerFake extends AbstractLogger {
+
+	/**
+	 * Every call, as ['level' => string, 'message' => string, 'context' => array].
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	public array $records = [];
+
+	/**
+	 * Record one log call.
+	 *
+	 * @param mixed $level Log level.
+	 * @param string|Stringable $message Log message.
+	 * @param array<string, mixed> $context Structured context.
+	 *
+	 * @return void
+	 */
+	public function log($level, string|Stringable $message, array $context = []): void {
+		$this->records[] = [
+			'level' => (string)$level,
+			'message' => (string)$message,
+			'context' => $context,
+		];
+	}//end log()
+
+	/**
+	 * The records logged at one level.
+	 *
+	 * @param string $level Log level to filter on.
+	 *
+	 * @return array<int, array<string, mixed>> The matching records.
+	 */
+	public function recordsAt(string $level): array {
+		return array_values(
+			array_filter($this->records, static fn (array $record): bool => $record['level'] === $level)
+		);
+	}//end recordsAt()
 }//end class

@@ -173,6 +173,55 @@ class BatchStateServiceTest extends TestCase {
 	}//end testGetMaxFilesReturnsDefault()
 
 	/**
+	 * The legacy key still wins when the canonical one is unset.
+	 *
+	 * `batch.max_files_per_run` is the manifest-declared key; the legacy
+	 * `docudesk_batch_max_files` is kept as a one-release fallback so an admin
+	 * who set the old key before the rename does not silently get the built-in
+	 * default instead of their own limit. That fallback is only reachable when
+	 * the canonical key reads empty, which is why the two tests above never
+	 * enter it — and a fallback nothing exercises is a fallback nobody would
+	 * notice losing.
+	 *
+	 * @return void
+	 */
+	public function testGetMaxFilesFallsBackToTheLegacyKeyWhenTheCanonicalOneIsUnset(): void {
+		$this->mockAppConfig->method('getValueString')
+			->willReturnMap(
+				[
+					['docudesk', 'batch.max_files_per_run', '', false, ''],
+					['docudesk', 'docudesk_batch_max_files', '100', false, '250'],
+				]
+			);
+
+		$this->assertSame(
+			expected: 250,
+			actual: $this->service->getMaxFiles(),
+			message: 'An admin-set legacy limit was ignored in favour of the built-in default.'
+		);
+
+	}//end testGetMaxFilesFallsBackToTheLegacyKeyWhenTheCanonicalOneIsUnset()
+
+	/**
+	 * With neither key set, the in-class default is what app-config is asked
+	 * for and what comes back.
+	 *
+	 * @return void
+	 */
+	public function testGetMaxFilesUsesTheInClassDefaultWhenNeitherKeyIsSet(): void {
+		$this->mockAppConfig->method('getValueString')
+			->willReturnMap(
+				[
+					['docudesk', 'batch.max_files_per_run', '', false, ''],
+					['docudesk', 'docudesk_batch_max_files', '100', false, '100'],
+				]
+			);
+
+		$this->assertSame(expected: 100, actual: $this->service->getMaxFiles());
+
+	}//end testGetMaxFilesUsesTheInClassDefaultWhenNeitherKeyIsSet()
+
+	/**
 	 * Test createBatch stores a batch in cache with uploading status
 	 *
 	 * @return void
