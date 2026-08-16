@@ -200,6 +200,71 @@ class DocumentAgentService {
 	}//end editDocument()
 
 	#[McpTool(
+		name: 'addDocumentChart',
+		description: 'Add a bar, line or pie chart to a Word (.docx) file. The chart is a real chart the user '
+			. 'can select and resize in Word or Nextcloud Office, not a picture. Give it a type, a title, a list '
+			. 'of categories, and one or more series each carrying exactly one value per category (a pie chart '
+			. 'takes one series). Call readDocument first and pass back the version; pass an anchor to place the '
+			. 'chart after that paragraph, or omit it to append at the end. Charts need a .docx -- .odt is '
+			. 'refused by name. The file is tagged "Agent authored" and the previous version stays restorable.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'update'
+	)]
+	/**
+	 * Add a chart to a Word document.
+	 *
+	 * The chart is native DrawingML: the user can select, resize and restyle it in
+	 * the office suite. Its values are carried in the chart's own cache, which is
+	 * what every suite renders from -- so it draws correctly, but "Edit data" has
+	 * no worksheet to open, because no embedded workbook is written.
+	 *
+	 * Verified 2026-08-16 against a live ONLYOFFICE: rendering the same document
+	 * with and without the chart produced a 25,793-byte and a 51,777-byte PDF. The
+	 * chart is drawn, not skipped.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document to change.
+	 * @param array<string, mixed> $chart The chart: type, title, categories, series.
+	 * @param string $version The `version` returned by the preceding readDocument.
+	 * @param string $afterAnchor An anchor to place the chart after, or empty to append.
+	 * @param string $outputMode Empty for the configured default, or "sibling" to write a new file.
+	 *
+	 * @return array<string, mixed> The written file's id, name, path and version.
+	 *
+	 * @throws RuntimeException When the version is stale, the definition is invalid, or the write is refused.
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function addDocumentChart(
+		int $fileId,
+		array $chart,
+		string $version,
+		string $afterAnchor = '',
+		string $outputMode = ''
+	): array {
+		$anchor = null;
+		if ($afterAnchor !== '') {
+			$anchor = $afterAnchor;
+		}
+
+		$mode = null;
+		if ($outputMode !== '') {
+			$mode = $outputMode;
+		}
+
+		return $this->editSession->embedChartForAgent(
+			uid: $this->requireUid(),
+			fileId: $fileId,
+			chart: $chart,
+			version: $version,
+			afterAnchor: $anchor,
+			requestedMode: $mode
+		);
+
+	}//end addDocumentChart()
+
+	#[McpTool(
 		name: 'readDocumentMetadata',
 		description: 'Read a Word (.docx) or OpenDocument (.odt) file\'s document properties: title, subject, '
 			. 'creator, keywords and description. Use this before setDocumentMetadata: it returns the version '
