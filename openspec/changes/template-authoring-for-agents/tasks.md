@@ -6,8 +6,7 @@ Found while testing this change end-to-end on 2026-08-17. It blocks every task
 below, and it blocks the existing document-editing feature too.
 
 - [ ] Fix `PackageCodec` write so a written `.docx` parses on re-read
-- [ ] Make `editDocument` verify its own output before reporting success
-- [ ] Report per-edit outcomes, never a bare count of edits submitted
+- [ ] Verify the written package before reporting success, and report per-edit outcomes rather than a bare count of edits submitted
 
 Evidence, isolated with a control:
 
