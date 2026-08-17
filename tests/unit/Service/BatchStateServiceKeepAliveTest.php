@@ -17,6 +17,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\BatchStateRepository;
 use OCA\DocuDesk\Service\BatchStateService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -81,7 +82,8 @@ class BatchStateServiceKeepAliveTest extends TestCase {
 			appConfig: $mockAppConfig,
 			logger: $mockLogger,
 			userSession: $mockUserSession,
-			groupManager: $mockGroupManager
+			groupManager: $mockGroupManager,
+			repository: $this->createMock(BatchStateRepository::class)
 		);
 
 	}//end setUp()

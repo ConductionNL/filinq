@@ -20,6 +20,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\BatchStateRepository;
 use OCA\DocuDesk\Service\BatchStateService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -93,6 +94,18 @@ class BatchStateServiceTest extends TestCase {
 	private IGroupManager|MockObject $mockGroupManager;
 
 	/**
+	 * Mocked BatchStateRepository — the OpenRegister store of record.
+	 *
+	 * Left as a bare mock here on purpose: this class covers the cache-facing
+	 * behaviour of BatchStateService, so every test either hits the cache or
+	 * expects a miss, and the store answers null. The store-backed behaviour is
+	 * covered with real fakes in BatchStateServicePersistenceTest.
+	 *
+	 * @var BatchStateRepository|MockObject
+	 */
+	private BatchStateRepository|MockObject $mockRepository;
+
+	/**
 	 * Set up test environment
 	 *
 	 * @return void
@@ -100,6 +113,7 @@ class BatchStateServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
+		$this->mockRepository = $this->createMock(originalClassName: BatchStateRepository::class);
 		$this->mockCache = $this->createMock(originalClassName: ICache::class);
 		$this->mockAppConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
@@ -116,7 +130,8 @@ class BatchStateServiceTest extends TestCase {
 			appConfig: $this->mockAppConfig,
 			logger: $this->mockLogger,
 			userSession: $this->mockUserSession,
-			groupManager: $this->mockGroupManager
+			groupManager: $this->mockGroupManager,
+			repository: $this->mockRepository
 		);
 
 	}//end setUp()
@@ -156,6 +171,55 @@ class BatchStateServiceTest extends TestCase {
 		$this->assertSame(expected: 100, actual: $result);
 
 	}//end testGetMaxFilesReturnsDefault()
+
+	/**
+	 * The legacy key still wins when the canonical one is unset.
+	 *
+	 * `batch.max_files_per_run` is the manifest-declared key; the legacy
+	 * `docudesk_batch_max_files` is kept as a one-release fallback so an admin
+	 * who set the old key before the rename does not silently get the built-in
+	 * default instead of their own limit. That fallback is only reachable when
+	 * the canonical key reads empty, which is why the two tests above never
+	 * enter it — and a fallback nothing exercises is a fallback nobody would
+	 * notice losing.
+	 *
+	 * @return void
+	 */
+	public function testGetMaxFilesFallsBackToTheLegacyKeyWhenTheCanonicalOneIsUnset(): void {
+		$this->mockAppConfig->method('getValueString')
+			->willReturnMap(
+				[
+					['docudesk', 'batch.max_files_per_run', '', false, ''],
+					['docudesk', 'docudesk_batch_max_files', '100', false, '250'],
+				]
+			);
+
+		$this->assertSame(
+			expected: 250,
+			actual: $this->service->getMaxFiles(),
+			message: 'An admin-set legacy limit was ignored in favour of the built-in default.'
+		);
+
+	}//end testGetMaxFilesFallsBackToTheLegacyKeyWhenTheCanonicalOneIsUnset()
+
+	/**
+	 * With neither key set, the in-class default is what app-config is asked
+	 * for and what comes back.
+	 *
+	 * @return void
+	 */
+	public function testGetMaxFilesUsesTheInClassDefaultWhenNeitherKeyIsSet(): void {
+		$this->mockAppConfig->method('getValueString')
+			->willReturnMap(
+				[
+					['docudesk', 'batch.max_files_per_run', '', false, ''],
+					['docudesk', 'docudesk_batch_max_files', '100', false, '100'],
+				]
+			);
+
+		$this->assertSame(expected: 100, actual: $this->service->getMaxFiles());
+
+	}//end testGetMaxFilesUsesTheInClassDefaultWhenNeitherKeyIsSet()
 
 	/**
 	 * Test createBatch stores a batch in cache with uploading status
@@ -297,4 +361,87 @@ class BatchStateServiceTest extends TestCase {
 		$this->service->deleteBatch(batchId: 'abc-123');
 
 	}//end testDeleteBatchCallsCacheRemove()
+
+	/**
+	 * Test getBatch returns null when the cached payload is not decodable as an array.
+	 *
+	 * A distributed cache entry can be truncated, half-written or written by an
+	 * older release, and `json_decode()` then yields a string, a scalar or null
+	 * rather than the batch record. Returning that to a caller would hand the
+	 * batch endpoints something they index as an array, and the keep-alive write
+	 * at the end of the method would refresh the corrupt entry's TTL for as long
+	 * as anything kept polling it.
+	 *
+	 * ⚠️ THERE IS NO SESSION USER IN THIS TEST, AND THAT IS THE WHOLE POINT.
+	 * The first version of this test stubbed a session user, and it PASSED with
+	 * the `is_array()` guard deleted — because a decoded scalar has no
+	 * `userId`, so the ownership check below refused it and returned null for a
+	 * completely different reason, and `assertNull` cannot tell the two nulls
+	 * apart. With no session user the ownership block is skipped entirely, so
+	 * the corrupt guard is the only thing left that can return null. Verified
+	 * both ways: with the guard disabled this test fails with
+	 * `ICache::set('docudesk_batch_abc-123', '"not-a-batch-record"', 7200):
+	 * mixed was not expected to be called` — i.e. it prints the corrupt value
+	 * being written back.
+	 *
+	 * @return void
+	 */
+	public function testGetBatchReturnsNullOnCorruptCachePayload(): void {
+		$this->mockUserSession->method('getUser')->willReturn(null);
+
+		// Valid JSON, but a scalar — exactly what a truncated or legacy entry
+		// decodes to. A non-JSON string exercises the same branch.
+		$this->mockCache->method('get')->willReturn('"not-a-batch-record"');
+
+		// The keep-alive write must NOT happen for a corrupt entry.
+		$this->mockCache->expects($this->never())->method('set');
+
+		$result = $this->service->getBatch(batchId: 'abc-123');
+
+		$this->assertNull(actual: $result);
+
+	}//end testGetBatchReturnsNullOnCorruptCachePayload()
+
+	/**
+	 * Test the configured cache TTL is the one actually written to the cache.
+	 *
+	 * `batch.cache_ttl_seconds` is the canonical manifest-declared key. A config
+	 * key that is declared and documented but read nowhere is a defect this
+	 * codebase has paid for before, so this asserts the value reaches
+	 * `ICache::set()` rather than asserting that the getter was called: the
+	 * in-class `CACHE_TTL` default is 7200, so a service that ignored the
+	 * override would still write a plausible-looking number here. Verified by
+	 * disabling the override branch — the test then reports
+	 * "Failed asserting that 7200 is identical to 900".
+	 *
+	 * @return void
+	 */
+	public function testConfiguredCacheTtlIsUsedWhenSet(): void {
+		$this->mockAppConfig->method('getValueString')
+			->willReturnMap(
+				[
+					['docudesk', 'batch.cache_ttl_seconds', '', false, '900'],
+				]
+			);
+
+		$writtenTtl = null;
+		$this->mockCache->expects($this->once())
+			->method('set')
+			->willReturnCallback(
+				function (string $key, string $value, int $ttl) use (&$writtenTtl): bool {
+					$writtenTtl = $ttl;
+					return true;
+				}
+			);
+
+		$this->service->createBatch(userId: 'user1', files: []);
+
+		$this->assertSame(
+			expected: 900,
+			actual: $writtenTtl,
+			message: 'The configured batch.cache_ttl_seconds did not reach ICache::set(); '
+				. 'a value of 7200 means the in-class CACHE_TTL default was written instead.'
+		);
+
+	}//end testConfiguredCacheTtlIsUsedWhenSet()
 }//end class

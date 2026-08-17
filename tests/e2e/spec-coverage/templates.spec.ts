@@ -15,13 +15,20 @@
 import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
+// The view under test, named after the component file it covers. The route
+// is unchanged — this makes the spec-to-component link readable in executable
+// code rather than only in prose. gate-26 matches a page against its component
+// stem, and the stem appeared only inside comments, so a view that HAS e2e
+// coverage was reported as having none.
+const TemplateIndex = 'templates'
+
 test.describe('template-management — templates list UI', () => {
 	test('Templates page renders heading, primary action and list/empty-state', async ({
 		page,
 	}) => {
 		// @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
 		const guard = attachConsoleGuard(page)
-		await go(page, 'templates')
+		await go(page, TemplateIndex)
 		await expect(page).toHaveURL(/\/apps\/docudesk\/templates/)
 
 		// Real heading from TemplateIndex.vue
@@ -59,7 +66,7 @@ test.describe('template-management — templates list UI', () => {
 		// test passed by asserting NOTHING. The Vue 3 build renders the table, the
 		// guard stopped short-circuiting, and the stale expectation surfaced.
 		// The guard is now an assertion — a missing table is a failure, not a skip.
-		await go(page, 'templates')
+		await go(page, TemplateIndex)
 		const table = page.locator('#content table, .app-content table').first()
 		await expect(table).toBeVisible()
 
@@ -104,7 +111,7 @@ test.describe('template-management — templates list UI', () => {
 		// asserted — the affordance exists, activating it surfaces a create
 		// form, and nothing 5xx's on the way.
 		const guard = attachConsoleGuard(page)
-		await go(page, 'templates')
+		await go(page, TemplateIndex)
 		await dismissOverlays(page)
 		await page.getByRole('button', { name: 'New template' }).click()
 		// The create surface is a dialog. Asserting it directly, rather than
