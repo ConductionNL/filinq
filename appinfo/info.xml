@@ -82,6 +82,16 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
     <background-jobs>
         <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
     </background-jobs>
+    <!--
+        info.xsd fixes the order of these elements: background-jobs, repair-steps,
+        two-factor-providers, commands, settings, activity, dashboard,
+        fulltextsearch, navigations. <commands> therefore belongs here, before
+        <settings> — not after <navigations>, where it fails validation with
+        "Element 'commands': This element is not expected."
+    -->
+    <commands>
+        <command>OCA\DocuDesk\Command\OfficeProbeCommand</command>
+    </commands>
     <settings>
         <admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
         <admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
@@ -94,7 +104,4 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
             <icon>app.svg</icon>
         </navigation>
     </navigations>
-    <commands>
-        <command>OCA\DocuDesk\Command\OfficeProbeCommand</command>
-    </commands>
 </info>

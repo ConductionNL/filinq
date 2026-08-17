@@ -111,7 +111,14 @@ class OfficeProbeCommand extends Command {
 	/**
 	 * Define the command.
 	 *
+	 * Registers `docudesk:office:probe` — the verification step the setup guide
+	 * already instructed operators to run. The requirement below forbids inferring
+	 * availability from installation, which is only enforceable if the probe the
+	 * documentation names actually exists.
+	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/office-suite-portability/spec.md#requirement-wopi-availability-must-be-probed-never-inferred-from-installation
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'docudesk:office:probe')
@@ -122,10 +129,17 @@ class OfficeProbeCommand extends Command {
 	/**
 	 * Run the probe.
 	 *
+	 * Probes each configured suite on its own and prints one line per suite. No
+	 * suite's verdict is derived from another's — that is the failure the
+	 * requirement below records, where an ONLYOFFICE measurement was reported under
+	 * a Euro-Office heading.
+	 *
 	 * @param InputInterface  $input  The console input.
 	 * @param OutputInterface $output The console output.
 	 *
 	 * @return int The exit code.
+	 *
+	 * @spec openspec/specs/office-suite-portability/spec.md#requirement-a-suite-must-not-be-claimed-as-supported-until-it-has-been-run
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$only = $input->getOption('suite');
