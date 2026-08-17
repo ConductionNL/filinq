@@ -1,5 +1,39 @@
 # Tasks
 
+## 0. 🔴 FIRST: `editDocument` writes a file it cannot read back
+
+Found while testing this change end-to-end on 2026-08-17. It blocks every task
+below, and it blocks the existing document-editing feature too.
+
+- [ ] Fix `PackageCodec` write so a written `.docx` parses on re-read
+- [ ] Make `editDocument` verify its own output before reporting success
+- [ ] Report per-edit outcomes, never a bare count of edits submitted
+
+Evidence, isolated with a control:
+
+| file | written by `editDocument`? | `blockCount` on re-read |
+|---|---|---|
+| 25151 | no | **8** |
+| 25335 | yes | **0** |
+
+File 25335 on disk holds **5 `<w:p>` elements and the visible text
+"Quotation"** — so the bytes are not empty, and `readDocument` is not broken.
+The written package is malformed in a way the codec's own scanner cannot span.
+
+⚠️ It reported SUCCESS while doing this: "5 anchors applied, new version
+`ebeb03fa…`", when one line of five had landed. The agent caught it only
+because it read the document back and disbelieved the tool.
+
+Acceptance criteria:
+- Round-trip is the test: write a document, re-read it, and assert the block
+  count and text match what was written. A write whose result cannot be read is
+  worse than a refusal — it destroys the document AND reports success.
+- ⚠️ A zero-block document is UNRECOVERABLE by the agent: every edit anchors to
+  an existing block, so once a file reads as zero blocks nothing can ever be
+  written to it again. The corruption is terminal, not cosmetic.
+- Assert the per-edit outcome is reported. "5 applied" for one applied edit is
+  the failure that hid this.
+
 ## 1. Apply a template to the document already open
 
 - [ ] Add `docudesk.applyTemplateToDocument(fileId, templateId, values)` rendering through the existing engine and writing via `EditSessionService`
