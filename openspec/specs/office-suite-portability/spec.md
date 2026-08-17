@@ -110,9 +110,20 @@ Measured failure, 2026-08-16: the portability work ran
 `onlyoffice/documentserver`, labelled it "Euro-Office / ONLYOFFICE" throughout its
 documentation, compose file and pull-request text, and justified the substitution by
 citing ADR-087 — which is where the "Euro-Office is an ONLYOFFICE fork" claim had
-been introduced by the same programme days earlier. **Euro-Office was never
-installed or run.** The WOPI 404→200 flip, the anchor round-trip and the chart
-render are all ONLYOFFICE results.
+been introduced by the same programme days earlier. **At the time of that
+publication Euro-Office had never been installed or run**, and the WOPI 404→200
+flip, the anchor round-trip and the chart render published under its name were all
+ONLYOFFICE results.
+
+Later the same day Euro-Office WAS started and probed on its own image
+(`ghcr.io/euro-office/documentserver`), with its own connector app and its own
+verification run — recorded in `docs/office-suites/eurooffice.md`. That does not
+retroactively support the earlier claims, and it does not transfer the ONLYOFFICE
+anchor round-trip or chart-fidelity results, which remain unrepeated on
+Euro-Office and are listed there as unverified. It is stated here because leaving
+"never installed or run" standing after the product has been run would be the same
+defect in the opposite direction: a document reporting something other than what
+was measured.
 
 #### Scenario: A measurement names the product it was taken on
 

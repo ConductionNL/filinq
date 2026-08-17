@@ -15,7 +15,7 @@ for another.
 | Suite | Page | Shape | Sidecar | Verified |
 |---|---|---|---|---|
 | ONLYOFFICE | [onlyoffice.md](onlyoffice.md) | WOPI host + browser editor | `docudesk-onlyoffice` :8092 | ✅ |
-| Euro-Office | [eurooffice.md](eurooffice.md) | WOPI host + browser editor | `docudesk-eurooffice` :8093 | ⚠️ server yes, connector no |
+| Euro-Office | [eurooffice.md](eurooffice.md) | WOPI host + browser editor | `docudesk-eurooffice` :8093 | ✅ server + connector; anchors/charts **not** repeated here |
 | Collabora Online | [collabora.md](collabora.md) | WOPI host + browser editor | `docudesk-collabora` :9980 | ✅ |
 | LibreOffice | [libreoffice.md](libreoffice.md) | **converter only** — no WOPI, no editor | `docudesk-libreoffice` :8094 | ✅ as converter |
 
