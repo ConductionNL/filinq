@@ -26,7 +26,7 @@ Two of the four clauses already hold, and were verified rather than assumed:
 > narrower evidence would have supported the claim for the wrong reason.
 
 So the gap is not the architecture. It is that **the portability claim has never been
-exercised**, and that ADR-087 §3 names the exact trap: *"Euro-Office ships WOPI
+exercised**, and that ADR-087 §3 names the exact trap: *"ONLYOFFICE ships WOPI
 disabled, so 'the app is installed' is not the probe — a successful `CheckFileInfo`
 is."* A codebase with no probe at all cannot make that distinction, and the failure
 mode is the one this project keeps meeting — a capability that reports available and
@@ -45,7 +45,7 @@ cannot reproduce the environment the claim is about.
 
 - **`OfficeSuiteCapabilityService`** probing WOPI by issuing a real `CheckFileInfo`
   and treating anything short of a well-formed success as *absent*. Installed-but-
-  disabled resolves absent, which is Euro-Office's shipped default.
+  disabled resolves absent, which is ONLYOFFICE's shipped default.
 - The probe result is surfaced as a capability so the feature degrades **visibly**
   per ADR-075 §4, rather than failing at use time.
 - **A conformance test locking §5**: no `lib/` or `src/` path may name a suite's app
@@ -54,9 +54,9 @@ cannot reproduce the environment the claim is about.
   `onlyoffice/documentserver` and `collabora/code`, each behind its own profile.
   Deliberately NOT added to the fleet `.github/docker-compose.yml`: an office suite
   is a DocuDesk concern, and `.github` is a separate repository.
-- **`docs/office-suite-setup.md`** covering Collabora **and** Euro-Office/ONLYOFFICE
+- **`docs/office-suite-setup.md`** covering Collabora **and** ONLYOFFICE
   end to end — bring-up, connector configuration, the `wopi.enable` default that
-  makes Euro-Office look installed-but-inert, and how to verify with the probe rather
+  makes ONLYOFFICE look installed-but-inert, and how to verify with the probe rather
   than by eye.
 - **The measurement ADR-087 asks for**: open a `.docx` in a non-Collabora suite, save
   it through that suite, re-read it with `PackageCodec`, and record whether

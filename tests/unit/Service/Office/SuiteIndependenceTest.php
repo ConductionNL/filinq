@@ -169,6 +169,37 @@ class SuiteIndependenceTest extends TestCase {
 	}//end testProseIsExemptButIdentifiersOnWordyLinesAreNot()
 
 	/**
+	 * REQ: the suite-registry exemption is narrow and must be declared.
+	 *
+	 * Without a control, an exemption becomes the thing everyone reaches for. This
+	 * asserts that the marker is required — a file naming a suite app id without
+	 * declaring itself a registry is still flagged.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/office-suite-portability/spec.md
+	 */
+	public function testTheSuiteRegistryExemptionMustBeDeclared(): void {
+		$withoutMarker = tempnam(sys_get_temp_dir(), 'reg') . '.php';
+		file_put_contents($withoutMarker, "<?php\n\$app = 'onlyoffice';\n");
+
+		$withMarker = tempnam(sys_get_temp_dir(), 'reg') . '.php';
+		file_put_contents(
+			$withMarker,
+			"<?php\n/** @suite-registry enumerates suites to probe each separately */\n\$app = 'onlyoffice';\n"
+		);
+
+		$flagged = $this->scan(file: new SplFileInfo($withoutMarker));
+		$exempt  = $this->scan(file: new SplFileInfo($withMarker));
+
+		unlink($withoutMarker);
+		unlink($withMarker);
+
+		$this->assertCount(1, $flagged, 'a file without the marker must still be flagged');
+		$this->assertSame([], $exempt, 'a declared suite registry is exempt');
+	}//end testTheSuiteRegistryExemptionMustBeDeclared()
+
+	/**
 	 * Scan one file for suite app ids in executable code.
 	 *
 	 * Uses PHP's own tokeniser rather than a regex, so a comment is identified the
@@ -182,6 +213,21 @@ class SuiteIndependenceTest extends TestCase {
 	private function scan(SplFileInfo $file): array {
 		$contents = (string)file_get_contents($file->getPathname());
 		$path     = $file->getPathname();
+
+		// A file may declare itself a SUITE REGISTRY: something whose job is to
+		// enumerate suites, such as the per-suite probe command. Naming suites is
+		// what it is for.
+		//
+		// The exemption is deliberately narrow and must be DECLARED in the file,
+		// with a reason, so it cannot be acquired by accident. What it permits is
+		// enumeration; what it must never permit is a CAPABILITY that only works
+		// when a named suite is present, which is what ADR-087 §5 bans.
+		//
+		// Keeping the marker in-file also means the exempt set is greppable:
+		//   grep -rn '@suite-registry' lib/ src/
+		if (str_contains($contents, '@suite-registry') === true) {
+			return [];
+		}
 
 		if ($file->getExtension() === 'php') {
 			return $this->scanPhp(contents: $contents, path: $path);

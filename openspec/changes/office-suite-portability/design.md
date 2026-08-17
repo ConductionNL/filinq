@@ -55,7 +55,7 @@ return (`BaseFileName`, `Size`).
 
 Each weaker check was considered and rejected:
 
-- *App id enabled* — Euro-Office ships `wopi.enable: false`; installed proves nothing.
+- *App id enabled* — ONLYOFFICE ships `wopi.enable: false`; installed proves nothing.
 - *Port reachable* — a running document server with WOPI off answers the port.
 - *Any 2xx* — an error page or a login redirect can be a 200.
 

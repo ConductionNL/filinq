@@ -7,8 +7,7 @@ request and treating only a well-formed success as *available*. The presence of 
 office app — its app id being enabled, its container running, its port answering —
 MUST NOT be accepted as evidence.
 
-This is not a hypothetical distinction. Euro-Office ships `wopi.enable` **false** in
-`local.json`, so an installed, running, reachable Euro-Office serves no WOPI at all.
+This is not a hypothetical distinction. ONLYOFFICE ships `wopi.enable` **false** by default, so an installed, running, reachable ONLYOFFICE serves no WOPI at all.
 An "is the app installed" check reports available and every subsequent editing
 session fails at use time.
 
@@ -21,7 +20,7 @@ and fails in the hands of a user.
 #### Scenario: An installed suite with WOPI disabled resolves absent
 
 - **GIVEN** an office suite app is installed and enabled
-- **AND** its WOPI endpoint is disabled, as Euro-Office ships by default
+- **AND** its WOPI endpoint is disabled, as ONLYOFFICE ships by default
 - **WHEN** the capability is probed
 - **THEN** the capability MUST resolve absent
 - **AND** the reason MUST record that the probe failed, not that the app was missing
@@ -111,11 +110,11 @@ failure this requirement exists to prevent.
 
 ### Requirement: Both supported suites MUST be reproducibly documented
 
-The repository MUST document bring-up for Collabora **and** Euro-Office/ONLYOFFICE:
+The repository MUST document bring-up for Collabora **and** ONLYOFFICE:
 how to start each, how to connect it to Nextcloud, and how to confirm it works using
 the capability probe rather than by looking at the admin UI.
 
-The Euro-Office documentation MUST state that WOPI is disabled by default and show
+The ONLYOFFICE documentation MUST state that WOPI is disabled by default and show
 how to enable it. Omitting that leaves a reader with a running suite, a green admin
 page, and a feature that does not work — which is the exact confusion ADR-087 §3
 calls out.
