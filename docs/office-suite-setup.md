@@ -250,14 +250,22 @@ them is a sovereignty and support decision, not a capability one.
 ### What DocuDesk itself can edit, which is less
 
 🔴 The table above is what the *suite* can open. DocuDesk's own in-package codec
-currently edits **`docx` and `odt` only**. Spreadsheets and presentations have no
-codec yet: their block model is a cell and a slide, not a paragraph, and giving
-them paragraph anchors would produce anchors that resolve to nothing. That work
-is specified in `multi-format-editing-tools`.
+edits **`docx` and `odt`**, and the two are no longer equal only in text:
 
-So for an agent editing a document today, the effective answer is `docx` and
-`odt` on any suite — and the table tells you which types are worth building the
-remaining codecs for on the suite you actually run.
+| | Read | Edit text | Style & layout | Headings |
+|---|:---:|:---:|:---:|:---:|
+| `docx` | ✅ | ✅ | ✅ | ✅ |
+| `odt` | ✅ | ✅ | ✅ (except `list`) | ✅ |
+
+⚠️ `list` is refused on `.odt`, by name rather than silently. An ODF list is a
+`<text:list>` element *wrapping* the paragraph, not a property of it, so turning
+one on restructures the document instead of restyling a block.
+
+Spreadsheets and presentations still have no codec: their block model is a cell
+and a slide, not a paragraph, and giving them paragraph anchors would produce
+anchors that resolve to nothing. That work is specified in
+`multi-format-editing-tools`, and the suite table above tells you which types are
+worth building it for on the suite you actually run.
 
 ### Re-running the probe
 

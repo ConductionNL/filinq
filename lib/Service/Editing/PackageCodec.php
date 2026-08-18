@@ -361,6 +361,69 @@ class PackageCodec {
 	}//end resolveEdits()
 
 	/**
+	 * An ODF automatic style minted by the current span rewrite, awaiting
+	 * injection into `content.xml`.
+	 *
+	 * @var string|null
+	 */
+	private ?string $pendingOdfStyle = null;
+
+	/**
+	 * Apply a style edit, capturing any ODF automatic style it mints.
+	 *
+	 * @param string $markup The block markup.
+	 * @param array  $edit   The edit.
+	 * @param string $format The package family.
+	 * @param string $xml    The part XML, used to keep minted names unique.
+	 *
+	 * @return string The rewritten block markup.
+	 *
+	 * @spec openspec/specs/document-rich-editing/spec.md
+	 */
+	private function applyStyleToSpan(string $markup, array $edit, string $format, string $xml): string {
+		// Unique per document: a name that collided with an existing automatic
+		// style would silently restyle unrelated blocks that reference it.
+		$styleName = 'DdAgent' . (substr_count($xml, '<style:style') + 1);
+
+		$result = $this->styles->applyStyle(
+			markup: $markup,
+			style: $edit['style'],
+			format: $format,
+			styleName: $styleName
+		);
+
+		$this->pendingOdfStyle = $result['automaticStyle'];
+
+		return $result['markup'];
+	}//end applyStyleToSpan()
+
+	/**
+	 * Insert an automatic style definition into `content.xml`.
+	 *
+	 * @param string $xml        The part XML.
+	 * @param string $definition The `<style:style>` element.
+	 *
+	 * @return string The part XML with the definition in place.
+	 */
+	private function injectAutomaticStyle(string $xml, string $definition): string {
+		if (str_contains($xml, '</office:automatic-styles>') === true) {
+			return str_replace('</office:automatic-styles>', $definition . '</office:automatic-styles>', $xml);
+		}
+
+		// No automatic-styles section at all — mint one immediately before the
+		// body, which is where ODF requires it.
+		if (str_contains($xml, '<office:body') === true) {
+			return str_replace(
+				'<office:body',
+				'<office:automatic-styles>' . $definition . '</office:automatic-styles><office:body',
+				$xml
+			);
+		}
+
+		return $xml;
+	}//end injectAutomaticStyle()
+
+	/**
 	 * Rewrite one span according to one edit.
 	 *
 	 * @param string $xml The part XML.
@@ -372,6 +435,7 @@ class PackageCodec {
 	 */
 	private function rewriteSpan(string $xml, array $span, array $edit, string $format): string {
 		$markup = substr($xml, $span[0], $span[1]);
+		$this->pendingOdfStyle = null;
 
 		$replacement = match ($edit['action']) {
 			self::ACTION_DELETE => '',
@@ -380,15 +444,26 @@ class PackageCodec {
 				text: $edit['text'],
 				format: $format
 			),
-			self::ACTION_STYLE => $this->styles->applyStyle(
+			self::ACTION_STYLE => $this->applyStyleToSpan(
 				markup: $markup,
-				style: $edit['style'],
-				format: $format
+				edit: $edit,
+				format: $format,
+				xml: $xml
 			),
 			default => $this->setText(markup: $markup, text: $edit['text'], format: $format),
 		};
 
-		return substr_replace($xml, $replacement, $span[0], $span[1]);
+		$xml = substr_replace($xml, $replacement, $span[0], $span[1]);
+
+		// An ODF automatic style is document-level: the block only POINTS at it,
+		// so a definition that never lands leaves the block referencing a style
+		// that does not exist and the restyle silently does nothing.
+		if ($this->pendingOdfStyle !== null) {
+			$xml = $this->injectAutomaticStyle(xml: $xml, definition: $this->pendingOdfStyle);
+			$this->pendingOdfStyle = null;
+		}
+
+		return $xml;
 
 	}//end rewriteSpan()
 
