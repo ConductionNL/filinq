@@ -157,6 +157,13 @@ class DocumentController extends Controller {
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC,
+	 * which is ON by default. This method passes no `_rbac: false`, and none
+	 * of the services it reaches does either — the 22 real opt-outs in this
+	 * app are in the dossier, policy, consent-validator and custom-dictionary
+	 * paths, none of which this endpoint touches. The data layer is the guard,
+	 * so an id belonging to another tenant returns nothing.
 	 */
 	public function preview(): JSONResponse {
 		try {
@@ -222,6 +229,13 @@ class DocumentController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 *
+	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC,
+	 * which is ON by default. This method passes no `_rbac: false`, and none
+	 * of the services it reaches does either — the 22 real opt-outs in this
+	 * app are in the dossier, policy, consent-validator and custom-dictionary
+	 * paths, none of which this endpoint touches. The data layer is the guard,
+	 * so an id belonging to another tenant returns nothing.
 	 */
 	public function generateBulk(): JSONResponse {
 		try {

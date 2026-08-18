@@ -48,6 +48,21 @@ use Throwable;
  * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
  */
 class NativeSigningProvider implements SigningProviderInterface {
+
+	/**
+	 * A withdrawn signing session.
+	 *
+	 * @var string
+	 */
+	public const STATUS_CANCELLED = 'cancelled';
+
+	/**
+	 * A signing session every signatory has signed.
+	 *
+	 * @var string
+	 */
+	public const STATUS_COMPLETED = 'completed';
+
 	/**
 	 * Constructor
 	 *
@@ -211,23 +226,41 @@ class NativeSigningProvider implements SigningProviderInterface {
 	}//end downloadSignedDocument()
 
 	/**
-	 * Cancel a native signing session
+	 * Withdraw a native signing session.
 	 *
-	 * @param string $externalId The signing session identifier
+	 * Idempotent on an already-cancelled session — a double-click, not an error.
+	 * Refuses a COMPLETED one: the signatures exist and the process is over, so
+	 * accepting it would let the UI show "cancelled" over a document that is in fact
+	 * signed, which is a claim the system cannot make good on.
 	 *
-	 * @return bool True if cancelled
+	 * @param string $externalId The signing session identifier.
 	 *
-	 * @throws RuntimeException If session not found
+	 * @return void
 	 *
-	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
+	 * @throws RuntimeException If the session is not found, or is already completed.
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 	 */
-	public function cancelSigning(string $externalId): bool {
+	public function cancelSigning(string $externalId): void {
 		$session = $this->loadSessionByExternalId(externalId: $externalId);
 
-		$session['status'] = 'cancelled';
-		$this->persistSession(session: $session);
+		// Already withdrawn: a double-click, not an error, and nothing to re-do.
+		if (($session['status'] ?? '') === self::STATUS_CANCELLED) {
+			return;
+		}
 
-		return true;
+		// A completed request cannot be withdrawn. The signatures exist and the
+		// process is over; accepting this would let the UI show "cancelled" over a
+		// document that is in fact signed — a claim the system cannot make good on.
+		if (($session['status'] ?? '') === self::STATUS_COMPLETED) {
+			throw new RuntimeException(
+				'This signing request is already completed and cannot be withdrawn. '
+				. 'Its existing signatures are unaffected.'
+			);
+		}
+
+		$session['status'] = self::STATUS_CANCELLED;
+		$this->persistSession(session: $session);
 	}//end cancelSigning()
 
 	/**

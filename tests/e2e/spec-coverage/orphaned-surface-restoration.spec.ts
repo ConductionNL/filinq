@@ -48,6 +48,11 @@
 import { test, expect, type Page } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
+// The views under test, named after the component files they cover. Routes are
+// unchanged — this makes the spec-to-component link readable in executable code
+// rather than only in prose (gate-26 matches a page against its component stem).
+const CorrespondenceIndex = 'correspondence'
+
 test.describe('orphaned-surface-restoration — correspondence', () => {
 	test('Correspondence is reachable via the left navigation and renders its form', async ({
 		page,
@@ -68,7 +73,7 @@ test.describe('orphaned-surface-restoration — correspondence', () => {
 	})
 
 	test('Correspondence deep-links directly', async ({ page }) => {
-		await go(page, 'correspondence')
+		await go(page, CorrespondenceIndex)
 		await expect(page).toHaveURL(/\/apps\/docudesk\/correspondence/)
 		await expect(
 			page.getByRole('heading', { name: 'Letters & correspondence' }),
@@ -164,7 +169,23 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		const firstRow = page
 			.locator('#content table tbody tr, .app-content table tbody tr')
 			.first()
-		if (!(await firstRow.isVisible().catch(() => false))) {
+		// ⚠️ POLL — do not put `isVisible()` back here. It is an IMMEDIATE
+		// predicate whose `timeout` option is ignored, so on the tick after
+		// `go()` it answers "no" before the SPA has fetched anything, and this
+		// guard then skips with the reason "no signing requests seeded" when the
+		// truth is "I looked too early". A skip whose stated reason is untrue is
+		// an invisible pass — worse than a failure, because the count looks
+		// deliberate and the reason looks investigated.
+		//
+		// This block is unreachable TODAY (the `test.fixme` above short-circuits
+		// the test), which is exactly why it is worth fixing now: whoever deletes
+		// that fixme when #339 lands would otherwise inherit a silent skip one
+		// line below a comment reading "do NOT weaken the assertion".
+		const hasRow = await firstRow
+			.waitFor({ state: 'visible', timeout: 10_000 })
+			.then(() => true)
+			.catch(() => false)
+		if (!hasRow) {
 			test.skip(
 				true,
 				'no signing requests seeded on this environment — nothing to open a detail for',
@@ -186,12 +207,15 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		// surface renders without erroring.
 		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/.+/)
 		await expect(page.locator('#content, .app-content').first()).toBeVisible()
-		if (
-			await verifyButton
-				.first()
-				.isVisible()
-				.catch(() => false)
-		) {
+		// Same reasoning as above: poll, so "absent" means absent rather than
+		// "not painted yet". A short budget — absence here is legitimate and is
+		// the expected branch whenever the request carries no documentFileId.
+		const hasVerify = await verifyButton
+			.first()
+			.waitFor({ state: 'visible', timeout: 5_000 })
+			.then(() => true)
+			.catch(() => false)
+		if (hasVerify) {
 			await expect(verifyButton.first()).toBeEnabled()
 		}
 	})
