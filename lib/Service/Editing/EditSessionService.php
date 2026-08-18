@@ -652,7 +652,14 @@ class EditSessionService {
 	 * @throws RuntimeException When a refusal applies.
 	 */
 	private function refuseIfGuarded(File $file): void {
-		$refusal = ($this->guard->signatureRefusal(file: $file) ?? $this->guard->anonymisationRefusal(file: $file));
+		// Format first. It is the cheapest check and the only one that answers
+		// "should this file EVER be content-edited" — a macro-bearing package
+		// is refused before any question about signatures or anonymisation,
+		// because those are about this document's state and this is about the
+		// bytes being a code-execution vector at all.
+		$refusal = ($this->guard->formatRefusal(file: $file)
+			?? $this->guard->signatureRefusal(file: $file)
+			?? $this->guard->anonymisationRefusal(file: $file));
 		if ($refusal !== null) {
 			throw new RuntimeException($refusal);
 		}
