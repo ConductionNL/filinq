@@ -120,12 +120,10 @@ class EditSessionService {
 	 * Constructor.
 	 *
 	 * @param IRootFolder $rootFolder The Nextcloud root folder.
-	 * @param ILockManager $lockManager The file lock manager.
-	 * @param PackageCodec $codec The document package codec.
-	 * @param AgentArtefactMarker $marker The ADR-088 artefact marker.
+	 * @param DocumentCodecs $codecs The per-kind document codecs.
+	 * @param GuardedWriter $writer The guarded read-modify-write.
 	 * @param DocumentGuard $guard The standing refusals.
 	 * @param IAppConfig $appConfig App configuration.
-	 * @param LoggerInterface $logger Logger for diagnostics.
 	 * @param PackageMetadataCodec $metadata The document metadata codec.
 	 * @param ChartCodec $charts The chart embedding codec.
 	 *
@@ -133,12 +131,10 @@ class EditSessionService {
 	 */
 	public function __construct(
 		private readonly IRootFolder $rootFolder,
-		private readonly ILockManager $lockManager,
-		private readonly PackageCodec $codec,
-		private readonly AgentArtefactMarker $marker,
+		private readonly DocumentCodecs $codecs,
+		private readonly GuardedWriter $writer,
 		private readonly DocumentGuard $guard,
 		private readonly IAppConfig $appConfig,
-		private readonly LoggerInterface $logger,
 		private readonly PackageMetadataCodec $metadata = new PackageMetadataCodec(),
 		private readonly ChartCodec $charts = new ChartCodec(),
 	) {
@@ -164,30 +160,62 @@ class EditSessionService {
 	 */
 	public function openForAgent(string $uid, int $fileId): array {
 		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
-		$read = $this->codec->readBlocks(
+		$read = $this->codecs->text->readBlocks(
 			packageBytes: $this->readBytes(file: $file),
 			extension: $file->getExtension()
 		);
 
-		$blocks = $read['blocks'];
-		$truncated = (count($blocks) > self::MAX_BLOCKS);
+		return $this->openEnvelope(
+			uid: $uid,
+			file: $file,
+			items: $read['blocks'],
+			countKey: 'blockCount',
+			itemsKey: 'blocks',
+			extra: ['format' => $read['format']]
+		);
+	}//end openForAgent()
+
+	/**
+	 * The common shape of every "open for an agent" read.
+	 *
+	 * All three reads do the same four things — resolve, read, bound, describe
+	 * — and differ only in what they call the items. Writing that out three
+	 * times is how the truncation rule ends up applied in two of them.
+	 *
+	 * @param string             $uid       The acting user id.
+	 * @param File               $file      The resolved file.
+	 * @param array<int, mixed>  $items     Everything the codec read.
+	 * @param string             $countKey  The envelope key for the total count.
+	 * @param string             $itemsKey  The envelope key for the items.
+	 * @param array<string, mixed> $extra   Format-specific additions.
+	 *
+	 * @return array<string, mixed> The envelope.
+	 */
+	private function openEnvelope(
+		string $uid,
+		File $file,
+		array $items,
+		string $countKey,
+		string $itemsKey,
+		array $extra = [],
+	): array {
+		$total = count($items);
+		$truncated = ($total > self::MAX_BLOCKS);
 		if ($truncated === true) {
-			$blocks = array_slice($blocks, 0, self::MAX_BLOCKS);
+			$items = array_slice($items, 0, self::MAX_BLOCKS);
 		}
 
-		return [
+		return ([
 			'fileId' => $file->getId(),
 			'name' => $file->getName(),
 			'path' => $this->userPath(uid: $uid, file: $file),
-			'format' => $read['format'],
 			'version' => $file->getEtag(),
-			'blockCount' => count($read['blocks']),
+			$countKey => $total,
 			'truncated' => $truncated,
-			'blocks' => $blocks,
+			$itemsKey => $items,
 			'editable' => ($file->isUpdateable() === true),
-		];
-
-	}//end openForAgent()
+		] + $extra);
+	}//end openEnvelope()
 
 	/**
 	 * Apply anchored edits to a document.
@@ -220,10 +248,10 @@ class EditSessionService {
 			requestedMode: $requestedMode
 		);
 
-		return $this->runSession(
+		return $this->writer->runSession(
 			uid: $uid,
 			file: $file,
-			transform: fn (string $bytes, string $extension): array => $this->codec->applyEdits(
+			transform: fn (string $bytes, string $extension): array => $this->codecs->text->applyEdits(
 				packageBytes: $bytes,
 				extension: $extension,
 				edits: $edits
@@ -233,6 +261,163 @@ class EditSessionService {
 		);
 
 	}//end editForAgent()
+
+
+	/**
+	 * Read a spreadsheet's cells for an agent.
+	 *
+	 * @param string $uid    The acting user id.
+	 * @param int    $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed> The sheet's cells and the version an edit requires.
+	 *
+	 * @throws RuntimeException When the file cannot be read or is not a spreadsheet.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 */
+	public function openSpreadsheetForAgent(string $uid, int $fileId): array {
+		$file = $this->resolveFile(
+			uid: $uid,
+			fileId: $fileId,
+			supports: fn (string $extension): bool => $this->codecs->spreadsheet->supports(extension: $extension),
+			formats: 'ods, xlsx'
+		);
+
+		return $this->openEnvelope(
+			uid: $uid,
+			file: $file,
+			items: $this->codecs->spreadsheet->readCells(
+				packageBytes: $this->readBytes(file: $file),
+				extension: $file->getExtension()
+			),
+			countKey: 'cellCount',
+			itemsKey: 'cells'
+		);
+	}//end openSpreadsheetForAgent()
+
+	/**
+	 * Write literal values into a spreadsheet's cells.
+	 *
+	 * Reuses the SAME lock discipline, version precondition and agent-authored
+	 * marking as text editing. None of that is type-specific, and a per-type
+	 * write path would eventually re-implement one of them wrongly.
+	 *
+	 * @param string $uid     The acting user id.
+	 * @param int    $fileId  The Nextcloud file id.
+	 * @param array  $edits   Each `{cell, value, replaceFormula?}`.
+	 * @param string $version The `version` from the read that produced these addresses.
+	 *
+	 * @return array<string, mixed> The outcome, including cells whose cached values went stale.
+	 *
+	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 */
+	public function editSpreadsheetForAgent(string $uid, int $fileId, array $edits, string $version): array {
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: null,
+			supports: fn (string $extension): bool => $this->codecs->spreadsheet->supports(extension: $extension),
+			formats: 'ods, xlsx'
+		);
+
+		$stale = [];
+		$result = $this->writer->runSession(
+			uid: $uid,
+			file: $file,
+			transform: function (string $bytes, string $extension) use ($edits, &$stale): array {
+				$applied = $this->codecs->spreadsheet->applyCellEdits(
+					packageBytes: $bytes,
+					extension: $extension,
+					edits: $edits
+				);
+				$stale = $applied['staleDependents'];
+
+				return $applied;
+			},
+			version: $version,
+			mode: $mode
+		);
+
+		// ⚠️ Surfaced on the RESULT, not merely logged. A dependent cell whose
+		// cached value no longer follows from its inputs is a number that looks
+		// current and is not, and the caller is the only one who can decide
+		// whether that matters.
+		$result['staleDependents'] = $stale;
+
+		return $result;
+	}//end editSpreadsheetForAgent()
+
+	/**
+	 * Read a presentation's shapes for an agent.
+	 *
+	 * @param string $uid    The acting user id.
+	 * @param int    $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed> The deck's shapes and the version an edit requires.
+	 *
+	 * @throws RuntimeException When the file cannot be read or is not a presentation.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 */
+	public function openPresentationForAgent(string $uid, int $fileId): array {
+		$file = $this->resolveFile(
+			uid: $uid,
+			fileId: $fileId,
+			supports: fn (string $extension): bool => $this->codecs->presentation->supports(extension: $extension),
+			formats: 'pptx, odp'
+		);
+
+		return $this->openEnvelope(
+			uid: $uid,
+			file: $file,
+			items: $this->codecs->presentation->readShapes(
+				packageBytes: $this->readBytes(file: $file),
+				extension: $file->getExtension()
+			),
+			countKey: 'shapeCount',
+			itemsKey: 'shapes'
+		);
+	}//end openPresentationForAgent()
+
+	/**
+	 * Replace the text of addressed presentation shapes.
+	 *
+	 * @param string $uid     The acting user id.
+	 * @param int    $fileId  The Nextcloud file id.
+	 * @param array  $edits   Each `{slide, shape, text, region?}`.
+	 * @param string $version The `version` from the read that produced these ids.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 */
+	public function editPresentationForAgent(string $uid, int $fileId, array $edits, string $version): array {
+		[$file, $mode] = $this->prepareWrite(
+			uid: $uid,
+			fileId: $fileId,
+			version: $version,
+			requestedMode: null,
+			supports: fn (string $extension): bool => $this->codecs->presentation->supports(extension: $extension),
+			formats: 'pptx, odp'
+		);
+
+		return $this->writer->runSession(
+			uid: $uid,
+			file: $file,
+			transform: fn (string $bytes, string $extension): array => $this->codecs->presentation->applyShapeEdits(
+				packageBytes: $bytes,
+				extension: $extension,
+				edits: $edits
+			),
+			version: $version,
+			mode: $mode
+		);
+	}//end editPresentationForAgent()
 
 	/**
 	 * Read a document's metadata.
@@ -297,7 +482,7 @@ class EditSessionService {
 			requestedMode: $requestedMode
 		);
 
-		return $this->runSession(
+		return $this->writer->runSession(
 			uid: $uid,
 			file: $file,
 			transform: fn (string $bytes, string $extension): array => $this->metadata->writeMetadata(
@@ -347,7 +532,7 @@ class EditSessionService {
 			requestedMode: $requestedMode
 		);
 
-		return $this->runSession(
+		return $this->writer->runSession(
 			uid: $uid,
 			file: $file,
 			transform: fn (string $bytes, string $extension): array => $this->charts->embedChart(
@@ -381,14 +566,21 @@ class EditSessionService {
 	 *
 	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
 	 */
-	private function prepareWrite(string $uid, int $fileId, string $version, ?string $requestedMode): array {
+	private function prepareWrite(
+		string $uid,
+		int $fileId,
+		string $version,
+		?string $requestedMode,
+		?callable $supports = null,
+		string $formats = '',
+	): array {
 		if (trim($version) === '') {
 			throw new RuntimeException(
 				'A version is required. Read the document first and pass back the version it returned.'
 			);
 		}
 
-		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
+		$file = $this->resolveFile(uid: $uid, fileId: $fileId, supports: $supports, formats: $formats);
 		$mode = $this->resolveMode(requested: $requestedMode);
 
 		$this->refuseIfGuarded(file: $file);
@@ -401,202 +593,10 @@ class EditSessionService {
 
 	}//end prepareWrite()
 
-	/**
-	 * Hold the lock across the whole read-modify-write, and release it on every exit path.
-	 *
-	 * @param string $uid The acting user id.
-	 * @param File $file The source file.
-	 * @param callable $transform Given (bytes, extension), returns the rewritten package.
-	 * @param string $version The expected version.
-	 * @param string $mode The resolved output mode.
-	 *
-	 * @return array<string, mixed> The outcome.
-	 *
-	 * @throws RuntimeException On any refusal or failure.
-	 */
-	private function runSession(string $uid, File $file, callable $transform, string $version, string $mode): array {
-		$lock = new LockContext($file, ILock::TYPE_APP, Application::APP_ID);
-		$held = $this->acquire(lock: $lock, file: $file);
-		$warnings = [];
 
-		if ($held === false) {
-			$warnings[] = 'No file-lock provider is available on this instance, so a concurrent '
-				. 'editing session could not be excluded. The version check still applies.';
-		}
 
-		try {
-			// The transform is a parameter rather than a fixed call so that a
-			// metadata write gets the IDENTICAL lock, version-recheck, tag-then-write
-			// and unlock path as a body edit. Copying this method for metadata would
-			// have meant two copies of the only code that stops an agent clobbering
-			// a concurrent human edit — and the copy would drift.
-			$bytes = $this->readBytes(file: $file);
-			$edited = $transform($bytes, $file->getExtension());
 
-			// Re-read the version immediately before the write. The lock excludes
-			// another editing SESSION; this closes the remaining window in which
-			// the file changed outside one. Refusing is correct -- this codec
-			// cannot merge, and guessing would be worse than stopping.
-			$current = $file->getEtag();
-			if ($current !== $version) {
-				throw new RuntimeException(
-					'This document changed since you read it, so it was not edited. '
-					. 'Read it again and re-apply your changes to the current text.'
-				);
-			}
 
-			$written = $this->write(uid: $uid, file: $file, bytes: $edited['bytes'], mode: $mode, lock: $lock);
-
-			return ([
-				'fileId' => $written['fileId'],
-				'name' => $written['name'],
-				'path' => $written['path'],
-				'outputMode' => $mode,
-				'appliedAnchors' => ($edited['applied'] ?? []),
-				'metadataWritten' => ($edited['written'] ?? []),
-				'version' => $written['version'],
-				'agentAuthoredTag' => AgentArtefactMarker::TAG_NAME,
-				'warnings' => $warnings,
-			]);
-		} finally {
-			if ($held === true) {
-				$this->release(lock: $lock);
-			}
-		}//end try
-
-	}//end runSession()
-
-	/**
-	 * Write the edited bytes, marking the artefact before it becomes visible.
-	 *
-	 * The mark goes on FIRST and is rolled back if the write then fails, so
-	 * neither an unmarked agent artefact nor a mark on an unchanged file can
-	 * survive this method.
-	 *
-	 * @param string $uid The acting user id.
-	 * @param File $file The source file.
-	 * @param string $bytes The edited package bytes.
-	 * @param string $mode The output mode.
-	 * @param LockContext $lock The held lock, so our own write is not refused by it.
-	 *
-	 * @return array{fileId: int, name: string, path: string, version: string}
-	 *
-	 * @throws RuntimeException When marking or writing fails.
-	 */
-	private function write(string $uid, File $file, string $bytes, string $mode, LockContext $lock): array {
-		$target = $file;
-		if ($mode === self::MODE_SIBLING) {
-			$target = $this->sibling(file: $file);
-		}
-
-		$added = $this->marker->mark(fileId: $target->getId());
-
-		try {
-			$this->lockManager->runInScope($lock, static function () use ($target, $bytes): void {
-				$target->putContent($bytes);
-			});
-		} catch (Throwable $e) {
-			if ($added === true) {
-				$this->marker->unmark(fileId: $target->getId());
-			}
-
-			throw new RuntimeException('Could not save the edited document: ' . $e->getMessage(), 0, $e);
-		}
-
-		return [
-			'fileId' => $target->getId(),
-			'name' => $target->getName(),
-			'path' => $this->userPath(uid: $uid, file: $target),
-			'version' => $target->getEtag(),
-		];
-
-	}//end write()
-
-	/**
-	 * Create the empty sibling file the edited bytes will be written into.
-	 *
-	 * @param File $file The source file.
-	 *
-	 * @return File The new file.
-	 *
-	 * @throws RuntimeException When the sibling cannot be created.
-	 */
-	private function sibling(File $file): File {
-		try {
-			$parent = $file->getParent();
-			$extension = $file->getExtension();
-			$stem = $file->getName();
-			$suffix = '';
-
-			if ($extension !== '') {
-				$stem = substr($stem, 0, (-1 * (strlen($extension) + 1)));
-				$suffix = '.' . $extension;
-			}
-
-			return $parent->newFile($parent->getNonExistingName($stem . ' (agent edit)' . $suffix));
-		} catch (Throwable $e) {
-			throw new RuntimeException('Could not create a new file beside the original: ' . $e->getMessage(), 0, $e);
-		}
-
-	}//end sibling()
-
-	/**
-	 * Take the lock, distinguishing "someone else holds it" from "nobody can".
-	 *
-	 * @param LockContext $lock The lock to take.
-	 * @param File $file The file being locked, for the refusal message.
-	 *
-	 * @return bool True when the lock is held and must be released.
-	 *
-	 * @throws RuntimeException When another owner holds the lock.
-	 */
-	private function acquire(LockContext $lock, File $file): bool {
-		try {
-			$this->lockManager->lock($lock);
-
-			return true;
-		} catch (OwnerLockedException $e) {
-			// Deliberately no polling, queueing, retry or lock stealing. Taking a
-			// lock we did not create is a data-loss primitive.
-			$holder = $e->getLock()->getOwner();
-			if ($holder === '') {
-				$holder = 'someone else';
-			}
-
-			throw new RuntimeException(
-				sprintf(
-					'"%s" is currently open for editing by %s, so it was not changed. Try again once it is closed.',
-					$file->getName(),
-					$holder
-				),
-				0,
-				$e
-			);
-		} catch (NoLockProviderException) {
-			return false;
-		} catch (Throwable $e) {
-			$this->logger->warning('DocuDesk could not take an edit lock: ' . $e->getMessage());
-
-			return false;
-		}//end try
-
-	}//end acquire()
-
-	/**
-	 * Release the lock, never masking the outcome the caller is already reporting.
-	 *
-	 * @param LockContext $lock The held lock.
-	 *
-	 * @return void
-	 */
-	private function release(LockContext $lock): void {
-		try {
-			$this->lockManager->unlock($lock);
-		} catch (Throwable $e) {
-			$this->logger->warning('DocuDesk could not release an edit lock: ' . $e->getMessage());
-		}
-
-	}//end release()
 
 	/**
 	 * Resolve the output mode: configuration sets the ceiling, the argument may only narrow it.
@@ -679,7 +679,7 @@ class EditSessionService {
 	 *
 	 * @throws RuntimeException When the id names nothing the user can reach, or an uneditable format.
 	 */
-	private function resolveFile(string $uid, int $fileId): File {
+	private function resolveFile(string $uid, int $fileId, ?callable $supports = null, string $formats = ''): File {
 		if (trim($uid) === '') {
 			throw new RuntimeException('No acting user; document tools require a signed-in user.');
 		}
@@ -694,13 +694,21 @@ class EditSessionService {
 			throw new RuntimeException('File ' . $fileId . ' was not found in your files.');
 		}
 
-		if ($this->codec->supports(extension: $node->getExtension()) === false) {
+		// ⚠️ Validated against the codec that will actually handle this file, not
+		// against the text codec for everything. A spreadsheet reaching the
+		// spreadsheet path was being refused as "not an editable document
+		// format" and told to convert itself — advice that would have destroyed
+		// the very cells the caller asked to edit.
+		$accepts = ($supports ?? fn (string $extension): bool => $this->codecs->text->supports(extension: $extension));
+		$supported = ($formats !== '') ? $formats : implode(', ', $this->codecs->text->supportedExtensions());
+
+		if ($accepts($node->getExtension()) === false) {
 			throw new RuntimeException(
 				sprintf(
 					'"%s" is not an editable document format. Editable formats are: %s. '
 					. 'Convert the document first if you need to change it.',
 					$node->getName(),
-					implode(', ', $this->codec->supportedExtensions())
+					$supported
 				)
 			);
 		}

@@ -249,23 +249,39 @@ them is a sovereignty and support decision, not a capability one.
 
 ### What DocuDesk itself can edit, which is less
 
-🔴 The table above is what the *suite* can open. DocuDesk's own in-package codec
-edits **`docx` and `odt`**, and the two are no longer equal only in text:
+The table above is what the *suite* can open. DocuDesk's own in-package codecs
+now cover text, spreadsheets and presentations:
 
-| | Read | Edit text | Style & layout | Headings |
-|---|:---:|:---:|:---:|:---:|
-| `docx` | ✅ | ✅ | ✅ | ✅ |
-| `odt` | ✅ | ✅ | ✅ (except `list`) | ✅ |
+| Kind | Formats | Read | Edit | Style & layout |
+|---|---|:---:|:---:|:---:|
+| Text | `docx`, `odt` | ✅ | ✅ | ✅ (`list` is docx-only) |
+| Spreadsheet | `ods`, `xlsx` | ✅ | ✅ cells | — |
+| Presentation | `pptx`, `odp` | ✅ | ✅ shape text | — |
 
-⚠️ `list` is refused on `.odt`, by name rather than silently. An ODF list is a
-`<text:list>` element *wrapping* the paragraph, not a property of it, so turning
-one on restructures the document instead of restyling a block.
+Addressing differs by kind, because the durable identity differs:
 
-Spreadsheets and presentations still have no codec: their block model is a cell
-and a slide, not a paragraph, and giving them paragraph anchors would produce
-anchors that resolve to nothing. That work is specified in
-`multi-format-editing-tools`, and the suite table above tells you which types are
-worth building it for on the suite you actually run.
+- **Text** uses content-derived anchors, so an anchor from an out-of-date read
+  is refused rather than applied to the wrong paragraph.
+- **Spreadsheets** use `Sheet!Cell`. A cell address is already a durable
+  identity — insert a row and everything below shifts in a way the file format
+  and the reader's mental model agree on.
+- **Presentations** use slide id and shape id, **never position**. Slide order
+  changes; ids do not.
+
+⚠️ Three refusals worth knowing before you plan around them:
+
+- Writing a literal over a cell holding a **formula** is refused unless that
+  edit sets `replaceFormula`. The flag is per cell and is not carried across a
+  bulk write.
+- Dependent cells are reported **stale**, not recalculated. DocuDesk has no
+  formula engine, and the difference is observable: after one write the same
+  file showed `1218` in ODS (LibreOffice recalculated on open) and `290` in
+  XLSX (it served the cached value).
+- Macro-bearing packages, `.odb`, and PDF content rewriting are refused
+  outright — and the macro check reads the **bytes**, so a package carrying
+  VBA is refused even when it is named `.docx`.
+
+`.odg` (Draw) has no codec, and Draw is Collabora-only in any case.
 
 ### Re-running the probe
 
