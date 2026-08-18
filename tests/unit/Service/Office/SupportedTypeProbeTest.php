@@ -86,7 +86,32 @@ class SupportedTypeProbeTest extends TestCase {
 
 		$d = $this->probe->declare($xml, 'collabora', '2026-08-18T00:00:00+00:00', 'http://suite/');
 
-		$this->assertArrayNotHasKey('xlsm', $d['types'], 'a refused type must not appear as a supported candidate');
+		// ⚠️ This used to assert the key was ABSENT, and absence was the weaker
+		// property: a type nobody had ever considered is absent in exactly the
+		// same way as one deliberately refused. It also let the refusal go dead
+		// without anything noticing — the probe iterated only the candidate
+		// list, which contains none of the refused types, so the guard could
+		// never fire and this test passed on the strength of an omission.
+		//
+		// Asserted now: the type IS declared, it is NOT editable, and it says
+		// so because it was refused rather than because nobody offered it.
+		foreach (['xlsm', 'docm', 'pptm', 'odb'] as $refused) {
+			$this->assertArrayHasKey($refused, $d['types'], "$refused must be declared, not silently omitted");
+			$this->assertFalse($d['types'][$refused]['edit'], "$refused must not be editable");
+			$this->assertFalse($d['types'][$refused]['view'], "$refused must not be viewable");
+			$this->assertStringStartsWith(
+				'refused by policy',
+				$d['types'][$refused]['reason'],
+				"$refused must say it was refused, not that the suite failed to advertise it"
+			);
+		}
+
+		// And the ground, not just the verdict — the two refusals here rest on
+		// different arguments and an operator asking for one to be lifted needs
+		// to know which.
+		$this->assertStringContainsString('macro-bearing', $d['types']['xlsm']['reason']);
+		$this->assertStringContainsString('database', $d['types']['odb']['reason']);
+
 		$this->assertSame([], $d['advertisedButUnhandled'], 'a refused type is refused, not merely unhandled');
 	}//end testAMacroFormatIsRefusedEvenWhenAdvertised()
 
@@ -105,6 +130,42 @@ class SupportedTypeProbeTest extends TestCase {
 
 		$this->assertStringContainsString('not probed', $d['types']['docx']['reason']);
 	}//end testAnUnreachableSuiteSupportsNothing()
+
+	/**
+	 * 🔴 ADR-087 §4: a type editable on ONE suite must resolve absent — and
+	 * visibly — on a suite that lacks it. Measured on this instance, Draw is
+	 * exactly that case: Collabora edits `.odg` and the ONLYOFFICE lineage does
+	 * not.
+	 *
+	 * "Visibly" is the load-bearing word. An absent capability that reports
+	 * nothing is discovered by a tenant at the point of failure, which is what
+	 * the ADR exists to prevent.
+	 *
+	 * @return void
+	 */
+	public function testASuiteSpecificTypeResolvesAbsentAndVisibly(): void {
+		$collabora = '<wopi-discovery>'
+			. '<action name="edit" ext="odt" urlsrc="x"/>'
+			. '<action name="edit" ext="odg" urlsrc="x"/>'
+			. '</wopi-discovery>';
+		$onlyoffice = '<wopi-discovery><action name="edit" ext="odt" urlsrc="x"/></wopi-discovery>';
+
+		$withDraw = $this->probe->declare($collabora, 'collabora', '2026-08-18T00:00:00+00:00', 'http://a/');
+		$withoutDraw = $this->probe->declare($onlyoffice, 'onlyoffice', '2026-08-18T00:00:00+00:00', 'http://b/');
+
+		$this->assertTrue($withDraw['types']['odg']['edit']);
+		$this->assertFalse($withoutDraw['types']['odg']['edit']);
+
+		// Absent WITH A REASON, and the declaration names the suite it was
+		// measured against, so the difference is attributable rather than
+		// mysterious.
+		$this->assertSame(
+			'suite does not advertise editing this type',
+			$withoutDraw['types']['odg']['reason']
+		);
+		$this->assertSame('onlyoffice', $withoutDraw['suite']);
+		$this->assertNotSame($withDraw['suite'], $withoutDraw['suite']);
+	}//end testASuiteSpecificTypeResolvesAbsentAndVisibly()
 
 	/**
 	 * ⚠️ WOPI does not fix attribute order. Reading only `name`-then-`ext`

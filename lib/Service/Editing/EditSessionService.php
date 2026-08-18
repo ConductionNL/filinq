@@ -323,7 +323,7 @@ class EditSessionService {
 			formats: 'ods, xlsx'
 		);
 
-		$stale = [];
+		$stale = ['staleDependents' => [], 'erroredDependents' => []];
 		$result = $this->writer->runSession(
 			uid: $uid,
 			file: $file,
@@ -333,7 +333,7 @@ class EditSessionService {
 					extension: $extension,
 					edits: $edits
 				);
-				$stale = $applied['staleDependents'];
+				$stale = ['staleDependents' => $applied['staleDependents'], 'erroredDependents' => $applied['erroredDependents']];
 
 				return $applied;
 			},
@@ -345,7 +345,8 @@ class EditSessionService {
 		// cached value no longer follows from its inputs is a number that looks
 		// current and is not, and the caller is the only one who can decide
 		// whether that matters.
-		$result['staleDependents'] = $stale;
+		$result['staleDependents'] = $stale['staleDependents'];
+		$result['erroredDependents'] = $stale['erroredDependents'];
 
 		return $result;
 	}//end editSpreadsheetForAgent()

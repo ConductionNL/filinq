@@ -58,6 +58,17 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
     -->
     <dependencies>
         <php min-version="8.3" min-int-size="64"/>
+        <!--
+        Every office format this app edits is a ZIP: `PackagePartIo` and
+        `DocumentGuard` construct `ZipArchive` in five places, with no fallback
+        and no capability check. Undeclared, that dependency surfaced only as a
+        fatal at the moment someone opened a document, on an instance that had
+        already installed the app successfully. Declared here, the install is
+        refused up front, which is the whole point of the element.
+
+        opencatalogi already declares the same lib for the same reason.
+        -->
+        <lib>zip</lib>
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
@@ -94,4 +105,7 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
             <icon>app.svg</icon>
         </navigation>
     </navigations>
+    <commands>
+        <command>OCA\DocuDesk\Command\OfficeProbeCommand</command>
+    </commands>
 </info>

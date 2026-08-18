@@ -50,6 +50,18 @@ class SpreadsheetCodec {
 	public const MAX_CELLS_PER_CALL = 200;
 
 	/**
+	 * Spreadsheet error literals.
+	 *
+	 * A dependent already holding one of these is reported separately from an
+	 * ordinary stale dependent: "this number no longer follows from its inputs"
+	 * and "this cell is broken" are different things for a caller to hear, and
+	 * an error value that persists silently through an edit reads as data.
+	 *
+	 * @var array<int, string>
+	 */
+	public const ERROR_VALUES = ['#REF!', '#DIV/0!', '#VALUE!', '#N/A', '#NAME?', '#NULL!', '#NUM!'];
+
+	/**
 	 * The per-family codecs, tried in order.
 	 *
 	 * @var array<int, SpreadsheetFamilyCodec>
@@ -112,7 +124,7 @@ class SpreadsheetCodec {
 	 * @param string $extension    The file extension.
 	 * @param array  $edits        Each `{cell, value, replaceFormula?}`.
 	 *
-	 * @return array{bytes: string, applied: array<int, string>, staleDependents: array<int, string>} The result.
+	 * @return array{bytes: string, applied: array<int, string>, staleDependents: array<int, string>, erroredDependents: array<int, string>} The result.
 	 *
 	 * @throws RuntimeException When an edit is refused.
 	 *
@@ -151,10 +163,13 @@ class SpreadsheetCodec {
 			$applied[] = $cell;
 		}//end foreach
 
+		$stale = $this->staleDependents(existing: $existing, written: $applied);
+
 		return [
 			'bytes' => $this->io->writePart(packageBytes: $packageBytes, part: $codec->valuePart(), xml: $xml),
 			'applied' => $applied,
-			'staleDependents' => $this->staleDependents(existing: $existing, written: $applied),
+			'staleDependents' => $stale,
+			'erroredDependents' => $this->erroredDependents(existing: $existing, stale: $stale),
 		];
 	}//end applyCellEdits()
 
@@ -271,6 +286,33 @@ class SpreadsheetCodec {
 
 		return $stale;
 	}//end staleDependents()
+
+	/**
+	 * Dependents whose cached value is a spreadsheet ERROR.
+	 *
+	 * ⚠️ Reported separately, and never repaired. A `#REF!` or `#DIV/0!` sitting
+	 * behind a changed input is not merely out of date — it is a cell the sheet
+	 * itself could not compute, and letting it persist through an edit without
+	 * a word makes it look like content.
+	 *
+	 * @param array<string, array{cell: string, value: string, formula: string|null}> $existing Cells by address.
+	 * @param array<int, string>                                                      $stale    Stale addresses.
+	 *
+	 * @return array<int, string> Addresses whose cached value is an error literal.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#42
+	 */
+	private function erroredDependents(array $existing, array $stale): array {
+		$errored = [];
+		foreach ($stale as $address) {
+			$value = trim((string)($existing[$address]['value'] ?? ''));
+			if (in_array(strtoupper($value), self::ERROR_VALUES, true) === true) {
+				$errored[] = $address;
+			}
+		}
+
+		return $errored;
+	}//end erroredDependents()
 
 	/**
 	 * The cell part of a `Sheet!Cell` address.

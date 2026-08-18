@@ -70,6 +70,23 @@ class SupportedTypeProbe {
 	public const REFUSED_TYPES = ['docm', 'xlsm', 'pptm', 'odb'];
 
 	/**
+	 * Why each refused type is refused.
+	 *
+	 * Two different reasons live in one list and they are not interchangeable:
+	 * three are refused because editing them is a code-execution vector, and one
+	 * because "edit a cell" means nothing in it. An operator asking to have a
+	 * refusal lifted needs to know which argument they are up against.
+	 *
+	 * @var array<string, string>
+	 */
+	private const REFUSAL_GROUNDS = [
+		'docm' => 'macro-bearing format — editing it is a code-execution vector',
+		'xlsm' => 'macro-bearing format — editing it is a code-execution vector',
+		'pptm' => 'macro-bearing format — editing it is a code-execution vector',
+		'odb'  => 'a database, with no document block or cell to edit',
+	];
+
+	/**
 	 * Build the support declaration from a WOPI discovery document.
 	 *
 	 * @param string      $discoveryXml The suite's WOPI discovery document.
@@ -85,8 +102,21 @@ class SupportedTypeProbe {
 		$editable = $this->extensionsFor(discoveryXml: $discoveryXml, action: 'edit');
 		$viewable = $this->extensionsFor(discoveryXml: $discoveryXml, action: 'view');
 
+		// 🔴 The refused types are declared HERE, not omitted. Iterating only
+		// CANDIDATE_TYPES made the refusal below dead code — none of `docm`,
+		// `xlsm`, `pptm` or `odb` is a candidate, so `$refused` was false on
+		// every pass and the guard had never once fired. phpstan said so
+		// outright: `in_array()` "will always evaluate to false".
+		//
+		// Absence was still SAFE — an undeclared type is unsupported — but it
+		// was safe by accident, and it made the refusal a comment rather than a
+		// rule. Worse, it is a rule that looks live: adding `docm` to the
+		// candidate list later, expecting the refusal to catch it, is a
+		// perfectly reasonable thing to do. Declaring them explicitly makes the
+		// guard real, testable, and visible to an operator as a REASON rather
+		// than a type that simply is not mentioned anywhere.
 		$types = [];
-		foreach (self::CANDIDATE_TYPES as $type) {
+		foreach ([...self::CANDIDATE_TYPES, ...self::REFUSED_TYPES] as $type) {
 			$refused = in_array($type, self::REFUSED_TYPES, true);
 			$canEdit = ($refused === false && isset($editable[$type]) === true);
 
@@ -132,6 +162,18 @@ class SupportedTypeProbe {
 		$types = [];
 		foreach (self::CANDIDATE_TYPES as $type) {
 			$types[$type] = ['edit' => false, 'view' => false, 'reason' => 'not probed: ' . $reason];
+		}
+
+		// A refused type is refused whether or not the probe ran — the refusal
+		// sits in FRONT of the probe, which is the whole premise. Reporting
+		// these as "not probed" would say the suite might yet be asked, and
+		// that is not true of a macro-bearing format.
+		foreach (self::REFUSED_TYPES as $type) {
+			$types[$type] = [
+				'edit' => false,
+				'view' => false,
+				'reason' => $this->reasonFor(type: $type, refused: true, advertised: false),
+			];
 		}
 
 		return [
@@ -206,7 +248,11 @@ class SupportedTypeProbe {
 	 */
 	private function reasonFor(string $type, bool $refused, bool $advertised): string {
 		if ($refused === true) {
-			return 'refused by policy';
+			// The GROUND, not just the verdict. "refused by policy" tells an
+			// operator the answer without telling them whether it is the right
+			// answer for their instance; the two refusals here have entirely
+			// different reasoning and only one of them is about safety.
+			return 'refused by policy: ' . (self::REFUSAL_GROUNDS[$type] ?? 'not offered for editing');
 		}
 
 		if ($advertised === false) {

@@ -9,6 +9,39 @@
 
 ### Added
 
+- **Agents can now edit spreadsheets and presentations, not just text documents (`multi-format-editing-tools`).** Four new tools — `readSpreadsheet`, `editSpreadsheet`, `readPresentation`, `editPresentation` — over `.ods`/`.xlsx` and `.pptx`/`.odp`. They reuse the existing lock, version precondition and agent-authored marking rather than opening a second write path.
+
+  Addressing follows the durable identity each kind already has: spreadsheets by `Sheet!Cell`, presentations by slide id and shape id (**never position** — slide order changes and ids do not). Speaker notes are a distinct region so drafting talking points cannot alter what is on screen.
+
+  Three refusals, each with a control-pair test:
+  - a literal write over a **formula** needs `replaceFormula` on that specific edit; the flag is per cell and is not carried across a bulk write
+  - over 200 cells (or 100 shapes) the call is **refused, never truncated**
+  - macro-bearing packages, `.odb` and PDF content rewriting are refused — and the macro check reads the **bytes**, so a package carrying VBA is refused even when named `.docx`
+
+  Dependent cells are reported **stale**, never recalculated: DocuDesk has no formula engine, and the difference is observable — after one write the same file showed `1218` in ODS (LibreOffice recalculated on open) and `290` in XLSX (it served the cached value).
+
+- **Style and layout now work on `.odt` (`document-rich-editing`).** Previously refused outright. ODF has no direct formatting, so this mints an automatic style in `content.xml` and points the block at it; `heading` rewrites `text:p` ↔ `text:h`, which is only safe because the block scanner now spans both. `list` remains refused by name — an ODF list wraps the paragraph rather than setting a property on it.
+
+- **A measured supported-type matrix, per office suite (`multi-format-editing-tools` Phase 0).** `SupportedTypeProbe` reads each suite's own WOPI discovery rather than trusting a hard-coded table, and publishes the answer with the suite name, version and probe date. An **unprobed type is UNSUPPORTED** — a probe that cannot reach the suite reports everything unsupported rather than unknown.
+
+  Measured 2026-08-18 on this instance:
+
+  | Type | Collabora | Euro-Office 1.0 | ONLYOFFICE 1.0 | LibreOffice 7.6.7.2\* |
+  |---|:---:|:---:|:---:|:---:|
+  | odt, docx, ods, xlsx, odp, pptx, csv | ✅ | ✅ | ✅ | ✅ |
+  | doc, xls, ppt | ✅ | ❌ | ❌ | ✅ |
+  | odg | ✅ | ❌ | ❌ | ❌ |
+  | pdf | ❌ | ✅ | ✅ | ✅ |
+
+  \* A different measurement: LibreOffice desktop exposes no WOPI discovery, so DocuDesk cannot open an editing session against it at all. Those ticks are conversion filters, not editability. Per ADR-087 §4, suite-specific types (legacy `doc`/`xls`/`ppt` and `odg` on Collabora; `pdf` on the ONLYOFFICE lineage) resolve absent and visibly, and no feature may require them.
+
+### Fixed
+
+- **ODF headings were invisible to `readDocument`, and could not be edited.** ODF writes a heading as `text:h`, its own element, and the block scanner spanned `text:p` only — so on a four-block `.odt` the tool reported three blocks and an agent asked to edit the heading was told its anchor did not exist for text plainly on the page.
+
+- **Duplicate derived tool ids were hiding real tools.** A derived id carries no register, so 13 copies of one schema slug collided. Suppressing them took the catalogue from 207 rows / 159 distinct to 173 / 173 — and 14 tools became visible that were not before, including `template` and `huisstijl`.
+
+
 - **DocuDesk is reachable by agents, and agents can change documents (`docudesk-mcp-adoption`, `document-editing-tools`).** DocuDesk had no MCP surface at all, so it was invisible to Hermiq; and no tool in the fleet could read a `.docx`/`.odt` as text and write a change back.
 
   **The MCP surface (ADR-063)** is deliberately narrow and read-biased. Eight of twenty-one schemas — `template`, `huisstijl`, `correspondence`, `generatedDocument`, `batchCorrespondenceJob`, `signingRequest`, `dossier`, `base` — declare `x-openregister-mcp` with `search` + `get` only. **No DocuDesk schema exposes a derived `create`/`update`/`delete` verb**: templates and huisstijl are governance artefacts, the correspondence and batch rows are audit records, and `signingRequest` is the legal spine of a signature process. The remaining thirteen schemas stay off entirely (signature material, citizen contact data, re-identification links, extracted invoice content). `lib/Mcp/DocudeskScannableServices.php` is the per-app `#[McpTool]` scan opt-in.

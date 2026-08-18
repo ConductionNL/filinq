@@ -74,7 +74,7 @@ class PackageCodec {
 	 * produce anchors that resolve to nothing. They are specified separately in
 	 * `multi-format-editing-tools`.
 	 *
-	 * @var array<string, array{format: string, part: string, tag: string}>
+	 * @var array<string, array{format: string, part: string, tag: string, blockTags: array<int, string>}>
 	 */
 	private const PACKAGES = [
 		'docx' => [
@@ -361,26 +361,34 @@ class PackageCodec {
 	}//end resolveEdits()
 
 	/**
-	 * An ODF automatic style minted by the current span rewrite, awaiting
-	 * injection into `content.xml`.
+	 * Apply a style edit, injecting any ODF automatic style it mints.
 	 *
-	 * @var string|null
-	 */
-	private ?string $pendingOdfStyle = null;
-
-	/**
-	 * Apply a style edit, capturing any ODF automatic style it mints.
+	 * ⚠️ A style edit produces TWO things: the rewritten block, and — for ODF —
+	 * a document-level automatic style the block only POINTS at. Both are
+	 * handled here, together, because they are only correct together: a
+	 * definition that never lands leaves the block referencing a style that
+	 * does not exist, and the restyle silently does nothing.
 	 *
-	 * @param string $markup The block markup.
-	 * @param array  $edit   The edit.
-	 * @param string $format The package family.
-	 * @param string $xml    The part XML, used to keep minted names unique.
+	 * They used to be split, with the definition handed back through a mutable
+	 * `$pendingOdfStyle` property that the caller read after the fact. That is
+	 * action at a distance in the one place it is least affordable, and it also
+	 * defeated static analysis: phpstan could not see the property ever being
+	 * assigned across the `match` arm, so it read the caller's `!== null` check
+	 * as comparing null with null and reported the injection as unreachable.
+	 * Returning the finished XML removes the property and the false reading at
+	 * once.
 	 *
-	 * @return string The rewritten block markup.
+	 * @param string               $xml    The part XML.
+	 * @param array{0: int, 1: int} $span  The span offset and length.
+	 * @param string               $markup The block markup.
+	 * @param array                $edit   The edit.
+	 * @param string               $format The package family.
+	 *
+	 * @return string The rewritten part XML, style definition included.
 	 *
 	 * @spec openspec/specs/document-rich-editing/spec.md
 	 */
-	private function applyStyleToSpan(string $markup, array $edit, string $format, string $xml): string {
+	private function rewriteStyledSpan(string $xml, array $span, string $markup, array $edit, string $format): string {
 		// Unique per document: a name that collided with an existing automatic
 		// style would silently restyle unrelated blocks that reference it.
 		$styleName = 'DdAgent' . (substr_count($xml, '<style:style') + 1);
@@ -392,10 +400,14 @@ class PackageCodec {
 			styleName: $styleName
 		);
 
-		$this->pendingOdfStyle = $result['automaticStyle'];
+		$xml = substr_replace($xml, $result['markup'], $span[0], $span[1]);
 
-		return $result['markup'];
-	}//end applyStyleToSpan()
+		if ($result['automaticStyle'] === null) {
+			return $xml;
+		}
+
+		return $this->injectAutomaticStyle(xml: $xml, definition: $result['automaticStyle']);
+	}//end rewriteStyledSpan()
 
 	/**
 	 * Insert an automatic style definition into `content.xml`.
@@ -435,7 +447,18 @@ class PackageCodec {
 	 */
 	private function rewriteSpan(string $xml, array $span, array $edit, string $format): string {
 		$markup = substr($xml, $span[0], $span[1]);
-		$this->pendingOdfStyle = null;
+
+		// Handled apart from the match because a style edit rewrites the part in
+		// two places — the block, and the document-level style it points at.
+		if ($edit['action'] === self::ACTION_STYLE) {
+			return $this->rewriteStyledSpan(
+				xml: $xml,
+				span: $span,
+				markup: $markup,
+				edit: $edit,
+				format: $format
+			);
+		}
 
 		$replacement = match ($edit['action']) {
 			self::ACTION_DELETE => '',
@@ -444,26 +467,10 @@ class PackageCodec {
 				text: $edit['text'],
 				format: $format
 			),
-			self::ACTION_STYLE => $this->applyStyleToSpan(
-				markup: $markup,
-				edit: $edit,
-				format: $format,
-				xml: $xml
-			),
 			default => $this->setText(markup: $markup, text: $edit['text'], format: $format),
 		};
 
-		$xml = substr_replace($xml, $replacement, $span[0], $span[1]);
-
-		// An ODF automatic style is document-level: the block only POINTS at it,
-		// so a definition that never lands leaves the block referencing a style
-		// that does not exist and the restyle silently does nothing.
-		if ($this->pendingOdfStyle !== null) {
-			$xml = $this->injectAutomaticStyle(xml: $xml, definition: $this->pendingOdfStyle);
-			$this->pendingOdfStyle = null;
-		}
-
-		return $xml;
+		return substr_replace($xml, $replacement, $span[0], $span[1]);
 
 	}//end rewriteSpan()
 
@@ -472,7 +479,7 @@ class PackageCodec {
 	 *
 	 * @param string $extension The file extension, without a leading dot.
 	 *
-	 * @return array{format: string, part: string, tag: string}
+	 * @return array{format: string, part: string, tag: string, blockTags: array<int, string>}
 	 *
 	 * @throws RuntimeException When the extension names no supported package.
 	 */
