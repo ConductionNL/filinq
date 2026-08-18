@@ -193,6 +193,88 @@ curl -s http://localhost:9980/hosting/discovery | head -5     # should be WOPI X
 
 ---
 
+## Which document types each suite edits
+
+Measured on this instance, not copied from any suite's feature list. Re-measure
+after a suite upgrade: these tables go stale silently, which is why the probe
+that produces them ships with the app (`SupportedTypeProbe`).
+
+| Type | Collabora | Euro-Office | ONLYOFFICE | LibreOffice\* |
+|---|:---:|:---:|:---:|:---:|
+| `odt` | ✅ | ✅ | ✅ | ✅ |
+| `docx` | ✅ | ✅ | ✅ | ✅ |
+| `doc` | ✅ | ❌ | ❌ | ✅ |
+| `ods` | ✅ | ✅ | ✅ | ✅ |
+| `xlsx` | ✅ | ✅ | ✅ | ✅ |
+| `xls` | ✅ | ❌ | ❌ | ✅ |
+| `odp` | ✅ | ✅ | ✅ | ✅ |
+| `pptx` | ✅ | ✅ | ✅ | ✅ |
+| `ppt` | ✅ | ❌ | ❌ | ✅ |
+| `odg` | ✅ | ❌ | ❌ | ❌ |
+| `csv` | ✅ | ✅ | ✅ | ✅ |
+| `pdf` | ❌ | ✅ | ✅ | ✅ |
+
+Measured 2026-08-18 · Collabora (LibreOffice lineage) · Euro-Office 1.0 ·
+ONLYOFFICE 1.0 · LibreOffice 7.6.7.2
+
+### Read the columns carefully — they do not mean the same thing
+
+⚠️ **The LibreOffice column is a different measurement.** LibreOffice desktop has
+**no server seam**: it exposes no WOPI discovery, so DocuDesk cannot open an
+editing session against it at all. Its ticks are *conversion filters* — what
+`soffice --convert-to` produces — which is useful for format conversion and
+useless for in-place editing. A ✅ in that column never means "an agent can edit
+this here".
+
+The other three columns come from each suite's own WOPI discovery document,
+counting `<action name="edit">` entries. That is the suite stating what it
+edits, which is the closest thing to an authoritative answer available.
+
+### What the differences actually cost you
+
+**Legacy Microsoft formats (`doc`, `xls`, `ppt`) are Collabora-only.** A tenant on
+Euro-Office or ONLYOFFICE cannot edit them, so no workflow, template or feature
+may require them (ADR-087 §4). They resolve absent, visibly.
+
+**Draw (`odg`) is Collabora-only** — the ONLYOFFICE lineage ships its own diagram
+model rather than the ODF one.
+
+**PDF editing exists only on the ONLYOFFICE lineage**, and DocuDesk restricts it
+to annotation and form-fill regardless. A PDF is a final-form artefact; silently
+rewriting its text produces something forgery-shaped.
+
+**Euro-Office and ONLYOFFICE report identical sets.** That is expected —
+Euro-Office is ONLYOFFICE lineage — and it is worth knowing that choosing between
+them is a sovereignty and support decision, not a capability one.
+
+### What DocuDesk itself can edit, which is less
+
+🔴 The table above is what the *suite* can open. DocuDesk's own in-package codec
+currently edits **`docx` and `odt` only**. Spreadsheets and presentations have no
+codec yet: their block model is a cell and a slide, not a paragraph, and giving
+them paragraph anchors would produce anchors that resolve to nothing. That work
+is specified in `multi-format-editing-tools`.
+
+So for an agent editing a document today, the effective answer is `docx` and
+`odt` on any suite — and the table tells you which types are worth building the
+remaining codecs for on the suite you actually run.
+
+### Re-running the probe
+
+The declaration is produced by `SupportedTypeProbe`, which reads each suite's
+WOPI discovery and reports per type. Two rules it enforces:
+
+- **An unprobed type is UNSUPPORTED.** Not "probably fine because LibreOffice can
+  open it". A probe that could not reach the suite reports everything
+  unsupported rather than unknown — "we could not ask" must never read as
+  "probably yes".
+- **Refusals sit in front of the probe.** `.docm`, `.xlsm`, `.pptm` and `.odb`
+  are refused however the suite advertises them: writing into a file carrying
+  VBA is a code-execution vector in document clothing, and a database is not a
+  document.
+
+---
+
 ## What is measured, and what is not
 
 DocuDesk carries a round-trip test that opens a document, has a real suite save it,
