@@ -81,11 +81,17 @@ class PackageCodec {
 			'format' => self::FORMAT_OOXML,
 			'part' => 'word/document.xml',
 			'tag' => 'w:p',
+			'blockTags' => ['w:p'],
 		],
 		'odt' => [
 			'format' => self::FORMAT_ODF,
 			'part' => 'content.xml',
 			'tag' => 'text:p',
+			// 🔴 `text:h` too. ODF writes a heading as its OWN element, not as
+			// a styled paragraph, so scanning `text:p` alone made every heading
+			// in an .odt invisible to readDocument — and an anchor an agent
+			// could never resolve for text plainly on the page.
+			'blockTags' => ['text:p', 'text:h'],
 		],
 	];
 
@@ -200,7 +206,7 @@ class PackageCodec {
 		$xml = $this->io->readPart(packageBytes: $packageBytes, part: $package['part']);
 
 		$blocks = [];
-		foreach ($this->scanner->spans(xml:$xml, tag: $package['tag']) as $span) {
+		foreach ($this->scanner->spansForTags(xml:$xml, tags: $package['blockTags']) as $span) {
 			$markup = substr($xml, $span[0], $span[1]);
 			$blocks[] = $this->extractText(markup: $markup, format: $package['format']);
 		}
@@ -240,7 +246,7 @@ class PackageCodec {
 		$package = $this->packageFor(extension: $extension);
 		$xml = $this->io->readPart(packageBytes: $packageBytes, part: $package['part']);
 
-		$spans = $this->scanner->spans(xml:$xml, tag: $package['tag']);
+		$spans = $this->scanner->spansForTags(xml:$xml, tags: $package['blockTags']);
 		$texts = [];
 		foreach ($spans as $span) {
 			$texts[] = $this->extractText(markup: substr($xml, $span[0], $span[1]), format: $package['format']);
