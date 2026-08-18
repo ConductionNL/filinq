@@ -58,6 +58,9 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
     -->
     <dependencies>
         <php min-version="8.3" min-int-size="64"/>
+        <database min-version="10">pgsql</database>
+        <database>sqlite</database>
+        <database min-version="8.0">mysql</database>
         <!--
         Every office format this app edits is a ZIP: `PackagePartIo` and
         `DocumentGuard` construct `ZipArchive` in five places, with no fallback
@@ -66,12 +69,14 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         already installed the app successfully. Declared here, the install is
         refused up front, which is the whole point of the element.
 
-        opencatalogi already declares the same lib for the same reason.
+        ⚠️ AFTER the <database> elements, not before. info.xsd fixes this order
+        — php, database, command, lib, os, owncloud, nextcloud — and the first
+        placement of this element sat between <php> and <database>, which fails
+        validation outright. opencatalogi already declares the same lib in the
+        same slot; copying its POSITION as well as its content would have
+        skipped the error.
         -->
         <lib>zip</lib>
-        <database min-version="10">pgsql</database>
-        <database>sqlite</database>
-        <database min-version="8.0">mysql</database>
         <!--
         App dependency (not expressible in app-info.xsd): OpenRegister — Docudesk's
         documents, templates and reports are OpenRegister objects, and
