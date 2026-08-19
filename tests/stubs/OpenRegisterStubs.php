@@ -2241,6 +2241,8 @@ if (class_exists(McpTool::class) === false) {
 		 * @param bool|null $destructiveHint MCP annotation hint.
 		 * @param bool|null $idempotentHint MCP annotation hint.
 		 * @param string|null $scope Advisory scope.
+		 * @param string|null $subject The thing the tool acts on (grant-matrix taxonomy).
+		 * @param string|null $action The verb it performs on that subject.
 		 */
 		public function __construct(
 			public readonly ?string $name = null,
@@ -2249,6 +2251,8 @@ if (class_exists(McpTool::class) === false) {
 			public readonly ?bool $destructiveHint = null,
 			public readonly ?bool $idempotentHint = null,
 			public readonly ?string $scope = null,
+			public readonly ?string $subject = null,
+			public readonly ?string $action = null,
 		) {
 		}//end __construct()
 	}//end class
