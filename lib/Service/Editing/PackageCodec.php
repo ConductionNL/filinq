@@ -74,18 +74,24 @@ class PackageCodec {
 	 * produce anchors that resolve to nothing. They are specified separately in
 	 * `multi-format-editing-tools`.
 	 *
-	 * @var array<string, array{format: string, part: string, tag: string}>
+	 * @var array<string, array{format: string, part: string, tag: string, blockTags: array<int, string>}>
 	 */
 	private const PACKAGES = [
 		'docx' => [
 			'format' => self::FORMAT_OOXML,
 			'part' => 'word/document.xml',
 			'tag' => 'w:p',
+			'blockTags' => ['w:p'],
 		],
 		'odt' => [
 			'format' => self::FORMAT_ODF,
 			'part' => 'content.xml',
 			'tag' => 'text:p',
+			// 🔴 `text:h` too. ODF writes a heading as its OWN element, not as
+			// a styled paragraph, so scanning `text:p` alone made every heading
+			// in an .odt invisible to readDocument — and an anchor an agent
+			// could never resolve for text plainly on the page.
+			'blockTags' => ['text:p', 'text:h'],
 		],
 	];
 
@@ -200,7 +206,7 @@ class PackageCodec {
 		$xml = $this->io->readPart(packageBytes: $packageBytes, part: $package['part']);
 
 		$blocks = [];
-		foreach ($this->scanner->spans(xml:$xml, tag: $package['tag']) as $span) {
+		foreach ($this->scanner->spansForTags(xml:$xml, tags: $package['blockTags']) as $span) {
 			$markup = substr($xml, $span[0], $span[1]);
 			$blocks[] = $this->extractText(markup: $markup, format: $package['format']);
 		}
@@ -240,7 +246,7 @@ class PackageCodec {
 		$package = $this->packageFor(extension: $extension);
 		$xml = $this->io->readPart(packageBytes: $packageBytes, part: $package['part']);
 
-		$spans = $this->scanner->spans(xml:$xml, tag: $package['tag']);
+		$spans = $this->scanner->spansForTags(xml:$xml, tags: $package['blockTags']);
 		$texts = [];
 		foreach ($spans as $span) {
 			$texts[] = $this->extractText(markup: substr($xml, $span[0], $span[1]), format: $package['format']);
@@ -355,6 +361,81 @@ class PackageCodec {
 	}//end resolveEdits()
 
 	/**
+	 * Apply a style edit, injecting any ODF automatic style it mints.
+	 *
+	 * ⚠️ A style edit produces TWO things: the rewritten block, and — for ODF —
+	 * a document-level automatic style the block only POINTS at. Both are
+	 * handled here, together, because they are only correct together: a
+	 * definition that never lands leaves the block referencing a style that
+	 * does not exist, and the restyle silently does nothing.
+	 *
+	 * They used to be split, with the definition handed back through a mutable
+	 * `$pendingOdfStyle` property that the caller read after the fact. That is
+	 * action at a distance in the one place it is least affordable, and it also
+	 * defeated static analysis: phpstan could not see the property ever being
+	 * assigned across the `match` arm, so it read the caller's `!== null` check
+	 * as comparing null with null and reported the injection as unreachable.
+	 * Returning the finished XML removes the property and the false reading at
+	 * once.
+	 *
+	 * @param string               $xml    The part XML.
+	 * @param array{0: int, 1: int} $span  The span offset and length.
+	 * @param string               $markup The block markup.
+	 * @param array                $edit   The edit.
+	 * @param string               $format The package family.
+	 *
+	 * @return string The rewritten part XML, style definition included.
+	 *
+	 * @spec openspec/specs/document-rich-editing/spec.md
+	 */
+	private function rewriteStyledSpan(string $xml, array $span, string $markup, array $edit, string $format): string {
+		// Unique per document: a name that collided with an existing automatic
+		// style would silently restyle unrelated blocks that reference it.
+		$styleName = 'DdAgent' . (substr_count($xml, '<style:style') + 1);
+
+		$result = $this->styles->applyStyle(
+			markup: $markup,
+			style: $edit['style'],
+			format: $format,
+			styleName: $styleName
+		);
+
+		$xml = substr_replace($xml, $result['markup'], $span[0], $span[1]);
+
+		if ($result['automaticStyle'] === null) {
+			return $xml;
+		}
+
+		return $this->injectAutomaticStyle(xml: $xml, definition: $result['automaticStyle']);
+	}//end rewriteStyledSpan()
+
+	/**
+	 * Insert an automatic style definition into `content.xml`.
+	 *
+	 * @param string $xml        The part XML.
+	 * @param string $definition The `<style:style>` element.
+	 *
+	 * @return string The part XML with the definition in place.
+	 */
+	private function injectAutomaticStyle(string $xml, string $definition): string {
+		if (str_contains($xml, '</office:automatic-styles>') === true) {
+			return str_replace('</office:automatic-styles>', $definition . '</office:automatic-styles>', $xml);
+		}
+
+		// No automatic-styles section at all — mint one immediately before the
+		// body, which is where ODF requires it.
+		if (str_contains($xml, '<office:body') === true) {
+			return str_replace(
+				'<office:body',
+				'<office:automatic-styles>' . $definition . '</office:automatic-styles><office:body',
+				$xml
+			);
+		}
+
+		return $xml;
+	}//end injectAutomaticStyle()
+
+	/**
 	 * Rewrite one span according to one edit.
 	 *
 	 * @param string $xml The part XML.
@@ -367,16 +448,23 @@ class PackageCodec {
 	private function rewriteSpan(string $xml, array $span, array $edit, string $format): string {
 		$markup = substr($xml, $span[0], $span[1]);
 
+		// Handled apart from the match because a style edit rewrites the part in
+		// two places — the block, and the document-level style it points at.
+		if ($edit['action'] === self::ACTION_STYLE) {
+			return $this->rewriteStyledSpan(
+				xml: $xml,
+				span: $span,
+				markup: $markup,
+				edit: $edit,
+				format: $format
+			);
+		}
+
 		$replacement = match ($edit['action']) {
 			self::ACTION_DELETE => '',
 			self::ACTION_INSERT_AFTER => $markup . $this->setText(
 				markup: $markup,
 				text: $edit['text'],
-				format: $format
-			),
-			self::ACTION_STYLE => $this->styles->applyStyle(
-				markup: $markup,
-				style: $edit['style'],
 				format: $format
 			),
 			default => $this->setText(markup: $markup, text: $edit['text'], format: $format),
@@ -391,7 +479,7 @@ class PackageCodec {
 	 *
 	 * @param string $extension The file extension, without a leading dot.
 	 *
-	 * @return array{format: string, part: string, tag: string}
+	 * @return array{format: string, part: string, tag: string, blockTags: array<int, string>}
 	 *
 	 * @throws RuntimeException When the extension names no supported package.
 	 */

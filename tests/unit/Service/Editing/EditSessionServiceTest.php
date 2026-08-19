@@ -20,7 +20,12 @@ namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
 use OCA\DocuDesk\Service\Editing\AgentArtefactMarker;
 use OCA\DocuDesk\Service\Editing\DocumentGuard;
 use OCA\DocuDesk\Service\Editing\EditSessionService;
+use OCA\DocuDesk\Service\Editing\DocumentCodecs;
+use OCA\DocuDesk\Service\Editing\GuardedWriter;
 use OCA\DocuDesk\Service\Editing\PackageCodec;
+use OCA\DocuDesk\Service\Editing\PackagePartIo;
+use OCA\DocuDesk\Service\Editing\PresentationCodec;
+use OCA\DocuDesk\Service\Editing\SpreadsheetCodec;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -253,12 +258,19 @@ class EditSessionServiceTest extends TestCase {
 	private function service(): EditSessionService {
 		return new EditSessionService(
 			$this->rootFolder,
-			$this->lockManager,
-			new PackageCodec(),
-			$this->marker,
+			new DocumentCodecs(
+				new PackageCodec(),
+				new SpreadsheetCodec(new PackagePartIo()),
+				new PresentationCodec(new PackagePartIo())
+			),
+			new GuardedWriter(
+				$this->lockManager,
+				$this->marker,
+				$this->createMock(LoggerInterface::class),
+				$this->rootFolder
+			),
 			$this->guard,
-			$this->appConfig,
-			$this->createMock(LoggerInterface::class)
+			$this->appConfig
 		);
 
 	}//end service()

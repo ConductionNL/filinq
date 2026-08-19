@@ -200,6 +200,150 @@ class DocumentAgentService {
 	}//end editDocument()
 
 	#[McpTool(
+		name: 'readSpreadsheet',
+		description: 'Read a spreadsheet (.ods or .xlsx) as a list of cells addressed Sheet!Cell, each with '
+			. 'its value and, when it has one, its formula. Use this before editSpreadsheet: it returns the '
+			. 'version that call requires. A cell address is a durable identity, so there are no anchors here.',
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'read'
+	)]
+	/**
+	 * Read a spreadsheet's cells.
+	 *
+	 * @param int $fileId The Nextcloud file id of the spreadsheet.
+	 *
+	 * @return array<string, mixed> The sheet's cells and the version an edit requires.
+	 *
+	 * @throws RuntimeException When the file cannot be read or is not a spreadsheet.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
+	 */
+	public function readSpreadsheet(int $fileId): array {
+		return $this->editSession->openSpreadsheetForAgent(uid: $this->requireUid(), fileId: $fileId);
+
+	}//end readSpreadsheet()
+
+	#[McpTool(
+		name: 'editSpreadsheet',
+		description: 'Write literal values into spreadsheet cells addressed Sheet!Cell. Read the sheet first '
+			. 'and pass back its version. Writing over a cell that holds a FORMULA is refused unless that '
+			. 'edit sets replaceFormula true — the flag is per cell and is not carried across a bulk write. '
+			. 'The result lists cells whose cached values no longer follow from their inputs.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: false,
+		scope: 'update'
+	)]
+	/**
+	 * Write literal values into a spreadsheet's cells.
+	 *
+	 * @param int    $fileId  The Nextcloud file id of the spreadsheet.
+	 * @param array  $edits   Each `{cell, value, replaceFormula?}`.
+	 * @param string $version The `version` from the read that produced these addresses.
+	 *
+	 * @return array<string, mixed> The outcome, including cells whose cached values went stale.
+	 *
+	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
+	 */
+	public function editSpreadsheet(int $fileId, array $edits, string $version): array {
+		$uid = $this->requireUid();
+
+		$result = $this->editSession->editSpreadsheetForAgent(
+			uid: $uid,
+			fileId: $fileId,
+			edits: $edits,
+			version: $version
+		);
+
+		$this->record(
+			uid: $uid,
+			fileId: (int)$result['fileId'],
+			path: (string)$result['path'],
+			format: 'spreadsheet',
+			note: sprintf('Agent cell edit of file %d', $fileId)
+		);
+
+		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
+
+	}//end editSpreadsheet()
+
+	#[McpTool(
+		name: 'readPresentation',
+		description: 'Read a presentation (.pptx or .odp) as a list of shapes, each carrying its slide id, '
+			. 'shape id, region (slide or notes) and text. Use this before editPresentation: it returns the '
+			. 'version that call requires. Slides are identified by ID, never by position.',
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'read'
+	)]
+	/**
+	 * Read a presentation's shapes.
+	 *
+	 * @param int $fileId The Nextcloud file id of the presentation.
+	 *
+	 * @return array<string, mixed> The deck's shapes and the version an edit requires.
+	 *
+	 * @throws RuntimeException When the file cannot be read or is not a presentation.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
+	 */
+	public function readPresentation(int $fileId): array {
+		return $this->editSession->openPresentationForAgent(uid: $this->requireUid(), fileId: $fileId);
+
+	}//end readPresentation()
+
+	#[McpTool(
+		name: 'editPresentation',
+		description: 'Replace the text of presentation shapes, addressed by slide id and shape id from '
+			. 'readPresentation. Never address a slide by its position: slide order changes and the ids do '
+			. 'not. Set region to notes to write speaker notes; it defaults to the slide, so talking points '
+			. 'are never put on screen by accident.',
+		readOnlyHint: false,
+		destructiveHint: true,
+		idempotentHint: false,
+		scope: 'update'
+	)]
+	/**
+	 * Replace the text of addressed presentation shapes.
+	 *
+	 * @param int    $fileId  The Nextcloud file id of the presentation.
+	 * @param array  $edits   Each `{slide, shape, text, region?}`.
+	 * @param string $version The `version` from the read that produced these ids.
+	 *
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
+	 */
+	public function editPresentation(int $fileId, array $edits, string $version): array {
+		$uid = $this->requireUid();
+
+		$result = $this->editSession->editPresentationForAgent(
+			uid: $uid,
+			fileId: $fileId,
+			edits: $edits,
+			version: $version
+		);
+
+		$this->record(
+			uid: $uid,
+			fileId: (int)$result['fileId'],
+			path: (string)$result['path'],
+			format: 'presentation',
+			note: sprintf('Agent shape edit of file %d', $fileId)
+		);
+
+		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
+
+	}//end editPresentation()
+
+	#[McpTool(
 		name: 'addDocumentChart',
 		description: 'Add a bar, line or pie chart to a Word (.docx) file. The chart is a real chart the user '
 			. 'can select and resize in Word or Nextcloud Office, not a picture. Give it a type, a title, a list '

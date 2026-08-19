@@ -54,7 +54,42 @@ class XmlBlockScanner {
 	private const NAME_DELIMITERS = [' ', '>', '/', "\t", "\n", "\r"];
 
 	/**
-	 * Locate every top-level occurrence of an element, in document order.
+	 * Locate every top-level occurrence of ANY of several elements, in document
+	 * order.
+	 *
+	 * 🔴 One block model, several element names. ODF writes a paragraph as
+	 * `text:p` and a HEADING as `text:h` — a different element, not a styled
+	 * paragraph. Scanning only `text:p` therefore made every heading in an
+	 * `.odt` invisible: measured on a four-block document, readDocument
+	 * reported three, and an agent asked to edit the heading was told its
+	 * anchor did not exist for text plainly on the page.
+	 *
+	 * Nested occurrences are still not returned separately, and the merged
+	 * result is sorted by offset so callers keep the descending-rewrite
+	 * guarantee that stops one edit moving another's offsets.
+	 *
+	 * @param string             $xml  The part XML.
+	 * @param array<int, string> $tags The element names that count as a block.
+	 *
+	 * @return array<int, array{0: int, 1: int}> Offset/length pairs, in document order.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-untouched-parts-of-a-document-package-survive-an-edit-unchanged
+	 */
+	public function spansForTags(string $xml, array $tags): array {
+		$spans = [];
+		foreach ($tags as $tag) {
+			foreach ($this->spans(xml: $xml, tag: $tag) as $span) {
+				$spans[] = $span;
+			}
+		}
+
+		usort($spans, static fn (array $a, array $b): int => ($a[0] <=> $b[0]));
+
+		return $spans;
+	}//end spansForTags()
+
+	/**
+	 * Locate every top-level occurrence of ONE element, in document order.
 	 *
 	 * Nested occurrences are NOT returned separately: an outer element's span
 	 * already contains them, and returning both would let one edit rewrite a

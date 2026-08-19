@@ -17,6 +17,7 @@ import AccountEdit from 'vue-material-design-icons/AccountEdit.vue'
 import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import Cash from 'vue-material-design-icons/Cash.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
@@ -47,6 +48,10 @@ export default {
 	AccountCheck,
 	AccountEdit,
 	BookAlphabet,
+	// Used by the `product` schema's rate card in the register. Unregistered,
+	// it rendered as NOTHING — not a fallback glyph, just an empty cell where
+	// the icon should be (ADR-077 rule 3).
+	Cash,
 	BookOpenVariant,
 	BookOpenVariantOutline,
 	ClipboardCheckOutline,

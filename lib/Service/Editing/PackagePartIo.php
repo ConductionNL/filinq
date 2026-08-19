@@ -57,6 +57,48 @@ use ZipArchive;
 class PackagePartIo {
 
 	/**
+	 * List every entry in a ZIP package.
+	 *
+	 * Multi-part formats need this: a `.pptx` keeps one part PER SLIDE and one
+	 * per notes page, so "which slides exist" is a question about the package's
+	 * contents rather than something a caller can be asked to know.
+	 *
+	 * @param string $packageBytes The raw package bytes.
+	 *
+	 * @return array<int, string> The entry names.
+	 *
+	 * @throws RuntimeException When the package cannot be read.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
+	 */
+	public function listParts(string $packageBytes): array {
+		$path = $this->spill(bytes: $packageBytes);
+
+		try {
+			$zip = new ZipArchive();
+			if ($zip->open($path) !== true) {
+				throw new RuntimeException('The file is not a readable document package.');
+			}
+
+			$names = [];
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$name = $zip->getNameIndex($i);
+				if ($name !== false) {
+					$names[] = $name;
+				}
+			}
+
+			$zip->close();
+
+			return $names;
+		} finally {
+			if (file_exists($path) === true) {
+				unlink($path);
+			}
+		}
+	}//end listParts()
+
+	/**
 	 * Read one entry from a ZIP package.
 	 *
 	 * @param string $packageBytes The raw package bytes.
