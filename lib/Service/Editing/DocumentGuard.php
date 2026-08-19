@@ -29,6 +29,7 @@ use OCA\DocuDesk\Service\DocumentObjectServiceResolver;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
+use ZipArchive;
 
 /**
  * Enforces the refusals that bound what an agent may do to a document.
@@ -216,4 +217,108 @@ class DocumentGuard {
 		return null;
 
 	}//end field()
+
+	/**
+	 * Refuse a file whose FORMAT must never be content-edited.
+	 *
+	 * 🔴 Determined from CONTENT, not from the filename. An extension is a
+	 * caller's claim about a file; the bytes are the file. A `.docx` that
+	 * actually carries a VBA project is exactly the input a name-based check
+	 * waves through, and writing into a macro-bearing package is a
+	 * code-execution vector in document clothing.
+	 *
+	 * Three standing refusals:
+	 * - macro-bearing OOXML (`.docm`/`.xlsm`/`.pptm`, or ANY package carrying
+	 *   `vbaProject.bin`)
+	 * - `.odb`, which is a database rather than a document and has no
+	 *   meaningful "edit a block" semantics
+	 * - PDF content rewriting; a PDF is a final-form artefact and silently
+	 *   rewriting its text produces something forgery-shaped
+	 *
+	 * @param File $file The file to check.
+	 *
+	 * @return string|null A refusal message, or null when the format is editable.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#3-refusals
+	 */
+	public function formatRefusal(File $file): ?string {
+		$mime = strtolower((string)$file->getMimeType());
+
+		if (str_contains($mime, 'pdf') === true) {
+			return 'A PDF is a final-form artefact. DocuDesk annotates and fills PDF forms but never '
+				. 'rewrites PDF content — a silently rewritten PDF is forgery-shaped.';
+		}
+
+		if (str_contains($mime, 'oasis.opendocument.database') === true) {
+			return 'An .odb is a database, not a document. It has no "edit a block" semantics and its '
+				. 'backing store is not a package.';
+		}
+
+		if ($this->carriesMacros(file: $file) === true) {
+			return 'This file carries a VBA macro project. Writing into a macro-bearing package is a '
+				. 'code-execution vector in document clothing, so it is refused regardless of its '
+				. 'extension — the refusal is based on the bytes, not the file name.';
+		}
+
+		return null;
+	}//end formatRefusal()
+
+	/**
+	 * Whether a package carries a VBA macro project.
+	 *
+	 * ⚠️ Reads the package rather than trusting `.docm`/`.xlsm`/`.pptm`. Both
+	 * halves matter: a renamed `.docx` is caught, and an unreadable package is
+	 * treated as macro-bearing — "I could not tell" must not resolve to "safe"
+	 * for a code-execution check.
+	 *
+	 * @param File $file The file to inspect.
+	 *
+	 * @return bool True when macros are present or cannot be ruled out.
+	 */
+	private function carriesMacros(File $file): bool {
+		$path = tempnam(sys_get_temp_dir(), 'ddmacro');
+		if ($path === false) {
+			return true;
+		}
+
+		try {
+			file_put_contents($path, $file->getContent());
+
+			$zip = new ZipArchive();
+			if ($zip->open($path) !== true) {
+				// Not a zip at all: no OOXML package, so no vbaProject to find.
+				return false;
+			}
+
+			$found = false;
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$name = strtolower((string)$zip->getNameIndex($i));
+				if (str_contains($name, 'vbaproject.bin') === true) {
+					$found = true;
+					break;
+				}
+			}
+
+			$zip->close();
+
+			return $found;
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[DocumentGuard] could not inspect a package for macros; treating it as macro-bearing',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
+			);
+
+			return true;
+		} finally {
+			// The temp file is ours and may already be gone if the write never
+			// happened; a failure to remove it is not a reason to fail the
+			// guard, but suppressing the diagnostic entirely hides a full disk.
+			if (file_exists($path) === true && unlink($path) === false) {
+				$this->logger->warning(
+					message: '[DocumentGuard] could not remove a temporary package copy',
+					context: ['file' => __FILE__, 'line' => __LINE__, 'path' => $path]
+				);
+			}
+		}
+	}//end carriesMacros()
 }//end class

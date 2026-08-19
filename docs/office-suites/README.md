@@ -106,3 +106,96 @@ suite's**:
 
 Before recording a suite as failing something, check that the instrument can succeed
 on a suite of that shape.
+
+---
+
+## Which document types each suite edits
+
+Measured on this instance, not copied from any suite's feature list. Re-measure
+after a suite upgrade: these tables go stale silently, which is why the probe
+that produces them ships with the app (`SupportedTypeProbe`).
+
+| Type | Collabora | Euro-Office | ONLYOFFICE | LibreOffice\* |
+|---|:---:|:---:|:---:|:---:|
+| `odt` | ✅ | ✅ | ✅ | ✅ |
+| `docx` | ✅ | ✅ | ✅ | ✅ |
+| `doc` | ✅ | ❌ | ❌ | ✅ |
+| `ods` | ✅ | ✅ | ✅ | ✅ |
+| `xlsx` | ✅ | ✅ | ✅ | ✅ |
+| `xls` | ✅ | ❌ | ❌ | ✅ |
+| `odp` | ✅ | ✅ | ✅ | ✅ |
+| `pptx` | ✅ | ✅ | ✅ | ✅ |
+| `ppt` | ✅ | ❌ | ❌ | ✅ |
+| `odg` | ✅ | ❌ | ❌ | ❌ |
+| `csv` | ✅ | ✅ | ✅ | ✅ |
+| `pdf` | ❌ | ✅ | ✅ | ✅ |
+
+Measured 2026-08-18 · Collabora (LibreOffice lineage) · Euro-Office 1.0 ·
+ONLYOFFICE 1.0 · LibreOffice 7.6.7.2
+
+### Read the columns carefully — they do not mean the same thing
+
+⚠️ **The LibreOffice column is a different measurement.** LibreOffice desktop has
+**no server seam**: it exposes no WOPI discovery, so DocuDesk cannot open an
+editing session against it at all. Its ticks are *conversion filters* — what
+`soffice --convert-to` produces — which is useful for format conversion and
+useless for in-place editing. A ✅ in that column never means "an agent can edit
+this here".
+
+The other three columns come from each suite's own WOPI discovery document,
+counting `<action name="edit">` entries. That is the suite stating what it
+edits, which is the closest thing to an authoritative answer available.
+
+### What the differences actually cost you
+
+**Legacy Microsoft formats (`doc`, `xls`, `ppt`) are Collabora-only.** A tenant on
+Euro-Office or ONLYOFFICE cannot edit them, so no workflow, template or feature
+may require them (ADR-087 §4). They resolve absent, visibly.
+
+**Draw (`odg`) is Collabora-only** — the ONLYOFFICE lineage ships its own diagram
+model rather than the ODF one.
+
+**PDF editing exists only on the ONLYOFFICE lineage**, and DocuDesk restricts it
+to annotation and form-fill regardless. A PDF is a final-form artefact; silently
+rewriting its text produces something forgery-shaped.
+
+**Euro-Office and ONLYOFFICE report identical sets.** That is expected —
+Euro-Office is ONLYOFFICE lineage — and it is worth knowing that choosing between
+them is a sovereignty and support decision, not a capability one.
+
+### What DocuDesk itself can edit, which is less
+
+The table above is what the *suite* can open. DocuDesk's own in-package codecs
+now cover text, spreadsheets and presentations:
+
+| Kind | Formats | Read | Edit | Style & layout |
+|---|---|:---:|:---:|:---:|
+| Text | `docx`, `odt` | ✅ | ✅ | ✅ (`list` is docx-only) |
+| Spreadsheet | `ods`, `xlsx` | ✅ | ✅ cells | — |
+| Presentation | `pptx`, `odp` | ✅ | ✅ shape text | — |
+
+Addressing differs by kind, because the durable identity differs:
+
+- **Text** uses content-derived anchors, so an anchor from an out-of-date read
+  is refused rather than applied to the wrong paragraph.
+- **Spreadsheets** use `Sheet!Cell`. A cell address is already a durable
+  identity — insert a row and everything below shifts in a way the file format
+  and the reader's mental model agree on.
+- **Presentations** use slide id and shape id, **never position**. Slide order
+  changes; ids do not.
+
+⚠️ Three refusals worth knowing before you plan around them:
+
+- Writing a literal over a cell holding a **formula** is refused unless that
+  edit sets `replaceFormula`. The flag is per cell and is not carried across a
+  bulk write.
+- Dependent cells are reported **stale**, not recalculated. DocuDesk has no
+  formula engine, and the difference is observable: after one write the same
+  file showed `1218` in ODS (LibreOffice recalculated on open) and `290` in
+  XLSX (it served the cached value).
+- Macro-bearing packages, `.odb`, and PDF content rewriting are refused
+  outright — and the macro check reads the **bytes**, so a package carrying
+  VBA is refused even when it is named `.docx`.
+
+`.odg` (Draw) has no codec, and Draw is Collabora-only in any case.
+

@@ -139,3 +139,31 @@ the register **must** be bumped; the importer additionally compares schema conte
 silently skipped, but the version bump is what moves the app-level configuration
 gate. Verify against the live instance — a cascade present in the file and absent
 from `oc_openregister_schemas` is a fix-shaped commit, not a fix.
+
+## `product` — the rate card
+
+`product` carries rate-card data: what a service is called and what it costs. Its
+authorization reads:
+
+```json
+{ "read": ["authenticated"],
+  "create": ["docudesk-template-editors"],
+  "update": ["docudesk-template-editors"],
+  "delete": ["docudesk-template-editors"] }
+```
+
+**Read is deliberately open to authenticated users.** A rate card is quoted back to
+clients; a price nobody inside the organisation may read is a price nobody can quote,
+and the data is not personal. Multitenancy still applies on the row, so "authenticated"
+means authenticated *within this organisation*, not everyone on the instance.
+
+**Writes are narrowed to `docudesk-template-editors`**, the same group that owns
+templates, because a rate card is priced content of exactly that kind: changing it
+changes what every future quotation says.
+
+⚠️ It is deliberately **not searchable**. Only `template` and `signingRequest` carry
+manifest deep links, and a searchable schema without one produces Unified Search hits
+that lead nowhere — a result the user can see and cannot open. The schema shipped
+`searchable: true` without a deep link and three tests caught it; this records the
+decision so the next person does not restore the flag on the assumption it was an
+oversight in the other direction.

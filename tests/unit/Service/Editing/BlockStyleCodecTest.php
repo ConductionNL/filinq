@@ -71,7 +71,7 @@ class BlockStyleCodecTest extends TestCase {
 			markup: $markup,
 			style: $style,
 			format: PackageCodec::FORMAT_OOXML
-		);
+		)['markup'];
 	}//end apply()
 
 	/**
@@ -212,18 +212,102 @@ class BlockStyleCodecTest extends TestCase {
 	 *
 	 * @spec openspec/specs/document-rich-editing/spec.md
 	 */
-	public function testOdfIsRefusedByNameRatherThanSilentlyIgnored(): void {
-		$this->assertFalse($this->codec->supports(format: PackageCodec::FORMAT_ODF));
+	public function testOdfStyleMintsAnAutomaticStyleAndPointsTheBlockAtIt(): void {
+		$this->assertTrue($this->codec->supports(format: PackageCodec::FORMAT_ODF));
 
+		$result = $this->codec->applyStyle(
+			markup: '<text:p>Text</text:p>',
+			style: ['bold' => true, 'alignment' => 'center'],
+			format: PackageCodec::FORMAT_ODF,
+			styleName: 'DdAgent1'
+		);
+
+		// ODF has no direct formatting: the block POINTS at a definition, and a
+		// definition that never lands leaves it referencing a style that does
+		// not exist — a restyle that reports success and changes nothing.
+		$this->assertStringContainsString('text:style-name="DdAgent1"', $result['markup']);
+		$this->assertStringContainsString('style:name="DdAgent1"', (string)$result['automaticStyle']);
+		$this->assertStringContainsString('fo:font-weight="bold"', (string)$result['automaticStyle']);
+		$this->assertStringContainsString('fo:text-align="center"', (string)$result['automaticStyle']);
+	}//end testOdfStyleMintsAnAutomaticStyleAndPointsTheBlockAtIt()
+
+	/**
+	 * ⚠️ ODF spells alignment in XSL-FO terms: `start`/`end`, never
+	 * `left`/`right`. Emitting the OOXML vocabulary here would produce values a
+	 * reader silently ignores.
+	 *
+	 * @return void
+	 */
+	public function testOdfAlignmentUsesTheOdfVocabulary(): void {
+		$result = $this->codec->applyStyle(
+			markup: '<text:p>Text</text:p>',
+			style: ['alignment' => 'right'],
+			format: PackageCodec::FORMAT_ODF,
+			styleName: 'DdAgent1'
+		);
+
+		$this->assertStringContainsString('fo:text-align="end"', (string)$result['automaticStyle']);
+		$this->assertStringNotContainsString('"right"', (string)$result['automaticStyle']);
+	}//end testOdfAlignmentUsesTheOdfVocabulary()
+
+	/**
+	 * 🔴 An ODF heading is `text:h`, a different ELEMENT. Styling it as a
+	 * paragraph property would leave the document without a heading while
+	 * reporting the restyle applied.
+	 *
+	 * @return void
+	 */
+	public function testOdfHeadingRewritesTheElement(): void {
+		$result = $this->codec->applyStyle(
+			markup: '<text:p>Kop</text:p>',
+			style: ['heading' => 2],
+			format: PackageCodec::FORMAT_ODF,
+			styleName: 'DdAgent1'
+		);
+
+		$this->assertStringContainsString('<text:h', $result['markup']);
+		$this->assertStringContainsString('text:outline-level="2"', $result['markup']);
+		$this->assertStringContainsString('</text:h>', $result['markup']);
+	}//end testOdfHeadingRewritesTheElement()
+
+	/**
+	 * Switching a heading OFF demotes it back to a paragraph. Leaving text:h in
+	 * place would report the restyle as applied and change nothing.
+	 *
+	 * @return void
+	 */
+	public function testOdfHeadingZeroDemotesBackToAParagraph(): void {
+		$result = $this->codec->applyStyle(
+			markup: '<text:h text:outline-level="2">Kop</text:h>',
+			style: ['heading' => 0],
+			format: PackageCodec::FORMAT_ODF,
+			styleName: 'DdAgent1'
+		);
+
+		$this->assertStringContainsString('<text:p', $result['markup']);
+		$this->assertStringNotContainsString('text:outline-level', $result['markup']);
+		$this->assertStringNotContainsString('<text:h', $result['markup']);
+	}//end testOdfHeadingZeroDemotesBackToAParagraph()
+
+	/**
+	 * ⚠️ `list` stays refused on ODF, BY NAME. An ODF list wraps the paragraph
+	 * in a <text:list> element rather than setting a property on it, so
+	 * enabling one restructures the document — silently doing nothing instead
+	 * would be worse.
+	 *
+	 * @return void
+	 */
+	public function testOdfListIsRefusedByNameRatherThanSilentlyIgnored(): void {
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessageMatches('/OOXML.*\.docx.*Text edits and metadata DO work on \.odt/s');
+		$this->expectExceptionMessageMatches('/list.*not supported on \.odt.*text:list/s');
 
 		$this->codec->applyStyle(
 			markup: '<text:p>Text</text:p>',
-			style: ['bold' => true],
-			format: PackageCodec::FORMAT_ODF
+			style: ['list' => true],
+			format: PackageCodec::FORMAT_ODF,
+			styleName: 'DdAgent1'
 		);
-	}//end testOdfIsRefusedByNameRatherThanSilentlyIgnored()
+	}//end testOdfListIsRefusedByNameRatherThanSilentlyIgnored()
 
 	/**
 	 * REQ: an unknown property is refused, listing what is supported.
