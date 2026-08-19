@@ -69,7 +69,7 @@ class PackagePartIo {
 	 *
 	 * @throws RuntimeException When the package cannot be read.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function listParts(string $packageBytes): array {
 		$path = $this->spill(bytes: $packageBytes);

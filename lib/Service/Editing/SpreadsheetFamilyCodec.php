@@ -22,7 +22,7 @@
  *
  * @link https://docudesk.app
  *
- * @spec openspec/changes/multi-format-editing-tools/tasks.md#11
+ * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ interface SpreadsheetFamilyCodec {
 	 *
 	 * @return bool True when handled.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function supports(string $extension): bool;
 
@@ -50,7 +50,7 @@ interface SpreadsheetFamilyCodec {
 	 *
 	 * @return string The part path.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function valuePart(): string;
 
@@ -62,7 +62,7 @@ interface SpreadsheetFamilyCodec {
 	 *
 	 * @return array<int, array{cell: string, value: string, formula: string|null}> The cells.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function readCells(string $xml, string $packageBytes): array;
 
@@ -75,7 +75,7 @@ interface SpreadsheetFamilyCodec {
 	 *
 	 * @return string The rewritten part.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function writeCell(string $xml, string $cell, string $value): string;
 }//end interface

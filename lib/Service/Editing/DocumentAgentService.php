@@ -218,7 +218,7 @@ class DocumentAgentService {
 	 *
 	 * @throws RuntimeException When the file cannot be read or is not a spreadsheet.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function readSpreadsheet(int $fileId): array {
 		return $this->editSession->openSpreadsheetForAgent(uid: $this->requireUid(), fileId: $fileId);
@@ -247,7 +247,7 @@ class DocumentAgentService {
 	 *
 	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function editSpreadsheet(int $fileId, array $edits, string $version): array {
 		$uid = $this->requireUid();
@@ -290,7 +290,7 @@ class DocumentAgentService {
 	 *
 	 * @throws RuntimeException When the file cannot be read or is not a presentation.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function readPresentation(int $fileId): array {
 		return $this->editSession->openPresentationForAgent(uid: $this->requireUid(), fileId: $fileId);
@@ -319,7 +319,7 @@ class DocumentAgentService {
 	 *
 	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function editPresentation(int $fileId, array $edits, string $version): array {
 		$uid = $this->requireUid();

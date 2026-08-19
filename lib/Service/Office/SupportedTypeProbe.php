@@ -96,7 +96,7 @@ class SupportedTypeProbe {
 	 *
 	 * @return array<string, mixed> The declaration.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#02
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-0.2
 	 */
 	public function declare(string $discoveryXml, ?string $suite, string $probedAt, string $endpoint): array {
 		$editable = $this->extensionsFor(discoveryXml: $discoveryXml, action: 'edit');
@@ -157,6 +157,8 @@ class SupportedTypeProbe {
 	 * @param string $probedAt ISO-8601 timestamp of the attempt.
 	 *
 	 * @return array<string, mixed> The declaration.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-0.2
 	 */
 	public function unavailable(string $reason, string $probedAt): array {
 		$types = [];

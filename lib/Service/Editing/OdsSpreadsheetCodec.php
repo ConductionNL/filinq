@@ -3,7 +3,13 @@
 /**
  * DocuDesk OdsSpreadsheetCodec
  *
- * Cell access for ODF spreadsheets (`.ods`).\n *\n * \u26a0\ufe0f ODS compresses runs of identical columns with\n * `table:number-columns-repeated`, so ONE element can stand for many columns.\n * Ignoring the repeat count puts every cell after a gap at the wrong address —\n * silently, and for the whole row — and writing into such a run must SPLIT it\n * rather than rewrite every column it stood for.
+ * Cell access for ODF spreadsheets (`.ods`).
+ *
+ * ⚠️ ODS compresses runs of identical columns with
+ * `table:number-columns-repeated`, so ONE element can stand for many columns.
+ * Ignoring the repeat count puts every cell after a gap at the wrong address —
+ * silently, and for the whole row — and writing into such a run must SPLIT it
+ * rather than rewrite every column it stood for.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service\Editing
@@ -17,7 +23,7 @@
  *
  * @link https://docudesk.app
  *
- * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+ * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -38,7 +44,7 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 *
 	 * @return bool True when handled.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function supports(string $extension): bool {
 		return (strtolower($extension) === 'ods');
@@ -49,7 +55,7 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 *
 	 * @return string The part path.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function valuePart(): string {
 		return 'content.xml';
@@ -59,8 +65,15 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * Read ODS cells.
 	 *
 	 * @param string $xml The content.xml.
+	 * @param string $packageBytes The whole package. Unused here — ODF keeps its
+	 *                             cell text inline, so nothing else has to be
+	 *                             opened. Accepted so the codec matches the
+	 *                             interface OOXML needs, where the text lives in
+	 *                             a separate shared-string part.
 	 *
 	 * @return array<int, array{cell: string, value: string, formula: string|null}> The cells.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function readCells(string $xml, string $packageBytes): array {
 		$cells = [];
@@ -179,6 +192,8 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * @return string The rewritten XML.
 	 *
 	 * @throws RuntimeException When the cell is absent.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function writeCell(string $xml, string $cell, string $value): string {
 		$target = $this->normaliseAddress(address: $cell);

@@ -24,7 +24,7 @@
  *
  * @link https://docudesk.app
  *
- * @spec openspec/changes/multi-format-editing-tools/tasks.md#11
+ * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ interface BlockStyleFamilyCodec {
 	 *
 	 * @return bool True when handled.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#11
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
 	 */
 	public function supports(string $format): bool;
 
@@ -61,7 +61,7 @@ interface BlockStyleFamilyCodec {
 	 *
 	 * @return array{markup: string, automaticStyle: string|null} The rewritten block and any style to inject.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#11
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
 	 */
 	public function applyStyle(string $markup, array $style, string $styleName): array;
 }//end interface

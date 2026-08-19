@@ -79,7 +79,7 @@ class PresentationCodec {
 	 *
 	 * @return bool True when handled.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function supports(string $extension): bool {
 		return ($this->codecFor(extension: $extension) !== null);
@@ -95,7 +95,7 @@ class PresentationCodec {
 	 *
 	 * @throws RuntimeException When the extension is not a presentation.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function readShapes(string $packageBytes, string $extension): array {
 		return $this->requireCodec(extension: $extension)->readShapes(packageBytes: $packageBytes);

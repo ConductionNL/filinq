@@ -3,7 +3,13 @@
 /**
  * DocuDesk XlsxSpreadsheetCodec
  *
- * Cell access for OOXML spreadsheets (`.xlsx`).\n *\n * \u26a0\ufe0f A string cell does not hold its text: `t=\"s\"` means the value is an\n * INDEX into `xl/sharedStrings.xml`. Reporting the index would hand a caller a\n * number where the sheet shows a word, so reads resolve it. Writes use an\n * INLINE string instead of appending to the shared table, because that table is\n * indexed by every other sheet in the workbook.
+ * Cell access for OOXML spreadsheets (`.xlsx`).
+ *
+ * ⚠️ A string cell does not hold its text: `t="s"` means the value is an
+ * INDEX into `xl/sharedStrings.xml`. Reporting the index would hand a caller a
+ * number where the sheet shows a word, so reads resolve it. Writes use an
+ * INLINE string instead of appending to the shared table, because that table is
+ * indexed by every other sheet in the workbook.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service\Editing
@@ -17,7 +23,7 @@
  *
  * @link https://docudesk.app
  *
- * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+ * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -46,7 +52,7 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 *
 	 * @return bool True when handled.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function supports(string $extension): bool {
 		return (strtolower($extension) === 'xlsx');
@@ -57,7 +63,7 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 *
 	 * @return string The part path.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function valuePart(): string {
 		return 'xl/worksheets/sheet1.xml';
@@ -70,6 +76,8 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * @param string $packageBytes The package, for the shared string table.
 	 *
 	 * @return array<int, array{cell: string, value: string, formula: string|null}> The cells.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function readCells(string $xml, string $packageBytes): array {
 		$shared = $this->sharedStrings(packageBytes: $packageBytes);
@@ -149,6 +157,8 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * @return string The rewritten XML.
 	 *
 	 * @throws RuntimeException When the cell is absent.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function writeCell(string $xml, string $cell, string $value): string {
 		$ref = $this->bareRef(cell: $cell);

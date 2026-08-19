@@ -88,7 +88,7 @@ class SpreadsheetCodec {
 	 *
 	 * @return bool True when handled.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function supports(string $extension): bool {
 		return ($this->codecFor(extension: $extension) !== null);
@@ -104,7 +104,7 @@ class SpreadsheetCodec {
 	 *
 	 * @throws RuntimeException When the extension is not a spreadsheet.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function readCells(string $packageBytes, string $extension): array {
 		$codec = $this->requireCodec(extension: $extension);
@@ -128,7 +128,7 @@ class SpreadsheetCodec {
 	 *
 	 * @throws RuntimeException When an edit is refused.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function applyCellEdits(string $packageBytes, string $extension, array $edits): array {
 		if ($edits === []) {
@@ -227,7 +227,7 @@ class SpreadsheetCodec {
 	 *
 	 * @throws RuntimeException When the cell holds a formula and intent is absent.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#13
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.3
 	 */
 	private function assertFormulaIntent(string $cell, array $edit, array $existing, int $position): void {
 		$formula = ($existing[$cell]['formula'] ?? null);
@@ -264,7 +264,7 @@ class SpreadsheetCodec {
 	 *
 	 * @return array<int, string> Addresses whose cached values no longer follow.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#14
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.4
 	 */
 	private function staleDependents(array $existing, array $written): array {
 		$stale = [];
@@ -300,7 +300,7 @@ class SpreadsheetCodec {
 	 *
 	 * @return array<int, string> Addresses whose cached value is an error literal.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#42
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-4.2
 	 */
 	private function erroredDependents(array $existing, array $stale): array {
 		$errored = [];

@@ -36,7 +36,7 @@ interface PresentationFamilyCodec {
 	 *
 	 * @return bool True when handled.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function supports(string $extension): bool;
 
@@ -47,7 +47,7 @@ interface PresentationFamilyCodec {
 	 *
 	 * @return array<int, array{slide: string, shape: string, region: string, text: string}> The shapes.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function readShapes(string $packageBytes): array;
 
@@ -62,7 +62,7 @@ interface PresentationFamilyCodec {
 	 *
 	 * @return string The rewritten package.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function writeShape(string $packageBytes, string $slide, string $shape, string $region, string $text): string;
 }//end interface

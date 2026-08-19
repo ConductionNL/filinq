@@ -97,6 +97,8 @@ class GuardedWriter {
 	 * @return array<string, mixed> The outcome.
 	 *
 	 * @throws RuntimeException On any refusal or failure.
+	 *
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
 	 */
 	public function runSession(string $uid, File $file, callable $transform, string $version, string $mode): array {
 		$lock = new LockContext($file, ILock::TYPE_APP, Application::APP_ID);

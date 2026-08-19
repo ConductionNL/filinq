@@ -63,7 +63,7 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @return bool True for odp.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function supports(string $extension): bool {
 		return (strtolower($extension) === 'odp');
@@ -76,7 +76,7 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @return array<int, array{slide: string, shape: string, region: string, text: string}> The shapes.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function readShapes(string $packageBytes): array {
 		$xml = $this->io->readPart(packageBytes: $packageBytes, part: self::PART);
@@ -111,7 +111,7 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @throws RuntimeException When the frame cannot be located.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function writeShape(string $packageBytes, string $slide, string $shape, string $region, string $text): string {
 		$xml = $this->io->readPart(packageBytes: $packageBytes, part: self::PART);
@@ -272,7 +272,12 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 			$notes = $match[0];
 		}
 
-		$regions = ['slide' => (($notes === '') ? $page : str_replace($notes, '', $page))];
+		$slide = $page;
+		if ($notes !== '') {
+			$slide = str_replace($notes, '', $page);
+		}
+
+		$regions = ['slide' => $slide];
 		if ($notes !== '') {
 			$regions['notes'] = $notes;
 		}

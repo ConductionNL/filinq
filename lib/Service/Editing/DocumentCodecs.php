@@ -24,7 +24,7 @@
  *
  * @link https://docudesk.app
  *
- * @spec openspec/changes/multi-format-editing-tools/tasks.md#11
+ * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
  */
 
 declare(strict_types=1);

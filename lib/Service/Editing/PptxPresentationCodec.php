@@ -52,7 +52,7 @@ class PptxPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @return bool True for pptx.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function supports(string $extension): bool {
 		return (strtolower($extension) === 'pptx');
@@ -65,7 +65,7 @@ class PptxPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @return array<int, array{slide: string, shape: string, region: string, text: string}> The shapes.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function readShapes(string $packageBytes): array {
 		$shapes = [];
@@ -98,7 +98,7 @@ class PptxPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @throws RuntimeException When the shape cannot be located.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function writeShape(string $packageBytes, string $slide, string $shape, string $region, string $text): string {
 		$path = $this->pathFor(packageBytes: $packageBytes, slide: $slide, region: $region);

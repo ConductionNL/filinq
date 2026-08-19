@@ -273,7 +273,7 @@ class EditSessionService {
 	 *
 	 * @throws RuntimeException When the file cannot be read or is not a spreadsheet.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function openSpreadsheetForAgent(string $uid, int $fileId): array {
 		$file = $this->resolveFile(
@@ -311,7 +311,7 @@ class EditSessionService {
 	 *
 	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#12
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
 	 */
 	public function editSpreadsheetForAgent(string $uid, int $fileId, array $edits, string $version): array {
 		[$file, $mode] = $this->prepareWrite(
@@ -361,7 +361,7 @@ class EditSessionService {
 	 *
 	 * @throws RuntimeException When the file cannot be read or is not a presentation.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function openPresentationForAgent(string $uid, int $fileId): array {
 		$file = $this->resolveFile(
@@ -395,7 +395,7 @@ class EditSessionService {
 	 *
 	 * @throws RuntimeException On any refusal. Nothing is written on a throw.
 	 *
-	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#21
+	 * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-2.1
 	 */
 	public function editPresentationForAgent(string $uid, int $fileId, array $edits, string $version): array {
 		[$file, $mode] = $this->prepareWrite(
@@ -560,6 +560,12 @@ class EditSessionService {
 	 * @param int $fileId The Nextcloud file id.
 	 * @param string $version The version the caller is writing against.
 	 * @param string|null $requestedMode The requested output mode, or null.
+	 * @param callable|null $supports Predicate deciding whether this file's
+	 *                                extension is editable by the calling codec.
+	 *                                Null means the text codec's own support set.
+	 * @param string $formats The human-readable format list named in the refusal
+	 *                        when `$supports` says no. Empty means the text
+	 *                        codec's supported extensions.
 	 *
 	 * @return array{0: File, 1: string} The resolved file and output mode.
 	 *
@@ -675,6 +681,11 @@ class EditSessionService {
 	 *
 	 * @param string $uid The acting user id.
 	 * @param int $fileId The Nextcloud file id.
+	 * @param callable|null $supports Predicate deciding whether this file's
+	 *                                extension is editable by the calling codec.
+	 *                                Null means the text codec's own support set.
+	 * @param string $formats The human-readable format list named in the refusal
+	 *                        when `$supports` says no.
 	 *
 	 * @return File The file.
 	 *
@@ -701,7 +712,10 @@ class EditSessionService {
 		// format" and told to convert itself — advice that would have destroyed
 		// the very cells the caller asked to edit.
 		$accepts = ($supports ?? fn (string $extension): bool => $this->codecs->text->supports(extension: $extension));
-		$supported = ($formats !== '') ? $formats : implode(', ', $this->codecs->text->supportedExtensions());
+		$supported = $formats;
+		if ($supported === '') {
+			$supported = implode(', ', $this->codecs->text->supportedExtensions());
+		}
 
 		if ($accepts($node->getExtension()) === false) {
 			throw new RuntimeException(
