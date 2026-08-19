@@ -82,6 +82,8 @@ final class McpTool {
 	 * @param bool|null $destructiveHint Optional MCP 2025-11-25 annotation hint.
 	 * @param bool|null $idempotentHint Optional MCP 2025-11-25 annotation hint.
 	 * @param string|null $scope Optional advisory scope.
+	 * @param string|null $subject The thing the tool acts on (grant-matrix taxonomy).
+	 * @param string|null $action The verb it performs on that subject.
 	 */
 	public function __construct(
 		public readonly ?string $name = null,
@@ -90,6 +92,8 @@ final class McpTool {
 		public readonly ?bool $destructiveHint = null,
 		public readonly ?bool $idempotentHint = null,
 		public readonly ?string $scope = null,
+		public readonly ?string $subject = null,
+		public readonly ?string $action = null,
 	) {
 	}//end __construct()
 }//end class
