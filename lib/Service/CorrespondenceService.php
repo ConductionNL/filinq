@@ -188,6 +188,10 @@ class CorrespondenceService {
 	 */
 	#[McpTool(
 		name: 'generateCorrespondence',
+		// `generate`, not `create`: it renders a document from a template and a
+		// data source, which is a different authority from authoring one.
+		subject: 'correspondence',
+		action: 'generate',
 		description: 'Generate one letter from a DocuDesk template for one recipient: resolves the '
 			. 'recipient\'s data from OpenRegister, applies the organisation huisstijl, renders the '
 			. 'template and logs the result to the correspondence register. Use searchTemplate first '
