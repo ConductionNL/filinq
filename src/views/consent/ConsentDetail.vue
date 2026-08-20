@@ -5,19 +5,27 @@ import { consentStore } from '../../store/store.js'
 
 <template>
 	<CnDetailPage
-		:title="consentStore.consentItem?.entityText || t('docudesk', 'Consent Detail')"
+		:title="
+			consentStore.consentItem?.entityText || t('docudesk', 'Consent Detail')
+		"
 		:loading="consentStore.loading"
-		:loading-label="t('docudesk', 'Loading consent record...')"
+		:loadingLabel="t('docudesk', 'Loading consent record...')"
 		:error="!consentStore.consentItem"
-		:error-message="t('docudesk', 'No consent record selected.')"
-		:stats-title="consentStore.consentItem ? t('docudesk', 'Entity Information') : ''"
-		:stats-columns="consentStore.consentItem ? [
-			{ key: 'field', label: t('docudesk', 'Field') },
-			{ key: 'value', label: t('docudesk', 'Value') },
-		] : []">
+		:errorMessage="t('docudesk', 'No consent record selected.')"
+		:statsTitle="
+			consentStore.consentItem ? t('docudesk', 'Entity Information') : ''
+		"
+		:statsColumns="
+			consentStore.consentItem
+				? [
+						{ key: 'field', label: t('docudesk', 'Field') },
+						{ key: 'value', label: t('docudesk', 'Value') },
+					]
+				: []
+		">
 		<!-- Back button in header -->
 		<template #header-actions>
-			<NcButton type="tertiary" @click="goBack">
+			<NcButton variant="tertiary" @click="goBack">
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
@@ -42,8 +50,11 @@ import { consentStore } from '../../store/store.js'
 				<td>{{ t('docudesk', 'Entity Type') }}</td>
 				<td>
 					<CnStatusBadge
-						:label="consentStore.consentItem.entityType || t('docudesk', 'Unknown')"
-						:color-map="entityTypeColorMap" />
+						:label="
+							consentStore.consentItem.entityType
+							|| t('docudesk', 'Unknown')
+						"
+						:colorMap="entityTypeColorMap" />
 				</td>
 			</tr>
 			<tr v-if="consentStore.consentItem.entityKey">
@@ -68,17 +79,42 @@ import { consentStore } from '../../store/store.js'
 					v-model="anonymiseToggle"
 					type="switch"
 					:disabled="toggleLocked"
-					@update:checked="onToggleAnonymise">
-					{{ t('docudesk', 'Anonymise this entity in the published document') }}
+					@update:modelValue="onToggleAnonymise">
+					{{
+						t(
+							'docudesk',
+							'Anonymise this entity in the published document',
+						)
+					}}
 				</NcCheckboxRadioSwitch>
-				<p v-if="policyMatchKind === 'prohibition'" class="toggle-note toggle-note-locked">
-					{{ t('docudesk', 'This entity is on the publication prohibition list. The decision is locked.') }}
+				<p
+					v-if="policyMatchKind === 'prohibition'"
+					class="toggle-note toggle-note-locked">
+					{{
+						t(
+							'docudesk',
+							'This entity is on the publication prohibition list. The decision is locked.',
+						)
+					}}
 				</p>
-				<p v-else-if="policyMatchKind === 'standing_consent'" class="toggle-note">
-					{{ t('docudesk', 'A standing publication consent applies. You may override to anonymise anyway; the override is audit-logged.') }}
+				<p
+					v-else-if="policyMatchKind === 'standing_consent'"
+					class="toggle-note">
+					{{
+						t(
+							'docudesk',
+							'A standing publication consent applies. You may override to anonymise anyway; the override is audit-logged.',
+						)
+					}}
 				</p>
-				<p v-else-if="consentStore.consentItem.policyMatch" class="toggle-note">
-					{{ t('docudesk', 'Pre-empted by policy match {ref}.', { ref: consentStore.consentItem.policyMatch }) }}
+				<p
+					v-else-if="consentStore.consentItem.policyMatch"
+					class="toggle-note">
+					{{
+						t('docudesk', 'Pre-empted by policy match {ref}.', {
+							ref: consentStore.consentItem.policyMatch,
+						})
+					}}
 				</p>
 			</div>
 		</div>
@@ -86,56 +122,69 @@ import { consentStore } from '../../store/store.js'
 		<!-- Consent status section -->
 		<div v-if="consentStore.consentItem" class="detail-section">
 			<h3>{{ t('docudesk', 'Consent Status') }}</h3>
+			<!--
+				This is a name/value grid: every row's first cell IS the name of
+				that row, so it is a row header, not data. It shipped as a table
+				of nothing but <td>, which left the values with no header to be
+				announced against at all (WCAG 1.3.1). <th scope="row"> states
+				what was already true of the markup.
+			-->
 			<table class="detail-table">
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Consent Status') }}
-					</td>
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.consentStatus"
 							:options="consentStatusOptions"
-							:input-label="t('docudesk', 'Consent Status')" />
+							:inputLabel="t('docudesk', 'Consent Status')" />
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Notification Status') }}
-					</td>
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.notificationStatus"
 							:options="notificationStatusOptions"
-							:input-label="t('docudesk', 'Notification Status')" />
+							:inputLabel="t('docudesk', 'Notification Status')" />
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Publication Decision') }}
-					</td>
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.publicationDecision"
 							:options="publicationDecisionOptions"
-							:input-label="t('docudesk', 'Publication Decision')" />
+							:inputLabel="t('docudesk', 'Publication Decision')" />
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Objection Deadline') }}
+					</th>
+					<td>
+						{{ formatDate(consentStore.consentItem.objectionDeadline) }}
 					</td>
-					<td>{{ formatDate(consentStore.consentItem.objectionDeadline) }}</td>
 				</tr>
 				<tr v-if="consentStore.consentItem.objectionReceivedAt">
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Objection Received') }}
+					</th>
+					<td>
+						{{
+							formatDate(consentStore.consentItem.objectionReceivedAt)
+						}}
 					</td>
-					<td>{{ formatDate(consentStore.consentItem.objectionReceivedAt) }}</td>
 				</tr>
 				<tr v-if="consentStore.consentItem.legalBasis">
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Legal Basis') }}
-					</td>
+					</th>
 					<td>{{ consentStore.consentItem.legalBasis }}</td>
 				</tr>
 			</table>
@@ -159,7 +208,10 @@ import { consentStore } from '../../store/store.js'
 
 		<!-- Save button -->
 		<div v-if="consentStore.consentItem" class="detail-actions">
-			<NcButton type="primary" :disabled="consentStore.loading" @click="saveChanges">
+			<NcButton
+				variant="primary"
+				:disabled="consentStore.loading"
+				@click="saveChanges">
 				<template #icon>
 					<NcLoadingIcon v-if="consentStore.loading" :size="20" />
 					<ContentSave v-else :size="20" />
@@ -171,13 +223,18 @@ import { consentStore } from '../../store/store.js'
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
 import { CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+} from '@nextcloud/vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'ConsentDetail',
@@ -191,12 +248,14 @@ export default {
 		ArrowLeft,
 		ContentSave,
 	},
+
 	props: {
 		consentId: {
 			type: String,
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			editData: {
@@ -204,19 +263,25 @@ export default {
 				notificationStatus: null,
 				publicationDecision: null,
 			},
+
 			anonymiseToggle: false,
 			policyMatchKind: null,
 			entityTypeColorMap: {
 				person: 'warning',
 				organization: 'primary',
 			},
+
 			consentStatusOptions: [
 				{ label: t('docudesk', 'Pending'), value: 'pending' },
 				{ label: t('docudesk', 'Consent Given'), value: 'consent_given' },
-				{ label: t('docudesk', 'Objection Received'), value: 'objection_received' },
+				{
+					label: t('docudesk', 'Objection Received'),
+					value: 'objection_received',
+				},
 				{ label: t('docudesk', 'No Response'), value: 'no_response' },
 				{ label: t('docudesk', 'Anonymized'), value: 'anonymized' },
 			],
+
 			notificationStatusOptions: [
 				{ label: t('docudesk', 'Pending'), value: 'pending' },
 				{ label: t('docudesk', 'Sent'), value: 'sent' },
@@ -224,20 +289,29 @@ export default {
 				{ label: t('docudesk', 'Failed'), value: 'failed' },
 				{ label: t('docudesk', 'Skipped'), value: 'skipped' },
 			],
+
 			publicationDecisionOptions: [
 				{ label: t('docudesk', 'Pending'), value: 'pending' },
 				{ label: t('docudesk', 'Anonymize'), value: 'anonymize' },
-				{ label: t('docudesk', 'Publish with Consent'), value: 'publish_with_consent' },
-				{ label: t('docudesk', 'Publish Anonymized'), value: 'publish_anonymized' },
+				{
+					label: t('docudesk', 'Publish with Consent'),
+					value: 'publish_with_consent',
+				},
+				{
+					label: t('docudesk', 'Publish Anonymized'),
+					value: 'publish_anonymized',
+				},
 				{ label: t('docudesk', 'Reject'), value: 'reject' },
 			],
 		}
 	},
+
 	computed: {
 		toggleLocked() {
 			return this.policyMatchKind === 'prohibition'
 		},
 	},
+
 	watch: {
 		'consentStore.consentItem': {
 			immediate: true,
@@ -249,19 +323,30 @@ export default {
 			 */
 			handler(item) {
 				if (item) {
-					this.editData.consentStatus = this.consentStatusOptions.find(o => o.value === item.consentStatus) || null
-					this.editData.notificationStatus = this.notificationStatusOptions.find(o => o.value === item.notificationStatus) || null
-					this.editData.publicationDecision = this.publicationDecisionOptions.find(o => o.value === item.publicationDecision) || null
+					this.editData.consentStatus =
+						this.consentStatusOptions.find(
+							(o) => o.value === item.consentStatus,
+						) || null
+					this.editData.notificationStatus =
+						this.notificationStatusOptions.find(
+							(o) => o.value === item.notificationStatus,
+						) || null
+					this.editData.publicationDecision =
+						this.publicationDecisionOptions.find(
+							(o) => o.value === item.publicationDecision,
+						) || null
 					this.refreshPolicyMatch()
 				}
 			},
 		},
 	},
+
 	created() {
 		if (this.consentId && !consentStore.consentItem) {
 			consentStore.fetchConsent(this.consentId)
 		}
 	},
+
 	methods: {
 		/**
 		 * Clear the selected consent and return to the consent list.
@@ -272,6 +357,7 @@ export default {
 			consentStore.clearConsentItem()
 			this.$router.push({ name: 'Consent' })
 		},
+
 		/**
 		 * Resolve the policyMatch UUID into a kind for toggle behaviour.
 		 *
@@ -284,13 +370,15 @@ export default {
 			const item = consentStore.consentItem
 			this.policyMatchKind = null
 			if (!item?.policyMatch) {
-				this.anonymiseToggle = (item?.publicationDecision === 'anonymize')
+				this.anonymiseToggle = item?.publicationDecision === 'anonymize'
 				return
 			}
 
 			try {
 				await axios.get(
-					generateUrl(`/apps/docudesk/api/policy/prohibitions/${item.policyMatch}`),
+					generateUrl(
+						`/apps/docudesk/api/policy/prohibitions/${item.policyMatch}`,
+					),
 				)
 				this.policyMatchKind = 'prohibition'
 				this.anonymiseToggle = true
@@ -301,23 +389,27 @@ export default {
 
 			try {
 				await axios.get(
-					generateUrl(`/apps/docudesk/api/policy/standing-consents/${item.policyMatch}`),
+					generateUrl(
+						`/apps/docudesk/api/policy/standing-consents/${item.policyMatch}`,
+					),
 				)
 				this.policyMatchKind = 'standing_consent'
 				// Default OFF for standing consent; user may override.
-				this.anonymiseToggle = (item.publicationDecision === 'anonymize')
+				this.anonymiseToggle = item.publicationDecision === 'anonymize'
 				return
 			} catch (err) {
 				// Dangling reference — fall through to legacy.
 			}
 
-			this.anonymiseToggle = (item?.publicationDecision === 'anonymize')
+			this.anonymiseToggle = item?.publicationDecision === 'anonymize'
 		},
+
 		/**
 		 * Handle toggle clicks. For standing-consent matches, flipping ON
 		 * records an override: publicationDecision=anonymize while consentStatus
 		 * stays consent_given and policyMatch is preserved. The audit trail
 		 * comes from OpenRegister's mapper-level history.
+		 *
 		 * @param checked
 		 */
 		async onToggleAnonymise(checked) {
@@ -327,7 +419,10 @@ export default {
 				return
 			}
 
-			const id = consentStore.consentItem?.['@self']?.id || consentStore.consentItem?.id || consentStore.consentItem?.uuid
+			const id =
+				consentStore.consentItem?.['@self']?.id
+				|| consentStore.consentItem?.id
+				|| consentStore.consentItem?.uuid
 			if (!id) return
 
 			const update = {
@@ -341,6 +436,7 @@ export default {
 				this.anonymiseToggle = !checked
 			}
 		},
+
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *
@@ -355,6 +451,7 @@ export default {
 				return dateStr
 			}
 		},
+
 		/**
 		 * Persist edited consent status/decision fields for the record.
 		 *
@@ -369,10 +466,12 @@ export default {
 				updateData.consentStatus = this.editData.consentStatus.value
 			}
 			if (this.editData.notificationStatus?.value) {
-				updateData.notificationStatus = this.editData.notificationStatus.value
+				updateData.notificationStatus =
+					this.editData.notificationStatus.value
 			}
 			if (this.editData.publicationDecision?.value) {
-				updateData.publicationDecision = this.editData.publicationDecision.value
+				updateData.publicationDecision =
+					this.editData.publicationDecision.value
 			}
 
 			const result = await consentStore.updateConsent(id, updateData)
@@ -405,12 +504,16 @@ export default {
 	width: 100%;
 }
 
-.detail-table td {
+.detail-table td,
+.detail-table th {
 	padding: 8px 4px;
 	vertical-align: middle;
 }
 
+/* The row headers are <th> now; neutralise the UA's centred default so the
+   rendering is unchanged. */
 .detail-table .label {
+	text-align: start;
 	font-weight: bold;
 	color: var(--color-text-maxcontrast);
 	width: 200px;

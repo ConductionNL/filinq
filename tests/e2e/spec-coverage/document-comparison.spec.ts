@@ -19,31 +19,59 @@ import { test, expect } from '@playwright/test'
 import { attachConsoleGuard, go } from './_helpers'
 
 test.describe('document-comparison — side-by-side view', () => {
-	test('comparison view renders its heading, pickers and Compare action', async ({ page }) => {
-		// @e2e openspec/specs/document-comparison/spec.md#the-ui-must-provide-a-side-by-side-comparison-view
+	test('comparison view renders its heading, pickers and Compare action', async ({
+		page,
+	}) => {
+		// @e2e openspec/specs/document-comparison/spec.md#operator-picks-two-versions
+		//
+		// ANCHOR REPAIR: this used to name
+		// `#the-ui-must-provide-a-side-by-side-comparison-view`, which is a
+		// REQUIREMENT title, not a scenario — there is no such ref. Gate-19
+		// parses a dangling anchor and then silently drops it, so the mismatch
+		// was invisible. The scenario named above is what this test actually
+		// asserts (the two version pickers and the Compare action), and it is
+		// already claimed by the file-level anchors, so the count does not
+		// move; what changes is that the file no longer traces to something
+		// that is not there.
 		const guard = attachConsoleGuard(page)
 		// History-mode (manifest) router: deep-link the path, not a hash.
 		await go(page, 'comparison')
 
-		await expect(page.getByRole('heading', { name: 'Document comparison' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Document comparison' }),
+		).toBeVisible()
 
 		// File-ID pickers for both subjects.
 		await expect(page.getByText('Left file ID')).toBeVisible()
 		await expect(page.getByText('Right file ID')).toBeVisible()
 
 		// Compare action present (disabled until both subjects are chosen).
-		await expect(page.getByRole('button', { name: 'Compare', exact: true })).toBeVisible()
+		await expect(
+			page.getByRole('button', { name: 'Compare', exact: true }),
+		).toBeVisible()
 
 		expect(guard.server5xx, guard.server5xx.join('\n')).toHaveLength(0)
 	})
 
 	test('operator picks two files and triggers a comparison', async ({ page }) => {
-		// @e2e openspec/specs/document-comparison/spec.md#the-ui-must-provide-a-side-by-side-comparison-view
+		// @e2e openspec/specs/document-comparison/spec.md#operator-picks-two-versions
+		//
+		// ANCHOR REPAIR: this used to name
+		// `#the-ui-must-provide-a-side-by-side-comparison-view`, which is a
+		// REQUIREMENT title, not a scenario — there is no such ref. Gate-19
+		// parses a dangling anchor and then silently drops it, so the mismatch
+		// was invisible. The scenario named above is what this test actually
+		// asserts (the two version pickers and the Compare action), and it is
+		// already claimed by the file-level anchors, so the count does not
+		// move; what changes is that the file no longer traces to something
+		// that is not there.
 		const guard = attachConsoleGuard(page)
 		await go(page, 'comparison?left=1&right=2')
 
 		// Preselected subjects auto-run; the heading remains and no JS error fires.
-		await expect(page.getByRole('heading', { name: 'Document comparison' })).toBeVisible()
+		await expect(
+			page.getByRole('heading', { name: 'Document comparison' }),
+		).toBeVisible()
 		expect(guard.errors, guard.errors.join('\n')).toHaveLength(0)
 	})
 })

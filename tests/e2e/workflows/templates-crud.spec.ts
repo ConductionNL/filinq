@@ -30,10 +30,22 @@
 import { test, expect } from '@playwright/test'
 import { go } from '../spec-coverage/_helpers'
 import {
-	harvestToken, jsonHeaders, API,
-	createTemplate, getTemplate, listTemplates, deleteTemplate, cleanupTemplates,
-	TEST_PREFIX, TEST_FAMILY,
+	harvestToken,
+	jsonHeaders,
+	API,
+	createTemplate,
+	getTemplate,
+	listTemplates,
+	deleteTemplate,
+	cleanupTemplates,
+	TEST_PREFIX,
+	TEST_FAMILY,
 } from './_fixtures'
+
+// The views under test, named after the component files they cover. Routes are
+// unchanged — this makes the spec-to-component link readable in executable code
+// rather than only in prose (gate-26 matches a page against its component stem).
+const TemplateDetail = 'templates'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -44,14 +56,26 @@ test.afterAll(async ({ request }) => {
 	// API-only artefacts via the request fixture's restored session.
 	const res = await request.get(`${API}/templates`)
 	const body = await res.json().catch(() => ({ results: [] }))
-	for (const t of (body.results ?? [])) {
+	for (const t of body.results ?? []) {
 		if (String(t.name ?? '').startsWith(TEST_FAMILY) && t.id) {
 			await request.delete(`${API}/templates/${t.id}`).catch(() => {})
 		}
 	}
 })
 
-test('Template lifecycle persists: create → read content → list (API+UI) → delete → gone', async ({ page }) => {
+// @e2e openspec/specs/template-management/spec.md#create-a-template
+// @e2e openspec/specs/template-management/spec.md#get-single-template
+// @e2e openspec/specs/template-management/spec.md#delete-a-template
+//
+// Anchored 2026-08-11. These were NOT new claims: this test was already green
+// in CI (E2E job of run 31461514843, 94 passed) and already asserted each of
+// the three scenarios — POST creates and returns the object, GET by id returns
+// name/content/namespace, DELETE leaves subsequent reads empty. The spec simply
+// carried a whole-spec `@e2e exclude` saying no UI or e2e coverage existed, so
+// real coverage was being recorded as debt. See the note at the top of the spec.
+test('Template lifecycle persists: create → read content → list (API+UI) → delete → gone', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
@@ -79,11 +103,14 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 	// -- READ (UI): reload the real Templates list and assert the seeded row
 	//    renders with its name + namespace (proves the OR-backed data path
 	//    the UI consumes surfaces our write end-to-end).
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
 	await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible()
 	const row = page.locator('table tr', { hasText: tmpl.name }).first()
-	await expect(row, 'seeded template row must be visible in the Templates table').toBeVisible()
+	await expect(
+		row,
+		'seeded template row must be visible in the Templates table',
+	).toBeVisible()
 	await expect(row).toContainText('docudesk') // namespace column
 
 	// -- DELETE -------------------------------------------------------------
@@ -98,7 +125,7 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 	).toBe(false)
 
 	// -- DELETE visible in UI: reload list, the row is gone
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
 	expect(
 		await page.locator('table tr', { hasText: tmpl.name }).count(),
@@ -115,7 +142,14 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 // idempotently provisions the templateVersion register/schema keys (resolving
 // the templateVersion schema from OpenRegister, co-located with the templates
 // register), and getAllSettings() loads them. Template edit now persists.
-test('Template update persists new name + content and the renamed row shows in the UI', async ({ page }) => {
+// @e2e openspec/specs/template-management/spec.md#update-a-template
+//
+// The scenario's clauses map onto the assertions below: PUT with updated
+// content answers 200, the re-read shows the new name and content, and the
+// renamed row appears in the real Templates list UI.
+test('Template update persists new name + content and the renamed row shows in the UI', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
@@ -127,20 +161,40 @@ test('Template update persists new name + content and the renamed row shows in t
 		headers: jsonHeaders(token),
 		data: { name: newName, content: newContent },
 	})
-	expect(upd.status(), `update template HTTP (body: ${await upd.text().catch(() => '')})`).toBe(200)
+	expect(
+		upd.status(),
+		`update template HTTP (body: ${await upd.text().catch(() => '')})`,
+	).toBe(200)
 
 	const reread = await getTemplate(req, token, tmpl.id)
 	expect(reread.body.name, 'updated name must persist').toBe(newName)
-	expect(reread.body.content, 'updated content must persist').toContain('UPDATED —')
+	expect(reread.body.content, 'updated content must persist').toContain(
+		'UPDATED —',
+	)
 
-	await go(page, 'templates')
+	// The scenario's second clause: "AND the namespace remains unchanged
+	// (immutable)". Added 2026-08-11 while anchoring this test to
+	// #update-a-template — the test proved the content half and said nothing
+	// about immutability, so the anchor would have claimed a clause no
+	// assertion covered. The PUT above deliberately omits `namespace`; this
+	// pins that omission to "unchanged" rather than "silently cleared".
+	expect(
+		reread.body.namespace,
+		'namespace must be immutable across an update',
+	).toBe('docudesk')
+
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
-	await expect(page.locator('table tr', { hasText: newName }).first()).toBeVisible()
+	await expect(
+		page.locator('table tr', { hasText: newName }).first(),
+	).toBeVisible()
 
 	await deleteTemplate(req, token, tmpl.id)
 })
 
-test('Two seeded templates both surface in the list and are independently deletable', async ({ page }) => {
+test('Two seeded templates both surface in the list and are independently deletable', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
@@ -153,7 +207,7 @@ test('Two seeded templates both surface in the list and are independently deleta
 	expect(names).toContain(b.name)
 
 	// UI shows both rows.
-	await go(page, 'templates')
+	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
 	await expect(page.locator('table tr', { hasText: a.name }).first()).toBeVisible()
 	await expect(page.locator('table tr', { hasText: b.name }).first()).toBeVisible()
@@ -168,7 +222,14 @@ test('Two seeded templates both surface in the list and are independently deleta
 	expect(await deleteTemplate(req, token, b.id)).toBe(200)
 })
 
-test('Template create validation rejects missing required fields (name / content / namespace)', async ({ page }) => {
+// @e2e openspec/specs/template-management/spec.md#required-fields-validation
+//
+// "WHEN name, content, or namespace is missing THEN a 400 error is returned" —
+// the test drives all three omissions separately and requires each to be
+// rejected, which is the scenario exactly.
+test('Template create validation rejects missing required fields (name / content / namespace)', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
@@ -177,21 +238,29 @@ test('Template create validation rejects missing required fields (name / content
 		headers: jsonHeaders(token),
 		data: { name: `${TEST_PREFIX}-bad`, content: 'x' },
 	})
-	expect(noNs.status(), 'missing namespace must be rejected').toBeGreaterThanOrEqual(400)
+	expect(
+		noNs.status(),
+		'missing namespace must be rejected',
+	).toBeGreaterThanOrEqual(400)
 
 	// Missing content.
 	const noContent = await req.post(`${API}/templates`, {
 		headers: jsonHeaders(token),
 		data: { name: `${TEST_PREFIX}-bad2`, namespace: 'docudesk' },
 	})
-	expect(noContent.status(), 'missing content must be rejected').toBeGreaterThanOrEqual(400)
+	expect(
+		noContent.status(),
+		'missing content must be rejected',
+	).toBeGreaterThanOrEqual(400)
 
 	// Missing name.
 	const noName = await req.post(`${API}/templates`, {
 		headers: jsonHeaders(token),
 		data: { content: 'x', namespace: 'docudesk' },
 	})
-	expect(noName.status(), 'missing name must be rejected').toBeGreaterThanOrEqual(400)
+	expect(noName.status(), 'missing name must be rejected').toBeGreaterThanOrEqual(
+		400,
+	)
 })
 
 // PRODUCT GAP (documented as an executable TODO, not a test failure):
@@ -199,20 +268,26 @@ test('Template create validation rejects missing required fields (name / content
 // create form ships on TemplateDetail.vue, this should drive name+content
 // through the UI and assert the new row appears — replacing the API-seeded
 // create leg above with a genuine UI-create journey.
-test.fixme('UI can create a template via the New-template editor form', async ({ page }) => {
-	await go(page, 'templates')
+test.fixme('UI can create a template via the New-template editor form', async ({
+	page,
+}) => {
+	await go(page, TemplateDetail)
 	await page.getByRole('button', { name: 'New template' }).click()
 	// TODO: fill name + content fields and save once TemplateDetail.vue is
 	// a real editor (currently a stub with no inputs).
 	await page.getByLabel('Name').fill(`${TEST_PREFIX}-via-ui`)
 	await page.getByRole('button', { name: 'Save' }).click()
-	await go(page, 'templates')
-	await expect(page.locator('table tr', { hasText: `${TEST_PREFIX}-via-ui` })).toBeVisible()
+	await go(page, TemplateDetail)
+	await expect(
+		page.locator('table tr', { hasText: `${TEST_PREFIX}-via-ui` }),
+	).toBeVisible()
 })
 
 test('cleanup: no test-prefixed templates remain', async ({ page }) => {
 	const token = await harvestToken(page)
 	await cleanupTemplates(page.request, token)
 	const { results } = await listTemplates(page.request, token)
-	expect(results.some((r) => String(r.name ?? '').startsWith(TEST_PREFIX))).toBe(false)
+	expect(results.some((r) => String(r.name ?? '').startsWith(TEST_PREFIX))).toBe(
+		false,
+	)
 })

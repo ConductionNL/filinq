@@ -3,69 +3,92 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
-/* eslint-disable camelcase, no-undef */
+import {
+	CnPageRenderer,
+	defaultPageTypes,
+	registerBuiltinDashboardWidgets,
+	registerIcons,
+	registerTranslations,
+} from '@conduction/nextcloud-vue'
+import {
+	loadTranslations,
+	translatePlural as n,
+	translate as t,
+} from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import { createApp, h } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import App from './App.vue'
+import appIcons from './icons.js'
+import bundledManifest from './manifest.json'
+import menuLayout from './menu-layout.json'
+import pinia from './pinia.js'
+import registry from './registry.js'
+import { initializeStores } from './store/store.js'
+
 // Must stay first: sets __webpack_public_path__ / __webpack_nonce__ before
 // any CSS or asset/resource URL or lazy chunk URL is evaluated. See
 // setPublicPath.js — docudesk lives under apps-extra, not the baked-in /apps/.
 import './setPublicPath.js'
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import { PiniaVuePlugin } from 'pinia'
-import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
-import { generateUrl } from '@nextcloud/router'
-import {
-	CnPageRenderer,
-	defaultPageTypes,
-	registerIcons,
-	registerTranslations,
-} from '@conduction/nextcloud-vue'
-import pinia from './pinia.js'
-import App from './App.vue'
-import bundledManifest from './manifest.json'
-import menuLayout from './menu-layout.json'
-import registry from './registry.js'
-import { initializeStores } from './store/store.js'
-
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
+// gridstack is an nc-vue peerDependency that the library deliberately does NOT
+// bundle, stylesheet included. CnDashboardPage → CnDashboardGrid drives it, and
+// without this stylesheet v12 sizes items with an undefined
+// `--gs-column-width`, so every dashboard item renders 0 px wide with NO error
+// and nothing in the console. nc-vue's own CSS carries the `.grid-stack`
+// overrides but none of the sizing primitives.
+import 'gridstack/dist/gridstack.min.css'
 import './assets/fonts.css'
 import './assets/app.css'
 
-Vue.mixin({ methods: { t, n } })
-Vue.use(PiniaVuePlugin)
-Vue.use(VueRouter)
-
 // Register library-side icon set + lib translations once at bootstrap.
-registerIcons()
+registerIcons(appIcons)
+
+// nc-vue marks itself `sideEffects: ["**/*.css", ...]`, so webpack is free to
+// drop the bare imports that register the built-in `stat` / `object-table`
+// dashboard widgets. When that happens the widgets render "Widget not
+// available" with no error (larpingapp lost 5 of 7). Registering explicitly at
+// bootstrap makes it a real call webpack cannot tree-shake.
+registerBuiltinDashboardWidgets()
+
 try {
 	registerTranslations()
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn('[docudesk] registerTranslations failed; falling back to English', e)
+	console.warn(
+		'[docudesk] registerTranslations failed; falling back to English',
+		e,
+	)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs only allow the
 // JS/CSS allowlist through Apache; /custom_apps/<app>/l10n/<locale>.json
 // may 404. Strings fall back to English source on miss; boot must not
 // depend on this resolving.
+/**
+ *
+ */
 function tryLoadTranslations() {
 	try {
 		const result = loadTranslations('docudesk', () => {})
 		if (result && typeof result.then === 'function') {
-			result.then(() => {}, () => {})
+			result.then(
+				() => {},
+				() => {},
+			)
 		}
 	} catch {
 		// no-op
 	}
 }
 
-// Shallow-clone CnPageRenderer because the lib's barrel exports are
-// non-extensible (webpack ESM module records). Vue 2's `Vue.extend()`
-// adds an internal `_Ctor` cache to the component definition; mutating
-// a non-extensible export throws "Cannot add property _Ctor, object is
-// not extensible". Cloning gives Vue Router an extensible
-// component-options object without altering the lib's internals.
+// Shallow-clone CnPageRenderer: the lib's barrel exports are non-extensible
+// (webpack ESM module records) and frozen in some bundle shapes. Vue 3 no
+// longer attaches a `_Ctor` cache the way Vue 2's `Vue.extend()` did, but the
+// router and the renderer still write bookkeeping onto component options, so
+// handing them an extensible copy keeps this independent of bundle shape.
 const RoutePageRenderer = { ...CnPageRenderer }
 
 /**
@@ -82,10 +105,26 @@ function mergeMenuItems(target, incoming) {
 	incoming.forEach((item) => {
 		const existing = target.find((t) => t.id === item.id)
 		if (!existing) {
-			target.push({ ...item, children: Array.isArray(item.children) ? [...item.children] : item.children })
+			target.push({
+				...item,
+				children: Array.isArray(item.children)
+					? [...item.children]
+					: item.children,
+			})
 			return
 		}
-		for (const key of ['label', 'icon', 'route', 'order', 'section', 'featureFlag', 'permission', 'visibleIf', 'href', 'action']) {
+		for (const key of [
+			'label',
+			'icon',
+			'route',
+			'order',
+			'section',
+			'featureFlag',
+			'permission',
+			'visibleIf',
+			'href',
+			'action',
+		]) {
 			if (existing[key] === undefined && item[key] !== undefined) {
 				existing[key] = item[key]
 			}
@@ -135,7 +174,8 @@ function applyMenuRelocations(menu, relocations) {
 				const child = node.children[j]
 				const childTarget = relocations[child.id]
 				if (!childTarget) continue
-				if (childTarget === node.id && !Array.isArray(child.children)) continue
+				if (childTarget === node.id && !Array.isArray(child.children))
+					continue
 				node.children.splice(j, 1)
 				moves.push({ node: child, target: childTarget })
 			}
@@ -155,8 +195,14 @@ function applyMenuRelocations(menu, relocations) {
 			}
 		})
 	}
-	return menu.filter((m) => m.type === 'caption' || m.route || m.href || m.action
-		|| (Array.isArray(m.children) && m.children.length > 0))
+	return menu.filter(
+		(m) =>
+			m.type === 'caption'
+			|| m.route
+			|| m.href
+			|| m.action
+			|| (Array.isArray(m.children) && m.children.length > 0),
+	)
 }
 
 /**
@@ -194,7 +240,9 @@ function applyMenuRemovals(menu, removals) {
 	const isLeaf = (n) => !Array.isArray(n.children) || n.children.length === 0
 	menu.forEach((node) => {
 		if (Array.isArray(node.children)) {
-			node.children = node.children.filter((c) => !(drop.has(c.id) && isLeaf(c)))
+			node.children = node.children.filter(
+				(c) => !(drop.has(c.id) && isLeaf(c)),
+			)
 		}
 	})
 	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
@@ -218,23 +266,30 @@ function applyMenuRemovals(menu, removals) {
 function applySettingsSection(menu, settingsIds) {
 	if (!Array.isArray(settingsIds) || settingsIds.length === 0) return menu
 	const want = new Set(settingsIds)
-	const isClickable = (n) => n.route !== undefined || n.href !== undefined || n.action !== undefined
+	const isClickable = (n) =>
+		n.route !== undefined || n.href !== undefined || n.action !== undefined
 	const lifted = []
-	const strip = (nodes) => nodes.reduce((acc, n) => {
-		if (want.has(n.id)) {
-			const { children, ...leaf } = n
-			lifted.push({ ...leaf, section: 'settings' })
+	const strip = (nodes) =>
+		nodes.reduce((acc, n) => {
+			if (want.has(n.id)) {
+				const { children, ...leaf } = n
+				lifted.push({ ...leaf, section: 'settings' })
+				return acc
+			}
+			if (Array.isArray(n.children)) {
+				const children = strip(n.children)
+				if (
+					children.length === 0
+					&& n.children.length > 0
+					&& !isClickable(n)
+				)
+					return acc
+				acc.push({ ...n, children })
+				return acc
+			}
+			acc.push(n)
 			return acc
-		}
-		if (Array.isArray(n.children)) {
-			const children = strip(n.children)
-			if (children.length === 0 && n.children.length > 0 && !isClickable(n)) return acc
-			acc.push({ ...n, children })
-			return acc
-		}
-		acc.push(n)
-		return acc
-	}, [])
+		}, [])
 	const remaining = strip(menu)
 	return [...remaining, ...lifted]
 }
@@ -274,7 +329,7 @@ const manifest = applyMenuLayout(bundledManifest)
  * `props: true` so the renderer receives params as props.
  *
  * @param {object} manifest The bundled manifest (with `pages[]`).
- * @return {Array<object>} vue-router 3 routes config.
+ * @return {Array<object>} vue-router 4 routes config.
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -283,14 +338,16 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
-	// Catch-all redirect to dashboard.
-	routes.push({ path: '*', redirect: '/' })
+	// Catch-all redirect to dashboard. vue-router 4 REMOVED the bare `'*'`
+	// path — it matches nothing and throws no error, so the shell renders
+	// with an empty <main> on any unknown route. The named-param form below
+	// is the v4 replacement.
+	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 	return routes
 }
 
-const router = new VueRouter({
-	mode: 'history',
-	base: generateUrl('/apps/docudesk'),
+const router = createRouter({
+	history: createWebHistory(generateUrl('/apps/docudesk')),
 	routes: routesFromManifest(manifest),
 })
 
@@ -325,26 +382,39 @@ const customComponentsProp = Object.fromEntries(
 try {
 	const result = initializeStores()
 	if (result && typeof result.then === 'function') {
-		result.then(() => {}, (e) => {
-			// eslint-disable-next-line no-console
-			console.warn('[docudesk] initializeStores failed', e)
-		})
+		result.then(
+			() => {},
+			(e) => {
+				// eslint-disable-next-line no-console
+				console.warn('[docudesk] initializeStores failed', e)
+			},
+		)
 	}
 } catch (e) {
 	// eslint-disable-next-line no-console
 	console.warn('[docudesk] initializeStores threw synchronously', e)
 }
 
-// Create and mount Vue instance immediately so the App renders.
-new Vue({
-	pinia,
-	router,
-	render: (h) => h(App, {
-		props: {
+// Create and mount the app immediately so the App renders.
+//
+// ⚠️ Mount target is `#docudesk-app`, NOT `#content`. Vue 2's `$mount()`
+// REPLACED the matched element, so mounting on templates/index.php's
+// `<div id="content">` quietly replaced Nextcloud's own `#content` wrapper
+// from layout.user.php and the duplicate id never showed. Vue 3's `mount()`
+// renders INSIDE the match, so the app would end up nested in core's wrapper
+// — and with two `#content` elements it is undefined which one is matched.
+// A dedicated host id removes the ambiguity entirely.
+const app = createApp({
+	render: () =>
+		h(App, {
 			manifest,
 			customComponents: customComponentsProp,
 			pageTypes: pageTypesProp,
 			registry: registryProp,
-		},
-	}),
-}).$mount('#content')
+		}),
+})
+
+app.mixin({ methods: { t, n } })
+app.use(pinia)
+app.use(router)
+app.mount('#docudesk-app')

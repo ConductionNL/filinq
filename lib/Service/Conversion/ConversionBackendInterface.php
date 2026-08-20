@@ -43,56 +43,55 @@ use OCP\Files\File;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-interface ConversionBackendInterface
-{
-    /**
-     * Short identifier used in diagnostic surfaces and the 422 body's
-     * `conversionAttempts[].backend` field.
-     *
-     * Stable across versions — operators read these strings in error
-     * responses.
-     *
-     * @return string Backend identifier (lowercase, snake_case).
-     */
-    public function name(): string;
+interface ConversionBackendInterface {
+	/**
+	 * Short identifier used in diagnostic surfaces and the 422 body's
+	 * `conversionAttempts[].backend` field.
+	 *
+	 * Stable across versions — operators read these strings in error
+	 * responses.
+	 *
+	 * @return string Backend identifier (lowercase, snake_case).
+	 */
+	public function name(): string;
 
-    /**
-     * Whether this backend is usable in the current install. Cheap check:
-     * tenant config flag, binary on PATH, app installed and configured.
-     * Called per-conversion-attempt; expected to be O(1) after any
-     * one-time setup.
-     *
-     * @return bool True when the backend can be invoked.
-     */
-    public function isAvailable(): bool;
+	/**
+	 * Whether this backend is usable in the current install. Cheap check:
+	 * tenant config flag, binary on PATH, app installed and configured.
+	 * Called per-conversion-attempt; expected to be O(1) after any
+	 * one-time setup.
+	 *
+	 * @return bool True when the backend can be invoked.
+	 */
+	public function isAvailable(): bool;
 
-    /**
-     * Whether this backend can process the given MIME type / extension.
-     * Cheap predicate; no I/O.
-     *
-     * @param string $mimeType  MIME type reported by Nextcloud (e.g. application/pdf).
-     * @param string $extension Lowercased file extension WITHOUT the dot (e.g. docx).
-     *
-     * @return bool True when this backend claims the input format.
-     */
-    public function canHandle(string $mimeType, string $extension): bool;
+	/**
+	 * Whether this backend can process the given MIME type / extension.
+	 * Cheap predicate; no I/O.
+	 *
+	 * @param string $mimeType MIME type reported by Nextcloud (e.g. application/pdf).
+	 * @param string $extension Lowercased file extension WITHOUT the dot (e.g. docx).
+	 *
+	 * @return bool True when this backend claims the input format.
+	 */
+	public function canHandle(string $mimeType, string $extension): bool;
 
-    /**
-     * Convert the source file to a PDF (PDF/A-3b when feasible) and
-     * write the result beside the source in Nextcloud Files. The
-     * source file is NOT deleted by the backend — replace/delete
-     * orchestration belongs to the caller.
-     *
-     * @param File $source Source file node.
-     *
-     * @return File The newly written PDF file node.
-     *
-     * @throws ConversionFailedException When this backend genuinely
-     *                                    cannot convert this input
-     *                                    (use the typed exception
-     *                                    rather than a generic one so
-     *                                    the cascade can aggregate
-     *                                    attempts cleanly).
-     */
-    public function convert(File $source): File;
+	/**
+	 * Convert the source file to a PDF (PDF/A-3b when feasible) and
+	 * write the result beside the source in Nextcloud Files. The
+	 * source file is NOT deleted by the backend — replace/delete
+	 * orchestration belongs to the caller.
+	 *
+	 * @param File $source Source file node.
+	 *
+	 * @return File The newly written PDF file node.
+	 *
+	 * @throws ConversionFailedException When this backend genuinely
+	 *                                   cannot convert this input
+	 *                                   (use the typed exception
+	 *                                   rather than a generic one so
+	 *                                   the cascade can aggregate
+	 *                                   attempts cleanly).
+	 */
+	public function convert(File $source): File;
 }//end interface

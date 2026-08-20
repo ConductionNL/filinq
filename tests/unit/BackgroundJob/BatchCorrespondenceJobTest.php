@@ -45,136 +45,115 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class BatchCorrespondenceJobTest extends TestCase
-{
+class BatchCorrespondenceJobTest extends TestCase {
 
-    /**
-     * @var CorrespondenceService|MockObject
-     */
-    private CorrespondenceService|MockObject $mockCorrSvc;
+	/**
+	 * @var CorrespondenceService|MockObject
+	 */
+	private CorrespondenceService|MockObject $mockCorrSvc;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * @var ITimeFactory|MockObject
-     */
-    private ITimeFactory|MockObject $mockTime;
+	/**
+	 * @var ITimeFactory|MockObject
+	 */
+	private ITimeFactory|MockObject $mockTime;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->mockCorrSvc = $this->createMock(CorrespondenceService::class);
-        $this->mockLogger  = $this->createMock(LoggerInterface::class);
-        $this->mockTime    = $this->createMock(ITimeFactory::class);
+		$this->mockCorrSvc = $this->createMock(CorrespondenceService::class);
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
+		$this->mockTime = $this->createMock(ITimeFactory::class);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test that the job can be instantiated.
-     *
-     * @return void
-     */
-    public function testJobCanBeInstantiated(): void
-    {
-        $job = new BatchCorrespondenceJob(
-            time: $this->mockTime,
-            corrSvc: $this->mockCorrSvc,
-            logger: $this->mockLogger,
-        );
+	/**
+	 * Test that the job can be instantiated.
+	 *
+	 * @return void
+	 */
+	public function testJobCanBeInstantiated(): void {
+		$job = new BatchCorrespondenceJob(
+			time: $this->mockTime,
+			corrSvc: $this->mockCorrSvc,
+			logger: $this->mockLogger,
+		);
 
-        $this->assertInstanceOf(BatchCorrespondenceJob::class, $job);
+		$this->assertInstanceOf(BatchCorrespondenceJob::class, $job);
 
-    }//end testJobCanBeInstantiated()
+	}//end testJobCanBeInstantiated()
 
-    /**
-     * Test that run with missing arguments logs error without processing.
-     *
-     * We expose run() via an anonymous subclass since it is protected.
-     *
-     * @return void
-     */
-    public function testRunLogsErrorForMissingArguments(): void
-    {
-        $this->mockLogger->expects($this->once())
-            ->method('error')
-            ->with(
-                $this->stringContains('BatchCorrespondenceJob: missing required arguments'),
-                $this->anything()
-            );
+	/**
+	 * Test that run with missing arguments logs error without processing.
+	 *
+	 * We expose run() via an anonymous subclass since it is protected.
+	 *
+	 * @return void
+	 */
+	public function testRunLogsErrorForMissingArguments(): void {
+		$this->mockLogger->expects($this->once())
+			->method('error')
+			->with(
+				$this->stringContains('BatchCorrespondenceJob: missing required arguments'),
+				$this->anything()
+			);
 
-        $job = new class(
-            $this->mockTime,
-            $this->mockCorrSvc,
-            $this->mockLogger,
-        ) extends BatchCorrespondenceJob {
-            public function runPublic(mixed $argument): void
-            {
-                $this->run($argument);
-            }//end runPublic()
-        };
+		$job = new class($this->mockTime, $this->mockCorrSvc, $this->mockLogger, ) extends BatchCorrespondenceJob {
+			public function runPublic(mixed $argument): void {
+				$this->run($argument);
+			}//end runPublic()
+		};
 
-        $job->runPublic([]);
+		$job->runPublic([]);
 
-    }//end testRunLogsErrorForMissingArguments()
+	}//end testRunLogsErrorForMissingArguments()
 
-    /**
-     * Test that run with empty jobId logs error.
-     *
-     * @return void
-     */
-    public function testRunLogsErrorForEmptyJobId(): void
-    {
-        $this->mockLogger->expects($this->once())
-            ->method('error');
+	/**
+	 * Test that run with empty jobId logs error.
+	 *
+	 * @return void
+	 */
+	public function testRunLogsErrorForEmptyJobId(): void {
+		$this->mockLogger->expects($this->once())
+			->method('error');
 
-        $job = new class(
-            $this->mockTime,
-            $this->mockCorrSvc,
-            $this->mockLogger,
-        ) extends BatchCorrespondenceJob {
-            public function runPublic(mixed $argument): void
-            {
-                $this->run($argument);
-            }//end runPublic()
-        };
+		$job = new class($this->mockTime, $this->mockCorrSvc, $this->mockLogger, ) extends BatchCorrespondenceJob {
+			public function runPublic(mixed $argument): void {
+				$this->run($argument);
+			}//end runPublic()
+		};
 
-        $job->runPublic(['jobId' => '', 'templateId' => '']);
+		$job->runPublic(['jobId' => '', 'templateId' => '']);
 
-    }//end testRunLogsErrorForEmptyJobId()
+	}//end testRunLogsErrorForEmptyJobId()
 
-    /**
-     * Test that run calls corrSvc.storeJobStatus when arguments are valid.
-     *
-     * @return void
-     */
-    public function testRunInitializesJobStatusForValidArguments(): void
-    {
-        $this->mockCorrSvc->expects($this->atLeastOnce())
-            ->method('storeJobStatus');
+	/**
+	 * Test that run calls corrSvc.storeJobStatus when arguments are valid.
+	 *
+	 * @return void
+	 */
+	public function testRunInitializesJobStatusForValidArguments(): void {
+		$this->mockCorrSvc->expects($this->atLeastOnce())
+			->method('storeJobStatus');
 
-        $job = new class(
-            $this->mockTime,
-            $this->mockCorrSvc,
-            $this->mockLogger,
-        ) extends BatchCorrespondenceJob {
-            public function runPublic(mixed $argument): void
-            {
-                $this->run($argument);
-            }//end runPublic()
-        };
+		$job = new class($this->mockTime, $this->mockCorrSvc, $this->mockLogger, ) extends BatchCorrespondenceJob {
+			public function runPublic(mixed $argument): void {
+				$this->run($argument);
+			}//end runPublic()
+		};
 
-        $job->runPublic(
-                [
-                    'jobId'        => 'job-uuid',
-                    'templateId'   => 'tmpl-uuid',
-                    'recipientIds' => [],
-                    'options'      => [],
-                ]
-                );
+		$job->runPublic(
+			[
+				'jobId' => 'job-uuid',
+				'templateId' => 'tmpl-uuid',
+				'recipientIds' => [],
+				'options' => [],
+			]
+		);
 
-    }//end testRunInitializesJobStatusForValidArguments()
+	}//end testRunInitializesJobStatusForValidArguments()
 }//end class

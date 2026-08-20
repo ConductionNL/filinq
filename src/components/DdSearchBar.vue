@@ -9,7 +9,7 @@
 			:placeholder="placeholder"
 			:aria-label="ariaLabel || placeholder"
 			@input="onInput"
-			@keydown.esc="clear">
+			@keydown.esc="clear" />
 		<button
 			v-if="clearable && hasValue"
 			type="button"
@@ -28,7 +28,7 @@
  *
  * - v-model on the search query string.
  * - Optional clear button (X) when there is a value.
- * - Optional debounce on the emitted `input` event so consumers
+ * - Optional debounce on the emitted `update:modelValue` event so consumers
  *   are not hit on every keystroke.
  */
 import DdIcon from './DdIcon.vue'
@@ -36,53 +36,62 @@ import DdIcon from './DdIcon.vue'
 export default {
 	name: 'DdSearchBar',
 	components: { DdIcon },
-	model: {
-		prop: 'value',
-		event: 'input',
-	},
+	// Vue 3 removed the `model: { prop, event }` option. A plain `v-model`
+	// now always binds `modelValue` + `update:modelValue`, so the prop and
+	// the emit are renamed rather than remapped. All four call sites use a
+	// bare `v-model`, so they need no change.
 	props: {
 		/** Current search value (v-model). */
-		value: {
+		modelValue: {
 			type: String,
 			default: '',
 		},
+
 		/** Placeholder text shown when the input is empty. */
 		placeholder: {
 			type: String,
 			default: '',
 		},
+
 		/** Optional aria-label; falls back to placeholder. */
 		ariaLabel: {
 			type: String,
 			default: '',
 		},
+
 		/** Show a clear (X) button when there is a value. */
 		clearable: {
 			type: Boolean,
 			default: true,
 		},
+
 		/** Debounce in ms before emitting the new value. 0 disables debounce. */
 		debounce: {
 			type: Number,
 			default: 200,
 		},
+
 		/** Translated label for the clear button (and aria). */
 		clearLabel: {
 			type: String,
 			default: 'Clear',
 		},
 	},
+
+	emits: ['update:modelValue'],
 	data() {
 		return {
-			localValue: this.value,
+			localValue: this.modelValue,
 			debounceTimer: null,
 		}
 	},
+
 	computed: {
 		hasValue() {
 			return this.localValue !== '' && this.localValue != null
 		},
 	},
+
 	watch: {
 		/**
 		 * Sync external value changes (e.g. parent reset) into the local copy
@@ -90,17 +99,19 @@ export default {
 		 *
 		 * @param {string} newValue New value coming from the parent.
 		 */
-		value(newValue) {
+		modelValue(newValue) {
 			if (newValue !== this.localValue) {
 				this.localValue = newValue
 			}
 		},
 	},
-	beforeDestroy() {
+
+	beforeUnmount() {
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer)
 		}
 	},
+
 	methods: {
 		/**
 		 * Schedule a debounced emit; with debounce=0 emits immediately.
@@ -110,13 +121,14 @@ export default {
 				clearTimeout(this.debounceTimer)
 			}
 			if (!this.debounce) {
-				this.$emit('input', this.localValue)
+				this.$emit('update:modelValue', this.localValue)
 				return
 			}
 			this.debounceTimer = setTimeout(() => {
-				this.$emit('input', this.localValue)
+				this.$emit('update:modelValue', this.localValue)
 			}, this.debounce)
 		},
+
 		/**
 		 * Clear the input, emit the empty value immediately (bypassing debounce),
 		 * and refocus the input so the user can keep typing.
@@ -127,11 +139,12 @@ export default {
 				this.debounceTimer = null
 			}
 			this.localValue = ''
-			this.$emit('input', '')
+			this.$emit('update:modelValue', '')
 			this.$nextTick(() => {
 				this.$refs.input?.focus?.()
 			})
 		},
+
 		/** Programmatic focus, exposed to parents via $refs. */
 		focus() {
 			this.$refs.input?.focus?.()
@@ -145,7 +158,6 @@ export default {
 	position: relative;
 	display: flex;
 	align-items: center;
-	max-width: 360px;
 	flex: 1;
 }
 
@@ -159,16 +171,18 @@ export default {
 .dd-search-bar__input {
 	width: 100%;
 	padding: 10px 40px 10px 48px;
-	border: 1px solid var(--dd-search-bar-border, #D9D9D9);
+	border: 1px solid var(--dd-search-bar-border, var(--dd-border, #d9d9d9));
 	border-radius: var(--dd-radius-pill-full);
-	background: var(--color-main-background, #FFF);
+	background: var(--color-main-background, #fff);
 	font-size: 14px;
 	font-weight: 300;
 	box-shadow: var(--dd-shadow-panel);
 	min-width: 392px;
 	max-width: 100%;
 	min-height: 40px;
-	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+	transition:
+		box-shadow 0.15s ease,
+		border-color 0.15s ease;
 }
 
 .dd-search-bar__input::placeholder {
@@ -194,7 +208,9 @@ export default {
 	background: transparent;
 	color: var(--color-text-maxcontrast);
 	cursor: pointer;
-	transition: background-color 0.15s ease, color 0.15s ease;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
 }
 
 .dd-search-bar__clear:hover {
@@ -205,5 +221,14 @@ export default {
 .dd-search-bar__clear:focus-visible {
 	outline: 2px solid var(--color-primary-element);
 	outline-offset: 1px;
+}
+
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-search-bar__input,
+	.dd-search-bar__clear {
+		transition: none;
+	}
 }
 </style>

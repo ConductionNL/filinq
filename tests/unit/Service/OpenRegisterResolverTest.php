@@ -30,74 +30,62 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class OpenRegisterResolverTest extends TestCase
-{
+class OpenRegisterResolverTest extends TestCase {
 
+	/**
+	 * Test source file exists
+	 *
+	 * @return void
+	 */
+	public function testSourceFileExists(): void {
+		$this->assertFileExists(
+			__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php'
+		);
 
-    /**
-     * Test source file exists
-     *
-     * @return void
-     */
-    public function testSourceFileExists(): void
-    {
-        $this->assertFileExists(
-            __DIR__ . '/../../../lib/Service/OpenRegisterResolver.php'
-        );
+	}//end testSourceFileExists()
 
-    }//end testSourceFileExists()
+	/**
+	 * Test file contains class declaration
+	 *
+	 * @return void
+	 */
+	public function testFileContainsClassDeclaration(): void {
+		$content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
+		$this->assertStringContainsString('class OpenRegisterResolver', $content);
 
+	}//end testFileContainsClassDeclaration()
 
-    /**
-     * Test file contains class declaration
-     *
-     * @return void
-     */
-    public function testFileContainsClassDeclaration(): void
-    {
-        $content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
-        $this->assertStringContainsString('class OpenRegisterResolver', $content);
+	/**
+	 * Test file contains getRegisterAndSchema method
+	 *
+	 * @return void
+	 */
+	public function testFileContainsGetRegisterAndSchemaMethod(): void {
+		$content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
+		$this->assertStringContainsString('function getRegisterAndSchema()', $content);
 
-    }//end testFileContainsClassDeclaration()
+	}//end testFileContainsGetRegisterAndSchemaMethod()
 
+	/**
+	 * Test file contains validateNamespace method
+	 *
+	 * @return void
+	 */
+	public function testFileContainsValidateNamespaceMethod(): void {
+		$content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
+		$this->assertStringContainsString('function validateNamespace(', $content);
 
-    /**
-     * Test file contains getRegisterAndSchema method
-     *
-     * @return void
-     */
-    public function testFileContainsGetRegisterAndSchemaMethod(): void
-    {
-        $content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
-        $this->assertStringContainsString('function getRegisterAndSchema()', $content);
+	}//end testFileContainsValidateNamespaceMethod()
 
-    }//end testFileContainsGetRegisterAndSchemaMethod()
+	/**
+	 * Test file uses SettingsService dependency
+	 *
+	 * @return void
+	 */
+	public function testFileDependsOnSettingsService(): void {
+		$content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
+		$this->assertStringContainsString('SettingsService', $content);
 
-
-    /**
-     * Test file contains validateNamespace method
-     *
-     * @return void
-     */
-    public function testFileContainsValidateNamespaceMethod(): void
-    {
-        $content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
-        $this->assertStringContainsString('function validateNamespace(', $content);
-
-    }//end testFileContainsValidateNamespaceMethod()
-
-
-    /**
-     * Test file uses SettingsService dependency
-     *
-     * @return void
-     */
-    public function testFileDependsOnSettingsService(): void
-    {
-        $content = file_get_contents(__DIR__ . '/../../../lib/Service/OpenRegisterResolver.php');
-        $this->assertStringContainsString('SettingsService', $content);
-
-    }//end testFileDependsOnSettingsService()
-
+	}//end testFileDependsOnSettingsService()
 
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dossier Controller
  *
@@ -6,13 +7,26 @@
  * single endpoint — `POST /api/anonymization/dossier/{dossierId}/grondslagen-pdf`
  * — which (re)generates the per-dossier grondslagen summary PDF aggregating
  * every redacted entity under the dossier's folder. See
- * `GrondslagenSummaryService::renderDossierSummary` for the render itself.
+ * `LegalBasesSummaryService::renderDossierSummary` for the render itself.
  *
  * Authentication is required (the route is `@NoAdminRequired` but
- * non-anonymous). Authorisation: the caller MUST be able to read the
- * dossier object via OpenRegister's standard RBAC + the file listing
- * uses the session user's view, so visibility of files under the
- * dossier folder mirrors the operator's permissions.
+ * non-anonymous).
+ *
+ * ⚠️ Authorisation, stated accurately. This header used to say the caller
+ * "MUST be able to read the dossier object via OpenRegister's standard RBAC".
+ * Half of that sentence is enforced and half is not:
+ *
+ *  - The FILE half is real. `renderDossierSummary` walks the dossier folder
+ *    through the session user's view, so a file the operator cannot see does
+ *    not enter the summary.
+ *  - The OBJECT half is not. The pre-render check resolves to an existence
+ *    test only, because the `dossier` schema declares `"authorization": null`
+ *    and OpenRegister treats an unconfigured cascade as open. See
+ *    `DossierSummaryDataService::assertDossierReadable()`.
+ *
+ * So any authenticated user in the organisation can trigger a regen for any
+ * dossier uuid they can name; what they get back is scoped to the files they
+ * can already see. Tracked in ConductionNL/docudesk#441.
  *
  * @category  Controller
  * @package   OCA\DocuDesk\Controller
@@ -22,7 +36,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/anonymisation-grondslagen-summary/specs/anonymisation-grondslagen-summary/spec.md
+ * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +47,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -51,85 +65,81 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class DossierController extends Controller
-{
-    /**
-     * Constructor for DossierController.
-     *
-     * @param string                    $appName            The application name.
-     * @param IRequest                  $request            The current HTTP request.
-     * @param LoggerInterface           $logger             Logger for error reporting.
-     * @param GrondslagenSummaryService $grondslagenSummary Per-dossier renderer.
-     * @param IL10N                     $l10n               Localisation service.
-     * @param IUserSession              $userSession        User session for auth check.
-     */
-    public function __construct(
-        string $appName,
-        IRequest $request,
-        private readonly LoggerInterface $logger,
-        private readonly GrondslagenSummaryService $grondslagenSummary,
-        private readonly IL10N $l10n,
-        private readonly IUserSession $userSession
-    ) {
-        parent::__construct(appName: $appName, request: $request);
+class DossierController extends Controller {
+	/**
+	 * Constructor for DossierController.
+	 *
+	 * @param string $appName The application name.
+	 * @param IRequest $request The current HTTP request.
+	 * @param LoggerInterface $logger Logger for error reporting.
+	 * @param LegalBasesSummaryService $grondslagenSummary Per-dossier renderer.
+	 * @param IL10N $l10n Localisation service.
+	 * @param IUserSession $userSession User session for auth check.
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		private readonly LoggerInterface $logger,
+		private readonly LegalBasesSummaryService $grondslagenSummary,
+		private readonly IL10N $l10n,
+		private readonly IUserSession $userSession,
+	) {
+		parent::__construct(appName: $appName, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Regenerate the per-dossier grondslagen summary PDF.
-     *
-     * Walks every file under the dossier folder, aggregates anonymised
-     * entities + their grondslagen, and writes the resulting summary PDF
-     * to `<dossier-folder>/grondslagen.pdf`. The dossier object's
-     * `configuration.grondslagen.{fileId, lastGeneratedAt}` is updated on
-     * success so the dossier UI can badge the report as fresh.
-     *
-     * @param string $dossierId The OR dossier object UUID.
-     *
-     * @return JSONResponse The generated file's metadata, or an error payload.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     */
-    public function generateGrondslagenSummary(string $dossierId): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Not authenticated')],
-                Http::STATUS_UNAUTHORIZED
-            );
-        }
+	/**
+	 * Regenerate the per-dossier grondslagen summary PDF.
+	 *
+	 * Walks every file under the dossier folder, aggregates anonymised
+	 * entities + their grondslagen, and writes the resulting summary PDF
+	 * to `<dossier-folder>/grondslagen.pdf`. The dossier object's
+	 * `configuration.grondslagen.{fileId, lastGeneratedAt}` is updated on
+	 * success so the dossier UI can badge the report as fresh.
+	 *
+	 * @param string $dossierId The OR dossier object UUID.
+	 *
+	 * @return JSONResponse The generated file's metadata, or an error payload.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function generateGrondslagenSummary(string $dossierId): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Not authenticated')],
+				Http::STATUS_UNAUTHORIZED
+			);
+		}
 
-        try {
-            $this->grondslagenSummary->authorizeAccess(dossierId: $dossierId);
-            $file = $this->grondslagenSummary->renderDossierSummary(dossierUuid: $dossierId);
+		try {
+			$this->grondslagenSummary->authorizeAccess(dossierId: $dossierId);
+			$file = $this->grondslagenSummary->renderDossierSummary(dossierUuid: $dossierId);
 
-            return new JSONResponse(
-                [
-                    'fileId'      => $file->getId(),
-                    'filename'    => $file->getName(),
-                    'filePath'    => $file->getPath(),
-                    'size'        => $file->getSize(),
-                    'generatedAt' => date('c'),
-                ]
-            );
-        } catch (Exception $e) {
-            $this->logger->error(
-                'DossierController::generateGrondslagenSummary failed: '.$e->getMessage(),
-                ['dossierId' => $dossierId, 'exception' => $e]
-            );
-            return new JSONResponse(
-                [
-                    'error' => $this->l10n->t(
-                        'Failed to generate dossier summary: %s',
-                        [$e->getMessage()]
-                    ),
-                ],
-                500
-            );
-        }//end try
+			return new JSONResponse(
+				[
+					'fileId' => $file->getId(),
+					'filename' => $file->getName(),
+					'filePath' => $file->getPath(),
+					'size' => $file->getSize(),
+					'generatedAt' => date('c'),
+				]
+			);
+		} catch (Exception $e) {
+			$this->logger->error(
+				'DossierController::generateGrondslagenSummary failed: ' . $e->getMessage(),
+				['dossierId' => $dossierId, 'exception' => $e]
+			);
+			return new JSONResponse(
+				[
+					'error' => $this->l10n->t(
+						'Failed to generate dossier summary: %s',
+						[$e->getMessage()]
+					),
+				],
+				500
+			);
+		}//end try
 
-    }//end generateGrondslagenSummary()
+	}//end generateGrondslagenSummary()
 }//end class

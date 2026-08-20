@@ -1,4 +1,6 @@
 {
   "@nextcloud/axios": "Nextcloud official package (GPL-3.0) — required dependency for all Nextcloud apps. Our apps run within the Nextcloud (AGPL-3.0) ecosystem. Approved 2026-03-15.",
-  "apexcharts": "License is MIT — license-checker misreads logo URL as custom license, see https://github.com/apexcharts/apexcharts.js/blob/main/LICENSE"
+  "apexcharts": "License is MIT — license-checker misreads logo URL as custom license, see https://github.com/apexcharts/apexcharts.js/blob/main/LICENSE. ⚠️ This entry is keyed on the SYMPTOM, not the licence: apexcharts 4.x is MIT, but 5.x is proprietary and reports the SAME 'Custom: <url>' string, so this override would silently approve it. The `^4.7.0` range that @conduction/nextcloud-vue pins cannot reach 5.x — verified 4.0.0-4.7.0 are all MIT — but do not widen that range without revisiting this line.",
+  "duck": "Permissive BSD. Declared as the legacy non-SPDX string 'BSD*', which the allowlist matches literally and therefore rejects; the licence itself is on the allowlist as BSD-2-Clause/BSD-3-Clause. Transitive via mammoth -> lop. Pre-existing, unchanged by the Vue 3 migration.",
+  "pako": "Permissive. Declared as the SPDX compound expression '(MIT AND Zlib)'; both halves are already on the allowlist, but the matcher compares whole strings and cannot evaluate a compound. Transitive via jszip and browserify-zlib. Pre-existing, unchanged by the Vue 3 migration."
 }

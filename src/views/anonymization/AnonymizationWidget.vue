@@ -1,43 +1,64 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../store/store.js'
+import {
+	anonymizationStore,
+	fileViewerStore,
+	myDocumentsStore,
+} from '../../store/store.js'
 </script>
 
 <template>
 	<div class="anonymization-widget">
 		<!-- Drop zone -->
 		<div class="upload-area">
+			<!--
+				Drag-and-drop is a pointer-only affordance by nature, so the file
+				picker is opened by a REAL <button> rather than by a click handler
+				on this wrapper. The wrapper used to carry `@click` while the
+				<input type="file"> was `display: none`, which left keyboard users
+				with no way at all to reach the picker (WCAG 2.1.1).
+			-->
 			<div
 				class="drop-zone"
 				:class="{ dragging: isDragging }"
 				@dragover.prevent="isDragging = true"
 				@dragleave.prevent="isDragging = false"
-				@drop.prevent="handleDrop"
-				@click="$refs.fileInput.click()">
-				<img :src="uploadIcon" alt="" class="upload-icon">
+				@drop.prevent="handleDrop">
+				<img :src="uploadIcon" alt="" class="upload-icon" />
 				<div class="drop-content">
 					<p class="drop-title">
 						{{ t('docudesk', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
-						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
+						{{
+							t(
+								'docudesk',
+								'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.',
+							)
+						}}
 					</p>
-					<span class="fake-button">
+					<button
+						type="button"
+						class="fake-button"
+						@click="$refs.fileInput.click()">
 						{{ t('docudesk', '+ Select files') }}
-					</span>
+					</button>
 				</div>
 				<input
 					ref="fileInput"
 					type="file"
 					multiple
-					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
+					:aria-label="t('docudesk', 'Select files to anonymise')"
+					accept=".docx,.odt,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,application/pdf,message/rfc822"
 					class="file-input"
-					@change="handleFileSelect">
+					@change="handleFileSelect" />
 			</div>
 		</div>
 
 		<!-- Recent documents -->
-		<section v-if="recentLoading || recentItems.length > 0" class="recent-section">
+		<section
+			v-if="recentLoading || recentItems.length > 0"
+			class="recent-section">
 			<h3 class="recent-section__title">
 				{{ t('docudesk', 'Recent documents') }}
 			</h3>
@@ -53,85 +74,28 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 			</div>
 		</section>
 
-		<!-- Dossier name dialog -->
-		<NcDialog
+		<!-- Upload dialog (single document or dossier) — src/dialogs/ per ADR-004 -->
+		<AnonymizationUploadDialog
 			v-if="showDossierDialog"
-			:name="t('docudesk', 'Create dossier')"
-			:can-close="!dossierSubmitting"
-			size="normal"
-			@closing="cancelDossier">
-			<div class="dossier-dialog">
-				<NcTextField
-					ref="dossierInput"
-					:value.sync="dossierName"
-					:label="t('docudesk', 'Dossier name')"
-					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
-					:disabled="dossierSubmitting"
-					:error="!!dossierError"
-					:helper-text="dossierError"
-					@keyup.enter="confirmDossier" />
-				<NcNoteCard type="info">
-					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
-				</NcNoteCard>
-			</div>
-			<template #actions>
-				<NcButton type="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="dossierSubmitting" @click="confirmDossier">
-					<template v-if="dossierSubmitting" #icon>
-						<NcLoadingIcon :size="18" />
-					</template>
-					{{ t('docudesk', 'Continue to anonymization') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			v-model:dossierName="dossierName"
+			v-model:grondslagen="grondslagen"
+			:singleFile="isSingleFile"
+			:fileName="singleFileName"
+			:submitting="dossierSubmitting"
+			:error="dossierError"
+			@confirm="confirmDossier"
+			@cancel="cancelDossier" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
+import AnonymizationUploadDialog from '../../dialogs/AnonymizationUploadDialog.vue'
 import uploadIcon from '../../assets/upload.png'
-
-// Anonymisation only produces real redactions for formats the backend can
-// edit in place: Word via PHPWord, plain text via byte-level replace, PDF
-// via the SAPP byte-replace pipeline. Other binary formats fall through to
-// the str_ireplace path that returns a byte-identical copy — see
-// project-anonymization-pipeline for the upstream OR limitation. Restrict
-// the upload widget so users can't accidentally pick a format that won't
-// actually redact.
-const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
-const ALLOWED_MIMES = new Set([
-	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-	'text/plain',
-	'application/pdf',
-])
-
-/**
- * Split a FileList into accepted (docx/txt/pdf) and rejected files.
- *
- * Matches on both MIME and filename extension because drag-and-drop sometimes
- * omits MIME (e.g. for .docx on certain browsers) and the input's `accept`
- * attribute is advisory only.
- *
- * @param {FileList | File[]} files Incoming files.
- * @return {{ accepted: File[], rejected: File[] }}
- */
-function partitionFiles(files) {
-	const accepted = []
-	const rejected = []
-	for (const file of Array.from(files)) {
-		const ext = (file.name.split('.').pop() || '').toLowerCase()
-		if (ALLOWED_MIMES.has(file.type) || ALLOWED_EXTENSIONS.includes(ext)) {
-			accepted.push(file)
-		} else {
-			rejected.push(file)
-		}
-	}
-	return { accepted, rejected }
-}
+import { partitionFiles } from '../../services/anonymizationUpload.js'
 
 // Widget only handles upload + the dossier dialog. After upload the user is
 // routed to the file viewer (/my-documents host), where `FileViewerSidebar`
@@ -140,13 +104,11 @@ function partitionFiles(files) {
 export default {
 	name: 'AnonymizationWidget',
 	components: {
-		NcButton,
-		NcDialog,
+		AnonymizationUploadDialog,
 		NcLoadingIcon,
-		NcNoteCard,
-		NcTextField,
 		DdDocumentCard,
 	},
+
 	data() {
 		return {
 			isDragging: false,
@@ -155,15 +117,67 @@ export default {
 			dossierName: '',
 			dossierSubmitting: false,
 			dossierError: '',
+			grondslagen: true,
 			uploadIcon,
 			recentItems: [],
 			recentLoading: false,
 		}
 	},
-	computed: {},
+
+	computed: {
+		/**
+		 * Display name of the currently logged-in Nextcloud user.
+		 *
+		 * @return {string} The user's display name, or their uid as fallback, or empty string when unauthenticated.
+		 */
+		userName() {
+			const user = getCurrentUser()
+			return user?.displayName || user?.uid || ''
+		},
+
+		/**
+		 * Time-of-day greeting interpolated with the user's display name.
+		 *
+		 * Morning: 05:00–11:59. Afternoon: 12:00–17:59. Evening: 18:00–04:59.
+		 *
+		 * @return {string} Localised greeting like 'Good morning Marco,'.
+		 */
+		greeting() {
+			const hour = new Date().getHours()
+			if (hour >= 5 && hour < 12) {
+				return t('docudesk', 'Good morning {name},', { name: this.userName })
+			}
+			if (hour >= 12 && hour < 18) {
+				return t('docudesk', 'Good afternoon {name},', {
+					name: this.userName,
+				})
+			}
+			return t('docudesk', 'Good evening {name},', { name: this.userName })
+		},
+
+		/**
+		 * Whether the upload modal is showing a single document (no dossier).
+		 *
+		 * @return {boolean} True when exactly one file is pending.
+		 */
+		isSingleFile() {
+			return this.pendingFiles.length === 1
+		},
+
+		/**
+		 * Filename of the single pending file, shown read-only in the modal.
+		 *
+		 * @return {string} The first pending file's name, or empty string.
+		 */
+		singleFileName() {
+			return this.pendingFiles[0]?.name || ''
+		},
+	},
+
 	mounted() {
 		this.loadRecent()
 	},
+
 	methods: {
 		/**
 		 * Fetch the most-recent anonymized files and dossier folders under
@@ -183,18 +197,26 @@ export default {
 				this.recentLoading = false
 			}
 		},
+
 		/**
 		 * Open a recent item: dossier folder → navigate to that folder in
 		 * My Documents; anonymized file → open in the file viewer + route
 		 * to My Documents host.
 		 *
 		 * @param {object} item Recent item from `loadRecent`.
-		 * @return {void}
+		 * @return {Promise<void>}
 		 */
-		openRecent(item) {
+		async openRecent(item) {
 			if (!item) return
 			if (item.isFolder) {
-				myDocumentsStore.fetchDocuments(item.path)
+				// Await the fetch before routing. `MyDocumentsIndex.mounted`
+				// fires a no-arg `fetchDocuments()` that resolves against
+				// `currentPath`; routing before this fetch sets `currentPath`
+				// to the dossier makes that mount-time refetch load the root
+				// instead, leaving `documents` (root) out of sync with
+				// `currentPath` (dossier) so the dossier sidebar shows the
+				// wrong files.
+				await myDocumentsStore.fetchDocuments(item.path)
 				this.gotoViewer()
 				return
 			}
@@ -206,6 +228,7 @@ export default {
 			})
 			this.gotoViewer()
 		},
+
 		/**
 		 * Drop handler for the drag-and-drop zone.
 		 * Delegates to dispatchFiles so the dossier-dialog logic applies.
@@ -223,6 +246,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * Change handler for the hidden file input.
 		 * Resets the input value so the same file(s) can be picked again.
@@ -240,6 +264,7 @@ export default {
 			}
 			event.target.value = ''
 		},
+
 		/**
 		 * Drop files whose extension/MIME isn't in the supported set.
 		 * Surfaces a toast naming each rejected file so the user knows why
@@ -252,43 +277,35 @@ export default {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
-				showError(t('docudesk', 'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}', { names }))
+				showError(
+					t(
+						'docudesk',
+						'Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}',
+						{ names },
+					),
+				)
 			}
 			return accepted
 		},
+
 		/**
-		 * Route the incoming files to the right flow:
-		 *   - 2+ files → open the dossier dialog (user picks a folder name).
-		 *   - single file → straight into the queue under /DocuDesk/, then
-		 *     open the file in the in-app viewer and route to /my-documents
-		 *     so `FileViewerPage` mounts and the sidebar lists entities.
+		 * Always open the upload modal so the user confirms the grondslagen
+		 * choice before anonymization, regardless of file count:
+		 *   - single file → read-only filename, no dossier name.
+		 *   - 2+ files → dossier-name input.
+		 * The actual upload + viewer routing happens on confirm.
 		 *
 		 * @param {File[] | FileList} fileList Files from drop or input.
-		 * @return {Promise<void>}
+		 * @return {void}
 		 */
-		async dispatchFiles(fileList) {
+		dispatchFiles(fileList) {
 			const files = Array.from(fileList)
-			if (files.length >= 2) {
-				this.openDossierDialog(files)
+			if (files.length === 0) {
 				return
 			}
-
-			// Capture MIME type before addFiles consumes the File blob,
-			// and the queue length so we can find the new entry afterwards.
-			const mimeType = files[0]?.type || ''
-			const before = anonymizationStore.files.length
-			await anonymizationStore.addFiles(files)
-			const entry = anonymizationStore.files[before]
-			if (entry && entry.fileId) {
-				fileViewerStore.open({
-					fileId: entry.fileId,
-					fileName: entry.name,
-					mimeType,
-					path: entry.filePath,
-				})
-				this.gotoViewer()
-			}
+			this.openDossierDialog(files)
 		},
+
 		/**
 		 * Route to the file-viewer host page when not already there.
 		 * Hash-mode router throws NavigationDuplicated if we push the same
@@ -300,23 +317,27 @@ export default {
 			if (this.$route?.name === 'MyDocuments') {
 				return
 			}
-			this.$router.push({ name: 'MyDocuments' }).catch(() => { /* duplicate nav */ })
+			this.$router.push({ name: 'MyDocuments' }).catch(() => {
+				/* duplicate nav */
+			})
 		},
+
 		/**
-		 * Open the dossier-name dialog with an empty input so the
-		 * placeholder is visible and focus on next tick.
+		 * Open the upload dialog with a fresh state: empty dossier name,
+		 * grondslagen defaulting to AAN. AnonymizationUploadDialog focuses
+		 * its own name field when it mounts (multi-file only), so the parent
+		 * no longer reaches across the boundary for it.
 		 *
-		 * @param {File[]} files Files that will be placed into the dossier.
+		 * @param {File[]} files Files pending upload.
 		 */
 		openDossierDialog(files) {
 			this.pendingFiles = files
 			this.dossierName = ''
 			this.dossierError = ''
+			this.grondslagen = true
 			this.showDossierDialog = true
-			this.$nextTick(() => {
-				this.$refs.dossierInput?.focus?.()
-			})
 		},
+
 		/**
 		 * Confirm handler for the dossier dialog. With a title the files are
 		 * grouped into a new dossier folder and bound to OpenRegister; with
@@ -335,7 +356,10 @@ export default {
 				const before = anonymizationStore.files.length
 
 				if (name) {
-					await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+					await anonymizationStore.addFilesAsDossier(
+						this.pendingFiles,
+						name,
+					)
 
 					// Bind the WebDAV folder to an OpenRegister dossier
 					// object (PROPFIND + POST). Best-effort: files are
@@ -362,22 +386,27 @@ export default {
 				// Open the first uploaded file in the viewer.
 				const firstEntry = anonymizationStore.files[before]
 				if (firstEntry && firstEntry.fileId) {
-					fileViewerStore.open({
-						fileId: firstEntry.fileId,
-						fileName: firstEntry.name,
-						mimeType: firstMime,
-						path: firstEntry.filePath,
-					})
+					fileViewerStore.open(
+						{
+							fileId: firstEntry.fileId,
+							fileName: firstEntry.name,
+							mimeType: firstMime,
+							path: firstEntry.filePath,
+						},
+						{ grondslagen: this.grondslagen },
+					)
 					this.gotoViewer()
 				}
 
 				this.closeDossierDialog()
 			} catch (err) {
-				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to upload'
+				this.dossierError =
+					err?.response?.data?.error || err?.message || 'Failed to upload'
 			} finally {
 				this.dossierSubmitting = false
 			}
 		},
+
 		/**
 		 * Cancel handler — ignored while a submit is in flight to avoid
 		 * leaving the store in a half-created state.
@@ -386,12 +415,14 @@ export default {
 			if (this.dossierSubmitting) return
 			this.closeDossierDialog()
 		},
+
 		/** Reset all dialog state back to its initial values. */
 		closeDossierDialog() {
 			this.showDossierDialog = false
 			this.pendingFiles = []
 			this.dossierName = ''
 			this.dossierError = ''
+			this.grondslagen = true
 		},
 	},
 }
@@ -399,6 +430,8 @@ export default {
 
 <style scoped>
 .anonymization-widget {
+	/* Theme-aware mid-contrast grey for the drop-zone's dashed border. */
+	--dd-color-dark-grey: var(--color-border-maxcontrast, #61616c);
 	display: flex;
 	flex-direction: column;
 	padding: 20px;
@@ -423,9 +456,12 @@ export default {
 	border: 2px dashed var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 32px;
-	background-color: #fff;
-	cursor: pointer;
-	transition: border-color 0.2s, background-color 0.2s;
+	background-color: var(--dd-surface, #fff);
+	box-shadow: var(--dd-shadow-panel);
+	/* Not a click target any more — the picker is opened by .fake-button. */
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .drop-zone:hover {
@@ -467,30 +503,29 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+/* A real <button> now, so the browser's own border/font defaults are reset
+   here to keep the previous appearance byte-for-byte. */
 .fake-button {
 	margin-top: 4px;
 	padding: 8px 16px;
+	border: none;
 	border-radius: var(--border-radius);
 	background-color: var(--color-primary-element);
 	color: var(--color-primary-element-text);
+	font-family: inherit;
 	font-size: 0.9rem;
 	font-weight: 500;
 	white-space: nowrap;
+	cursor: pointer;
+}
+
+.fake-button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .file-input {
 	display: none;
-}
-
-.dossier-dialog {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	padding: 20px;
-}
-
-.dossier-dialog :deep(.notecard) {
-	margin: 0;
 }
 
 .recent-section {
@@ -517,4 +552,11 @@ export default {
 	gap: 16px;
 }
 
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.drop-zone {
+		transition: none;
+	}
+}
 </style>

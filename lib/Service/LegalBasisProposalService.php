@@ -1,0 +1,425 @@
+<?php
+
+/**
+ * Grondslag Proposal Service
+ *
+ * Proposes a grondslag (legal basis) per detected entity type. After PII
+ * detection, for each EntityRelation whose `bases` is still empty, this
+ * service pre-fills the operator-configured default base slug(s) for that
+ * entity type — leaving any operator-assigned bases untouched (fill-only-
+ * when-empty). It also supplies the settings UI with the selectable entity
+ * types and the available `base` records.
+ *
+ * Decisions (see openspec/changes/propose-grondslag-per-entity-type):
+ *   - Mapping is instance-global app-config JSON
+ *     (`docudesk.grondslagen.entity_type_bases`), value
+ *     `{ "<TYPE>": ["<base-slug>", ...] }`.
+ *   - Bases are stored as plain slug strings, matching the existing
+ *     `EntityRelation.bases` shape and `LegalBasesSummaryService` resolver.
+ *   - Selectable entity types come from a curated in-DocuDesk list (v1).
+ *     Sourcing them live from the anonymiser backend is deferred until that
+ *     backend exposes a supported-types endpoint; {@see getSelectableEntityTypes}
+ *     is the single seam to swap when it does.
+ *
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
+ */
+
+declare(strict_types=1);
+
+namespace OCA\DocuDesk\Service;
+
+use Exception;
+use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Proposes grondslagen per entity type and pre-fills them at detection time.
+ *
+ * @category Service
+ * @package  OCA\DocuDesk\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
+ */
+class LegalBasisProposalService {
+
+	/**
+	 * App config key holding the entity-type → base-slug[] mapping.
+	 *
+	 * @var string
+	 */
+	public const CONFIG_KEY = 'docudesk.grondslagen.entity_type_bases';
+
+	/**
+	 * App config key holding the JSON array of entity types left enabled for
+	 * automatic detection. Unset or empty means "all types" (the default).
+	 *
+	 * @var string
+	 */
+	public const ENABLED_TYPES_CONFIG_KEY = 'docudesk.anonymisation.enabled_entity_types';
+
+	/**
+	 * The DocuDesk app id, used as the app-config namespace.
+	 *
+	 * @var string
+	 */
+	private const APP_ID = 'docudesk';
+
+	/**
+	 * Curated list of entity types offered in the settings selector (v1).
+	 *
+	 * The identifiers MUST match the `entity_type` strings the backend emits
+	 * on detections, so the mapping keys line up at pre-fill time. The first
+	 * group is verified against this deployment's classic/light flavor
+	 * (spaCy NER + Dutch regex). The second group are the additional GLiNER
+	 * targets the GPU flavor emits (kept so the same instance works against
+	 * either flavor). This constant is the single seam to replace when the
+	 * backend exposes a supported-types endpoint (deferred — see design.md D4).
+	 *
+	 * @var array<int, string>
+	 */
+	private const CURATED_ENTITY_TYPES = [
+		// Classic/light flavor — verified against live detections.
+		'PERSON',
+		'LOCATION',
+		'ORGANIZATION',
+		'EMAIL',
+		'PHONE',
+		'DATE',
+		'BSN',
+		'IBAN',
+		'KENTEKEN',
+		// Additional GLiNER targets emitted by the GPU flavor.
+		'STREET_ADDRESS',
+		'NORP',
+		'POLITICAL_PARTY',
+		'INCOME',
+		'EDUCATION_LEVEL',
+		// Dynamic, per-organisation-list type contributed by
+		// CustomDictionaryMatchService (custom-dictionary-recognition,
+		// design.md §D4) — distinct from the fixed backend-emitted types
+		// above: this one toggle enables/disables ALL active custom
+		// dictionaries' automatic detection at once.
+		'CUSTOM_DICTIONARY',
+	];
+
+	/**
+	 * OpenRegister-facing reads (service resolution + `base` records).
+	 *
+	 * @var LegalBasisCatalog
+	 */
+	private readonly LegalBasisCatalog $baseCatalog;
+
+	/**
+	 * Constructor for LegalBasisProposalService.
+	 *
+	 * The catalog is an injected collaborator; the null default keeps the
+	 * historical four-argument signature usable, in which case an equivalent
+	 * catalog is built from the same three dependencies.
+	 *
+	 * @param IAppConfig $config App configuration (mapping storage).
+	 * @param IAppManager $appManager App manager (OpenRegister availability).
+	 * @param ContainerInterface $container DI container resolving OpenRegister services at runtime.
+	 * @param LoggerInterface $logger Logger for best-effort diagnostics.
+	 * @param LegalBasisCatalog|null $baseCatalog OpenRegister-facing reads; built from the above when null.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+		IAppManager $appManager,
+		ContainerInterface $container,
+		private readonly LoggerInterface $logger,
+		?LegalBasisCatalog $baseCatalog = null,
+	) {
+		$this->baseCatalog = ($baseCatalog ?? new LegalBasisCatalog($appManager, $container, $logger));
+
+	}//end __construct()
+
+	/**
+	 * Return the entity types selectable in the settings UI.
+	 *
+	 * Version 1 returns the curated constant. This is the single seam to swap
+	 * for a live backend-sourced list when that endpoint exists.
+	 *
+	 * @return array<int, string> Entity type identifiers.
+	 */
+	public function getSelectableEntityTypes(): array {
+		return self::CURATED_ENTITY_TYPES;
+	}//end getSelectableEntityTypes()
+
+	/**
+	 * Return the entity types currently enabled for automatic detection.
+	 *
+	 * Backs the settings selector, which is all-on by default: when nothing has
+	 * been stored yet every curated type is returned so the UI shows them all
+	 * checked. A stored selection is sanitised against the curated list so an
+	 * unknown/stale type can never surface in the UI.
+	 *
+	 * @return array<int, string> Enabled entity type identifiers.
+	 */
+	public function getEnabledEntityTypes(): array {
+		$stored = $this->readEnabledEntityTypes();
+		if ($stored === null) {
+			return self::CURATED_ENTITY_TYPES;
+		}
+
+		return $stored;
+	}//end getEnabledEntityTypes()
+
+	/**
+	 * Return the entity-type whitelist to hand to OpenRegister's analysis call.
+	 *
+	 * Null means "do not constrain detection" (detect every type) and is
+	 * returned whenever the operator has everything enabled — either because
+	 * nothing was stored or because the stored selection covers the full
+	 * curated set. Only a genuine subset yields a whitelist, keeping the
+	 * default behaviour identical to today and avoiding a filter that would
+	 * needlessly narrow the detector's vocabulary.
+	 *
+	 * @return array<int, string>|null Entity type whitelist, or null for "all".
+	 */
+	public function getEntityTypeWhitelist(): ?array {
+		$stored = $this->readEnabledEntityTypes();
+		if ($stored === null || count($stored) === count(self::CURATED_ENTITY_TYPES)) {
+			return null;
+		}
+
+		return $stored;
+	}//end getEntityTypeWhitelist()
+
+	/**
+	 * Read and sanitise the stored enabled-types selection.
+	 *
+	 * Returns null when unset, empty, malformed, or reduced to nothing after
+	 * sanitisation — every one of those cases means "all types". Otherwise the
+	 * stored ids are intersected with the curated list and returned in curated
+	 * order, dropping unknown/stale/duplicate entries.
+	 *
+	 * @return array<int, string>|null Sanitised enabled subset, or null for "all".
+	 */
+	private function readEnabledEntityTypes(): ?array {
+		$raw = $this->config->getValueString(self::APP_ID, self::ENABLED_TYPES_CONFIG_KEY, '');
+		if ($raw === '') {
+			return null;
+		}
+
+		$decoded = json_decode($raw, true);
+		if (is_array($decoded) === false) {
+			return null;
+		}
+
+		$enabled = array_values(
+			array_filter(
+				self::CURATED_ENTITY_TYPES,
+				static function (string $type) use ($decoded): bool {
+					return in_array($type, $decoded, true);
+				}
+			)
+		);
+
+		if (count($enabled) === 0) {
+			return null;
+		}
+
+		return $enabled;
+	}//end readEnabledEntityTypes()
+
+	/**
+	 * Return the configured entity-type → base-slug[] mapping.
+	 *
+	 * @return array<string, array<int, string>> Mapping; empty when unset or malformed.
+	 */
+	public function getMapping(): array {
+		$raw = $this->config->getValueString(self::APP_ID, self::CONFIG_KEY, '{}');
+		$decoded = json_decode($raw, true);
+		if (is_array($decoded) === false) {
+			return [];
+		}
+
+		$mapping = [];
+		foreach ($decoded as $type => $slugs) {
+			if (is_string($type) === false || is_array($slugs) === false) {
+				continue;
+			}
+
+			$clean = [];
+			foreach ($slugs as $slug) {
+				if (is_string($slug) === true && $slug !== '') {
+					$clean[] = $slug;
+				}
+			}
+
+			if (count($clean) > 0) {
+				$mapping[$type] = $clean;
+			}
+		}//end foreach
+
+		return $mapping;
+	}//end getMapping()
+
+	/**
+	 * List the available `base` (grondslag) records for the settings selector.
+	 *
+	 * Returns slug + name + description per base so the UI can offer them as
+	 * options. Operator-added bases appear automatically. Best-effort: an
+	 * empty array is returned when OpenRegister is unavailable or the lookup
+	 * fails — the settings page must still render.
+	 *
+	 * @return array<int, array{slug: string, name: string, description: string}> Available bases.
+	 */
+	public function getAvailableBases(): array {
+		return $this->baseCatalog->getAvailableBases();
+	}//end getAvailableBases()
+
+	/**
+	 * Pre-fill proposed bases onto a file's freshly-detected entity relations.
+	 *
+	 * For each EntityRelation of the file whose `bases` is empty, sets the
+	 * configured base slug(s) for that entity's type. Relations with existing
+	 * bases are skipped (non-clobber); entity types with no mapping are left
+	 * empty. Best-effort and idempotent — safe to call after every detection.
+	 *
+	 * @param int $fileId Nextcloud file id whose relations were just detected.
+	 *
+	 * @return int Number of relations a proposal was written to.
+	 *
+	 * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-proposed-grondslag-pre-filled-at-detection-time
+	 */
+	public function applyProposals(int $fileId): int {
+		$mapping = $this->getMapping();
+		if (count($mapping) === 0) {
+			return 0;
+		}
+
+		$mapper = $this->baseCatalog->resolve(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
+		if ($mapper === null) {
+			return 0;
+		}
+
+		$filled = 0;
+		try {
+			$detections = $mapper->findEntitiesForFile($fileId);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'LegalBasisProposalService: could not load detections for proposal',
+				['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return 0;
+		}
+
+		foreach ($detections as $detection) {
+			$filled += $this->proposeForDetection(
+				mapper: $mapper,
+				mapping: $mapping,
+				detection: $detection,
+				fileId: $fileId
+			);
+		}
+
+		return $filled;
+	}//end applyProposals()
+
+	/**
+	 * Pre-fill the proposed bases for a single detection, when applicable.
+	 *
+	 * Returns 1 when a proposal was written, 0 otherwise (unmapped type,
+	 * missing relation id, already-filled relation, or a best-effort failure).
+	 *
+	 * @param mixed $mapper The EntityRelationMapper.
+	 * @param array<string, array<int, string>> $mapping Entity-type → base-slug[] mapping.
+	 * @param mixed $detection One detection row from findEntitiesForFile.
+	 * @param int $fileId File id (for log context).
+	 *
+	 * @return int 1 if a proposal was written, 0 otherwise.
+	 */
+	private function proposeForDetection(mixed $mapper, array $mapping, mixed $detection, int $fileId): int {
+		$row = (array)$detection;
+		$type = (string)($row['entity_type'] ?? $row['entityType'] ?? '');
+		$relationId = (int)($row['relation_id'] ?? $row['relationId'] ?? 0);
+		if ($type === '' || $relationId === 0 || isset($mapping[$type]) === false) {
+			return 0;
+		}
+
+		try {
+			$relation = $mapper->find($relationId);
+			$existing = $relation->getBases();
+			if ($existing !== null && count($existing) > 0) {
+				// Non-clobber: never overwrite an operator (or prior) decision.
+				return 0;
+			}
+
+			$mapper->updateDecisionMetadata(
+				relation: $relation,
+				fields: ['bases' => array_values($mapping[$type])]
+			);
+			return 1;
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'LegalBasisProposalService: failed to pre-fill bases',
+				['fileId' => $fileId, 'relationId' => $relationId, 'error' => $e->getMessage()]
+			);
+			return 0;
+		}//end try
+
+	}//end proposeForDetection()
+
+	/**
+	 * Merge each relation's current `bases` into the detection rows.
+	 *
+	 * `findEntitiesForFile` does not select `bases`, so callers that surface
+	 * detections for review (e.g. the anonymisation sidebar) enrich them here
+	 * after {@see applyProposals} — otherwise the proposed grondslag would be
+	 * stored but invisible in the review UI. Best-effort: the rows are
+	 * returned unchanged when OpenRegister is unavailable or the lookup fails.
+	 *
+	 * @param array<int, mixed> $entities Detection rows (each carrying relation_id).
+	 * @param int $fileId File whose relations supply the bases.
+	 *
+	 * @return array<int, mixed> The detection rows with a `bases` key populated.
+	 *
+	 * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-proposed-grondslag-pre-filled-at-detection-time
+	 */
+	public function enrichEntitiesWithBases(array $entities, int $fileId): array {
+		$mapper = $this->baseCatalog->resolve(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
+		if ($mapper === null) {
+			return $entities;
+		}
+
+		try {
+			$basesByRelation = [];
+			foreach ($mapper->findByFileId($fileId) as $relation) {
+				$basesByRelation[(int)$relation->getId()] = $relation->getBases();
+			}
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'LegalBasisProposalService: could not load bases for enrichment',
+				['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return $entities;
+		}
+
+		foreach ($entities as $index => $row) {
+			$data = (array)$row;
+			$relationId = (int)($data['relation_id'] ?? $data['relationId'] ?? 0);
+			if ($relationId !== 0 && array_key_exists($relationId, $basesByRelation) === true) {
+				$data['bases'] = $basesByRelation[$relationId];
+				$entities[$index] = $data;
+			}
+		}
+
+		return $entities;
+	}//end enrichEntitiesWithBases()
+}//end class

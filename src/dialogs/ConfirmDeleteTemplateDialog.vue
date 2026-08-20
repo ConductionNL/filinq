@@ -1,16 +1,21 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Delete template')"
-		@closing="$emit('cancel')">
+	<NcDialog :name="t('docudesk', 'Delete template')" @closing="$emit('cancel')">
 		<template #default>
 			<p>
-				{{ t('docudesk', 'Are you sure you want to delete "{name}"? This action cannot be undone.', { name: templateName }) }}
+				{{
+					t(
+						'docudesk',
+						'Are you sure you want to delete "{name}"? This action cannot be undone.',
+						{ name: templateName },
+					)
+				}}
 			</p>
 		</template>
 		<template #actions>
 			<NcButton @click="$emit('cancel')">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton type="error" @click="$emit('confirm')">
+			<NcButton variant="error" @click="$emit('confirm')">
 				{{ t('docudesk', 'Delete') }}
 			</NcButton>
 		</template>
@@ -18,8 +23,8 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'ConfirmDeleteTemplateDialog',
@@ -30,6 +35,7 @@ export default {
 			default: '',
 		},
 	},
+
 	emits: ['confirm', 'cancel'],
 	methods: { t },
 }

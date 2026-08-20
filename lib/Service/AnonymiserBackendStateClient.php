@@ -39,61 +39,59 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-1
  */
-class AnonymiserBackendStateClient
-{
+class AnonymiserBackendStateClient {
 
-    /**
-     * Fully-qualified class name of the OpenRegister backend service.
-     *
-     * @var string
-     */
-    private const OR_SERVICE = 'OCA\OpenRegister\Service\AnonymisationBackendService';
+	/**
+	 * Fully-qualified class name of the OpenRegister backend service.
+	 *
+	 * @var string
+	 */
+	private const OR_SERVICE = 'OCA\OpenRegister\Service\AnonymisationBackendService';
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container DI container used for lazy service resolution.
-     * @param LoggerInterface    $logger    Logger for debug/warning output.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly LoggerInterface $logger,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container DI container used for lazy service resolution.
+	 * @param LoggerInterface $logger Logger for debug/warning output.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Retrieve the current anonymisation backend state.
-     *
-     * Delegates to `OCA\OpenRegister\Service\AnonymisationBackendService::getState()`.
-     * Falls back to `['method' => 'regex', 'appApiInstalled' => false]` when the
-     * companion service is not yet deployed, so the admin warning is shown rather
-     * than silently suppressed.
-     *
-     * The returned array contains at least:
-     * - `method`         (string) — one of 'regex', 'openanonymiser', 'presidio', 'llm', or a URL.
-     * - `appApiInstalled` (bool)  — whether the app_api ExApp host is installed on this instance.
-     *
-     * @return array<string, mixed> State array from OpenRegister, or safe defaults.
-     *
-     * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-1
-     */
-    public function getState(): array
-    {
-        try {
-            $service = $this->container->get(self::OR_SERVICE);
-            // @phpstan-ignore-next-line
-            $state = $service->getState();
-            return $state;
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                'AnonymisationBackendService not available; defaulting to regex state',
-                ['exception' => $e->getMessage()]
-            );
-            return [
-                'method'          => 'regex',
-                'appApiInstalled' => false,
-            ];
-        }//end try
+	/**
+	 * Retrieve the current anonymisation backend state.
+	 *
+	 * Delegates to `OCA\OpenRegister\Service\AnonymisationBackendService::getState()`.
+	 * Falls back to `['method' => 'regex', 'appApiInstalled' => false]` when the
+	 * companion service is not yet deployed, so the admin warning is shown rather
+	 * than silently suppressed.
+	 *
+	 * The returned array contains at least:
+	 * - `method`         (string) — one of 'regex', 'openanonymiser', 'presidio', 'llm', or a URL.
+	 * - `appApiInstalled` (bool)  — whether the app_api ExApp host is installed on this instance.
+	 *
+	 * @return array<string, mixed> State array from OpenRegister, or safe defaults.
+	 *
+	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-1
+	 */
+	public function getState(): array {
+		try {
+			$service = $this->container->get(self::OR_SERVICE);
+			// @phpstan-ignore-next-line
+			$state = $service->getState();
+			return $state;
+		} catch (\Throwable $e) {
+			$this->logger->debug(
+				'AnonymisationBackendService not available; defaulting to regex state',
+				['exception' => $e->getMessage()]
+			);
+			return [
+				'method' => 'regex',
+				'appApiInstalled' => false,
+			];
+		}//end try
 
-    }//end getState()
+	}//end getState()
 }//end class

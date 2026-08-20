@@ -42,16 +42,19 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		/** Optional sub-line shown below the title. */
 		description: {
 			type: String,
 			default: '',
 		},
+
 		/** Optional DdIcon name shown left of the title. */
 		icon: {
 			type: String,
 			default: '',
 		},
+
 		/** Square icon size in pixels. */
 		iconSize: {
 			type: Number,

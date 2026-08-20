@@ -54,174 +54,161 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  */
-class OutputLayoutResolver
-{
+class OutputLayoutResolver {
 
+	/**
+	 * App-config key for the configurable subfolder name.
+	 */
+	public const SUBFOLDER_CONFIG_KEY = 'anonymisation.output_subfolder_name';
 
-    /**
-     * App-config key for the configurable subfolder name.
-     */
-    public const SUBFOLDER_CONFIG_KEY = 'anonymisation.output_subfolder_name';
+	/**
+	 * Default subfolder name when the config key is unset or invalid.
+	 */
+	public const DEFAULT_SUBFOLDER_NAME = 'anonymised';
 
-    /**
-     * Default subfolder name when the config key is unset or invalid.
-     */
-    public const DEFAULT_SUBFOLDER_NAME = 'anonymised';
+	/**
+	 * Regex that valid subfolder names must match.
+	 */
+	private const SUBFOLDER_NAME_REGEX = '/^[a-z0-9_-]+$/';
 
-    /**
-     * Regex that valid subfolder names must match.
-     */
-    private const SUBFOLDER_NAME_REGEX = '/^[a-z0-9_-]+$/';
+	/**
+	 * Trailing-`_anonymized` strip pattern; matches the literal suffix on
+	 * the base name (post-strip of the extension) so `Report_anonymized`
+	 * becomes `Report` while `_anonymized_summary` is untouched.
+	 */
+	private const LEGACY_SUFFIX_REGEX = '/_anonymized$/';
 
-    /**
-     * Trailing-`_anonymized` strip pattern; matches the literal suffix on
-     * the base name (post-strip of the extension) so `Report_anonymized`
-     * becomes `Report` while `_anonymized_summary` is untouched.
-     */
-    private const LEGACY_SUFFIX_REGEX = '/_anonymized$/';
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $config App configuration provider.
+	 * @param LoggerInterface $logger Logger for the invalid-config warning.
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig      $config App configuration provider.
-     * @param LoggerInterface $logger Logger for the invalid-config warning.
-     */
-    public function __construct(
-        private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger
-    ) {
+	}//end __construct()
 
-    }//end __construct()
+	/**
+	 * Resolve the canonical batch-output relative path for a given source.
+	 *
+	 * Output shape: `<sourceFolderPath>/<subfolder>/<cleanBaseName>.<extension>`.
+	 *
+	 * @param string $sourceFolderPath Absolute Nextcloud path of the source
+	 *                                 folder (must start with `/`).
+	 * @param string $sourceBaseName Base name of the source file (no extension).
+	 * @param string $extension File extension (without leading dot).
+	 *
+	 * @return string Canonical destination path.
+	 */
+	public function resolveBatchDestination(
+		string $sourceFolderPath,
+		string $sourceBaseName,
+		string $extension,
+	): string {
+		$subfolder = $this->getSubfolderName();
+		$cleanBase = $this->stripLegacyAnonymizedSuffix(baseName: $sourceBaseName);
+		$normalisedExt = ltrim($extension, '.');
 
-    /**
-     * Resolve the canonical batch-output relative path for a given source.
-     *
-     * Output shape: `<sourceFolderPath>/<subfolder>/<cleanBaseName>.<extension>`.
-     *
-     * @param string $sourceFolderPath Absolute Nextcloud path of the source
-     *                                 folder (must start with `/`).
-     * @param string $sourceBaseName   Base name of the source file (no extension).
-     * @param string $extension        File extension (without leading dot).
-     *
-     * @return string Canonical destination path.
-     */
-    public function resolveBatchDestination(
-        string $sourceFolderPath,
-        string $sourceBaseName,
-        string $extension
-    ): string {
-        $subfolder     = $this->getSubfolderName();
-        $cleanBase     = $this->stripLegacyAnonymizedSuffix(baseName: $sourceBaseName);
-        $normalisedExt = ltrim($extension, '.');
+		$folder = rtrim($sourceFolderPath, '/');
+		$tail = $cleanBase;
+		if ($normalisedExt !== '') {
+			$tail = $cleanBase . '.' . $normalisedExt;
+		}
 
-        $folder = rtrim($sourceFolderPath, '/');
-        $tail   = $cleanBase;
-        if ($normalisedExt !== '') {
-            $tail = $cleanBase.'.'.$normalisedExt;
-        }
+		return $folder . '/' . $subfolder . '/' . $tail;
+	}//end resolveBatchDestination()
 
-        return $folder.'/'.$subfolder.'/'.$tail;
+	/**
+	 * Strip a trailing `_anonymized` suffix from the supplied base name.
+	 *
+	 * Public so source-discovery filters (`BatchExtractionService`,
+	 * `FolderBatchService`, `FolderExtractionJob`) can quickly test whether
+	 * a candidate file is itself a prior anonymisation output.
+	 *
+	 * @param string $baseName Source base name (without extension).
+	 *
+	 * @return string Base name with one trailing `_anonymized` stripped, if present.
+	 */
+	public function stripLegacyAnonymizedSuffix(string $baseName): string {
+		$stripped = preg_replace(self::LEGACY_SUFFIX_REGEX, '', $baseName);
+		if (is_string($stripped) === true) {
+			return $stripped;
+		}
 
-    }//end resolveBatchDestination()
+		return $baseName;
+	}//end stripLegacyAnonymizedSuffix()
 
-    /**
-     * Strip a trailing `_anonymized` suffix from the supplied base name.
-     *
-     * Public so source-discovery filters (`BatchExtractionService`,
-     * `FolderBatchService`, `FolderExtractionJob`) can quickly test whether
-     * a candidate file is itself a prior anonymisation output.
-     *
-     * @param string $baseName Source base name (without extension).
-     *
-     * @return string Base name with one trailing `_anonymized` stripped, if present.
-     */
-    public function stripLegacyAnonymizedSuffix(string $baseName): string
-    {
-        $stripped = preg_replace(self::LEGACY_SUFFIX_REGEX, '', $baseName);
-        if (is_string($stripped) === true) {
-            return $stripped;
-        }
+	/**
+	 * Indicate whether the given base name is itself a prior anonymisation
+	 * output (used by the source-discovery filter).
+	 *
+	 * @param string $baseName Source base name (without extension).
+	 *
+	 * @return bool True iff the base name ends with the legacy `_anonymized` suffix.
+	 */
+	public function isLegacyAnonymizedOutput(string $baseName): bool {
+		return preg_match(self::LEGACY_SUFFIX_REGEX, $baseName) === 1;
+	}//end isLegacyAnonymizedOutput()
 
-        return $baseName;
+	/**
+	 * Indicate whether a full file name (with extension) is itself a prior
+	 * anonymisation output, i.e. its base name ends with `_anonymized`.
+	 *
+	 * This is the file-name-oriented discriminator used by the folder-flow
+	 * source filter (`FolderExtractionJob`) — it strips the extension first
+	 * and then defers to {@see isLegacyAnonymizedOutput()} so there is a
+	 * single source of truth for the suffix semantics.
+	 *
+	 * @param string $fileName Full file name including extension.
+	 *
+	 * @return bool True iff the base name ends with the legacy `_anonymized` suffix.
+	 */
+	public function hasAnonymizedSuffix(string $fileName): bool {
+		$baseName = pathinfo($fileName, PATHINFO_FILENAME);
+		return $this->isLegacyAnonymizedOutput(baseName: $baseName);
+	}//end hasAnonymizedSuffix()
 
-    }//end stripLegacyAnonymizedSuffix()
+	/**
+	 * Alias for {@see getSubfolderName()} expressing the "read from config"
+	 * intent at the folder-flow call-site (`FolderExtractionJob`).
+	 *
+	 * @return string A safe, validated subfolder name.
+	 */
+	public function readSubfolderName(): string {
+		return $this->getSubfolderName();
+	}//end readSubfolderName()
 
-    /**
-     * Indicate whether the given base name is itself a prior anonymisation
-     * output (used by the source-discovery filter).
-     *
-     * @param string $baseName Source base name (without extension).
-     *
-     * @return bool True iff the base name ends with the legacy `_anonymized` suffix.
-     */
-    public function isLegacyAnonymizedOutput(string $baseName): bool
-    {
-        return preg_match(self::LEGACY_SUFFIX_REGEX, $baseName) === 1;
+	/**
+	 * Resolve the configured subfolder name with validation and fallback.
+	 *
+	 * Reads `docudesk.anonymisation.output_subfolder_name`; falls back to
+	 * `anonymised` and logs a warning when the value does not match the
+	 * `/^[a-z0-9_-]+$/` validation regex.
+	 *
+	 * @return string A safe, validated subfolder name.
+	 */
+	public function getSubfolderName(): string {
+		$value = $this->config->getValueString(
+			'docudesk',
+			self::SUBFOLDER_CONFIG_KEY,
+			self::DEFAULT_SUBFOLDER_NAME
+		);
 
-    }//end isLegacyAnonymizedOutput()
+		if (preg_match(self::SUBFOLDER_NAME_REGEX, $value) !== 1) {
+			$this->logger->warning(
+				'OutputLayoutResolver: configured subfolder name fails validation '
+				. '(/^[a-z0-9_-]+$/), falling back to default.',
+				[
+					'configured' => $value,
+					'default' => self::DEFAULT_SUBFOLDER_NAME,
+				]
+			);
+			return self::DEFAULT_SUBFOLDER_NAME;
+		}
 
-    /**
-     * Indicate whether a full file name (with extension) is itself a prior
-     * anonymisation output, i.e. its base name ends with `_anonymized`.
-     *
-     * This is the file-name-oriented discriminator used by the folder-flow
-     * source filter (`FolderExtractionJob`) — it strips the extension first
-     * and then defers to {@see isLegacyAnonymizedOutput()} so there is a
-     * single source of truth for the suffix semantics.
-     *
-     * @param string $fileName Full file name including extension.
-     *
-     * @return bool True iff the base name ends with the legacy `_anonymized` suffix.
-     */
-    public function hasAnonymizedSuffix(string $fileName): bool
-    {
-        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
-        return $this->isLegacyAnonymizedOutput(baseName: $baseName);
-
-    }//end hasAnonymizedSuffix()
-
-    /**
-     * Alias for {@see getSubfolderName()} expressing the "read from config"
-     * intent at the folder-flow call-site (`FolderExtractionJob`).
-     *
-     * @return string A safe, validated subfolder name.
-     */
-    public function readSubfolderName(): string
-    {
-        return $this->getSubfolderName();
-
-    }//end readSubfolderName()
-
-    /**
-     * Resolve the configured subfolder name with validation and fallback.
-     *
-     * Reads `docudesk.anonymisation.output_subfolder_name`; falls back to
-     * `anonymised` and logs a warning when the value does not match the
-     * `/^[a-z0-9_-]+$/` validation regex.
-     *
-     * @return string A safe, validated subfolder name.
-     */
-    public function getSubfolderName(): string
-    {
-        $value = $this->config->getValueString(
-            'docudesk',
-            self::SUBFOLDER_CONFIG_KEY,
-            self::DEFAULT_SUBFOLDER_NAME
-        );
-
-        if (preg_match(self::SUBFOLDER_NAME_REGEX, $value) !== 1) {
-            $this->logger->warning(
-                'OutputLayoutResolver: configured subfolder name fails validation '
-                .'(/^[a-z0-9_-]+$/), falling back to default.',
-                [
-                    'configured' => $value,
-                    'default'    => self::DEFAULT_SUBFOLDER_NAME,
-                ]
-            );
-            return self::DEFAULT_SUBFOLDER_NAME;
-        }
-
-        return $value;
-
-    }//end getSubfolderName()
+		return $value;
+	}//end getSubfolderName()
 }//end class

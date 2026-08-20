@@ -31,112 +31,96 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class LanguageClassifierTest extends TestCase
-{
+class LanguageClassifierTest extends TestCase {
 
-    /**
-     * The LanguageClassifier instance being tested
-     *
-     * @var LanguageClassifier
-     */
-    private LanguageClassifier $classifier;
+	/**
+	 * The LanguageClassifier instance being tested
+	 *
+	 * @var LanguageClassifier
+	 */
+	private LanguageClassifier $classifier;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->classifier = new LanguageClassifier();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->classifier = new LanguageClassifier();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test Dutch language detection
+	 *
+	 * @return void
+	 */
+	public function testDetectDutchLanguage(): void {
+		$text = 'Dit is de tekst van het document en het bevat de woorden van de Nederlandse taal met een paar van de meest voorkomende woorden';
+		$result = $this->classifier->detectLanguage($text);
+		$this->assertEquals('nl', $result);
 
+	}//end testDetectDutchLanguage()
 
-    /**
-     * Test Dutch language detection
-     *
-     * @return void
-     */
-    public function testDetectDutchLanguage(): void
-    {
-        $text = 'Dit is de tekst van het document en het bevat de woorden van de Nederlandse taal met een paar van de meest voorkomende woorden';
-        $result = $this->classifier->detectLanguage($text);
-        $this->assertEquals('nl', $result);
+	/**
+	 * Test English language detection
+	 *
+	 * @return void
+	 */
+	public function testDetectEnglishLanguage(): void {
+		$text = 'The document is a report that have been written in the English language and it is a document of the company';
+		$result = $this->classifier->detectLanguage($text);
+		$this->assertEquals('en', $result);
 
-    }//end testDetectDutchLanguage()
+	}//end testDetectEnglishLanguage()
 
+	/**
+	 * Test null returned for insufficient text
+	 *
+	 * @return void
+	 */
+	public function testDetectNullForInsufficientText(): void {
+		$text = 'Hello world';
+		$result = $this->classifier->detectLanguage($text);
+		$this->assertNull($result);
 
-    /**
-     * Test English language detection
-     *
-     * @return void
-     */
-    public function testDetectEnglishLanguage(): void
-    {
-        $text = 'The document is a report that have been written in the English language and it is a document of the company';
-        $result = $this->classifier->detectLanguage($text);
-        $this->assertEquals('en', $result);
+	}//end testDetectNullForInsufficientText()
 
-    }//end testDetectEnglishLanguage()
+	/**
+	 * Test topic classification for legal content
+	 *
+	 * @return void
+	 */
+	public function testClassifyLegalTopic(): void {
+		$text = 'This contract is a legal agreement between the parties and the court shall judge any disputes under the law';
+		$result = $this->classifier->classifyTopic($text);
+		$this->assertEquals('legal', $result);
 
+	}//end testClassifyLegalTopic()
 
-    /**
-     * Test null returned for insufficient text
-     *
-     * @return void
-     */
-    public function testDetectNullForInsufficientText(): void
-    {
-        $text = 'Hello world';
-        $result = $this->classifier->detectLanguage($text);
-        $this->assertNull($result);
+	/**
+	 * Test topic classification for financial content
+	 *
+	 * @return void
+	 */
+	public function testClassifyFinancialTopic(): void {
+		$text = 'The invoice for the payment was sent and the budget shows the financial account balance with money';
+		$result = $this->classifier->classifyTopic($text);
+		$this->assertEquals('financial', $result);
 
-    }//end testDetectNullForInsufficientText()
+	}//end testClassifyFinancialTopic()
 
+	/**
+	 * Test topic classification returns null for unclassifiable content
+	 *
+	 * @return void
+	 */
+	public function testClassifyTopicReturnsNullForUnknown(): void {
+		$text = 'Lorem ipsum dolor sit amet';
+		$result = $this->classifier->classifyTopic($text);
+		$this->assertNull($result);
 
-    /**
-     * Test topic classification for legal content
-     *
-     * @return void
-     */
-    public function testClassifyLegalTopic(): void
-    {
-        $text = 'This contract is a legal agreement between the parties and the court shall judge any disputes under the law';
-        $result = $this->classifier->classifyTopic($text);
-        $this->assertEquals('legal', $result);
-
-    }//end testClassifyLegalTopic()
-
-
-    /**
-     * Test topic classification for financial content
-     *
-     * @return void
-     */
-    public function testClassifyFinancialTopic(): void
-    {
-        $text = 'The invoice for the payment was sent and the budget shows the financial account balance with money';
-        $result = $this->classifier->classifyTopic($text);
-        $this->assertEquals('financial', $result);
-
-    }//end testClassifyFinancialTopic()
-
-
-    /**
-     * Test topic classification returns null for unclassifiable content
-     *
-     * @return void
-     */
-    public function testClassifyTopicReturnsNullForUnknown(): void
-    {
-        $text = 'Lorem ipsum dolor sit amet';
-        $result = $this->classifier->classifyTopic($text);
-        $this->assertNull($result);
-
-    }//end testClassifyTopicReturnsNullForUnknown()
-
+	}//end testClassifyTopicReturnsNullForUnknown()
 
 }//end class

@@ -7,9 +7,9 @@
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-5
  */
 
-import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 export const useCorrespondenceStore = defineStore('correspondence', {
 	state: () => ({
@@ -58,7 +58,10 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		 * @return {boolean}
 		 */
 		isBatchMode(state) {
-			return state.dataRefs.length === 0 && state.recipientIdsText.trim().length > 0
+			return (
+				state.dataRefs.length === 0
+				&& state.recipientIdsText.trim().length > 0
+			)
 		},
 	},
 
@@ -78,16 +81,25 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 
 			try {
 				const url = generateUrl('/apps/docudesk/api/correspondence/generate')
-				const response = await axios.post(url, {
-					templateId: this.templateId,
-					dataRefs: this.dataRefs,
-					options: {
-						format: this.format,
-						huisstijlId: this.huisstijlId || undefined,
-						caseReference: this.caseReference || undefined,
+				const response = await axios.post(
+					url,
+					{
+						templateId: this.templateId,
+						dataRefs: this.dataRefs,
+						options: {
+							format: this.format,
+							huisstijlId: this.huisstijlId || undefined,
+							caseReference: this.caseReference || undefined,
+						},
+						filename,
 					},
-					filename,
-				}, { responseType: this.format === 'pdf' || this.format === 'docx' ? 'blob' : 'json' })
+					{
+						responseType:
+							this.format === 'pdf' || this.format === 'docx'
+								? 'blob'
+								: 'json',
+					},
+				)
 
 				if (this.format === 'pdf' || this.format === 'docx') {
 					this._triggerDownload(response.data, filename, this.format)
@@ -117,7 +129,9 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 			this.jobStatus = null
 
 			try {
-				const url = generateUrl('/apps/docudesk/api/correspondence/generate/batch')
+				const url = generateUrl(
+					'/apps/docudesk/api/correspondence/generate/batch',
+				)
 				const response = await axios.post(url, {
 					templateId: this.templateId,
 					recipientIds: this.recipientIds,
@@ -132,7 +146,12 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 
 				if (response.data.jobId) {
 					this.jobId = response.data.jobId
-					this.jobStatus = { status: 'queued', total: response.data.totalRecipients, completed: 0, errors: 0 }
+					this.jobStatus = {
+						status: 'queued',
+						total: response.data.totalRecipients,
+						completed: 0,
+						errors: 0,
+					}
 				} else {
 					this.jobStatus = response.data
 				}
@@ -156,7 +175,10 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 			}
 
 			try {
-				const url = generateUrl('/apps/docudesk/api/correspondence/jobs/' + encodeURIComponent(this.jobId))
+				const url = generateUrl(
+					'/apps/docudesk/api/correspondence/jobs/'
+						+ encodeURIComponent(this.jobId),
+				)
 				const response = await axios.get(url)
 				this.jobStatus = response.data
 			} catch (err) {
@@ -192,7 +214,9 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		 */
 		_triggerDownload(blob, filename, format) {
 			const ext = format === 'docx' ? '.docx' : '.pdf'
-			const name = filename.endsWith(ext) ? filename : filename.replace(/\.[^.]+$/, '') + ext
+			const name = filename.endsWith(ext)
+				? filename
+				: filename.replace(/\.[^.]+$/, '') + ext
 			const objectUrl = URL.createObjectURL(blob)
 			const a = document.createElement('a')
 			a.href = objectUrl

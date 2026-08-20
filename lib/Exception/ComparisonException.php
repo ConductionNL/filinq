@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Comparison Exception
  *
@@ -14,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+ * @spec openspec/specs/document-comparison/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,59 +36,53 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class ComparisonException extends RuntimeException
-{
+class ComparisonException extends RuntimeException {
 
-    /**
-     * HTTP status code for this failure.
-     *
-     * @var integer
-     */
-    private int $statusCode;
+	/**
+	 * HTTP status code for this failure.
+	 *
+	 * @var integer
+	 */
+	private int $statusCode;
 
-    /**
-     * Machine-readable reason code.
-     *
-     * @var string
-     */
-    private string $reason;
+	/**
+	 * Machine-readable reason code.
+	 *
+	 * @var string
+	 */
+	private string $reason;
 
-    /**
-     * Constructor.
-     *
-     * @param int    $statusCode HTTP status code.
-     * @param string $reason     Machine-readable reason code.
-     * @param string $message    Human-readable message.
-     *
-     * @return void
-     */
-    public function __construct(int $statusCode, string $reason, string $message='')
-    {
-        parent::__construct(message: $message);
-        $this->statusCode = $statusCode;
-        $this->reason     = $reason;
+	/**
+	 * Constructor.
+	 *
+	 * @param int $statusCode HTTP status code.
+	 * @param string $reason Machine-readable reason code.
+	 * @param string $message Human-readable message.
+	 *
+	 * @return void
+	 */
+	public function __construct(int $statusCode, string $reason, string $message = '') {
+		parent::__construct(message: $message);
+		$this->statusCode = $statusCode;
+		$this->reason = $reason;
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the HTTP status code.
-     *
-     * @return int The status code.
-     */
-    public function getStatusCode(): int
-    {
-        return $this->statusCode;
+	/**
+	 * Get the HTTP status code.
+	 *
+	 * @return int The status code.
+	 */
+	public function getStatusCode(): int {
+		return $this->statusCode;
+	}//end getStatusCode()
 
-    }//end getStatusCode()
-
-    /**
-     * Get the machine-readable reason code.
-     *
-     * @return string The reason code.
-     */
-    public function getReason(): string
-    {
-        return $this->reason;
-
-    }//end getReason()
+	/**
+	 * Get the machine-readable reason code.
+	 *
+	 * @return string The reason code.
+	 */
+	public function getReason(): string {
+		return $this->reason;
+	}//end getReason()
 }//end class

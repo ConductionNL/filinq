@@ -1,4 +1,4 @@
-/* eslint-disable camelcase, no-undef */
+/* eslint-disable no-undef */
 /**
  * Webpack runtime bootstrap — MUST be the first import of every entry point.
  *

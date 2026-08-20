@@ -41,115 +41,109 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class BatchReportServiceTest extends TestCase
-{
+class BatchReportServiceTest extends TestCase {
 
-    /**
-     * @var BatchReportService
-     */
-    private BatchReportService $service;
+	/**
+	 * @var BatchReportService
+	 */
+	private BatchReportService $service;
 
-    /**
-     * @var BatchStateService|MockObject
-     */
-    private BatchStateService|MockObject $mockStateService;
+	/**
+	 * @var BatchStateService|MockObject
+	 */
+	private BatchStateService|MockObject $mockStateService;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->mockStateService = $this->createMock(BatchStateService::class);
-        $this->service          = new BatchReportService(stateService: $this->mockStateService);
+		$this->mockStateService = $this->createMock(BatchStateService::class);
+		$this->service = new BatchReportService(stateService: $this->mockStateService);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test generateReport throws when batch not found.
-     *
-     * @return void
-     */
-    public function testGenerateReportThrowsWhenBatchNotFound(): void
-    {
-        $this->mockStateService->method('getBatch')->willReturn(null);
+	/**
+	 * Test generateReport throws when batch not found.
+	 *
+	 * @return void
+	 */
+	public function testGenerateReportThrowsWhenBatchNotFound(): void {
+		$this->mockStateService->method('getBatch')->willReturn(null);
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionCode(404);
+		$this->expectException(Exception::class);
+		$this->expectExceptionCode(404);
 
-        $this->service->generateReport('missing-batch-id');
+		$this->service->generateReport('missing-batch-id');
 
-    }//end testGenerateReportThrowsWhenBatchNotFound()
+	}//end testGenerateReportThrowsWhenBatchNotFound()
 
-    /**
-     * Test generateReport throws when batch is not completed.
-     *
-     * @return void
-     */
-    public function testGenerateReportThrowsForIncompleteBatch(): void
-    {
-        $this->mockStateService->method('getBatch')->willReturn(
-            ['batchId' => 'abc', 'status' => 'extracting', 'files' => []]
-        );
+	/**
+	 * Test generateReport throws when batch is not completed.
+	 *
+	 * @return void
+	 */
+	public function testGenerateReportThrowsForIncompleteBatch(): void {
+		$this->mockStateService->method('getBatch')->willReturn(
+			['batchId' => 'abc', 'status' => 'extracting', 'files' => []]
+		);
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionCode(409);
+		$this->expectException(Exception::class);
+		$this->expectExceptionCode(409);
 
-        $this->service->generateReport('abc');
+		$this->service->generateReport('abc');
 
-    }//end testGenerateReportThrowsForIncompleteBatch()
+	}//end testGenerateReportThrowsForIncompleteBatch()
 
-    /**
-     * Test generateReport returns CSV string for completed batch.
-     *
-     * @return void
-     */
-    public function testGenerateReportReturnsCsvForCompletedBatch(): void
-    {
-        $batch = [
-            'batchId'   => 'abc',
-            'status'    => 'completed',
-            'createdAt' => time(),
-            'files'     => [
-                [
-                    'fileName'         => 'test.pdf',
-                    'fileId'           => 42,
-                    'anonymizedFileId' => 43,
-                    'entityCount'      => 3,
-                    'replacementCount' => 3,
-                    'status'           => 'completed',
-                ],
-            ],
-        ];
+	/**
+	 * Test generateReport returns CSV string for completed batch.
+	 *
+	 * @return void
+	 */
+	public function testGenerateReportReturnsCsvForCompletedBatch(): void {
+		$batch = [
+			'batchId' => 'abc',
+			'status' => 'completed',
+			'createdAt' => time(),
+			'files' => [
+				[
+					'fileName' => 'test.pdf',
+					'fileId' => 42,
+					'anonymizedFileId' => 43,
+					'entityCount' => 3,
+					'replacementCount' => 3,
+					'status' => 'completed',
+				],
+			],
+		];
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $csv = $this->service->generateReport('abc');
+		$csv = $this->service->generateReport('abc');
 
-        $this->assertStringContainsString('fileName', $csv);
-        $this->assertStringContainsString('test.pdf', $csv);
+		$this->assertStringContainsString('fileName', $csv);
+		$this->assertStringContainsString('test.pdf', $csv);
 
-    }//end testGenerateReportReturnsCsvForCompletedBatch()
+	}//end testGenerateReportReturnsCsvForCompletedBatch()
 
-    /**
-     * Test generateReport CSV has correct header columns.
-     *
-     * @return void
-     */
-    public function testGenerateReportCsvHasHeaders(): void
-    {
-        $batch = [
-            'batchId'   => 'abc',
-            'status'    => 'completed',
-            'createdAt' => time(),
-            'files'     => [],
-        ];
+	/**
+	 * Test generateReport CSV has correct header columns.
+	 *
+	 * @return void
+	 */
+	public function testGenerateReportCsvHasHeaders(): void {
+		$batch = [
+			'batchId' => 'abc',
+			'status' => 'completed',
+			'createdAt' => time(),
+			'files' => [],
+		];
 
-        $this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $csv   = $this->service->generateReport('abc');
-        $lines = explode("\n", trim($csv));
+		$csv = $this->service->generateReport('abc');
+		$lines = explode("\n", trim($csv));
 
-        $this->assertStringContainsString('entityCount', $lines[0]);
-        $this->assertStringContainsString('status', $lines[0]);
+		$this->assertStringContainsString('entityCount', $lines[0]);
+		$this->assertStringContainsString('status', $lines[0]);
 
-    }//end testGenerateReportCsvHasHeaders()
+	}//end testGenerateReportCsvHasHeaders()
 }//end class

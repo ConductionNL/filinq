@@ -44,172 +44,165 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class BatchAnonymizeServiceOutputLayoutTest extends TestCase
-{
+class BatchAnonymizeServiceOutputLayoutTest extends TestCase {
 
-    /**
-     * The service under test.
-     *
-     * @var BatchAnonymizeService
-     */
-    private BatchAnonymizeService $service;
+	/**
+	 * The service under test.
+	 *
+	 * @var BatchAnonymizeService
+	 */
+	private BatchAnonymizeService $service;
 
-    /**
-     * @var AnonymizationService|MockObject
-     */
-    private AnonymizationService|MockObject $mockAnonService;
+	/**
+	 * @var AnonymizationService|MockObject
+	 */
+	private AnonymizationService|MockObject $mockAnonService;
 
-    /**
-     * @var BatchStateService|MockObject
-     */
-    private BatchStateService|MockObject $mockStateService;
+	/**
+	 * @var BatchStateService|MockObject
+	 */
+	private BatchStateService|MockObject $mockStateService;
 
-    /**
-     * Set up test environment.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->mockAnonService  = $this->createMock(AnonymizationService::class);
-        $this->mockStateService = $this->createMock(BatchStateService::class);
+		$this->mockAnonService = $this->createMock(AnonymizationService::class);
+		$this->mockStateService = $this->createMock(BatchStateService::class);
 
-        $this->service = new BatchAnonymizeService(
-            anonService: $this->mockAnonService,
-            stateService: $this->mockStateService
-        );
+		$this->service = new BatchAnonymizeService(
+			anonService: $this->mockAnonService,
+			stateService: $this->mockStateService
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Build a minimal batch fixture with one extracted file.
-     *
-     * @param int $fileId Source file ID.
-     *
-     * @return array<string, mixed> Batch data.
-     */
-    private function makeBatch(int $fileId=10): array
-    {
-        return [
-            'batchId' => 'batch-layout-1',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => $fileId, 'status' => 'extracted'],
-            ],
-        ];
+	/**
+	 * Build a minimal batch fixture with one extracted file.
+	 *
+	 * @param int $fileId Source file ID.
+	 *
+	 * @return array<string, mixed> Batch data.
+	 */
+	private function makeBatch(int $fileId = 10): array {
+		return [
+			'batchId' => 'batch-layout-1',
+			'status' => 'review',
+			'files' => [
+				['fileId' => $fileId, 'status' => 'extracted'],
+			],
+		];
 
-    }//end makeBatch()
+	}//end makeBatch()
 
-    /**
-     * Post-process places file at the layout destination resolved per file.
-     *
-     * The destination is owned by AnonymizationService::anonymizeDocument();
-     * the batch service simply records the returned per-file outcome. We assert
-     * that an extracted file is processed and the returned path is honoured.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
-     */
-    public function testPostProcessMovePlacesFileAtExpectedPath(): void
-    {
-        $batch = $this->makeBatch(fileId: 10);
-        $this->mockStateService->method('getBatch')->willReturn($batch);
+	/**
+	 * Post-process places file at the layout destination resolved per file.
+	 *
+	 * The destination is owned by AnonymizationService::anonymizeDocument();
+	 * the batch service simply records the returned per-file outcome. We assert
+	 * that an extracted file is processed and the returned path is honoured.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 */
+	public function testPostProcessMovePlacesFileAtExpectedPath(): void {
+		$batch = $this->makeBatch(fileId: 10);
+		$this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $targetPath = '/admin/files/dossier/anonymised/foo.pdf';
+		$targetPath = '/admin/files/dossier/anonymised/foo.pdf';
 
-        $this->mockAnonService->method('anonymizeDocument')
-            ->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 99, 'anonymizedFilePath' => $targetPath]);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 99, 'anonymizedFilePath' => $targetPath]);
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
+		$result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
 
-        $this->assertSame(1, $result['processedFiles']);
+		$this->assertSame(1, $result['processedFiles']);
 
-    }//end testPostProcessMovePlacesFileAtExpectedPath()
+	}//end testPostProcessMovePlacesFileAtExpectedPath()
 
-    /**
-     * A per-file output failure surfaced by AnonymizationService preserves the
-     * legacy path and is recorded without aborting the batch.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
-     */
-    public function testMoveFailurePreservesFileAtLegacyPathWithWarning(): void
-    {
-        $batch = $this->makeBatch(fileId: 10);
-        $this->mockStateService->method('getBatch')->willReturn($batch);
+	/**
+	 * A per-file output failure surfaced by AnonymizationService preserves the
+	 * legacy path and is recorded without aborting the batch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 */
+	public function testMoveFailurePreservesFileAtLegacyPathWithWarning(): void {
+		$batch = $this->makeBatch(fileId: 10);
+		$this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $legacyPath = '/admin/files/dossier/foo_anonymized.pdf';
+		$legacyPath = '/admin/files/dossier/foo_anonymized.pdf';
 
-        $this->mockAnonService->method('anonymizeDocument')
-            ->willReturn(
-                [
-                    'replacementCount'   => 1,
-                    'anonymizedFileId'   => 99,
-                    'anonymizedFilePath' => $legacyPath,
-                    'warning'            => ['code' => 'OUTPUT_MOVE_FAILED', 'message' => 'Permission denied'],
-                ]
-            );
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(
+				[
+					'replacementCount' => 1,
+					'anonymizedFileId' => 99,
+					'anonymizedFilePath' => $legacyPath,
+					'warning' => ['code' => 'OUTPUT_MOVE_FAILED', 'message' => 'Permission denied'],
+				]
+			);
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
+		$result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
 
-        $this->assertSame(1, $result['processedFiles']);
+		$this->assertSame(1, $result['processedFiles']);
 
-    }//end testMoveFailurePreservesFileAtLegacyPathWithWarning()
+	}//end testMoveFailurePreservesFileAtLegacyPathWithWarning()
 
-    /**
-     * When anonymizedFileId is null, the file is still processed and the legacy
-     * (null) path is returned unchanged.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
-     */
-    public function testNoMoveWhenAnonymizedFileIdIsNull(): void
-    {
-        $batch = $this->makeBatch(fileId: 10);
-        $this->mockStateService->method('getBatch')->willReturn($batch);
+	/**
+	 * When anonymizedFileId is null, the file is still processed and the legacy
+	 * (null) path is returned unchanged.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 */
+	public function testNoMoveWhenAnonymizedFileIdIsNull(): void {
+		$batch = $this->makeBatch(fileId: 10);
+		$this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $this->mockAnonService->method('anonymizeDocument')
-            ->willReturn(['replacementCount' => 0, 'anonymizedFileId' => null, 'anonymizedFilePath' => null]);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 0, 'anonymizedFileId' => null, 'anonymizedFilePath' => null]);
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
+		$result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
 
-        $this->assertSame(1, $result['processedFiles']);
+		$this->assertSame(1, $result['processedFiles']);
 
-    }//end testNoMoveWhenAnonymizedFileIdIsNull()
+	}//end testNoMoveWhenAnonymizedFileIdIsNull()
 
-    /**
-     * Source discovery excludes non-extracted files: only files with status
-     * `extracted` are anonymized; `uploaded` (and other) statuses are skipped.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
-     */
-    public function testSourceDiscoveryExcludedFilesAreSkipped(): void
-    {
-        $batch = [
-            'batchId' => 'batch-layout-2',
-            'status'  => 'review',
-            'files'   => [
-                ['fileId' => 1, 'status' => 'extracted'],
-                ['fileId' => 2, 'status' => 'uploaded'],
-            ],
-        ];
-        $this->mockStateService->method('getBatch')->willReturn($batch);
+	/**
+	 * Source discovery excludes non-extracted files: only files with status
+	 * `extracted` are anonymized; `uploaded` (and other) statuses are skipped.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 */
+	public function testSourceDiscoveryExcludedFilesAreSkipped(): void {
+		$batch = [
+			'batchId' => 'batch-layout-2',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 1, 'status' => 'extracted'],
+				['fileId' => 2, 'status' => 'uploaded'],
+			],
+		];
+		$this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $this->mockAnonService->expects($this->once())
-            ->method('anonymizeDocument')
-            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 55, 'anonymizedFilePath' => '/src/clean_anonymized.pdf']);
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 55, 'anonymizedFilePath' => '/src/clean_anonymized.pdf']);
 
-        $result = $this->service->anonymizeBatch(batchId: 'batch-layout-2', entities: []);
+		$result = $this->service->anonymizeBatch(batchId: 'batch-layout-2', entities: []);
 
-        $this->assertSame(1, $result['processedFiles']);
-        $this->assertSame(2, $result['totalFiles']);
+		$this->assertSame(1, $result['processedFiles']);
+		$this->assertSame(2, $result['totalFiles']);
 
-    }//end testSourceDiscoveryExcludedFilesAreSkipped()
+	}//end testSourceDiscoveryExcludedFilesAreSkipped()
 }//end class

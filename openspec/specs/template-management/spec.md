@@ -1,5 +1,5 @@
 ---
-status: done
+status: in-progress
 retrofit_extensions:
   - REQ-TMPL-08
   - REQ-TMPL-09
@@ -10,9 +10,50 @@ retrofit_extensions:
 
 # Template Management
 
+**Status**: in-progress
+**OpenSpec changes**:
+- [office-template-authoring](../../changes/office-template-authoring/) _(active)_ — office-file-native templates: `templateType`/source-file data-model extension (REQ-DDOTA-006) and versioning/lock/preview/duplicate parity for office templates (REQ-DDOTA-007) (kind: code)
+- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — adds the `wizardDefinition` schema to the templates register (guided-interview definitions fronting a template by `templateId`; the `template`/`templateVersion` data model is unchanged) — full requirements live in the `guided-document-wizard` capability (REQ-DDGDW-*) (kind: code)
+
 ## Purpose
 
-@e2e exclude template management has no dedicated DocuDesk UI — templates are managed via REST API or TemplateService DI injection from consumer apps; API behavior covered by PHPUnit service and controller tests
+<!--
+  WHOLE-SPEC `@e2e exclude` REMOVED 2026-08-11 — IT WAS FALSE, AND IT SUPPRESSED
+  ALL 45 SCENARIOS IN THIS FILE.
+
+  The removed reason read:
+
+    "template management has no dedicated DocuDesk UI — templates are managed
+     via REST API or TemplateService DI injection from consumer apps; API
+     behavior covered by PHPUnit service and controller tests"
+
+  All three parts of the audit rule fail against this repository as it stands:
+
+  (a) THE UI EXISTS. `src/manifest.json` declares page `Templates` at route
+      `/templates` (type index) and `TemplateDetail` at `/templates/:id`, plus a
+      top-level menu entry `{ id: "Templates", label: "Templates" }`.
+      `src/views/templates/TemplateDetail.vue` implements the editor, preview
+      and version-history panes.
+
+  (b) RUNNING TESTS ALREADY CONTAIN THE ASSERTIONS — including tests already
+      anchored to THIS spec. `tests/e2e/spec-coverage/templates.spec.ts` carries
+      `@e2e openspec/specs/template-management/spec.md#create-a-template` and
+      `#list-templates-with-namespace-filter`, and
+      `tests/e2e/workflows/templates-crud.spec.ts` drives create / read / list /
+      update / delete and the required-field rejections end to end.
+
+  (c) THEY RUN IN THIS REPO'S PIPELINE. `.github/workflows/code-quality.yml`
+      sets `enable-playwright: true`; the most recent `E2E Tests (Playwright)`
+      job (run 31461514843) reported completed/success with 94 passed / 4
+      skipped, and all five templates-crud tests are individually green in that
+      log.
+
+  A whole-spec waiver whose own spec is the target of anchors inside the passing
+  suite is self-refuting. Scenarios that a running test genuinely exercises are
+  now anchored; the rest are counted as the open debt they are, rather than
+  hidden behind this line.
+-->
+
 
 Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister objects. Templates are scoped per-app via a `namespace` field, enabling multiple Nextcloud apps to maintain their own template collections through a shared service. Consumer apps access templates via the `TemplateService` (DI container) or the REST API.
 
@@ -262,6 +303,19 @@ Template objects from OpenRegister are consistently serialized for API responses
 | namespace | string | Yes | -- | App identifier (max 64 chars, lowercase alphanumeric) |
 | format | string (enum) | No | A4 | Page format: A4, A3, Letter, Legal |
 | orientation | string (enum) | No | P | Page orientation: P (portrait), L (landscape) |
+
+### Templates Register Schemas
+
+The `templates` register (`lib/Settings/docudesk_register.json`) is the single
+source of truth for template-related schemas. It contains:
+
+| Schema | Owning capability | Purpose |
+|--------|-------------------|---------|
+| `template` | template-management | The template data model (this spec, REQ-TMPL-01) |
+| `templateVersion` | template-management | Versioned template snapshots (REQ-TMPL-08) |
+| `textFragment` | office-template-authoring | Reusable text fragments for office templates |
+| `templateImportJob` | office-template-authoring | Office-template import job records |
+| `wizardDefinition` | guided-document-wizard | Guided-interview definition (ordered questions, skip logic, register-object pickers) attached to exactly one template by `templateId`; does not modify the `template`/`templateVersion` data model — full requirements in the `guided-document-wizard` capability (REQ-DDGDW-*) |
 
 ## API Endpoints
 

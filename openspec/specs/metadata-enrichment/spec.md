@@ -469,7 +469,7 @@ MetadataService extracts text content from object data fields in a defined prior
 Reverse-engineered from already-shipped code on 2026-05-24 via ghost change
 `retrofit-2026-05-24-metadata-enrichment` (archived).
 
-### REQ-META-11: Language and Topic Classifier Class Boundary
+### Requirement: Language and Topic Classifier Class Boundary (REQ-META-11)
 
 DocuDesk SHALL implement the language-detection and topic-classification algorithms in a dedicated `LanguageClassifier` service that owns the word-list vocabularies, the minimum-match threshold, and the scoring tiebreaker. Other services (`TextAnalysisService`, `MetadataService`) SHALL consume the classifier via dependency injection; they MUST NOT re-implement the vocabulary or scoring logic.
 

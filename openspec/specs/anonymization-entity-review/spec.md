@@ -1,10 +1,70 @@
 ---
-status: done
+status: in-progress
 ---
+
+**Status**: in-progress
+**Scope**: docudesk
+**OpenSpec changes**:
+- [anonymization-review-workbench](../../changes/anonymization-review-workbench/) _(active)_ — consolidated-entities response gains `standingConsentMatch` (sibling of `prohibitionMatch`, pre-excluding matched entities) and the batch anonymize commit gains the per-document checked-gate precondition (kind: code)
 
 ## Purpose
 
-@e2e exclude entity review UI for batch anonymization is not yet shipped in the current DocuDesk release (v0.0.34) — batch entity consolidation endpoint and review table are unbuilt; covered by PHPUnit and API contract tests when implemented
+<!--
+  WHOLE-SPEC `@e2e exclude` REMOVED 2026-08-11 — IT WAS FALSE, AND IT SUPPRESSED
+  ALL 23 SCENARIO ROWS IN THIS FILE (22 distinct refs; two requirements share
+  the title "Apply confidence threshold", and duplicate titles collapse to one
+  slug — ConductionNL/.github#354).
+
+  The removed reason read:
+
+    "entity review UI for batch anonymization is not yet shipped in the current
+     DocuDesk release (v0.0.34) — batch entity consolidation endpoint and review
+     table are unbuilt; covered by PHPUnit and API contract tests when
+     implemented"
+
+  It names a RELEASE VERSION and a STATE OF THE WORLD, which is the kind of
+  waiver that rots. Both of its factual halves are false at 0.0.46, and each was
+  falsifiable in one command:
+
+  (a) THE CONSOLIDATED-ENTITIES ENDPOINT IS BUILT AND ANSWERS. Measured on a
+      freshly seeded NC 34 rig, printing the status code every time:
+
+        POST /api/anonymization/batch/folder        -> 200  (batchId, 3 files)
+        POST /api/anonymization/batch/{id}/extract  -> 200  {"batchStatus":"review"}
+        GET  /api/anonymization/batch/{id}/entities -> 200  2 entities, each
+             carrying type / value / highestConfidence / fileCount / included
+             AND the two later-added fields prohibitionMatch + suggestedBases.
+
+      `appinfo/routes.php` has declared `batchAnonymization#batchEntities` at
+      `api/anonymization/batch/{batchId}/entities` for as long as the waiver has
+      existed.
+
+  (b) THE REVIEW TABLE IS BUILT AND RENDERS. `src/views/anonymization/
+      EntityReviewTable.vue` implements the summary bar, the search box, the
+      type filter, Select/Deselect All Visible, sortable column headers and the
+      per-row include checkbox; `FolderAnonymizationView.vue` renders it under
+      `v-if="store.batchStatus === 'review'"` on the live `/folder-anonymization`
+      route, which the folder-analysis flow reaches.
+
+  Its escape clause — "covered by PHPUnit and API contract tests WHEN
+  IMPLEMENTED" — was conditional on an event that has happened, and the
+  condition was never revisited. And because gate-19 scores an `@e2e exclude` as
+  POSITIVE coverage (ConductionNL/.github#345), these scenarios were not merely
+  unenforced: they were counted as covered.
+
+  `tests/e2e/workflows/entity-review.spec.ts` now covers 11 of them with real,
+  asserting Playwright tests. The remaining scenarios are deliberately left
+  UNCOVERED rather than re-excluded, and this file will therefore report gate-19
+  findings until they are written. That is the number becoming honest, and the
+  fix is a test, never a restored waiver. They need one of three fixtures this
+  environment cannot produce: a SECOND entity type, an entity BELOW the
+  confidence threshold (the regex-only backend emits CUSTOM_DICTIONARY at
+  confidence 1.00 and nothing else), or a dossier-bound batch. A scenario-level
+  exclusion naming that environment state would be a fresh instance of the exact
+  defect this comment records.
+
+  See ConductionNL/docudesk#431.
+-->
 
 ## ADDED Requirements
 

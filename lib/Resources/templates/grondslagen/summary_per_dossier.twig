@@ -1,107 +1,106 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<title>Grondslagen overzicht — {{ dossierName|default('Dossier') }}</title>
+<title>Grondslagen-rapportage — {{ dossier.name|default('dossier')|escape }}</title>
 <style>
-body { font-family: "DejaVu Sans", sans-serif; font-size: 11px; color: #222; margin: 0; padding: 0; }
-h1 { font-size: 15px; color: #1a3c6e; border-bottom: 2px solid #1a3c6e; padding-bottom: 4px; margin-bottom: 8px; }
-h2 { font-size: 12px; color: #2c5f9e; margin-top: 14px; margin-bottom: 4px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-th { background-color: #1a3c6e; color: #fff; text-align: left; padding: 4px 6px; font-size: 10px; }
-td { padding: 3px 6px; border-bottom: 1px solid #dde3ef; font-size: 10px; }
-tr:nth-child(even) td { background-color: #f4f6fb; }
-.meta-table td { border-bottom: none; }
-.meta-label { font-weight: bold; width: 35%; color: #444; }
-.footer { margin-top: 16px; font-size: 10px; color: #666; border-top: 1px solid #ccd3e0; padding-top: 6px; }
-.empty-note { font-style: italic; color: #888; font-size: 10px; }
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
+  h1 { font-size: 18pt; margin: 0 0 4pt 0; }
+  .description { font-size: 10pt; color: #444; margin: 4pt 0 10pt 0; }
+  .header-grid { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt 0; }
+  .header-grid td { padding: 2pt 6pt 2pt 0; vertical-align: top; font-size: 9pt; }
+  .header-grid td.label { color: #666; width: 32%; }
+  table.summary { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 12pt 0 6pt 0; }
+  table.summary th { background: #eee; padding: 4pt 6pt; text-align: left; border-bottom: 1pt solid #999; }
+  table.summary td { padding: 3pt 6pt; border-bottom: 0.4pt solid #ddd; vertical-align: top; }
+  table.summary td.numeric { text-align: right; white-space: nowrap; }
+  .totals-line { margin-top: 10pt; font-size: 9pt; color: #444; }
+  .empty-note { font-style: italic; color: #888; }
+  .placeholder-cell { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.5pt; }
+  h2.bases-heading { font-size: 11pt; margin: 16pt 0 4pt 0; }
+  dl.bases-list { font-size: 9pt; margin: 0; }
+  dl.bases-list dt { font-weight: bold; margin-top: 6pt; }
+  dl.bases-list dd { margin: 1pt 0 0 0; padding-left: 0; color: #333; }
 </style>
 </head>
 <body>
 
-<h1>Grondslagen overzicht per dossier</h1>
+<h1>Grondslagen-rapportage</h1>
 
-<h2>Dossiergegevens</h2>
-<table class="meta-table">
+<table class="header-grid">
   <tr>
-    <td class="meta-label">Naam</td>
-    <td>{{ dossierName|default('—') }}</td>
+    <td class="label">Dossier</td>
+    <td>{{ dossier.name|default('—')|escape }}</td>
+  </tr>
+  {% if dossier.description|default('') != '' %}
+    <tr>
+      <td class="label">Omschrijving</td>
+      <td class="description">{{ dossier.description|escape }}</td>
+    </tr>
+  {% endif %}
+  <tr>
+    <td class="label">Laatste review</td>
+    <td>{{ dossier.checkedOn|default('—')|escape }}</td>
   </tr>
   <tr>
-    <td class="meta-label">Omschrijving</td>
-    <td>{{ dossierDescription|default('—') }}</td>
-  </tr>
-  <tr>
-    <td class="meta-label">Beoordeeld op</td>
-    <td>{{ checkedOn|default('—') }}</td>
-  </tr>
-  <tr>
-    <td class="meta-label">Overzicht gegenereerd op</td>
-    <td>{{ generatedAt|default('—') }}</td>
+    <td class="label">Rapport gegenereerd op</td>
+    <td>{{ generatedAt|default('—')|escape }}</td>
   </tr>
 </table>
 
-<h2>Per document</h2>
-{% if documents is not empty %}
-<table>
-  <thead>
-    <tr>
-      <th>Bestandsnaam</th>
-      <th>Entiteiten</th>
-      <th>Grondslagen (aantal)</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for doc in documents %}
-    <tr>
-      <td>{{ doc.fileName|default('—') }}</td>
-      <td>{{ doc.entityCount|default(0) }}</td>
-      <td>
-        {% if doc.bases is not empty %}
-          {% for baseName, count in doc.bases %}{{ baseName }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}
+{% if rows|length == 0 %}
+  <p class="empty-note">Dit dossier bevat geen geanonimiseerde documenten.</p>
+{% else %}
+  <table class="summary">
+    <thead>
+      <tr>
+        <th>Placeholder</th>
+        <th class="numeric">Aantal keer geanonimiseerd</th>
+        <th>Bestand(en)</th>
+        <th>Grondslag</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td class="placeholder-cell">{{ row.placeholder|escape }}</td>
+          <td class="numeric">{{ row.count|default(0) }}</td>
+          <td>{{ row.filename|default('—')|escape }}</td>
+          <td>
+            {% if row.basesText|default('') != '' %}
+              {{ row.basesText|escape }}
+            {% else %}
+              <span class="empty-note">geen grondslag</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+<p class="totals-line">
+  Totaal: {{ totals.documentCount|default(0) }} document{% if totals.documentCount|default(0) != 1 %}en{% endif %} ·
+  {{ totals.distinctEntityCount|default(0) }} unieke entiteit{% if totals.distinctEntityCount|default(0) != 1 %}en{% endif %} ·
+  {{ totals.entityCount|default(0) }} keer geanonimiseerd ·
+  {{ totals.distinctBasesCount|default(0) }} unieke grondsla{% if totals.distinctBasesCount|default(0) != 1 %}gen{% else %}g{% endif %}
+</p>
+
+{% if bases|default([])|length > 0 %}
+  <h2 class="bases-heading">Toegepaste grondslagen</h2>
+  <dl class="bases-list">
+    {% for base in bases %}
+      <dt>{{ base.name|escape }}</dt>
+      <dd>
+        {% if base.description|default('') != '' %}
+          {{ base.description|escape }}
         {% else %}
-          <span style="color:#888">—</span>
+          <span class="empty-note">geen omschrijving beschikbaar</span>
         {% endif %}
-      </td>
-    </tr>
+      </dd>
     {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<p class="empty-note">Geen geanonimiseerde documenten gevonden in dit dossier.</p>
+  </dl>
 {% endif %}
-
-<h2>Per grondslag</h2>
-{% if perGrondslag is not empty %}
-<table>
-  <thead>
-    <tr>
-      <th>Grondslag</th>
-      <th>Aantal bestanden</th>
-      <th>Totaal entiteiten</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in perGrondslag %}
-    <tr>
-      <td>{{ row.name|default('—') }}</td>
-      <td>{{ row.fileCount|default(0) }}</td>
-      <td>{{ row.entityCount|default(0) }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<p class="empty-note">Geen grondslagen geregistreerd in dit dossier.</p>
-{% endif %}
-
-<div class="footer">
-  Totaal geanonimiseerde entiteiten: <strong>{{ totalEntities|default(0) }}</strong>
-  &nbsp;|&nbsp;
-  Unieke grondslagen: <strong>{{ totalBases|default(0) }}</strong>
-  &nbsp;|&nbsp;
-  Gegenereerd door DocuDesk
-</div>
 
 </body>
 </html>

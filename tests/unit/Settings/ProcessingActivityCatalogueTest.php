@@ -40,189 +40,182 @@ use PHPUnit\Framework\TestCase;
 /**
  * Verifies the processing-activity catalogue contract + the no-export guard.
  */
-class ProcessingActivityCatalogueTest extends TestCase
-{
+class ProcessingActivityCatalogueTest extends TestCase {
 
-    /**
-     * Decoded register configuration.
-     *
-     * @var array<string, mixed>
-     */
-    private array $config;
+	/**
+	 * Decoded register configuration.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $config;
 
-    /**
-     * Map of carrying schema => expected activity code.
-     *
-     * @var array<string, string>
-     */
-    private const ACTIVITY_SCHEMAS = [
-        'anonymizationLink' => 'docudesk-anonymisation',
-        'generatedDocument' => 'docudesk-ocr',
-        'base'              => 'docudesk-metadata-enrichment',
-        'signingAuditEntry' => 'docudesk-signing',
-    ];
+	/**
+	 * Map of carrying schema => expected activity code.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ACTIVITY_SCHEMAS = [
+		'anonymizationLink' => 'docudesk-anonymisation',
+		'generatedDocument' => 'docudesk-ocr',
+		'base' => 'docudesk-metadata-enrichment',
+		'signingAuditEntry' => 'docudesk-signing',
+	];
 
-    /**
-     * Load the register configuration once per test.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $path = __DIR__.'/../../../lib/Settings/docudesk_register.json';
-        $raw  = file_get_contents($path);
-        $this->assertNotFalse($raw, 'docudesk_register.json must be readable');
+	/**
+	 * Load the register configuration once per test.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$path = __DIR__ . '/../../../lib/Settings/docudesk_register.json';
+		$raw = file_get_contents($path);
+		$this->assertNotFalse($raw, 'docudesk_register.json must be readable');
 
-        $decoded = json_decode($raw, true);
-        $this->assertIsArray($decoded, 'docudesk_register.json must be valid JSON');
-        $this->config = $decoded;
+		$decoded = json_decode($raw, true);
+		$this->assertIsArray($decoded, 'docudesk_register.json must be valid JSON');
+		$this->config = $decoded;
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * The four activities are declared, each on its carrying schema, with the
-     * required Art. 30 catalogue fields and its own attribution code.
-     *
-     * @return void
-     */
-    public function testFourActivitiesDeclaredWithCatalogueFields(): void
-    {
-        $schemas = $this->config['components']['schemas'] ?? [];
-        $codes   = [];
+	/**
+	 * The four activities are declared, each on its carrying schema, with the
+	 * required Art. 30 catalogue fields and its own attribution code.
+	 *
+	 * @return void
+	 */
+	public function testFourActivitiesDeclaredWithCatalogueFields(): void {
+		$schemas = $this->config['components']['schemas'] ?? [];
+		$codes = [];
 
-        foreach (self::ACTIVITY_SCHEMAS as $schemaName => $expectedCode) {
-            $this->assertArrayHasKey($schemaName, $schemas, "schema $schemaName MUST exist");
-            $processing = $schemas[$schemaName]['x-openregister-processing'] ?? null;
-            $this->assertIsArray($processing, "$schemaName MUST carry x-openregister-processing");
+		foreach (self::ACTIVITY_SCHEMAS as $schemaName => $expectedCode) {
+			$this->assertArrayHasKey($schemaName, $schemas, "schema $schemaName MUST exist");
+			$processing = $schemas[$schemaName]['x-openregister-processing'] ?? null;
+			$this->assertIsArray($processing, "$schemaName MUST carry x-openregister-processing");
 
-            // Required Art. 30 catalogue fields.
-            foreach (['code', 'naam', 'doelbinding', 'rechtsgrond', 'dataCategories', 'backend', 'retentionReference', 'grondslagSource'] as $field) {
-                $this->assertArrayHasKey($field, $processing, "$schemaName.$field MUST be declared");
-                $this->assertNotEmpty($processing[$field], "$schemaName.$field MUST be non-empty");
-            }
+			// Required Art. 30 catalogue fields.
+			foreach (['code', 'naam', 'doelbinding', 'rechtsgrond', 'dataCategories', 'backend', 'retentionReference', 'grondslagSource'] as $field) {
+				$this->assertArrayHasKey($field, $processing, "$schemaName.$field MUST be declared");
+				$this->assertNotEmpty($processing[$field], "$schemaName.$field MUST be non-empty");
+			}
 
-            $this->assertSame($expectedCode, $processing['code'], "$schemaName MUST declare code $expectedCode");
-            $this->assertSame('EntityRelation.bases', $processing['grondslagSource'], 'grondslag MUST source from EntityRelation.bases (OR-PA-4)');
-            $codes[] = $processing['code'];
-        }
+			$this->assertSame($expectedCode, $processing['code'], "$schemaName MUST declare code $expectedCode");
+			$this->assertSame('EntityRelation.bases', $processing['grondslagSource'], 'grondslag MUST source from EntityRelation.bases (OR-PA-4)');
+			$codes[] = $processing['code'];
+		}
 
-        $this->assertCount(4, array_unique($codes), 'Exactly four distinct activity codes expected');
+		$this->assertCount(4, array_unique($codes), 'Exactly four distinct activity codes expected');
 
-    }//end testFourActivitiesDeclaredWithCatalogueFields()
+	}//end testFourActivitiesDeclaredWithCatalogueFields()
 
-    /**
-     * Each annotation opts the schema into read-logging and attributes reads
-     * to its own activity code (resolvable by OpenRegister by code).
-     *
-     * @return void
-     */
-    public function testActivitiesOptInToReadLoggingAndSelfAttribute(): void
-    {
-        $schemas = $this->config['components']['schemas'] ?? [];
+	/**
+	 * Each annotation opts the schema into read-logging and attributes reads
+	 * to its own activity code (resolvable by OpenRegister by code).
+	 *
+	 * @return void
+	 */
+	public function testActivitiesOptInToReadLoggingAndSelfAttribute(): void {
+		$schemas = $this->config['components']['schemas'] ?? [];
 
-        foreach (self::ACTIVITY_SCHEMAS as $schemaName => $expectedCode) {
-            $processing = $schemas[$schemaName]['x-openregister-processing'];
+		foreach (self::ACTIVITY_SCHEMAS as $schemaName => $expectedCode) {
+			$processing = $schemas[$schemaName]['x-openregister-processing'];
 
-            $this->assertTrue(
-                ($processing['logReads'] ?? false) === true,
-                "$schemaName MUST opt into per-access read logging (logReads: true)"
-            );
+			$this->assertTrue(
+				($processing['logReads'] ?? false) === true,
+				"$schemaName MUST opt into per-access read logging (logReads: true)"
+			);
 
-            $this->assertArrayHasKey('attribution', $processing, "$schemaName MUST declare attribution");
-            $this->assertSame(
-                $expectedCode,
-                $processing['attribution']['default'] ?? null,
-                "$schemaName attribution.default MUST reference its own activity code"
-            );
+			$this->assertArrayHasKey('attribution', $processing, "$schemaName MUST declare attribution");
+			$this->assertSame(
+				$expectedCode,
+				$processing['attribution']['default'] ?? null,
+				"$schemaName attribution.default MUST reference its own activity code"
+			);
 
-            $this->assertArrayHasKey('subjectIdFields', $processing, "$schemaName MUST declare subjectIdFields (may be empty)");
-            $this->assertIsArray($processing['subjectIdFields']);
-        }
+			$this->assertArrayHasKey('subjectIdFields', $processing, "$schemaName MUST declare subjectIdFields (may be empty)");
+			$this->assertIsArray($processing['subjectIdFields']);
+		}
 
-    }//end testActivitiesOptInToReadLoggingAndSelfAttribute()
+	}//end testActivitiesOptInToReadLoggingAndSelfAttribute()
 
-    /**
-     * Retention references mirror the schema's existing `x-openregister-archival`
-     * annotation, and stay visible as "not declared" when the schema has none.
-     *
-     * @return void
-     */
-    public function testRetentionReferencesMirrorArchivalOrStayVisible(): void
-    {
-        $schemas = $this->config['components']['schemas'] ?? [];
+	/**
+	 * Retention references mirror the schema's existing `x-openregister-archival`
+	 * annotation, and stay visible as "not declared" when the schema has none.
+	 *
+	 * @return void
+	 */
+	public function testRetentionReferencesMirrorArchivalOrStayVisible(): void {
+		$schemas = $this->config['components']['schemas'] ?? [];
 
-        foreach (self::ACTIVITY_SCHEMAS as $schemaName => $code) {
-            $processing = $schemas[$schemaName]['x-openregister-processing'];
-            $hasArchival = isset($schemas[$schemaName]['x-openregister-archival']);
-            $reference   = (string) $processing['retentionReference'];
+		foreach (self::ACTIVITY_SCHEMAS as $schemaName => $code) {
+			$processing = $schemas[$schemaName]['x-openregister-processing'];
+			$hasArchival = isset($schemas[$schemaName]['x-openregister-archival']);
+			$reference = (string)$processing['retentionReference'];
 
-            if ($hasArchival === false) {
-                $this->assertStringContainsStringIgnoringCase(
-                    'not declared',
-                    $reference,
-                    "$schemaName has no x-openregister-archival, so retentionReference MUST read 'not declared'"
-                );
-            } else {
-                $this->assertStringNotContainsStringIgnoringCase(
-                    'not declared',
-                    $reference,
-                    "$schemaName HAS x-openregister-archival, so retentionReference MUST cite it, not 'not declared'"
-                );
-            }
-        }
+			if ($hasArchival === false) {
+				$this->assertStringContainsStringIgnoringCase(
+					'not declared',
+					$reference,
+					"$schemaName has no x-openregister-archival, so retentionReference MUST read 'not declared'"
+				);
+			} else {
+				$this->assertStringNotContainsStringIgnoringCase(
+					'not declared',
+					$reference,
+					"$schemaName HAS x-openregister-archival, so retentionReference MUST cite it, not 'not declared'"
+				);
+			}
+		}
 
-    }//end testRetentionReferencesMirrorArchivalOrStayVisible()
+	}//end testRetentionReferencesMirrorArchivalOrStayVisible()
 
-    /**
-     * The register requires the OpenRegister version that ships the
-     * per-access read-logging dialect (>= 0.2.14).
-     *
-     * @return void
-     */
-    public function testRegisterRequiresProcessingCapableOpenRegister(): void
-    {
-        $constraint = (string) ($this->config['x-openregister']['openregister'] ?? '');
-        $this->assertNotSame('', $constraint, 'OpenRegister version constraint MUST be declared');
+	/**
+	 * The register requires the OpenRegister version that ships the
+	 * per-access read-logging dialect (>= 0.2.14).
+	 *
+	 * @return void
+	 */
+	public function testRegisterRequiresProcessingCapableOpenRegister(): void {
+		$constraint = (string)($this->config['x-openregister']['openregister'] ?? '');
+		$this->assertNotSame('', $constraint, 'OpenRegister version constraint MUST be declared');
 
-        // Extract the minor version from a `^vX.Y.Z` style constraint.
-        $this->assertMatchesRegularExpression('/0\.2\.(1[4-9]|[2-9][0-9]|[3-9])/', $constraint, 'OpenRegister constraint MUST be >= 0.2.14');
+		// Extract the minor version from a `^vX.Y.Z` style constraint.
+		$this->assertMatchesRegularExpression('/0\.2\.(1[4-9]|[2-9][0-9]|[3-9])/', $constraint, 'OpenRegister constraint MUST be >= 0.2.14');
 
-    }//end testRegisterRequiresProcessingCapableOpenRegister()
+	}//end testRegisterRequiresProcessingCapableOpenRegister()
 
-    /**
-     * DocuDesk ships NO endpoint that aggregates / exports processing
-     * activities — that surface is OpenRegister's (OR-PA-7), per ADR-022.
-     *
-     * @return void
-     */
-    public function testNoDocudeskProcessingExportEndpointExists(): void
-    {
-        $routesPath = __DIR__.'/../../../appinfo/routes.php';
-        $routes     = require $routesPath;
-        $this->assertIsArray($routes);
+	/**
+	 * DocuDesk ships NO endpoint that aggregates / exports processing
+	 * activities — that surface is OpenRegister's (OR-PA-7), per ADR-022.
+	 *
+	 * @return void
+	 */
+	public function testNoDocudeskProcessingExportEndpointExists(): void {
+		$routesPath = __DIR__ . '/../../../appinfo/routes.php';
+		$routes = require $routesPath;
+		$this->assertIsArray($routes);
 
-        $names = [];
-        foreach (($routes['routes'] ?? []) as $route) {
-            $names[] = strtolower((string) ($route['name'] ?? ''));
-        }
+		$names = [];
+		foreach (($routes['routes'] ?? []) as $route) {
+			$names[] = strtolower((string)($route['name'] ?? ''));
+		}
 
-        $forbidden = ['verwerkingen', 'processingactivit', 'art30', 'art-30', 'verwerkingsregister'];
-        foreach ($names as $name) {
-            foreach ($forbidden as $needle) {
-                $this->assertStringNotContainsString(
-                    $needle,
-                    $name,
-                    "DocuDesk MUST NOT register a processing-activity export route ($name) — the export is OR-PA-7's"
-                );
-            }
-        }
+		$forbidden = ['verwerkingen', 'processingactivit', 'art30', 'art-30', 'verwerkingsregister'];
+		foreach ($names as $name) {
+			foreach ($forbidden as $needle) {
+				$this->assertStringNotContainsString(
+					$needle,
+					$name,
+					"DocuDesk MUST NOT register a processing-activity export route ($name) — the export is OR-PA-7's"
+				);
+			}
+		}
 
-        // No controller class implements an aggregation/export surface.
-        $controllerDir = __DIR__.'/../../../lib/Controller';
-        $this->assertDirectoryExists($controllerDir);
-        $hits = glob($controllerDir.'/*ProcessingActivit*Controller.php') ?: [];
-        $hits = array_merge($hits, (glob($controllerDir.'/*Verwerking*Controller.php') ?: []));
-        $this->assertSame([], $hits, 'DocuDesk MUST NOT ship a processing-activity / verwerkingsregister controller');
+		// No controller class implements an aggregation/export surface.
+		$controllerDir = __DIR__ . '/../../../lib/Controller';
+		$this->assertDirectoryExists($controllerDir);
+		$hits = glob($controllerDir . '/*ProcessingActivit*Controller.php') ?: [];
+		$hits = array_merge($hits, (glob($controllerDir . '/*Verwerking*Controller.php') ?: []));
+		$this->assertSame([], $hits, 'DocuDesk MUST NOT ship a processing-activity / verwerkingsregister controller');
 
-    }//end testNoDocudeskProcessingExportEndpointExists()
+	}//end testNoDocudeskProcessingExportEndpointExists()
 }//end class

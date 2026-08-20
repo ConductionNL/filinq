@@ -3,30 +3,27 @@
 /**
  * EML Conversion Backend
  *
- * Bridges the PDF-conversion cascade to OpenRegister's structured EML
- * extractor + DocuDesk's `EmlPdfAssemblyService`. For EML inputs, the
- * backend:
+ * Cascade slot for EML (`message/rfc822`) inputs. EML is anonymised by
+ * OpenRegister (which redacts headers, body, attachment bytes and inline
+ * images) and assembled into a PDF/A-3b by DocuDesk's
+ * `EmlPdfAssemblyService` — DocuDesk performs NO redaction itself and embeds
+ * NO original or redacted bytes as PDF/A-3 file attachments.
  *
- *   1. Confirms OR's `TextExtractionService::parseEmlStructured` is
- *      available (the change's hard prerequisite).
- *   2. Delegates parsing to OR — gets back an `EmlStructure` value
- *      object (headers + body + attachments).
- *   3. Hands the structure to `EmlPdfAssemblyService::assemble` which
- *      emits the assembled PDF/A-3b bytes.
- *   4. Writes the bytes beside the source file, returning the new node.
+ * Wiring note (see DEFERRED_QUESTIONS in the change): the PRIMARY EML path is
+ * the dedicated branch in `AnonymizationService::anonymizeDocument()`, which
+ * calls OR's `anonymizeEmlStructured($node, $entities, ...)` with the
+ * operator-selected entities and assembles the result. That is necessary
+ * because the `ConversionBackendInterface::convert(File)` signature carries
+ * no entity list, and entities are essential to redaction.
  *
- * Tenant configuration:
- *   - `docudesk.conversion.backends.eml_enabled` (default `true`).
- *     When `false`, the backend stays unavailable even if OR is
- *     installed; lets operators temporarily disable EML conversion
- *     (e.g. to fall through to `outputFormat: "preserve"` during
- *     incident response).
+ * This backend therefore exists for cascade completeness and observability:
+ * `isAvailable()` reflects whether both dependencies are present, and
+ * `convert()` provides a best-effort assembly path (calling OR's
+ * anonymise-EML API with an empty entity set — OR still returns the
+ * structured, body/header-redacted shape). It is NOT the operator-facing
+ * redaction path; that is the AnonymizationService branch.
  *
- * Cross-app dependency:
- *   - OR-side `text-extraction-eml` provides `parseEmlStructured()`
- *     returning an `\OCA\OpenRegister\Service\TextExtraction\EmlStructure`.
- *     The dependency is checked dynamically via `class_exists` +
- *     `method_exists` so DocuDesk still loads in installs without OR.
+ * See openspec/changes/eml-pdf-assembly/design.md (D-step-3, D9).
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service\Conversion
@@ -35,8 +32,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
- *
- * @spec openspec/changes/eml-pdf-assembly/specs/eml-pdf-assembly/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,21 +43,18 @@ namespace OCA\DocuDesk\Service\Conversion;
 
 use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Service\EmlPdfAssemblyService;
+use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\IAppConfig;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * EML conversion backend.
- *
- * `isAvailable()` reflects three signals: the tenant flag, the
- * presence of OR's structured-parse API, and the presence of the
- * `EmlPdfAssemblyService` (the latter is constructor-injected so it's
- * always present in this build). `canHandle()` claims `message/rfc822`
- * + `.eml`. `convert()` walks the parse→assemble→write path and
- * surfaces any OR-side parse failure as a `ConversionFailedException`
- * with the structured `attempts` payload the 422 contract expects.
+ * Available when OR's anonymise-EML API AND DocuDesk's EmlPdfAssemblyService
+ * are both present. `convert()` calls OR's anonymise-EML API and delegates the
+ * assembly to EmlPdfAssemblyService; OR exceptions surface as
+ * ConversionFailedException with NO raw-parse fallback.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service\Conversion
@@ -71,225 +63,185 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-class EmlBackend implements ConversionBackendInterface
-{
+class EmlBackend implements ConversionBackendInterface {
 
+	/**
+	 * App config key for the tenant observability flag.
+	 */
+	private const ENABLED_KEY = 'docudesk.conversion.backends.eml_enabled';
 
-    /**
-     * App config key for the tenant on/off flag.
-     */
-    private const ENABLED_KEY = 'docudesk.conversion.backends.eml_enabled';
+	/**
+	 * App identifier used for IAppConfig reads/writes.
+	 */
+	private const APP_ID = 'docudesk';
 
+	/**
+	 * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().
+	 */
+	private const OR_FILE_SERVICE = 'OCA\\OpenRegister\\Service\\FileService';
 
-    /**
-     * App identifier used for IAppConfig reads/writes.
-     */
-    private const APP_ID = 'docudesk';
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig Tenant configuration provider.
+	 * @param IAppManager $appManager App manager (OpenRegister installed check).
+	 * @param ContainerInterface $container DI container for OR service resolution.
+	 * @param EmlPdfAssemblyService $assembly Redacted-component PDF assembler.
+	 * @param LoggerInterface $logger Logger for diagnostics.
+	 */
+	public function __construct(
+		private readonly IAppConfig $appConfig,
+		private readonly IAppManager $appManager,
+		private readonly ContainerInterface $container,
+		private readonly EmlPdfAssemblyService $assembly,
+		private readonly LoggerInterface $logger,
+	) {
 
+	}//end __construct()
 
-    /**
-     * Fully-qualified class name of OR's TextExtractionService —
-     * deliberately string-literal so DocuDesk doesn't `use` the
-     * symbol and stays loadable without OR on the classpath.
-     */
-    private const OR_TEXT_EXTRACTION_FQCN = '\\OCA\\OpenRegister\\Service\\TextExtractionService';
+	/**
+	 * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'eml';
+	}//end name()
 
-    /**
-     * Constructor.
-     *
-     * @param EmlPdfAssemblyService $assemblyService The EML→PDF assembler.
-     * @param IAppConfig            $appConfig       Tenant configuration provider.
-     * @param LoggerInterface       $logger          Logger for diagnostics.
-     */
-    public function __construct(
-        private readonly EmlPdfAssemblyService $assemblyService,
-        private readonly IAppConfig $appConfig,
-        private readonly LoggerInterface $logger,
-    ) {
+	/**
+	 * Available iff the tenant flag is set AND OpenRegister exposes its
+	 * anonymise-EML API (`anonymizeEmlStructured`) AND the assembly service
+	 * is present. The tenant flag is read for observability and lets tenants
+	 * force fall-through.
+	 *
+	 * @return bool
+	 */
+	public function isAvailable(): bool {
+		$flag = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
+		if ($flag === 'false') {
+			return false;
+		}
 
-    }//end __construct()
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			return false;
+		}
 
-    /**
-     * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'eml';
+		try {
+			$fileService = $this->container->get(self::OR_FILE_SERVICE);
+		} catch (Throwable $e) {
+			return false;
+		}
 
-    }//end name()
+		return method_exists($fileService, 'anonymizeEmlStructured');
+	}//end isAvailable()
 
-    /**
-     * Whether the backend is usable: the tenant flag must be on AND
-     * OR's structured-parse method must be present on the classpath.
-     *
-     * Note: when OR is present but `EmlPdfAssemblyService` cannot
-     * resolve the TextExtractionService via DI at runtime, we fall
-     * through inside `convert()`; `isAvailable()` only validates the
-     * statically observable signals.
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-8
-     */
-    public function isAvailable(): bool
-    {
-        $enabled = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
-        if ($enabled === 'false' || $enabled === '0') {
-            return false;
-        }
+	/**
+	 * Declare the input formats this backend claims for cascade routing.
+	 *
+	 * @param string $mimeType Source MIME.
+	 * @param string $extension Source extension (lowercased, no dot).
+	 *
+	 * @return bool True for `message/rfc822` (.eml).
+	 */
+	public function canHandle(string $mimeType, string $extension): bool {
+		return $mimeType === 'message/rfc822' || $extension === 'eml';
+	}//end canHandle()
 
-        $orClass = self::OR_TEXT_EXTRACTION_FQCN;
-        if (class_exists($orClass) === false) {
-            return false;
-        }
+	/**
+	 * Convert an EML input: call OR's anonymise-EML API and assemble the
+	 * redacted result into a PDF/A-3b written beside the source.
+	 *
+	 * NO raw-parse fallback: if OR's API throws, this throws
+	 * ConversionFailedException so the cascade falls through (422 for EML) —
+	 * never emitting un-redacted content (design D9). Entities are not
+	 * threaded through the cascade signature, so this calls OR with an empty
+	 * entity set; the operator-facing redaction path is the
+	 * AnonymizationService branch.
+	 *
+	 * @param File $source Source EML file node.
+	 *
+	 * @return File Newly written PDF file node.
+	 *
+	 * @throws ConversionFailedException On OR API failure or assembly failure.
+	 */
+	public function convert(File $source): File {
+		try {
+			$fileService = $this->container->get(self::OR_FILE_SERVICE);
+		} catch (Throwable $e) {
+			throw new ConversionFailedException(
+				message: 'EML backend could not resolve OpenRegister FileService: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => false,
+						'supports' => true,
+						'reason' => 'OpenRegister FileService unavailable',
+					],
+				],
+				previous: $e
+			);
+		}
 
-        // PHPStan eliminates the OR class symbolically (OpenRegister is
-        // an external app, ignored by config), so `method_exists()` on
-        // its FQCN string constant looks like a contradiction. At
-        // runtime the class is loaded by NC's autoloader once OR is
-        // enabled, so the guard is the right defensive shape.
-        // phpcs:ignore
-        // @phpstan-ignore-next-line function.impossibleType
-        if (method_exists($orClass, 'parseEmlStructured') === false) {
-            return false;
-        }
+		try {
+			$structure = $fileService->anonymizeEmlStructured($source, [], 'document', null);
+		} catch (Throwable $e) {
+			// NO raw-parse fallback — re-throw as a typed failure.
+			$this->logger->warning(
+				'[EmlBackend] OR anonymizeEmlStructured failed; no raw-parse fallback',
+				['source' => $source->getPath(), 'exception' => get_class($e), 'message' => $e->getMessage()]
+			);
+			throw new ConversionFailedException(
+				message: 'OpenRegister anonymise-EML API failed: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'anonymizeEmlStructured threw: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}//end try
 
-        return true;
+		if (is_object($structure) === false) {
+			throw new ConversionFailedException(
+				message: 'OpenRegister anonymise-EML API returned no structure.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'anonymizeEmlStructured returned non-object',
+					],
+				]
+			);
+		}
 
-    }//end isAvailable()
+		$pdfBytes = $this->assembly->assemble(result: $structure, sourceFilename: $source->getName());
 
-    /**
-     * Declare the input formats this backend claims for cascade routing.
-     *
-     * @param string $mimeType  Source MIME.
-     * @param string $extension Source extension (lowercased, no dot).
-     *
-     * @return bool True for `message/rfc822` (.eml).
-     */
-    public function canHandle(string $mimeType, string $extension): bool
-    {
-        return $mimeType === 'message/rfc822' || $extension === 'eml';
+		$parent = $source->getParent();
+		$outputName = $this->stripExtension(name: $source->getName()) . '_anonymized.pdf';
+		if ($parent->nodeExists($outputName) === true) {
+			$parent->get($outputName)->delete();
+		}
 
-    }//end canHandle()
+		return $parent->newFile($outputName, $pdfBytes);
+	}//end convert()
 
-    /**
-     * Convert an EML source into an assembled PDF/A-3b file beside it.
-     *
-     * Errors surface as `ConversionFailedException` with a structured
-     * `attempts[]` payload so the cascade aggregator can append it
-     * cleanly into the 422 response body.
-     *
-     * @param File $source Source file node.
-     *
-     * @return File Newly written PDF file node.
-     *
-     * @throws ConversionFailedException When parse or assembly fails.
-     *
-     * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-8
-     */
-    public function convert(File $source): File
-    {
-        $textExtractionService = $this->assemblyService->resolveTextExtractionService();
-        if ($textExtractionService === null) {
-            throw new ConversionFailedException(
-                message: 'OpenRegister TextExtractionService is unavailable for EML parsing.',
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => false,
-                        'supports'  => true,
-                        'reason'    => 'OR TextExtractionService not resolvable from container',
-                    ],
-                ]
-            );
-        }
+	/**
+	 * Return $name without its trailing `.ext`.
+	 *
+	 * @param string $name File name with extension.
+	 *
+	 * @return string
+	 */
+	private function stripExtension(string $name): string {
+		$dotPos = strrpos($name, '.');
+		if ($dotPos === false) {
+			return $name;
+		}
 
-        try {
-            // Structured parse returns the EmlStructure value object.
-            $structure = $textExtractionService->parseEmlStructured($source);
-        } catch (Throwable $e) {
-            $this->logger->error(
-                '[EmlBackend] OR parseEmlStructured failed.',
-                [
-                    'source'    => $source->getPath(),
-                    'exception' => get_class($e),
-                    'message'   => $e->getMessage(),
-                ]
-            );
-
-            throw new ConversionFailedException(
-                message: 'EML parse failed: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'OR parseEmlStructured threw: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }//end try
-
-        try {
-            $pdfBinary = $this->assemblyService->assemble(
-                structure: $structure,
-                sourceFilename: $source->getName()
-            );
-        } catch (ConversionFailedException $e) {
-            throw $e;
-        } catch (Throwable $e) {
-            $this->logger->error(
-                '[EmlBackend] Assembly threw.',
-                [
-                    'source'    => $source->getPath(),
-                    'exception' => get_class($e),
-                    'message'   => $e->getMessage(),
-                ]
-            );
-            throw new ConversionFailedException(
-                message: 'EML assembly failed: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'EmlPdfAssemblyService threw: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }//end try
-
-        // Write the PDF beside the source. If a same-named file
-        // already exists, replace it — this is a fresh conversion.
-        $parent     = $source->getParent();
-        $outputName = $this->stripExtension(name: $source->getName()).'.pdf';
-        if ($parent->nodeExists($outputName) === true) {
-            $parent->get($outputName)->delete();
-        }
-
-        return $parent->newFile($outputName, $pdfBinary);
-
-    }//end convert()
-
-    /**
-     * Return `$name` without its trailing `.ext` suffix.
-     *
-     * @param string $name Filename.
-     *
-     * @return string Name without extension.
-     */
-    private function stripExtension(string $name): string
-    {
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            return $name;
-        }
-
-        return substr($name, 0, $dotPos);
-
-    }//end stripExtension()
+		return substr($name, 0, $dotPos);
+	}//end stripExtension()
 }//end class

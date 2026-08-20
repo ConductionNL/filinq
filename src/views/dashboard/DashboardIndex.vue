@@ -8,8 +8,8 @@ import { consentStore } from '../../store/store.js'
 		<!-- Anonymiser backend warning banner — admin-only, sits above the dashboard grid -->
 		<AnonymiserBackendWarning
 			v-if="isAdmin"
-			:show-warning="anonymiserBackend.showWarning"
-			:app-api-installed="anonymiserBackend.appApiInstalled"
+			:showWarning="anonymiserBackend.showWarning"
+			:appApiInstalled="anonymiserBackend.appApiInstalled"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<CnDashboardPage
@@ -17,44 +17,87 @@ import { consentStore } from '../../store/store.js'
 			:widgets="widgetDefs"
 			:layout="dashboardLayout"
 			:loading="consentStore.loading">
+			<!--
+				Each KPI tile navigates to the consent overview. That is a
+				navigation, so it ships as a real link: <RouterLink> renders an
+				<a href>, which is focusable, activates on Enter, and supports
+				middle-click / open-in-new-tab. The previous `<div @click>`
+				wrapper was unreachable by keyboard entirely (WCAG 2.1.1).
+				The explicit aria-label names the link, because its visible text
+				lives inside CnStatsBlock.
+			-->
 			<!-- KPI: Total Consents -->
 			<template #widget-total-consents>
-				<CnStatsBlock
-					:title="t('docudesk', 'Total Consents')"
-					:count="consentStore.consentStats.total"
-					:count-label="t('docudesk', 'records')"
-					variant="default"
-					show-zero-count />
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="
+						t('docudesk', 'Total Consents — open the consent overview')
+					">
+					<CnStatsBlock
+						:title="t('docudesk', 'Total Consents')"
+						:count="consentStore.consentStats.total"
+						:countLabel="t('docudesk', 'records')"
+						variant="default"
+						showZeroCount />
+				</RouterLink>
 			</template>
 
 			<!-- KPI: Pending -->
 			<template #widget-pending>
-				<CnStatsBlock
-					:title="t('docudesk', 'Pending')"
-					:count="consentStore.consentStats.pending"
-					:count-label="t('docudesk', 'pending')"
-					variant="warning"
-					show-zero-count />
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="
+						t('docudesk', 'Pending consents — open the consent overview')
+					">
+					<CnStatsBlock
+						:title="t('docudesk', 'Pending')"
+						:count="consentStore.consentStats.pending"
+						:countLabel="t('docudesk', 'pending')"
+						variant="warning"
+						showZeroCount />
+				</RouterLink>
 			</template>
 
 			<!-- KPI: Approved -->
 			<template #widget-approved>
-				<CnStatsBlock
-					:title="t('docudesk', 'Approved')"
-					:count="consentStore.consentStats.approved"
-					:count-label="t('docudesk', 'approved')"
-					variant="success"
-					show-zero-count />
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="
+						t(
+							'docudesk',
+							'Approved consents — open the consent overview',
+						)
+					">
+					<CnStatsBlock
+						:title="t('docudesk', 'Approved')"
+						:count="consentStore.consentStats.approved"
+						:countLabel="t('docudesk', 'approved')"
+						variant="success"
+						showZeroCount />
+				</RouterLink>
 			</template>
 
 			<!-- KPI: Objected -->
 			<template #widget-objected>
-				<CnStatsBlock
-					:title="t('docudesk', 'Objected')"
-					:count="consentStore.consentStats.objected"
-					:count-label="t('docudesk', 'objected')"
-					variant="error"
-					show-zero-count />
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="
+						t(
+							'docudesk',
+							'Objected consents — open the consent overview',
+						)
+					">
+					<CnStatsBlock
+						:title="t('docudesk', 'Objected')"
+						:count="consentStore.consentStats.objected"
+						:countLabel="t('docudesk', 'objected')"
+						variant="error"
+						showZeroCount />
+				</RouterLink>
 			</template>
 
 			<!-- Pending Consents table -->
@@ -62,25 +105,32 @@ import { consentStore } from '../../store/store.js'
 				<NcEmptyContent
 					v-if="!consentStore.loading && pendingConsents.length === 0"
 					:name="t('docudesk', 'No pending consents')"
-					:description="t('docudesk', 'All consents have been handled.')" />
+					:description="
+						t('docudesk', 'All consents have been handled.')
+					" />
 				<CnDataTable
 					v-else
 					:rows="pendingConsents"
 					:columns="consentColumns"
-					borderless />
+					borderless
+					@rowClick="navigateToPendingConsent" />
 			</template>
 
 			<!-- Quick Anonymization -->
 			<template #widget-anonymization>
-				<AnonymizationDashboardWidget :in-app="true" />
+				<AnonymizationDashboardWidget :inApp="true" />
 			</template>
 		</CnDashboardPage>
 	</div>
 </template>
 
 <script>
+import {
+	CnDashboardPage,
+	CnDataTable,
+	CnStatsBlock,
+} from '@conduction/nextcloud-vue'
 import { NcEmptyContent } from '@nextcloud/vue'
-import { CnDashboardPage, CnStatsBlock, CnDataTable } from '@conduction/nextcloud-vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
 
@@ -94,6 +144,7 @@ export default {
 		AnonymizationDashboardWidget,
 		AnonymiserBackendWarning,
 	},
+
 	data() {
 		return {
 			isAdmin: false,
@@ -103,16 +154,64 @@ export default {
 				warningDismissed: false,
 				showWarning: false,
 			},
+
 			dashboardLayout: [
-				{ id: 1, widgetId: 'total-consents', gridX: 0, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 2, widgetId: 'pending', gridX: 3, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 3, widgetId: 'approved', gridX: 6, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 4, widgetId: 'objected', gridX: 9, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
-				{ id: 5, widgetId: 'pending-consents', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 5 },
-				{ id: 6, widgetId: 'anonymization', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 5 },
+				{
+					id: 1,
+					widgetId: 'total-consents',
+					gridX: 0,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 2,
+					widgetId: 'pending',
+					gridX: 3,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 3,
+					widgetId: 'approved',
+					gridX: 6,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 4,
+					widgetId: 'objected',
+					gridX: 9,
+					gridY: 0,
+					gridWidth: 3,
+					gridHeight: 2,
+					showTitle: false,
+				},
+				{
+					id: 5,
+					widgetId: 'pending-consents',
+					gridX: 0,
+					gridY: 2,
+					gridWidth: 6,
+					gridHeight: 5,
+				},
+				{
+					id: 6,
+					widgetId: 'anonymization',
+					gridX: 6,
+					gridY: 2,
+					gridWidth: 6,
+					gridHeight: 5,
+				},
 			],
 		}
 	},
+
 	computed: {
 		/**
 		 * Widget definitions for CnDashboardPage.
@@ -129,18 +228,19 @@ export default {
 				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
 			]
 		},
+
 		/**
 		 * Column definitions for the Pending Consents CnDataTable.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
 		consentColumns() {
-			return [
-				{ key: 'entity', label: t('docudesk', 'Entity') },
-			]
+			return [{ key: 'entity', label: t('docudesk', 'Entity') }]
 		},
+
 		/**
 		 * Consent records with status "pending", capped at 10 rows.
+		 * The `id` field is retained so row-click can navigate to ConsentDetail.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
@@ -148,13 +248,15 @@ export default {
 			return consentStore.consents
 				.filter((c) => c.consentStatus === 'pending')
 				.slice(0, 10)
-				.map((c) => ({ entity: c.entityText || '—' }))
+				.map((c) => ({ id: c.id || c.uuid, entity: c.entityText || '—' }))
 		},
 	},
+
 	mounted() {
 		consentStore.fetchConsents()
 		this.fetchAnonymiserBackendState()
 	},
+
 	methods: {
 		/**
 		 * Fetch anonymiser backend state to decide whether to show the warning banner.
@@ -163,7 +265,10 @@ export default {
 		 */
 		async fetchAnonymiserBackendState() {
 			try {
-				const response = await fetch('/index.php/apps/docudesk/api/settings', { method: 'GET' })
+				const response = await fetch(
+					'/index.php/apps/docudesk/api/settings',
+					{ method: 'GET' },
+				)
 				if (response.ok === false) {
 					return
 				}
@@ -172,8 +277,12 @@ export default {
 				if (data.anonymiserBackend) {
 					this.anonymiserBackend = {
 						method: data.anonymiserBackend.method ?? 'regex',
-						appApiInstalled: data.anonymiserBackend.appApiInstalled ?? false,
-						warningDismissed: data.anonymiserBackend.warningDismissed ?? false,
+						appApiInstalled:
+							data.anonymiserBackend.appApiInstalled ?? false,
+
+						warningDismissed:
+							data.anonymiserBackend.warningDismissed ?? false,
+
 						showWarning: data.anonymiserBackend.showWarning ?? false,
 					}
 				}
@@ -183,13 +292,47 @@ export default {
 		},
 
 		/**
+		 * Navigate to ConsentDetail when a pending-consents table row is clicked.
+		 *
+		 * @param {object} row - The clicked row object (contains id + entity fields).
+		 */
+		navigateToPendingConsent(row) {
+			if (row && row.id) {
+				this.$router.push({ name: 'ConsentDetail', params: { id: row.id } })
+			} else {
+				this.$router.push({ name: 'Consent' })
+			}
+		},
+
+		/**
 		 * Handle the anonymiser backend warning being dismissed on the dashboard.
 		 *
 		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-8
 		 */
 		onAnonymiserWarningDismissed() {
-			this.anonymiserBackend = { ...this.anonymiserBackend, showWarning: false, warningDismissed: true }
+			this.anonymiserBackend = {
+				...this.anonymiserBackend,
+				showWarning: false,
+				warningDismissed: true,
+			}
 		},
 	},
 }
 </script>
+
+<style scoped>
+/* The KPI tiles are links, but they must keep the tile look — no underline,
+   no link colour — while retaining a visible keyboard focus ring. */
+.dashboard-kpi-link {
+	display: block;
+	height: 100%;
+	color: inherit;
+	text-decoration: none;
+}
+
+.dashboard-kpi-link:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+	border-radius: var(--border-radius-large);
+}
+</style>

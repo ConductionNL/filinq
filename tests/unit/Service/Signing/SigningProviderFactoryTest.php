@@ -42,154 +42,145 @@ use RuntimeException;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class SigningProviderFactoryTest extends TestCase
-{
+class SigningProviderFactoryTest extends TestCase {
 
-    /**
-     * @var IAppConfig|MockObject
-     */
-    private IAppConfig|MockObject $config;
+	/**
+	 * @var IAppConfig|MockObject
+	 */
+	private IAppConfig|MockObject $config;
 
-    /**
-     * @var NativeSigningProvider|MockObject
-     */
-    private NativeSigningProvider|MockObject $nativeProvider;
+	/**
+	 * @var NativeSigningProvider|MockObject
+	 */
+	private NativeSigningProvider|MockObject $nativeProvider;
 
-    /**
-     * @var ValidSignProvider|MockObject
-     */
-    private ValidSignProvider|MockObject $validSignProvider;
+	/**
+	 * @var ValidSignProvider|MockObject
+	 */
+	private ValidSignProvider|MockObject $validSignProvider;
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->config = $this->createMock(IAppConfig::class);
+		$this->config = $this->createMock(IAppConfig::class);
 
-        $this->nativeProvider = $this->createMock(NativeSigningProvider::class);
-        $this->nativeProvider->method('getIdentifier')->willReturn('native');
+		$this->nativeProvider = $this->createMock(NativeSigningProvider::class);
+		$this->nativeProvider->method('getIdentifier')->willReturn('native');
 
-        $this->validSignProvider = $this->createMock(ValidSignProvider::class);
-        $this->validSignProvider->method('getIdentifier')->willReturn('validsign');
+		$this->validSignProvider = $this->createMock(ValidSignProvider::class);
+		$this->validSignProvider->method('getIdentifier')->willReturn('validsign');
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Build a fresh SigningProviderFactory for each test.
-     *
-     * @param string $configuredProvider The provider name stored in app config.
-     *
-     * @return SigningProviderFactory
-     */
-    private function buildFactory(string $configuredProvider='native'): SigningProviderFactory
-    {
-        $this->config->method('getValueString')
-            ->with('docudesk', 'signing_provider', 'native')
-            ->willReturn($configuredProvider);
+	/**
+	 * Build a fresh SigningProviderFactory for each test.
+	 *
+	 * @param string $configuredProvider The provider name stored in app config.
+	 *
+	 * @return SigningProviderFactory
+	 */
+	private function buildFactory(string $configuredProvider = 'native'): SigningProviderFactory {
+		$this->config->method('getValueString')
+			->with('docudesk', 'signing_provider', 'native')
+			->willReturn($configuredProvider);
 
-        return new SigningProviderFactory(
-            config: $this->config,
-            nativeProvider: $this->nativeProvider,
-            validSignProvider: $this->validSignProvider
-        );
+		return new SigningProviderFactory(
+			config: $this->config,
+			nativeProvider: $this->nativeProvider,
+			validSignProvider: $this->validSignProvider
+		);
 
-    }//end buildFactory()
+	}//end buildFactory()
 
-    /**
-     * getActiveProvider() returns the native provider when config is 'native'.
-     *
-     * @return void
-     */
-    public function testGetActiveProviderReturnsNativeByDefault(): void
-    {
-        $factory = $this->buildFactory(configuredProvider: 'native');
+	/**
+	 * getActiveProvider() returns the native provider when config is 'native'.
+	 *
+	 * @return void
+	 */
+	public function testGetActiveProviderReturnsNativeByDefault(): void {
+		$factory = $this->buildFactory(configuredProvider: 'native');
 
-        $provider = $factory->getActiveProvider();
+		$provider = $factory->getActiveProvider();
 
-        $this->assertSame($this->nativeProvider, $provider);
+		$this->assertSame($this->nativeProvider, $provider);
 
-    }//end testGetActiveProviderReturnsNativeByDefault()
+	}//end testGetActiveProviderReturnsNativeByDefault()
 
-    /**
-     * getActiveProvider() returns the validsign provider when configured.
-     *
-     * @return void
-     */
-    public function testGetActiveProviderReturnsValidsignWhenConfigured(): void
-    {
-        $factory = $this->buildFactory(configuredProvider: 'validsign');
+	/**
+	 * getActiveProvider() returns the validsign provider when configured.
+	 *
+	 * @return void
+	 */
+	public function testGetActiveProviderReturnsValidsignWhenConfigured(): void {
+		$factory = $this->buildFactory(configuredProvider: 'validsign');
 
-        $provider = $factory->getActiveProvider();
+		$provider = $factory->getActiveProvider();
 
-        $this->assertSame($this->validSignProvider, $provider);
+		$this->assertSame($this->validSignProvider, $provider);
 
-    }//end testGetActiveProviderReturnsValidsignWhenConfigured()
+	}//end testGetActiveProviderReturnsValidsignWhenConfigured()
 
-    /**
-     * getActiveProvider() falls back to native for unknown provider names.
-     *
-     * @return void
-     */
-    public function testGetActiveProviderFallsBackToNativeForUnknown(): void
-    {
-        $factory = $this->buildFactory(configuredProvider: 'does-not-exist');
+	/**
+	 * getActiveProvider() falls back to native for unknown provider names.
+	 *
+	 * @return void
+	 */
+	public function testGetActiveProviderFallsBackToNativeForUnknown(): void {
+		$factory = $this->buildFactory(configuredProvider: 'does-not-exist');
 
-        $provider = $factory->getActiveProvider();
+		$provider = $factory->getActiveProvider();
 
-        $this->assertSame($this->nativeProvider, $provider);
+		$this->assertSame($this->nativeProvider, $provider);
 
-    }//end testGetActiveProviderFallsBackToNativeForUnknown()
+	}//end testGetActiveProviderFallsBackToNativeForUnknown()
 
-    /**
-     * getProvider('validsign') returns the ValidSign provider instance.
-     *
-     * @return void
-     */
-    public function testGetProviderReturnsRequestedProvider(): void
-    {
-        $factory = $this->buildFactory();
+	/**
+	 * getProvider('validsign') returns the ValidSign provider instance.
+	 *
+	 * @return void
+	 */
+	public function testGetProviderReturnsRequestedProvider(): void {
+		$factory = $this->buildFactory();
 
-        $provider = $factory->getProvider(identifier: 'validsign');
+		$provider = $factory->getProvider(identifier: 'validsign');
 
-        $this->assertSame($this->validSignProvider, $provider);
+		$this->assertSame($this->validSignProvider, $provider);
 
-    }//end testGetProviderReturnsRequestedProvider()
+	}//end testGetProviderReturnsRequestedProvider()
 
-    /**
-     * getProvider() throws RuntimeException for unknown identifiers.
-     *
-     * @return void
-     */
-    public function testGetProviderThrowsForUnknownIdentifier(): void
-    {
-        $factory = $this->buildFactory();
+	/**
+	 * getProvider() throws RuntimeException for unknown identifiers.
+	 *
+	 * @return void
+	 */
+	public function testGetProviderThrowsForUnknownIdentifier(): void {
+		$factory = $this->buildFactory();
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Signing provider not available');
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Signing provider not available');
 
-        $factory->getProvider(identifier: 'docusign');
+		$factory->getProvider(identifier: 'docusign');
 
-    }//end testGetProviderThrowsForUnknownIdentifier()
+	}//end testGetProviderThrowsForUnknownIdentifier()
 
-    /**
-     * getAvailableProviders() lists both registered providers.
-     *
-     * @return void
-     */
-    public function testGetAvailableProvidersListsBothProviders(): void
-    {
-        $factory = $this->buildFactory();
+	/**
+	 * getAvailableProviders() lists both registered providers.
+	 *
+	 * @return void
+	 */
+	public function testGetAvailableProvidersListsBothProviders(): void {
+		$factory = $this->buildFactory();
 
-        $providers = $factory->getAvailableProviders();
+		$providers = $factory->getAvailableProviders();
 
-        $this->assertContains('native', $providers);
-        $this->assertContains('validsign', $providers);
-        $this->assertCount(2, $providers);
+		$this->assertContains('native', $providers);
+		$this->assertContains('validsign', $providers);
+		$this->assertCount(2, $providers);
 
-    }//end testGetAvailableProvidersListsBothProviders()
+	}//end testGetAvailableProvidersListsBothProviders()
 }//end class

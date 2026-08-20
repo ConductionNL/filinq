@@ -1,5 +1,10 @@
 # publication-consent Specification
 
+**Status**: in-progress
+**Scope**: docudesk
+**OpenSpec changes**:
+- [woo-publicatie-pipeline](../../changes/woo-publicatie-pipeline/) _(active)_ — adds the read-only document consent-clearance signal (REQ-DDWPP-020) consumed by the publication-readiness gate; objection-window rules and consent CRUD unchanged (kind: code)
+
 ## Purpose
 TBD - created by archiving change docudesk-consent-to-or-gdpr. Update Purpose after archive.
 ## Requirements

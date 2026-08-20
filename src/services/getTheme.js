@@ -11,7 +11,7 @@
  *
  * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
  */
-export const getTheme = () => {
+export function getTheme() {
 	if (document.body.hasAttribute('data-theme-light')) {
 		return 'light'
 	}

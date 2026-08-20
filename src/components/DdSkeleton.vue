@@ -1,6 +1,7 @@
 <template>
 	<div
-		:class="['dd-skeleton', 'dd-skeleton--' + variant]"
+		class="dd-skeleton"
+		:class="['dd-skeleton--' + variant]"
 		:style="rootStyle"
 		role="presentation"
 		aria-hidden="true">
@@ -38,6 +39,7 @@ export default {
 			default: 'text',
 			validator: (v) => ['text', 'row', 'circle'].includes(v),
 		},
+
 		/**
 		 * Width — number (px) or any CSS length string. Defaults to 100%.
 		 */
@@ -45,6 +47,7 @@ export default {
 			type: [String, Number],
 			default: '100%',
 		},
+
 		/**
 		 * Height — number (px) or any CSS length string. Required for `row`,
 		 * ignored for `circle` (uses width), optional for `text` (defaults to
@@ -54,6 +57,7 @@ export default {
 			type: [String, Number],
 			default: null,
 		},
+
 		/**
 		 * Number of lines for the `text` variant. Ignored for other variants.
 		 * The last line is rendered narrower so the block reads as text.
@@ -63,6 +67,7 @@ export default {
 			default: 1,
 		},
 	},
+
 	computed: {
 		/**
 		 * How many bars to render. `text` uses `rows`, others one block.
@@ -72,6 +77,7 @@ export default {
 		barCount() {
 			return this.variant === 'text' ? Math.max(1, this.rows) : 1
 		},
+
 		/**
 		 * Root-level inline style. Width comes from the prop; circle gets
 		 * an explicit aspect-ratio via the CSS class.
@@ -82,6 +88,7 @@ export default {
 			return { width: this.toCssLength(this.width) }
 		},
 	},
+
 	methods: {
 		/**
 		 * Convert a number to a px string or pass through a CSS length.
@@ -95,6 +102,7 @@ export default {
 			}
 			return typeof value === 'number' ? value + 'px' : value
 		},
+
 		/**
 		 * Per-bar inline style. For multi-line text, the last bar is
 		 * shortened to ~70% so the block reads as a paragraph.

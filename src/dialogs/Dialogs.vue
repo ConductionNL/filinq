@@ -4,10 +4,8 @@
 </template>
 
 <script>
-
 export default {
 	name: 'Dialogs',
-	components: {
-	},
+	components: {},
 }
 </script>
