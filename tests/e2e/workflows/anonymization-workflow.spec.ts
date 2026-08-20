@@ -33,14 +33,24 @@
  * a `test.fixme` so it starts passing once the backend is provisioned and
  * the uncaught-\Error 500 is fixed.
  *
- * @spec openspec/specs/anonymization/spec.md#analyze-a-folder-for-entities
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-folder-batch-initiation-from-existing-nextcloud-folder
  */
 
 import { test, expect } from '@playwright/test'
-import { dismissOverlays } from '../spec-coverage/_helpers'
 import {
-	harvestToken, jsonHeaders, API, TEST_PREFIX, TEST_FAMILY,
-	createDavFolder, createDavFile,
+	APP,
+	appUrl,
+	dismissOverlays,
+	waitForAppReady,
+} from '../spec-coverage/_helpers'
+import {
+	harvestToken,
+	jsonHeaders,
+	API,
+	TEST_PREFIX,
+	TEST_FAMILY,
+	createDavFolder,
+	createDavFile,
 } from './_fixtures'
 
 test.describe.configure({ mode: 'serial' })
@@ -50,14 +60,20 @@ const FOLDER = `${TEST_PREFIX}-anon`
 test.afterAll(async ({ request }) => {
 	// Purge every TEST_FAMILY-prefixed path in the admin user's Files root
 	// (covers this run's folder + any orphan left by a crashed prior run).
-	const pf = await request.fetch('/remote.php/dav/files/admin/', {
-		method: 'PROPFIND',
-		headers: { Depth: '1' },
-	}).catch(() => null)
+	const pf = await request
+		.fetch('/remote.php/dav/files/admin/', {
+			method: 'PROPFIND',
+			headers: { Depth: '1' },
+		})
+		.catch(() => null)
 	const xml = pf ? await pf.text().catch(() => '') : ''
-	const names = [...new Set((xml.match(new RegExp(`${TEST_FAMILY}[^<\\/"]*`, 'g')) ?? []))]
+	const names = [
+		...new Set(xml.match(new RegExp(`${TEST_FAMILY}[^<\\/"]*`, 'g')) ?? []),
+	]
 	for (const name of names) {
-		await request.fetch(`/remote.php/dav/files/admin/${name}`, { method: 'DELETE' }).catch(() => {})
+		await request
+			.fetch(`/remote.php/dav/files/admin/${name}`, { method: 'DELETE' })
+			.catch(() => {})
 	}
 })
 
@@ -70,30 +86,56 @@ test.afterAll(async ({ request }) => {
  * @return Resolves once the route has loaded and overlays are dismissed.
  */
 async function goRoute(page, route: string): Promise<void> {
-	await page.goto('/apps/docudesk')
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// `index.php`-prefixed — see the APP constant in ../spec-coverage/_helpers.ts.
+	// `domcontentloaded` + an explicit app-mounted wait, not `networkidle`:
+	// Nextcloud keeps long-lived connections open (notifications polling,
+	// user-status heartbeat) so networkidle never fires. Both calls here used
+	// to be `waitForLoadState('networkidle').catch(() => {})`, i.e. two full
+	// timeouts burned per navigation, each swallowed into a pass, after which
+	// the specs asserted against a possibly-unmounted app. `waitForAppReady`
+	// waits for the DocuDesk mount point and its painted content region
+	// instead, and throws if they never arrive. ADR-074 rule 4 / gate-58.
+	await page.goto(APP, { waitUntil: 'domcontentloaded' })
+	await waitForAppReady(page)
 	await dismissOverlays(page)
-	await page.goto(`/apps/docudesk/${route}`)
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// `appUrl`, not `${APP}/${route}`. The SPA router's base is
+	// `generateUrl('/apps/docudesk')`, which includes the `index.php` segment
+	// only when `OC.config.modRewriteWorking` is false — true on CI's `php -S`,
+	// FALSE on any Apache with mod_rewrite. On a rewriting server the hardcoded
+	// form addressed a path the router does not recognise, so it fell back to
+	// the app root: this file's first test failed with
+	// `getByRole('heading', { name: /Folder Analysis/ })` not found while
+	// sitting on the dashboard, and took the four tests after it with it
+	// ("3 did not run"). See `resolveAppBase` in ../spec-coverage/_helpers.
+	await page.goto(await appUrl(page, route), { waitUntil: 'domcontentloaded' })
+	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(1200)
 }
 
-test('Folder Analysis view renders its real folder-path input form', async ({ page }) => {
+test('Folder Analysis view renders its real folder-path input form', async ({
+	page,
+}) => {
 	await goRoute(page, 'folder-anonymization')
-	await expect(page.getByRole('heading', { name: /Folder Analysis/ })).toBeVisible()
+	await expect(
+		page.getByRole('heading', { name: /Folder Analysis/ }),
+	).toBeVisible()
 	await expect(page.locator('input.folder-path-input')).toHaveCount(1)
 	await expect(page.getByRole('button', { name: /Analyze Folder/ })).toBeVisible()
 })
 
-test('Running Folder Analysis on a real seeded folder fires the analysis and leaves the idle state (progress or surfaced error, never blank)', async ({ page }) => {
+test('Running Folder Analysis on a real seeded folder fires the analysis and leaves the idle state (progress or surfaced error, never blank)', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
 	// Seed a REAL folder with a REAL document containing PII.
 	expect(await createDavFolder(req, token, FOLDER)).toBeLessThan(300)
 	const file = await createDavFile(
-		req, token, `${FOLDER}/contract.txt`,
+		req,
+		token,
+		`${FOLDER}/contract.txt`,
 		'Beste Jan Jansen, uw BSN is 123456782 en uw e-mailadres is jan.jansen@example.com.',
 	)
 	expect(file.status, 'seeded PII file').toBeLessThan(300)
@@ -106,10 +148,18 @@ test('Running Folder Analysis on a real seeded folder fires the analysis and lea
 	// Fire the analysis. We wait for the POST to the folder-batch endpoint so
 	// the assertion is bound to a REAL backend round-trip, not a timer.
 	const [resp] = await Promise.all([
-		page.waitForResponse((r) => r.url().includes('/api/anonymization/batch/folder'), { timeout: 15_000 }).catch(() => null),
+		page
+			.waitForResponse(
+				(r) => r.url().includes('/api/anonymization/batch/folder'),
+				{ timeout: 15_000 },
+			)
+			.catch(() => null),
 		page.getByRole('button', { name: /Analyze Folder|Starting/ }).click(),
 	])
-	expect(resp, 'clicking Analyze must POST to the folder-batch endpoint').not.toBeNull()
+	expect(
+		resp,
+		'clicking Analyze must POST to the folder-batch endpoint',
+	).not.toBeNull()
 
 	await page.waitForTimeout(2500)
 
@@ -126,10 +176,14 @@ test('Running Folder Analysis on a real seeded folder fires the analysis and lea
 	).toBeVisible()
 })
 
-test('Anonymization (upload) view renders its real dropzone surface', async ({ page }) => {
+test('Anonymization (upload) view renders its real dropzone surface', async ({
+	page,
+}) => {
 	await goRoute(page, 'anonymization')
 	const content = page.locator('#content, .app-content').first()
-	await expect(content.getByText(/Drag and drop|Select files|anonymize/i).first()).toBeVisible()
+	await expect(
+		content.getByText(/Drag and drop|Select files|anonymize/i).first(),
+	).toBeVisible()
 })
 
 // FIXED (was a 500): the anonymization endpoints (files GET, extract POST,
@@ -147,14 +201,18 @@ test('Anonymization (upload) view renders its real dropzone surface', async ({ p
 // ABSENT in dev ("AnonymisationBackendService not available; defaulting to
 // regex state"), extract must still return a clean 200 JSON with a
 // well-formed entities array — never an HTML 500.
-test('Anonymization extract degrades gracefully (clean JSON 200, never an HTML 500) when the NER sidecar is absent', async ({ page }) => {
+test('Anonymization extract degrades gracefully (clean JSON 200, never an HTML 500) when the NER sidecar is absent', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
 	// Use a dedicated top-level file (not the shared FOLDER) so this test does
 	// not collide with the serial folder-analysis test's seed/cleanup.
 	const file = await createDavFile(
-		req, token, `${TEST_PREFIX}-extract.txt`,
+		req,
+		token,
+		`${TEST_PREFIX}-extract.txt`,
 		'Beste Jan Jansen, uw BSN is 123456782 en uw e-mailadres is jan.jansen@example.com.',
 	)
 	expect(file.fileId).not.toEqual('')
@@ -166,14 +224,20 @@ test('Anonymization extract degrades gracefully (clean JSON 200, never an HTML 5
 		headers: jsonHeaders(token),
 		data: {},
 	})
-	expect(extract.status(), `extract entities (body: ${await extract.text().catch(() => '')})`).toBe(200)
 	expect(
-		(extract.headers()['content-type'] ?? ''),
+		extract.status(),
+		`extract entities (body: ${await extract.text().catch(() => '')})`,
+	).toBe(200)
+	expect(
+		extract.headers()['content-type'] ?? '',
 		'extract must return JSON, not an HTML 500 page',
 	).toContain('application/json')
 	const body = await extract.json()
 	const entities = body.entities ?? body.results ?? []
-	expect(Array.isArray(entities), 'extract response must carry a well-formed entities array').toBe(true)
+	expect(
+		Array.isArray(entities),
+		'extract response must carry a well-formed entities array',
+	).toBe(true)
 })
 
 // ENV-DEPENDENT (still fixme): live, on-the-fly NER detection of fresh PII in
@@ -182,13 +246,17 @@ test('Anonymization extract degrades gracefully (clean JSON 200, never an HTML 5
 // above), but the regex fallback does not detect arbitrary BSN/name/email on
 // the fly, so the entities-detected outcome cannot be asserted headlessly
 // here. This flips green once the sidecar is provisioned.
-test.fixme('Folder Analysis detects entities (BSN / name / email) in the seeded document', async ({ page }) => {
+test.fixme('Folder Analysis detects entities (BSN / name / email) in the seeded document', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
 	await createDavFolder(req, token, FOLDER)
 	const file = await createDavFile(
-		req, token, `${FOLDER}/contract.txt`,
+		req,
+		token,
+		`${FOLDER}/contract.txt`,
 		'Beste Jan Jansen, uw BSN is 123456782 en uw e-mailadres is jan.jansen@example.com.',
 	)
 	expect(file.fileId).not.toEqual('')
@@ -198,10 +266,16 @@ test.fixme('Folder Analysis detects entities (BSN / name / email) in the seeded 
 		headers: jsonHeaders(token),
 		data: {},
 	})
-	expect(extract.status(), `extract entities (body: ${await extract.text().catch(() => '')})`).toBe(200)
+	expect(
+		extract.status(),
+		`extract entities (body: ${await extract.text().catch(() => '')})`,
+	).toBe(200)
 	const body = await extract.json()
 	const entities = body.entities ?? body.results ?? []
-	expect(Array.isArray(entities) && entities.length > 0, 'at least one PII entity must be detected').toBe(true)
+	expect(
+		Array.isArray(entities) && entities.length > 0,
+		'at least one PII entity must be detected',
+	).toBe(true)
 
 	// And the detected entities surface in the Folder Analysis review UI.
 	await goRoute(page, 'folder-anonymization')
@@ -209,6 +283,10 @@ test.fixme('Folder Analysis detects entities (BSN / name / email) in the seeded 
 	await page.getByRole('button', { name: /Analyze Folder/ }).click()
 	await page.waitForTimeout(4000)
 	await expect(
-		page.locator('#content, .app-content').first().getByText(/Jan Jansen|BSN|entit/i).first(),
+		page
+			.locator('#content, .app-content')
+			.first()
+			.getByText(/Jan Jansen|BSN|entit/i)
+			.first(),
 	).toBeVisible()
 })

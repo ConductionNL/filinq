@@ -29,7 +29,7 @@ use OCA\DocuDesk\Event\SignerStepApprovedEvent;
 use OCA\DocuDesk\Event\SignerStepPendingEvent;
 use OCA\DocuDesk\Event\SignerStepRejectedEvent;
 use OCA\DocuDesk\EventListener\ApprovalStepListener;
-use OCA\DocuDesk\Service\Signing\NativeSigningProvider;
+use OCA\DocuDesk\EventListener\SignerEventTranslator;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCA\DocuDesk\Service\Signing\SigningProviderInterface;
 use OCA\OpenRegister\Db\ApprovalChain;
@@ -53,355 +53,347 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-final class ApprovalStepListenerTest extends TestCase
-{
+final class ApprovalStepListenerTest extends TestCase {
 
-    /**
-     * Provider factory mock.
-     *
-     * @var SigningProviderFactory&MockObject
-     */
-    private SigningProviderFactory $providerFactory;
+	/**
+	 * Provider factory mock.
+	 *
+	 * @var SigningProviderFactory&MockObject
+	 */
+	private SigningProviderFactory $providerFactory;
 
-    /**
-     * Dispatcher mock used for re-emitting typed docudesk events.
-     *
-     * @var IEventDispatcher&MockObject
-     */
-    private IEventDispatcher $dispatcher;
+	/**
+	 * Dispatcher mock used for re-emitting typed docudesk events.
+	 *
+	 * @var IEventDispatcher&MockObject
+	 */
+	private IEventDispatcher $dispatcher;
 
-    /**
-     * App config mock supplying register / schema slugs.
-     *
-     * @var IAppConfig&MockObject
-     */
-    private IAppConfig $config;
+	/**
+	 * App config mock supplying register / schema slugs.
+	 *
+	 * @var IAppConfig&MockObject
+	 */
+	private IAppConfig $config;
 
-    /**
-     * Logger mock.
-     *
-     * @var LoggerInterface&MockObject
-     */
-    private LoggerInterface $logger;
+	/**
+	 * Logger mock.
+	 *
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface $logger;
 
-    /**
-     * Listener under test.
-     *
-     * @var ApprovalStepListener
-     */
-    private ApprovalStepListener $listener;
+	/**
+	 * Listener under test.
+	 *
+	 * @var ApprovalStepListener
+	 */
+	private ApprovalStepListener $listener;
 
-    /**
-     * Configure mocks for the docudesk signing-request slugs.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Configure mocks for the docudesk signing-request slugs.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->providerFactory = $this->createMock(SigningProviderFactory::class);
-        $this->dispatcher      = $this->createMock(IEventDispatcher::class);
-        $this->config          = $this->createMock(IAppConfig::class);
-        $this->logger          = $this->createMock(LoggerInterface::class);
+		$this->providerFactory = $this->createMock(SigningProviderFactory::class);
+		$this->dispatcher = $this->createMock(IEventDispatcher::class);
+		$this->config = $this->createMock(IAppConfig::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
 
-        $this->config->method('getValueString')->willReturnMap(
-            [
-                ['docudesk', 'signingRequest_register', '', 'docudesk'],
-                ['docudesk', 'signingRequest_schema', '', 'signingRequest'],
-            ]
-        );
+		$this->config->method('getValueString')->willReturnMap(
+			[
+				['docudesk', 'signingRequest_register', '', 'docudesk'],
+				['docudesk', 'signingRequest_schema', '', 'signingRequest'],
+			]
+		);
 
-        $this->listener = new ApprovalStepListener(
-            providerFactory: $this->providerFactory,
-            dispatcher: $this->dispatcher,
-            config: $this->config,
-            logger: $this->logger
-        );
+		$this->listener = new ApprovalStepListener(
+			translator: new SignerEventTranslator(
+				providerFactory: $this->providerFactory,
+				dispatcher: $this->dispatcher,
+				logger: $this->logger
+			),
+			config: $this->config,
+			logger: $this->logger
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Build a docudesk-owned ApprovalChain.
-     *
-     * @return ApprovalChain
-     */
-    private function makeDocudeskChain(): ApprovalChain
-    {
-        $chain = new ApprovalChain();
-        $chain->setId(101);
-        $chain->setUuid('chain-101');
-        $chain->setRegisterSlug('docudesk');
-        $chain->setSchemaSlug('signingRequest');
+	/**
+	 * Build a docudesk-owned ApprovalChain.
+	 *
+	 * @return ApprovalChain
+	 */
+	private function makeDocudeskChain(): ApprovalChain {
+		$chain = new ApprovalChain();
+		$chain->setId(101);
+		$chain->setUuid('chain-101');
+		$chain->setRegisterSlug('docudesk');
+		$chain->setSchemaSlug('signingRequest');
 
-        return $chain;
+		return $chain;
+	}//end makeDocudeskChain()
 
-    }//end makeDocudeskChain()
+	/**
+	 * Build a step.
+	 *
+	 * @param int $order Step order.
+	 * @param string $objectUuid Object UUID.
+	 *
+	 * @return ApprovalStep
+	 */
+	private function makeStep(int $order, string $objectUuid = 'sign-req-1'): ApprovalStep {
+		$step = new ApprovalStep();
+		$step->setUuid('step-' . $order);
+		$step->setChainId(101);
+		$step->setObjectUuid($objectUuid);
+		$step->setStepOrder($order);
+		$step->setRole('docudesk-signers');
+		$step->setStatus('pending');
 
-    /**
-     * Build a step.
-     *
-     * @param int    $order      Step order.
-     * @param string $objectUuid Object UUID.
-     *
-     * @return ApprovalStep
-     */
-    private function makeStep(int $order, string $objectUuid='sign-req-1'): ApprovalStep
-    {
-        $step = new ApprovalStep();
-        $step->setUuid('step-'.$order);
-        $step->setChainId(101);
-        $step->setObjectUuid($objectUuid);
-        $step->setStepOrder($order);
-        $step->setRole('docudesk-signers');
-        $step->setStatus('pending');
+		return $step;
+	}//end makeStep()
 
-        return $step;
+	/**
+	 * An initiated event on a docudesk chain dispatches SignerStepPendingEvent
+	 * and invokes the active provider.
+	 *
+	 * @return void
+	 */
+	public function testInitiatedOnDocudeskChainDispatchesAndInvokesProvider(): void {
+		$chain = $this->makeDocudeskChain();
+		$step = $this->makeStep(order: 1);
 
-    }//end makeStep()
+		$provider = $this->createMock(SigningProviderInterface::class);
+		$provider->method('getIdentifier')->willReturn('native');
+		$this->providerFactory->expects($this->once())
+			->method('getActiveProvider')
+			->willReturn($provider);
 
-    /**
-     * An initiated event on a docudesk chain dispatches SignerStepPendingEvent
-     * and invokes the active provider.
-     *
-     * @return void
-     */
-    public function testInitiatedOnDocudeskChainDispatchesAndInvokesProvider(): void
-    {
-        $chain = $this->makeDocudeskChain();
-        $step  = $this->makeStep(order: 1);
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with($this->isInstanceOf(SignerStepPendingEvent::class));
 
-        $provider = $this->createMock(SigningProviderInterface::class);
-        $provider->method('getIdentifier')->willReturn('native');
-        $this->providerFactory->expects($this->once())
-            ->method('getActiveProvider')
-            ->willReturn($provider);
+		$event = new ApprovalStepInitiatedEvent(chain: $chain, step: $step, objectUuid: 'sign-req-1');
+		$this->listener->handle($event);
 
-        $this->dispatcher->expects($this->once())
-            ->method('dispatchTyped')
-            ->with($this->isInstanceOf(SignerStepPendingEvent::class));
+	}//end testInitiatedOnDocudeskChainDispatchesAndInvokesProvider()
 
-        $event = new ApprovalStepInitiatedEvent(chain: $chain, step: $step, objectUuid: 'sign-req-1');
-        $this->listener->handle($event);
+	/**
+	 * Events for foreign chains (different register/schema) are ignored.
+	 *
+	 * @return void
+	 */
+	public function testForeignChainIsIgnored(): void {
+		$chain = new ApprovalChain();
+		$chain->setRegisterSlug('decidesk');
+		$chain->setSchemaSlug('decision');
 
-    }//end testInitiatedOnDocudeskChainDispatchesAndInvokesProvider()
+		$step = $this->makeStep(order: 1);
 
-    /**
-     * Events for foreign chains (different register/schema) are ignored.
-     *
-     * @return void
-     */
-    public function testForeignChainIsIgnored(): void
-    {
-        $chain = new ApprovalChain();
-        $chain->setRegisterSlug('decidesk');
-        $chain->setSchemaSlug('decision');
+		$this->providerFactory->expects($this->never())->method('getActiveProvider');
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
 
-        $step = $this->makeStep(order: 1);
+		$event = new ApprovalStepInitiatedEvent(chain: $chain, step: $step, objectUuid: 'decision-99');
+		$this->listener->handle($event);
 
-        $this->providerFactory->expects($this->never())->method('getActiveProvider');
-        $this->dispatcher->expects($this->never())->method('dispatchTyped');
+	}//end testForeignChainIsIgnored()
 
-        $event = new ApprovalStepInitiatedEvent(chain: $chain, step: $step, objectUuid: 'decision-99');
-        $this->listener->handle($event);
+	/**
+	 * Approved with a next step dispatches SignerStepApprovedEvent AND invokes
+	 * the provider for the next pending step.
+	 *
+	 * @return void
+	 */
+	public function testApprovedWithNextStepDispatchesAndInvokesProvider(): void {
+		$chain = $this->makeDocudeskChain();
+		$step = $this->makeStep(order: 1);
+		$nextStep = $this->makeStep(order: 2);
 
-    }//end testForeignChainIsIgnored()
+		$provider = $this->createMock(SigningProviderInterface::class);
+		$provider->method('getIdentifier')->willReturn('native');
+		$this->providerFactory->expects($this->once())
+			->method('getActiveProvider')
+			->willReturn($provider);
 
-    /**
-     * Approved with a next step dispatches SignerStepApprovedEvent AND invokes
-     * the provider for the next pending step.
-     *
-     * @return void
-     */
-    public function testApprovedWithNextStepDispatchesAndInvokesProvider(): void
-    {
-        $chain    = $this->makeDocudeskChain();
-        $step     = $this->makeStep(order: 1);
-        $nextStep = $this->makeStep(order: 2);
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with(
+				$this->callback(
+					static function ($event): bool {
+						return $event instanceof SignerStepApprovedEvent
+						&& $event->isFinalStep() === false
+						&& $event->getUserId() === 'alice';
+					}
+				)
+			);
 
-        $provider = $this->createMock(SigningProviderInterface::class);
-        $provider->method('getIdentifier')->willReturn('native');
-        $this->providerFactory->expects($this->once())
-            ->method('getActiveProvider')
-            ->willReturn($provider);
+		$event = new ApprovalStepApprovedEvent(
+			chain: $chain,
+			step: $step,
+			userId: 'alice',
+			statusOnApprove: 'IN_PROGRESS',
+			nextStep: $nextStep
+		);
+		$this->listener->handle($event);
 
-        $this->dispatcher->expects($this->once())
-            ->method('dispatchTyped')
-            ->with(
-                    $this->callback(
-                    static function ($event): bool {
-                        return $event instanceof SignerStepApprovedEvent
-                        && $event->isFinalStep() === false
-                        && $event->getUserId() === 'alice';
-                    }
-                    )
-                    );
+	}//end testApprovedWithNextStepDispatchesAndInvokesProvider()
 
-        $event = new ApprovalStepApprovedEvent(
-            chain: $chain,
-            step: $step,
-            userId: 'alice',
-            statusOnApprove: 'IN_PROGRESS',
-            nextStep: $nextStep
-        );
-        $this->listener->handle($event);
+	/**
+	 * Approved with no next step (final) does not invoke the provider — the
+	 * ApprovalStepCompletedEvent will run shortly after and is what closes
+	 * the chain.
+	 *
+	 * @return void
+	 */
+	public function testApprovedAsFinalStepDoesNotInvokeProvider(): void {
+		$chain = $this->makeDocudeskChain();
+		$step = $this->makeStep(order: 2);
 
-    }//end testApprovedWithNextStepDispatchesAndInvokesProvider()
+		$this->providerFactory->expects($this->never())->method('getActiveProvider');
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with(
+				$this->callback(
+					static function ($event): bool {
+						return $event instanceof SignerStepApprovedEvent && $event->isFinalStep() === true;
+					}
+				)
+			);
 
-    /**
-     * Approved with no next step (final) does not invoke the provider — the
-     * ApprovalStepCompletedEvent will run shortly after and is what closes
-     * the chain.
-     *
-     * @return void
-     */
-    public function testApprovedAsFinalStepDoesNotInvokeProvider(): void
-    {
-        $chain = $this->makeDocudeskChain();
-        $step  = $this->makeStep(order: 2);
+		$event = new ApprovalStepApprovedEvent(
+			chain: $chain,
+			step: $step,
+			userId: 'bob',
+			statusOnApprove: 'COMPLETED',
+			nextStep: null
+		);
+		$this->listener->handle($event);
 
-        $this->providerFactory->expects($this->never())->method('getActiveProvider');
-        $this->dispatcher->expects($this->once())
-            ->method('dispatchTyped')
-            ->with(
-                    $this->callback(
-                    static function ($event): bool {
-                        return $event instanceof SignerStepApprovedEvent && $event->isFinalStep() === true;
-                    }
-                    )
-                    );
+	}//end testApprovedAsFinalStepDoesNotInvokeProvider()
 
-        $event = new ApprovalStepApprovedEvent(
-            chain: $chain,
-            step: $step,
-            userId: 'bob',
-            statusOnApprove: 'COMPLETED',
-            nextStep: null
-        );
-        $this->listener->handle($event);
+	/**
+	 * Rejected event dispatches SignerStepRejectedEvent and never invokes
+	 * the provider.
+	 *
+	 * @return void
+	 */
+	public function testRejectedDispatchesAndDoesNotInvokeProvider(): void {
+		$chain = $this->makeDocudeskChain();
+		$step = $this->makeStep(order: 1);
 
-    }//end testApprovedAsFinalStepDoesNotInvokeProvider()
+		$this->providerFactory->expects($this->never())->method('getActiveProvider');
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with(
+				$this->callback(
+					static function ($event): bool {
+						return $event instanceof SignerStepRejectedEvent
+						&& $event->getUserId() === 'mallory';
+					}
+				)
+			);
 
-    /**
-     * Rejected event dispatches SignerStepRejectedEvent and never invokes
-     * the provider.
-     *
-     * @return void
-     */
-    public function testRejectedDispatchesAndDoesNotInvokeProvider(): void
-    {
-        $chain = $this->makeDocudeskChain();
-        $step  = $this->makeStep(order: 1);
+		$event = new ApprovalStepRejectedEvent(
+			chain: $chain,
+			step: $step,
+			userId: 'mallory',
+			statusOnReject: 'DECLINED'
+		);
+		$this->listener->handle($event);
 
-        $this->providerFactory->expects($this->never())->method('getActiveProvider');
-        $this->dispatcher->expects($this->once())
-            ->method('dispatchTyped')
-            ->with(
-                    $this->callback(
-                    static function ($event): bool {
-                        return $event instanceof SignerStepRejectedEvent
-                        && $event->getUserId() === 'mallory';
-                    }
-                    )
-                    );
+	}//end testRejectedDispatchesAndDoesNotInvokeProvider()
 
-        $event = new ApprovalStepRejectedEvent(
-            chain: $chain,
-            step: $step,
-            userId: 'mallory',
-            statusOnReject: 'DECLINED'
-        );
-        $this->listener->handle($event);
+	/**
+	 * Completed event dispatches SignerChainCompletedEvent.
+	 *
+	 * @return void
+	 */
+	public function testCompletedDispatchesChainCompletedEvent(): void {
+		$chain = $this->makeDocudeskChain();
+		$finalStep = $this->makeStep(order: 3);
 
-    }//end testRejectedDispatchesAndDoesNotInvokeProvider()
+		$this->providerFactory->expects($this->never())->method('getActiveProvider');
+		$this->dispatcher->expects($this->once())
+			->method('dispatchTyped')
+			->with(
+				$this->callback(
+					static function ($event): bool {
+						return $event instanceof SignerChainCompletedEvent
+						&& $event->getUserId() === 'carol';
+					}
+				)
+			);
 
-    /**
-     * Completed event dispatches SignerChainCompletedEvent.
-     *
-     * @return void
-     */
-    public function testCompletedDispatchesChainCompletedEvent(): void
-    {
-        $chain     = $this->makeDocudeskChain();
-        $finalStep = $this->makeStep(order: 3);
+		$event = new ApprovalStepCompletedEvent(
+			chain: $chain,
+			finalStep: $finalStep,
+			userId: 'carol',
+			statusOnApprove: 'COMPLETED'
+		);
+		$this->listener->handle($event);
 
-        $this->providerFactory->expects($this->never())->method('getActiveProvider');
-        $this->dispatcher->expects($this->once())
-            ->method('dispatchTyped')
-            ->with(
-                    $this->callback(
-                    static function ($event): bool {
-                        return $event instanceof SignerChainCompletedEvent
-                        && $event->getUserId() === 'carol';
-                    }
-                    )
-                    );
+	}//end testCompletedDispatchesChainCompletedEvent()
 
-        $event = new ApprovalStepCompletedEvent(
-            chain: $chain,
-            finalStep: $finalStep,
-            userId: 'carol',
-            statusOnApprove: 'COMPLETED'
-        );
-        $this->listener->handle($event);
+	/**
+	 * When no signing-request slugs are configured (fresh install), the
+	 * listener treats every event as foreign and skips it.
+	 *
+	 * @return void
+	 */
+	public function testUnconfiguredAppSkipsAllEvents(): void {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturn('');
 
-    }//end testCompletedDispatchesChainCompletedEvent()
+		$listener = new ApprovalStepListener(
+			translator: new SignerEventTranslator(
+				providerFactory: $this->providerFactory,
+				dispatcher: $this->dispatcher,
+				logger: $this->logger
+			),
+			config: $config,
+			logger: $this->logger
+		);
 
-    /**
-     * When no signing-request slugs are configured (fresh install), the
-     * listener treats every event as foreign and skips it.
-     *
-     * @return void
-     */
-    public function testUnconfiguredAppSkipsAllEvents(): void
-    {
-        $config = $this->createMock(IAppConfig::class);
-        $config->method('getValueString')->willReturn('');
+		$this->providerFactory->expects($this->never())->method('getActiveProvider');
+		$this->dispatcher->expects($this->never())->method('dispatchTyped');
 
-        $listener = new ApprovalStepListener(
-            providerFactory: $this->providerFactory,
-            dispatcher: $this->dispatcher,
-            config: $config,
-            logger: $this->logger
-        );
+		$event = new ApprovalStepInitiatedEvent(
+			chain: $this->makeDocudeskChain(),
+			step: $this->makeStep(order: 1),
+			objectUuid: 'sign-req-1'
+		);
+		$listener->handle($event);
 
-        $this->providerFactory->expects($this->never())->method('getActiveProvider');
-        $this->dispatcher->expects($this->never())->method('dispatchTyped');
+	}//end testUnconfiguredAppSkipsAllEvents()
 
-        $event = new ApprovalStepInitiatedEvent(
-            chain: $this->makeDocudeskChain(),
-            step: $this->makeStep(order: 1),
-            objectUuid: 'sign-req-1'
-        );
-        $listener->handle($event);
+	/**
+	 * Provider resolution failure is swallowed — the listener must not throw
+	 * out of `handle()` (OR's write-path runs other listeners after it).
+	 *
+	 * @return void
+	 */
+	public function testProviderResolutionFailureIsLoggedNotThrown(): void {
+		$this->providerFactory->expects($this->once())
+			->method('getActiveProvider')
+			->willThrowException(new \RuntimeException('no provider'));
 
-    }//end testUnconfiguredAppSkipsAllEvents()
+		$this->logger->expects($this->atLeastOnce())->method('error');
 
-    /**
-     * Provider resolution failure is swallowed — the listener must not throw
-     * out of `handle()` (OR's write-path runs other listeners after it).
-     *
-     * @return void
-     */
-    public function testProviderResolutionFailureIsLoggedNotThrown(): void
-    {
-        $this->providerFactory->expects($this->once())
-            ->method('getActiveProvider')
-            ->willThrowException(new \RuntimeException('no provider'));
+		// Dispatch still happens — the typed event is independent of the
+		// provider call.
+		$this->dispatcher->expects($this->once())->method('dispatchTyped');
 
-        $this->logger->expects($this->atLeastOnce())->method('error');
+		$event = new ApprovalStepInitiatedEvent(
+			chain: $this->makeDocudeskChain(),
+			step: $this->makeStep(order: 1),
+			objectUuid: 'sign-req-1'
+		);
 
-        // Dispatch still happens — the typed event is independent of the
-        // provider call.
-        $this->dispatcher->expects($this->once())->method('dispatchTyped');
+		$this->listener->handle($event);
 
-        $event = new ApprovalStepInitiatedEvent(
-            chain: $this->makeDocudeskChain(),
-            step: $this->makeStep(order: 1),
-            objectUuid: 'sign-req-1'
-        );
-
-        $this->listener->handle($event);
-
-    }//end testProviderResolutionFailureIsLoggedNotThrown()
+	}//end testProviderResolutionFailureIsLoggedNotThrown()
 }//end class

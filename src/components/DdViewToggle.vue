@@ -1,19 +1,16 @@
 <template>
-	<div
-		class="dd-view-toggle"
-		role="group"
-		:aria-label="ariaLabel">
+	<div class="dd-view-toggle" role="group" :aria-label="ariaLabel">
 		<!-- Sliding white background; sits behind the active segment -->
 		<span
 			class="dd-view-toggle__thumb"
-			:class="{ 'dd-view-toggle__thumb--right': value === 'list' }"
+			:class="{ 'dd-view-toggle__thumb--right': modelValue === 'list' }"
 			aria-hidden="true" />
 
 		<button
 			type="button"
 			class="dd-view-toggle__btn"
-			:class="{ 'dd-view-toggle__btn--active': value === 'tiles' }"
-			:aria-pressed="value === 'tiles'"
+			:class="{ 'dd-view-toggle__btn--active': modelValue === 'tiles' }"
+			:aria-pressed="modelValue === 'tiles'"
 			@click="select('tiles')">
 			<DdIcon name="tiles" :size="24" />
 			<span class="dd-view-toggle__label">{{ tilesLabel }}</span>
@@ -22,8 +19,8 @@
 		<button
 			type="button"
 			class="dd-view-toggle__btn"
-			:class="{ 'dd-view-toggle__btn--active': value === 'list' }"
-			:aria-pressed="value === 'list'"
+			:class="{ 'dd-view-toggle__btn--active': modelValue === 'list' }"
+			:aria-pressed="modelValue === 'list'"
 			@click="select('list')">
 			<DdIcon name="list" :size="24" />
 			<span class="dd-view-toggle__label">{{ listLabel }}</span>
@@ -37,9 +34,9 @@ import DdIcon from './DdIcon.vue'
 /**
  * Segmented tiles/list view switch with a sliding white background.
  *
- * Controlled component: pass the active mode via `value` (`'tiles'` or
- * `'list'`) and listen to `input` for `v-model` two-way binding. The
- * white thumb animates left/right when the value changes.
+ * Controlled component: pass the active mode via `modelValue` (`'tiles'` or
+ * `'list'`) and listen to `update:modelValue` for `v-model` two-way binding.
+ * The white thumb animates left/right when the value changes.
  *
  * Usage:
  *   <DdViewToggle v-model="viewMode" />
@@ -49,33 +46,38 @@ export default {
 	components: {
 		DdIcon,
 	},
-	model: {
-		prop: 'value',
-		event: 'input',
-	},
+
+	// Vue 3 removed `model: { prop, event }`; a bare `v-model` always binds
+	// `modelValue` + `update:modelValue`, so the prop and emit are renamed
+	// rather than remapped. `change` is kept as a separate notification event.
 	props: {
 		/** Active view mode: `'tiles'` or `'list'`. */
-		value: {
+		modelValue: {
 			type: String,
 			default: 'tiles',
 			validator: (v) => ['tiles', 'list'].includes(v),
 		},
+
 		/** Label for the tiles segment. */
 		tilesLabel: {
 			type: String,
 			default: 'Tiles',
 		},
+
 		/** Label for the list segment. */
 		listLabel: {
 			type: String,
 			default: 'List',
 		},
+
 		/** Accessible name for the toggle group. */
 		ariaLabel: {
 			type: String,
 			default: 'View mode',
 		},
 	},
+
+	emits: ['update:modelValue', 'change'],
 	methods: {
 		/**
 		 * Emit the chosen mode unless it is already active.
@@ -85,8 +87,8 @@ export default {
 		 * @spec exclude Local view-toggle UI control; no domain or persistence semantics.
 		 */
 		select(mode) {
-			if (mode === this.value) return
-			this.$emit('input', mode)
+			if (mode === this.modelValue) return
+			this.$emit('update:modelValue', mode)
 			this.$emit('change', mode)
 		},
 	},
@@ -169,5 +171,14 @@ export default {
 
 .dd-view-toggle__label {
 	white-space: nowrap;
+}
+
+/* WCAG 2.2 SC 2.3.3 — the thumb still lands under the selected option, it
+   just jumps there for users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-view-toggle__thumb,
+	.dd-view-toggle__btn {
+		transition: none;
+	}
 }
 </style>

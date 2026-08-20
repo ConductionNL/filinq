@@ -1,0 +1,229 @@
+# SPDX-License-Identifier: EUPL-1.2
+# SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+#
+##############################################################################
+# DocuDesk — office suite overlay
+#
+# THREE SEPARATE PRODUCTS. None runs by default; each sits behind its own
+# profile, and each is verified on its own:
+#
+#   docker compose -f docker-compose.office.yml --profile onlyoffice up -d
+#   docker compose -f docker-compose.office.yml --profile eurooffice up -d
+#   docker compose -f docker-compose.office.yml --profile collabora  up -d
+#
+# They are deliberately separate services rather than one parameterised one.
+# On 2026-08-16 this repository treated ONLYOFFICE and Euro-Office as
+# interchangeable and printed an ONLYOFFICE measurement under a Euro-Office
+# heading. Separate containers, separate connector apps, separate verification
+# runs — nothing is inferred across them.
+#
+# Why this file lives HERE and not in .github/docker-compose.yml:
+# `.github` is a separate repository shared by the whole fleet, and an office
+# suite is a DocuDesk concern. Putting it there would split one change across
+# two review surfaces and start a 3 GB image for apps that never touch a
+# document.
+#
+# DocuDesk does NOT require any of them. Reading and editing documents goes
+# through the in-package codec with no suite in the call path (ADR-087 §2).
+# These exist to (a) exercise the conversion cascade against a real provider
+# and (b) measure anchor stability across a real save round-trip, which
+# ADR-087 lists as a known unknown.
+#
+# See docs/office-suite-setup.md for the full walkthrough.
+##############################################################################
+
+networks:
+  default:
+    # The shared development stack's network, so `nextcloud` resolves by name
+    # from inside these containers and vice versa. Verified with
+    # `docker inspect nextcloud --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'`
+    # rather than assumed — the compose project name does not determine it here.
+    name: conduction-network
+    external: true
+
+services:
+
+  # ===========================================================================
+  # ONLYOFFICE Document Server
+  #
+  # ⚠️ THIS IS NOT EURO-OFFICE. An earlier version of this file said it was --
+  #    "Euro-Office is the ONLYOFFICE fork ... API-compatible with ONLYOFFICE
+  #    Document Server, which is what the overlay runs". That equivalence was
+  #    never verified. It came from ADR-087, written in this same programme, and
+  #    was then used to justify substituting one product for the other. A claim
+  #    cited as evidence for itself is not evidence.
+  #
+  #    ONLYOFFICE is Ascensio System SIA's product. Euro-Office is a separate
+  #    product with its own image and its own connector app -- see the
+  #    `eurooffice` service below. Whether the two share a lineage is not
+  #    settled here and does not matter: each is verified on its own.
+  #
+  # ⚠️ WOPI IS DISABLED BY DEFAULT in this image's default.json (measured
+  #    2026-08-16). The container starts, the port answers, the Nextcloud admin
+  #    page goes green, and WOPI serves nothing. "The app is installed" is NOT
+  #    the probe -- a successful CheckFileInfo is (ADR-087 §3).
+  onlyoffice:
+    profiles:
+      - onlyoffice
+    container_name: docudesk-onlyoffice
+    image: onlyoffice/documentserver:latest
+    restart: unless-stopped
+    ports:
+      - "8092:80"
+    environment:
+      # No JWT in local development so the connector can be wired without
+      # sharing a secret. NEVER do this off a development host: with JWT off,
+      # anyone who can reach the port can ask the server to open any document
+      # it can fetch.
+      - JWT_ENABLED=false
+      - ALLOW_PRIVATE_IP_ADDRESS=true
+      - USE_UNAUTHORIZED_STORAGE=true
+      # WITHOUT THIS THE SERVER SERVES NO WOPI AT ALL.
+      # Measured on this image 2026-08-16: with it unset, the container is
+      # healthy, /healthcheck returns `true`, the welcome page 302s — and
+      # /hosting/discovery, /hosting/wopi/discovery and /hosting/capabilities
+      # all return 404, because default.json ships `"wopi": {"enable": false}`.
+      # That is the exact "installed, running, reachable, serves nothing"
+      # state ADR-087 §3 warns about, and it is why the capability is probed
+      # with a CheckFileInfo rather than by asking whether the app is enabled.
+      - WOPI_ENABLED=true
+    volumes:
+      - onlyoffice-data:/var/www/onlyoffice/Data
+      - onlyoffice-logs:/var/log/onlyoffice
+    healthcheck:
+      # /healthcheck returns the literal string `true` when the server is up.
+      # A 200 alone is not enough — the server answers the port well before
+      # its converters are ready.
+      test: ["CMD-SHELL", "curl -fsS http://localhost/healthcheck | grep -q true"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+
+  # ===========================================================================
+  # Euro-Office Document Server
+  #
+  # A SEPARATE PRODUCT from ONLYOFFICE, with its own image, its own Nextcloud
+  # connector app (`eurooffice`, not `onlyoffice`) and its own container here.
+  #
+  # It is run as its own service precisely because this repository previously
+  # treated it as interchangeable with ONLYOFFICE and reported an ONLYOFFICE
+  # measurement under a Euro-Office heading. Two products, two containers, two
+  # verification runs — nothing is inferred across them.
+  #
+  # Image size on 2026-08-16: 4.35 GB, against ONLYOFFICE's 3.32 GB. Different
+  # artifacts, whatever their lineage.
+  #
+  # Source: https://nextcloud.com/blog/how-to-install-euro-office/
+  # ===========================================================================
+  eurooffice:
+    profiles:
+      - eurooffice
+    container_name: docudesk-eurooffice
+    image: ghcr.io/euro-office/documentserver:latest
+    restart: unless-stopped
+    ports:
+      - "8093:80"
+    environment:
+      - JWT_ENABLED=false
+      - ALLOW_PRIVATE_IP_ADDRESS=true
+      - USE_UNAUTHORIZED_STORAGE=true
+      # Whether this image also ships WOPI disabled is a question about THIS
+      # image and is answered by its own verification run, not by ONLYOFFICE's.
+      - WOPI_ENABLED=true
+    volumes:
+      - eurooffice-data:/var/www/onlyoffice/Data
+      - eurooffice-logs:/var/log/onlyoffice
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 120s
+
+  # ===========================================================================
+  # LibreOffice (headless, via unoserver)
+  #
+  # A DIFFERENT SHAPE from the other three, and the difference is the point.
+  # ONLYOFFICE, Euro-Office and Collabora are WOPI hosts with browser editors.
+  # LibreOffice here is a CONVERTER ONLY: no WOPI, no discovery endpoint, no
+  # in-browser editing. Its row in a verification run therefore FAILS the WOPI
+  # checks, and that is correct rather than a defect -- a suite is not worse for
+  # being a different shape, and a harness that forced it to look the same would
+  # be hiding what it is.
+  #
+  # ⚠️ DocuDesk's own LibreOfficeHeadlessBackend CANNOT USE THIS CONTAINER.
+  #    It invokes `soffice --headless` via proc_open as a LOCAL SUBPROCESS
+  #    (config key `docudesk.conversion.libreoffice_binary_path`, default
+  #    "soffice"). Measured 2026-08-16: `soffice` is not present in the
+  #    nextcloud container, so that cascade tier is dead on this deployment --
+  #    it fails at conversion time, not at startup, so nothing reports it.
+  #
+  #    This service exists to verify LibreOffice ITSELF as a converter and to
+  #    make the gap visible. Wiring DocuDesk to a remote unoserver is a code
+  #    change (an HTTP backend beside the subprocess one), not a config change.
+  # ===========================================================================
+  libreoffice:
+    profiles:
+      - libreoffice
+    container_name: docudesk-libreoffice
+    image: libreofficedocker/libreoffice-unoserver:3.19
+    restart: unless-stopped
+    ports:
+      - "8094:2004"
+    # NO HEALTHCHECK, deliberately.
+    #
+    # This server answers 404 to EVERY GET -- `/`, `/request`, `/health`, `/healthz`
+    # (measured 2026-08-16). It only responds to a multipart POST on /request. There
+    # is no GET a healthcheck can assert on, and two attempts at one both reported
+    # UNHEALTHY while the server was converting documents perfectly well.
+    #
+    # A healthcheck that cannot pass is not a safety net; it is a permanently red
+    # light that trains people to ignore red lights. Readiness is asserted where it
+    # is meaningful instead -- by the conversion check in
+    # docs/office-suites/verify-suite.sh, which does the POST that actually works.
+
+  # ===========================================================================
+  # Collabora Online (CODE)
+  #
+  # LibreOffice-based, the incumbent Nextcloud Office engine, WOPI client.
+  # Unlike ONLYOFFICE it serves WOPI out of the box.
+  # ===========================================================================
+  collabora:
+    profiles:
+      - collabora
+    container_name: docudesk-collabora
+    image: collabora/code:latest
+    restart: unless-stopped
+    ports:
+      - "9980:9980"
+    environment:
+      # The host Collabora will accept WOPI callbacks from. Regex, and the
+      # dots must be escaped or it will match far more than intended.
+      - aliasgroup1=http://nextcloud:80
+      - username=admin
+      - password=admin
+      - DONT_GEN_SSL_CERT=true
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true
+    cap_add:
+      - MKNOD
+    # NO HEALTHCHECK, deliberately.
+    #
+    # This image ships no shell and no curl -- `docker exec docudesk-collabora sh`
+    # fails with "executable file not found in $PATH". A CMD-SHELL healthcheck
+    # therefore cannot run, and Docker reports the container UNHEALTHY forever.
+    #
+    # Measured 2026-08-16: with a CMD-SHELL healthcheck defined, this container sat
+    # at `unhealthy` while `/hosting/discovery` returned 200 from Nextcloud. The
+    # health status was a fact about the healthcheck, not about Collabora — and a
+    # verification run reading it would have condemned a working suite.
+    #
+    # Collabora's readiness is checked from OUTSIDE instead: see
+    # docs/office-suites/verify-suite.sh, which probes discovery from the Nextcloud
+    # container, which is the connection that actually matters.
+
+volumes:
+  onlyoffice-data:
+  onlyoffice-logs:
+  eurooffice-data:
+  eurooffice-logs:

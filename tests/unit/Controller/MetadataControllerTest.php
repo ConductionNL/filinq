@@ -42,151 +42,139 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class MetadataControllerTest extends TestCase
-{
+class MetadataControllerTest extends TestCase {
 
-    /**
-     * @var MetadataController
-     */
-    private MetadataController $controller;
+	/**
+	 * @var MetadataController
+	 */
+	private MetadataController $controller;
 
-    /**
-     * @var IRequest|MockObject
-     */
-    private IRequest|MockObject $mockRequest;
+	/**
+	 * @var IRequest|MockObject
+	 */
+	private IRequest|MockObject $mockRequest;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * @var MetadataService|MockObject
-     */
-    private MetadataService|MockObject $mockMetadataService;
+	/**
+	 * @var MetadataService|MockObject
+	 */
+	private MetadataService|MockObject $mockMetadataService;
 
-    /**
-     * @var IL10N|MockObject
-     */
-    private IL10N|MockObject $mockL10n;
+	/**
+	 * @var IL10N|MockObject
+	 */
+	private IL10N|MockObject $mockL10n;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $mockUserSession;
+	/**
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $mockUserSession;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockRequest = $this->createMock(IRequest::class);
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
+		$this->mockMetadataService = $this->createMock(MetadataService::class);
+		$this->mockL10n = $this->createMock(IL10N::class);
+		$this->mockL10n->method('t')->willReturnCallback(function ($text, $params = []) {
+			return vsprintf($text, $params);
+		});
 
-        $this->mockRequest         = $this->createMock(IRequest::class);
-        $this->mockLogger          = $this->createMock(LoggerInterface::class);
-        $this->mockMetadataService = $this->createMock(MetadataService::class);
-        $this->mockL10n            = $this->createMock(IL10N::class);
-        $this->mockL10n->method('t')->willReturnCallback(function ($text, $params = []) {
-            return vsprintf($text, $params);
-        });
+		$mockUser = $this->createMock(IUser::class);
+		$mockUser->method('getUID')->willReturn('test-user');
+		$this->mockUserSession = $this->createMock(IUserSession::class);
+		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
-        $mockUser                = $this->createMock(IUser::class);
-        $mockUser->method('getUID')->willReturn('test-user');
-        $this->mockUserSession   = $this->createMock(IUserSession::class);
-        $this->mockUserSession->method('getUser')->willReturn($mockUser);
+		$this->controller = new MetadataController(
+			'docudesk',
+			$this->mockRequest,
+			$this->mockLogger,
+			$this->mockMetadataService,
+			$this->mockL10n,
+			$this->mockUserSession
+		);
 
-        $this->controller = new MetadataController(
-            'docudesk',
-            $this->mockRequest,
-            $this->mockLogger,
-            $this->mockMetadataService,
-            $this->mockL10n,
-            $this->mockUserSession
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test enrich returns 400 when objectId missing
+	 *
+	 * @return void
+	 */
+	public function testEnrichReturns400WhenObjectIdMissing(): void {
+		$this->mockRequest->method('getParams')
+			->willReturn([]);
 
+		$result = $this->controller->enrich();
 
-    /**
-     * Test enrich returns 400 when objectId missing
-     *
-     * @return void
-     */
-    public function testEnrichReturns400WhenObjectIdMissing(): void
-    {
-        $this->mockRequest->method('getParams')
-            ->willReturn([]);
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(400, $result->getStatus());
 
-        $result = $this->controller->enrich();
+	}//end testEnrichReturns400WhenObjectIdMissing()
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(400, $result->getStatus());
+	/**
+	 * Test enrich returns 400 when register missing
+	 *
+	 * @return void
+	 */
+	public function testEnrichReturns400WhenRegisterMissing(): void {
+		$this->mockRequest->method('getParams')
+			->willReturn(['objectId' => 'obj-1']);
 
-    }//end testEnrichReturns400WhenObjectIdMissing()
+		$result = $this->controller->enrich();
 
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(400, $result->getStatus());
 
-    /**
-     * Test enrich returns 400 when register missing
-     *
-     * @return void
-     */
-    public function testEnrichReturns400WhenRegisterMissing(): void
-    {
-        $this->mockRequest->method('getParams')
-            ->willReturn(['objectId' => 'obj-1']);
+	}//end testEnrichReturns400WhenRegisterMissing()
 
-        $result = $this->controller->enrich();
+	/**
+	 * Test enrich returns 400 when schema missing
+	 *
+	 * @return void
+	 */
+	public function testEnrichReturns400WhenSchemaMissing(): void {
+		$this->mockRequest->method('getParams')
+			->willReturn(['objectId' => 'obj-1', 'register' => 'reg-1']);
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(400, $result->getStatus());
+		$result = $this->controller->enrich();
 
-    }//end testEnrichReturns400WhenRegisterMissing()
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(400, $result->getStatus());
 
+	}//end testEnrichReturns400WhenSchemaMissing()
 
-    /**
-     * Test enrich returns 400 when schema missing
-     *
-     * @return void
-     */
-    public function testEnrichReturns400WhenSchemaMissing(): void
-    {
-        $this->mockRequest->method('getParams')
-            ->willReturn(['objectId' => 'obj-1', 'register' => 'reg-1']);
+	/**
+	 * Test enrich returns success when no enrichment needed
+	 *
+	 * @return void
+	 */
+	public function testEnrichReturnsSuccessNoEnrichmentNeeded(): void {
+		$this->mockRequest->method('getParams')
+			->willReturn([
+				'objectId' => 'obj-1',
+				'register' => 'reg-1',
+				'schema' => 'sch-1',
+			]);
 
-        $result = $this->controller->enrich();
+		$this->mockMetadataService->method('enhanceMetadata')
+			->willReturn([]);
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(400, $result->getStatus());
+		$result = $this->controller->enrich();
 
-    }//end testEnrichReturns400WhenSchemaMissing()
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(200, $result->getStatus());
 
-
-    /**
-     * Test enrich returns success when no enrichment needed
-     *
-     * @return void
-     */
-    public function testEnrichReturnsSuccessNoEnrichmentNeeded(): void
-    {
-        $this->mockRequest->method('getParams')
-            ->willReturn([
-                'objectId' => 'obj-1',
-                'register' => 'reg-1',
-                'schema'   => 'sch-1',
-            ]);
-
-        $this->mockMetadataService->method('enhanceMetadata')
-            ->willReturn([]);
-
-        $result = $this->controller->enrich();
-
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(200, $result->getStatus());
-
-    }//end testEnrichReturnsSuccessNoEnrichmentNeeded()
-
+	}//end testEnrichReturnsSuccessNoEnrichmentNeeded()
 
 }//end class

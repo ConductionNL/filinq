@@ -48,232 +48,229 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-class MpdfBackend implements ConversionBackendInterface
-{
+class MpdfBackend implements ConversionBackendInterface {
 
+	/**
+	 * App config key controlling whether this backend is attempted.
+	 * Default true; tenants disable for testing or to force fall-through.
+	 */
+	private const ENABLED_KEY = 'docudesk.conversion.backends.mpdf_enabled';
 
-    /**
-     * App config key controlling whether this backend is attempted.
-     * Default true; tenants disable for testing or to force fall-through.
-     */
-    private const ENABLED_KEY = 'docudesk.conversion.backends.mpdf_enabled';
+	/**
+	 * App identifier used for IAppConfig reads/writes.
+	 */
+	private const APP_ID = 'docudesk';
 
+	/**
+	 * Constructor.
+	 *
+	 * @param PdfService $pdfService PDF generator shared with print-preview.
+	 * @param IAppConfig $appConfig Tenant configuration provider.
+	 * @param LoggerInterface $logger Logger for diagnostics.
+	 */
+	public function __construct(
+		private readonly PdfService $pdfService,
+		private readonly IAppConfig $appConfig,
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * App identifier used for IAppConfig reads/writes.
-     */
-    private const APP_ID = 'docudesk';
+	}//end __construct()
 
-    /**
-     * Constructor.
-     *
-     * @param PdfService      $pdfService PDF generator shared with print-preview.
-     * @param IAppConfig      $appConfig  Tenant configuration provider.
-     * @param LoggerInterface $logger     Logger for diagnostics.
-     */
-    public function __construct(
-        private readonly PdfService $pdfService,
-        private readonly IAppConfig $appConfig,
-        private readonly LoggerInterface $logger,
-    ) {
+	/**
+	 * Identifier surfaced in the 422 body's `conversionAttempts[].backend`.
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'mpdf';
+	}//end name()
 
-    }//end __construct()
+	/**
+	 * Whether the backend is enabled in tenant config. mPDF is in-process
+	 * and always available at the runtime level; the flag exists for
+	 * cascade testing and to let tenants force fall-through.
+	 *
+	 * @return bool
+	 */
+	public function isAvailable(): bool {
+		$value = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
+		return $value !== 'false';
+	}//end isAvailable()
 
-    /**
-     * Identifier surfaced in the 422 body's `conversionAttempts[].backend`.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'mpdf';
+	/**
+	 * HTML and plain-text inputs only. Spreadsheet/presentation/Word
+	 * formats are claimed by other backends earlier in the cascade.
+	 *
+	 * @param string $mimeType Source MIME type.
+	 * @param string $extension Lowercased extension without dot.
+	 *
+	 * @return bool
+	 */
+	public function canHandle(string $mimeType, string $extension): bool {
+		$htmlMimes = [
+			'text/html',
+			'application/xhtml+xml',
+		];
+		$textMimes = [
+			'text/plain',
+			'text/markdown',
+		];
 
-    }//end name()
+		if (in_array($mimeType, $htmlMimes, true) === true
+			|| $extension === 'html'
+			|| $extension === 'htm'
+			|| $extension === 'xhtml'
+		) {
+			return true;
+		}
 
-    /**
-     * Whether the backend is enabled in tenant config. mPDF is in-process
-     * and always available at the runtime level; the flag exists for
-     * cascade testing and to let tenants force fall-through.
-     *
-     * @return bool
-     */
-    public function isAvailable(): bool
-    {
-        $value = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
-        return $value !== 'false';
+		if (in_array($mimeType, $textMimes, true) === true
+			|| $extension === 'txt'
+			|| $extension === 'md'
+			|| $extension === 'markdown'
+		) {
+			return true;
+		}
 
-    }//end isAvailable()
+		return false;
+	}//end canHandle()
 
-    /**
-     * HTML and plain-text inputs only. Spreadsheet/presentation/Word
-     * formats are claimed by other backends earlier in the cascade.
-     *
-     * @param string $mimeType  Source MIME type.
-     * @param string $extension Lowercased extension without dot.
-     *
-     * @return bool
-     */
-    public function canHandle(string $mimeType, string $extension): bool
-    {
-        $htmlMimes = [
-            'text/html',
-            'application/xhtml+xml',
-        ];
-        $textMimes = [
-            'text/plain',
-            'text/markdown',
-        ];
+	/**
+	 * Convert the source. For TXT inputs, wrap the body in a minimal
+	 * `<pre>` envelope so mPDF preserves whitespace; for HTML the body
+	 * passes through unchanged. Output is written beside the source.
+	 *
+	 * @param File $source Source file node.
+	 *
+	 * @return File Newly written PDF file node.
+	 *
+	 * @throws ConversionFailedException When the PDF emission fails.
+	 */
+	public function convert(File $source): File {
+		$name = $source->getName();
+		$extension = $this->extractExtension(name: $name);
 
-        if (in_array($mimeType, $htmlMimes, true) === true
-            || $extension === 'html'
-            || $extension === 'htm'
-            || $extension === 'xhtml'
-        ) {
-            return true;
-        }
+		$rawContent = $source->getContent();
+		if (is_string($rawContent) === false) {
+			throw new ConversionFailedException(
+				message: 'mPDF backend could not read source content.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'getContent returned non-string',
+					],
+				]
+			);
+		}
 
-        if (in_array($mimeType, $textMimes, true) === true
-            || $extension === 'txt'
-            || $extension === 'md'
-            || $extension === 'markdown'
-        ) {
-            return true;
-        }
+		$isPlainText = in_array(
+			$extension,
+			['txt', 'md', 'markdown'],
+			true
+		);
 
-        return false;
+		$html = $rawContent;
+		if ($isPlainText === true) {
+			$html = $this->wrapPlainTextAsHtml(text: $rawContent);
+		}
 
-    }//end canHandle()
+		try {
+			$pdfBinary = $this->pdfService->generatePdfFromHtml(
+				html: $html,
+				options: [
+					'pdfa' => true,
+					'format' => 'A4',
+					'title' => $this->stripExtension(name: $name),
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'[MpdfBackend] mPDF rendering failed',
+				[
+					'source' => $source->getPath(),
+					'exception' => get_class($e),
+					'message' => $e->getMessage(),
+				]
+			);
+			throw new ConversionFailedException(
+				message: 'mPDF rendering threw: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'mPDF render exception: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}//end try
 
-    /**
-     * Convert the source. For TXT inputs, wrap the body in a minimal
-     * `<pre>` envelope so mPDF preserves whitespace; for HTML the body
-     * passes through unchanged. Output is written beside the source.
-     *
-     * @param File $source Source file node.
-     *
-     * @return File Newly written PDF file node.
-     *
-     * @throws ConversionFailedException When the PDF emission fails.
-     */
-    public function convert(File $source): File
-    {
-        $name   = $source->getName();
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            $extension = '';
-        } else {
-            $extension = strtolower(substr($name, ($dotPos + 1)));
-        }
+		// Write PDF beside the source. If a file with the target name
+		// already exists, delete it first — this is a fresh conversion,
+		// not an incremental update.
+		$parent = $source->getParent();
+		$outputName = $this->stripExtension(name: $name) . '.pdf';
+		if ($parent->nodeExists($outputName) === true) {
+			$parent->get($outputName)->delete();
+		}
 
-        $rawContent = $source->getContent();
-        if (is_string($rawContent) === false) {
-            throw new ConversionFailedException(
-                message: 'mPDF backend could not read source content.',
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'getContent returned non-string',
-                    ],
-                ]
-            );
-        }
+		return $parent->newFile($outputName, $pdfBinary);
+	}//end convert()
 
-        $isPlainText = in_array(
-            $extension,
-            ['txt', 'md', 'markdown'],
-            true
-        );
+	/**
+	 * Wrap a plain-text body in a minimal HTML envelope so mPDF emits
+	 * the text with monospace formatting and preserved whitespace.
+	 * The `<pre>` shape is faithful to the original layout.
+	 *
+	 * @param string $text UTF-8 plain text.
+	 *
+	 * @return string HTML document.
+	 */
+	private function wrapPlainTextAsHtml(string $text): string {
+		$escaped = htmlspecialchars($text, (ENT_QUOTES | ENT_SUBSTITUTE), 'UTF-8');
+		$preStyle = 'font-family:DejaVuSansMono,monospace; font-size:10pt; white-space:pre-wrap;';
+		return sprintf(
+			'<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre style="%s">%s</pre></body></html>',
+			$preStyle,
+			$escaped
+		);
 
-        if ($isPlainText === true) {
-            $html = $this->wrapPlainTextAsHtml(text: $rawContent);
-        } else {
-            $html = $rawContent;
-        }
+	}//end wrapPlainTextAsHtml()
 
-        try {
-            $pdfBinary = $this->pdfService->generatePdfFromHtml(
-                html: $html,
-                options: [
-                    'pdfa'   => true,
-                    'format' => 'A4',
-                    'title'  => $this->stripExtension(name: $name),
-                ]
-            );
-        } catch (Throwable $e) {
-            $this->logger->error(
-                '[MpdfBackend] mPDF rendering failed',
-                [
-                    'source'    => $source->getPath(),
-                    'exception' => get_class($e),
-                    'message'   => $e->getMessage(),
-                ]
-            );
-            throw new ConversionFailedException(
-                message: 'mPDF rendering threw: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'mPDF render exception: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }//end try
+	/**
+	 * Return the lowercased extension of $name without the leading dot.
+	 *
+	 * @param string $name File name, with or without an extension.
+	 *
+	 * @return string Lowercased extension, or an empty string when the name
+	 *                carries no dot.
+	 */
+	private function extractExtension(string $name): string {
+		$dotPos = strrpos($name, '.');
+		if ($dotPos === false) {
+			return '';
+		}
 
-        // Write PDF beside the source. If a file with the target name
-        // already exists, delete it first — this is a fresh conversion,
-        // not an incremental update.
-        $parent     = $source->getParent();
-        $outputName = $this->stripExtension(name: $name).'.pdf';
-        if ($parent->nodeExists($outputName) === true) {
-            $parent->get($outputName)->delete();
-        }
+		return strtolower(substr($name, ($dotPos + 1)));
+	}//end extractExtension()
 
-        return $parent->newFile($outputName, $pdfBinary);
+	/**
+	 * Return $name without its trailing `.ext` suffix, for use as a
+	 * title and PDF filename base.
+	 *
+	 * @param string $name File name with extension.
+	 *
+	 * @return string Name without extension.
+	 */
+	private function stripExtension(string $name): string {
+		$dotPos = strrpos($name, '.');
+		if ($dotPos === false) {
+			return $name;
+		}
 
-    }//end convert()
-
-    /**
-     * Wrap a plain-text body in a minimal HTML envelope so mPDF emits
-     * the text with monospace formatting and preserved whitespace.
-     * The `<pre>` shape is faithful to the original layout.
-     *
-     * @param string $text UTF-8 plain text.
-     *
-     * @return string HTML document.
-     */
-    private function wrapPlainTextAsHtml(string $text): string
-    {
-        $escaped  = htmlspecialchars($text, (ENT_QUOTES | ENT_SUBSTITUTE), 'UTF-8');
-        $preStyle = 'font-family:DejaVuSansMono,monospace; font-size:10pt; white-space:pre-wrap;';
-        return sprintf(
-            '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre style="%s">%s</pre></body></html>',
-            $preStyle,
-            $escaped
-        );
-
-    }//end wrapPlainTextAsHtml()
-
-    /**
-     * Return $name without its trailing `.ext` suffix, for use as a
-     * title and PDF filename base.
-     *
-     * @param string $name File name with extension.
-     *
-     * @return string Name without extension.
-     */
-    private function stripExtension(string $name): string
-    {
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            return $name;
-        }
-
-        return substr($name, 0, $dotPos);
-
-    }//end stripExtension()
+		return substr($name, 0, $dotPos);
+	}//end stripExtension()
 }//end class

@@ -1,9 +1,15 @@
 ---
-status: implementing
+status: in-progress
 or_adoption_change: docudesk-adopt-or-abstractions
 ---
 
 # Batch Anonymization
+
+**Status**: in-progress
+**Scope**: docudesk
+**OpenSpec changes**:
+- [docudesk-adopt-or-abstractions](../../changes/archive/2026-06-14-docudesk-adopt-or-abstractions/) _(implementing)_ — REQ-BANON-00: ICache batch state replaced by `batchAnonymizationJob` OR objects with per-file lifecycle children, scheduled via OR Background Jobs (kind: code)
+- [redaction-at-scale](../../changes/redaction-at-scale/) _(active)_ — batch anonymize becomes a background operation above the synchronous cap (HTTP 202 + work-unit processing, cancel/resume, throughput report, sampling QA) (kind: code)
 
 ## Purpose
 

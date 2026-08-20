@@ -1,7 +1,7 @@
 <script setup>
+import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 </script>
 
 <template>
@@ -34,17 +34,17 @@ import axios from '@nextcloud/axios'
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'File') }}</th>
-						<th class="col-number">
+						<th scope="col">{{ t('docudesk', 'File') }}</th>
+						<th scope="col" class="col-number">
 							{{ t('docudesk', 'Entities') }}
 						</th>
-						<th class="col-risk">
+						<th scope="col" class="col-risk">
 							{{ t('docudesk', 'Risk') }}
 						</th>
-						<th class="col-status">
+						<th scope="col" class="col-status">
 							{{ t('docudesk', 'Status') }}
 						</th>
-						<th class="col-ocr">
+						<th scope="col" class="col-ocr">
 							{{ t('docudesk', 'OCR') }}
 						</th>
 					</tr>
@@ -64,7 +64,10 @@ import axios from '@nextcloud/axios'
 							{{ file.entityCount }}
 						</td>
 						<td class="col-risk">
-							<span :class="'risk-badge risk-' + (file.riskLevel || 'none')">
+							<span
+								:class="
+									'risk-badge risk-' + (file.riskLevel || 'none')
+								">
 								{{ riskLevelLabel(file.riskLevel) }}
 							</span>
 						</td>
@@ -74,7 +77,8 @@ import axios from '@nextcloud/axios'
 							</span>
 						</td>
 						<td class="col-ocr">
-							<span v-if="file.ocrProcessed"
+							<span
+								v-if="file.ocrProcessed"
 								class="ocr-badge"
 								:title="t('docudesk', 'Processed with OCR')">
 								{{ t('docudesk', 'OCR') }}
@@ -102,12 +106,14 @@ export default {
 		NcLoadingIcon,
 		FileDocumentOutline,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			files: [],
@@ -115,6 +121,7 @@ export default {
 			error: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Deep link to the DocuDesk app from the widget footer.
@@ -125,9 +132,11 @@ export default {
 			return generateUrl('/apps/docudesk')
 		},
 	},
+
 	mounted() {
 		this.fetchFiles()
 	},
+
 	methods: {
 		/**
 		 * Fetch the processed-file list with risk assessment for the widget.
@@ -149,6 +158,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Build a Files-app link to a processed file.
 		 *
@@ -160,12 +170,19 @@ export default {
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
 				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
-				const dir = relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
-				const file = relativePath.substring(relativePath.lastIndexOf('/') + 1)
-				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', { dir, file })
+				const dir =
+					relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
+				const file = relativePath.substring(
+					relativePath.lastIndexOf('/') + 1,
+				)
+				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', {
+					dir,
+					file,
+				})
 			}
 			return generateUrl('/apps/files')
 		},
+
 		/**
 		 * Localized label for a file's personal-data risk level.
 		 *
@@ -182,6 +199,7 @@ export default {
 			}
 			return labels[level] || labels.none
 		},
+
 		/**
 		 * Localized label for a file's processing status.
 		 *
@@ -351,13 +369,13 @@ export default {
 }
 
 .status-extracted {
-	background-color: var(--color-warning-element-light, #fef3cd);
-	color: var(--color-warning-text, #856404);
+	background-color: var(--color-warning);
+	color: var(--color-warning-text);
 }
 
 .status-anonymized {
-	background-color: var(--color-success-element-light, #d4edda);
-	color: var(--color-success-text, #155724);
+	background-color: var(--color-success);
+	color: var(--color-success-text);
 }
 
 /* Risk badges */
@@ -375,23 +393,23 @@ export default {
 }
 
 .risk-low {
-	background-color: var(--color-info-element-light, #cce5ff);
-	color: var(--color-info-text, #004085);
+	background-color: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .risk-medium {
-	background-color: var(--color-warning-element-light, #fef3cd);
-	color: var(--color-warning-text, #856404);
+	background-color: var(--color-warning);
+	color: var(--color-warning-text);
 }
 
 .risk-high {
-	background-color: var(--color-error-element-light, #f8d7da);
-	color: var(--color-error-text, #721c24);
+	background-color: var(--color-error);
+	color: var(--color-error-text);
 }
 
 .risk-very_high {
-	background-color: var(--color-error);
-	color: white;
+	background-color: var(--color-element-error);
+	color: var(--color-primary-element-text);
 }
 
 /* Footer link */

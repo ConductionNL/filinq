@@ -52,173 +52,168 @@ use Psr\Log\LoggerInterface;
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class BatchAnonymizationControllerSummaryFlagTest extends TestCase
-{
+class BatchAnonymizationControllerSummaryFlagTest extends TestCase {
 
-    /**
-     * @var IRequest|MockObject
-     */
-    private IRequest|MockObject $mockRequest;
+	/**
+	 * @var IRequest|MockObject
+	 */
+	private IRequest|MockObject $mockRequest;
 
-    /**
-     * @var BatchAnonymizeService|MockObject
-     */
-    private BatchAnonymizeService|MockObject $mockAnonService;
+	/**
+	 * @var BatchAnonymizeService|MockObject
+	 */
+	private BatchAnonymizeService|MockObject $mockAnonService;
 
-    /**
-     * @var IL10N|MockObject
-     */
-    private IL10N|MockObject $mockL10n;
+	/**
+	 * @var IL10N|MockObject
+	 */
+	private IL10N|MockObject $mockL10n;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $mockUserSession;
+	/**
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $mockUserSession;
 
-    /**
-     * @var BatchAnonymizationController
-     */
-    private BatchAnonymizationController $controller;
+	/**
+	 * @var BatchAnonymizationController
+	 */
+	private BatchAnonymizationController $controller;
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->mockRequest     = $this->createMock(IRequest::class);
-        $this->mockAnonService = $this->createMock(BatchAnonymizeService::class);
-        $this->mockL10n        = $this->createMock(IL10N::class);
-        $this->mockL10n->method('t')->willReturnCallback(static fn($s) => $s);
+		$this->mockRequest = $this->createMock(IRequest::class);
+		$this->mockAnonService = $this->createMock(BatchAnonymizeService::class);
+		$this->mockL10n = $this->createMock(IL10N::class);
+		$this->mockL10n->method('t')->willReturnCallback(static fn ($s) => $s);
 
-        $mockUser = $this->createMock(IUser::class);
-        $this->mockUserSession = $this->createMock(IUserSession::class);
-        $this->mockUserSession->method('getUser')->willReturn($mockUser);
+		$mockUser = $this->createMock(IUser::class);
+		$this->mockUserSession = $this->createMock(IUserSession::class);
+		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
-        $this->controller = new BatchAnonymizationController(
-            appName: 'docudesk',
-            request: $this->mockRequest,
-            logger: $this->createMock(LoggerInterface::class),
-            stateService: $this->createMock(BatchStateService::class),
-            uploadService: $this->createMock(BatchUploadService::class),
-            extractService: $this->createMock(BatchExtractionService::class),
-            anonService: $this->mockAnonService,
-            reportService: $this->createMock(BatchReportService::class),
-            entityService: $this->createMock(EntityConsolidationService::class),
-            profileService: $this->createMock(WooProfileService::class),
-            folderBatchService: $this->createMock(FolderBatchService::class),
-            l10n: $this->mockL10n,
-            appConfig: $this->createMock(\OCP\IAppConfig::class),
-            userSession: $this->mockUserSession
-        );
+		$this->controller = new BatchAnonymizationController(
+			appName: 'docudesk',
+			request: $this->mockRequest,
+			logger: $this->createMock(LoggerInterface::class),
+			stateService: $this->createMock(BatchStateService::class),
+			uploadService: $this->createMock(BatchUploadService::class),
+			extractService: $this->createMock(BatchExtractionService::class),
+			anonService: $this->mockAnonService,
+			reportService: $this->createMock(BatchReportService::class),
+			entityService: $this->createMock(EntityConsolidationService::class),
+			profileService: $this->createMock(WooProfileService::class),
+			folderBatchService: $this->createMock(FolderBatchService::class),
+			l10n: $this->mockL10n,
+			appConfig: $this->createMock(\OCP\IAppConfig::class),
+			userSession: $this->mockUserSession
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Payload validation rejects a non-boolean appendBasisSummary on the batch endpoint.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
-     */
-    public function testBatchAnonymizeRejectsNonBooleanSummaryFlag(): void
-    {
-        $this->mockRequest->method('getParams')->willReturn(
-            [
-                'entities'           => [['text' => 'Test', 'type' => 'PERSON']],
-                'appendBasisSummary' => 'yes',
-            ]
-        );
+	/**
+	 * Payload validation rejects a non-boolean appendBasisSummary on the batch endpoint.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+	 */
+	public function testBatchAnonymizeRejectsNonBooleanSummaryFlag(): void {
+		$this->mockRequest->method('getParams')->willReturn(
+			[
+				'entities' => [['text' => 'Test', 'type' => 'PERSON']],
+				'appendBasisSummary' => 'yes',
+			]
+		);
 
-        $this->mockAnonService->expects($this->never())->method('anonymizeBatch');
+		$this->mockAnonService->expects($this->never())->method('anonymizeBatch');
 
-        $response = $this->controller->batchAnonymize(batchId: 'batch-1');
+		$response = $this->controller->batchAnonymize(batchId: 'batch-1');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(400, $response->getStatus());
-        $data = $response->getData();
-        $this->assertArrayHasKey('error', $data);
-        $this->assertStringContainsString('appendBasisSummary', $data['error']);
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertArrayHasKey('error', $data);
+		$this->assertStringContainsString('appendBasisSummary', $data['error']);
 
-    }//end testBatchAnonymizeRejectsNonBooleanSummaryFlag()
+	}//end testBatchAnonymizeRejectsNonBooleanSummaryFlag()
 
-    /**
-     * Flag true is forwarded to the batch anonymize service.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
-     */
-    public function testBatchAnonymizeForwardsFlagTrueToService(): void
-    {
-        $entities = [['text' => 'Test', 'type' => 'PERSON']];
+	/**
+	 * Flag true is forwarded to the batch anonymize service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+	 */
+	public function testBatchAnonymizeForwardsFlagTrueToService(): void {
+		$entities = [['text' => 'Test', 'type' => 'PERSON']];
 
-        $this->mockRequest->method('getParams')->willReturn(
-            [
-                'entities'           => $entities,
-                'appendBasisSummary' => true,
-            ]
-        );
+		$this->mockRequest->method('getParams')->willReturn(
+			[
+				'entities' => $entities,
+				'appendBasisSummary' => true,
+			]
+		);
 
-        $this->mockAnonService->expects($this->once())
-            ->method('anonymizeBatch')
-            ->with(
-                batchId: 'batch-2',
-                entities: $entities,
-                appendBasisSummary: true
-            )
-            ->willReturn(
-                [
-                    'batchId'        => 'batch-2',
-                    'batchStatus'    => 'completed',
-                    'processedFiles' => 1,
-                    'skippedFiles'   => [],
-                    'totalFiles'     => 1,
-                ]
-            );
+		$this->mockAnonService->expects($this->never())->method('anonymizeBatch');
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeBatchWithBasisSummary')
+			->with(
+				batchId: 'batch-2',
+				entities: $entities
+			)
+			->willReturn(
+				[
+					'batchId' => 'batch-2',
+					'batchStatus' => 'completed',
+					'processedFiles' => 1,
+					'skippedFiles' => [],
+					'totalFiles' => 1,
+				]
+			);
 
-        $response = $this->controller->batchAnonymize(batchId: 'batch-2');
+		$response = $this->controller->batchAnonymize(batchId: 'batch-2');
 
-        $this->assertSame(200, $response->getStatus());
+		$this->assertSame(200, $response->getStatus());
 
-    }//end testBatchAnonymizeForwardsFlagTrueToService()
+	}//end testBatchAnonymizeForwardsFlagTrueToService()
 
-    /**
-     * Flag omitted defaults to false — service is called with appendBasisSummary=false.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
-     */
-    public function testBatchAnonymizeFlagDefaultsToFalse(): void
-    {
-        $entities = [['text' => 'Test', 'type' => 'PERSON']];
+	/**
+	 * Flag omitted defaults to false — service is called with appendBasisSummary=false.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+	 */
+	public function testBatchAnonymizeFlagDefaultsToFalse(): void {
+		$entities = [['text' => 'Test', 'type' => 'PERSON']];
 
-        $this->mockRequest->method('getParams')->willReturn(['entities' => $entities]);
+		$this->mockRequest->method('getParams')->willReturn(['entities' => $entities]);
 
-        $this->mockAnonService->expects($this->once())
-            ->method('anonymizeBatch')
-            ->with(
-                batchId: 'batch-3',
-                entities: $entities,
-                appendBasisSummary: false
-            )
-            ->willReturn(
-                [
-                    'batchId'        => 'batch-3',
-                    'batchStatus'    => 'completed',
-                    'processedFiles' => 1,
-                    'skippedFiles'   => [],
-                    'totalFiles'     => 1,
-                ]
-            );
+		$this->mockAnonService->expects($this->never())->method('anonymizeBatchWithBasisSummary');
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeBatch')
+			->with(
+				batchId: 'batch-3',
+				entities: $entities
+			)
+			->willReturn(
+				[
+					'batchId' => 'batch-3',
+					'batchStatus' => 'completed',
+					'processedFiles' => 1,
+					'skippedFiles' => [],
+					'totalFiles' => 1,
+				]
+			);
 
-        $response = $this->controller->batchAnonymize(batchId: 'batch-3');
+		$response = $this->controller->batchAnonymize(batchId: 'batch-3');
 
-        $this->assertSame(200, $response->getStatus());
+		$this->assertSame(200, $response->getStatus());
 
-    }//end testBatchAnonymizeFlagDefaultsToFalse()
+	}//end testBatchAnonymizeFlagDefaultsToFalse()
 }//end class

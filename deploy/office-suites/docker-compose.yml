@@ -1,0 +1,78 @@
+# DocuDesk office-suite sidecars — the two WOPI clients ADR-087 names.
+#
+# ⚠️ NEXTCLOUD IS THE WOPI **HOST**, NOT THE CLIENT. This is the distinction the
+# document-editing-tools spec originally got wrong and it changes what has to be
+# deployed. `richdocuments` implements the host endpoints
+# (`/apps/richdocuments/wopi/files/{fileId}`); the suites below are *clients*
+# that consume them. DocuDesk's own `editDocument` is likewise a CLIENT of
+# Nextcloud's host — so the headless editing path needs `richdocuments`
+# installed, and needs NEITHER of these containers.
+#
+# What these are for is the half ADR-087 cannot otherwise verify: **portability**.
+# The ADR forbids a capability that works on one suite only, and the spec says a
+# type editable on one suite alone ships as suite-specific rather than as
+# supported. Neither claim is measurable with a single suite installed, and an
+# unmeasured portability claim is exactly the kind this fleet has been bitten by.
+#
+# Unlike the speech sidecars, BOTH images here are vendor-official.
+#
+# Note on Euro-Office: it is a fork of the ONLYOFFICE codebase and does not (at
+# time of writing) publish its own document-server image. `onlyoffice/documentserver`
+# is therefore the closest available stand-in — it exercises the SAME lineage and
+# the same WOPI implementation, but a green result against it is evidence about
+# ONLYOFFICE, not proof about Euro-Office. Say so in any report that uses it.
+#
+# SPDX-License-Identifier: EUPL-1.2
+# Copyright 2026 Conduction B.V.
+
+services:
+  # ---------------------------------------------------------------------------
+  # Collabora Online (LibreOffice lineage). Vendor-official image.
+  # Strongest ODF and legacy .doc/.xls/.ppt fidelity; carries Draw (.odg).
+  # ---------------------------------------------------------------------------
+  docudesk-collabora:
+    image: collabora/code:latest
+    container_name: docudesk-collabora
+    restart: unless-stopped
+    environment:
+      # The Nextcloud origin allowed to embed this editor. Dots must be escaped —
+      # this is a regex, and an unescaped dot silently widens the allowlist.
+      - aliasgroup1=http://host\.docker\.internal:8080
+      - username=admin
+      - password=admin
+      # Disable TLS only because this is a loopback-bound dev deployment.
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true
+    ports:
+      - '127.0.0.1:9980:9980'
+    cap_add:
+      # Collabora's per-document sandbox needs it; documented rather than silently granted.
+      - MKNOD
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:9980/hosting/discovery >/dev/null || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # ONLYOFFICE Document Server — the lineage Euro-Office forked. Vendor-official.
+  #
+  # ⚠️ WOPI IS OFF BY DEFAULT here. That is the concrete reason ADR-087 requires
+  # a real CheckFileInfo probe rather than "is the app installed" — this suite
+  # can be fully present and still refuse every WOPI call.
+  # ---------------------------------------------------------------------------
+  docudesk-onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: docudesk-onlyoffice
+    restart: unless-stopped
+    environment:
+      - JWT_ENABLED=true
+      - JWT_SECRET=CHANGE_ME_LOCAL_DEV_ONLY
+      # Turns on the WOPI handlers that ship disabled.
+      - WOPI_ENABLED=true
+    ports:
+      - '127.0.0.1:9981:80'
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost/healthcheck || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5

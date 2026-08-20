@@ -2,22 +2,278 @@ name: Code Quality
 
 on:
   push:
-    branches: [main, development, feature/**, bugfix/**, hotfix/**]
+    # An ALLOW-LIST of branch prefixes is a gate with a hole in it, and the
+    # hole is SILENT: a branch matching nothing gets no CI at all, and its last
+    # visible status is whatever it inherited — indistinguishable, on every
+    # dashboard, from a branch that passed.
+    #
+    # Two live examples, both found 2026-08-14: `perf/**` was uncovered in
+    # openconnector, where a merge carrying unresolved conflict markers and 84
+    # failing tests was pushed and nothing ran; and `feat/**` was uncovered in
+    # openregister — note the list said `feature/**`, so every branch anyone
+    # named `feat/...` had been running unchecked.
+    #
+    # Prefixes are added rather than replaced with `**` because this workflow is
+    # expensive (PHPUnit matrix, Newman, Playwright). The fast structural checks
+    # DO run on `**` — see merge-hygiene.yml, added in the same change.
+    #
+    # ⚠️ Adding prefixes is not the durable fix; the next invented one is
+    # uncovered again. The durable fix is branch protection requiring a PR into
+    # development, which the pull_request trigger below already gates correctly.
+    branches:
+      - main
+      - development
+      - feature/**
+      - feat/**
+      - bugfix/**
+      - hotfix/**
+      - perf/**
+      - refactor/**
+      - chore/**
+      - fix/**
   pull_request:
     branches: [main, beta, development]
   workflow_dispatch:
 
+# Deduplicating a `push` run against the `pull_request` run for the SAME head
+# ref is the point of this block, and for a feature branch it is exactly right:
+# two runs of identical jobs, one of them wasted.
+#
+# It is wrong for `main` and `development`, because the push run there is NOT a
+# duplicate — it is the only carrier of the push-only jobs: "Coverage Baseline
+# Check" (`github.event_name == 'push'`), "SBOM" and "Features Extract". And
+# those two branches always have an open PR whose `head_ref` IS the branch
+# name: the standing "Release: merge development into beta" (#71 here).
+# `github.head_ref` on that PR run and `github.ref_name` on the push run both
+# render the identical group `quality-development`, and `cancel-in-progress`
+# then kills whichever started first — normally the push run.
+#
+# HONEST SCOPE OF THE EVIDENCE HERE: unlike the rest of the fleet, this repo
+# shows NO concurrency-cancelled `development` push run in its last 20, and its
+# push-only jobs demonstrably DO execute (run 31045437704: Features Extract
+# success, SBOM success, Coverage Baseline Check failure). So this change is
+# PREVENTIVE, not a repair of an observed outage — the collision is latent in
+# the expression and has simply not won the race here yet. It is applied for
+# fleet uniformity with openconnector#1158, where the same expression cancelled
+# 15 of the last 20 push runs.
+#
+# Suffixing only the default-branch push keeps feature-branch dedup untouched
+# (`quality-feature/x` for both events, exactly as before) and gives the two
+# default branches' push runs a lane of their own.
+concurrency:
+  group: quality-${{ github.head_ref || github.ref_name }}${{ (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'development')) && '-push' || '' }}
+  cancel-in-progress: true
+
+# Permission CEILING for the called quality pipeline. GitHub statically
+# validates the called workflow's declared job permissions against this
+# grant — even for jobs that are disabled — so it must cover the maximum
+# any nested job declares: journeydoc-capture (contents+actions write),
+# update-baseline / features-extract (contents write), and the Quality
+# Report PR comment (issues / pull-requests write).
+permissions:
+  contents: write
+  actions: write
+  issues: write
+  pull-requests: write
+
 jobs:
   quality:
-    uses: Conduction/.github/.github/workflows/quality.yml@main
+    uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: docudesk
       php-version: "8.3"
-      nextcloud-test-refs: '["stable32"]'
+      # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
+      # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
+      # a leg. Adopting NC 34 by REPLACING the list left 32 and 33 advertised to
+      # the App Store with no job touching them — the declared floor became the
+      # untested end, which is the same drift as never testing 34, reversed.
+      # stable34 leads because newman, playwright and journeydoc-capture all read
+      # `fromJSON(inputs.nextcloud-test-refs)[0]` as their single server, and 34
+      # is the major this app had never been exercised on.
+      nextcloud-test-refs: '["stable34", "stable32", "stable33"]'
       enable-psalm: true
       enable-phpstan: true
       enable-phpmetrics: true
       enable-frontend: true
       enable-eslint: true
+      # `enable-frontend` only buys eslint + stylelint. The repo's own frontend
+      # suites are opt-in through `frontend-checks`, which was never set — so
+      # the 77-test Jest suite, the 45-test Vitest suite, the manifest schema
+      # validation and the l10n key check had NEVER executed on a pull request.
+      # Each entry becomes its own "Frontend Check (<script>)" job and must
+      # exist in package.json and be self-contained.
+      #
+      # `format` (prettier --check) is listed because the shared workflow has NO
+      # prettier job of its own — `quality.yml` runs eslint and stylelint and
+      # mentions prettier ZERO times. This repo already carries
+      # `@nextcloud/prettier-config` and a `format` script, so without this leg
+      # `npm run format` never runs outside a developer's editor and the tree
+      # drifts straight back out of format between merges — the same inert-
+      # formatter failure mode that made the old `.prettierrc` worth deleting.
+      # Centralising the config never stopped drift; the gate does.
+      # Measured on this tree before enabling: PASSES, 174 of 203 tracked
+      # frontend files in scope (phpmetrics/, docs/ and l10n/ excluded via
+      # .prettierignore — phpmetrics/ is tracked despite being gitignored, so
+      # the explicit entry is what keeps 15 generated report files out).
+      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n", "format"]'
       enable-phpunit: true
-      additional-apps: '[{"repo":"Conduction/openregister","app":"openregister","ref":"beta"}]'
+      # OpenRegister is a hard dependency: DocuDesk stores every template,
+      # signing request and consent record as an OpenRegister object, and
+      # `tests/e2e/ci-seed.sh` provisions the registers through OpenRegister's
+      # own admin importer. Tracking `development` rather than `beta` so CI
+      # exercises the same OpenRegister the rest of the fleet integrates
+      # against; `beta` lags and the importer contract this seed relies on
+      # (`POST /api/configurations/import`) is read from `development`.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
+      # Shared `E2E Tests (Playwright)` job.
+      #
+      # `playwright-test-path` does double duty: it is where the job looks for
+      # spec files AND the first place it looks for a config. The workflow runs
+      # `npx playwright test --config=<path>/playwright.config.ts` with NO
+      # `--project`, so every project in whichever config it picks would run.
+      # Pointing it at `tests/e2e` selects the CI-only config declared there,
+      # which has just the regression project — the root `playwright.config.ts`
+      # also declares `docs-capture` (owned by the Journeydoc job) and `visual`
+      # (whose PNG baselines are host-font/GPU specific and cannot byte-match on
+      # a CI Linux runner).
+      enable-playwright: true
+      playwright-test-path: tests/e2e
+      # Provisions the OpenRegister registers/schemas and the app-config
+      # object-type bindings DocuDesk needs, then gates on the frontend bundle
+      # actually serving as JavaScript. Runs with cwd = Nextcloud server root.
+      playwright-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh'
+
+      # ── Integration tests ────────────────────────────────────────────────
+      # `enable-newman` defaults to FALSE and this caller never set it, so
+      # tests/integration/docudesk.postman_collection.json had never executed in
+      # CI. It sits at the default `newman-collection-path` (tests/integration),
+      # which is both the directory the validator counts collections in and the
+      # directory the run step globs `*.postman_collection.json` in — flat, not
+      # recursively.
+      #
+      # THAT FLATNESS HID A SECOND SUITE. `tests/newman/` held two more
+      # collections that no CI step has ever executed, because the glob only
+      # ever visits ONE directory and `newman-collection-path` is never set
+      # away from its default. Measured 2026-08-09:
+      #
+      #   tests/newman/docudesk-api.postman_collection.json
+      #       50 requests / 107 pm.test assertions. NOT ONE request declared
+      #       `OCS-APIRequest`, so all 39 of its writes (34 POST + 5 DELETE)
+      #       would have been rejected 412 by Nextcloud middleware before
+      #       reaching a controller — it had never exercised a write path.
+      #   tests/newman/docudesk-api-collection.json
+      #       8 requests / 15 assertions, and invisible even to the validator:
+      #       its name does not match `*.postman_collection.json`. Its own
+      #       `baseUrl` variable was the literal string "{{baseUrl}}".
+      #
+      # Both are now repaired and moved INTO tests/integration, so the existing
+      # flat glob runs all three. Keeping the default path (rather than
+      # repointing it at tests/newman) is deliberate: repointing would have
+      # de-selected the one collection that does run today.
+      enable-newman: true
+
+      # The Newman job needs the SAME provisioning the Playwright job gets, and
+      # for the same reason: DocuDesk resolves every template / consent /
+      # signing write through app-config bindings
+      # (`<schemaSlug>_register` / `_schema`) that an ADMINISTRATOR sets in the
+      # admin settings UI. Nothing auto-provisions them on a fresh install
+      # except `templateVersion_*`. `newman-seed-command` was never set, so the
+      # collection ran against an instance where they were all empty.
+      #
+      # Measured on run 31074205317 (job 92528887929, branch development):
+      # 19 of 66 assertions failed, and every one of them traced to that.
+      # `OpenRegisterResolver::getRegisterAndSchema()` throws
+      # RegisterNotConfiguredException with code 0, so
+      # `TemplateRequestHandler::buildErrorResponse()` maps it to 500 — hence
+      # the 500s on template create/show/update/delete and on signing
+      # create/show/cancel. Consent has its own shape:
+      # `ConsentController::notConfiguredResponse()` answers 400, which is the
+      # two `/api/consents` failures. The two endpoints that DID pass
+      # (`GET /api/templates`, `GET /api/signing/requests`) are precisely the
+      # two that catch RegisterNotConfiguredException and return an empty
+      # `notConfigured: true` list — a green assertion over a store the
+      # collection could never write to.
+      #
+      # `ci-seed.sh` already documents and performs exactly this provisioning
+      # for Playwright; the `api` argument reuses it verbatim and only skips
+      # the closing SPA-bundle gate, which would `exit 1` here because the
+      # Newman job has no frontend build step.
+      newman-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh api'
+
+      # ── Coverage ratchet ─────────────────────────────────────────────────
+      # `enable-coverage-guard` defaults to FALSE, which is why both
+      # "Coverage Baseline Protection" and "Coverage Baseline Check" have only
+      # ever reported `skipped`. It needs two inputs this repo did not have,
+      # both added in this commit: `scripts/coverage-guard.php` (byte-identical
+      # to openregister's) and `.coverage-baseline` = 52.88, this repo's own
+      # measured coverage (5796 of 10961 statements) read from clover.xml in the
+      # `coverage-report` artifact of run 30911556572.
+      enable-coverage-guard: true
+
+      # ── Hydra mechanical gates ───────────────────────────────────────────
+      # `enable-hydra-gates` defaults to FALSE, so this tier has never executed
+      # here — the job reported `skipped`, which the Quality Report renders
+      # identically to a pass.
+      # `enable-axe` was deliberately NOT set, on the grounds that "a vanilla
+      # Nextcloud 34 already carries serious/critical violations on core's OWN
+      # routes that DOM scoping does not remove". That reasoning was correct
+      # when it was written and is now out of date: ConductionNL/.github#161
+      # ("scope axe to the app's own DOM, and prove the scope is not a mute"),
+      # re-landed as #168, gives the runner an AxeBuilder.include scope, and it
+      # measured /apps/openregister/ 2 serious/critical -> 0 and /apps/hermiq/
+      # 1 -> 0, with every violation removed being core's. So the exclusion the
+      # opt-out was hand-rolling now exists upstream.
+      #
+      # It is a SCOPE, not a mute, and the runner proves that on every run: it
+      # injects a deliberate violation INSIDE the container and asserts axe
+      # reports it, then injects the same violation OUTSIDE and asserts axe does
+      # not. A selector list matching nothing is a hard failure rather than an
+      # empty pass. That is why this is safe to turn on without also taking a
+      # baseline — and a rule/fingerprint baseline would be the wrong tool
+      # anyway: DOM scoping excludes TERRITORY, while a baseline suppresses
+      # FINDINGS, including future ones on our own markup.
+      enable-axe: true
+
+      # NOT the `#content-vue, #content` default. DocuDesk mounts on a dedicated
+      # host element — `templates/index.php` renders exactly
+      # `<div id="docudesk-app"></div>` and `src/main.js` mounts there — for a
+      # documented reason: Vue 3's mount() renders INSIDE the match, so mounting
+      # on `#content` would nest the app inside Nextcloud's own wrapper from
+      # layout.user.php and leave two `#content` elements, with which one gets
+      # matched undefined.
+      #
+      # Core's layout wraps that div in `#content`, so the default selector
+      # WOULD match — and would drag core's chrome (navigation, header, app
+      # menu) back inside the scope, re-attributing core's violations to this
+      # app. `#docudesk-app` is exactly this app's own rendered DOM and nothing
+      # else, which is what the input is for.
+      axe-include-selector: '#docudesk-app'
+      enable-hydra-gates: true
+      # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
+      # to @main, and this workflow is itself consumed at @main, so the two
+      # sides move together and a gate fix reaches this repo without a commit
+      # in this repo. A pin is a silent expiry date: 22 repos sat on v1.0.1 and
+      # 16 gates were dead fleet-wide while every one reported PASS (.github#159),
+      # and a default flipped at @main later reached those old runners and made
+      # them red on gates they had no subject matter for (.github#173).
+      # To hold this repo still for a specific reason, set the input explicitly
+      # and say why — it is still honoured. To roll back for everyone, revert on
+      # ConductionNL/.github main.
+      #
+      # THIRD CAUSE, and the one that is failing this repo RIGHT NOW
+      # (.github#177): quality.yml@main began executing three gate helpers BY
+      # NAME — check_spec_anchors.py, check_form_labels.py and
+      # check_license_triangle.py — which exist in NO tag before v1.5.0.
+      # Verified by DIRECTORY LISTING of each tag, not by per-file lookups:
+      # those answered "present" uniformly across v1.0.0..v1.5.0, and the
+      # uniformity across independent inputs was the tell that the instrument
+      # was wrong. So the Hydra Gates job here fails at "Verify the pinned gates
+      # package satisfies this workflow", before a single gate runs, with the
+      # workflow's own words: "This is NOT a code-quality finding about your
+      # repository." Removing the pin is the repair.
+      #
+      # Unpinning also picks up v1.5.1's push scoping (.github#179): on a push to
+      # `development`, `origin/development` IS `HEAD`, so the diff was empty by
+      # construction — <= v1.4.0 passed over it (permanently green) and v1.5.0
+      # refused with exit 99 (permanently red). The scope is now
+      # `github.event.before...HEAD`, what the push actually changed.

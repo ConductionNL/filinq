@@ -40,69 +40,60 @@ use OCP\EventDispatcher\Event;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class SignerChainCompletedEvent extends Event
-{
-    /**
-     * Constructor.
-     *
-     * @param ApprovalChain $chain      The OR approval chain that completed.
-     * @param ApprovalStep  $finalStep  The final approved step.
-     * @param string        $userId     UID of the user who approved the final step.
-     * @param string        $objectUuid Signing-request UUID.
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly ApprovalChain $chain,
-        private readonly ApprovalStep $finalStep,
-        private readonly string $userId,
-        private readonly string $objectUuid
-    ) {
-        parent::__construct();
+class SignerChainCompletedEvent extends Event {
+	/**
+	 * Constructor.
+	 *
+	 * @param ApprovalChain $chain The OR approval chain that completed.
+	 * @param ApprovalStep $finalStep The final approved step.
+	 * @param string $userId UID of the user who approved the final step.
+	 * @param string $objectUuid Signing-request UUID.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly ApprovalChain $chain,
+		private readonly ApprovalStep $finalStep,
+		private readonly string $userId,
+		private readonly string $objectUuid,
+	) {
+		parent::__construct();
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the completed chain.
-     *
-     * @return ApprovalChain The OR approval chain.
-     */
-    public function getChain(): ApprovalChain
-    {
-        return $this->chain;
+	/**
+	 * Get the completed chain.
+	 *
+	 * @return ApprovalChain The OR approval chain.
+	 */
+	public function getChain(): ApprovalChain {
+		return $this->chain;
+	}//end getChain()
 
-    }//end getChain()
+	/**
+	 * Get the final approved step.
+	 *
+	 * @return ApprovalStep The final OR approval step.
+	 */
+	public function getFinalStep(): ApprovalStep {
+		return $this->finalStep;
+	}//end getFinalStep()
 
-    /**
-     * Get the final approved step.
-     *
-     * @return ApprovalStep The final OR approval step.
-     */
-    public function getFinalStep(): ApprovalStep
-    {
-        return $this->finalStep;
+	/**
+	 * Get the UID of the user who approved the final step.
+	 *
+	 * @return string Nextcloud user ID.
+	 */
+	public function getUserId(): string {
+		return $this->userId;
+	}//end getUserId()
 
-    }//end getFinalStep()
-
-    /**
-     * Get the UID of the user who approved the final step.
-     *
-     * @return string Nextcloud user ID.
-     */
-    public function getUserId(): string
-    {
-        return $this->userId;
-
-    }//end getUserId()
-
-    /**
-     * Get the docudesk signing-request UUID this chain backed.
-     *
-     * @return string Signing-request UUID.
-     */
-    public function getSigningRequestUuid(): string
-    {
-        return $this->objectUuid;
-
-    }//end getSigningRequestUuid()
+	/**
+	 * Get the docudesk signing-request UUID this chain backed.
+	 *
+	 * @return string Signing-request UUID.
+	 */
+	public function getSigningRequestUuid(): string {
+		return $this->objectUuid;
+	}//end getSigningRequestUuid()
 }//end class

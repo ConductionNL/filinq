@@ -1,25 +1,43 @@
 <template>
 	<div class="signing-request-form">
 		<h2>{{ t('docudesk', 'New Signing Request') }}</h2>
+		<NcNoteCard type="info" class="signing-request-form__notice">
+			{{
+				t(
+					'docudesk',
+					'This composes a draft signing request only. Sending for signature, provider binding and signer-identity assertion are not available yet — the signature level below records your intent but is not yet cryptographically enforced.',
+				)
+			}}
+		</NcNoteCard>
 		<div class="form-group">
-			<label>{{ t('docudesk', 'Document File ID') }}</label>
-			<input v-model="form.documentFileId" type="text">
+			<label for="signing-request-document-file-id">{{
+				t('docudesk', 'Document File ID')
+			}}</label>
+			<input
+				id="signing-request-document-file-id"
+				v-model="form.documentFileId"
+				type="text" />
 		</div>
 		<div class="form-group">
-			<label>{{ t('docudesk', 'Document Name') }}</label>
-			<input v-model="form.documentName" type="text">
+			<label for="signing-request-document-name">{{
+				t('docudesk', 'Document Name')
+			}}</label>
+			<input
+				id="signing-request-document-name"
+				v-model="form.documentName"
+				type="text" />
 		</div>
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signature Level') }}</label>
 			<select v-model="form.signatureLevel">
 				<option value="SES">
-					SES - Simple
+					{{ t('docudesk', 'SES - Simple') }}
 				</option>
 				<option value="AdES">
-					AdES - Advanced
+					{{ t('docudesk', 'AdES - Advanced') }}
 				</option>
 				<option value="QES">
-					QES - Qualified
+					{{ t('docudesk', 'QES - Qualified') }}
 				</option>
 			</select>
 		</div>
@@ -34,39 +52,53 @@
 				</option>
 			</select>
 		</div>
-		<NcButton type="primary" :disabled="!form.documentFileId || !form.documentName" @click="submit">
+		<NcButton
+			variant="primary"
+			:disabled="!form.documentFileId || !form.documentName"
+			@click="submit">
 			{{ t('docudesk', 'Create Signing Request') }}
 		</NcButton>
 	</div>
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcNoteCard } from '@nextcloud/vue'
 import { useSigningStore } from '../../store/modules/signing.js'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'SigningRequestForm',
-	components: { NcButton },
+	components: { NcButton, NcNoteCard },
 	data() {
 		return {
-			form: { documentFileId: '', documentName: '', signatureLevel: 'SES', signingMode: 'sequential', signers: [] },
+			form: {
+				documentFileId: '',
+				documentName: '',
+				signatureLevel: 'SES',
+				signingMode: 'sequential',
+				signers: [],
+			},
 		}
 	},
+
 	methods: {
 		t,
 		/**
-		 * Validate and submit the new signing request form.
+		 * Validate and submit the new signing request form. Drafts a
+		 * signingRequest record only (POST signing#createRequest) — this
+		 * does not send for signature, bind a provider, or assert signer
+		 * identity, so it stays within the non-trust-bearing composition
+		 * this restored page is scoped to (design.md D4).
 		 *
-		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-4
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-signing-authoring-and-verify-are-reachable-with-trust-actions-gated-req-ddosr-004
 		 */
 		async submit() {
 			const signingStore = useSigningStore()
 			const result = await signingStore.createSigningRequest(this.form)
 			if (result) {
 				showSuccess(t('docudesk', 'Signing request created'))
-				this.$router.push({ name: 'Signing' })
+				this.$router.push({ name: 'SigningRequests' })
 			} else {
 				showError(t('docudesk', 'Failed to create signing request'))
 			}
@@ -79,6 +111,10 @@ export default {
 .signing-request-form {
 	padding: 20px;
 	max-width: 600px;
+}
+
+.signing-request-form__notice {
+	margin-bottom: 16px;
 }
 
 .form-group {

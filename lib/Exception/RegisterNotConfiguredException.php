@@ -36,7 +36,6 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class RegisterNotConfiguredException extends RuntimeException
-{
+class RegisterNotConfiguredException extends RuntimeException {
 
 }//end class

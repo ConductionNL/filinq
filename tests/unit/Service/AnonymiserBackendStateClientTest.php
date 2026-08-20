@@ -37,147 +37,140 @@ use RuntimeException;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class AnonymiserBackendStateClientTest extends TestCase
-{
+class AnonymiserBackendStateClientTest extends TestCase {
 
-    /**
-     * @var ContainerInterface|MockObject
-     */
-    private ContainerInterface|MockObject $mockContainer;
+	/**
+	 * @var ContainerInterface|MockObject
+	 */
+	private ContainerInterface|MockObject $mockContainer;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * @var AnonymiserBackendStateClient
-     */
-    private AnonymiserBackendStateClient $client;
+	/**
+	 * @var AnonymiserBackendStateClient
+	 */
+	private AnonymiserBackendStateClient $client;
 
-    /**
-     * Set up test environment.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->mockContainer = $this->createMock(ContainerInterface::class);
-        $this->mockLogger    = $this->createMock(LoggerInterface::class);
+		$this->mockContainer = $this->createMock(ContainerInterface::class);
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
 
-        $this->client = new AnonymiserBackendStateClient(
-            container: $this->mockContainer,
-            logger: $this->mockLogger,
-        );
+		$this->client = new AnonymiserBackendStateClient(
+			container: $this->mockContainer,
+			logger: $this->mockLogger,
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test that getState() returns `regex` defaults when OR service is unavailable.
-     *
-     * Covers: spec scenario "state query returns regex when OR companion not deployed".
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-4
-     */
-    public function testGetStateReturnsDefaultsWhenServiceUnavailable(): void
-    {
-        $this->mockContainer
-            ->method('get')
-            ->willThrowException(new RuntimeException('Service not found'));
+	/**
+	 * Test that getState() returns `regex` defaults when OR service is unavailable.
+	 *
+	 * Covers: spec scenario "state query returns regex when OR companion not deployed".
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-4
+	 */
+	public function testGetStateReturnsDefaultsWhenServiceUnavailable(): void {
+		$this->mockContainer
+			->method('get')
+			->willThrowException(new RuntimeException('Service not found'));
 
-        $this->mockLogger->expects($this->once())
-            ->method('debug');
+		$this->mockLogger->expects($this->once())
+			->method('debug');
 
-        $state = $this->client->getState();
+		$state = $this->client->getState();
 
-        $this->assertSame('regex', $state['method']);
-        $this->assertFalse($state['appApiInstalled']);
+		$this->assertSame('regex', $state['method']);
+		$this->assertFalse($state['appApiInstalled']);
 
-    }//end testGetStateReturnsDefaultsWhenServiceUnavailable()
+	}//end testGetStateReturnsDefaultsWhenServiceUnavailable()
 
-    /**
-     * Test that getState() delegates to the OR service when available.
-     *
-     * Covers: spec scenario "state query returns openanonymiser → banner suppressed".
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-4
-     */
-    public function testGetStateDelegatesToOpenRegisterService(): void
-    {
-        $expected = ['method' => 'openanonymiser', 'appApiInstalled' => true];
+	/**
+	 * Test that getState() delegates to the OR service when available.
+	 *
+	 * Covers: spec scenario "state query returns openanonymiser → banner suppressed".
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-4
+	 */
+	public function testGetStateDelegatesToOpenRegisterService(): void {
+		$expected = ['method' => 'openanonymiser', 'appApiInstalled' => true];
 
-        $orService = $this->createMock(\stdClass::class);
-        // PHPUnit stdClass mock does not allow arbitrary method expectations;
-        // use an anonymous class that behaves like the OR service instead.
-        $orServiceLike = new class ($expected) {
-            public function __construct(private readonly array $state)
-            {
-            }
+		$orService = $this->createMock(\stdClass::class);
+		// PHPUnit stdClass mock does not allow arbitrary method expectations;
+		// use an anonymous class that behaves like the OR service instead.
+		$orServiceLike = new class($expected) {
+			public function __construct(
+				private readonly array $state,
+			) {
+			}
 
-            public function getState(): array
-            {
-                return $this->state;
-            }
-        };
+			public function getState(): array {
+				return $this->state;
+			}
+		};
 
-        $this->mockContainer
-            ->expects($this->once())
-            ->method('get')
-            ->with('OCA\OpenRegister\Service\AnonymisationBackendService')
-            ->willReturn($orServiceLike);
+		$this->mockContainer
+			->expects($this->once())
+			->method('get')
+			->with('OCA\OpenRegister\Service\AnonymisationBackendService')
+			->willReturn($orServiceLike);
 
-        $state = $this->client->getState();
+		$state = $this->client->getState();
 
-        $this->assertSame('openanonymiser', $state['method']);
-        $this->assertTrue($state['appApiInstalled']);
+		$this->assertSame('openanonymiser', $state['method']);
+		$this->assertTrue($state['appApiInstalled']);
 
-    }//end testGetStateDelegatesToOpenRegisterService()
+	}//end testGetStateDelegatesToOpenRegisterService()
 
-    /**
-     * Test that getState() returns `regex` defaults when method key is absent.
-     *
-     * Defensive: OR service exists but returns unexpected shape.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-4
-     */
-    public function testGetStateHandlesRegexMethodFromOrService(): void
-    {
-        $orServiceLike = new class {
-            public function getState(): array
-            {
-                return ['method' => 'regex', 'appApiInstalled' => false];
-            }
-        };
+	/**
+	 * Test that getState() returns `regex` defaults when method key is absent.
+	 *
+	 * Defensive: OR service exists but returns unexpected shape.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-4
+	 */
+	public function testGetStateHandlesRegexMethodFromOrService(): void {
+		$orServiceLike = new class {
+			public function getState(): array {
+				return ['method' => 'regex', 'appApiInstalled' => false];
+			}
+		};
 
-        $this->mockContainer
-            ->method('get')
-            ->willReturn($orServiceLike);
+		$this->mockContainer
+			->method('get')
+			->willReturn($orServiceLike);
 
-        $state = $this->client->getState();
+		$state = $this->client->getState();
 
-        $this->assertSame('regex', $state['method']);
-        $this->assertFalse($state['appApiInstalled']);
+		$this->assertSame('regex', $state['method']);
+		$this->assertFalse($state['appApiInstalled']);
 
-    }//end testGetStateHandlesRegexMethodFromOrService()
+	}//end testGetStateHandlesRegexMethodFromOrService()
 
-    /**
-     * Test source file exists.
-     *
-     * @return void
-     */
-    public function testSourceFileExists(): void
-    {
-        $this->assertFileExists(
-            __DIR__ . '/../../../lib/Service/AnonymiserBackendStateClient.php'
-        );
+	/**
+	 * Test source file exists.
+	 *
+	 * @return void
+	 */
+	public function testSourceFileExists(): void {
+		$this->assertFileExists(
+			__DIR__ . '/../../../lib/Service/AnonymiserBackendStateClient.php'
+		);
 
-    }//end testSourceFileExists()
+	}//end testSourceFileExists()
 }//end class

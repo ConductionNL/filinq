@@ -35,12 +35,11 @@ declare(strict_types=1);
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class OC
-{
+class OC {
 
-    /**
-     * @var object|null
-     */
-    public static ?object $server = null;
+	/**
+	 * @var object|null
+	 */
+	public static ?object $server = null;
 
 }//end class

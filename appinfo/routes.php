@@ -17,12 +17,21 @@
 
 // The mechanical boilerplate routes — `dashboard#page` (`/`) and the SPA
 // catch-all (`/{path}`, `dashboard#catchAll`) — are supplied by
-// `Routes::standard()`; both resolve to docudesk's `DashboardController`
-// (which extends the AppHost `GenericDashboardController`), so the route name
-// `docudesk.dashboard.page` that the navigation (info.xml) and the dashboard
-// widgets link to is defined. The app-specific API routes below are passed
-// through as `$extra` and inserted before the catch-all.
-return \OCA\OpenRegister\AppHost\Routes::standard([
+// `Routes::standard()`; both resolve to docudesk's `DashboardController`, so
+// the route name `docudesk.dashboard.page` that the navigation (info.xml) and
+// the dashboard widgets link to is defined. The app-specific API routes below
+// are passed through as `$extra` and inserted before the catch-all.
+//
+// ⚠️ The AppHost builder is invoked through a `class_exists()` guard. Nextcloud
+// `include`s this file for EVERY docudesk request, so an unguarded static call
+// to a class in another app makes every route in the app fatal with HTTP 500
+// when openregister is absent — not just the AppHost ones. DocuDesk does not
+// declare `<app>openregister</app>`, so an admin can create exactly that
+// configuration. Fixing only the controllers MOVES the fatal here rather than
+// removing it. The `$fallback` branch below reproduces `Routes::standard()`'s
+// output locally so docudesk still routes (and degrades per-endpoint) without
+// openregister. See decidesk#377 / #388.
+$extra = [
         // Metrics and health.
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
@@ -47,14 +56,23 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         // Document comparison route.
         ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
 
+        // Document version routes (Versies detail tab — thin files_versions consumer).
+        ['name' => 'version#index', 'url' => 'api/documents/{fileId}/versions', 'verb' => 'GET'],
+        ['name' => 'version#download', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/download', 'verb' => 'GET'],
+        ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
         ['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
+        ['name' => 'anonymization#updateRelation', 'url' => 'api/anonymization/relations/{id}', 'verb' => 'PATCH', 'requirements' => ['id' => '\\d+']],
+
+        // Original-EML preview (renders the source message to a PDF for the viewer).
+        ['name' => 'emlPreview#preview', 'url' => 'api/anonymization/eml-preview/{fileId}', 'verb' => 'GET'],
 
         // Dossier anonymization routes.
-        ['name' => 'dossier#generateGrondslagenPdf', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
+        ['name' => 'dossier#generateGrondslagenSummary', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
 
         // Batch anonymization routes.
         ['name' => 'batchAnonymization#folderBatch', 'url' => 'api/anonymization/batch/folder', 'verb' => 'POST'],
@@ -76,16 +94,32 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'policy#updateProhibition', 'url' => 'api/policy/prohibitions/{id}', 'verb' => 'PUT'],
         ['name' => 'policy#deleteProhibition', 'url' => 'api/policy/prohibitions/{id}', 'verb' => 'DELETE'],
 
-        // Policy — standing consent routes.
-        ['name' => 'policy#indexStandingConsents', 'url' => 'api/policy/standing-consents', 'verb' => 'GET'],
-        ['name' => 'policy#createStandingConsent', 'url' => 'api/policy/standing-consents', 'verb' => 'POST'],
-        ['name' => 'policy#showStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'GET'],
-        ['name' => 'policy#updateStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'PUT'],
-        ['name' => 'policy#deleteStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'DELETE'],
+        // Policy — standing consent routes (StandingConsentController).
+        ['name' => 'standingConsent#index', 'url' => 'api/policy/standing-consents', 'verb' => 'GET'],
+        ['name' => 'standingConsent#create', 'url' => 'api/policy/standing-consents', 'verb' => 'POST'],
+        ['name' => 'standingConsent#show', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'GET'],
+        ['name' => 'standingConsent#update', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'PUT'],
+        ['name' => 'standingConsent#destroy', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'DELETE'],
+
+        // Custom dictionaries — organisation-managed term-list CRUD + import
+        // (custom-dictionary-recognition).
+        ['name' => 'customDictionary#index', 'url' => 'api/custom-dictionaries', 'verb' => 'GET'],
+        ['name' => 'customDictionary#create', 'url' => 'api/custom-dictionaries', 'verb' => 'POST'],
+        ['name' => 'customDictionary#show', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'GET'],
+        ['name' => 'customDictionary#update', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'PUT'],
+        ['name' => 'customDictionary#destroy', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'DELETE'],
+        ['name' => 'customDictionary#indexTerms', 'url' => 'api/custom-dictionaries/{id}/terms', 'verb' => 'GET'],
+        ['name' => 'customDictionary#createTerm', 'url' => 'api/custom-dictionaries/{id}/terms', 'verb' => 'POST'],
+        ['name' => 'customDictionary#deleteTerm', 'url' => 'api/custom-dictionaries/{id}/terms/{termId}', 'verb' => 'DELETE'],
+        ['name' => 'customDictionary#import', 'url' => 'api/custom-dictionaries/{id}/import', 'verb' => 'POST'],
 
         // PDF generation routes.
         ['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
         ['name' => 'pdf#renderPdfA', 'url' => 'api/pdf/render-pdfa', 'verb' => 'POST'],
+
+        // PDF/A-3 archival conversion route (MDTO/e-depot; consumed by
+        // procest's beschikking pipeline and OpenRegister's TMLO/MDTO SIP builder).
+        ['name' => 'pdfa3Conversion#convert', 'url' => 'api/pdfa3/convert', 'verb' => 'POST'],
 
         // Print preview and PDF/A download routes.
         ['name' => 'print#preview', 'url' => 'api/print/preview', 'verb' => 'POST'],
@@ -112,14 +146,14 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         // Template routes.
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
-        ['name' => 'templates#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
+        ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
         ['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
         ['name' => 'templates#update', 'url' => 'api/templates/{id}', 'verb' => 'PUT'],
         ['name' => 'templates#destroy', 'url' => 'api/templates/{id}', 'verb' => 'DELETE'],
-        ['name' => 'templates#versions', 'url' => 'api/templates/{id}/versions', 'verb' => 'GET'],
-        ['name' => 'templates#diffVersions', 'url' => 'api/templates/{id}/versions/diff', 'verb' => 'GET'],
-        ['name' => 'templates#restoreVersion', 'url' => 'api/templates/{id}/versions/{versionId}/restore', 'verb' => 'POST'],
-        ['name' => 'templates#previewTemplate', 'url' => 'api/templates/{id}/preview', 'verb' => 'POST'],
+        ['name' => 'templateVersions#versions', 'url' => 'api/templates/{id}/versions', 'verb' => 'GET'],
+        ['name' => 'templateVersions#diffVersions', 'url' => 'api/templates/{id}/versions/diff', 'verb' => 'GET'],
+        ['name' => 'templateVersions#restoreVersion', 'url' => 'api/templates/{id}/versions/{versionId}/restore', 'verb' => 'POST'],
+        ['name' => 'templatePreview#previewTemplate', 'url' => 'api/templates/{id}/preview', 'verb' => 'POST'],
         ['name' => 'templates#duplicate', 'url' => 'api/templates/{id}/duplicate', 'verb' => 'POST'],
         ['name' => 'templates#lock', 'url' => 'api/templates/{id}/lock', 'verb' => 'POST'],
         ['name' => 'templates#unlock', 'url' => 'api/templates/{id}/lock', 'verb' => 'DELETE'],
@@ -135,6 +169,28 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
+        // Portal signing receiver routes (portal-signing-actions,
+        // portal-signing-surface): the A6 endpoint-forward targets portaliq
+        // calls server-to-server on behalf of an external, accountless
+        // signer — #[PublicPage] because the caller is portaliq's backend,
+        // never a browser; the X-Portal-Subject assertion IS the auth.
+        //
+        // ⚠️ The controller segment is CASE-SENSITIVE. Nextcloud builds the
+        // class name with `ucfirst()` only — it does NOT re-case the rest — so
+        // `portalsigningreceiver#…` resolved to `PortalsigningreceiverController`,
+        // a class that does not exist, and all three endpoints were dead. Keep
+        // the segment spelled exactly as the class: `portalSigningReceiver`.
+        ['name' => 'portalSigningReceiver#signDocument', 'url' => 'api/portal/signing/sign', 'verb' => 'POST'],
+        ['name' => 'portalSigningReceiver#declineDocument', 'url' => 'api/portal/signing/decline', 'verb' => 'POST'],
+        ['name' => 'portalSigningReceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
+
+        // Financial extraction routes (scan-en-herken).
+        ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
+        ['name' => 'extraction#corrections', 'url' => 'api/extraction/{id}/corrections', 'verb' => 'POST'],
+
+        // GL-account ("grootboekrekening") suggestion route (ai-gl-account-suggestion).
+        ['name' => 'glAccountSuggestion#suggestAccount', 'url' => 'api/extraction/{id}/suggest-account', 'verb' => 'POST'],
+
         // Anonymiser warning dismissal routes (admin-only, per-user).
         ['name' => 'anonymiserWarning#dismiss', 'url' => 'api/admin/anonymiser-warning/dismiss', 'verb' => 'POST'],
         ['name' => 'anonymiserWarning#reset', 'url' => 'api/admin/anonymiser-warning/reset', 'verb' => 'POST'],
@@ -142,6 +198,61 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g.
         // CnSupportDialog) — served by OpenRegister's AppHost
         // GenericPreferencesController (aliased in Application::register).
-        ['name' => 'AppHost\Controller\GenericPreferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
-        ['name' => 'AppHost\Controller\GenericPreferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
-]);
+        // Served by lib/Controller/PreferencesController (a local OCP-only
+        // implementation of OpenRegister's GenericPreferencesController). The
+        // route name MUST stay `preferences#…`: Nextcloud resolves `foo#bar` to
+        // OCA\DocuDesk\Controller\FooController, so a namespaced name here
+        // resolves to a class that does not exist and 500s.
+        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+];
+
+// Preferred path: the OpenRegister AppHost owns the canonical route table.
+// `class_exists()` autoloads without fatalling when the class is unavailable.
+if (class_exists('OCA\OpenRegister\AppHost\Routes') === true) {
+    return \OCA\OpenRegister\AppHost\Routes::standard($extra);
+}
+
+// Fallback: openregister is not installed. Reproduce `Routes::standard()`
+// locally — canonical routes first (minus any name `$extra` overrides), then
+// `$extra`, then the SPA catch-all LAST so it never shadows a real route.
+$canonicalRoutes = [
+    ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
+    ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
+    ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
+    ['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
+    ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'POST'],
+    ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+    ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+    ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
+    ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
+];
+
+$catchAllRoute = [
+    'name'         => 'dashboard#catchAll',
+    'url'          => '/{path}',
+    'verb'         => 'GET',
+    'requirements' => ['path' => '.+'],
+    'defaults'     => ['path' => ''],
+];
+
+$extraNames = [];
+foreach ($extra as $extraRoute) {
+    if (isset($extraRoute['name']) === true) {
+        $extraNames[(string) $extraRoute['name']] = true;
+    }
+}
+
+$mergedRoutes = [];
+foreach ($canonicalRoutes as $canonicalRoute) {
+    if (isset($extraNames[$canonicalRoute['name']]) === true) {
+        continue;
+    }
+
+    $mergedRoutes[] = $canonicalRoute;
+}
+
+$mergedRoutes   = array_merge($mergedRoutes, $extra);
+$mergedRoutes[] = $catchAllRoute;
+
+return ['routes' => $mergedRoutes];

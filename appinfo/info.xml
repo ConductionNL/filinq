@@ -3,24 +3,27 @@
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>docudesk</id>
     <name>DocuDesk</name>
-    <summary>GDPR publication consent management and document metadata enrichment for Nextcloud</summary>
-    <description><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 17 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/docudesk) for release planning and what this app does.
+    <summary lang="en">Document generation, anonymisation, signing, and GDPR/WOO publication consent for Nextcloud</summary>
+    <summary lang="nl">Documentgeneratie, anonimisering, ondertekening en AVG/Woo-publicatie-instemming voor Nextcloud</summary>
+    <description><![CDATA[Document generation, anonymisation, signing, and GDPR/WOO publication consent for Nextcloud
 
-GDPR publication consent management and document metadata enrichment for Nextcloud
-
-DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid) and automatic document metadata enrichment. It integrates with Open Register via events to enrich documents as they are created and updated.
+DocuDesk generates documents from templates bound to Open Register fields, anonymises personal data (PII) in documents through a configurable entity-detection backend, signs outbound documents (eIDAS SES/AdES/QES), and tracks GDPR and Wet Open Overheid (Woo) publication consent — all processed locally on the customer's own Nextcloud instance. It integrates with Open Register via events to enrich documents as they are created and updated.
 
 ## Key Features
 
-- GDPR publication consent tracking with configurable objection periods
-- Wet Open Overheid compliance (minimum 4-week objection period)
-- Automatic language detection for documents
-- Keyword extraction and topic classification
+- Document generation from Twig/HTML templates, output as PDF, ODF (.odt), or HTML, with Open Register field binding
+- PII anonymisation, with entity detection routed through a configurable backend (regex, OpenAnonymiser, Presidio, or an LLM) via Open Register
+- Digital signing with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows
+- GDPR publication consent tracking with configurable objection periods (Wet Open Overheid, default 4-week objection period)
+- Document metadata enrichment: automatic language detection, keyword extraction, and topic classification
+- OCR text extraction (Tesseract) for scanned and image-based documents
+- Document comparison and document validation/quality checks
+- Folder- and dossier-level batch anonymisation with legal-basis (grondslagen) tracking under Woo Art. 5
 - Event-driven integration with Open Register
 
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Requirements can be found [here](https://conduction.gitbook.io/docudesk-nextcloud/installatie)
+Requirements can be found [here](https://docudesk.conduction.nl)
 
 The Roadmap is available [here](https://codeberg.org/Conduction/docudesk/milestones)
 
@@ -30,19 +33,22 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.0.35</version>
-    <licence>agpl</licence>
+    <version>0.0.38-unstable.20260820125103</version>
+    <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
+    <documentation>
+        <user>https://docudesk.conduction.nl</user>
+        <admin>https://docudesk.conduction.nl</admin>
+        <developer>https://docudesk.conduction.nl</developer>
+    </documentation>
     <category>organization</category>
     <website>https://codeberg.org/Conduction/docudesk</website>
     <bugs>https://codeberg.org/Conduction/docudesk/issues</bugs>
     <repository>https://codeberg.org/Conduction/docudesk</repository>
-    <documentation>
-        <user>https://conduction.gitbook.io/docudesk-nextcloud/</user>
-        <admin>https://conduction.gitbook.io/docudesk-nextcloud/</admin>
-        <developer>https://conduction.gitbook.io/docudesk-nextcloud/</developer>
-    </documentation>
+    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-dashboard.png</screenshot>
+    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-consent.png</screenshot>
+    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-anonymization.png</screenshot>
     <!--
         Processing-activity export (AVG Art. 30) consumes OpenRegister's
         per-access read-logging capability (x-openregister-processing dialect,
@@ -55,8 +61,57 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="30" max-version="34"/>
+        <!--
+        Every office format this app edits is a ZIP: `PackagePartIo` and
+        `DocumentGuard` construct `ZipArchive` in five places, with no fallback
+        and no capability check. Undeclared, that dependency surfaced only as a
+        fatal at the moment someone opened a document, on an instance that had
+        already installed the app successfully. Declared here, the install is
+        refused up front, which is the whole point of the element.
+
+        ⚠️ AFTER the <database> elements, not before. info.xsd fixes this order
+        — php, database, command, lib, os, owncloud, nextcloud — and the first
+        placement of this element sat between <php> and <database>, which fails
+        validation outright. opencatalogi already declares the same lib in the
+        same slot; copying its POSITION as well as its content would have
+        skipped the error.
+        -->
+        <lib>zip</lib>
+        <!--
+        App dependency (not expressible in app-info.xsd): OpenRegister — Docudesk's
+        documents, templates and reports are OpenRegister objects, and
+        src/manifest.json lists "openregister" as a required dependency.
+
+        min-version is therefore 32, NOT 30: openregister declares min-version="32"
+        because its lib/ContextChat/ContentProvider.php implements
+        OCP\ContextChat\IContentProvider, an interface core does not have before
+        Nextcloud 32. On NC 30-31 openregister refuses to install ("cannot be
+        installed because it is not compatible with this version of the server"), so
+        the app cannot function there. Declaring 30 advertised a range this app
+        cannot deliver. Same defect as openconnector#1173.
+
+        CI already tests stable32 only, so this changes the advertised app-store
+        range and nothing about what runs.
+        -->
+        <nextcloud min-version="32" max-version="34"/>
     </dependencies>
+    <background-jobs>
+        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
+    </background-jobs>
+    <!--
+        info.xsd fixes the order of these elements: background-jobs, repair-steps,
+        two-factor-providers, commands, settings, activity, dashboard,
+        fulltextsearch, navigations. <commands> therefore belongs here, before
+        <settings> — not after <navigations>, where it fails validation with
+        "Element 'commands': This element is not expected."
+    -->
+    <commands>
+        <command>OCA\DocuDesk\Command\OfficeProbeCommand</command>
+    </commands>
+    <settings>
+        <admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
+        <admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
+    </settings>
     <navigations>
         <navigation>
             <id>docudesk</id>
@@ -65,11 +120,4 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
             <icon>app.svg</icon>
         </navigation>
     </navigations>
-	<settings>
-		<admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
-		<admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
-	</settings>
-    <background-jobs>
-        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
-    </background-jobs>
 </info>

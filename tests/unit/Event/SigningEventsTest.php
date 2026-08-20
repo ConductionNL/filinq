@@ -25,7 +25,8 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Tests\Unit\Event;
 
 use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
-use OCA\DocuDesk\Event\SigningConcludedEvent;
+use OCA\DocuDesk\Event\SigningConcludedEventFactory;
+use OCA\DocuDesk\Event\SigningProvenance;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -37,109 +38,107 @@ use PHPUnit\Framework\TestCase;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class SigningEventsTest extends TestCase
-{
+class SigningEventsTest extends TestCase {
 
-    /**
-     * The request event exposes constructed values and a writable result slot.
-     *
-     * @return void
-     */
-    public function testRequestedEventGettersAndResultSlot(): void
-    {
-        $event = new DocumentSigningRequestedEvent(
-            sourceApp: 'shillinq',
-            subjectRegister: 'finance',
-            subjectSchema: 'invoice',
-            subjectId: 'inv-1',
-            subjectLabel: 'Invoice 1',
-            documentReference: 'file-1',
-            signers: [['userId' => 'bob']],
-            signatureLevel: 'AdES',
-            signingMode: 'parallel',
-            externalReference: 'ext-1',
-            correlationId: 'corr-1'
-        );
+	/**
+	 * The request event exposes constructed values and a writable result slot.
+	 *
+	 * @return void
+	 */
+	public function testRequestedEventGettersAndResultSlot(): void {
+		$event = new DocumentSigningRequestedEvent(
+			provenance: new SigningProvenance(
+				sourceApp: 'shillinq',
+				subjectRegister: 'finance',
+				subjectSchema: 'invoice',
+				subjectId: 'inv-1',
+				externalReference: 'ext-1',
+				correlationId: 'corr-1'
+			),
+			subjectLabel: 'Invoice 1',
+			documentReference: 'file-1',
+			signers: [['userId' => 'bob']],
+			signatureLevel: 'AdES',
+			signingMode: 'parallel'
+		);
 
-        $this->assertSame('shillinq', $event->getSourceApp());
-        $this->assertSame('finance', $event->getSubjectRegister());
-        $this->assertSame('invoice', $event->getSubjectSchema());
-        $this->assertSame('inv-1', $event->getSubjectId());
-        $this->assertSame('Invoice 1', $event->getSubjectLabel());
-        $this->assertSame('file-1', $event->getDocumentReference());
-        $this->assertSame([['userId' => 'bob']], $event->getSigners());
-        $this->assertSame('AdES', $event->getSignatureLevel());
-        $this->assertSame('parallel', $event->getSigningMode());
-        $this->assertSame('ext-1', $event->getExternalReference());
-        $this->assertSame('corr-1', $event->getCorrelationId());
+		$this->assertSame('shillinq', $event->getSourceApp());
+		$this->assertSame('finance', $event->getSubjectRegister());
+		$this->assertSame('invoice', $event->getSubjectSchema());
+		$this->assertSame('inv-1', $event->getSubjectId());
+		$this->assertSame('Invoice 1', $event->getSubjectLabel());
+		$this->assertSame('file-1', $event->getDocumentReference());
+		$this->assertSame([['userId' => 'bob']], $event->getSigners());
+		$this->assertSame('AdES', $event->getSignatureLevel());
+		$this->assertSame('parallel', $event->getSigningMode());
+		$this->assertSame('ext-1', $event->getExternalReference());
+		$this->assertSame('corr-1', $event->getCorrelationId());
 
-        // Result slot defaults, then writes.
-        $this->assertNull($event->getSigningRequestId());
-        $this->assertFalse($event->isHandled());
+		// Result slot defaults, then writes.
+		$this->assertNull($event->getSigningRequestId());
+		$this->assertFalse($event->isHandled());
 
-        $event->setSigningRequestId('req-1');
-        $event->setHandled(true);
-        $this->assertSame('req-1', $event->getSigningRequestId());
-        $this->assertTrue($event->isHandled());
+		$event->setSigningRequestId('req-1');
+		$event->setHandled(true);
+		$this->assertSame('req-1', $event->getSigningRequestId());
+		$this->assertTrue($event->isHandled());
 
-    }//end testRequestedEventGettersAndResultSlot()
+	}//end testRequestedEventGettersAndResultSlot()
 
-    /**
-     * fromRequest() maps the persisted request + status onto the conclusion event.
-     *
-     * @return void
-     */
-    public function testConcludedEventFromRequest(): void
-    {
-        $request = [
-            'id'                => 'req-9',
-            'signerIds'         => ['s1', 's2'],
-            'signedAt'          => '2026-06-15T10:00:00+00:00',
-            'sourceApp'         => 'shillinq',
-            'subjectRegister'   => 'finance',
-            'subjectSchema'     => 'invoice',
-            'subjectId'         => 'inv-9',
-            'externalReference' => 'ext-9',
-            'correlationId'     => 'corr-9',
-        ];
+	/**
+	 * fromRequest() maps the persisted request + status onto the conclusion event.
+	 *
+	 * @return void
+	 */
+	public function testConcludedEventFromRequest(): void {
+		$request = [
+			'id' => 'req-9',
+			'signerIds' => ['s1', 's2'],
+			'signedAt' => '2026-06-15T10:00:00+00:00',
+			'sourceApp' => 'shillinq',
+			'subjectRegister' => 'finance',
+			'subjectSchema' => 'invoice',
+			'subjectId' => 'inv-9',
+			'externalReference' => 'ext-9',
+			'correlationId' => 'corr-9',
+		];
 
-        $event = SigningConcludedEvent::fromRequest(
-            request: $request,
-            status: 'signed',
-            signedDocumentRef: 'file-signed-9'
-        );
+		$event = (new SigningConcludedEventFactory())->create(
+			request: $request,
+			status: 'signed',
+			signedDocumentRef: 'file-signed-9'
+		);
 
-        $this->assertSame('req-9', $event->getSigningRequestId());
-        $this->assertSame('signed', $event->getStatus());
-        $this->assertSame('file-signed-9', $event->getSignedDocumentRef());
-        $this->assertSame(['s1', 's2'], $event->getSigners());
-        $this->assertSame('2026-06-15T10:00:00+00:00', $event->getSignedAt());
-        $this->assertSame('shillinq', $event->getSourceApp());
-        $this->assertSame('finance', $event->getSubjectRegister());
-        $this->assertSame('invoice', $event->getSubjectSchema());
-        $this->assertSame('inv-9', $event->getSubjectId());
-        $this->assertSame('ext-9', $event->getExternalReference());
-        $this->assertSame('corr-9', $event->getCorrelationId());
+		$this->assertSame('req-9', $event->getSigningRequestId());
+		$this->assertSame('signed', $event->getStatus());
+		$this->assertSame('file-signed-9', $event->getSignedDocumentRef());
+		$this->assertSame(['s1', 's2'], $event->getSigners());
+		$this->assertSame('2026-06-15T10:00:00+00:00', $event->getSignedAt());
+		$this->assertSame('shillinq', $event->getSourceApp());
+		$this->assertSame('finance', $event->getSubjectRegister());
+		$this->assertSame('invoice', $event->getSubjectSchema());
+		$this->assertSame('inv-9', $event->getSubjectId());
+		$this->assertSame('ext-9', $event->getExternalReference());
+		$this->assertSame('corr-9', $event->getCorrelationId());
 
-    }//end testConcludedEventFromRequest()
+	}//end testConcludedEventFromRequest()
 
-    /**
-     * fromRequest() tolerates a minimal internal request (no provenance).
-     *
-     * @return void
-     */
-    public function testConcludedEventFromMinimalRequest(): void
-    {
-        $event = SigningConcludedEvent::fromRequest(
-            request: ['uuid' => 'req-min'],
-            status: 'cancelled'
-        );
+	/**
+	 * fromRequest() tolerates a minimal internal request (no provenance).
+	 *
+	 * @return void
+	 */
+	public function testConcludedEventFromMinimalRequest(): void {
+		$event = (new SigningConcludedEventFactory())->create(
+			request: ['uuid' => 'req-min'],
+			status: 'cancelled'
+		);
 
-        $this->assertSame('req-min', $event->getSigningRequestId());
-        $this->assertSame('cancelled', $event->getStatus());
-        $this->assertNull($event->getSignedDocumentRef());
-        $this->assertSame([], $event->getSigners());
-        $this->assertSame('', $event->getSourceApp());
+		$this->assertSame('req-min', $event->getSigningRequestId());
+		$this->assertSame('cancelled', $event->getStatus());
+		$this->assertNull($event->getSignedDocumentRef());
+		$this->assertSame([], $event->getSigners());
+		$this->assertSame('', $event->getSourceApp());
 
-    }//end testConcludedEventFromMinimalRequest()
+	}//end testConcludedEventFromMinimalRequest()
 }//end class

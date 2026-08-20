@@ -2,20 +2,28 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+@spec openspec/specs/document-validation-checks/spec.md
 -->
 
 <template>
 	<div class="validation-findings">
 		<div class="validation-findings__header">
-			<CnStatusBadge :label="verdictLabel" :color-map="colorMap" />
+			<CnStatusBadge :label="verdictLabel" :colorMap="colorMap" />
 		</div>
 
 		<ul v-if="findings.length > 0" class="validation-findings__list">
-			<li v-for="(finding, index) in findings" :key="index" class="validation-findings__item">
-				<span class="validation-findings__check">{{ checkLabel(finding) }}</span>
-				<span class="validation-findings__message">{{ findingMessage(finding) }}</span>
-				<a v-if="finding.suggestedAction === 'ocr'"
+			<li
+				v-for="(finding, index) in findings"
+				:key="index"
+				class="validation-findings__item">
+				<span class="validation-findings__check">{{
+					checkLabel(finding)
+				}}</span>
+				<span class="validation-findings__message">{{
+					findingMessage(finding)
+				}}</span>
+				<a
+					v-if="finding.suggestedAction === 'ocr'"
 					class="validation-findings__ocr"
 					href="#/anonymization"
 					@click="$emit('ocr', finding)">
@@ -40,6 +48,7 @@ export default {
 		status: { type: String, default: '' },
 		findings: { type: Array, default: () => [] },
 	},
+
 	computed: {
 		/**
 		 * Localised verdict label for the status chip.
@@ -49,16 +58,17 @@ export default {
 		 */
 		verdictLabel() {
 			switch (this.status) {
-			case 'passed':
-				return t('docudesk', 'Validation passed')
-			case 'warnings':
-				return t('docudesk', 'Validation warnings')
-			case 'failed':
-				return t('docudesk', 'Validation failed')
-			default:
-				return t('docudesk', 'Not yet validated')
+				case 'passed':
+					return t('docudesk', 'Validation passed')
+				case 'warnings':
+					return t('docudesk', 'Validation warnings')
+				case 'failed':
+					return t('docudesk', 'Validation failed')
+				default:
+					return t('docudesk', 'Not yet validated')
 			}
 		},
+
 		/**
 		 * Colour-map for the status chip keyed by the verdict label.
 		 *
@@ -69,6 +79,7 @@ export default {
 			return { [this.verdictLabel]: verdictColor(this.status) }
 		},
 	},
+
 	methods: {
 		/**
 		 * Human-readable label for a finding's check id.
@@ -88,6 +99,7 @@ export default {
 			}
 			return map[finding.checkId] || finding.checkId
 		},
+
 		/**
 		 * Translate a finding's English source message + interpolate its
 		 * (non-content) placeholder params.
@@ -109,20 +121,24 @@ export default {
 	flex-direction: column;
 	gap: 8px;
 }
+
 .validation-findings__list {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 }
+
 .validation-findings__item {
 	display: flex;
 	gap: 8px;
 	align-items: baseline;
 	flex-wrap: wrap;
 }
+
 .validation-findings__check {
 	font-weight: bold;
 }
+
 .validation-findings__ocr {
 	color: var(--color-primary-element);
 	text-decoration: underline;

@@ -7,60 +7,65 @@ import { consentStore } from '../../store/store.js'
 	<CnIndexPage
 		ref="indexPage"
 		:title="t('docudesk', 'Consent Workflow')"
-		:description="t('docudesk', 'Per-document consent records produced by the publication-clearance workflow.')"
-		:show-title="true"
+		:description="
+			t(
+				'docudesk',
+				'Per-document consent records produced by the publication-clearance workflow.',
+			)
+		"
+		:showTitle="true"
 		:objects="workflowConsents"
 		:columns="tableColumns"
 		:pagination="paginationData"
 		:loading="consentStore.loading"
 		:selectable="false"
-		:show-edit-action="false"
-		:show-copy-action="false"
-		:show-delete-action="false"
-		:show-mass-import="false"
-		:show-mass-export="false"
-		:show-mass-copy="false"
-		:show-mass-delete="false"
-		:show-view-toggle="false"
-		:show-add="false"
-		row-key="id"
-		:empty-text="emptyContentName"
+		:showEditAction="false"
+		:showCopyAction="false"
+		:showDeleteAction="false"
+		:showMassImport="false"
+		:showMassExport="false"
+		:showMassCopy="false"
+		:showMassDelete="false"
+		:showViewToggle="false"
+		:showAdd="false"
+		rowKey="id"
+		:emptyText="emptyContentName"
 		:refreshing="isRefreshing"
 		@refresh="handleRefresh"
-		@page-changed="onPageChanged"
-		@page-size-changed="onPageSizeChanged"
-		@row-click="viewConsent">
+		@pageChanged="onPageChanged"
+		@pageSizeChanged="onPageSizeChanged"
+		@rowClick="viewConsent">
 		<!-- Stats above the table -->
 		<template #above-table>
 			<div class="consent-stats">
 				<CnStatsBlock
 					:title="t('docudesk', 'Total')"
 					:count="consentStore.consentStats.total"
-					:count-label="t('docudesk', 'records')"
+					:countLabel="t('docudesk', 'records')"
 					variant="default"
 					horizontal
-					show-zero-count />
+					showZeroCount />
 				<CnStatsBlock
 					:title="t('docudesk', 'Pending')"
 					:count="consentStore.consentStats.pending"
-					:count-label="t('docudesk', 'pending')"
+					:countLabel="t('docudesk', 'pending')"
 					variant="warning"
 					horizontal
-					show-zero-count />
+					showZeroCount />
 				<CnStatsBlock
 					:title="t('docudesk', 'Approved')"
 					:count="consentStore.consentStats.approved"
-					:count-label="t('docudesk', 'approved')"
+					:countLabel="t('docudesk', 'approved')"
 					variant="success"
 					horizontal
-					show-zero-count />
+					showZeroCount />
 				<CnStatsBlock
 					:title="t('docudesk', 'Objected')"
 					:count="consentStore.consentStats.objected"
-					:count-label="t('docudesk', 'objected')"
+					:countLabel="t('docudesk', 'objected')"
 					variant="error"
 					horizontal
-					show-zero-count />
+					showZeroCount />
 			</div>
 		</template>
 
@@ -71,28 +76,28 @@ import { consentStore } from '../../store/store.js'
 				v-if="row.policyMatch"
 				class="policy-preempted-badge"
 				:label="t('docudesk', 'policy')"
-				:color-map="{ [t('docudesk', 'policy')]: 'primary' }" />
+				:colorMap="{ [t('docudesk', 'policy')]: 'primary' }" />
 		</template>
 
 		<!-- Entity type badge -->
 		<template #column-entityType="{ row }">
 			<CnStatusBadge
 				:label="row.entityType || t('docudesk', 'Unknown')"
-				:color-map="entityTypeColorMap" />
+				:colorMap="entityTypeColorMap" />
 		</template>
 
 		<!-- Consent status badge -->
 		<template #column-consentStatus="{ row }">
 			<CnStatusBadge
 				:label="formatStatus(row.consentStatus)"
-				:color-map="consentStatusColorMap" />
+				:colorMap="consentStatusColorMap" />
 		</template>
 
 		<!-- Notification status badge -->
 		<template #column-notificationStatus="{ row }">
 			<CnStatusBadge
 				:label="formatStatus(row.notificationStatus)"
-				:color-map="notificationStatusColorMap" />
+				:colorMap="notificationStatusColorMap" />
 		</template>
 
 		<!-- Deadline column -->
@@ -104,7 +109,7 @@ import { consentStore } from '../../store/store.js'
 		<template #column-publicationDecision="{ row }">
 			<CnStatusBadge
 				:label="formatDecision(row.publicationDecision)"
-				:color-map="decisionColorMap" />
+				:colorMap="decisionColorMap" />
 		</template>
 
 		<!-- Row actions: view detail -->
@@ -113,7 +118,7 @@ import { consentStore } from '../../store/store.js'
 				<template #icon>
 					<DotsHorizontal :size="20" />
 				</template>
-				<NcActionButton close-after-click @click="viewConsent(row)">
+				<NcActionButton closeAfterClick @click="viewConsent(row)">
 					<template #icon>
 						<Eye :size="20" />
 					</template>
@@ -125,8 +130,8 @@ import { consentStore } from '../../store/store.js'
 </template>
 
 <script>
-import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 
@@ -141,6 +146,7 @@ export default {
 		DotsHorizontal,
 		Eye,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
@@ -150,6 +156,7 @@ export default {
 				person: 'warning',
 				organization: 'primary',
 			},
+
 			consentStatusColorMap: {
 				[t('docudesk', 'Pending')]: 'default',
 				[t('docudesk', 'Approved')]: 'success',
@@ -157,6 +164,7 @@ export default {
 				[t('docudesk', 'No Response')]: 'warning',
 				[t('docudesk', 'Anonymized')]: 'primary',
 			},
+
 			notificationStatusColorMap: {
 				[t('docudesk', 'Pending')]: 'default',
 				[t('docudesk', 'Sent')]: 'primary',
@@ -164,6 +172,7 @@ export default {
 				[t('docudesk', 'Failed')]: 'error',
 				[t('docudesk', 'Skipped')]: 'warning',
 			},
+
 			decisionColorMap: {
 				[t('docudesk', 'Pending')]: 'default',
 				[t('docudesk', 'Publish')]: 'success',
@@ -173,6 +182,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Column definitions for the consent records table.
@@ -181,23 +191,48 @@ export default {
 		 */
 		tableColumns() {
 			return [
-				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
+				{
+					key: 'entityText',
+					label: t('docudesk', 'Entity'),
+					sortable: true,
+				},
 				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'consentStatus', label: t('docudesk', 'Consent Status'), sortable: true },
-				{ key: 'notificationStatus', label: t('docudesk', 'Notification'), sortable: true },
-				{ key: 'objectionDeadline', label: t('docudesk', 'Deadline'), sortable: true },
-				{ key: 'publicationDecision', label: t('docudesk', 'Decision'), sortable: true },
+				{
+					key: 'consentStatus',
+					label: t('docudesk', 'Consent Status'),
+					sortable: true,
+				},
+				{
+					key: 'notificationStatus',
+					label: t('docudesk', 'Notification'),
+					sortable: true,
+				},
+				{
+					key: 'objectionDeadline',
+					label: t('docudesk', 'Deadline'),
+					sortable: true,
+				},
+				{
+					key: 'publicationDecision',
+					label: t('docudesk', 'Decision'),
+					sortable: true,
+				},
 			]
 		},
+
 		// Workflow records only — scope:"entity" rows live on the Standing Consents page.
 		workflowConsents() {
-			return consentStore.consents.filter(c => (c.scope || 'document') === 'document')
+			return consentStore.consents.filter(
+				(c) => (c.scope || 'document') === 'document',
+			)
 		},
+
 		paginationData() {
 			const total = this.workflowConsents.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
 		emptyContentName() {
 			if (consentStore.error) {
 				return consentStore.error
@@ -205,9 +240,11 @@ export default {
 			return t('docudesk', 'No consent records found')
 		},
 	},
+
 	mounted() {
 		consentStore.fetchConsents()
 	},
+
 	methods: {
 		/**
 		 * Open the selected consent record in the detail view.
@@ -217,8 +254,12 @@ export default {
 		 */
 		viewConsent(consent) {
 			consentStore.setConsentItem(consent)
-			this.$router.push({ name: 'ConsentDetail', params: { id: consent.id || consent.uuid } })
+			this.$router.push({
+				name: 'ConsentDetail',
+				params: { id: consent.id || consent.uuid },
+			})
 		},
+
 		async handleRefresh() {
 			this.isRefreshing = true
 			try {
@@ -227,6 +268,7 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		/**
 		 * Update the current page index of the consent table.
 		 *
@@ -236,6 +278,7 @@ export default {
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		/**
 		 * Update the page size and reset to the first page.
 		 *
@@ -246,6 +289,7 @@ export default {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		/**
 		 * Map a consent/notification status code to a localized label.
 		 *
@@ -266,6 +310,7 @@ export default {
 			}
 			return map[status] || status || t('docudesk', 'Unknown')
 		},
+
 		/**
 		 * Map a publication-decision code to a localized label.
 		 *
@@ -282,6 +327,7 @@ export default {
 			}
 			return map[decision] || decision || t('docudesk', 'Pending')
 		},
+
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *
@@ -307,6 +353,7 @@ export default {
 	margin-bottom: 16px;
 	flex-wrap: wrap;
 }
+
 .policy-preempted-badge {
 	margin-left: 8px;
 }

@@ -8,9 +8,14 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<div class="correspondence-index">
 		<div class="correspondence-index__header">
-			<h2>{{ t('docudesk', 'Brieven & correspondentie') }}</h2>
+			<h2>{{ t('docudesk', 'Letters & correspondence') }}</h2>
 			<p class="correspondence-index__subtitle">
-				{{ t('docudesk', 'Generate letters and correspondence from templates with merge data.') }}
+				{{
+					t(
+						'docudesk',
+						'Generate letters and correspondence from templates with merge data.',
+					)
+				}}
 			</p>
 		</div>
 
@@ -24,8 +29,9 @@ SPDX-License-Identifier: EUPL-1.2
 				<label class="correspondence-index__label" for="corr-template-id">
 					{{ t('docudesk', 'Template ID') }} *
 				</label>
-				<NcTextField id="corr-template-id"
-					:value.sync="store.templateId"
+				<NcTextField
+					id="corr-template-id"
+					v-model="store.templateId"
 					:label="t('docudesk', 'Template UUID')"
 					:placeholder="t('docudesk', 'Enter template UUID')"
 					required />
@@ -37,12 +43,14 @@ SPDX-License-Identifier: EUPL-1.2
 					{{ t('docudesk', 'Output format') }}
 				</label>
 				<div class="correspondence-index__radio-group">
-					<label v-for="fmt in formats"
+					<label
+						v-for="fmt in formats"
 						:key="fmt.value"
 						class="correspondence-index__radio-label">
-						<input v-model="store.format"
+						<input
+							v-model="store.format"
 							type="radio"
-							:value="fmt.value">
+							:value="fmt.value" />
 						{{ fmt.label }}
 					</label>
 				</div>
@@ -53,18 +61,23 @@ SPDX-License-Identifier: EUPL-1.2
 				<label class="correspondence-index__label" for="corr-case-ref">
 					{{ t('docudesk', 'Case reference') }}
 				</label>
-				<NcTextField id="corr-case-ref"
-					:value.sync="store.caseReference"
+				<NcTextField
+					id="corr-case-ref"
+					v-model="store.caseReference"
 					:label="t('docudesk', 'Case reference (optional)')"
 					:placeholder="t('docudesk', 'e.g. Z/2026/001')" />
 			</div>
 
 			<!-- Mode tabs -->
 			<div class="correspondence-index__mode-tabs">
-				<NcButton :type="!batchMode ? 'primary' : 'secondary'" @click="batchMode = false">
+				<NcButton
+					:variant="!batchMode ? 'primary' : 'secondary'"
+					@click="batchMode = false">
 					{{ t('docudesk', 'Single recipient') }}
 				</NcButton>
-				<NcButton :type="batchMode ? 'primary' : 'secondary'" @click="batchMode = true">
+				<NcButton
+					:variant="batchMode ? 'primary' : 'secondary'"
+					@click="batchMode = true">
 					{{ t('docudesk', 'Batch (multiple recipients)') }}
 				</NcButton>
 			</div>
@@ -75,40 +88,50 @@ SPDX-License-Identifier: EUPL-1.2
 					<label class="correspondence-index__label">
 						{{ t('docudesk', 'Data references') }}
 					</label>
-					<div v-for="(ref, idx) in store.dataRefs"
+					<div
+						v-for="(ref, idx) in store.dataRefs"
 						:key="idx"
 						class="correspondence-index__data-ref">
-						<NcTextField :value.sync="ref.register"
+						<NcTextField
+							v-model="ref.register"
 							:label="t('docudesk', 'Register')"
 							:placeholder="t('docudesk', 'e.g. brp')"
 							class="correspondence-index__ref-field" />
-						<NcTextField :value.sync="ref.schema"
+						<NcTextField
+							v-model="ref.schema"
 							:label="t('docudesk', 'Schema')"
 							:placeholder="t('docudesk', 'e.g. persoon')"
 							class="correspondence-index__ref-field" />
-						<NcTextField :value.sync="ref.id"
+						<NcTextField
+							v-model="ref.id"
 							:label="t('docudesk', 'UUID')"
 							:placeholder="t('docudesk', 'Object UUID')"
 							class="correspondence-index__ref-field" />
-						<NcButton type="tertiary"
+						<NcButton
+							variant="tertiary"
 							:aria-label="t('docudesk', 'Remove data reference')"
 							@click="removeDataRef(idx)">
 							✕
 						</NcButton>
 					</div>
-					<NcButton type="secondary" @click="addDataRef">
+					<NcButton variant="secondary" @click="addDataRef">
 						+ {{ t('docudesk', 'Add data reference') }}
 					</NcButton>
 				</div>
 
 				<div class="correspondence-index__actions">
-					<NcButton type="primary"
+					<NcButton
+						variant="primary"
 						:disabled="!canGenerate || store.loading"
 						@click="generate">
 						<template #icon>
 							<NcLoadingIcon v-if="store.loading" :size="20" />
 						</template>
-						{{ store.loading ? t('docudesk', 'Generating…') : t('docudesk', 'Generate letter') }}
+						{{
+							store.loading
+								? t('docudesk', 'Generating…')
+								: t('docudesk', 'Generate letter')
+						}}
 					</NcButton>
 				</div>
 			</template>
@@ -119,7 +142,8 @@ SPDX-License-Identifier: EUPL-1.2
 					<label class="correspondence-index__label" for="corr-register">
 						{{ t('docudesk', 'Register') }}
 					</label>
-					<NcTextField id="corr-register"
+					<NcTextField
+						id="corr-register"
 						v-model="batchRegister"
 						:label="t('docudesk', 'Register slug')"
 						:placeholder="t('docudesk', 'e.g. brp')" />
@@ -128,7 +152,8 @@ SPDX-License-Identifier: EUPL-1.2
 					<label class="correspondence-index__label" for="corr-schema">
 						{{ t('docudesk', 'Schema') }}
 					</label>
-					<NcTextField id="corr-schema"
+					<NcTextField
+						id="corr-schema"
 						v-model="batchSchema"
 						:label="t('docudesk', 'Schema slug')"
 						:placeholder="t('docudesk', 'e.g. persoon')" />
@@ -137,24 +162,34 @@ SPDX-License-Identifier: EUPL-1.2
 					<label class="correspondence-index__label" for="corr-recipients">
 						{{ t('docudesk', 'Recipient UUIDs') }} *
 					</label>
-					<textarea id="corr-recipients"
+					<textarea
+						id="corr-recipients"
 						v-model="store.recipientIdsText"
 						class="correspondence-index__textarea"
 						:placeholder="t('docudesk', 'One UUID per line')"
 						rows="8" />
 					<p class="correspondence-index__hint">
-						{{ t('docudesk', '{count} recipient(s)', { count: store.recipientIds.length }) }}
+						{{
+							t('docudesk', '{count} recipient(s)', {
+								count: store.recipientIds.length,
+							})
+						}}
 					</p>
 				</div>
 
 				<div class="correspondence-index__actions">
-					<NcButton type="primary"
+					<NcButton
+						variant="primary"
 						:disabled="!canGenerateBatch || store.loading"
 						@click="generateBatch">
 						<template #icon>
 							<NcLoadingIcon v-if="store.loading" :size="20" />
 						</template>
-						{{ store.loading ? t('docudesk', 'Sending…') : t('docudesk', 'Generate batch') }}
+						{{
+							store.loading
+								? t('docudesk', 'Sending…')
+								: t('docudesk', 'Generate batch')
+						}}
 					</NcButton>
 				</div>
 
@@ -162,17 +197,28 @@ SPDX-License-Identifier: EUPL-1.2
 				<div v-if="store.jobStatus" class="correspondence-index__job-status">
 					<h3>{{ t('docudesk', 'Batch job status') }}</h3>
 					<p>
-						{{ t('docudesk', 'Status: {status}', { status: store.jobStatus.status }) }}
+						{{
+							t('docudesk', 'Status: {status}', {
+								status: store.jobStatus.status,
+							})
+						}}
 					</p>
 					<p v-if="store.jobStatus.total">
-						{{ t('docudesk', '{completed} / {total} completed, {errors} errors', {
-							completed: store.jobStatus.completed || 0,
-							total: store.jobStatus.total,
-							errors: store.jobStatus.errors || 0,
-						}) }}
+						{{
+							t(
+								'docudesk',
+								'{completed} / {total} completed, {errors} errors',
+								{
+									completed: store.jobStatus.completed || 0,
+									total: store.jobStatus.total,
+									errors: store.jobStatus.errors || 0,
+								},
+							)
+						}}
 					</p>
-					<NcButton v-if="store.jobId && store.jobStatus.status !== 'completed'"
-						type="secondary"
+					<NcButton
+						v-if="store.jobId && store.jobStatus.status !== 'completed'"
+						variant="secondary"
 						@click="store.pollJobStatus()">
 						{{ t('docudesk', 'Refresh status') }}
 					</NcButton>
@@ -195,12 +241,7 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import {
-	NcButton,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import { useCorrespondenceStore } from '../../store/modules/correspondence.js'
 
 export default {
@@ -243,8 +284,11 @@ export default {
 		 * @return {boolean}
 		 */
 		canGenerate() {
-			return !!this.store.templateId && this.store.dataRefs.length > 0
+			return (
+				!!this.store.templateId
+				&& this.store.dataRefs.length > 0
 				&& this.store.dataRefs.every((r) => r.register && r.schema && r.id)
+			)
 		},
 
 		/**
@@ -253,8 +297,12 @@ export default {
 		 * @return {boolean}
 		 */
 		canGenerateBatch() {
-			return !!this.store.templateId && this.store.recipientIds.length > 0
-				&& !!this.batchRegister && !!this.batchSchema
+			return (
+				!!this.store.templateId
+				&& this.store.recipientIds.length > 0
+				&& !!this.batchRegister
+				&& !!this.batchSchema
+			)
 		},
 	},
 
@@ -286,7 +334,8 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async generate() {
-			const filename = 'brief-' + (this.store.caseReference || 'correspondentie')
+			const filename =
+				'brief-' + (this.store.caseReference || 'correspondentie')
 			await this.store.generate(filename)
 		},
 

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 export const useTemplateStore = defineStore('template', {
 	state: () => ({
@@ -32,7 +32,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Build the Accept-Language header value for the current preference.
 		 *
-		 * @return {Object} Headers object, potentially with Accept-Language
+		 * @return {object} Headers object, potentially with Accept-Language
 		 *
 		 * @spec openspec/changes/register-i18n/tasks.md#task-1
 		 */
@@ -42,20 +42,24 @@ export const useTemplateStore = defineStore('template', {
 			}
 			// Build quality-weighted header: "nl, en;q=0.9" (REQ-I18N-032)
 			const supported = ['nl', 'en']
-			const others = supported.filter(l => l !== this.selectedLanguage)
-			const parts = [this.selectedLanguage, ...others.map((l, i) => `${l};q=${(0.9 - i * 0.1).toFixed(1)}`)]
+			const others = supported.filter((l) => l !== this.selectedLanguage)
+			const parts = [
+				this.selectedLanguage,
+				...others.map((l, i) => `${l};q=${(0.9 - i * 0.1).toFixed(1)}`),
+			]
 			return { 'Accept-Language': parts.join(', ') }
 		},
 		/**
 		 * Record language negotiation headers from an OR response.
 		 *
-		 * @param {Object} response The axios response object
+		 * @param {object} response The axios response object
 		 *
 		 * @spec openspec/changes/register-i18n/tasks.md#task-1
 		 */
 		recordResponseLanguage(response) {
 			this.servedLanguage = response.headers?.['content-language'] || null
-			this.isFallbackLanguage = response.headers?.['x-content-language-fallback'] === 'true'
+			this.isFallbackLanguage =
+				response.headers?.['x-content-language-fallback'] === 'true'
 		},
 		/**
 		 * Fetch templates with optional category/tag/search filters.
@@ -74,7 +78,9 @@ export const useTemplateStore = defineStore('template', {
 					}
 				})
 				const response = await axios.get(
-					generateUrl('/apps/docudesk/api/templates') + '?' + params.toString(),
+					generateUrl('/apps/docudesk/api/templates')
+						+ '?'
+						+ params.toString(),
 					{ headers: this.buildLanguageHeaders() },
 				)
 				this.templates = response.data.results || []
@@ -122,7 +128,10 @@ export const useTemplateStore = defineStore('template', {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.post(generateUrl('/apps/docudesk/api/templates'), data)
+				const response = await axios.post(
+					generateUrl('/apps/docudesk/api/templates'),
+					data,
+				)
 				this.templateItem = response.data
 				return response.data
 			} catch (err) {
@@ -144,7 +153,10 @@ export const useTemplateStore = defineStore('template', {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.put(generateUrl(`/apps/docudesk/api/templates/${id}`), data)
+				const response = await axios.put(
+					generateUrl(`/apps/docudesk/api/templates/${id}`),
+					data,
+				)
 				this.templateItem = response.data
 				return response.data
 			} catch (err) {
@@ -166,7 +178,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				await axios.delete(generateUrl(`/apps/docudesk/api/templates/${id}`))
-				this.templates = this.templates.filter(t => t.id !== id)
+				this.templates = this.templates.filter((t) => t.id !== id)
 				return true
 			} catch (err) {
 				console.error('Failed to delete template:', err)
@@ -186,7 +198,9 @@ export const useTemplateStore = defineStore('template', {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.post(generateUrl(`/apps/docudesk/api/templates/${id}/duplicate`))
+				const response = await axios.post(
+					generateUrl(`/apps/docudesk/api/templates/${id}/duplicate`),
+				)
 				return response.data
 			} catch (err) {
 				console.error('Failed to duplicate template:', err)
@@ -206,7 +220,9 @@ export const useTemplateStore = defineStore('template', {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.get(generateUrl(`/apps/docudesk/api/templates/${id}/versions`))
+				const response = await axios.get(
+					generateUrl(`/apps/docudesk/api/templates/${id}/versions`),
+				)
 				this.versions = response.data.results || []
 				return response.data
 			} catch (err) {
@@ -228,7 +244,11 @@ export const useTemplateStore = defineStore('template', {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.post(generateUrl(`/apps/docudesk/api/templates/${templateId}/versions/${versionId}/restore`))
+				const response = await axios.post(
+					generateUrl(
+						`/apps/docudesk/api/templates/${templateId}/versions/${versionId}/restore`,
+					),
+				)
 				this.templateItem = response.data
 				return response.data
 			} catch (err) {
@@ -249,7 +269,10 @@ export const useTemplateStore = defineStore('template', {
 		async previewTemplate(content, data = {}) {
 			this.error = null
 			try {
-				const response = await axios.post(generateUrl('/apps/docudesk/api/templates/preview'), { content, data })
+				const response = await axios.post(
+					generateUrl('/apps/docudesk/api/templates/preview'),
+					{ content, data },
+				)
 				return response.data.html
 			} catch (err) {
 				console.error('Failed to preview template:', err)
@@ -266,7 +289,9 @@ export const useTemplateStore = defineStore('template', {
 		async acquireLock(id) {
 			this.error = null
 			try {
-				const response = await axios.post(generateUrl(`/apps/docudesk/api/templates/${id}/lock`))
+				const response = await axios.post(
+					generateUrl(`/apps/docudesk/api/templates/${id}/lock`),
+				)
 				return response.data
 			} catch (err) {
 				console.error('Failed to acquire lock:', err)
@@ -283,7 +308,9 @@ export const useTemplateStore = defineStore('template', {
 		async releaseLock(id) {
 			this.error = null
 			try {
-				const response = await axios.delete(generateUrl(`/apps/docudesk/api/templates/${id}/lock`))
+				const response = await axios.delete(
+					generateUrl(`/apps/docudesk/api/templates/${id}/lock`),
+				)
 				return response.data
 			} catch (err) {
 				console.error('Failed to release lock:', err)

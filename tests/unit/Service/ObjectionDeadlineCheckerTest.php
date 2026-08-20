@@ -36,125 +36,113 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class ObjectionDeadlineCheckerTest extends TestCase
-{
+class ObjectionDeadlineCheckerTest extends TestCase {
 
-    /**
-     * @var ObjectionDeadlineChecker
-     */
-    private ObjectionDeadlineChecker $checker;
+	/**
+	 * @var ObjectionDeadlineChecker
+	 */
+	private ObjectionDeadlineChecker $checker;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * @var ContainerInterface|MockObject
-     */
-    private ContainerInterface|MockObject $mockContainer;
+	/**
+	 * @var ContainerInterface|MockObject
+	 */
+	private ContainerInterface|MockObject $mockContainer;
 
-    /**
-     * @var IAppManager|MockObject
-     */
-    private IAppManager|MockObject $mockAppManager;
+	/**
+	 * @var IAppManager|MockObject
+	 */
+	private IAppManager|MockObject $mockAppManager;
 
-    /**
-     * @var IAppConfig|MockObject
-     */
-    private IAppConfig|MockObject $mockConfig;
+	/**
+	 * @var IAppConfig|MockObject
+	 */
+	private IAppConfig|MockObject $mockConfig;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
+		$this->mockContainer = $this->createMock(ContainerInterface::class);
+		$this->mockAppManager = $this->createMock(IAppManager::class);
+		$this->mockConfig = $this->createMock(IAppConfig::class);
 
-        $this->mockLogger     = $this->createMock(LoggerInterface::class);
-        $this->mockContainer  = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager = $this->createMock(IAppManager::class);
-        $this->mockConfig     = $this->createMock(IAppConfig::class);
+		$this->checker = new ObjectionDeadlineChecker(
+			$this->mockLogger,
+			$this->mockContainer,
+			$this->mockAppManager,
+			$this->mockConfig
+		);
 
-        $this->checker = new ObjectionDeadlineChecker(
-            $this->mockLogger,
-            $this->mockContainer,
-            $this->mockAppManager,
-            $this->mockConfig
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test getObjectionPeriodDays returns configured value
+	 *
+	 * @return void
+	 */
+	public function testGetObjectionPeriodDaysReturnsConfiguredValue(): void {
+		$this->mockConfig->method('getValueString')
+			->with('docudesk', 'publication_objection_period_days', '28')
+			->willReturn('14');
 
+		$this->assertEquals(14, $this->checker->getObjectionPeriodDays());
 
-    /**
-     * Test getObjectionPeriodDays returns configured value
-     *
-     * @return void
-     */
-    public function testGetObjectionPeriodDaysReturnsConfiguredValue(): void
-    {
-        $this->mockConfig->method('getValueString')
-            ->with('docudesk', 'publication_objection_period_days', '28')
-            ->willReturn('14');
+	}//end testGetObjectionPeriodDaysReturnsConfiguredValue()
 
-        $this->assertEquals(14, $this->checker->getObjectionPeriodDays());
+	/**
+	 * Test getObjectionPeriodDays returns default value
+	 *
+	 * @return void
+	 */
+	public function testGetObjectionPeriodDaysReturnsDefault(): void {
+		$this->mockConfig->method('getValueString')
+			->with('docudesk', 'publication_objection_period_days', '28')
+			->willReturn('28');
 
-    }//end testGetObjectionPeriodDaysReturnsConfiguredValue()
+		$this->assertEquals(28, $this->checker->getObjectionPeriodDays());
 
+	}//end testGetObjectionPeriodDaysReturnsDefault()
 
-    /**
-     * Test getObjectionPeriodDays returns default value
-     *
-     * @return void
-     */
-    public function testGetObjectionPeriodDaysReturnsDefault(): void
-    {
-        $this->mockConfig->method('getValueString')
-            ->with('docudesk', 'publication_objection_period_days', '28')
-            ->willReturn('28');
+	/**
+	 * Test calculateDeadline returns future date
+	 *
+	 * @return void
+	 */
+	public function testCalculateDeadlineReturnsFutureDate(): void {
+		$this->mockConfig->method('getValueString')
+			->willReturn('28');
 
-        $this->assertEquals(28, $this->checker->getObjectionPeriodDays());
+		$deadline = $this->checker->calculateDeadline();
+		$now = new \DateTime();
 
-    }//end testGetObjectionPeriodDaysReturnsDefault()
+		$this->assertGreaterThan($now, $deadline);
 
+	}//end testCalculateDeadlineReturnsFutureDate()
 
-    /**
-     * Test calculateDeadline returns future date
-     *
-     * @return void
-     */
-    public function testCalculateDeadlineReturnsFutureDate(): void
-    {
-        $this->mockConfig->method('getValueString')
-            ->willReturn('28');
+	/**
+	 * Test checkObjectionDeadline throws when OpenRegister not installed
+	 *
+	 * @return void
+	 */
+	public function testCheckObjectionDeadlineThrowsWhenNotInstalled(): void {
+		$this->expectException(\Exception::class);
+		$this->expectExceptionMessage('Failed to check objection deadline');
 
-        $deadline = $this->checker->calculateDeadline();
-        $now      = new \DateTime();
+		$this->mockAppManager->method('getInstalledApps')
+			->willReturn([]);
 
-        $this->assertGreaterThan($now, $deadline);
+		$this->checker->checkObjectionDeadline('uuid-1', 'reg-1', 'sch-1');
 
-    }//end testCalculateDeadlineReturnsFutureDate()
-
-
-    /**
-     * Test checkObjectionDeadline throws when OpenRegister not installed
-     *
-     * @return void
-     */
-    public function testCheckObjectionDeadlineThrowsWhenNotInstalled(): void
-    {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Failed to check objection deadline');
-
-        $this->mockAppManager->method('getInstalledApps')
-            ->willReturn([]);
-
-        $this->checker->checkObjectionDeadline('uuid-1', 'reg-1', 'sch-1');
-
-    }//end testCheckObjectionDeadlineThrowsWhenNotInstalled()
-
+	}//end testCheckObjectionDeadlineThrowsWhenNotInstalled()
 
 }//end class

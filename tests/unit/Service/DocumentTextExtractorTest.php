@@ -33,149 +33,129 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class DocumentTextExtractorTest extends TestCase
-{
+class DocumentTextExtractorTest extends TestCase {
 
-    /**
-     * @var DocumentTextExtractor
-     */
-    private DocumentTextExtractor $extractor;
+	/**
+	 * @var DocumentTextExtractor
+	 */
+	private DocumentTextExtractor $extractor;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
+		$this->extractor = new DocumentTextExtractor($this->mockLogger);
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->mockLogger = $this->createMock(LoggerInterface::class);
-        $this->extractor  = new DocumentTextExtractor($this->mockLogger);
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test extractTextContent returns content field
+	 *
+	 * @return void
+	 */
+	public function testExtractTextContentFromContentField(): void {
+		$result = $this->extractor->extractTextContent(['content' => 'Hello world']);
+		$this->assertEquals('Hello world', $result);
 
+	}//end testExtractTextContentFromContentField()
 
-    /**
-     * Test extractTextContent returns content field
-     *
-     * @return void
-     */
-    public function testExtractTextContentFromContentField(): void
-    {
-        $result = $this->extractor->extractTextContent(['content' => 'Hello world']);
-        $this->assertEquals('Hello world', $result);
+	/**
+	 * Test extractTextContent returns text field
+	 *
+	 * @return void
+	 */
+	public function testExtractTextContentFromTextField(): void {
+		$result = $this->extractor->extractTextContent(['text' => 'Some text']);
+		$this->assertEquals('Some text', $result);
 
-    }//end testExtractTextContentFromContentField()
+	}//end testExtractTextContentFromTextField()
 
+	/**
+	 * Test extractTextContent returns description field
+	 *
+	 * @return void
+	 */
+	public function testExtractTextContentFromDescriptionField(): void {
+		$result = $this->extractor->extractTextContent(['description' => 'A description']);
+		$this->assertEquals('A description', $result);
 
-    /**
-     * Test extractTextContent returns text field
-     *
-     * @return void
-     */
-    public function testExtractTextContentFromTextField(): void
-    {
-        $result = $this->extractor->extractTextContent(['text' => 'Some text']);
-        $this->assertEquals('Some text', $result);
+	}//end testExtractTextContentFromDescriptionField()
 
-    }//end testExtractTextContentFromTextField()
+	/**
+	 * Test extractTextContent returns empty string for no text
+	 *
+	 * @return void
+	 */
+	public function testExtractTextContentReturnsEmptyForNoText(): void {
+		$result = $this->extractor->extractTextContent(['other' => 'data']);
+		$this->assertEquals('', $result);
 
+	}//end testExtractTextContentReturnsEmptyForNoText()
 
-    /**
-     * Test extractTextContent returns description field
-     *
-     * @return void
-     */
-    public function testExtractTextContentFromDescriptionField(): void
-    {
-        $result = $this->extractor->extractTextContent(['description' => 'A description']);
-        $this->assertEquals('A description', $result);
+	/**
+	 * Test extractTextContent returns empty string for non-string content
+	 *
+	 * @return void
+	 */
+	public function testExtractTextContentReturnsEmptyForNonString(): void {
+		$result = $this->extractor->extractTextContent(['content' => 123]);
+		$this->assertEquals('', $result);
 
-    }//end testExtractTextContentFromDescriptionField()
+	}//end testExtractTextContentReturnsEmptyForNonString()
 
+	/**
+	 * Test normalizeDateFields normalizes valid dates
+	 *
+	 * @return void
+	 */
+	public function testNormalizeDateFieldsNormalizesValidDates(): void {
+		$result = $this->extractor->normalizeDateFields([
+			'created' => '2024-01-15',
+			'modified' => '2024-06-20T10:30:00+00:00',
+		]);
 
-    /**
-     * Test extractTextContent returns empty string for no text
-     *
-     * @return void
-     */
-    public function testExtractTextContentReturnsEmptyForNoText(): void
-    {
-        $result = $this->extractor->extractTextContent(['other' => 'data']);
-        $this->assertEquals('', $result);
+		$this->assertArrayHasKey('created', $result);
+		$this->assertArrayHasKey('modified', $result);
 
-    }//end testExtractTextContentReturnsEmptyForNoText()
+	}//end testNormalizeDateFieldsNormalizesValidDates()
 
+	/**
+	 * Test normalizeDateFields skips empty fields
+	 *
+	 * @return void
+	 */
+	public function testNormalizeDateFieldsSkipsEmptyFields(): void {
+		$result = $this->extractor->normalizeDateFields([
+			'created' => '',
+			'other' => 'value',
+		]);
 
-    /**
-     * Test extractTextContent returns empty string for non-string content
-     *
-     * @return void
-     */
-    public function testExtractTextContentReturnsEmptyForNonString(): void
-    {
-        $result = $this->extractor->extractTextContent(['content' => 123]);
-        $this->assertEquals('', $result);
+		$this->assertEmpty($result);
 
-    }//end testExtractTextContentReturnsEmptyForNonString()
+	}//end testNormalizeDateFieldsSkipsEmptyFields()
 
+	/**
+	 * Test normalizeDateFields handles invalid dates gracefully
+	 *
+	 * @return void
+	 */
+	public function testNormalizeDateFieldsHandlesInvalidDates(): void {
+		$result = $this->extractor->normalizeDateFields([
+			'created' => 'not-a-date',
+		]);
 
-    /**
-     * Test normalizeDateFields normalizes valid dates
-     *
-     * @return void
-     */
-    public function testNormalizeDateFieldsNormalizesValidDates(): void
-    {
-        $result = $this->extractor->normalizeDateFields([
-            'created'  => '2024-01-15',
-            'modified' => '2024-06-20T10:30:00+00:00',
-        ]);
+		// Invalid date string "not-a-date" will cause an exception, should be skipped.
+		$this->assertArrayNotHasKey('created', $result);
 
-        $this->assertArrayHasKey('created', $result);
-        $this->assertArrayHasKey('modified', $result);
-
-    }//end testNormalizeDateFieldsNormalizesValidDates()
-
-
-    /**
-     * Test normalizeDateFields skips empty fields
-     *
-     * @return void
-     */
-    public function testNormalizeDateFieldsSkipsEmptyFields(): void
-    {
-        $result = $this->extractor->normalizeDateFields([
-            'created' => '',
-            'other'   => 'value',
-        ]);
-
-        $this->assertEmpty($result);
-
-    }//end testNormalizeDateFieldsSkipsEmptyFields()
-
-
-    /**
-     * Test normalizeDateFields handles invalid dates gracefully
-     *
-     * @return void
-     */
-    public function testNormalizeDateFieldsHandlesInvalidDates(): void
-    {
-        $result = $this->extractor->normalizeDateFields([
-            'created' => 'not-a-date',
-        ]);
-
-        // Invalid date string "not-a-date" will cause an exception, should be skipped.
-        $this->assertArrayNotHasKey('created', $result);
-
-    }//end testNormalizeDateFieldsHandlesInvalidDates()
-
+	}//end testNormalizeDateFieldsHandlesInvalidDates()
 
 }//end class

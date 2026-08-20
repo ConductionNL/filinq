@@ -9,6 +9,87 @@
 
 ### Added
 
+- **Agents can now edit spreadsheets and presentations, not just text documents (`multi-format-editing-tools`).** Four new tools — `readSpreadsheet`, `editSpreadsheet`, `readPresentation`, `editPresentation` — over `.ods`/`.xlsx` and `.pptx`/`.odp`. They reuse the existing lock, version precondition and agent-authored marking rather than opening a second write path.
+
+  Addressing follows the durable identity each kind already has: spreadsheets by `Sheet!Cell`, presentations by slide id and shape id (**never position** — slide order changes and ids do not). Speaker notes are a distinct region so drafting talking points cannot alter what is on screen.
+
+  Three refusals, each with a control-pair test:
+  - a literal write over a **formula** needs `replaceFormula` on that specific edit; the flag is per cell and is not carried across a bulk write
+  - over 200 cells (or 100 shapes) the call is **refused, never truncated**
+  - macro-bearing packages, `.odb` and PDF content rewriting are refused — and the macro check reads the **bytes**, so a package carrying VBA is refused even when named `.docx`
+
+  Dependent cells are reported **stale**, never recalculated: DocuDesk has no formula engine, and the difference is observable — after one write the same file showed `1218` in ODS (LibreOffice recalculated on open) and `290` in XLSX (it served the cached value).
+
+- **Style and layout now work on `.odt` (`document-rich-editing`).** Previously refused outright. ODF has no direct formatting, so this mints an automatic style in `content.xml` and points the block at it; `heading` rewrites `text:p` ↔ `text:h`, which is only safe because the block scanner now spans both. `list` remains refused by name — an ODF list wraps the paragraph rather than setting a property on it.
+
+- **A measured supported-type matrix, per office suite (`multi-format-editing-tools` Phase 0).** `SupportedTypeProbe` reads each suite's own WOPI discovery rather than trusting a hard-coded table, and publishes the answer with the suite name, version and probe date. An **unprobed type is UNSUPPORTED** — a probe that cannot reach the suite reports everything unsupported rather than unknown.
+
+  Measured 2026-08-18 on this instance:
+
+  | Type | Collabora | Euro-Office 1.0 | ONLYOFFICE 1.0 | LibreOffice 7.6.7.2\* |
+  |---|:---:|:---:|:---:|:---:|
+  | odt, docx, ods, xlsx, odp, pptx, csv | ✅ | ✅ | ✅ | ✅ |
+  | doc, xls, ppt | ✅ | ❌ | ❌ | ✅ |
+  | odg | ✅ | ❌ | ❌ | ❌ |
+  | pdf | ❌ | ✅ | ✅ | ✅ |
+
+  \* A different measurement: LibreOffice desktop exposes no WOPI discovery, so DocuDesk cannot open an editing session against it at all. Those ticks are conversion filters, not editability. Per ADR-087 §4, suite-specific types (legacy `doc`/`xls`/`ppt` and `odg` on Collabora; `pdf` on the ONLYOFFICE lineage) resolve absent and visibly, and no feature may require them.
+
+### Fixed
+
+- **ODF headings were invisible to `readDocument`, and could not be edited.** ODF writes a heading as `text:h`, its own element, and the block scanner spanned `text:p` only — so on a four-block `.odt` the tool reported three blocks and an agent asked to edit the heading was told its anchor did not exist for text plainly on the page.
+
+- **Duplicate derived tool ids were hiding real tools.** A derived id carries no register, so 13 copies of one schema slug collided. Suppressing them took the catalogue from 207 rows / 159 distinct to 173 / 173 — and 14 tools became visible that were not before, including `template` and `huisstijl`.
+
+
+- **DocuDesk is reachable by agents, and agents can change documents (`docudesk-mcp-adoption`, `document-editing-tools`).** DocuDesk had no MCP surface at all, so it was invisible to Hermiq; and no tool in the fleet could read a `.docx`/`.odt` as text and write a change back.
+
+  **The MCP surface (ADR-063)** is deliberately narrow and read-biased. Eight of twenty-one schemas — `template`, `huisstijl`, `correspondence`, `generatedDocument`, `batchCorrespondenceJob`, `signingRequest`, `dossier`, `base` — declare `x-openregister-mcp` with `search` + `get` only. **No DocuDesk schema exposes a derived `create`/`update`/`delete` verb**: templates and huisstijl are governance artefacts, the correspondence and batch rows are audit records, and `signingRequest` is the legal spine of a signature process. The remaining thirteen schemas stay off entirely (signature material, citizen contact data, re-identification links, extracted invoice content). `lib/Mcp/DocudeskScannableServices.php` is the per-app `#[McpTool]` scan opt-in.
+
+  **Four curated tools.** `docudesk.generateCorrespondence` (one letter, from a template, for one recipient); `docudesk.readDocument`, `docudesk.editDocument` and `docudesk.convertDocumentToPdf`. `generateBatch()` is **not** exposed — an agent-triggerable mail-merge over N recipients is a spam and exfiltration primitive — and no signing service carries a tool attribute, because applying an electronic signature has legal effect and stays a deliberate human action.
+
+  **Editing is byte-surgical.** `PackageCodec` rewrites only the byte range of the targeted paragraph inside the one body part of the ODF/OOXML package. Comments, tracked changes, headers, styles, embedded objects and every other package entry survive because they are never re-serialised — losses invisible in a diff of the visible text are made structurally impossible rather than guarded. Edits address **content-hash anchors** recomputed on every read, never positional indexes; editing a paragraph spends its anchor, so a stale edit is refused instead of landing in the wrong place. (`w14:paraId` was measured and does **not** survive a Collabora round trip, which is why native ids are not used.)
+
+  **Concurrency, and why this is not a WOPI client.** `richdocuments`' `WopiController::lock()` ignores `X-WOPI-Lock` and takes an `ILockManager` `TYPE_APP` lock owned by the literal string `richdocuments`; `files_lock` **extends** a lock whose type and owner both match. A WOPI client's lock would therefore be indistinguishable from Collabora's own, and a document open in the editor would have its lock silently extended rather than refusing — exactly the data-loss case the lock exists to prevent. The session instead takes an in-process `TYPE_APP` lock owned by `docudesk`, which conflicts with Collabora's (the refusal) while staying distinct from it, and needs no self-addressed HTTP call. Lock contention is a **structured refusal** — never a poll, a queue, a retry, or a stolen lock. A file etag re-read immediately before the write closes the remaining out-of-session race: a version that moved is refused, never merged.
+
+  **Output mode.** In place by default, producing a restorable Nextcloud file version; `sibling` writes a new file beside the original. Configuration (`docudesk.agent_edit_output_mode`) sets the **ceiling** and a tool argument may only narrow it — an agent cannot widen its own blast radius.
+
+  **Marking and recording (ADR-088).** Every produced file gets the fleet-wide `Agent authored` system tag, applied **before** the write and rolled back if the write then fails — so neither an unmarked agent artefact nor a mark on an unchanged file can survive the operation. Results carry an `artefact` descriptor that Hermiq lifts into its run trace, and a `generatedDocument` row records the file id. No tool returns document, attachment or signature bytes.
+
+  **Refusals:** a document under a non-cancelled `signingRequest` (fails **closed** when the register is unreachable); anonymisation output; unsupported formats; oversized packages; read-only files; a file outside the acting user's folder; no signed-in user.
+
+- **`PdfConversionService::convertToPdfReporting()`** returns the PDF *and* the backend that claimed it, so an office-app conversion can be told from the built-in fallback in a log after the fact. `convertToPdf()` is unchanged.
+
+- **`generatedDocument.format`** accepts `docx`, which an agent edit produces.
+
+- **Output destinations for document generation
+  (`document-output-destinations-and-bulk-retention`).**
+  `POST /apps/docudesk/api/documents/generate` accepts a new
+  `options.output = {mode: 'return'|'files'|'both', targetPath?}`. Default
+  `mode: 'return'` is byte-identical to today's behaviour. `'files'` stores
+  the generated document in the requesting user's Files
+  (`DocuDesk/<template namespace>/` by default, created recursively;
+  filename collisions resolved via Nextcloud's own
+  `Folder::getNonExistingName()` convention) and returns JSON
+  `{fileId, path, name, size, format}` instead of a binary. `'both'` stores
+  AND returns the binary, with the stored file identified via
+  `X-Docudesk-File-Id`/`X-Docudesk-File-Path` response headers. A storage
+  execution failure (quota, permissions) fails the request for `'files'`
+  but fails open — binary returned, warning attached — for `'both'`;
+  `targetPath` validation failures (path traversal, absolute paths, bad
+  charset) always hard-fail. New `DocumentStorageService`. The
+  `generatedDocument` audit record gains additive `fileId`/`filePath`
+  fields (register bumped to v7.6.0; schema to v1.1.0).
+  **Async bulk generation (`generate/bulk`, >10 objects) no longer
+  discards generated output.** `BatchDocumentJob` now requires
+  `options.output.mode: 'files'` (HTTP 400 otherwise, before the job is
+  ever dispatched) and stores every object's output under
+  `<targetPath>/<jobId>/`; each job-status result item gains `fileId`/
+  `path`. Sync bulk (≤10 objects) honours `options.output.mode` per
+  object the same way single-generate does. Correspondence
+  (`CorrespondenceService`/`CorrespondenceController`) is unchanged — it
+  is a fully independent implementation and out of scope for this change.
+
 - **AVG Art. 30 processing-activity register (`processing-activity-export`).**
   DocuDesk now declares its four processing activities (anonymisation, OCR,
   metadata-enrichment, signing) as `x-openregister-processing` catalogue

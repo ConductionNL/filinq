@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+@spec openspec/specs/document-validation-checks/spec.md
 -->
 
 <template>
@@ -25,9 +25,9 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
-import NcModal from '@nextcloud/vue/dist/Components/NcModal.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
+// @nextcloud/vue v9 dropped the `dist/Components/Nc*.js` path layout in
+// favour of an exports map; the old deep specifiers resolve to nothing.
+import { NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
 import ValidationFindingsPanel from '../components/ValidationFindingsPanel.vue'
 
 export default {

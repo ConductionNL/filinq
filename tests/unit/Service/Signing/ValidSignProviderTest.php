@@ -25,6 +25,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service\Signing;
 
 use OCA\DocuDesk\Service\Signing\ValidSignProvider;
 use OCP\IAppConfig;
+use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -40,154 +41,175 @@ use RuntimeException;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class ValidSignProviderTest extends TestCase
-{
+class ValidSignProviderTest extends TestCase {
 
-    /**
-     * @var IAppConfig|MockObject
-     */
-    private IAppConfig|MockObject $config;
+	/**
+	 * @var IAppConfig|MockObject
+	 */
+	private IAppConfig|MockObject $config;
 
-    /**
-     * @var ValidSignProvider
-     */
-    private ValidSignProvider $provider;
+	/**
+	 * @var ValidSignProvider
+	 */
+	private ValidSignProvider $provider;
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->config = $this->createMock(IAppConfig::class);
+		$this->config = $this->createMock(IAppConfig::class);
 
-        $this->provider = new ValidSignProvider(
-            config: $this->config
-        );
+		$this->provider = new ValidSignProvider(
+			config: $this->config
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * getIdentifier() returns the canonical 'validsign' identifier.
-     *
-     * @return void
-     */
-    public function testGetIdentifierReturnsValidsign(): void
-    {
-        $this->assertSame('validsign', $this->provider->getIdentifier());
+	/**
+	 * getIdentifier() returns the canonical 'validsign' identifier.
+	 *
+	 * @return void
+	 */
+	public function testGetIdentifierReturnsValidsign(): void {
+		$this->assertSame('validsign', $this->provider->getIdentifier());
 
-    }//end testGetIdentifierReturnsValidsign()
+	}//end testGetIdentifierReturnsValidsign()
 
-    /**
-     * supportsLevel() returns true for all three eIDAS levels.
-     *
-     * @return void
-     */
-    public function testSupportsLevelForEidasLevels(): void
-    {
-        $this->assertTrue($this->provider->supportsLevel(level: 'SES'));
-        $this->assertTrue($this->provider->supportsLevel(level: 'AdES'));
-        $this->assertTrue($this->provider->supportsLevel(level: 'QES'));
+	/**
+	 * supportsLevel() returns true for all three eIDAS levels.
+	 *
+	 * @return void
+	 */
+	public function testSupportsLevelForEidasLevels(): void {
+		$this->assertTrue($this->provider->supportsLevel(level: 'SES'));
+		$this->assertTrue($this->provider->supportsLevel(level: 'AdES'));
+		$this->assertTrue($this->provider->supportsLevel(level: 'QES'));
 
-    }//end testSupportsLevelForEidasLevels()
+	}//end testSupportsLevelForEidasLevels()
 
-    /**
-     * supportsLevel() returns false for unknown levels.
-     *
-     * @return void
-     */
-    public function testSupportsLevelReturnsFalseForUnknown(): void
-    {
-        $this->assertFalse($this->provider->supportsLevel(level: 'UNKNOWN'));
-        $this->assertFalse($this->provider->supportsLevel(level: ''));
-        $this->assertFalse($this->provider->supportsLevel(level: 'ses'));
+	/**
+	 * supportsLevel() returns false for unknown levels.
+	 *
+	 * @return void
+	 */
+	public function testSupportsLevelReturnsFalseForUnknown(): void {
+		$this->assertFalse($this->provider->supportsLevel(level: 'UNKNOWN'));
+		$this->assertFalse($this->provider->supportsLevel(level: ''));
+		$this->assertFalse($this->provider->supportsLevel(level: 'ses'));
 
-    }//end testSupportsLevelReturnsFalseForUnknown()
+	}//end testSupportsLevelReturnsFalseForUnknown()
 
-    /**
-     * initiateSigning() throws when the provider is not configured (no sourceId).
-     *
-     * @return void
-     */
-    public function testInitiateSigningThrowsWhenNotConfigured(): void
-    {
-        $this->config->method('getValueString')->willReturn('{}');
+	/**
+	 * initiateSigning() throws when the provider is not configured (no sourceId).
+	 *
+	 * @return void
+	 */
+	public function testInitiateSigningThrowsWhenNotConfigured(): void {
+		$this->config->method('getValueString')->willReturn('{}');
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('ValidSign provider is not configured');
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('ValidSign provider is not configured');
 
-        $this->provider->initiateSigning(
-            documentPath: '/tmp/test.pdf',
-            documentName: 'test.pdf',
-            signers: [['userId' => 'alice']],
-            level: 'SES'
-        );
+		$this->provider->initiateSigning(
+			documentPath: '/tmp/test.pdf',
+			documentName: 'test.pdf',
+			signers: [['userId' => 'alice']],
+			level: 'SES'
+		);
 
-    }//end testInitiateSigningThrowsWhenNotConfigured()
+	}//end testInitiateSigningThrowsWhenNotConfigured()
 
-    /**
-     * initiateSigning() returns a success result when sourceId is configured.
-     *
-     * @return void
-     */
-    public function testInitiateSigningSucceedsWhenConfigured(): void
-    {
-        $this->config->method('getValueString')->willReturn(json_encode(['sourceId' => 'vs-source-123']));
+	/**
+	 * initiateSigning() returns a success result when sourceId is configured.
+	 *
+	 * @return void
+	 */
+	public function testInitiateSigningSucceedsWhenConfigured(): void {
+		$this->config->method('getValueString')->willReturn(json_encode(['sourceId' => 'vs-source-123']));
 
-        $result = $this->provider->initiateSigning(
-            documentPath: '/tmp/test.pdf',
-            documentName: 'test.pdf',
-            signers: [['userId' => 'alice']],
-            level: 'SES'
-        );
+		$result = $this->provider->initiateSigning(
+			documentPath: '/tmp/test.pdf',
+			documentName: 'test.pdf',
+			signers: [['userId' => 'alice']],
+			level: 'SES'
+		);
 
-        $this->assertTrue($result['success']);
-        $this->assertArrayHasKey('externalId', $result);
-        $this->assertStringStartsWith('validsign-', $result['externalId']);
+		$this->assertTrue($result['success']);
+		$this->assertArrayHasKey('externalId', $result);
+		$this->assertStringStartsWith('validsign-', $result['externalId']);
 
-    }//end testInitiateSigningSucceedsWhenConfigured()
+	}//end testInitiateSigningSucceedsWhenConfigured()
 
-    /**
-     * checkStatus() returns a pending status response (stub).
-     *
-     * @return void
-     */
-    public function testCheckStatusReturnsPendingStub(): void
-    {
-        $result = $this->provider->checkStatus(externalId: 'validsign-abc123');
+	/**
+	 * checkStatus() returns a pending status response (stub).
+	 *
+	 * @return void
+	 */
+	public function testCheckStatusReturnsPendingStub(): void {
+		$result = $this->provider->checkStatus(externalId: 'validsign-abc123');
 
-        $this->assertSame('pending', $result['status']);
-        $this->assertIsArray($result['signers']);
-        $this->assertNull($result['completedAt']);
+		$this->assertSame('pending', $result['status']);
+		$this->assertIsArray($result['signers']);
+		$this->assertNull($result['completedAt']);
 
-    }//end testCheckStatusReturnsPendingStub()
+	}//end testCheckStatusReturnsPendingStub()
 
-    /**
-     * downloadSignedDocument() always throws (not yet implemented).
-     *
-     * @return void
-     */
-    public function testDownloadSignedDocumentAlwaysThrows(): void
-    {
-        $this->expectException(RuntimeException::class);
+	/**
+	 * downloadSignedDocument() always throws (not yet implemented).
+	 *
+	 * @return void
+	 */
+	public function testDownloadSignedDocumentAlwaysThrows(): void {
+		$this->expectException(RuntimeException::class);
 
-        $this->provider->downloadSignedDocument(externalId: 'validsign-abc123');
+		$this->provider->downloadSignedDocument(externalId: 'validsign-abc123');
 
-    }//end testDownloadSignedDocumentAlwaysThrows()
+	}//end testDownloadSignedDocumentAlwaysThrows()
 
-    /**
-     * cancelSigning() returns true (stub).
-     *
-     * @return void
-     */
-    public function testCancelSigningReturnsTrue(): void
-    {
-        $result = $this->provider->cancelSigning(externalId: 'validsign-abc123');
+	/**
+	 * cancelSigning() REFUSES rather than claiming a withdrawal it did not perform.
+	 *
+	 * This test previously asserted `assertTrue($result)` against a body that was,
+	 * in full, `return true;` — no call to ValidSign. It was green BECAUSE of the
+	 * defect: it pinned in place a method that tells a user their signing request
+	 * is withdrawn while it stays live at the provider, with signatories still able
+	 * to sign and produce a legally valid signature.
+	 *
+	 * openspec/changes/signing-cancellation.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testCancelSigningRefusesRatherThanClaimingSuccess(): void {
+		$this->expectException(SigningCancellationNotSupportedException::class);
+		$this->expectExceptionMessageMatches('/ValidSign.*still live.*can still sign/s');
 
-        $this->assertTrue($result);
+		$this->provider->cancelSigning(externalId: 'validsign-abc123');
 
-    }//end testCancelSigningReturnsTrue()
+	}//end testCancelSigningRefusesRatherThanClaimingSuccess()
+
+	/**
+	 * The refusal tells the user what to do instead.
+	 *
+	 * A refusal a user cannot act on is only marginally better than the lie it
+	 * replaced — they still do not know their request is live.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testTheRefusalNamesTheRemedy(): void {
+		try {
+			$this->provider->cancelSigning(externalId: 'validsign-abc123');
+			$this->fail('ValidSign cancellation must refuse');
+		} catch (SigningCancellationNotSupportedException $e) {
+			$this->assertStringContainsString('Withdraw it directly with the provider', $e->getMessage());
+		}
+
+	}//end testTheRefusalNamesTheRemedy()
 }//end class
