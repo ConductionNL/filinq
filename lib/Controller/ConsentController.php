@@ -166,7 +166,8 @@ class ConsentController extends Controller {
 	 */
 	public function index(): JSONResponse {
 		try {
-			if ($this->userSession->getUser() === null) {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
 				return new JSONResponse(
 					data: ['error' => $this->l10n->t('Not authenticated')],
 					statusCode: Http::STATUS_UNAUTHORIZED
@@ -178,14 +179,14 @@ class ConsentController extends Controller {
 				return $this->notConfiguredResponse();
 			}
 
-			$user = $this->userSession->getUser();
-			// $user cannot be null here (checked above), but appease Psalm.
-			$uid = '';
-			if ($user !== null) {
-				$uid = $user->getUID();
-			}
-
-			$isAdmin = ($user !== null && $this->groupManager->isAdmin($uid) === true);
+			// $user is the SAME object the guard above rejected when null — it is
+			// bound once at the top of this method now, rather than fetched a
+			// second time and re-checked. The old `$user !== null` here carried a
+			// comment saying it existed only to "appease Psalm"; binding once
+			// makes the non-null provable to every analyser and drops a redundant
+			// session lookup.
+			$uid = $user->getUID();
+			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
 
 			$filterUid = $uid;
 			if ($isAdmin === true) {
@@ -443,7 +444,8 @@ class ConsentController extends Controller {
 	 */
 	public function byDocument(string $documentId): JSONResponse {
 		try {
-			if ($this->userSession->getUser() === null) {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
 				return new JSONResponse(
 					data: ['error' => $this->l10n->t('Not authenticated')],
 					statusCode: Http::STATUS_UNAUTHORIZED
@@ -455,13 +457,10 @@ class ConsentController extends Controller {
 				return $this->notConfiguredResponse();
 			}
 
-			$user = $this->userSession->getUser();
-			$uid = '';
-			if ($user !== null) {
-				$uid = $user->getUID();
-			}
-
-			$isAdmin = ($user !== null && $this->groupManager->isAdmin($uid) === true);
+			// Same as index(): bound once by the guard above, so no second
+			// getUser() and no re-check.
+			$uid = $user->getUID();
+			$isAdmin = ($this->groupManager->isAdmin($uid) === true);
 
 			$filterUid = $uid;
 			if ($isAdmin === true) {
