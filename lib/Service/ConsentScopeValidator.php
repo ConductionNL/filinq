@@ -316,8 +316,10 @@ class ConsentScopeValidator {
 	 * @return void
 	 */
 	private function assertEntityHasNoPolicyMatch(array $consent): void {
+		// No `!== null`: isset() is already false for a null value, so that arm
+		// can never be false (PHPStan 2: notIdentical.alwaysTrue). The `!== ''`
+		// check is NOT redundant and stays — isset() is true for an empty string.
 		if (isset($consent['policyMatch']) === true
-			&& $consent['policyMatch'] !== null
 			&& $consent['policyMatch'] !== ''
 		) {
 			throw new InvalidArgumentException(

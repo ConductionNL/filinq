@@ -248,11 +248,17 @@ class MetadataService {
 				metadata: $metadata
 			);
 
-			if (method_exists($objectService, 'runAsSystem') === true) {
-				return $objectService->runAsSystem($direct);
-			}
-
-			return $direct();
+			// No method_exists() probe: getObjectService() returns
+			// ObjectServiceInterface, which DECLARES runAsSystem() (verified
+			// against openregister's real lib/Contract/ObjectServiceInterface.php,
+			// not just this repo's stub). The probe was therefore always true and
+			// the fallback below it unreachable.
+			//
+			// Worth removing rather than leaving: the fallback ran $direct()
+			// WITHOUT system context, inside a method called
+			// saveEnrichedMetadataAsSystem(). Had it ever been reachable it would
+			// have been a silent privilege downgrade, not a graceful degradation.
+			return $objectService->runAsSystem($direct);
 		};
 
 		return $this->runEnrichedMetadataPersist(

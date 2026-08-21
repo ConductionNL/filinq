@@ -309,8 +309,9 @@ class PolicyRetroactiveService {
 							return false;
 						}
 
+						// `!== null` dropped: isset() already excludes null. The
+						// `!== ''` stays — isset() is true for an empty string.
 						if (isset($r['policyMatch']) === true
-							&& $r['policyMatch'] !== null
 							&& $r['policyMatch'] !== ''
 						) {
 							return false;
