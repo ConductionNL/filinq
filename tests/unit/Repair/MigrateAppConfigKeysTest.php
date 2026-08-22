@@ -151,7 +151,12 @@ final class MigrateAppConfigKeysTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/app-identity/spec.md
+	 * @spec exclude Covers the same one-off docudesk -> filinq rename
+	 *       plumbing the class itself excludes: the step moves IAppConfig
+	 *       rows between namespaces and adds no behaviour of its own, so
+	 *       there is no capability spec to point at. What it pins is the
+	 *       step's own safety contract - that it survives an unreadable key
+	 *       rather than aborting the install.
 	 */
 	public function testAThrowingReadIsLoggedAndTheNextKeyStillMigrates(): void {
 		/* The store's own throwOnKey only refuses WRITES, which is exactly
