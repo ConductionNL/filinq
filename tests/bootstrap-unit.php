@@ -4,7 +4,7 @@
  * Bootstrap file for standalone PHPUnit tests (no Nextcloud server required)
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://DocuDesk.app
+ * @link https://filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -163,7 +163,7 @@ if (is_dir($ocpLockDir) === true) {
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
 
 // Shared test-only trait. The composer PSR-4 dev prefix maps
-// OCA\DocuDesk\Tests\ to tests/, which cannot resolve the lower-cased
+// OCA\Filinq\Tests\ to tests/, which cannot resolve the lower-cased
 // tests/unit/ directory segment, so non-test helper classes under tests/unit
 // are required explicitly (PHPUnit loads *Test.php files by path).
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';

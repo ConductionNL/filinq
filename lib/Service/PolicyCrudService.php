@@ -12,16 +12,16 @@
  * The CRUD layer dispatches to OpenRegister's ObjectService and enforces the
  * spec-level scope-validation rules via `ConsentService::validatePublicationConsentData`.
  * Schema-level RBAC stays unchanged (task 7); this layer is the place to
- * enforce DocuDesk-specific service-level gates (e.g. the standing-consent
+ * enforce Filinq-specific service-level gates (e.g. the standing-consent
  * scope check called out in spec §RBAC).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
@@ -42,10 +42,10 @@ use RuntimeException;
  * CRUD wrapper around the two policy surfaces.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class PolicyCrudService {
 
@@ -85,6 +85,10 @@ class PolicyCrudService {
 	 * write requires standing-consent permission" — the underlying
 	 * publicationConsent schema's RBAC cannot discriminate by `scope`, so the
 	 * scope-aware gate lives here.
+	 *
+	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME — see
+	 * PROHIBITION_GROUP below for the full reasoning; it applies to every
+	 * `docudesk-*` group id this app declares.
 	 */
 	public const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
 
@@ -93,6 +97,17 @@ class PolicyCrudService {
 	 * records. Prohibitions are operator-level blocking rules that override
 	 * the standard anonymise flow, so write authorisation requires either
 	 * admin role or membership in this group — never any authenticated user.
+	 *
+	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME. This is a
+	 * Nextcloud GROUP ID, declared in `lib/Settings/filinq_register.json` and
+	 * provisioned by OpenRegister CREATE-ONLY, then populated by admins.
+	 * Renaming the id therefore creates a NEW, EMPTY group while the existing
+	 * one keeps every member and nothing reads it any more. An empty group
+	 * denies everyone except admins and object owners, so the symptom is
+	 * prohibition writes starting to 403 for exactly the operators who were
+	 * granted them — no error at provisioning time, nothing in the log. Same
+	 * failure shape as renaming an OpenRegister register slug. Renaming these
+	 * groups needs its own membership migration, not a token substitution.
 	 */
 	public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
 
@@ -251,7 +266,7 @@ class PolicyCrudService {
 	 * Delete a prohibition record.
 	 *
 	 * NOTE: this can never succeed while `publicationProhibition` declares
-	 * `x-openregister-archival` (see `lib/Settings/docudesk_register.json`).
+	 * `x-openregister-archival` (see `lib/Settings/filinq_register.json`).
 	 * OpenRegister's `ObjectService::deleteObject()` refuses every user-driven
 	 * delete on an archival schema and throws
 	 * `OCA\OpenRegister\Exception\ArchivalImmutableException`; rows are removed
@@ -355,7 +370,7 @@ class PolicyCrudService {
 	 *
 	 * Unlike {@see deleteProhibition()} this really can succeed: the
 	 * `publicationConsent` schema declares NO `x-openregister-archival` in
-	 * `lib/Settings/docudesk_register.json`, so OpenRegister's archival gate
+	 * `lib/Settings/filinq_register.json`, so OpenRegister's archival gate
 	 * does not apply to it.
 	 *
 	 * @param string $uuid The record UUID.

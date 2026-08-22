@@ -29,7 +29,7 @@ export const useSigningStore = defineStore('signing', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/docudesk/api/signing/requests'),
+					generateUrl('/apps/filinq/api/signing/requests'),
 				)
 				this.signingRequests = response.data
 			} catch (err) {
@@ -50,7 +50,7 @@ export const useSigningStore = defineStore('signing', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl(`/apps/docudesk/api/signing/requests/${id}`),
+					generateUrl(`/apps/filinq/api/signing/requests/${id}`),
 				)
 				this.signingRequest = response.data
 				return response.data
@@ -73,7 +73,7 @@ export const useSigningStore = defineStore('signing', {
 			this.error = null
 			try {
 				const response = await axios.post(
-					generateUrl('/apps/docudesk/api/signing/requests'),
+					generateUrl('/apps/filinq/api/signing/requests'),
 					data,
 				)
 				this.signingRequests.push(response.data)
@@ -99,7 +99,7 @@ export const useSigningStore = defineStore('signing', {
 			try {
 				const response = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/signing/requests/${requestId}/sign`,
+						`/apps/filinq/api/signing/requests/${requestId}/sign`,
 					),
 					{ signerId },
 				)
@@ -126,7 +126,7 @@ export const useSigningStore = defineStore('signing', {
 			try {
 				const response = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/signing/requests/${requestId}/decline`,
+						`/apps/filinq/api/signing/requests/${requestId}/decline`,
 					),
 					{ signerId, reason },
 				)
@@ -149,7 +149,7 @@ export const useSigningStore = defineStore('signing', {
 			this.loading = true
 			try {
 				await axios.delete(
-					generateUrl(`/apps/docudesk/api/signing/requests/${requestId}`),
+					generateUrl(`/apps/filinq/api/signing/requests/${requestId}`),
 				)
 			} catch (err) {
 				console.error('Failed to cancel signing request:', err)
@@ -168,7 +168,7 @@ export const useSigningStore = defineStore('signing', {
 			this.loading = true
 			try {
 				const response = await axios.post(
-					generateUrl('/apps/docudesk/api/signing/bulk'),
+					generateUrl('/apps/filinq/api/signing/bulk'),
 					{ requestIds },
 				)
 				return response.data
@@ -190,7 +190,7 @@ export const useSigningStore = defineStore('signing', {
 			this.loading = true
 			try {
 				const response = await axios.get(
-					generateUrl(`/apps/docudesk/api/signing/verify/${fileId}`),
+					generateUrl(`/apps/filinq/api/signing/verify/${fileId}`),
 				)
 				this.verificationResult = response.data
 				return response.data
@@ -213,7 +213,7 @@ export const useSigningStore = defineStore('signing', {
 			try {
 				const response = await axios.get(
 					generateUrl(
-						`/apps/docudesk/api/signing/requests/${requestId}/audit`,
+						`/apps/filinq/api/signing/requests/${requestId}/audit`,
 					),
 				)
 				this.auditTrail = response.data

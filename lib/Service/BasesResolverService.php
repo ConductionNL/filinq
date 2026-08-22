@@ -17,7 +17,7 @@
  *   - **Orphan files / empty dossier bases** — gracefully returns `[]`.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * Resolves suggested dossier grondslagen bases for a batch of files.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl

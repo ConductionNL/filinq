@@ -10,7 +10,7 @@ Acceptance criteria:
 - Confirm multitenancy is still enforced, so the exposure bound in the proposal is measured rather than assumed.
 
 Measured 2026-08-16 on the development instance:
-- 20 of 21 schemas had no cascade; all three `docudesk` **register** rows also had `authorization = NULL`, so the register-level cascade did not fill the gap either.
+- 20 of 21 schemas had no cascade; all three `filinq` **register** rows also had `authorization = NULL`, so the register-level cascade did not fill the gap either.
 - The gate-7 count is **17 across the whole app**, not 9 — the 9 was a diff-scoped run (ADR-020). All 17 route through `ObjectService::find()` / `findAll()` with `_rbac: true`.
 - Bound verified: `ddauth-carol` (different organisation) received **404** on the object `ddauth-bob` (same organisation) read with **200**. Multitenancy is enforced.
 - The defect is worse than disclosure: `ddauth-bob`, in no groups, **overwrote** `ddauth-alice`'s template content via `PUT` (HTTP 200) and duplicated it.
@@ -18,7 +18,7 @@ Measured 2026-08-16 on the development instance:
 ## 2. Decide authorisation per schema
 
 - [x] For each of the 20 open schemas, declare an `authorization` cascade or record why org-wide readability is correct
-- [x] Bump `info.version` in `lib/Settings/docudesk_register.json`
+- [x] Bump `info.version` in `lib/Settings/filinq_register.json`
 
 Acceptance criteria:
 - Without the version bump the import is SKIPPED and the change never deploys to any existing install. Verify the cascade is live on a running instance, not just present in the file.
@@ -64,4 +64,4 @@ Acceptance criteria:
 - [ ] Report the finding to the fleet: any consumer app assuming OR's RBAC guards it has the same question
 
 Acceptance criteria:
-- DocuDesk is where this was measured, not necessarily where it is worst.
+- Filinq is where this was measured, not necessarily where it is worst.

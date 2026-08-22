@@ -1,10 +1,10 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Delete template')" @closing="$emit('cancel')">
+	<NcDialog :name="t('filinq', 'Delete template')" @closing="$emit('cancel')">
 		<template #default>
 			<p>
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Are you sure you want to delete "{name}"? This action cannot be undone.',
 						{ name: templateName },
 					)
@@ -13,10 +13,10 @@
 		</template>
 		<template #actions>
 			<NcButton @click="$emit('cancel')">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="error" @click="$emit('confirm')">
-				{{ t('docudesk', 'Delete') }}
+				{{ t('filinq', 'Delete') }}
 			</NcButton>
 		</template>
 	</NcDialog>

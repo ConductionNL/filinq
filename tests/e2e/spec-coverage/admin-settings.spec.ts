@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — admin-settings spec
@@ -9,7 +9,7 @@
  * internals, helper methods) carry @e2e exclude annotations in the spec.
  */
 
-// @e2e openspec/specs/admin-settings/spec.md#admin-opens-docudesk-settings-section
+// @e2e openspec/specs/admin-settings/spec.md#admin-opens-filinq-settings-section
 // @e2e openspec/specs/admin-settings/spec.md#non-admin-cannot-access-settings
 // @e2e openspec/specs/admin-settings/spec.md#settings-page-renders-vue-component
 // @e2e openspec/specs/admin-settings/spec.md#configure-consent-register-and-schema
@@ -20,7 +20,7 @@
 // @e2e openspec/specs/admin-settings/spec.md#all-enrichment-features-enabled-by-default
 // @e2e openspec/specs/admin-settings/spec.md#user-accesses-documentation-link
 // @e2e openspec/specs/admin-settings/spec.md#settings-page-resilient-to-openregister-failures
-// @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-docudesk
+// @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-filinq
 // @e2e openspec/specs/processing-activity-export/spec.md#unconfigured-identity-prompts-not-blocks
 
 import { test, expect, type Page } from '@playwright/test'
@@ -43,7 +43,7 @@ async function dismissOverlays(page: Page): Promise<void> {
 async function goSettings(page: Page): Promise<void> {
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
-	await page.goto('/index.php/settings/admin/docudesk', {
+	await page.goto('/index.php/settings/admin/filinq', {
 		waitUntil: 'domcontentloaded',
 	})
 	// Wait for exactly what these specs read next: the settings content region
@@ -62,8 +62,8 @@ async function goSettings(page: Page): Promise<void> {
 // ---------------------------------------------------------------------------
 
 test.describe('admin-settings — admin panel integration', () => {
-	test('admin can access DocuDesk settings section', async ({ page }) => {
-		// @e2e openspec/specs/admin-settings/spec.md#admin-opens-docudesk-settings-section
+	test('admin can access Filinq settings section', async ({ page }) => {
+		// @e2e openspec/specs/admin-settings/spec.md#admin-opens-filinq-settings-section
 		await goSettings(page)
 		// Admin is logged in (via storageState); page should render
 		await expect(page.locator('body')).toBeVisible()
@@ -84,8 +84,8 @@ test.describe('admin-settings — admin panel integration', () => {
 		await expect(page).toHaveURL(/\/settings\/admin/)
 	})
 
-	test('DocuDesk appears in admin settings navigation', async ({ page }) => {
-		// @e2e openspec/specs/admin-settings/spec.md#admin-opens-docudesk-settings-section
+	test('Filinq appears in admin settings navigation', async ({ page }) => {
+		// @e2e openspec/specs/admin-settings/spec.md#admin-opens-filinq-settings-section
 		await page.goto('/index.php/settings/admin', {
 			waitUntil: 'domcontentloaded',
 		})
@@ -107,7 +107,7 @@ test.describe('admin-settings — admin panel integration', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('admin-settings — access control', () => {
-	test('admin user can reach docudesk settings without being blocked', async ({
+	test('admin user can reach filinq settings without being blocked', async ({
 		page,
 	}) => {
 		// @e2e openspec/specs/admin-settings/spec.md#non-admin-cannot-access-settings
@@ -121,7 +121,7 @@ test.describe('admin-settings — access control', () => {
 			.innerText()
 			.catch(() => '')
 		const is403 =
-			/access denied|403/i.test(bodyText) && !/docudesk/i.test(bodyText)
+			/access denied|403/i.test(bodyText) && !/filinq/i.test(bodyText)
 		expect(is403).toBe(false)
 	})
 })
@@ -197,9 +197,9 @@ test.describe('admin-settings — documentation links', () => {
 		// @e2e openspec/specs/admin-settings/spec.md#user-accesses-documentation-link
 		await goSettings(page)
 		await expect(page.locator('body')).toBeVisible()
-		// Look for any anchor linking to docudesk documentation
+		// Look for any anchor linking to filinq documentation
 		const docLinks = page.locator(
-			'a[href*="docudesk"], a[href*="conduction.gitbook"]',
+			'a[href*="filinq"], a[href*="conduction.gitbook"]',
 		)
 		const count = await docLinks.count()
 		// If Vue is mounted, a doc link should be present
@@ -215,14 +215,14 @@ test.describe('admin-settings — documentation links', () => {
 // ---------------------------------------------------------------------------
 // processing-activity-export: AVG Art. 30 compliance section (UI only)
 // The aggregation / export / access-gating are OpenRegister's (OR-PA-7/8);
-// these tests assert only the DocuDesk settings surface that deep-links to it.
+// these tests assert only the Filinq settings surface that deep-links to it.
 // ---------------------------------------------------------------------------
 
 test.describe('admin-settings — AVG Art. 30 processing-activity register', () => {
-	test('compliance section surfaces the register scoped to docudesk', async ({
+	test('compliance section surfaces the register scoped to filinq', async ({
 		page,
 	}) => {
-		// @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-docudesk
+		// @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-filinq
 		await goSettings(page)
 		await expect(page.locator('body')).toBeVisible()
 		await expect(page).not.toHaveURL(/\/login/)

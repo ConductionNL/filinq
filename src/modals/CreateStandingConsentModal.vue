@@ -1,26 +1,26 @@
 <template>
 	<NcModal
 		:show="show"
-		:title="t('docudesk', 'Create Standing Consent')"
+		:title="t('filinq', 'Create Standing Consent')"
 		@close="$emit('close')">
 		<div class="create-standing-consent-modal">
 			<form @submit.prevent="handleSubmit">
 				<!-- Entity Text -->
 				<NcTextField
 					v-model="form.entityText"
-					:label="t('docudesk', 'Entity Name')"
-					:placeholder="t('docudesk', 'e.g. Acme Corp')" />
+					:label="t('filinq', 'Entity Name')"
+					:placeholder="t('filinq', 'e.g. Acme Corp')" />
 
 				<!-- Entity Type -->
 				<div class="form-field">
 					<label class="form-label">{{
-						t('docudesk', 'Entity Type')
+						t('filinq', 'Entity Type')
 					}}</label>
 					<NcSelect
 						v-model="form.entityType"
 						:options="entityTypeOptions"
-						:placeholder="t('docudesk', 'Select entity type')"
-						:inputLabel="t('docudesk', 'Entity Type')"
+						:placeholder="t('filinq', 'Select entity type')"
+						:inputLabel="t('filinq', 'Entity Type')"
 						label="label"
 						trackBy="value" />
 				</div>
@@ -28,14 +28,14 @@
 				<!-- Consent Method (required) -->
 				<div class="form-field">
 					<label class="form-label">
-						{{ t('docudesk', 'Consent Method') }}
+						{{ t('filinq', 'Consent Method') }}
 						<span class="required">*</span>
 					</label>
 					<NcSelect
 						v-model="form.consentMethod"
 						:options="consentMethodOptions"
-						:placeholder="t('docudesk', 'Select consent method')"
-						:inputLabel="t('docudesk', 'Consent Method')"
+						:placeholder="t('filinq', 'Select consent method')"
+						:inputLabel="t('filinq', 'Consent Method')"
 						label="label"
 						trackBy="value" />
 					<span v-if="errors.consentMethod" class="field-error">
@@ -46,20 +46,20 @@
 				<!-- Valid From -->
 				<NcTextField
 					v-model="form.validFrom"
-					:label="t('docudesk', 'Valid From')"
+					:label="t('filinq', 'Valid From')"
 					type="date" />
 
 				<!-- Valid Until -->
 				<NcTextField
 					v-model="form.validUntil"
-					:label="t('docudesk', 'Valid Until')"
+					:label="t('filinq', 'Valid Until')"
 					type="date" />
 
 				<!-- Warning when validUntil is blank -->
 				<NcNoteCard v-if="!form.validUntil" type="warning">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'No expiry date set — this consent will remain active indefinitely unless explicitly revoked.',
 						)
 					}}
@@ -73,21 +73,21 @@
 				<div class="form-field">
 					<NcTextArea
 						v-model="matchRulesText"
-						:label="t('docudesk', 'Match Rules (one per line)')"
-						:placeholder="t('docudesk', 'e.g. acme.nl')"
+						:label="t('filinq', 'Match Rules (one per line)')"
+						:placeholder="t('filinq', 'e.g. acme.nl')"
 						:rows="3" />
 				</div>
 
 				<!-- Actions -->
 				<div class="modal-actions">
 					<NcButton @click="$emit('close')">
-						{{ t('docudesk', 'Cancel') }}
+						{{ t('filinq', 'Cancel') }}
 					</NcButton>
 					<NcButton variant="primary" type="submit" :disabled="saving">
 						{{
 							saving
-								? t('docudesk', 'Saving…')
-								: t('docudesk', 'Create')
+								? t('filinq', 'Saving…')
+								: t('filinq', 'Create')
 						}}
 					</NcButton>
 				</div>
@@ -149,21 +149,21 @@ export default {
 			// recognise. The schema enums are uppercase entity types and
 			// the four canonical consent-method values.
 			entityTypeOptions: [
-				{ label: t('docudesk', 'Person'), value: 'PERSON' },
-				{ label: t('docudesk', 'Organization'), value: 'ORGANIZATION' },
+				{ label: t('filinq', 'Person'), value: 'PERSON' },
+				{ label: t('filinq', 'Organization'), value: 'ORGANIZATION' },
 			],
 
 			consentMethodOptions: [
-				{ label: t('docudesk', 'Paper'), value: 'paper' },
+				{ label: t('filinq', 'Paper'), value: 'paper' },
 				{
-					label: t('docudesk', 'Digital signature'),
+					label: t('filinq', 'Digital signature'),
 					value: 'digital_signature',
 				},
 				{
-					label: t('docudesk', 'Verbal (recorded)'),
+					label: t('filinq', 'Verbal (recorded)'),
 					value: 'verbal_recorded',
 				},
-				{ label: t('docudesk', 'Opt-in form'), value: 'opt_in_form' },
+				{ label: t('filinq', 'Opt-in form'), value: 'opt_in_form' },
 			],
 		}
 	},
@@ -179,7 +179,7 @@ export default {
 
 			if (this.form.consentMethod === null || this.form.consentMethod === '') {
 				this.errors.consentMethod = t(
-					'docudesk',
+					'filinq',
 					'Consent method is required.',
 				)
 				return

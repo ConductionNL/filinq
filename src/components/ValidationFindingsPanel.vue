@@ -27,12 +27,12 @@ SPDX-License-Identifier: EUPL-1.2
 					class="validation-findings__ocr"
 					href="#/anonymization"
 					@click="$emit('ocr', finding)">
-					{{ t('docudesk', 'Run OCR') }}
+					{{ t('filinq', 'Run OCR') }}
 				</a>
 			</li>
 		</ul>
 		<p v-else class="validation-findings__empty">
-			{{ t('docudesk', 'No validation findings.') }}
+			{{ t('filinq', 'No validation findings.') }}
 		</p>
 	</div>
 </template>
@@ -59,13 +59,13 @@ export default {
 		verdictLabel() {
 			switch (this.status) {
 				case 'passed':
-					return t('docudesk', 'Validation passed')
+					return t('filinq', 'Validation passed')
 				case 'warnings':
-					return t('docudesk', 'Validation warnings')
+					return t('filinq', 'Validation warnings')
 				case 'failed':
-					return t('docudesk', 'Validation failed')
+					return t('filinq', 'Validation failed')
 				default:
-					return t('docudesk', 'Not yet validated')
+					return t('filinq', 'Not yet validated')
 			}
 		},
 
@@ -90,12 +90,12 @@ export default {
 		 */
 		checkLabel(finding) {
 			const map = {
-				'format-not-allowed': t('docudesk', 'Format not allowed'),
-				'extension-mime-mismatch': t('docudesk', 'Extension/type mismatch'),
-				'file-unreadable': t('docudesk', 'File unreadable'),
-				'pdf-encrypted': t('docudesk', 'Encrypted PDF'),
-				'text-layer-missing': t('docudesk', 'Missing text layer'),
-				'metadata-incomplete': t('docudesk', 'Incomplete metadata'),
+				'format-not-allowed': t('filinq', 'Format not allowed'),
+				'extension-mime-mismatch': t('filinq', 'Extension/type mismatch'),
+				'file-unreadable': t('filinq', 'File unreadable'),
+				'pdf-encrypted': t('filinq', 'Encrypted PDF'),
+				'text-layer-missing': t('filinq', 'Missing text layer'),
+				'metadata-incomplete': t('filinq', 'Incomplete metadata'),
 			}
 			return map[finding.checkId] || finding.checkId
 		},
@@ -109,7 +109,7 @@ export default {
 		 * @spec openspec/specs/document-validation-checks/spec.md
 		 */
 		findingMessage(finding) {
-			return t('docudesk', finding.message || '', finding.params || {})
+			return t('filinq', finding.message || '', finding.params || {})
 		},
 	},
 }

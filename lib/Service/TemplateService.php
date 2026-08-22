@@ -9,12 +9,12 @@
  * Supports versioning, categories, tags, duplication, and optimistic locking.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/template-management/spec.md
  * @spec openspec/specs/template-management/spec.md
@@ -27,7 +27,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTime;
 use Exception;
@@ -41,10 +41,10 @@ use RuntimeException;
  * Service for CRUD operations on document templates via OpenRegister
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class TemplateService {
 
@@ -517,7 +517,7 @@ class TemplateService {
 			$diffMins = ($now->getTimestamp() - $lockedAt->getTimestamp()) / 60;
 
 			$timeoutMinutes = (int)$this->config->getValueString(
-				'docudesk',
+				'filinq',
 				'templates.lock_timeout_minutes',
 				(string)self::LOCK_TIMEOUT_MINUTES
 			);

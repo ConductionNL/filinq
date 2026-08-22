@@ -4,7 +4,7 @@
  * Unit tests for BatchStateService TTL keep-alive behavior
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,13 +12,13 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\BatchStateRepository;
-use OCA\DocuDesk\Service\BatchStateService;
+use OCA\Filinq\Service\BatchStateRepository;
+use OCA\Filinq\Service\BatchStateService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -32,10 +32,10 @@ use Psr\Log\LoggerInterface;
  * Tests that getBatch() resets TTL on read (keep-alive pattern)
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase

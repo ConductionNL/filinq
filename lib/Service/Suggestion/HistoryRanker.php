@@ -9,12 +9,12 @@
  * the same booking history it always produces the same ranked result.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Suggestion
+ * @package   OCA\Filinq\Service\Suggestion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
@@ -24,16 +24,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Suggestion;
+namespace OCA\Filinq\Service\Suggestion;
 
 /**
  * Ranks GL account codes by windowed booking frequency.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Suggestion
+ * @package  OCA\Filinq\Service\Suggestion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */

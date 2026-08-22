@@ -4,7 +4,7 @@
  * Unit tests for BatchAnonymizationController appendBasisSummary flag
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
  *
@@ -20,17 +20,17 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\BatchAnonymizationController;
-use OCA\DocuDesk\Service\BatchAnonymizeService;
-use OCA\DocuDesk\Service\BatchExtractionService;
-use OCA\DocuDesk\Service\BatchReportService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\BatchUploadService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\FolderBatchService;
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchExtractionService;
+use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\BatchUploadService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\FolderBatchService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -44,10 +44,10 @@ use Psr\Log\LoggerInterface;
  * Tests the appendBasisSummary flag on the batchAnonymize endpoint.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -97,7 +97,7 @@ class BatchAnonymizationControllerSummaryFlagTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new BatchAnonymizationController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->createMock(LoggerInterface::class),
 			stateService: $this->createMock(BatchStateService::class),

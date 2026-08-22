@@ -1,12 +1,12 @@
 ---
 sidebar_position: 3
 title: Anonymise a document
-description: Run a document through DocuDesk's GDPR-aware anonymisation flow and review the redacted entities before exporting.
+description: Run a document through Filinq's GDPR-aware anonymisation flow and review the redacted entities before exporting.
 ---
 
 # Anonymise a document
 
-DocuDesk's anonymisation pipeline detects personal data (names, addresses, BSNs, phone numbers, emails, …) in any uploaded document, lets you review each detection, and produces a redacted copy that is safe to publish under GDPR / Wet Open Overheid.
+Filinq's anonymisation pipeline detects personal data (names, addresses, BSNs, phone numbers, emails, …) in any uploaded document, lets you review each detection, and produces a redacted copy that is safe to publish under GDPR / Wet Open Overheid.
 
 ## Goal
 
@@ -15,7 +15,7 @@ By the end you will have anonymised one document, reviewed the detected entities
 ## Prerequisites
 
 - You have completed [Upload a document](./02-upload-document.md) and have at least one document in the **Documents** register.
-- The instance has the **Presidio** anonymisation service configured and reachable (an admin sets this in **Settings → DocuDesk → Anonymisation**).
+- The instance has the **Presidio** anonymisation service configured and reachable (an admin sets this in **Settings → Filinq → Anonymisation**).
 
 ## Steps
 
@@ -23,7 +23,7 @@ By the end you will have anonymised one document, reviewed the detected entities
 
    ![Document detail with Anonymise action](/screenshots/tutorials/user/03-anonymise-document-01.png)
 
-2. DocuDesk extracts entities through the configured anonymisation service. The detection table lists each entity, its type (PERSON, ADDRESS, PHONE_NUMBER, …) and confidence, plus the surrounding text excerpt.
+2. Filinq extracts entities through the configured anonymisation service. The detection table lists each entity, its type (PERSON, ADDRESS, PHONE_NUMBER, …) and confidence, plus the surrounding text excerpt.
 
    ![Anonymisation entity review](/screenshots/tutorials/user/03-anonymise-document-02.png)
 
@@ -31,7 +31,7 @@ By the end you will have anonymised one document, reviewed the detected entities
 
    ![Reviewing one entity](/screenshots/tutorials/user/03-anonymise-document-03.png)
 
-4. Click **Apply anonymisation**. DocuDesk generates a new redacted document and links it back to the original via the *Source document* field. Download it from the detail view's **Outputs** tab.
+4. Click **Apply anonymisation**. Filinq generates a new redacted document and links it back to the original via the *Source document* field. Download it from the detail view's **Outputs** tab.
 
    ![Anonymised output ready to download](/screenshots/tutorials/user/03-anonymise-document-04.png)
 
@@ -43,9 +43,9 @@ You are done when: the **Outputs** tab on the source document shows one new entr
 
 | Symptom | Fix |
 |---|---|
-| Anonymise action returns *"Service unreachable"* | The Presidio backend isn't running, or its URL in **Settings → DocuDesk → Anonymisation** points at the wrong host. Restart the service and retry. |
-| Detection table is empty even on a document you know contains names | The Presidio analyser doesn't recognise the document language — check **Settings → DocuDesk → Anonymisation → Languages** and enable the relevant pack. |
-| Output document has text overlapping or layout shifted | PDFs with complex layouts can't be redacted in-place; DocuDesk falls back to a plain-text export. For layout-preserving redaction, convert the source to DOCX first. |
+| Anonymise action returns *"Service unreachable"* | The Presidio backend isn't running, or its URL in **Settings → Filinq → Anonymisation** points at the wrong host. Restart the service and retry. |
+| Detection table is empty even on a document you know contains names | The Presidio analyser doesn't recognise the document language — check **Settings → Filinq → Anonymisation → Languages** and enable the relevant pack. |
+| Output document has text overlapping or layout shifted | PDFs with complex layouts can't be redacted in-place; Filinq falls back to a plain-text export. For layout-preserving redaction, convert the source to DOCX first. |
 
 ## Reference
 

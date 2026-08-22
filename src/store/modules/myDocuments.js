@@ -51,8 +51,8 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		loading: false,
 		error: null,
 		total: 0,
-		currentPath: '/DocuDesk',
-		breadcrumbs: [{ name: 'DocuDesk', path: '/DocuDesk' }],
+		currentPath: '/Filinq',
+		breadcrumbs: [{ name: 'Filinq', path: '/Filinq' }],
 		// anonymizationLink records (sourceFileId ↔ anonymizedFileId) for the
 		// current user, fetched alongside the document listing.
 		anonymizationLinks: [],
@@ -608,9 +608,9 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 
 			// Build breadcrumbs from path
 			const parts = path.split('/').filter(Boolean)
-			this.breadcrumbs = [{ name: 'DocuDesk', path: '/DocuDesk' }]
+			this.breadcrumbs = [{ name: 'Filinq', path: '/Filinq' }]
 
-			let currentPath = '/DocuDesk'
+			let currentPath = '/Filinq'
 			for (let i = 1; i < parts.length; i++) {
 				currentPath += `/${parts[i]}`
 				this.breadcrumbs.push({
@@ -632,7 +632,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 
 		/**
 		 * Fetch the most-recent anonymized files and dossier folders under
-		 * /DocuDesk/, sorted newest first. Does NOT mutate store state —
+		 * /Filinq/, sorted newest first. Does NOT mutate store state —
 		 * intended for read-only widgets (e.g. the dashboard "Recent
 		 * documents" cards) that must not clobber the currentPath /
 		 * breadcrumbs of the My Documents page.
@@ -650,7 +650,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 			}
 
 			const davPrefix = `/remote.php/dav/files/${user.uid}`
-			const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}/DocuDesk`)
+			const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}/Filinq`)
 
 			let response
 			try {
@@ -673,7 +673,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 							</d:propfind>`,
 				})
 			} catch (err) {
-				// /DocuDesk/ may not exist yet for fresh users — return empty list.
+				// /Filinq/ may not exist yet for fresh users — return empty list.
 				if (err.response && err.response.status === 404) {
 					return []
 				}
@@ -686,7 +686,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 
 			const items = []
 			responses.forEach((resp, index) => {
-				// First response is /DocuDesk/ itself — skip.
+				// First response is /Filinq/ itself — skip.
 				if (index === 0) return
 
 				const href = resp.querySelector('href')?.textContent || ''

@@ -10,12 +10,12 @@
  * persists the result on a `financialExtraction` OpenRegister object.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
@@ -25,17 +25,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\DocuDesk\Event\FinancialExtractionCompletedEvent;
-use OCA\DocuDesk\Service\Extraction\AmountExtractor;
-use OCA\DocuDesk\Service\Extraction\DateExtractor;
-use OCA\DocuDesk\Service\Extraction\IbanExtractor;
-use OCA\DocuDesk\Service\Extraction\KvkExtractor;
-use OCA\DocuDesk\Service\Extraction\TotalsReconciler;
-use OCA\DocuDesk\Service\Extraction\VatIdExtractor;
+use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
+use OCA\Filinq\Service\Extraction\AmountExtractor;
+use OCA\Filinq\Service\Extraction\DateExtractor;
+use OCA\Filinq\Service\Extraction\IbanExtractor;
+use OCA\Filinq\Service\Extraction\KvkExtractor;
+use OCA\Filinq\Service\Extraction\TotalsReconciler;
+use OCA\Filinq\Service\Extraction\VatIdExtractor;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -53,10 +53,10 @@ use Throwable;
  * Orchestrates financial-document field extraction.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -527,7 +527,7 @@ class FinancialExtractionService {
 			$result = $this->mergeAiFields(result: $result, fillable: $fillable, decoded: $decoded);
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'DocuDesk: AI extraction enhancement failed, returning heuristic-only result: ' . $e->getMessage()
+				'Filinq: AI extraction enhancement failed, returning heuristic-only result: ' . $e->getMessage()
 			);
 		}//end try
 
@@ -877,7 +877,7 @@ class FinancialExtractionService {
 			$task = new TaskProcessingTask(
 				TextToText::ID,
 				['input' => $prompt],
-				'docudesk',
+				'filinq',
 				$userId,
 			);
 
@@ -889,7 +889,7 @@ class FinancialExtractionService {
 		$task = new TextProcessingTask(
 			FreePromptTaskType::class,
 			$prompt,
-			'docudesk',
+			'filinq',
 			$userId,
 		);
 
@@ -932,7 +932,7 @@ class FinancialExtractionService {
 	}//end stripCodeFences()
 
 	/**
-	 * Dispatch the canonical `nl.conduction.docudesk.extraction.completed`
+	 * Dispatch the canonical `nl.conduction.filinq.extraction.completed`
 	 * event. Fail-soft: the already-persisted result is never rolled back on
 	 * a dispatch failure (mirrors SigningService::emitConclusionIfDelegated).
 	 *
@@ -967,7 +967,7 @@ class FinancialExtractionService {
 			$this->eventDispatcher->dispatchTyped($event);
 		} catch (Throwable $e) {
 			$this->logger->error(
-				'DocuDesk: financial extraction completed but event dispatch failed: ' . $e->getMessage(),
+				'Filinq: financial extraction completed but event dispatch failed: ' . $e->getMessage(),
 				['exception' => $e]
 			);
 		}
@@ -1025,7 +1025,7 @@ class FinancialExtractionService {
 		try {
 			$tempFile = $this->writeToTemp(file: $file);
 		} catch (Throwable $e) {
-			$this->logger->warning('DocuDesk: financial extraction could not stage file for OCR: ' . $e->getMessage());
+			$this->logger->warning('Filinq: financial extraction could not stage file for OCR: ' . $e->getMessage());
 			return ['text' => $embedded, 'ocrConfidence' => 0.0];
 		}
 
@@ -1044,7 +1044,7 @@ class FinancialExtractionService {
 				'ocrConfidence' => ($result['confidence'] / 100),
 			];
 		} catch (Throwable $e) {
-			$this->logger->warning('DocuDesk: financial extraction OCR failed: ' . $e->getMessage());
+			$this->logger->warning('Filinq: financial extraction OCR failed: ' . $e->getMessage());
 			return ['text' => $embedded, 'ocrConfidence' => 0.0];
 		} finally {
 			if (file_exists($tempFile) === true) {
@@ -1125,7 +1125,7 @@ class FinancialExtractionService {
 	 */
 	private function writeToTemp(File $file): string {
 		$extension = pathinfo($file->getName(), PATHINFO_EXTENSION);
-		$tempFile = sys_get_temp_dir() . '/docudesk_extraction_' . uniqid() . '.' . $extension;
+		$tempFile = sys_get_temp_dir() . '/filinq_extraction_' . uniqid() . '.' . $extension;
 
 		$content = $file->getContent();
 		if (file_put_contents($tempFile, $content) === false) {

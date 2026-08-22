@@ -4,7 +4,7 @@
  * Bootstrap file for PHPUnit tests
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://DocuDesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ if (!defined('OC_CONSOLE')) {
 	\OC_App::loadApps();
 
 	// Load our specific app.
-	\OC_App::loadApp('docudesk');
+	\OC_App::loadApp('filinq');
 
 	// Clear hooks for testing.
 	OC_Hook::clear();

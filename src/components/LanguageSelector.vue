@@ -17,13 +17,13 @@ The selected language persists across navigation via the template store (REQ-I18
 			:modelValue="currentOption"
 			:options="languageOptions"
 			:clearable="false"
-			:inputLabel="t('docudesk', 'Content language')"
+			:inputLabel="t('filinq', 'Content language')"
 			label="label"
 			trackBy="value"
 			class="language-selector__select"
 			@update:modelValue="onLanguageChange" />
 		<span v-if="isFallbackLanguage" class="language-selector__fallback-badge">
-			{{ t('docudesk', 'Showing fallback language') }}
+			{{ t('filinq', 'Showing fallback language') }}
 		</span>
 	</div>
 </template>

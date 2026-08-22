@@ -1,26 +1,26 @@
 ---
 kind: code
 depends_on:
-  - docudesk-mcp-adoption
+  - filinq-mcp-adoption
 ---
 
 # Proposal: document-editing-tools
 
 ## Why
 
-`docudesk-mcp-adoption` gives an agent the ability to **find** a template and
-**generate** a new document from register data (`docudesk.generateCorrespondence`).
+`filinq-mcp-adoption` gives an agent the ability to **find** a template and
+**generate** a new document from register data (`filinq.generateCorrespondence`).
 `mcp-generation-tools` adds status and anonymisation. Nothing in either change —
-or anywhere in DocuDesk — lets an agent act on a document that **already
+or anywhere in Filinq — lets an agent act on a document that **already
 exists**: convert it to another format, or change its content.
 
 Those are the two operations users actually ask an assistant for once the first
 document exists ("zet dit even om naar PDF", "werk de bedragen in deze brief
-bij"), and DocuDesk already owns most of the machinery for the first one:
+bij"), and Filinq already owns most of the machinery for the first one:
 `lib/Service/Conversion/` holds a complete backend cascade behind
 `ConversionBackendInterface` — `OfficeAppBackend` (Nextcloud's
 `IConversionManager`, NC 31+) → `LibreOfficeHeadlessBackend` → `PhpWordBackend`
-→ `MpdfBackend`, plus an Eml slot. It is reachable from DocuDesk's own UI and
+→ `MpdfBackend`, plus an Eml slot. It is reachable from Filinq's own UI and
 from ADR-075's channel, but **not from an agent**.
 
 The second operation has no machinery at all, and it is where the fleet's
@@ -30,21 +30,21 @@ is one suite-independent codec, editing sessions use WOPI and only WOPI, and
 live in-editor streaming (Collabora's `postMessage` / `Send_UNO_Command`) is an
 explicitly non-portable enhancement that this change does **not** build.
 
-The governance posture is inherited, not reinvented: `docudesk-mcp-adoption`
+The governance posture is inherited, not reinvented: `filinq-mcp-adoption`
 established a narrow, read-biased surface with standing refusals (no signing, no
 batch mail-merge, no entity values, no signature material). This change extends
 that surface with two curated tools and contradicts none of it.
 
 ## What Changes
 
-- **One curated conversion tool** `docudesk.convertDocument` — a genuinely
+- **One curated conversion tool** `filinq.convertDocument` — a genuinely
   non-CRUD action on a real service method wrapping the existing
   `ConversionBackendInterface` cascade. Converts one file the acting user can
   read into a requested target format, writing the **result as a new file**.
   Annotated honestly: `scope: 'create'`, `readOnlyHint: false`,
   `destructiveHint: false`, `idempotentHint: false`.
 
-- **One curated editing tool** `docudesk.editDocument` — opens a WOPI session
+- **One curated editing tool** `filinq.editDocument` — opens a WOPI session
   against the instance's WOPI host, applies anchored block edits to the document
   package, and writes the result back into the source file (or to a sibling, on
   request). Annotated honestly for what it now does: `scope: 'update'`,
@@ -103,17 +103,17 @@ that surface with two curated tools and contradicts none of it.
 ## Capabilities
 
 **New Capabilities**
-- `document-editing` — DocuDesk's suite-independent conversion and editing of
+- `document-editing` — Filinq's suite-independent conversion and editing of
   existing documents.
 
 **Modified Capabilities**
-- `docudesk-mcp-surface` — extended with the two curated tools above, bound by
+- `filinq-mcp-surface` — extended with the two curated tools above, bound by
   the standing refusals already declared there.
 
 ## Impact
 
 - New: `lib/Service/Editing/` (WOPI client, session manager, document codec),
-  two `#[McpTool]` methods, `DocudeskScannableServices` extended.
+  two `#[McpTool]` methods, `FilinqScannableServices` extended.
 - Blocked on two unknowns recorded in ADR-087 and re-stated in design.md
   §Verification: `w14:paraId` survival across a Collabora save, and headless WOPI
   token issuance. Both are measured in Phase 0 tasks before any editing code is

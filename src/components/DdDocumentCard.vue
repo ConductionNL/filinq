@@ -20,7 +20,7 @@ import singleFileIcon from '../assets/single-file.png'
 			v-if="selectable"
 			class="dd-document-card__select"
 			:modelValue="selected"
-			:aria-label="t('docudesk', 'Select')"
+			:aria-label="t('filinq', 'Select')"
 			@update:modelValue="$emit('toggle-select', item)"
 			@click.stop />
 		<figure class="dd-document-card__icon">
@@ -38,7 +38,7 @@ import singleFileIcon from '../assets/single-file.png'
 
 <script>
 /**
- * Single document tile for DocuDesk index/dashboard surfaces.
+ * Single document tile for Filinq index/dashboard surfaces.
  *
  * Layout (top → bottom): asset icon (dossier.png / single-file.png),
  * filename without extension, date, kind pill (CnStatusBadge).
@@ -79,9 +79,9 @@ export default {
 			// Color tokens used by CnStatusBadge — keyed on the localised
 			// label so swapping languages still picks the right colour.
 			pillColorMap: {
-				[t('docudesk', 'Dossier')]: 'info',
-				[t('docudesk', 'Concept')]: 'warning',
-				[t('docudesk', 'Anonymized')]: 'success',
+				[t('filinq', 'Dossier')]: 'info',
+				[t('filinq', 'Concept')]: 'warning',
+				[t('filinq', 'Anonymized')]: 'success',
 			},
 		}
 	},
@@ -116,9 +116,9 @@ export default {
 		 * @return {string}
 		 */
 		pillLabel() {
-			if (this.item.isFolder) return t('docudesk', 'Dossier')
-			if (this.item.isAnonymized) return t('docudesk', 'Anonymized')
-			return t('docudesk', 'Concept')
+			if (this.item.isFolder) return t('filinq', 'Dossier')
+			if (this.item.isAnonymized) return t('filinq', 'Anonymized')
+			return t('filinq', 'Concept')
 		},
 
 		/**

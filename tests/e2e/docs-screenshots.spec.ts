@@ -1,10 +1,10 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Documentation screenshot capture suite — docudesk.
+ * Documentation screenshot capture suite — filinq.
  *
- * This spec is *not* a regression test — it drives the DocuDesk UI
+ * This spec is *not* a regression test — it drives the Filinq UI
  * through the flows documented under `docs/tutorials/{user,admin}/*.md`
  * and writes a fresh PNG into `docs/static/screenshots/tutorials/<track>/`
  * for each step the markdown references.
@@ -23,19 +23,19 @@
  * Nextcloud login → storage state) and `use.storageState`, so the
  * `page` fixture here arrives already signed in.
  *
- * Routing note: DocuDesk's dashboard route is `/apps/docudesk` (no
+ * Routing note: Filinq's dashboard route is `/apps/filinq` (no
  * trailing slash); adding the slash returns 404 because the Symfony
  * route registers `url: '/'` and the controller signature uses
- * `?string $getParameter`. Tracked separately — see docudesk#143.
+ * `?string $getParameter`. Tracked separately — see filinq#143.
  *
  * Mount-status note: at the time of bootstrap (2026-05-13) the Vue
- * mount point `<div id="docudesk"></div>` stayed empty on the dev
+ * mount point `<div id="filinq"></div>` stayed empty on the dev
  * container (#143). Until that's fixed, the structural screenshots
  * below capture only the Nextcloud chrome — the markdown pages
  * reference them as expected, and the docs build's
  * `onBrokenMarkdownImages: 'warn'` keeps the build green.
  *
- * Data dependency: DocuDesk's list views render even with zero
+ * Data dependency: Filinq's list views render even with zero
  * objects (Documents / Templates / Consents / Signing all show an
  * empty state). The flow-detail screenshots (a signed PDF, a
  * fully-anonymised output, a consent past its earliest-publish date)
@@ -58,7 +58,7 @@ const SHOT_ROOT = path.resolve(
 	'screenshots',
 	'tutorials',
 )
-const APP = '/apps/docudesk'
+const APP = '/apps/filinq'
 
 async function shoot(
 	page: Page,
@@ -101,7 +101,7 @@ async function dismissOverlays(page: Page): Promise<void> {
 	}
 }
 
-/** Navigate to a DocuDesk (or absolute) route and settle. */
+/** Navigate to a Filinq (or absolute) route and settle. */
 async function go(page: Page, route: string): Promise<void> {
 	// Strip leading slash on the route so we never produce `//`.
 	const cleaned = route.startsWith('/') ? route.slice(1) : route
@@ -180,7 +180,7 @@ test.describe('docs: user track', () => {
 		await shoot(page, 'user', '01-first-launch-03.png')
 		await go(page, 'documents')
 		await shoot(page, 'user', '01-first-launch-04.png')
-		expect(page.url()).toContain('/apps/docudesk')
+		expect(page.url()).toContain('/apps/filinq')
 	})
 
 	test('U2 upload-document', async ({ page }) => {
@@ -295,7 +295,7 @@ test.describe('docs: admin track', () => {
 
 	test('A2 anonymisation-rules', async ({ page }) => {
 		// docs/tutorials/admin/02-anonymisation-rules.md
-		await go(page, '/settings/admin/docudesk')
+		await go(page, '/settings/admin/filinq')
 		await shoot(page, 'admin', '02-anonymisation-rules-01.png')
 		await shoot(page, 'admin', '02-anonymisation-rules-02.png')
 		await shoot(page, 'admin', '02-anonymisation-rules-03.png')
@@ -304,7 +304,7 @@ test.describe('docs: admin track', () => {
 
 	test('A3 admin-settings', async ({ page }) => {
 		// docs/tutorials/admin/03-admin-settings.md
-		await go(page, '/settings/admin/docudesk')
+		await go(page, '/settings/admin/filinq')
 		await shoot(page, 'admin', '03-admin-settings-01.png')
 		await shoot(page, 'admin', '03-admin-settings-02.png')
 		await shoot(page, 'admin', '03-admin-settings-03.png')

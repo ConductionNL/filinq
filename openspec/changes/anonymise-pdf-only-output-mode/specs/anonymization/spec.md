@@ -10,7 +10,7 @@ This delta extends the existing `anonymization` capability (and the `pdf` / `pre
 
 ### Requirement: The anonymise endpoint MUST accept `outputFormat: "pdf-only"` and default to it
 
-The anonymise endpoint and `AnonymizationService::anonymizeDocument()` MUST accept `outputFormat` value `"pdf-only"` in addition to `"pdf"` and `"preserve"`. The allowed set MUST be exactly `["pdf-only", "pdf", "preserve"]`. When `outputFormat` is omitted, the endpoint MUST use the tenant default `docudesk.anonymisation.default_output_format`, whose default value MUST be `"pdf-only"`. Any value outside the allowed set MUST be rejected with HTTP 400 whose body cites the three allowed values.
+The anonymise endpoint and `AnonymizationService::anonymizeDocument()` MUST accept `outputFormat` value `"pdf-only"` in addition to `"pdf"` and `"preserve"`. The allowed set MUST be exactly `["pdf-only", "pdf", "preserve"]`. When `outputFormat` is omitted, the endpoint MUST use the tenant default `filinq.anonymisation.default_output_format`, whose default value MUST be `"pdf-only"`. Any value outside the allowed set MUST be rejected with HTTP 400 whose body cites the three allowed values.
 
 #### Scenario: Default mode is pdf-only
 - **GIVEN** an anonymise request with no `outputFormat` specified
@@ -76,12 +76,12 @@ When the anonymised result is already a PDF, the conversion gate (guarded by `mi
 
 ### Requirement: The admin settings UI MUST let the operator choose the default among all three modes
 
-The DocuDesk admin settings panel MUST expose the tenant default `docudesk.anonymisation.default_output_format` as a control that can select any of the three values `pdf-only`, `pdf`, `preserve` (not a two-state toggle). The control MUST load the persisted value, default to `pdf-only` when unset, and persist exactly the selected value without coercing an unrecognised/ third value to one of only two. A boolean toggle is insufficient because it cannot represent or preserve `pdf-only`.
+The Filinq admin settings panel MUST expose the tenant default `filinq.anonymisation.default_output_format` as a control that can select any of the three values `pdf-only`, `pdf`, `preserve` (not a two-state toggle). The control MUST load the persisted value, default to `pdf-only` when unset, and persist exactly the selected value without coercing an unrecognised/ third value to one of only two. A boolean toggle is insufficient because it cannot represent or preserve `pdf-only`.
 
 #### Scenario: Admin selects pdf-only and it persists
 - **GIVEN** the admin settings panel with the Anonymisation section
 - **WHEN** the operator selects the "PDF only" option and saves
-- **THEN** `docudesk.anonymisation.default_output_format` is persisted as `pdf-only`
+- **THEN** `filinq.anonymisation.default_output_format` is persisted as `pdf-only`
 - **AND** re-opening the panel shows "PDF only" selected
 
 #### Scenario: Saving the panel never clobbers pdf-only

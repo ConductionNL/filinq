@@ -5,7 +5,7 @@
  * OpenRegister's ObjectService::deleteObject().
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -13,17 +13,17 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\ConsentService;
-use OCA\DocuDesk\Service\PolicyCrudService;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\PolicyCrudService;
+use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -34,12 +34,12 @@ use Psr\Log\LoggerInterface;
 /**
  * A named argument that does not exist on the callee is a RUNTIME error, not a
  * compile-time one: PHP raises `Error: Unknown named parameter $id` only when
- * the line actually executes. Both DocuDesk deletion paths passed `id:` to
+ * the line actually executes. Both Filinq deletion paths passed `id:` to
  * ObjectService::deleteObject(), whose parameter is `$uuid` — so every
  * prohibition delete and every standing-consent delete answered HTTP 500.
  *
  * Nothing caught it. No unit test exercised these methods, and the Newman
- * collection that would have — `tests/newman/docudesk-api.postman_collection.json`
+ * collection that would have — `tests/newman/filinq-api.postman_collection.json`
  * — had never been executed by CI (its directory was outside the runner's flat
  * glob). When it was finally run on 2026-08-09 it produced 5 server-side
  * `Unknown named parameter $id` exceptions, at PolicyCrudService.php:272 and

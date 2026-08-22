@@ -9,7 +9,7 @@ Governs where folder-driven anonymisation writes its redacted outputs, placing t
 ## Requirements
 ### Requirement: Folder-driven anonymisation MUST write outputs to the configured subfolder
 
-The folder analysis flow (orchestrating extraction + anonymisation across all files in a target folder) MUST emit redacted outputs at `<source-folder>/<subfolder>/<cleanBase>.<ext>`, using the same `docudesk.anonymisation.output_subfolder_name` configuration key as the batch flow (default `anonymised`). The same `_anonymized` suffix-stripping rules from the `batch-anonymization` delta apply.
+The folder analysis flow (orchestrating extraction + anonymisation across all files in a target folder) MUST emit redacted outputs at `<source-folder>/<subfolder>/<cleanBase>.<ext>`, using the same `filinq.anonymisation.output_subfolder_name` configuration key as the batch flow (default `anonymised`). The same `_anonymized` suffix-stripping rules from the `batch-anonymization` delta apply.
 
 #### Scenario: Folder analysis flow uses the same layout as batch
 

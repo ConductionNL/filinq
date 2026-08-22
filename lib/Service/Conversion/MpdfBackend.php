@@ -14,12 +14,12 @@
  * processing).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,10 +27,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Conversion;
+namespace OCA\Filinq\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\PdfService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\PdfService;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -42,11 +42,11 @@ use Throwable;
  * PdfService for consistency with print-preview.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class MpdfBackend implements ConversionBackendInterface {
 
@@ -54,12 +54,12 @@ class MpdfBackend implements ConversionBackendInterface {
 	 * App config key controlling whether this backend is attempted.
 	 * Default true; tenants disable for testing or to force fall-through.
 	 */
-	private const ENABLED_KEY = 'docudesk.conversion.backends.mpdf_enabled';
+	private const ENABLED_KEY = 'filinq.conversion.backends.mpdf_enabled';
 
 	/**
 	 * App identifier used for IAppConfig reads/writes.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * Constructor.

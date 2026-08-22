@@ -19,7 +19,7 @@ export const useSettingsStore = defineStore('settings', {
 	},
 	actions: {
 		/**
-		 * Fetch DocuDesk settings, OpenRegister availability and admin status.
+		 * Fetch Filinq settings, OpenRegister availability and admin status.
 		 *
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
 		 */
@@ -29,7 +29,7 @@ export const useSettingsStore = defineStore('settings', {
 
 			try {
 				const response = await fetch(
-					'/index.php/apps/docudesk/api/settings',
+					'/index.php/apps/filinq/api/settings',
 					{
 						method: 'GET',
 						headers: {
@@ -68,7 +68,7 @@ export const useSettingsStore = defineStore('settings', {
 				return this.config
 			} catch (error) {
 				this.error = error.message
-				console.error('Error fetching DocuDesk settings:', error)
+				console.error('Error fetching Filinq settings:', error)
 				return null
 			} finally {
 				this.loading = false
@@ -76,7 +76,7 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Persist DocuDesk settings via the settings REST API.
+		 * Persist Filinq settings via the settings REST API.
 		 *
 		 * @param settingsData
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
@@ -87,7 +87,7 @@ export const useSettingsStore = defineStore('settings', {
 
 			try {
 				const response = await fetch(
-					'/index.php/apps/docudesk/api/settings',
+					'/index.php/apps/filinq/api/settings',
 					{
 						method: 'POST',
 						headers: {
@@ -111,7 +111,7 @@ export const useSettingsStore = defineStore('settings', {
 				return this.config
 			} catch (error) {
 				this.error = error.message
-				console.error('Error saving DocuDesk settings:', error)
+				console.error('Error saving Filinq settings:', error)
 				return null
 			} finally {
 				this.loading = false

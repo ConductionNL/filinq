@@ -6,10 +6,10 @@ status: proposed
 
 ## Purpose
 
-Multiple organisations operate on one DocuDesk instance with shared-nothing
-isolation: every DocuDesk object family (consents, prohibitions/policies,
+Multiple organisations operate on one Filinq instance with shared-nothing
+isolation: every Filinq object family (consents, prohibitions/policies,
 signing requests, templates, huisstijl, dossiers, batch jobs, correspondence,
-generated documents) is scoped to an OpenRegister Organisation. DocuDesk
+generated documents) is scoped to an OpenRegister Organisation. Filinq
 consumes OR's organisation model and enforcement (`_rbac`/`_multitenancy`
 defaults) instead of bypassing it, gets a per-organisation template library
 and branding, and produces organisation-scoped dashboards and reports.
@@ -19,36 +19,36 @@ Closes the tenant-isolation dimension of GH #283.
 
 ### Requirement: Tenant identity is the OpenRegister Organisation (REQ-DDMTH-001)
 
-DocuDesk MUST use OpenRegister's Organisation (identified by its UUID) as the
+Filinq MUST use OpenRegister's Organisation (identified by its UUID) as the
 only tenant identity, consumed via OR's `OrganisationService`
 (active-organisation resolution, membership, `isOrganisationAdmin()`), per
 the hydra umbrella spec `tenant-fleet-wide-consumption` and ADR-022. Objects
 MUST carry their organisation exclusively in OR's object envelope
 (`@self.organisation`), stamped by OR from the creator's active organisation.
-DocuDesk MUST NOT add an organisation/tenant property to any schema in
-`lib/Settings/docudesk_register.json`, MUST NOT write the organisation stamp
+Filinq MUST NOT add an organisation/tenant property to any schema in
+`lib/Settings/filinq_register.json`, MUST NOT write the organisation stamp
 itself, and MUST NOT introduce any app-local tenant schema, tenant service,
 tenant middleware or tenant lifecycle logic.
 
 #### Scenario: New objects are stamped with the creator's active organisation
 
 - GIVEN a user whose active OR organisation is A
-- WHEN the user creates a consent record, a template and a dossier through DocuDesk
+- WHEN the user creates a consent record, a template and a dossier through Filinq
 - THEN each stored object's OR envelope carries organisation A
-- AND no DocuDesk code path passed an organisation value into the save call
+- AND no Filinq code path passed an organisation value into the save call
 - @e2e tests/e2e/spec-coverage/multi-tenant.spec.ts
 
 #### Scenario: No app-local tenant construct exists
 
-- GIVEN the DocuDesk codebase at the end of this change
-- WHEN `lib/` and `lib/Settings/docudesk_register.json` are inspected
+- GIVEN the Filinq codebase at the end of this change
+- WHEN `lib/` and `lib/Settings/filinq_register.json` are inspected
 - THEN no schema declares an organisation/tenant property
-- AND no `Tenant*`-shaped class, middleware or service exists in DocuDesk
+- AND no `Tenant*`-shaped class, middleware or service exists in Filinq
 - @e2e exclude static codebase shape, not a browser surface — enforced by hydra's tenant anti-pattern grep gate and pinned by PHPUnit (tests/unit/Service/MultiTenantGuardrailsTest.php)
 
 ### Requirement: OpenRegister enforcement is on by default; bypasses are removed (REQ-DDMTH-002)
 
-DocuDesk MUST NOT pass `_rbac: false` or `_multitenancy: false` to any
+Filinq MUST NOT pass `_rbac: false` or `_multitenancy: false` to any
 OpenRegister `ObjectService` call on a user-request path. The 29 bypass call
 sites verified at HEAD across `ConsentService`, `PolicyCrudService`,
 `PolicyMatchService`, `PolicyRetroactiveService`,
@@ -76,17 +76,17 @@ from any request parameter.
 - AND a log entry records the seam use, the reason and the caller
 - @e2e exclude background-job seam with no UI surface — covered by PHPUnit (tests/unit/Service/SystemContextSeamTest.php)
 
-### Requirement: Shared-nothing isolation across all DocuDesk object families (REQ-DDMTH-003)
+### Requirement: Shared-nothing isolation across all Filinq object families (REQ-DDMTH-003)
 
 A user whose active organisation is A MUST NOT be able to read, list, search,
-update or delete organisation B's DocuDesk objects — consents, prohibitions/
+update or delete organisation B's Filinq objects — consents, prohibitions/
 policies, signing requests, templates, template versions, huisstijl,
 dossiers, batch jobs, correspondence, generated documents — through any
-DocuDesk endpoint, any DocuDesk view, or the OpenRegister object API. This
+Filinq endpoint, any Filinq view, or the OpenRegister object API. This
 MUST hold for the cross-tenant consent forgery documented in GH #283: a
 consent update addressed to another organisation's consent record MUST be
 rejected and MUST NOT modify the record. Failure mode MUST be fail-closed: if
-the active organisation cannot be resolved, DocuDesk surfaces MUST show no
+the active organisation cannot be resolved, Filinq surfaces MUST show no
 organisation-scoped objects rather than all objects.
 
 #### Scenario: GH #283 cross-tenant consent forgery fails
@@ -109,7 +109,7 @@ organisation-scoped objects rather than all objects.
 #### Scenario: Unresolvable organisation fails closed
 
 - GIVEN a user for whom no active organisation can be resolved
-- WHEN the user opens an organisation-scoped DocuDesk view
+- WHEN the user opens an organisation-scoped Filinq view
 - THEN the view shows an empty state
 - AND no cross-organisation data is returned
 - @e2e exclude requires forcing an inconsistent OR membership state not reproducible in the e2e environment — covered by PHPUnit (tests/unit/Service/ActiveOrganisationFailClosedTest.php)
@@ -147,7 +147,7 @@ labelled as covering all organisations.
 #### Scenario: Dashboard counts only the active organisation
 
 - GIVEN 3 pending consents in organisation A and 5 in organisation B
-- WHEN a user with active organisation A opens the DocuDesk dashboard
+- WHEN a user with active organisation A opens the Filinq dashboard
 - THEN the pending-consent counter shows 3
 - @e2e tests/e2e/spec-coverage/multi-tenant.spec.ts
 
@@ -161,7 +161,7 @@ labelled as covering all organisations.
 
 ### Requirement: Legacy objects are backfilled to the default organisation (REQ-DDMTH-006)
 
-A one-time repair step MUST backfill DocuDesk-owned objects whose OR envelope
+A one-time repair step MUST backfill Filinq-owned objects whose OR envelope
 carries no organisation to OpenRegister's default organisation
 (`getDefaultOrganisationUuid()`), so pre-existing single-tenant data remains
 visible after enforcement turns on. The step MUST modify only the envelope
@@ -172,7 +172,7 @@ changed.
 
 #### Scenario: Null-organisation objects become default-organisation objects
 
-- GIVEN pre-upgrade objects with no organisation stamp across several DocuDesk schemas
+- GIVEN pre-upgrade objects with no organisation stamp across several Filinq schemas
 - WHEN the repair step runs twice
 - THEN after the first run each such object carries the default organisation and per-schema counts are logged
 - AND the second run changes nothing

@@ -12,10 +12,10 @@
  * An admin skips the per-request scoping and reads the trail directly.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
  *
@@ -25,12 +25,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\SigningController;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningService;
-use OCA\DocuDesk\Service\SigningVerificationService;
+use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\SigningVerificationService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
@@ -47,10 +47,10 @@ use RuntimeException;
  * Tests for the signing audit-trail endpoint.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -118,7 +118,7 @@ class SigningControllerAuditTest extends TestCase {
 		$groupManager->method('isAdmin')->willReturn($isAdmin);
 
 		return new SigningController(
-			'docudesk',
+			'filinq',
 			$this->createMock(IRequest::class),
 			$this->signingService,
 			$this->auditService,
@@ -215,7 +215,7 @@ class SigningControllerAuditTest extends TestCase {
 	/**
 	 * A backend failure answers 500 with a generic body — the exception text
 	 * must never reach the client, since distinct messages would confirm
-	 * whether a request ID exists (docudesk#100).
+	 * whether a request ID exists (filinq#100).
 	 *
 	 * @return void
 	 */

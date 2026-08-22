@@ -7,19 +7,19 @@
 			<h2>{{ signingStore.signingRequest.documentName }}</h2>
 			<div class="detail-grid">
 				<div>
-					<strong>{{ t('docudesk', 'Status') }}</strong
+					<strong>{{ t('filinq', 'Status') }}</strong
 					>: {{ signingStore.signingRequest.status }}
 				</div>
 				<div>
-					<strong>{{ t('docudesk', 'Level') }}</strong
+					<strong>{{ t('filinq', 'Level') }}</strong
 					>: {{ signingStore.signingRequest.signatureLevel }}
 				</div>
 				<div>
-					<strong>{{ t('docudesk', 'Mode') }}</strong
+					<strong>{{ t('filinq', 'Mode') }}</strong
 					>: {{ signingStore.signingRequest.signingMode }}
 				</div>
 				<div>
-					<strong>{{ t('docudesk', 'Provider') }}</strong
+					<strong>{{ t('filinq', 'Provider') }}</strong
 					>: {{ signingStore.signingRequest.provider }}
 				</div>
 			</div>
@@ -27,15 +27,15 @@
 				v-if="signingStore.signingRequest.documentFileId"
 				variant="secondary"
 				@click="openVerify">
-				{{ t('docudesk', 'Verify') }}
+				{{ t('filinq', 'Verify') }}
 			</NcButton>
-			<h3>{{ t('docudesk', 'Audit Trail') }}</h3>
+			<h3>{{ t('filinq', 'Audit Trail') }}</h3>
 			<table v-if="signingStore.auditTrail.length > 0" class="audit-table">
 				<thead>
 					<tr>
-						<th scope="col">{{ t('docudesk', 'Action') }}</th>
-						<th scope="col">{{ t('docudesk', 'Actor') }}</th>
-						<th scope="col">{{ t('docudesk', 'Timestamp') }}</th>
+						<th scope="col">{{ t('filinq', 'Action') }}</th>
+						<th scope="col">{{ t('filinq', 'Actor') }}</th>
+						<th scope="col">{{ t('filinq', 'Timestamp') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -55,7 +55,7 @@
 				</tbody>
 			</table>
 			<p v-else>
-				{{ t('docudesk', 'No audit entries yet.') }}
+				{{ t('filinq', 'No audit entries yet.') }}
 			</p>
 		</template>
 	</div>

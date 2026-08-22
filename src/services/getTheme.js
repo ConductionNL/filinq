@@ -9,7 +9,7 @@
  *
  * @return { 'light' | 'dark' } The current theme, either 'light' or 'dark'.
  *
- * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+ * @spec openspec/specs/dashboard/spec.md#requirement-filinq-dashboard-view-req-dash-01
  */
 export function getTheme() {
 	if (document.body.hasAttribute('data-theme-light')) {

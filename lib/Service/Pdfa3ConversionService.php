@@ -27,12 +27,12 @@
  * only asserts the container-level markers it is responsible for.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  *
@@ -42,12 +42,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Mpdf\Output\Destination;
-use OCA\DocuDesk\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -58,10 +58,10 @@ use Throwable;
  * document with embedded attachments and MDTO/archival metadata.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
@@ -70,7 +70,7 @@ class Pdfa3ConversionService {
 	/**
 	 * App identifier used for IAppConfig reads.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * App config key: master enable/disable switch for this service.
@@ -78,17 +78,17 @@ class Pdfa3ConversionService {
 	 * response (e.g. during a phased rollout, or when an install wants
 	 * to guarantee the endpoint is a hard no-op).
 	 */
-	private const CFG_ENABLED = 'docudesk.pdfa3.enabled';
+	private const CFG_ENABLED = 'filinq.pdfa3.enabled';
 
 	/**
 	 * App config key: maximum source PDF size, in bytes.
 	 */
-	private const CFG_MAX_INPUT_BYTES = 'docudesk.pdfa3.max_input_bytes';
+	private const CFG_MAX_INPUT_BYTES = 'filinq.pdfa3.max_input_bytes';
 
 	/**
 	 * App config key: wall-clock time budget for one conversion, in seconds.
 	 */
-	private const CFG_MAX_SECONDS = 'docudesk.pdfa3.max_seconds';
+	private const CFG_MAX_SECONDS = 'filinq.pdfa3.max_seconds';
 
 	/**
 	 * Default cap: 50 MiB source PDF.
@@ -225,7 +225,7 @@ class Pdfa3ConversionService {
 	 * Unlike convertExistingPdf(), mPDF renders every element itself,
 	 * so font embedding and colour-space compliance are fully
 	 * guaranteed by mPDF's own PDF/A auto-correction — this is the
-	 * strongest-guarantee path and the one docudesk's own generation
+	 * strongest-guarantee path and the one filinq's own generation
 	 * flow (PdfController::renderPdfA) uses.
 	 *
 	 * @param string $html Rendered HTML document body.
@@ -323,7 +323,7 @@ class Pdfa3ConversionService {
 	 * @throws Pdfa3ConversionException REASON_CONVERTER_UNAVAILABLE.
 	 */
 	private function instantiateMpdf(array $options): Mpdf {
-		$tempDir = sys_get_temp_dir() . '/docudesk-pdfa3';
+		$tempDir = sys_get_temp_dir() . '/filinq-pdfa3';
 		$this->ensureTempDirectory(tempDir: $tempDir);
 
 		$margins = $options['margin'] ?? [];
@@ -565,7 +565,7 @@ class Pdfa3ConversionService {
 			throw new Pdfa3ConversionException(
 				reason: Pdfa3ConversionException::REASON_CONVERTER_UNAVAILABLE,
 				message: 'PDF/A-3 converter (mPDF) is not installed.',
-				adminHint: 'Run composer install in the docudesk app directory to restore the mpdf/mpdf vendor package.',
+				adminHint: 'Run composer install in the filinq app directory to restore the mpdf/mpdf vendor package.',
 				code: 503
 			);
 		}

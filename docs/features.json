@@ -158,12 +158,12 @@
   {
     "slug": "processing-activity-export",
     "title": "AVG Art. 30 register",
-    "summary": "Keep your processing register from DocuDesk and OpenRegister.",
+    "summary": "Keep your processing register from Filinq and OpenRegister.",
     "status": "beta",
     "docsUrl": "openspec/specs/processing-activity-export/spec.md",
     "providedBy": "openregister",
     "title_nl": "AVG art. 30-register",
-    "summary_nl": "Houd je verwerkingsregister bij vanuit DocuDesk en OpenRegister."
+    "summary_nl": "Houd je verwerkingsregister bij vanuit Filinq en OpenRegister."
   },
   {
     "slug": "dashboard",
@@ -186,11 +186,11 @@
   {
     "slug": "prometheus-metrics",
     "title": "Prometheus metrics and health",
-    "summary": "Monitor DocuDesk with your own observability stack.",
+    "summary": "Monitor Filinq with your own observability stack.",
     "status": "stable",
     "docsUrl": "openspec/specs/prometheus-metrics/spec.md",
     "title_nl": "Prometheus-metrics en health",
-    "summary_nl": "Monitor DocuDesk met je eigen observability-stack."
+    "summary_nl": "Monitor Filinq met je eigen observability-stack."
   },
   {
     "slug": "batch-entity-review",

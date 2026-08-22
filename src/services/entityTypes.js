@@ -75,7 +75,7 @@ export function entityTypeColor(type) {
  * and only produces the string shown to the user.
  *
  * The raw uppercase token IS the translation msgid — deliberately the same
- * scheme the DocuDesk backend uses (`LegalBasesSummaryService::localizeEntityType`
+ * scheme the Filinq backend uses (`LegalBasesSummaryService::localizeEntityType`
  * → `IL10N::t($entityType)`) and that OpenRegister writes into redacted
  * documents (`DocumentProcessingHandler::LOCALIZABLE_ENTITY_TYPES`). Translating
  * by the raw token means the sidebar label, the summary legend and the redacted
@@ -93,5 +93,5 @@ export function entityTypeLabel(type) {
 	if (upper === '') {
 		return ''
 	}
-	return t('docudesk', upper)
+	return t('filinq', upper)
 }

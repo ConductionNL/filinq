@@ -11,10 +11,10 @@
  * the permission check running BEFORE the record is touched.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,11 +22,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
-use OCA\DocuDesk\Controller\PolicyController;
-use OCA\DocuDesk\Service\PolicyCrudService;
+use OCA\Filinq\Controller\PolicyController;
+use OCA\Filinq\Service\PolicyCrudService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -42,10 +42,10 @@ use RuntimeException;
  * Tests for the prohibition policy-surface CRUD endpoints.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress                              PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
@@ -106,7 +106,7 @@ class PolicyControllerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$this->controller = new PolicyController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->createMock(LoggerInterface::class),
 			$this->crudService,
@@ -126,7 +126,7 @@ class PolicyControllerTest extends TestCase {
 		$session->method('getUser')->willReturn(null);
 
 		return new PolicyController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->createMock(LoggerInterface::class),
 			$this->crudService,

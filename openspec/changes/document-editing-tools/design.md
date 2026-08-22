@@ -29,7 +29,7 @@ It mostly does not exist. The layers, and who brokers each:
 
 ## The two curated tools
 
-### `docudesk.convertDocument`
+### `filinq.convertDocument`
 
 Wraps the existing cascade. Input: a file id the acting user can read, plus a
 target format. Output: a new file node plus a `generatedDocument` record.
@@ -44,7 +44,7 @@ target format. Output: a new file node plus a `generatedDocument` record.
   error naming the source format. It never silently returns a lower-fidelity
   result without saying so.
 
-### `docudesk.editDocument`
+### `filinq.editDocument`
 
 Input: a file id, plus a list of anchored edits. Output: a **new document
 version**, never a mutation of the input.
@@ -70,7 +70,7 @@ Unlock          -> in a finally, on every exit path
 
 In-place keeps one document identity and one history, and puts the undo where
 users already look for it — the file's version list — rather than scattering
-near-duplicate files through a folder. Review still works: DocuDesk has
+near-duplicate files through a folder. Review still works: Filinq has
 `DocumentComparisonService`, and Collabora Online 26.04 renders version-to-version
 redlines natively, so "what did the agent change?" is answered by diffing versions.
 
@@ -125,7 +125,7 @@ refusal both become unachievable through that route: a document open in the
 editor would have its lock *silently extended* rather than refusing — precisely
 the data-loss case the lock exists to prevent.
 
-An in-process `LockContext($file, ILock::TYPE_APP, 'docudesk')` conflicts with
+An in-process `LockContext($file, ILock::TYPE_APP, 'filinq')` conflicts with
 Collabora's lock (the refusal we want) **and** stays distinct from it (which WOPI
 cannot give us). It also drops a self-addressed HTTP call carrying a bearer
 token, which ADR-041's in-process posture argues against anyway.
@@ -200,7 +200,7 @@ impossible rather than guarded.
 
 ## Refusals
 
-Extending the standing refusals in `docudesk-mcp-adoption` §Refusals, which
+Extending the standing refusals in `filinq-mcp-adoption` §Refusals, which
 remain in force unchanged:
 
 - **No unguarded in-place write.** `PutFile` is called only while the session's own
@@ -232,7 +232,7 @@ Every file either tool produces is marked and recorded, in both directions:
   "did an agent write this?" is answerable without opening an audit page.
 - **In the record** — the `generatedDocument` row carries the invoking agent, and
   Hermiq's `tool` trace step for the invocation carries the produced **file id**.
-  Without that, the oversight surface says `docudesk.editDocument` succeeded and
+  Without that, the oversight surface says `filinq.editDocument` succeeded and
   cannot say on what.
 
 Two rules that are easy to get wrong:
@@ -253,8 +253,8 @@ consistent with the no-bytes refusal below.
 
 ## Grant-surface correctness
 
-Both tools are two-segment curated ids (`docudesk.convertDocument`,
-`docudesk.editDocument`), not three-segment derived ones. Per
+Both tools are two-segment curated ids (`filinq.convertDocument`,
+`filinq.editDocument`), not three-segment derived ones. Per
 `hermiq-prefer-tool-hints`, classification **fails closed** on a hint-less
 non-3-segment id — a missing `scope` does not produce an unclassified tool, it
 produces a write/destructive one. Both are write-classified either way, so the

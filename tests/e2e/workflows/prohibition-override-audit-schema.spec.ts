@@ -1,14 +1,14 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Regression test for ConductionNL/docudesk#428.
+ * Regression test for ConductionNL/filinq#428.
  *
  * `ProhibitionOverrideCommitter` writes its AVG Art. 30 override-audit entry to
  * `register: consent, schema: prohibitionOverrideAudit` and is explicitly
  * fail-closed — "If the audit write fails we MUST NOT proceed to the OR PATCH"
  * — rethrowing as `RuntimeException(…, 500)`. That schema was declared NOWHERE:
- * `lib/Settings/docudesk_register.json` listed 20 schemas and this was not one
+ * `lib/Settings/filinq_register.json` listed 20 schemas and this was not one
  * of them, so the store answered
  *
  *     404 {"message":"Schema not found: 'prohibitionOverrideAudit'"}
@@ -17,14 +17,14 @@
  * schema by name:
  *
  *   "Implementations MUST use a `prohibitionOverrideAudit` schema in
- *    `docudesk_register.json` for this entry, alongside the existing schemas."
+ *    `filinq_register.json` for this entry, alongside the existing schemas."
  *   — openspec/specs/anonymisation-prohibition-gate/spec.md
  *
  * ⚠️ DELIBERATELY CARRIES NO `@e2e` ANCHOR, and that is not an oversight.
  * The nearest scenario is `#override-acknowledgement-writes-both-audit-and-skip-flag`,
  * which requires the CONTROLLER to write the entry while releasing a
  * LOW-confidence match. An override is only valid below the high-confidence
- * threshold (default 0.85, `docudesk.prohibition.high_confidence_threshold`,
+ * threshold (default 0.85, `filinq.prohibition.high_confidence_threshold`,
  * which is NOT in `SettingsService::WRITABLE_KEYS` so a test cannot move it),
  * and the regex-only backend this instance and CI run emits `CUSTOM_DICTIONARY`
  * at confidence 1.00 and nothing else — so no overridable match can be

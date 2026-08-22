@@ -11,7 +11,7 @@
 			regression check on 2026-07-24.
 		-->
 		<h2 class="anonymization-page__title">
-			{{ t('docudesk', 'Anonymization') }}
+			{{ t('filinq', 'Anonymization') }}
 		</h2>
 		<AnonymizationWidget />
 	</div>

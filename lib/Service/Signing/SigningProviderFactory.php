@@ -6,12 +6,12 @@
  * Resolves the active signing provider based on admin configuration.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Signing
+ * @package   OCA\Filinq\Service\Signing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Signing;
+namespace OCA\Filinq\Service\Signing;
 
 use OCP\IAppConfig;
 use RuntimeException;
@@ -28,10 +28,10 @@ use RuntimeException;
  * Factory for resolving signing providers
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
  */
@@ -71,7 +71,7 @@ class SigningProviderFactory {
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
 	 */
 	public function getActiveProvider(): SigningProviderInterface {
-		$providerName = $this->config->getValueString('docudesk', 'signing_provider', 'native');
+		$providerName = $this->config->getValueString('filinq', 'signing_provider', 'native');
 
 		if (isset($this->providers[$providerName]) === false) {
 			return $this->providers['native'];

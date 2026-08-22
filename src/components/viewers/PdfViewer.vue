@@ -5,7 +5,7 @@
 		@mouseup="captureSelection">
 		<div v-if="loading" class="pdf-viewer__loading">
 			<NcLoadingIcon :size="48" />
-			<span>{{ t('docudesk', 'Loading document…') }}</span>
+			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
 		<div v-else-if="error" class="pdf-viewer__error">
 			{{ error }}
@@ -186,7 +186,7 @@ export default {
 				}
 			} catch (err) {
 				console.error('[PdfViewer] failed to load PDF:', err)
-				this.error = err.message || t('docudesk', 'Failed to load PDF')
+				this.error = err.message || t('filinq', 'Failed to load PDF')
 				this.loading = false
 			}
 		},

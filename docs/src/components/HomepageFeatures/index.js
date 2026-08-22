@@ -19,7 +19,7 @@ const FeatureList = [
     title: 'Comprehensive Document Services',
     description: (
       <>
-        From document generation and signing to GDPR anonymization and WCAG compliance, DocuDesk provides all the tools you need for modern document management.
+        From document generation and signing to GDPR anonymization and WCAG compliance, Filinq provides all the tools you need for modern document management.
       </>
     ),
   },

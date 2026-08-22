@@ -4,7 +4,7 @@
  * Unit tests for BatchStateService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,16 +12,16 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\BatchStateRepository;
-use OCA\DocuDesk\Service\BatchStateService;
+use OCA\Filinq\Service\BatchStateRepository;
+use OCA\Filinq\Service\BatchStateService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -41,10 +41,10 @@ use RuntimeException;
  * PHP internals), but the cache interaction contract is fully tested.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase
@@ -122,7 +122,7 @@ class BatchStateServiceTest extends TestCase {
 
 		$mockCacheFactory = $this->createMock(originalClassName: ICacheFactory::class);
 		$mockCacheFactory->method('createDistributed')
-			->with('docudesk')
+			->with('filinq')
 			->willReturn($this->mockCache);
 
 		$this->service = new BatchStateService(
@@ -146,8 +146,8 @@ class BatchStateServiceTest extends TestCase {
 		$this->mockAppConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'batch.max_files_per_run', '', false, '50'],
-					['docudesk', 'docudesk_batch_max_files', '100', false, '100'],
+					['filinq', 'batch.max_files_per_run', '', false, '50'],
+					['filinq', 'filinq_batch_max_files', '100', false, '100'],
 				]
 			);
 
@@ -176,7 +176,7 @@ class BatchStateServiceTest extends TestCase {
 	 * The legacy key still wins when the canonical one is unset.
 	 *
 	 * `batch.max_files_per_run` is the manifest-declared key; the legacy
-	 * `docudesk_batch_max_files` is kept as a one-release fallback so an admin
+	 * `filinq_batch_max_files` is kept as a one-release fallback so an admin
 	 * who set the old key before the rename does not silently get the built-in
 	 * default instead of their own limit. That fallback is only reachable when
 	 * the canonical key reads empty, which is why the two tests above never
@@ -189,8 +189,8 @@ class BatchStateServiceTest extends TestCase {
 		$this->mockAppConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'batch.max_files_per_run', '', false, ''],
-					['docudesk', 'docudesk_batch_max_files', '100', false, '250'],
+					['filinq', 'batch.max_files_per_run', '', false, ''],
+					['filinq', 'filinq_batch_max_files', '100', false, '250'],
 				]
 			);
 
@@ -212,8 +212,8 @@ class BatchStateServiceTest extends TestCase {
 		$this->mockAppConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'batch.max_files_per_run', '', false, ''],
-					['docudesk', 'docudesk_batch_max_files', '100', false, '100'],
+					['filinq', 'batch.max_files_per_run', '', false, ''],
+					['filinq', 'filinq_batch_max_files', '100', false, '100'],
 				]
 			);
 
@@ -380,7 +380,7 @@ class BatchStateServiceTest extends TestCase {
 	 * apart. With no session user the ownership block is skipped entirely, so
 	 * the corrupt guard is the only thing left that can return null. Verified
 	 * both ways: with the guard disabled this test fails with
-	 * `ICache::set('docudesk_batch_abc-123', '"not-a-batch-record"', 7200):
+	 * `ICache::set('filinq_batch_abc-123', '"not-a-batch-record"', 7200):
 	 * mixed was not expected to be called` — i.e. it prints the corrupt value
 	 * being written back.
 	 *
@@ -420,7 +420,7 @@ class BatchStateServiceTest extends TestCase {
 		$this->mockAppConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'batch.cache_ttl_seconds', '', false, '900'],
+					['filinq', 'batch.cache_ttl_seconds', '', false, '900'],
 				]
 			);
 

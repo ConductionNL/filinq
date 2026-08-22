@@ -4,13 +4,13 @@
  * Anonymiser Backend State Client
  *
  * Delegates backend-state queries to OpenRegister's AnonymisationBackendService.
- * DocuDesk must not query IAppManager or AppAPI directly — all detection is
+ * Filinq must not query IAppManager or AppAPI directly — all detection is
  * centralised in OpenRegister per ADR-017. If the companion service is not yet
  * deployed (e.g. during a phased rollout), falls back to method='regex' so the
  * admin warning is shown rather than silently suppressed.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
  * Wraps the OpenRegister AnonymisationBackendService::getState() call.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl

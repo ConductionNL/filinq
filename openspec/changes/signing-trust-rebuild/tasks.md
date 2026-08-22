@@ -25,8 +25,8 @@
 
 - [x] 2.4 Unit tests for 2.1–2.3 incl. the QES+native 400, unknown-provider completion failure, decline-on-COMPLETED rejection, marker-less download refusal
 
-- [x] 2.5 Preserve the decidesk delegation seam (REQ-DDSTR-010): kept the `docudesk-signing` `/signing-requests` request/response fields backward-compatible (no field touched); added the resolved eIDAS `assuranceLevel` (`low` for native SES, `substantial`/`high` for other provider/level pairs) to `SigningConcludedEvent` (the completion payload the consumer maps to `resolveSignatureStage()`), unit-tested in `tests/unit/Event/SigningConcludedEventTest.php`.
-  - Verified against the real decidesk checkout: `EIDASSignatureService::resolveSignatureStage()`/`composeDocudeskSigningRequest()` do not read `assuranceLevel` today, so this is a pure additive field with zero coupling risk. **Newman contract test against the docudesk-signing collection NOT written** — no Newman collection exists for this seam in this repo.
+- [x] 2.5 Preserve the decidesk delegation seam (REQ-DDSTR-010): kept the `filinq-signing` `/signing-requests` request/response fields backward-compatible (no field touched); added the resolved eIDAS `assuranceLevel` (`low` for native SES, `substantial`/`high` for other provider/level pairs) to `SigningConcludedEvent` (the completion payload the consumer maps to `resolveSignatureStage()`), unit-tested in `tests/unit/Event/SigningConcludedEventTest.php`.
+  - Verified against the real decidesk checkout: `EIDASSignatureService::resolveSignatureStage()`/`composeFilinqSigningRequest()` do not read `assuranceLevel` today, so this is a pure additive field with zero coupling risk. **Newman contract test against the filinq-signing collection NOT written** — no Newman collection exists for this seam in this repo.
 
 ## 3. Audit binding + proven immutability
 

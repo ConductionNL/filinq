@@ -13,7 +13,7 @@
  * processing for large batches (>10 objects).
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,17 +21,17 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\DocuDesk\BackgroundJob\BatchDocumentJob;
+use OCA\Filinq\BackgroundJob\BatchDocumentJob;
 use OCP\BackgroundJob\IJobList;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,10 +40,10 @@ use Psr\Log\LoggerInterface;
  * Service for generating formal documents from templates and OpenRegister data
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
@@ -88,6 +88,16 @@ class DocumentService {
 	 * Default storage folder prefix (a template's namespace is appended).
 	 *
 	 * @var string
+	 *
+	 * ⚠️ STILL `DocuDesk`, DELIBERATELY, ACROSS THE FILINQ RENAME. This is a
+	 * real FOLDER NAME in the user's Nextcloud Files tree — every document this
+	 * app has ever generated or stored lives under `<user>/files/DocuDesk/…`.
+	 * Renaming the constant does not move a single file: the app simply starts
+	 * writing into a new, empty `Filinq/` folder while every existing document
+	 * is orphaned where nothing looks for it any more. Same class of failure as
+	 * renaming an OpenRegister register slug, and equally invisible — there is
+	 * no error, the folder is just empty. Moving the folder needs its own
+	 * repair step that renames the node per user.
 	 */
 	private const DEFAULT_OUTPUT_FOLDER_PREFIX = 'DocuDesk';
 
@@ -397,7 +407,7 @@ class DocumentService {
 		try {
 			$config = $this->container->get(\OCP\IAppConfig::class);
 			$value = $config->getValueString(
-				'docudesk',
+				'filinq',
 				'document_job_' . $jobId,
 				''
 			);
@@ -431,7 +441,7 @@ class DocumentService {
 		try {
 			$config = $this->container->get(\OCP\IAppConfig::class);
 			$config->setValueString(
-				'docudesk',
+				'filinq',
 				'document_job_' . $jobId,
 				json_encode($status)
 			);

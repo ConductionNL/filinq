@@ -1,12 +1,12 @@
 ## ADDED Requirements
 
 ### Requirement: Entity-type to grondslag mapping configuration
-The system SHALL persist an instance-global mapping from entity type to grondslag, stored as a JSON object in DocuDesk app configuration under the key `docudesk.grondslagen.entity_type_bases`. Each property key is an entity type identifier (e.g. `PERSON`, `BSN`); each value is an array of `base` (grondslag) slugs containing zero or more entries. The mapping SHALL be readable and writable through the DocuDesk settings service.
+The system SHALL persist an instance-global mapping from entity type to grondslag, stored as a JSON object in Filinq app configuration under the key `filinq.grondslagen.entity_type_bases`. Each property key is an entity type identifier (e.g. `PERSON`, `BSN`); each value is an array of `base` (grondslag) slugs containing zero or more entries. The mapping SHALL be readable and writable through the Filinq settings service.
 
 #### Scenario: Save an entity-type mapping
-- **GIVEN** an administrator on the DocuDesk settings page
+- **GIVEN** an administrator on the Filinq settings page
 - **WHEN** they map `PERSON` to the base `uitvoering-publiekrechtelijke-taak` and save
-- **THEN** `docudesk.grondslagen.entity_type_bases` contains `{"PERSON":["uitvoering-publiekrechtelijke-taak"]}`
+- **THEN** `filinq.grondslagen.entity_type_bases` contains `{"PERSON":["uitvoering-publiekrechtelijke-taak"]}`
 - **AND** the value is returned on the next settings read
 
 #### Scenario: Multiple bases for one type
@@ -20,7 +20,7 @@ The system SHALL persist an instance-global mapping from entity type to grondsla
 - **AND** reading the mapping for `EMAIL` yields an empty result
 
 ### Requirement: Grondslag selector in admin settings
-The DocuDesk admin settings panel SHALL present, for each available entity type, a control to select zero or more `base` records as the proposed grondslag for that type. The list of selectable `base` records SHALL be loaded from the `base` register so that operator-added bases appear automatically. The control SHALL allow multiple selections, defaulting to a single selection. Saving the selector SHALL persist to the entity-type mapping configuration.
+The Filinq admin settings panel SHALL present, for each available entity type, a control to select zero or more `base` records as the proposed grondslag for that type. The list of selectable `base` records SHALL be loaded from the `base` register so that operator-added bases appear automatically. The control SHALL allow multiple selections, defaulting to a single selection. Saving the selector SHALL persist to the entity-type mapping configuration.
 
 #### Scenario: Available bases include operator-added ones
 - **GIVEN** a municipality has added a custom `base` record `gemeentelijke-verordening`
@@ -33,7 +33,7 @@ The DocuDesk admin settings panel SHALL present, for each available entity type,
 - **THEN** the entity-type mapping configuration reflects the `LOCATION` selection
 
 ### Requirement: Selectable entity types from a curated list
-The set of entity types offered in the selector SHALL come from a curated list maintained within DocuDesk, seeded from the entity types the configured anonymiser backend is known to emit. The list SHALL be available without contacting the backend. (Sourcing the list live from the backend is a planned enhancement, dependent on the backend exposing a supported-types endpoint; see design.md.)
+The set of entity types offered in the selector SHALL come from a curated list maintained within Filinq, seeded from the entity types the configured anonymiser backend is known to emit. The list SHALL be available without contacting the backend. (Sourcing the list live from the backend is a planned enhancement, dependent on the backend exposing a supported-types endpoint; see design.md.)
 
 #### Scenario: Selector lists the curated entity types
 - **WHEN** the administrator opens the grondslag settings

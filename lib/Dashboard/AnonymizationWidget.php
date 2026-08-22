@@ -6,11 +6,11 @@
  * Nextcloud Dashboard widget for quick document anonymization.
  *
  * @category  Dashboard
- * @package   OCA\DocuDesk\Dashboard
+ * @package   OCA\Filinq\Dashboard
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/dashboard/spec.md
  * @spec openspec/specs/dashboard/spec.md
@@ -21,9 +21,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Dashboard;
+namespace OCA\Filinq\Dashboard;
 
-use OCA\DocuDesk\AppInfo\Application;
+use OCA\Filinq\AppInfo\Application;
 use OCP\Dashboard\IIconWidget;
 use OCP\Dashboard\IWidget;
 use OCP\IURLGenerator;
@@ -33,10 +33,10 @@ use OCP\Util;
  * Dashboard widget for document anonymization
  *
  * @category Dashboard
- * @package  OCA\DocuDesk\Dashboard
+ * @package  OCA\Filinq\Dashboard
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class AnonymizationWidget implements IWidget, IIconWidget {
 	/**
@@ -58,6 +58,10 @@ class AnonymizationWidget implements IWidget, IIconWidget {
 	 * @spec openspec/specs/dashboard/spec.md
 	 */
 	public function getId(): string {
+		/* FROZEN at the old app id — see FileEntitiesWidget::getId(). The
+		   Dashboard app persists this string in each user's own layout, so
+		   renaming it silently removes the widget from every dashboard that
+		   already has it. */
 		return 'docudesk-anonymization';
 	}//end getId()
 
@@ -91,7 +95,7 @@ class AnonymizationWidget implements IWidget, IIconWidget {
 	 * @spec openspec/specs/dashboard/spec.md
 	 */
 	public function getIconClass(): string {
-		return 'icon-docudesk';
+		return 'icon-filinq';
 	}//end getIconClass()
 
 	/**
@@ -116,7 +120,7 @@ class AnonymizationWidget implements IWidget, IIconWidget {
 	 * @spec openspec/specs/dashboard/spec.md
 	 */
 	public function getUrl(): ?string {
-		return $this->urlGenerator->linkToRouteAbsolute('docudesk.dashboard.page');
+		return $this->urlGenerator->linkToRouteAbsolute('filinq.dashboard.page');
 	}//end getUrl()
 
 	/**
@@ -132,7 +136,7 @@ class AnonymizationWidget implements IWidget, IIconWidget {
 		// Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
 		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-vendor');
 		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-nc-vue');
-		Util::addScript(Application::APP_ID, 'docudesk-dashboard');
+		Util::addScript(Application::APP_ID, 'filinq-dashboard');
 
 	}//end load()
 }//end class

@@ -4,7 +4,7 @@
  * Unit tests for AnonymizationService prohibition-match behaviour
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,18 +12,18 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymizationResultParser;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\EntityDetectionService;
-use OCA\DocuDesk\Service\PolicyMatchService;
+use OCA\Filinq\Service\AnonymizationResultParser;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\EntityDetectionService;
+use OCA\Filinq\Service\PolicyMatchService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -43,10 +43,10 @@ use Psr\Log\LoggerInterface;
  * read-only `prohibitionMatch` hint (null, or `{ruleId, ruleName, highConfidence}`).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -137,7 +137,7 @@ class AnonymizationServiceProhibitionTest extends TestCase {
 		$mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
 		$mockMapper->method('findEntitiesForFile')->willReturn($rawEntities);
 
-		$mockBasis = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
+		$mockBasis = $this->createMock(\OCA\Filinq\Service\LegalBasisProposalService::class);
 		$mockBasis->method('getEntityTypeWhitelist')->willReturn(null);
 		// enrichEntitiesWithBases must return its entities argument unchanged.
 		$mockBasis->method('enrichEntitiesWithBases')->willReturnArgument(0);
@@ -152,11 +152,11 @@ class AnonymizationServiceProhibitionTest extends TestCase {
 					return $mockMapper;
 				}
 
-				if ($class === 'OCA\DocuDesk\Service\LegalBasisProposalService') {
+				if ($class === 'OCA\Filinq\Service\LegalBasisProposalService') {
 					return $mockBasis;
 				}
 
-				if ($class === 'OCA\DocuDesk\Service\PolicyMatchService') {
+				if ($class === 'OCA\Filinq\Service\PolicyMatchService') {
 					if ($policyService === null) {
 						throw new \Exception('PolicyMatchService not registered');
 					}
@@ -374,10 +374,10 @@ class AnonymizationServiceProhibitionTest extends TestCase {
  * `applyPolicyDecisions()` relies on: `match()` and `highConfidenceThreshold()`.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  */
 class FakePolicyMatchService {
 

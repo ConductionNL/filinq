@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage — the "Three separate admin surfaces MUST exist"
@@ -206,7 +206,7 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 	}) => {
 		// @e2e openspec/specs/entity-publication-policies/spec.md#standing-publication-consents-page-filters-by-scope
 		await go(page, 'policy/standing-consents')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/standing-consents/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/policy\/standing-consents/)
 		await expect(
 			page.getByRole('heading', { name: 'Publish always' }),
 		).toBeVisible()
@@ -229,7 +229,7 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 		// computed narrows them. An API-level test of this scenario would pass
 		// over a broken page, so it has to be a browser assertion.
 		await go(page, 'consent')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/consent/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/consent/)
 
 		await expectListedNotListed(
 			page,
@@ -244,7 +244,7 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 	}) => {
 		// @e2e openspec/specs/entity-publication-policies/spec.md#publication-prohibitions-page-is-the-only-surface-for-prohibition-records
 		await go(page, 'policy/prohibitions')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/prohibitions/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/policy\/prohibitions/)
 		await expect(
 			page.getByRole('heading', { name: 'Publish never' }),
 		).toBeVisible()

@@ -1,9 +1,9 @@
 <template>
 	<div class="template-index">
 		<div class="template-index__header">
-			<h2>{{ t('docudesk', 'Templates') }}</h2>
+			<h2>{{ t('filinq', 'Templates') }}</h2>
 			<NcButton variant="primary" @click="openNewTemplate">
-				{{ t('docudesk', 'New template') }}
+				{{ t('filinq', 'New template') }}
 			</NcButton>
 		</div>
 
@@ -11,14 +11,14 @@
 			<NcSelect
 				v-model="selectedCategory"
 				:options="categoryOptions"
-				:placeholder="t('docudesk', 'Filter by category')"
-				:inputLabel="t('docudesk', 'Category filter')"
+				:placeholder="t('filinq', 'Filter by category')"
+				:inputLabel="t('filinq', 'Category filter')"
 				class="template-index__filter-select"
 				@update:modelValue="applyFilters" />
 			<NcTextField
 				v-model="searchQuery"
-				:label="t('docudesk', 'Search templates')"
-				:placeholder="t('docudesk', 'Search by name...')"
+				:label="t('filinq', 'Search templates')"
+				:placeholder="t('filinq', 'Search by name...')"
 				class="template-index__search"
 				@update:modelValue="applyFilters" />
 		</div>
@@ -30,12 +30,12 @@
 			class="template-index__table">
 			<thead>
 				<tr>
-					<th scope="col">{{ t('docudesk', 'Name') }}</th>
-					<th scope="col">{{ t('docudesk', 'Category') }}</th>
-					<th scope="col">{{ t('docudesk', 'Namespace') }}</th>
-					<th scope="col">{{ t('docudesk', 'Tags') }}</th>
-					<th scope="col">{{ t('docudesk', 'Status') }}</th>
-					<th scope="col">{{ t('docudesk', 'Actions') }}</th>
+					<th scope="col">{{ t('filinq', 'Name') }}</th>
+					<th scope="col">{{ t('filinq', 'Category') }}</th>
+					<th scope="col">{{ t('filinq', 'Namespace') }}</th>
+					<th scope="col">{{ t('filinq', 'Tags') }}</th>
+					<th scope="col">{{ t('filinq', 'Status') }}</th>
+					<th scope="col">{{ t('filinq', 'Actions') }}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -58,7 +58,7 @@
 					<td>
 						<span v-if="tmpl.lockedBy" class="template-index__locked">
 							{{
-								t('docudesk', 'Locked by {user}', {
+								t('filinq', 'Locked by {user}', {
 									user: tmpl.lockedBy,
 								})
 							}}
@@ -67,21 +67,21 @@
 					<td @click.stop>
 						<NcButton
 							variant="tertiary"
-							:aria-label="t('docudesk', 'Edit template')"
+							:aria-label="t('filinq', 'Edit template')"
 							@click="openTemplate(tmpl)">
-							{{ t('docudesk', 'Edit') }}
+							{{ t('filinq', 'Edit') }}
 						</NcButton>
 						<NcButton
 							variant="tertiary"
-							:aria-label="t('docudesk', 'Duplicate template')"
+							:aria-label="t('filinq', 'Duplicate template')"
 							@click="duplicateTemplate(tmpl)">
-							{{ t('docudesk', 'Duplicate') }}
+							{{ t('filinq', 'Duplicate') }}
 						</NcButton>
 						<NcButton
 							variant="error"
-							:aria-label="t('docudesk', 'Delete template')"
+							:aria-label="t('filinq', 'Delete template')"
 							@click="confirmDelete(tmpl)">
-							{{ t('docudesk', 'Delete') }}
+							{{ t('filinq', 'Delete') }}
 						</NcButton>
 					</td>
 				</tr>
@@ -90,9 +90,9 @@
 
 		<NcEmptyContent
 			v-else
-			:name="t('docudesk', 'No templates found')"
+			:name="t('filinq', 'No templates found')"
 			:description="
-				t('docudesk', 'Create your first template to get started.')
+				t('filinq', 'Create your first template to get started.')
 			" />
 
 		<ConfirmDeleteTemplateDialog
@@ -154,7 +154,7 @@ export default {
 				this.templateStore.templates.map((t) => t.category).filter(Boolean),
 			)
 			return [
-				{ label: t('docudesk', 'All categories'), value: '' },
+				{ label: t('filinq', 'All categories'), value: '' },
 				...[...cats].map((c) => ({ label: c, value: c })),
 			]
 		},

@@ -6,12 +6,12 @@
  * Verifies signatures embedded in PDF documents.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -19,11 +19,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\DocuDesk\Service\Signing\AssertionCanonicalizer;
+use OCA\Filinq\Service\Signing\AssertionCanonicalizer;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -33,10 +33,10 @@ use RuntimeException;
  * Service for verifying document signatures
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#5-1
  */
@@ -140,7 +140,7 @@ class SigningVerificationService {
 	 * states per signature: `verified` (v2 MAC recomputed and matches),
 	 * `invalid` (a v2 marker whose MAC fails — tamper evidence), or
 	 * `unverifiable` (a legacy v1 marker, or a genuine external `/Type /Sig`
-	 * signature DocuDesk cannot yet cryptographically validate). `valid` is
+	 * signature Filinq cannot yet cryptographically validate). `valid` is
 	 * retained as the derived boolean `status === 'verified'` for
 	 * response-shape backward compatibility.
 	 *
@@ -160,6 +160,17 @@ class SigningVerificationService {
 			return $signatures;
 		}
 
+		// ⚠️ THE MARKER NAME STAYS `/DocuDesk-Signature` ACROSS THE FILINQ
+		// RENAME. It is not source text: it is a byte sequence written into
+		// every PDF this app has ever signed, and this regex is what reads it
+		// back out. Rename the reader and every already-signed document stops
+		// being recognised — each one silently degrades to `unverifiable`, i.e.
+		// the whole existing signature corpus loses its verification. Rename
+		// reader and writer together and old documents break instead of new
+		// ones. Either way it is an evidence-destroying change, so the literal
+		// is pinned here, in NativeSigningProvider::produceSignedArtifact() and
+		// in SigningProviderInterface's contract. A future marker migration has
+		// to read BOTH spellings, not swap one for the other.
 		$dataPattern = '/\/DocuDesk-Signature\s*\(([^)]+)\)/';
 		preg_match_all($dataPattern, $pdfContent, $dataMatches);
 
@@ -189,8 +200,8 @@ class SigningVerificationService {
 		}//end if
 
 		if (empty($signatures) === true) {
-			// A `/Type /Sig` entry with no DocuDesk marker is a genuine
-			// external signature DocuDesk cannot yet validate — honestly
+			// A `/Type /Sig` entry with no Filinq marker is a genuine
+			// external signature Filinq cannot yet validate — honestly
 			// `unverifiable`, never `invalid` (that would mislabel an
 			// inability to verify as tampering, REQ-DDSTR-005).
 			for ($i = 0; $i < $matches; $i++) {
@@ -211,7 +222,7 @@ class SigningVerificationService {
 	}//end extractSignatures()
 
 	/**
-	 * Cryptographically verify a self-asserted DocuDesk signature blob (v2)
+	 * Cryptographically verify a self-asserted Filinq signature blob (v2)
 	 *
 	 * V2 assertions carry `v: 2` and a MAC computed as `HMAC-SHA256(secret,
 	 * sha256(canonical-document) . "\n" . canonical-JSON(assertion-minus-mac))`
@@ -286,7 +297,7 @@ class SigningVerificationService {
 	}//end verifyAssertion()
 
 	/**
-	 * Blank every DocuDesk signature marker payload to recover the canonical form
+	 * Blank every Filinq signature marker payload to recover the canonical form
 	 *
 	 * The signed artifact is the original document plus a
 	 * `/DocuDesk-Signature(base64-json)` marker. The marker's own `mac` field
@@ -337,7 +348,7 @@ class SigningVerificationService {
 	 * @return string|null The configured secret, or null when unset.
 	 */
 	private function getSigningSecret(): ?string {
-		$secret = $this->config->getValueString('docudesk', 'signing_verification_secret', '');
+		$secret = $this->config->getValueString('filinq', 'signing_verification_secret', '');
 		if ($secret === '') {
 			return null;
 		}

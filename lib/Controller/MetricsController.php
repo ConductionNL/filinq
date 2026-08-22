@@ -3,7 +3,7 @@
 /**
  * Metrics Controller — AppHost adopter by COMPOSITION, not inheritance.
  *
- * The `metrics#index` route resolves to this concrete DocuDesk class, which
+ * The `metrics#index` route resolves to this concrete Filinq class, which
  * owns the admin-only auth posture (no #[NoAdminRequired]) and drives the
  * OpenRegister AppHost metrics engine — pulled out of the DI container BY FQCN
  * STRING at dispatch time rather than inherited. The declarative
@@ -14,17 +14,17 @@
  * ⚠️ DO NOT "simplify" this back into a subclass of the AppHost generic, and do
  * not `use`-import an OpenRegister class here. Nextcloud's router
  * `ReflectionClass()`es every file in `lib/Controller/` while MATCHING a route,
- * so an unresolvable parent makes EVERY route in DocuDesk return HTTP 500, not
+ * so an unresolvable parent makes EVERY route in Filinq return HTTP 500, not
  * just this one. `extends` is resolved by the AUTOLOADER, not the container, so
  * lazy DI cannot rescue it. See decidesk#377 / #388.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
  *
@@ -34,9 +34,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\AppInfo\Application;
+use OCA\Filinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -51,10 +51,10 @@ use Psr\Container\ContainerInterface;
  * the intended ADR-006 posture. Anonymous callers get 401, never metric data.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class MetricsController extends Controller {
 
@@ -63,7 +63,7 @@ class MetricsController extends Controller {
 	 *
 	 * Referenced as a string, never imported: the class only exists when
 	 * openregister is installed, and an import in a resolved position would
-	 * 500 every DocuDesk route when it is not.
+	 * 500 every Filinq route when it is not.
 	 *
 	 * @var string
 	 */

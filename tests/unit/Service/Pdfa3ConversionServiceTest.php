@@ -9,7 +9,7 @@
  * IAppConfig, LoggerInterface) is mocked.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,7 +17,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -25,14 +25,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Exception\Pdfa3ConversionException;
-use OCA\DocuDesk\Service\Charts\ChartSvgRenderer;
-use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
-use OCA\DocuDesk\Service\Pdfa3ConversionService;
-use OCA\DocuDesk\Service\PdfService;
-use OCA\DocuDesk\Service\TemplateRenderer;
+use OCA\Filinq\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Service\Charts\ChartSvgRenderer;
+use OCA\Filinq\Service\Charts\TableHtmlRenderer;
+use OCA\Filinq\Service\Pdfa3ConversionService;
+use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\TemplateRenderer;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -44,10 +44,10 @@ use ReflectionClass;
  * Unit tests for Pdfa3ConversionService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -220,6 +220,10 @@ class Pdfa3ConversionServiceTest extends TestCase {
 		$this->assertStringContainsString('Gemeente Voorbeeld', $result['content']);
 
 		// Non-standard MDTO fields land in the docudesk: custom XMP namespace.
+		// The prefix and its namespace URI deliberately keep the pre-rename
+		// spelling — an XML namespace is an identifier baked into every PDF/A-3
+		// already produced, and changing it declares a different vocabulary
+		// rather than renaming this one. See Pdfa3MetadataAssembler.
 		$this->assertStringContainsString('<docudesk:identifier>ZAAK-2026-001</docudesk:identifier>', $result['content']);
 		$this->assertStringContainsString('<docudesk:caseReference>BEK-42</docudesk:caseReference>', $result['content']);
 
@@ -236,7 +240,7 @@ class Pdfa3ConversionServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testConvertHtmlFailsGracefullyWhenConverterDisabled(): void {
-		$this->configOverrides['docudesk.pdfa3.enabled'] = 'false';
+		$this->configOverrides['filinq.pdfa3.enabled'] = 'false';
 
 		$this->expectException(Pdfa3ConversionException::class);
 
@@ -258,7 +262,7 @@ class Pdfa3ConversionServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testConvertExistingPdfRejectsOversizedSource(): void {
-		$this->configOverrides['docudesk.pdfa3.max_input_bytes'] = '100';
+		$this->configOverrides['filinq.pdfa3.max_input_bytes'] = '100';
 
 		$mockFile = $this->createMock(File::class);
 		$mockFile->method('getSize')->willReturn(200);
@@ -283,7 +287,7 @@ class Pdfa3ConversionServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testConvertHtmlRejectsOversizedAttachment(): void {
-		$this->configOverrides['docudesk.pdfa3.max_attachment_bytes'] = '10';
+		$this->configOverrides['filinq.pdfa3.max_attachment_bytes'] = '10';
 
 		$this->expectException(Pdfa3ConversionException::class);
 

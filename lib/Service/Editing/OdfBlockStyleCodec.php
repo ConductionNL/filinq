@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk OdfBlockStyleCodec
+ * Filinq OdfBlockStyleCodec
  *
  * Block style for the ODF family (`.odt`).
  *
@@ -12,7 +12,7 @@
  * for a long time, and it is the whole of the difficulty.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,14 +21,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/document-rich-editing/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 

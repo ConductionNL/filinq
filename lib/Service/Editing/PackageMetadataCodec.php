@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk PackageMetadataCodec
+ * Filinq PackageMetadataCodec
  *
  * Reads and writes document metadata — title, subject, creator, keywords,
  * description — in ODF and OOXML packages.
@@ -10,7 +10,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -18,12 +18,12 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -50,7 +50,7 @@ use RuntimeException;
  * a claim rather than a fact.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -58,7 +58,7 @@ use RuntimeException;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/document-rich-editing/spec.md
  */

@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at HEAD (DocuDesk `spec/market-gap-wave3-2026-07`, OpenRegister HEAD):
+Verified at HEAD (Filinq `spec/market-gap-wave3-2026-07`, OpenRegister HEAD):
 
 - **OR already emits readable, stable placeholders.**
   `DocumentProcessingHandler::anonymizeDocument()` replaces each entity with
@@ -13,7 +13,7 @@ Verified at HEAD (DocuDesk `spec/market-gap-wave3-2026-07`, OpenRegister HEAD):
   is never linkable across documents. It records the exact emitted string in
   `lastPlaceholderMap` keyed by the **global entity id**, exposed via
   `FileService::getLastPlaceholderMap()` → `['<entityId>' => '[PERSOON: 1]', …]`.
-- **DocuDesk already consumes that map.**
+- **Filinq already consumes that map.**
   `AnonymizationService::anonymizeDocument()` calls `getLastPlaceholderMap()`
   and threads it into `attachGrondslagenSummary()` (Robert's merge, PR#314).
   So the placeholder → readable-token half of pseudonymisation is live; what is
@@ -23,7 +23,7 @@ Verified at HEAD (DocuDesk `spec/market-gap-wave3-2026-07`, OpenRegister HEAD):
   facetable, idempotent on `sourceFileId`); re-anonymise updates the same
   record. This is the object a reversible mapping hangs off and shares a
   lifecycle with.
-- **DocuDesk has no secret store today.** Grep of `lib/` + the register found
+- **Filinq has no secret store today.** Grep of `lib/` + the register found
   **zero** `writeOnly` / `_render:false` usage and no `ICrypto` use. OR's
   render boundary is the documented mechanism: only a `_render:false` property
   is withheld from read responses (fleet reference: writeOnly render boundary,
@@ -60,7 +60,7 @@ Verified at HEAD (DocuDesk `spec/market-gap-wave3-2026-07`, OpenRegister HEAD):
 
 `AnonymizationService::anonymizeDocument()` gains a `reversible` flag (default
 false = today's behaviour). When true, after OR produces the anonymised file
-and returns `getLastPlaceholderMap()`, DocuDesk assembles the mapping from the
+and returns `getLastPlaceholderMap()`, Filinq assembles the mapping from the
 placeholder map (entity id → placeholder) joined with the request `entities[]`
 (entity id → original value + type) into
 `placeholder → { originalValue, entityType }`, and calls `PseudonymMapService`
@@ -123,7 +123,7 @@ result, never a silent no-op.
 
 Restore is re-identification — the most sensitive operation in the app:
 
-- Gated by `docudesk.pseudonymisation.restore_allowed_groups` (JSON array of NC
+- Gated by `filinq.pseudonymisation.restore_allowed_groups` (JSON array of NC
   group ids; default `[]` = admins only). Enforced in the controller on the
   restore route (`#[NoAdminRequired]` + explicit in-method gate — semantic-auth
   pattern); a non-member gets 403 with a neutral body; a config read failure

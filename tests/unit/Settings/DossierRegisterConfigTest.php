@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for the dossier-register additions to `docudesk_register.json`.
+ * Unit tests for the dossier-register additions to `filinq_register.json`.
  *
  * Asserts the JSON contract added by the `add-dossier-schema` change:
  *   - register `dossier` exists with schemas `dossier` + `base`
@@ -13,19 +13,19 @@
  *     (covers the optionality cases)
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Settings
+ * @package  OCA\Filinq\Tests\Unit\Settings
  *
  * @author  Conduction Development Team <info@conduction.nl>
  * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/add-dossier-schema/tasks.md "6.1"
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Settings;
+namespace OCA\Filinq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 
@@ -37,12 +37,12 @@ class DossierRegisterConfigTest extends TestCase {
 	private array $config;
 
 	protected function setUp(): void {
-		$path = __DIR__ . '/../../../lib/Settings/docudesk_register.json';
+		$path = __DIR__ . '/../../../lib/Settings/filinq_register.json';
 		$raw = file_get_contents($path);
-		$this->assertNotFalse($raw, 'docudesk_register.json must be readable');
+		$this->assertNotFalse($raw, 'filinq_register.json must be readable');
 
 		$decoded = json_decode($raw, true);
-		$this->assertIsArray($decoded, 'docudesk_register.json must be valid JSON');
+		$this->assertIsArray($decoded, 'filinq_register.json must be valid JSON');
 		$this->config = $decoded;
 	}
 

@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Unit tests for DocumentAgentService and DocuDesk's MCP tool surface
+ * Unit tests for DocumentAgentService and Filinq's MCP tool surface
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,18 +12,18 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Mcp\DocudeskScannableServices;
-use OCA\DocuDesk\Service\CorrespondenceService;
-use OCA\DocuDesk\Service\Editing\AgentArtefactMarker;
-use OCA\DocuDesk\Service\Editing\DocumentAgentService;
-use OCA\DocuDesk\Service\Editing\EditSessionService;
-use OCA\DocuDesk\Service\GeneratedDocumentLogger;
-use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\Filinq\Mcp\FilinqScannableServices;
+use OCA\Filinq\Service\CorrespondenceService;
+use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\DocumentAgentService;
+use OCA\Filinq\Service\Editing\EditSessionService;
+use OCA\Filinq\Service\GeneratedDocumentLogger;
+use OCA\Filinq\Service\PdfConversionService;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -41,10 +41,10 @@ use RuntimeException;
  * Unit tests for the agent-facing document tools.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  *
@@ -238,7 +238,7 @@ class DocumentAgentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoSigningServiceIsReachableByAnAgent(): void {
-		$scannable = (new DocudeskScannableServices())->getScannableServiceClasses();
+		$scannable = (new FilinqScannableServices())->getScannableServiceClasses();
 
 		foreach ($scannable as $class) {
 			$this->assertStringNotContainsString('Signing', $class);
@@ -267,7 +267,7 @@ class DocumentAgentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testEveryScannableClassActuallyCarriesTools(): void {
-		$scannable = (new DocudeskScannableServices())->getScannableServiceClasses();
+		$scannable = (new FilinqScannableServices())->getScannableServiceClasses();
 
 		$this->assertContains(CorrespondenceService::class, $scannable);
 		$this->assertContains(DocumentAgentService::class, $scannable);

@@ -1,11 +1,11 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * DEEP, data-dependent workflow test — the Nextcloud Dashboard widget.
  *
  * `src/views/widgets/FileEntitiesDashboardWidget.vue` is mounted by
- * `src/dashboard.js` through `OCA.Dashboard.register('docudesk-file-entities')`
+ * `src/dashboard.js` through `OCA.Dashboard.register('filinq-file-entities')`
  * and by nothing else — it has no in-app route, so the ONLY surface that can
  * render it is Nextcloud's Dashboard. A widget renders there only when it is
  * in the viewing user's dashboard layout, and the shipped default layout is
@@ -23,7 +23,7 @@ import { test, expect } from '@playwright/test'
 import { harvestToken } from './_fixtures'
 
 /** Widget id — `FileEntitiesWidget::getId()` in lib/Dashboard/. */
-const WIDGET_ID = 'docudesk-file-entities'
+const WIDGET_ID = 'filinq-file-entities'
 
 test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added to the layout', async ({
 	page,
@@ -70,5 +70,5 @@ test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added 
 	).toHaveCount(0)
 
 	// The widget's own footer link back into the app.
-	await expect(widget.getByRole('link', { name: 'Open DocuDesk' })).toBeVisible()
+	await expect(widget.getByRole('link', { name: 'Open Filinq' })).toBeVisible()
 })

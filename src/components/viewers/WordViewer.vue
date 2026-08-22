@@ -5,7 +5,7 @@
 		@mouseup="captureSelection">
 		<div v-if="loading" class="word-viewer__loading">
 			<NcLoadingIcon :size="48" />
-			<span>{{ t('docudesk', 'Loading document…') }}</span>
+			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
 		<div v-else-if="error" class="word-viewer__error">
 			{{ error }}
@@ -138,7 +138,7 @@ export default {
 				this.html = result.value
 			} catch (err) {
 				console.error('[WordViewer] failed to load docx:', err)
-				this.error = err.message || t('docudesk', 'Failed to load document')
+				this.error = err.message || t('filinq', 'Failed to load document')
 			} finally {
 				this.loading = false
 			}

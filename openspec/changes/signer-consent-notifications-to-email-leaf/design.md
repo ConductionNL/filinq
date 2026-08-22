@@ -6,7 +6,7 @@ The OR email leaf (`integration-email`) registers an `EmailProvider`
 (id=`email`, group=`comms`, requiredApp=`mail`, storage=`link-table`). It is a **link-only**
 integration: NC Mail owns compose/send; the leaf surfaces + links messages on an OR object and
 tracks them in OR's integration link-table, rendering them on the object's comms surface
-(`CnEmailTab` chips, subject/sender/date cached at link time). DocuDesk consumes this leaf as
+(`CnEmailTab` chips, subject/sender/date cached at link time). Filinq consumes this leaf as
 the comms surface for its two notification flows instead of a bespoke notifier with its own
 state table.
 
@@ -14,7 +14,7 @@ state table.
 
 The notifications themselves are short, templated, transactional messages. NC's Mail /
 notification subsystem performs the actual delivery (the link-only nature of the leaf means
-"Mail owns send"). What DocuDesk currently re-invents is the *tracking + surfacing*: a private
+"Mail owns send"). What Filinq currently re-invents is the *tracking + surfacing*: a private
 notifier with its own `notificationStatus` table, not visible on the object's comms surface and
 not query-able cross-app. That tracking is exactly what the email leaf's link-table provides.
 So the migration is: keep NC Mail/notification as the transport, drop the bespoke tracking, and
@@ -57,8 +57,8 @@ preserved — its *source of truth* moves to the leaf.
 
 ## Kept-in-app (documented ADR-022 exception)
 
-PDF/letter generation, eIDAS signing crypto, and anonymisation stay in DocuDesk — **no leaf
-exists for these and DocuDesk IS the partner service** that provides them. This change does not
+PDF/letter generation, eIDAS signing crypto, and anonymisation stay in Filinq — **no leaf
+exists for these and Filinq IS the partner service** that provides them. This change does not
 touch them; it only moves notification *tracking/surfacing*. External QTSP-sent signing emails
 (e.g. ValidSign's own "sign here" mail) remain the provider's responsibility and are explicitly
 out of scope.
@@ -81,7 +81,7 @@ source of truth moves to the email-leaf-linked message.
 
 - **ADR-022** (primary) — consume the OR email/comms abstraction over a bespoke notifier.
 - **ADR-019** — integration registry; the email leaf is the comms surface mechanism.
-- **ADR-001** (docudesk) — the document/consent detail page is where the comms tab lands.
+- **ADR-001** (filinq) — the document/consent detail page is where the comms tab lands.
 - **Email leaf** — `openregister/openspec/changes/integration-email/specs/integration-email/spec.md`.
-- **Signing migration** — `docudesk/openspec/changes/migrate-signing-to-or-approval-workflow`
+- **Signing migration** — `filinq/openspec/changes/migrate-signing-to-or-approval-workflow`
   (ordering is OR approval-workflow; this change moves only the notification surface).

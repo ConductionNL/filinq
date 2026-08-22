@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at HEAD (DocuDesk `development`, branch
+Verified at HEAD (Filinq `development`, branch
 `spec/market-gap-wave3-2026-07`):
 
 - **The verify primitive is authenticated + file-scoped.**
@@ -39,7 +39,7 @@ Verified at HEAD (DocuDesk `development`, branch
 
 **Goals:**
 
-- One public, account-free page that verifies a signed/waarmerked DocuDesk
+- One public, account-free page that verifies a signed/waarmerked Filinq
   document reached by scanning a QR.
 - Present **only guarantees the cryptography actually provides** — separate
   "content integrity verified" from "signer identity verified", and never
@@ -102,9 +102,9 @@ Per-signature status is tri-state, matching the tri-state
 `signing-trust-rebuild` introduces:
 
 - `verified` — content integrity cryptographically confirmed.
-- `unverifiable` — an external `/Type /Sig` CMS signature DocuDesk cannot yet
+- `unverifiable` — an external `/Type /Sig` CMS signature Filinq cannot yet
   validate (not tampering; honestly reported as such, not `invalid`).
-- `invalid` — a DocuDesk marker whose MAC does not match (tamper).
+- `invalid` — a Filinq marker whose MAC does not match (tamper).
 
 **Dependency wiring:** once `signing-trust-rebuild` ships the identity-bound
 MAC, the mint step sets `identityBound: true` and the page promotes the signer

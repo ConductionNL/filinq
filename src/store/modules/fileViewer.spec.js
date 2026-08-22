@@ -11,7 +11,7 @@ function sampleFile() {
 		fileId: 42,
 		fileName: 'doc.pdf',
 		mimeType: 'application/pdf',
-		path: '/DocuDesk/doc.pdf',
+		path: '/Filinq/doc.pdf',
 	}
 }
 

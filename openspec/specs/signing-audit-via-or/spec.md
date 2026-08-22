@@ -5,13 +5,13 @@ status: done
 # signing-audit-via-or Specification
 
 ## Purpose
-Records every signing action (CREATED, SIGNED, DECLINED, CANCELLED, EXPIRED, COMPLETED, VIEWED) as an OpenRegister audit-trail entry with a `docudesk.signing.{ACTION}` action type, instead of a private app-local audit schema. Each entry is bound to the signing request's UUID, participates in OR's tamper-evident hash chain, carries signing context such as actor, IP, signature level, and provider, and is retrievable through the standard audit-trail API. This gives signing a single, queryable, integrity-protected audit record.
+Records every signing action (CREATED, SIGNED, DECLINED, CANCELLED, EXPIRED, COMPLETED, VIEWED) as an OpenRegister audit-trail entry with a `filinq.signing.{ACTION}` action type, instead of a private app-local audit schema. Each entry is bound to the signing request's UUID, participates in OR's tamper-evident hash chain, carries signing context such as actor, IP, signature level, and provider, and is retrievable through the standard audit-trail API. This gives signing a single, queryable, integrity-protected audit record.
 ## Requirements
 ### Requirement: Signing Action Emits OR Audit Event
 
 SHALL emit an OR audit trail entry for every signing action — CREATED, SIGNED, DECLINED,
-CANCELLED, EXPIRED, COMPLETED, VIEWED — with action type `docudesk.signing.{ACTION}` (e.g.
-`docudesk.signing.SIGNED`, `docudesk.signing.DECLINED`). No signing audit event shall be
+CANCELLED, EXPIRED, COMPLETED, VIEWED — with action type `filinq.signing.{ACTION}` (e.g.
+`filinq.signing.SIGNED`, `filinq.signing.DECLINED`). No signing audit event shall be
 written only to the private `signingAuditEntry` schema after this spec ships.
 
 #### Scenario: SIGNED action creates OR audit entry
@@ -19,21 +19,21 @@ written only to the private `signingAuditEntry` schema after this spec ships.
 - GIVEN a signing request with UUID `sign-001` stored in OR
 - WHEN `SigningAuditService::logEvent('sign-001', 'SIGNED', ...)` is called
 - THEN an OR audit entry SHALL be created with `objectUuid = sign-001`
-- AND the entry's `action` field SHALL equal `docudesk.signing.SIGNED`
+- AND the entry's `action` field SHALL equal `filinq.signing.SIGNED`
 - AND the entry SHALL be retrievable via `GET /api/audit-trails?objectUuid=sign-001`
 
 #### Scenario: DECLINED action creates OR audit entry
 
 - GIVEN a signing request with UUID `sign-002` stored in OR
 - WHEN `SigningAuditService::logEvent('sign-002', 'DECLINED', ...)` is called
-- THEN an OR audit entry SHALL be created with action `docudesk.signing.DECLINED`
+- THEN an OR audit entry SHALL be created with action `filinq.signing.DECLINED`
 - AND the hash chain SHALL remain intact across all entries for `sign-002`
 
 #### Scenario: All VALID_ACTIONS produce OR audit entries
 
 - GIVEN the seven action types: CREATED, SIGNED, DECLINED, CANCELLED, EXPIRED, COMPLETED, VIEWED
 - WHEN each is passed to `SigningAuditService::logEvent()`
-- THEN each MUST produce an OR audit entry with the corresponding `docudesk.signing.*` action type
+- THEN each MUST produce an OR audit entry with the corresponding `filinq.signing.*` action type
 
 ---
 
@@ -46,7 +46,7 @@ method: NativeSigningProvider or external provider name).
 
 #### Scenario: Changed column carries signer identity
 
-- GIVEN an OR audit entry for `docudesk.signing.SIGNED` on `sign-001`
+- GIVEN an OR audit entry for `filinq.signing.SIGNED` on `sign-001`
 - WHEN the entry is retrieved via the audit trail API
 - THEN the `changed` field MUST contain `signRequestId` equal to `sign-001`
 - AND the `changed` field MUST contain `actorUserId` and `actorDisplayName`
@@ -62,14 +62,14 @@ method: NativeSigningProvider or external provider name).
 
 ### Requirement: Retention Aligned With Archiefwet
 
-The docudesk signing audit retention configuration SHALL set OR retention to at least 10
+The filinq signing audit retention configuration SHALL set OR retention to at least 10
 years (3650 days) for the register containing signing requests. This configuration is a
 deploy-time setting in OR, not enforced in application code.
 
 #### Scenario: Retention configuration documented
 
-- GIVEN a docudesk installation with OR as the backend
-- WHEN an administrator consults the docudesk deployment guide
+- GIVEN a filinq installation with OR as the backend
+- WHEN an administrator consults the filinq deployment guide
 - THEN the guide SHALL specify setting OR retention for the signing register to ≥ 3650 days
 - AND the guide SHALL reference Archiefwet 1995 as the regulatory basis
 
@@ -113,7 +113,7 @@ return all signing events in chronological order with hash-chain integrity verif
 - GIVEN a signing request `sign-003` that has gone through CREATED → SIGNED → COMPLETED
 - WHEN `GET /api/audit-trails?objectUuid=sign-003` is called
 - THEN the response SHALL include three entries in chronological order
-- AND each entry SHALL have an `action` field matching `docudesk.signing.*`
+- AND each entry SHALL have an `action` field matching `filinq.signing.*`
 - AND `GET /api/audit-trails/verify` SHALL return a passing integrity check for the chain
 
 #### Scenario: SigningAuditService.getAuditTrail reads from OR
@@ -166,7 +166,7 @@ migration.
 
 ### Requirement: Audit retrieval is object-scoped and bounded (REQ-DDSTR-007)
 
-`SigningAuditService::getAuditTrail()` MUST query OR's audit trail scoped to the signing request's object identity (`object_uuid` filter pushed into the mapper/query layer, verified against `AuditTrailMapper::findAll()` at OR HEAD) instead of fetching all `docudesk.signing.*` entries fleet-wide and filtering in PHP. The result MUST remain chronologically ordered.
+`SigningAuditService::getAuditTrail()` MUST query OR's audit trail scoped to the signing request's object identity (`object_uuid` filter pushed into the mapper/query layer, verified against `AuditTrailMapper::findAll()` at OR HEAD) instead of fetching all `filinq.signing.*` entries fleet-wide and filtering in PHP. The result MUST remain chronologically ordered.
 
 #### Scenario: Trail query does not scan unrelated requests
 - **GIVEN** 3 audit entries for signing request A and 500 entries for other signing requests

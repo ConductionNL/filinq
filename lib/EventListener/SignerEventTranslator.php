@@ -1,20 +1,20 @@
 <?php
 
 /**
- * DocuDesk Signer Event Translator
+ * Filinq Signer Event Translator
  *
- * Translates OpenRegister ApprovalStep events into DocuDesk's own typed signer
+ * Translates OpenRegister ApprovalStep events into Filinq's own typed signer
  * events and notifies the configured signing provider when a step becomes
  * pending. Extracted from `ApprovalStepListener`, which keeps only the
  * chain-ownership filter and the event routing.
  *
  * @category  EventListener
- * @package   OCA\DocuDesk\EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
  *
@@ -24,13 +24,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\EventListener;
+namespace OCA\Filinq\EventListener;
 
-use OCA\DocuDesk\Event\SignerChainCompletedEvent;
-use OCA\DocuDesk\Event\SignerStepApprovedEvent;
-use OCA\DocuDesk\Event\SignerStepPendingEvent;
-use OCA\DocuDesk\Event\SignerStepRejectedEvent;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Event\SignerChainCompletedEvent;
+use OCA\Filinq\Event\SignerStepApprovedEvent;
+use OCA\Filinq\Event\SignerStepPendingEvent;
+use OCA\Filinq\Event\SignerStepRejectedEvent;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\OpenRegister\Event\ApprovalStepApprovedEvent;
 use OCA\OpenRegister\Event\ApprovalStepCompletedEvent;
 use OCA\OpenRegister\Event\ApprovalStepInitiatedEvent;
@@ -40,13 +40,13 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Re-emits OR approval-step transitions as DocuDesk signer events.
+ * Re-emits OR approval-step transitions as Filinq signer events.
  *
  * @category EventListener
- * @package  OCA\DocuDesk\EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SignerEventTranslator {
 	/**
@@ -56,7 +56,7 @@ class SignerEventTranslator {
 	 *                                                the configured provider on
 	 *                                                step-pending transitions.
 	 * @param IEventDispatcher $dispatcher Dispatcher used to re-emit
-	 *                                     typed docudesk-side events.
+	 *                                     typed filinq-side events.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
@@ -177,7 +177,7 @@ class SignerEventTranslator {
 	 * Resolve the active provider and ask it to handle a now-pending step.
 	 *
 	 * The `NativeSigningProvider` is a no-op for this call today: it waits for
-	 * the docudesk UI signer-action endpoint, which translates to OR's
+	 * the filinq UI signer-action endpoint, which translates to OR's
 	 * `ApprovalService::approveStep`. External providers (`ValidSignProvider`
 	 * and future plugins) may use this hook to push a signing-request to the
 	 * external service or send the signer email.

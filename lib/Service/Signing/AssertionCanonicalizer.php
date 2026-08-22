@@ -9,12 +9,12 @@
  * agree on the exact bytes the MAC covers (signing-trust-rebuild REQ-DDSTR-001).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Signing
+ * @package   OCA\Filinq\Service\Signing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Signing;
+namespace OCA\Filinq\Service\Signing;
 
 /**
  * Deterministic (sorted-key) JSON encoding of an assertion payload.
@@ -34,8 +34,8 @@ namespace OCA\DocuDesk\Service\Signing;
  * sides can never drift.
  *
  * Stateless but deliberately NOT static: the writer
- * ({@see \OCA\DocuDesk\Service\Signing\NativeSigningProvider}) and the verifier
- * ({@see \OCA\DocuDesk\Service\SigningVerificationService}) take it as an
+ * ({@see \OCA\Filinq\Service\Signing\NativeSigningProvider}) and the verifier
+ * ({@see \OCA\Filinq\Service\SigningVerificationService}) take it as an
  * injected collaborator, so the encoding is a substitutable dependency rather
  * than a hard-wired static call.
  *

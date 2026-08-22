@@ -13,10 +13,10 @@
  * `lockedBy` / `lockedAt` out of it to tell the user who holds the lock.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/template-management/spec.md
  *
@@ -26,12 +26,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
-use OCA\DocuDesk\Controller\TemplateRequestHandler;
-use OCA\DocuDesk\Controller\TemplatesController;
-use OCA\DocuDesk\Service\TemplateService;
+use OCA\Filinq\Controller\TemplateRequestHandler;
+use OCA\Filinq\Controller\TemplatesController;
+use OCA\Filinq\Service\TemplateService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -45,10 +45,10 @@ use Psr\Log\LoggerInterface;
  * Tests for template duplication and edit locking.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress                              PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
@@ -91,7 +91,7 @@ class TemplatesControllerLockingTest extends TestCase {
 	 */
 	private function buildController(IUserSession $session): TemplatesController {
 		return new TemplatesController(
-			'docudesk',
+			'filinq',
 			$this->createMock(IRequest::class),
 			$this->templateService,
 			new TemplateRequestHandler($this->createMock(LoggerInterface::class)),

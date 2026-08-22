@@ -86,12 +86,12 @@ only: completing or moving a card SHALL NOT change `consentStatus` or
 ### Requirement: Consent Leaves Do Not Widen The Agent Surface
 
 Enabling mail, calendar, and deck leaves on `publicationConsent` SHALL NOT expose the
-schema through MCP: the `docudesk-mcp-adoption` exclusion of `publicationConsent`
+schema through MCP: the `filinq-mcp-adoption` exclusion of `publicationConsent`
 (citizen contact details and objection reasons) SHALL continue to hold, and no leaf
 SHALL be reachable through an agent tool.
 
 #### Scenario: Agent still cannot enumerate consent records
 
 - GIVEN the leaves of this delta enabled on `publicationConsent`
-- WHEN an agent enumerates DocuDesk's MCP tool surface
+- WHEN an agent enumerates Filinq's MCP tool surface
 - THEN no tool exposes `publicationConsent`

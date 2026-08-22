@@ -11,18 +11,18 @@
  * ordering — verify assertion (401) -> derive scope from claims (403) ->
  * validate input (403) -> authorise against the domain row (403, uniform) ->
  * act -> relay — lives entirely in
- * {@see \OCA\DocuDesk\Controller\PortalSigningReceiverController}, and this
+ * {@see \OCA\Filinq\Controller\PortalSigningReceiverController}, and this
  * resolver is only ever called once that ordering has already granted the
  * act. It was extracted from the controller so the trust boundary stays a
  * small, readable class; the resolution logic itself is unchanged.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -42,10 +42,10 @@ use Throwable;
  * Resolves the signing request's target document node.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */

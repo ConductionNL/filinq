@@ -11,12 +11,12 @@
  * listener itself contains no validation logic.
  *
  * @category  EventListener
- * @package   OCA\DocuDesk\EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  *
@@ -26,10 +26,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\EventListener;
+namespace OCA\Filinq\EventListener;
 
-use OCA\DocuDesk\Service\DocumentValidationService;
-use OCA\DocuDesk\Service\MetadataService;
+use OCA\Filinq\Service\DocumentValidationService;
+use OCA\Filinq\Service\MetadataService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
@@ -39,13 +39,13 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Runs document validation as a calculation fallback for DocuDesk objects.
+ * Runs document validation as a calculation fallback for Filinq objects.
  *
  * @category EventListener
- * @package  OCA\DocuDesk\EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  */
@@ -89,7 +89,7 @@ class ValidationRunner {
 				logContext: 'validation fallback'
 			);
 		} catch (Throwable $e) {
-			$logger->debug('DocuDesk: validation fallback skipped: ' . $e->getMessage());
+			$logger->debug('Filinq: validation fallback skipped: ' . $e->getMessage());
 		}
 
 	}//end runFallbackForEvent()
@@ -152,7 +152,7 @@ class ValidationRunner {
 			);
 
 			$logger->info(
-				'DocuDesk: Validation verdict stored for ' . $logContext,
+				'Filinq: Validation verdict stored for ' . $logContext,
 				[
 					'objectId' => $object->getUuid(),
 					'status' => $verdict['validationStatus'],
@@ -160,7 +160,7 @@ class ValidationRunner {
 			);
 		} catch (Throwable $e) {
 			$logger->error(
-				'DocuDesk: Failed to validate object for ' . $logContext,
+				'Filinq: Failed to validate object for ' . $logContext,
 				['exception' => $e->getMessage()]
 			);
 		}//end try

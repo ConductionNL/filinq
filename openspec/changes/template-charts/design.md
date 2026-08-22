@@ -96,7 +96,7 @@ are escaped by the renderers themselves):
 - `nc_image(fileId, options = {})` → `TemplateImageResolver`: resolves the NC
   file **as the generating user** via `IRootFolder` user folder (no
   app-privileged read), validates mime against a raster whitelist
-  (png/jpeg/gif/webp), enforces `docudesk.templates.max_image_bytes`
+  (png/jpeg/gif/webp), enforces `filinq.templates.max_image_bytes`
   (default 5 MB), returns `<img src="data:...">`. Unreadable/oversized/
   non-raster → `[image unavailable: reason]` marker + warning. SVG *files*
   are rejected (user-supplied SVG is a script/entity vector; app-generated
@@ -179,7 +179,7 @@ No new schemas — no register seed objects. Shipped fixtures instead:
 - `tests/sample-documents/chart-template.docx` — office template with
   `${chart:bezwaren}`, `${image:logo}`, and a cloned-row table block
   (Demostad flavour, pairs with Wave-1's seed office template).
-- A seed Twig demo template (namespace `docudesk`, "Demostad
+- A seed Twig demo template (namespace `filinq`, "Demostad
   handhavingsrapportage") whose content exercises `chart('bar', …)`,
   `chart('pie', …)`, `data_table(...)` over the seeded Demostad dossier
   collection, and `nc_image(...)`.
@@ -199,7 +199,7 @@ No new schemas — no register seed objects. Shipped fixtures instead:
   (`htmlspecialchars` in SVG text nodes / table cells; PhpWord XML-escaping
   via its element API). Raster-only image whitelist blocks SVG/EPS vectors.
 - **Resource bounds**: image size cap; chart series/point caps
-  (`docudesk.charts.max_points`, default 1000) so a template cannot OOM mPDF
+  (`filinq.charts.max_points`, default 1000) so a template cannot OOM mPDF
   with a million-point series; rasterisation goes through the serialized LO
   lock like every other soffice call.
 - GDPR: chart/table data is generation-context data already covered by the

@@ -27,7 +27,7 @@ By the end you will have rendered one of your templates, filled all required fie
 
    ![Render dialog with field inputs](/screenshots/tutorials/user/05-render-template-02.png)
 
-3. Submit. DocuDesk renders the source DOCX/ODT into a finished document and writes it to the **Documents** register. The success banner links straight to the new document.
+3. Submit. Filinq renders the source DOCX/ODT into a finished document and writes it to the **Documents** register. The success banner links straight to the new document.
 
    ![Render success](/screenshots/tutorials/user/05-render-template-03.png)
 

@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at HEAD (`lib/Settings/docudesk_register.json` v5.10.0, `lib/`):
+Verified at HEAD (`lib/Settings/filinq_register.json` v5.10.0, `lib/`):
 
 - **Five registers** (`consent`, `signing`, `templates`, `document`,
   `dossier`); the `dossier` register carries `dossier` + `base`. There is no
@@ -139,13 +139,13 @@ Two `x-openregister-notifications` entries on `contract`, mirroring the
 shipped `objectionDeadline` dialect exactly (scheduled trigger with
 `intervalSec: 86400`, `filter: {"status": "active"}`, `channels:
 ["nc-notification"]`, recipients `object-acl manage` + group
-`docudesk-contract-managers`, `nl`/`en` subjects):
+`filinq-contract-managers`, `nl`/`en` subjects):
 
 - `noticeDeadline` — "Opzegtermijn nadert voor contract" / "Notice deadline
   approaching for a contract".
 - `endDate` — "Contract loopt af" / "Contract is expiring".
 
-No DocuDesk notifier, listener or cron dispatches contract reminders
+No Filinq notifier, listener or cron dispatches contract reminders
 (gate-18 stays green). The `noticeDeadline` default (`endDate −
 noticePeriodDays`) is computed by `ContractService` at save when the field is
 empty — a pure, unit-testable function; the user can always override the
@@ -160,9 +160,9 @@ persisted date.
 - **Sign**: "send for signature" deep-links into the existing signing
   request creation with the chosen contract document preselected; the
   created request's uuid is stored in `signingRequestRef`, and on completion
-  the signed artifact reference is stored in `signedDocumentRef`. DocuDesk
+  the signed artifact reference is stored in `signedDocumentRef`. Filinq
   observes completion through the signing surface it already owns (the
-  sibling `docudesk-signing-events` change may make this event-driven; until
+  sibling `filinq-signing-events` change may make this event-driven; until
   then the detail view resolves current signing status by reading the
   referenced `signingRequest`).
 
@@ -243,7 +243,7 @@ audited write). Nothing imperative duplicates an OR read path.
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (placeholder identifiers
+Shipped in `filinq_register.json` `objects[]` (placeholder identifiers
 only, nil-UUID pattern):
 
 ```json
@@ -302,7 +302,7 @@ references use nil-UUID URNs; no real party data.
   explicit lead-time knob; if OR fires only when the date property is
   reached, "approaching" semantics depend on OR's scheduler contract.
   Verified at apply; fallback is documenting the fire window, not building a
-  DocuDesk cron (gate-18).
+  Filinq cron (gate-18).
 - **Lean scope pressure**: CLM suites will always have more features; the
   defence is positioning (bundled with generation + signing municipalities
   already run) — feature creep here is a bug, not a risk.
@@ -322,5 +322,5 @@ the same release. Rollback = ignore the schema.
   Deferred to a unification ADR once all three are in production (per the
   long-term-unification working rule).
 - Per-organisation contract-manager notification groups (instead of the
-  instance-wide `docudesk-contract-managers`) once `multi-tenant-hardening`'s
+  instance-wide `filinq-contract-managers`) once `multi-tenant-hardening`'s
   `organisationSettings` exists — deferred, additive.

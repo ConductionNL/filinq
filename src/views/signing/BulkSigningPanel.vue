@@ -12,17 +12,17 @@
 -->
 <template>
 	<div class="bulk-signing-panel">
-		<h2>{{ t('docudesk', 'Bulk Signing') }}</h2>
+		<h2>{{ t('filinq', 'Bulk Signing') }}</h2>
 		<NcLoadingIcon v-if="signingStore.loading" :size="44" />
 		<NcEmptyContent
 			v-else-if="pending.length === 0"
-			:name="t('docudesk', 'No pending signing requests')" />
+			:name="t('filinq', 'No pending signing requests')" />
 		<template v-else>
 			<NcButton
 				variant="primary"
 				:disabled="selected.length === 0"
 				@click="bulkSign">
-				{{ t('docudesk', 'Sign Selected') }} ({{ selected.length }})
+				{{ t('filinq', 'Sign Selected') }} ({{ selected.length }})
 			</NcButton>
 			<table class="bulk-table">
 				<thead>
@@ -30,8 +30,8 @@
 						<!-- Selection column: a control header with no name of its
 						     own, so scope= would associate nothing. -->
 						<th />
-						<th scope="col">{{ t('docudesk', 'Document') }}</th>
-						<th scope="col">{{ t('docudesk', 'Level') }}</th>
+						<th scope="col">{{ t('filinq', 'Document') }}</th>
+						<th scope="col">{{ t('filinq', 'Level') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -43,7 +43,7 @@
 							<input
 								type="checkbox"
 								:aria-label="
-									t('docudesk', 'Select {document}', {
+									t('filinq', 'Select {document}', {
 										document: req.documentName,
 									})
 								"
@@ -121,7 +121,7 @@ export default {
 		 */
 		async bulkSign() {
 			await this.signingStore.bulkSign(this.selected)
-			showSuccess(t('docudesk', 'Bulk signing completed'))
+			showSuccess(t('filinq', 'Bulk signing completed'))
 			this.selected = []
 		},
 	},

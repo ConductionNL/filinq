@@ -7,12 +7,12 @@
  * Extracted from ConsentService to reduce class complexity.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTime;
 use Exception;
@@ -37,10 +37,10 @@ use RuntimeException;
  * Service for checking objection deadlines on consent records
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ObjectionDeadlineChecker {
 
@@ -67,7 +67,7 @@ class ObjectionDeadlineChecker {
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
 	) {
-		$this->appName = 'docudesk';
+		$this->appName = 'filinq';
 
 	}//end __construct()
 

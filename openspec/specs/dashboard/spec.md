@@ -6,18 +6,18 @@ status: done
 
 ## Purpose
 
-Provides a central overview of DocuDesk activity, including consent tracking statistics, recent consent activity, and a quick anonymization widget. Additionally, DocuDesk registers two Nextcloud Dashboard widgets (AnonymizationWidget and FileEntitiesWidget) that appear on the main Nextcloud Dashboard page, giving users at-a-glance document processing information.
+Provides a central overview of Filinq activity, including consent tracking statistics, recent consent activity, and a quick anonymization widget. Additionally, Filinq registers two Nextcloud Dashboard widgets (AnonymizationWidget and FileEntitiesWidget) that appear on the main Nextcloud Dashboard page, giving users at-a-glance document processing information.
 
 ## Requirements
 
-### Requirement: DocuDesk Dashboard View (REQ-DASH-01)
+### Requirement: Filinq Dashboard View (REQ-DASH-01)
 
 **Priority:** MUST
 
 The dashboard serves as the default landing page displaying consent statistics, recent activity, and quick anonymization access.
 
 #### Scenario: View dashboard with consent data
-- GIVEN a logged-in user opens DocuDesk
+- GIVEN a logged-in user opens Filinq
 - AND 12 consent records exist (3 pending, 7 approved, 2 objected)
 - WHEN the dashboard page loads
 - THEN stat cards display Total: 12, Pending: 3, Approved: 7, Objected: 2
@@ -51,48 +51,48 @@ The dashboard serves as the default landing page displaying consent statistics, 
 | DASH-005 | Include a "Quick Anonymization" section embedding the AnonymizationWidget | MUST | Implemented |
 | DASH-006 | Show loading state while fetching consent data | MUST | Implemented |
 | DASH-007 | Show empty state when no consent records exist | MUST | Implemented |
-| DASH-008 | Dashboard is the default landing page for the DocuDesk app | MUST | Implemented |
+| DASH-008 | Dashboard is the default landing page for the Filinq app | MUST | Implemented |
 
 ### Requirement: Nextcloud Dashboard Widgets (REQ-DASH-02)
 
 **Priority:** MUST
 
-DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
+Filinq registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
 
 #### Scenario: Widgets available on Nextcloud Dashboard
-- GIVEN DocuDesk is installed and enabled
+- GIVEN Filinq is installed and enabled
 - WHEN a user visits the Nextcloud Dashboard
 - THEN "Document Anonymization" and "File Entities" widgets are available to add
-- AND each widget shows the DocuDesk app icon (app-dark.svg)
+- AND each widget shows the Filinq app icon (app-dark.svg)
 
-#### Scenario: Widget links to DocuDesk
+#### Scenario: Widget links to Filinq
 - GIVEN a dashboard widget is displayed
 - WHEN the user clicks the widget
-- THEN they are navigated to the DocuDesk main page via `docudesk.dashboard.page` route
+- THEN they are navigated to the Filinq main page via `filinq.dashboard.page` route
 
 #### Scenario: Widget script loading
 @e2e exclude script bundle loading is a build artifact — verified by webpack output inspection; not directly observable as a UI assertion
 - GIVEN the Nextcloud Dashboard page loads
-- WHEN DocuDesk widgets are rendered
-- THEN both widgets load the `docudesk-dashboard` script bundle
+- WHEN Filinq widgets are rendered
+- THEN both widgets load the `filinq-dashboard` script bundle
 - AND the script renders the Vue widget components
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | DASH-010 | Register AnonymizationWidget as Nextcloud Dashboard widget (IWidget, IIconWidget) | MUST | Implemented |
-| DASH-011 | AnonymizationWidget has ID `docudesk-anonymization`, title "Document Anonymization", order 20 | MUST | Implemented |
+| DASH-011 | AnonymizationWidget has ID `filinq-anonymization`, title "Document Anonymization", order 20 | MUST | Implemented |
 | DASH-012 | Register FileEntitiesWidget as Nextcloud Dashboard widget (IWidget, IIconWidget) | MUST | Implemented |
-| DASH-013 | FileEntitiesWidget has ID `docudesk-file-entities`, title "File Entities", order 21 | MUST | Implemented |
+| DASH-013 | FileEntitiesWidget has ID `filinq-file-entities`, title "File Entities", order 21 | MUST | Implemented |
 | DASH-014 | Both widgets use `app-dark.svg` icon | MUST | Implemented |
-| DASH-015 | Both widgets link to DocuDesk main page | MUST | Implemented |
-| DASH-016 | Both widgets load the `docudesk-dashboard` script bundle | MUST | Implemented |
+| DASH-015 | Both widgets link to Filinq main page | MUST | Implemented |
+| DASH-016 | Both widgets load the `filinq-dashboard` script bundle | MUST | Implemented |
 | DASH-017 | Widgets registered in Application::register() via registerDashboardWidget() | MUST | Implemented |
 
 ### Requirement: Navigation Menu (REQ-DASH-03)
 
 **Priority:** MUST
 
-The main navigation provides three items with Material Design icons for switching between DocuDesk views.
+The main navigation provides three items with Material Design icons for switching between Filinq views.
 
 #### Scenario: Navigate between views
 - GIVEN a user is on the Dashboard view
@@ -101,7 +101,7 @@ The main navigation provides three items with Material Design icons for switchin
 - AND the Consent Management nav item becomes active (visually highlighted)
 
 #### Scenario: Navigation items and icons
-- GIVEN the DocuDesk app is open
+- GIVEN the Filinq app is open
 - WHEN the navigation menu is displayed
 - THEN three items are shown: Dashboard (Finance icon), Anonymization (ShieldLock icon), Consent Management (AccountCheck icon)
 
@@ -138,7 +138,7 @@ The main navigation provides three items with Material Design icons for switchin
 The DashboardController serves the main app page as a Nextcloud TemplateResponse.
 
 #### Scenario: Serve main app page
-@e2e exclude DashboardController::page() PHP implementation — HTTP 200 response verified by view-dashboard test navigating to /apps/docudesk
+@e2e exclude DashboardController::page() PHP implementation — HTTP 200 response verified by view-dashboard test navigating to /apps/filinq
 - GIVEN an authenticated user
 - WHEN GET / is requested
 - THEN DashboardController::page() returns a TemplateResponse
@@ -194,21 +194,21 @@ Consent status values are displayed with consistent color-coded badges throughou
 
 **Priority:** MUST
 
-DocuDesk uses different icon files for navigation vs. dashboard widgets, following Nextcloud conventions.
+Filinq uses different icon files for navigation vs. dashboard widgets, following Nextcloud conventions.
 
 #### Scenario: Navigation icon
-- GIVEN the DocuDesk app is displayed in the Nextcloud top bar
+- GIVEN the Filinq app is displayed in the Nextcloud top bar
 - WHEN the navigation entry is rendered
 - THEN `app.svg` is used (from info.xml)
 
 #### Scenario: Dashboard widget icon
-- GIVEN a DocuDesk dashboard widget is displayed
+- GIVEN a Filinq dashboard widget is displayed
 - WHEN the widget icon is rendered
 - THEN `app-dark.svg` is used via IIconWidget::getIconUrl()
 - AND this provides better visibility on light backgrounds
 
 #### Scenario: Admin settings section icon
-- GIVEN the DocuDesk admin settings section is displayed
+- GIVEN the Filinq admin settings section is displayed
 - WHEN the section icon is rendered
 - THEN `app-dark.svg` is used (same as dashboard widgets)
 
@@ -261,7 +261,7 @@ The dashboard does not own any data. It consumes data from:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/` | Render DocuDesk main page (TemplateResponse) |
+| GET | `/` | Render Filinq main page (TemplateResponse) |
 
 ## Dependencies
 

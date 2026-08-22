@@ -6,7 +6,7 @@ The `dossier` register's `base` seed MUST contain the 19 Woo Art. 5 exception gr
 
 #### Scenario: The 19 grounds are seeded
 
-- **WHEN** the DocuDesk register configuration is imported
+- **WHEN** the Filinq register configuration is imported
 - **THEN** the `base` objects include all 19 Woo Art. 5 grounds A–S with `art-5-*` slugs
 - **AND** no demo `dossier`/reference still points at a removed legacy slug
 

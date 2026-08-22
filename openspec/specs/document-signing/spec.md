@@ -5,7 +5,7 @@ status: done
 # document-signing Specification
 
 ## Purpose
-Provides digital signing of documents with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows. Signing requests, signer records, and immutable audit entries are stored as OpenRegister objects, the document is locked during signing, and a strict status machine (DRAFT, PENDING, IN_PROGRESS, COMPLETED, DECLINED, EXPIRED, CANCELLED) governs the lifecycle while signers are notified through Nextcloud. This gives DocuDesk a legally meaningful, auditable signature process.
+Provides digital signing of documents with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows. Signing requests, signer records, and immutable audit entries are stored as OpenRegister objects, the document is locked during signing, and a strict status machine (DRAFT, PENDING, IN_PROGRESS, COMPLETED, DECLINED, EXPIRED, CANCELLED) governs the lifecycle while signers are notified through Nextcloud. This gives Filinq a legally meaningful, auditable signature process.
 
 @e2e exclude Backend signing API + eIDAS crypto + status machine + OR schema/audit contracts; no navigable UI surface. Covered by PHPUnit (SignatureService, status transitions, audit immutability) and Newman (/api/signing/* contracts).
 ## Requirements
@@ -157,7 +157,7 @@ The system SHALL maintain an immutable audit trail for all signing-related event
 - **THEN** the response includes all audit entries for that signing request in chronological order
 
 ### Requirement: Signing request data model
-The system SHALL store signing data using three OpenRegister schemas defined in `docudesk_register.json`.
+The system SHALL store signing data using three OpenRegister schemas defined in `filinq_register.json`.
 
 #### Scenario: SigningRequest schema
 - **WHEN** a signing request is created
@@ -175,7 +175,7 @@ The system SHALL store signing data using three OpenRegister schemas defined in 
 The system SHALL expose signing functionality via REST API endpoints registered in `appinfo/routes.php`.
 
 #### Scenario: API endpoints are registered
-- **WHEN** the DocuDesk app is loaded
+- **WHEN** the Filinq app is loaded
 - **THEN** the following routes are available:
   - POST `/api/signing/requests` (create signing request)
   - GET `/api/signing/requests` (list signing requests)
@@ -330,10 +330,10 @@ The completion path MUST NOT silently substitute providers or levels. (1) Reques
 - @e2e exclude pluggable-provider session seam has no native UI caller (per signing-via-or-approval-with-provider-plugins); covered by PHPUnit (tests/unit/Service/Signing/NativeSigningProviderTest.php)
 
 ### Requirement: Verification reports three honest states (REQ-DDSTR-005)
-Each reported signature MUST carry `status` ∈ {`verified`, `invalid`, `unverifiable`} plus a machine-readable `reason`, with `valid` retained as the derived boolean `status === 'verified'` for response-shape compatibility. An embedded external signature (`/Type /Sig` without a DocuDesk marker) that DocuDesk cannot cryptographically validate MUST report `unverifiable` with reason `external-signature-unsupported` — not `invalid`. A DocuDesk v2 marker whose MAC fails MUST report `invalid`. The document-level response MUST add `verdict` ∈ {`verified`, `tampered`, `unverifiable`, `mixed`} while `isValid` keeps its strict meaning (at least one signature and all `verified`). No state may ever escalate to `verified` without a passing MAC.
+Each reported signature MUST carry `status` ∈ {`verified`, `invalid`, `unverifiable`} plus a machine-readable `reason`, with `valid` retained as the derived boolean `status === 'verified'` for response-shape compatibility. An embedded external signature (`/Type /Sig` without a Filinq marker) that Filinq cannot cryptographically validate MUST report `unverifiable` with reason `external-signature-unsupported` — not `invalid`. A Filinq v2 marker whose MAC fails MUST report `invalid`. The document-level response MUST add `verdict` ∈ {`verified`, `tampered`, `unverifiable`, `mixed`} while `isValid` keeps its strict meaning (at least one signature and all `verified`). No state may ever escalate to `verified` without a passing MAC.
 
 #### Scenario: Externally signed PDF is unverifiable, not tampered
-- **GIVEN** a PDF containing a genuine external CMS signature and no DocuDesk marker
+- **GIVEN** a PDF containing a genuine external CMS signature and no Filinq marker
 - **WHEN** GET `/api/signing/verify/{fileId}` is called
 - **THEN** the signature reports status `unverifiable` with reason `external-signature-unsupported`
 - **AND** the document `verdict` is `unverifiable` and `isValid` is `false`
@@ -354,7 +354,7 @@ The rebuild MUST preserve — or version without breaking — the `docudesk-sign
 - **WHEN** the signing request is created
 - **THEN** the response carries `id` (or `signingRequestId`) and `signingUrl` with unchanged field names and types
 - **AND** no previously present request or response field is removed or renamed
-- @e2e exclude cross-app OpenConnector Source contract — decidesk drives it with no docudesk UI surface; covered by PHPUnit (tests/unit/Controller/SigningControllerTest.php)
+- @e2e exclude cross-app OpenConnector Source contract — decidesk drives it with no filinq UI surface; covered by PHPUnit (tests/unit/Controller/SigningControllerTest.php)
 
 #### Scenario: Completion payload exposes the resolved assurance level
 - **GIVEN** a signing request delegated from decidesk that completes via the native provider

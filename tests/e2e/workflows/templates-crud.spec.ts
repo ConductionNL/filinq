@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * DEEP, data-dependent workflow tests — Template CRUD with persistence.
@@ -10,7 +10,7 @@
  * lifecycle PERSISTS, and that the persisted state surfaces in the
  * read-only Templates list UI.
  *
- * Why the create/edit/delete legs are API-driven: the DocuDesk Templates
+ * Why the create/edit/delete legs are API-driven: the Filinq Templates
  * UI is read-only. `TemplateIndex.vue` renders a non-interactive table;
  * its "New template" button routes to `TemplateDetail.vue`, which is a
  * STUB ("Template editor" heading + descriptive paragraph) with no name/
@@ -90,7 +90,7 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 	expect(read.status, 'GET template by id after create').toBe(200)
 	expect(read.body.name).toBe(tmpl.name)
 	expect(read.body.content).toContain('{{recipient}}')
-	expect(read.body.namespace).toBe('docudesk')
+	expect(read.body.namespace).toBe('filinq')
 
 	// -- READ (API list): the template appears in the listing results
 	const afterCreate = await listTemplates(req, token)
@@ -111,7 +111,7 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 		row,
 		'seeded template row must be visible in the Templates table',
 	).toBeVisible()
-	await expect(row).toContainText('docudesk') // namespace column
+	await expect(row).toContainText('filinq') // namespace column
 
 	// -- DELETE -------------------------------------------------------------
 	const del = await deleteTemplate(req, token, tmpl.id)
@@ -181,7 +181,7 @@ test('Template update persists new name + content and the renamed row shows in t
 	expect(
 		reread.body.namespace,
 		'namespace must be immutable across an update',
-	).toBe('docudesk')
+	).toBe('filinq')
 
 	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
@@ -246,7 +246,7 @@ test('Template create validation rejects missing required fields (name / content
 	// Missing content.
 	const noContent = await req.post(`${API}/templates`, {
 		headers: jsonHeaders(token),
-		data: { name: `${TEST_PREFIX}-bad2`, namespace: 'docudesk' },
+		data: { name: `${TEST_PREFIX}-bad2`, namespace: 'filinq' },
 	})
 	expect(
 		noContent.status(),
@@ -256,7 +256,7 @@ test('Template create validation rejects missing required fields (name / content
 	// Missing name.
 	const noName = await req.post(`${API}/templates`, {
 		headers: jsonHeaders(token),
-		data: { content: 'x', namespace: 'docudesk' },
+		data: { content: 'x', namespace: 'filinq' },
 	})
 	expect(noName.status(), 'missing name must be rejected').toBeGreaterThanOrEqual(
 		400,

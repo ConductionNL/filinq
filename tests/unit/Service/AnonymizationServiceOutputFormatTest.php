@@ -13,13 +13,13 @@
  * source text.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-7
  *
@@ -27,12 +27,12 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\AnonymisedPdfOutputService;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\AnonymisedPdfOutputService;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\PdfConversionService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -41,10 +41,10 @@ use Psr\Log\NullLogger;
  * Tests for the PDF output-format gate on an anonymised intermediate
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -283,7 +283,7 @@ class AnonymizationServiceOutputFormatTest extends TestCase {
 	 */
 	public function testPdfConversionServiceConvertToPdfSignature(): void {
 		$method = new \ReflectionMethod(
-			\OCA\DocuDesk\Service\PdfConversionService::class,
+			\OCA\Filinq\Service\PdfConversionService::class,
 			'convertToPdf'
 		);
 

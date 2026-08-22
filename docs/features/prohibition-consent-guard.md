@@ -19,7 +19,7 @@ keywords:
 
 Wires the `publicationProhibition` and `standingPublicationConsent` policies (from `entity-publication-policies`) into the generic anonymise/redaction flow. Previously these policies were enforced only in the WOO publication-consent workflow; the anonymise path was policy-unaware, so a prohibited entity could be skipped and silently left un-redacted, and standing-consent entities had to be re-decided on every document.
 
-Design is intentionally lightweight — **compute-at-guard**, no persisted DocuDesk flag on OpenRegister's `EntityRelation` and no OpenRegister schema change. It supersedes the prohibition-gate portion of `anonimisation-grondslagen-and-prohibition-gate`.
+Design is intentionally lightweight — **compute-at-guard**, no persisted Filinq flag on OpenRegister's `EntityRelation` and no OpenRegister schema change. It supersedes the prohibition-gate portion of `anonimisation-grondslagen-and-prohibition-gate`.
 
 ## Behaviour
 
@@ -29,7 +29,7 @@ During extraction, each detected entity is matched via `PolicyMatchService` (pro
 
 ### Prohibition → guarded skip, per occurrence
 
-The review UI records skip/include decisions through a DocuDesk endpoint that runs the guard at decision time (per relation), so the operator is stopped at the moment they try to skip — not deferred to anonymise time. Skipping a prohibition-matched entity is refused based on the detection confidence:
+The review UI records skip/include decisions through a Filinq endpoint that runs the guard at decision time (per relation), so the operator is stopped at the moment they try to skip — not deferred to anonymise time. Skipping a prohibition-matched entity is refused based on the detection confidence:
 
 - **confidence ≥ threshold** → **absolute**: the skip is rejected and `force` cannot release it (court-order witnesses, undercover officers, minor-protection entries must never leak).
 - **confidence < threshold** → the skip is rejected **unless** the request sets `force`.
@@ -38,7 +38,7 @@ Including an entity (or any non-skip decision such as setting bases) is always a
 
 ### Backstop at anonymise time
 
-OpenRegister's generic relation PATCH endpoint stays open, so a caller could skip a prohibited relation by bypassing the DocuDesk endpoint. As defence-in-depth, the anonymise flow re-checks before redaction: if a relation left un-redacted matches a prohibition at confidence ≥ threshold, the request fails with HTTP 422 regardless of `force`.
+OpenRegister's generic relation PATCH endpoint stays open, so a caller could skip a prohibited relation by bypassing the Filinq endpoint. As defence-in-depth, the anonymise flow re-checks before redaction: if a relation left un-redacted matches a prohibition at confidence ≥ threshold, the request fails with HTTP 422 regardless of `force`.
 
 ### Read-only with respect to consent
 
@@ -48,7 +48,7 @@ The guard consults `publicationProhibition` (and, at analysis, `standingPublicat
 
 | App config key | Default | Meaning |
 | --- | --- | --- |
-| `docudesk.prohibition.high_confidence_threshold` | `0.85` | Confidence at or above which a prohibition match is **absolute** (not releasable by `force`). Read at request time, so runtime changes take effect without a restart. The same threshold governs the `highConfidence` flag on the extract response. |
+| `filinq.prohibition.high_confidence_threshold` | `0.85` | Confidence at or above which a prohibition match is **absolute** (not releasable by `force`). Read at request time, so runtime changes take effect without a restart. The same threshold governs the `highConfidence` flag on the extract response. |
 
 ## API
 
@@ -70,7 +70,7 @@ or
 
 ### Skip-decision endpoint
 
-`PATCH /apps/docudesk/api/anonymization/relations/{id}`
+`PATCH /apps/filinq/api/anonymization/relations/{id}`
 
 Request body:
 
@@ -101,4 +101,4 @@ The frontend offers a `force` retry only when `absolute` is `false`.
 
 ### Anonymise endpoint
 
-`POST /apps/docudesk/api/anonymization/anonymize/{fileId}` may now return `422` with `{ "error": "...", "missingProhibitionMatches": [ ... ] }` when the backstop finds an absolute prohibition entity left un-redacted. Callers with no `publicationProhibition` records configured see no behaviour change.
+`POST /apps/filinq/api/anonymization/anonymize/{fileId}` may now return `422` with `{ "error": "...", "missingProhibitionMatches": [ ... ] }` when the backstop finds an absolute prohibition entity left un-redacted. Callers with no `publicationProhibition` records configured see no behaviour change.

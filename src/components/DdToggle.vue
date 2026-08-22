@@ -21,7 +21,7 @@
 
 <script>
 /**
- * Pill switch for DocuDesk.
+ * Pill switch for Filinq.
  *
  * A 40×24 rounded track with a 20px knob that slides right when on, matching
  * the design-system toggle. The track turns blue (`--dd-color-blue`) when

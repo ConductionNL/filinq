@@ -5,7 +5,7 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Additive register edit in `lib/Settings/docudesk_register.json`: `signingRequest.requiredAssurance` (enum low|substantial|high) + `signerRecord.identityEvidence` (object: provider, means, assurance, subjectPseudonym, authenticatedAt, evidenceHash) with register version bump for boot import (REQ-DDSIR-004)
+- [ ] 1.1 Additive register edit in `lib/Settings/filinq_register.json`: `signingRequest.requiredAssurance` (enum low|substantial|high) + `signerRecord.identityEvidence` (object: provider, means, assurance, subjectPseudonym, authenticatedAt, evidenceHash) with register version bump for boot import (REQ-DDSIR-004)
   - Union-additive diff against merge base — no existing property dropped; `tests/validate-manifest.js` passes
 
 - [ ] 1.2 Seed data: demo request `…e001` (`requiredAssurance: substantial`) + signer `…e002` with fixture evidence per design.md Seed Data (nil-UUID pattern, `demo-pseudonym-not-a-bsn-0001`)
@@ -28,11 +28,11 @@
 
 - [ ] 3.3 Step-up UI: sign dialog (in `src/modals/`) triggers `initiateAuthentication` on 403 step-up, handles the broker redirect/callback, re-attempts the signature; request form exposes `requiredAssurance` with floor hints (NcSelect with `inputLabel`)
 
-- [ ] 3.4 Surface resolved assurance to consumers (REQ-DDSIR-007): expose the recorded `identityEvidence.assurance` on the `docudesk-signing` completion payload (feeds decidesk `QesGuard`; coordinates with `signing-trust-rebuild` REQ-DDSTR-010) and make it readable by the `portal-signing-actions` `minTrust` gate; surface pseudonym + assurance only, never BSN/raw token
+- [ ] 3.4 Surface resolved assurance to consumers (REQ-DDSIR-007): expose the recorded `identityEvidence.assurance` on the `filinq-signing` completion payload (feeds decidesk `QesGuard`; coordinates with `signing-trust-rebuild` REQ-DDSTR-010) and make it readable by the `portal-signing-actions` `minTrust` gate; surface pseudonym + assurance only, never BSN/raw token
 
 ## 4. Quality, i18n, docs
 
-- [ ] 4.1 Unit tests ≥75% on new code incl. minimisation scan (no BSN-like value / raw token in store, audit, logs, artifact) and custody grep; run in container `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 4.1 Unit tests ≥75% on new code incl. minimisation scan (no BSN-like value / raw token in store, audit, logs, artifact) and custody grep; run in container `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
 - [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/signer-identity-rails.spec.ts` against a throwaway mock-OIDC IdP container: substantial request refuses session-only signer → step-up at digid-substantial → signature accepted → evidence visible on record/audit/artifact; floor normalisation on QES creation; verify on Postgres (8080), nldesign theme enabled
 

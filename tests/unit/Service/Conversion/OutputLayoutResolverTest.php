@@ -13,7 +13,7 @@
  *   - `isLegacyAnonymizedOutput` discriminates correctly for source-discovery.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,7 +21,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,9 +30,9 @@
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Conversion;
+namespace OCA\Filinq\Tests\Unit\Service\Conversion;
 
-use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -41,13 +41,13 @@ use Psr\Log\LoggerInterface;
  * Tests for OutputLayoutResolver.
  *
  * @internal
- * @coversDefaultClass \OCA\DocuDesk\Service\Conversion\OutputLayoutResolver
+ * @coversDefaultClass \OCA\Filinq\Service\Conversion\OutputLayoutResolver
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

@@ -5,7 +5,7 @@
  *
  * Renders per-document and per-dossier grondslagen summary PDFs. Reads
  * EntityRelation.bases (OpenRegister, Wave 1.3 — entity-relation-grondslagen)
- * and resolves the bases against the `base` schema (DocuDesk, Wave 1.1 —
+ * and resolves the bases against the `base` schema (Filinq, Wave 1.1 —
  * add-dossier-schema) to produce an auditable record of "what was redacted
  * under which Woo Art. 5 grondslag" for the file or dossier.
  *
@@ -32,19 +32,19 @@
  * {@see GrondslagenPdfWriter}'s.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\App\IAppManager;
 use OCP\Files\File;
@@ -58,10 +58,10 @@ use Psr\Log\LoggerInterface;
  * Renderer for the per-document and per-dossier grondslagen summary PDFs.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class LegalBasesSummaryService {
 
@@ -78,7 +78,7 @@ class LegalBasesSummaryService {
 	 * (the `EntityRecognitionHandler::ENTITY_TYPE_*` values). Only these are
 	 * translated so the summary legend reads the same as the labels
 	 * OpenRegister wrote into the redacted document; an unknown type falls
-	 * back to its raw string. DocuDesk's `l10n/` carries the same Dutch
+	 * back to its raw string. Filinq's `l10n/` carries the same Dutch
 	 * translations so the two apps resolve identically for a given language.
 	 *
 	 * @var array<int, string>
@@ -263,7 +263,7 @@ class LegalBasesSummaryService {
 	 * before `renderDossierSummary`, and the render itself deliberately runs
 	 * as a system operation with RBAC disabled — so this call is the ONLY
 	 * pre-render check there is, which is exactly why its real strength
-	 * matters. Tracked in ConductionNL/docudesk#441.
+	 * matters. Tracked in ConductionNL/filinq#441.
 	 *
 	 * @param string $dossierId The OR dossier object UUID.
 	 *

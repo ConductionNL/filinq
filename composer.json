@@ -1,5 +1,5 @@
 {
-    "name": "conductionnl/docudesk",
+    "name": "conductionnl/filinq",
     "description": "GDPR publication consent management and document metadata enrichment for Nextcloud",
     "license": "EUPL-1.2",
     "authors": [
@@ -11,7 +11,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "OCA\\DocuDesk\\": "lib/"
+            "OCA\\Filinq\\": "lib/"
         }
     },
     "scripts": {
@@ -111,7 +111,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "OCA\\DocuDesk\\Tests\\": "tests/"
+            "OCA\\Filinq\\Tests\\": "tests/"
         }
     }
 }

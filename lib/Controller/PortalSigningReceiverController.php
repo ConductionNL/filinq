@@ -3,7 +3,7 @@
 /**
  * Portal Signing Receiver Controller
  *
- * The DocuDesk-side receiver for portaliq's ADR-046 contract-v2/v2.2 A6
+ * The Filinq-side receiver for portaliq's ADR-046 contract-v2/v2.2 A6
  * endpoint-forward actions (`portal-signing-actions`, `portal-signing-surface`).
  * Gives an external, accountless **signer** a real signing surface: portaliq
  * forwards `sign`/`decline`/`viewDocument` server-to-server, attaching a
@@ -21,12 +21,12 @@
  *   act -> relay (200/502).
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,13 +37,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\Portal\PortalAssertionVerifier;
-use OCA\DocuDesk\Service\OpenRegisterResolver;
-use OCA\DocuDesk\Service\PortalSigningDocumentResolver;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Portal\PortalAssertionVerifier;
+use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\PortalSigningDocumentResolver;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\SigningService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -71,7 +71,7 @@ class PortalSigningReceiverController extends Controller {
 	 *
 	 * @var string
 	 */
-	private const THROTTLE_ACTION = 'docudesk_portal_signing_assertion';
+	private const THROTTLE_ACTION = 'filinq_portal_signing_assertion';
 
 	/**
 	 * Minimum eIDAS-aligned portal trust required to act (mirrors
@@ -123,7 +123,7 @@ class PortalSigningReceiverController extends Controller {
 	}//end __construct()
 
 	/**
-	 * POST /apps/docudesk/api/portal/signing/sign
+	 * POST /apps/filinq/api/portal/signing/sign
 	 *
 	 * The signDocument act (portal-signing-actions REQ-DDPSA-005,
 	 * portal-signing-surface REQ-DDPSS-002): records the signer's consent
@@ -176,7 +176,7 @@ class PortalSigningReceiverController extends Controller {
 	}//end signDocument()
 
 	/**
-	 * POST /apps/docudesk/api/portal/signing/decline
+	 * POST /apps/filinq/api/portal/signing/decline
 	 *
 	 * The declineDocument act (portal-signing-actions REQ-DDPSA-005,
 	 * portal-signing-surface REQ-DDPSS-003): records the client-supplied
@@ -222,7 +222,7 @@ class PortalSigningReceiverController extends Controller {
 	}//end declineDocument()
 
 	/**
-	 * GET /apps/docudesk/api/portal/signing/viewDocument
+	 * GET /apps/filinq/api/portal/signing/viewDocument
 	 *
 	 * The viewDocument act (portal-signing-actions REQ-DDPSA-006): lets the
 	 * verified, invited signer read the target document BEFORE signing.
@@ -410,7 +410,7 @@ class PortalSigningReceiverController extends Controller {
 				_multitenancy: false
 			);
 		} catch (Throwable $e) {
-			$this->logger->debug('DocuDesk: portal signer lookup failed', ['reason' => $e->getMessage()]);
+			$this->logger->debug('Filinq: portal signer lookup failed', ['reason' => $e->getMessage()]);
 			return null;
 		}
 
@@ -548,7 +548,7 @@ class PortalSigningReceiverController extends Controller {
 	 */
 	private function downstreamFailure(string $context, Throwable $exception): JSONResponse {
 		$this->logger->error(
-			'DocuDesk: portal signing receiver ' . $context . ' failed: ' . $exception->getMessage(),
+			'Filinq: portal signing receiver ' . $context . ' failed: ' . $exception->getMessage(),
 			['exception' => $exception]
 		);
 

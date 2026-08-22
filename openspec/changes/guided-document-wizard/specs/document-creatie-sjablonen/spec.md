@@ -22,7 +22,7 @@ containing the wizard's id, the wizard object's OpenRegister version at run
 time, and the submitted answers, alongside the existing `templateId`,
 `templateVersion`, and `dataRefs` metadata (DCS-051/DCS-072) — so the exact
 interview that produced a document can be audited and replayed. The
-`generatedDocument` schema in `lib/Settings/docudesk_register.json` MUST gain
+`generatedDocument` schema in `lib/Settings/filinq_register.json` MUST gain
 `wizardContext` as an optional property (document register bump `2.2.0` →
 `2.3.0`, additive only), and generations without a wizard MUST omit it and
 behave exactly as before this change. Stored answers are personal data:

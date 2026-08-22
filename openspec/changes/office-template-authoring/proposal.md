@@ -6,8 +6,8 @@ kind: code
 
 ## Why
 
-DocuDesk templates today are Twig/HTML strings (`template.content`, `format:
-html` — verified in `lib/Settings/docudesk_register.json` and
+Filinq templates today are Twig/HTML strings (`template.content`, `format:
+html` — verified in `lib/Settings/filinq_register.json` and
 `lib/Service/TemplateRenderer.php`). That makes template authoring a
 developer activity, while the market baseline is office-file-native
 authoring: **8+ competitors** let the communications department own templates
@@ -29,7 +29,7 @@ Dutch-government demand is concrete and tendered:
   **migration tooling** rank as a top-10 deduplicated wish (GH #82, NC forum
   threads).
 
-DocuDesk already has the two halves this change joins: a template register
+Filinq already has the two halves this change joins: a template register
 with versioning/diff/restore/lock/duplicate/preview
 (`TemplateService`/`TemplateVersionService`/`TemplatesController`, spec
 `template-management` REQ-TMPL-01..12) and a file-to-PDF conversion cascade
@@ -96,7 +96,7 @@ cascade, and importing existing template estates in bulk.
   import job), extensions to `TemplateService`/`TemplateVersionService`/
   `TemplatePreviewService`; render path reuses `PdfConversionService` and
   `DocumentService`.
-- **Register**: `lib/Settings/docudesk_register.json` — `template` and
+- **Register**: `lib/Settings/filinq_register.json` — `template` and
   `templateVersion` schema extensions, new `textFragment` schema, templates
   register version bump (currently `2.0.0`).
 - **Routes**: new upload/validate/import endpoints under `api/templates/…`

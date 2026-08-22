@@ -13,12 +13,12 @@
  * DocumentAnonymizeRunner.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,11 +35,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Exception\ProhibitionGateException;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\ProhibitionGateException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -47,10 +47,10 @@ use Psr\Log\LoggerInterface;
  * Service for orchestrating the document anonymization pipeline
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
@@ -185,11 +185,11 @@ class AnonymizationService {
 				className: 'OCA\OpenRegister\Service\TextExtractionService'
 			);
 
-			// Resolve DocuDesk's grondslag service up front (via the container,
+			// Resolve Filinq's grondslag service up front (via the container,
 			// string class name, to keep this class's coupling in check). It
 			// also owns the operator's enabled-entity-type selection, used to
 			// scope automatic detection just below.
-			$legalBasisProposal = $this->container->get('OCA\DocuDesk\Service\LegalBasisProposalService');
+			$legalBasisProposal = $this->container->get('OCA\Filinq\Service\LegalBasisProposalService');
 
 			// Scope automatic detection to the enabled entity types (null = all
 			// types). Manual entities are added through a separate path, so a

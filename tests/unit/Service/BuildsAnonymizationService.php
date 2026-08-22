@@ -10,7 +10,7 @@
  * one-call factory.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -18,7 +18,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -26,29 +26,29 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymisedPdfOutputService;
-use OCA\DocuDesk\Service\AnonymizationPersistenceService;
-use OCA\DocuDesk\Service\AnonymizationResultParser;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\ConfidentialityLabelService;
-use OCA\DocuDesk\Service\ConsentCrudService;
-use OCA\DocuDesk\Service\ConsentService;
-use OCA\DocuDesk\Service\CustomDictionaryDetectionRunner;
-use OCA\DocuDesk\Service\DocumentAnonymizeRunner;
-use OCA\DocuDesk\Service\EmlAnonymizationService;
-use OCA\DocuDesk\Service\EmlPdfAssemblyService;
-use OCA\DocuDesk\Service\EntityDetectionService;
-use OCA\DocuDesk\Service\FileEntityStatsService;
-use OCA\DocuDesk\Service\GrondslagenSummaryAttacher;
-use OCA\DocuDesk\Service\LegalBasesSummaryService;
-use OCA\DocuDesk\Service\OpenRegisterServiceLocator;
-use OCA\DocuDesk\Service\PdfConversionService;
-use OCA\DocuDesk\Service\ProhibitionGateService;
-use OCA\DocuDesk\Service\ProhibitionPolicyService;
-use OCA\DocuDesk\Service\RelationSkipDecisionService;
-use OCA\DocuDesk\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\AnonymisedPdfOutputService;
+use OCA\Filinq\Service\AnonymizationPersistenceService;
+use OCA\Filinq\Service\AnonymizationResultParser;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\ConfidentialityLabelService;
+use OCA\Filinq\Service\ConsentCrudService;
+use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\CustomDictionaryDetectionRunner;
+use OCA\Filinq\Service\DocumentAnonymizeRunner;
+use OCA\Filinq\Service\EmlAnonymizationService;
+use OCA\Filinq\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Service\EntityDetectionService;
+use OCA\Filinq\Service\FileEntityStatsService;
+use OCA\Filinq\Service\GrondslagenSummaryAttacher;
+use OCA\Filinq\Service\LegalBasesSummaryService;
+use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\ProhibitionGateService;
+use OCA\Filinq\Service\ProhibitionPolicyService;
+use OCA\Filinq\Service\RelationSkipDecisionService;
+use OCA\Filinq\Service\ReplacementVerificationService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;

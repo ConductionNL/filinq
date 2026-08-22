@@ -2,7 +2,7 @@
  * Grondslagen (Woo Art. 5 bases) options — fetched from the register.
  *
  * The `base` objects are seeded in the OpenRegister `dossier` register
- * (docudesk_register.json). The picker options are fetched live so the
+ * (filinq_register.json). The picker options are fetched live so the
  * label shows each grondslag's human name (e.g. "J — Persoonlijke
  * levenssfeer") while the stored value stays the stable slug (e.g.
  * "art-5-1-2-e"), and tenant-added grondslagen surface automatically.

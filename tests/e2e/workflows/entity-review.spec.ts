@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Behavioural coverage for `anonymization-entity-review`.
@@ -8,7 +8,7 @@
  * ---------------------------
  * Every scenario in that spec was blanket-excluded from gate-19 by ONE
  * whole-spec `@e2e exclude` whose reason said the consolidated-entities
- * endpoint and the review table "are unbuilt" in "the current DocuDesk release
+ * endpoint and the review table "are unbuilt" in "the current Filinq release
  * (v0.0.34)". Both halves were falsifiable in one command each and both are
  * false at 0.0.46:
  *
@@ -18,7 +18,7 @@
  *                                                     prohibitionMatch + suggestedBases)
  *
  * and the review table renders on `/folder-anonymization` the moment the store
- * reaches `batchStatus === 'review'`. See ConductionNL/docudesk#431.
+ * reaches `batchStatus === 'review'`. See ConductionNL/filinq#431.
  *
  * WHAT IS AND IS NOT COVERED HERE
  * -------------------------------
@@ -44,7 +44,7 @@
  * worse than the exclusion it replaced.
  *
  * Fixtures are stamped with `Date.now()` (TEST_PREFIX) so this run's negative
- * assertions name only this run's strings: the DocuDesk consent/dictionary
+ * assertions name only this run's strings: the Filinq consent/dictionary
  * surfaces do not all offer a working DELETE (measured: 405 on consents, 409
  * on retention-protected prohibitions), so leakage has to be made harmless
  * rather than cleaned up.
@@ -651,7 +651,7 @@ test.describe('anonymization-entity-review — review table UI', () => {
 		const payloads: string[] = []
 		page.on('request', (r) => {
 			if (
-				/\/apps\/docudesk\/api\/anonymization\/anonymize\/\d+/.test(r.url())
+				/\/apps\/filinq\/api\/anonymization\/anonymize\/\d+/.test(r.url())
 			) {
 				payloads.push(r.postData() ?? '')
 			}
@@ -729,7 +729,7 @@ test.describe('anonymization-entity-review — review table UI', () => {
 })
 
 /*
- * DEFECT FOUND WHILE WRITING THESE TESTS — filed as ConductionNL/docudesk#434.
+ * DEFECT FOUND WHILE WRITING THESE TESTS — filed as ConductionNL/filinq#434.
  *
  * The consolidated-entities endpoint pre-sets `included` from the active WOO
  * profile; the spec's own scenario says "entities matching the WOO keep profile

@@ -6,7 +6,7 @@
  * Reads Word-family inputs via PhpOffice\PhpWord, renders them to HTML
  * with PhpWord's HTML writer, then hands that HTML to PdfService for
  * mPDF rendering. Covers DOC (MsDoc, limited fidelity), DOCX (Word2007),
- * ODT (ODText), RTF, and HTML — all the Word-family formats DocuDesk
+ * ODT (ODText), RTF, and HTML — all the Word-family formats Filinq
  * needs to redact in the no-Office-app tier. Spreadsheet and
  * presentation formats are deliberately out of scope (see design D7).
  *
@@ -22,12 +22,12 @@
  * cascade will route there first.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,10 +35,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Conversion;
+namespace OCA\Filinq\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\PdfService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\PdfService;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use OCP\ITempManager;
@@ -55,11 +55,11 @@ use Throwable;
  * ConversionFailedException for the cascade to fall through.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class PhpWordBackend implements ConversionBackendInterface {
 
@@ -67,12 +67,12 @@ class PhpWordBackend implements ConversionBackendInterface {
 	 * App config key controlling whether this backend is attempted.
 	 * Default true; tenants disable for testing or forced fall-through.
 	 */
-	private const ENABLED_KEY = 'docudesk.conversion.backends.phpword_enabled';
+	private const ENABLED_KEY = 'filinq.conversion.backends.phpword_enabled';
 
 	/**
 	 * App identifier used for IAppConfig reads/writes.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * PhpWord reader name to use per extension. PhpWord's IOFactory

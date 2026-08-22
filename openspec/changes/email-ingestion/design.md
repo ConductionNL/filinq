@@ -7,9 +7,9 @@ Verified at HEAD:
 - **`EmlBackend`** (`lib/Service/Conversion/EmlBackend.php`): part of the
   `PdfConversionService` cascade; `canHandle()` claims `message/rfc822` +
   `.eml` **only** (no `.msg`); `isAvailable()` = tenant flag
-  `docudesk.conversion.backends.eml_enabled` AND OR's
+  `filinq.conversion.backends.eml_enabled` AND OR's
   `TextExtractionService::parseEmlStructured` present (checked dynamically
-  by FQCN string — DocuDesk loads without OR); `convert()` walks
+  by FQCN string — Filinq loads without OR); `convert()` walks
   parse → assemble → write-beside-source.
 - **`EmlPdfAssemblyService`**: stateless `assemble(EmlStructure)` → PDF/A-3b
   bytes via mPDF + the shared Twig `TemplateRenderer` (envelope template,
@@ -20,9 +20,9 @@ Verified at HEAD:
 - **OR's `EmlStructure`** headers at HEAD: `from`, `to`, `cc`, `subject`,
   `date`, `messageId` — **no `In-Reply-To` / `References`** (the docblock
   allows "extras", but `EmlParser` only surfaces `messageId`). Threading
-  headers must therefore be read by DocuDesk itself (D4).
+  headers must therefore be read by Filinq itself (D4).
 - **No ingestion machinery exists**: no watched folder, no mailbox client,
-  no email record schema, no filing. DocuDesk's `BackgroundJob/` already
+  no email record schema, no filing. Filinq's `BackgroundJob/` already
   hosts cron jobs (`FolderExtractionJob` etc.) — the pattern to follow,
   including the redaction-at-scale lesson: bounded work per tick.
 - Dossier filing target: the `dossier` register's `@self.folder` binding —
@@ -48,7 +48,7 @@ Verified at HEAD:
 **Non-Goals:**
 
 - No IMAP/POP/Graph client, no mailbox credentials, no polling of remote
-  mailboxes in DocuDesk (D5).
+  mailboxes in Filinq (D5).
 - No native `.msg` (Outlook CFBF) parsing (D6) and no PST/MBOX bulk-archive
   splitter in v1 (the cluster's *bulk import PST/MBOX* story needs a
   container-format decision first — deferred).
@@ -76,7 +76,7 @@ One record per ingested email: `sourceFileRef` (the filed `.eml`, required),
 Envelope PII (from/to/subject) IS stored on the record: the record *is* the
 correspondence-register entry the mailbox cluster asks for
 ("register incoming email in correspondence log"), and the same data sits in
-the filed document itself; the schema carries a `docudesk-email-ingestion`
+the filed document itself; the schema carries a `filinq-email-ingestion`
 `x-openregister-processing` annotation (rechtsgrond `public-task`, data
 categories PERSON/EMAIL) so the activity is declared in the platform Art. 30
 register — same follow-up note as entity-search: the
@@ -90,10 +90,10 @@ lifecycle and would corrupt that schema's semantics.
 
 ### D2 — Watched-folder scan as a bounded cron job
 
-`docudesk.email_ingestion.inbox_folders` (IAppConfig JSON): array of
+`filinq.email_ingestion.inbox_folders` (IAppConfig JSON): array of
 `{folderId, dossierRef}` mappings, managed in admin settings.
 `EmailIngestionJob` (cron `TimedJob`) scans each mapped inbox for `.eml` /
-`.msg` files, processing at most `docudesk.email_ingestion.files_per_tick`
+`.msg` files, processing at most `filinq.email_ingestion.files_per_tick`
 (default 25) per run — the redaction-at-scale bounded-work lesson; a large
 PST-export drop drains over successive ticks rather than starving the
 instance.
@@ -118,7 +118,7 @@ with a visible "not converted" state and a retry action, because the
 archival obligation is about capturing the record; a conversion outage must
 not lose mail. Retry re-runs conversion only (idempotent on the record).
 
-### D4 — Threading metadata: DocuDesk reads the raw headers
+### D4 — Threading metadata: Filinq reads the raw headers
 
 OR surfaces only `messageId` at HEAD, so `EmailIngestionService` extracts
 `In-Reply-To` and `References` itself from the raw RFC 5322 header block of
@@ -133,11 +133,11 @@ extraction be deleted — OR-side follow-up, not assigned here.
 
 ### D5 — IMAP boundary: OpenConnector owns mailbox fetch
 
-Decision: **no mailbox connectivity in DocuDesk.** Rationale:
+Decision: **no mailbox connectivity in Filinq.** Rationale:
 
 - Source-system connectivity, polling and credential custody are
   OpenConnector's domain — exactly the zgw-document-bridge precedent (case
-  systems fetch via OpenConnector; DocuDesk processes staged items), and
+  systems fetch via OpenConnector; Filinq processes staged items), and
   ADR-064 custody: secrets (IMAP passwords/OAuth tokens) never sit in a
   document app's config.
 - The watched folder is already the union interface: manual `.eml` exports,
@@ -147,7 +147,7 @@ Decision: **no mailbox connectivity in DocuDesk.** Rationale:
 The documented contract for the optional IMAP feed: an OpenConnector flow
 authenticates to the mailbox, writes each message as a raw `.eml` file into
 the mapped watched folder (filename convention `<messageId-hash>.eml`), and
-DocuDesk's idempotency (D2) absorbs redeliveries. DocuDesk ships a negative
+Filinq's idempotency (D2) absorbs redeliveries. Filinq ships a negative
 guarantee: no IMAP client code, no mailbox credential setting (spec
 REQ-DDEIN-005). Building the reference OpenConnector flow is recorded as a
 follow-up for the OpenConnector backlog (not assigned to this change).
@@ -232,9 +232,9 @@ nil-hash pattern, demo-municipality flavour):
 
 - Ingested emails are untrusted input: parsing is delegated to OR's
   hardened parser (nesting cap 3); the assembly never executes attachment
-  content; DocuDesk's own header extraction reads header *lines* only and
+  content; Filinq's own header extraction reads header *lines* only and
   never evaluates content.
-- No mailbox credentials anywhere in DocuDesk (D5 — negative-guard spec
+- No mailbox credentials anywhere in Filinq (D5 — negative-guard spec
   requirement and test).
 - The background job runs as system; filed files land under the dossier
   folder's existing ACLs — the inbox mapping is admin-configured, so an

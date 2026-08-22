@@ -15,11 +15,11 @@ actively positions "WCAG templates" as a differentiator
 (research-competitors.md), and user-wishes #15 flags it as a fully
 **unspecced gap**: "hard procurement gate … 0 issues". The NC-ecosystem scan
 (research-nc-ecosystem.md, gap 4) confirms **zero coverage**: no Nextcloud
-app produces or validates PDF/UA — DocuDesk already ships PDF/A-3
+app produces or validates PDF/UA — Filinq already ships PDF/A-3
 (`pdfa3-conversion`, `render-pdfa`), so accessibility is the missing half of
 its archival/compliance output story.
 
-Every document DocuDesk generates for a citizen or publishes under Woo is in
+Every document Filinq generates for a citizen or publishes under Woo is in
 scope of the Besluit. Verified current state: the mPDF path
 (`PdfService::renderPdf`) produces **untagged** PDFs (the existing
 `pdf-generation` spec itself notes "PDF accessibility (tagged PDF) not
@@ -80,11 +80,11 @@ PDF/UA identification or language metadata; and
   validation UI; adds the accessibility category, the publication-readiness
   warning, and lint results in template preview (ADR-012 components).
 - **Config**: accessibility checks ride the existing
-  `docudesk.validation.profiles` severity mechanism (default `warning`,
+  `filinq.validation.profiles` severity mechanism (default `warning`,
   admin-escalatable to `blocking`).
 - **No new dependencies**: heuristics are parser-free (same style as the
   existing `isPdfEncrypted`/`textLayerMissing` checks); veraPDF-grade
   external validation is explicitly out of scope (tracked separately, CB
   #182 pattern).
 - **Sibling boundaries**: publication endpoints remain
-  OpenCatalogi/OpenWoo's; DocuDesk only gates its own hand-off readiness.
+  OpenCatalogi/OpenWoo's; Filinq only gates its own hand-off readiness.

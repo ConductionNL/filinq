@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Shared helpers for the Gate-19 behavioural spec-coverage suite.
@@ -7,11 +7,11 @@
  * `attachConsoleGuard` records genuine app-level console errors and 5xx
  * responses so individual specs can assert the page rendered cleanly. It
  * deliberately ignores Nextcloud-environment noise that is unrelated to
- * DocuDesk and present fleet-wide on this dev container:
+ * Filinq and present fleet-wide on this dev container:
  *   - user_status / heartbeat OCS endpoints (NC core, returning 500 here)
  *   - WebDAV (`remote.php/dav`) — the dev container's DAV stack is 500ing
- *     at the root, so DocuDesk's recent-documents fetch fails downstream.
- * Those are tracked as environment bugs in the run report, not DocuDesk
+ *     at the root, so Filinq's recent-documents fetch fails downstream.
+ * Those are tracked as environment bugs in the run report, not Filinq
  * defects, and must not make a page-render assertion flap.
  */
 
@@ -85,13 +85,13 @@ export async function dismissOverlays(page: Page): Promise<void> {
 		await support.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {})
 	}
 
-	// The onboarding walkthrough ("Welcome to DocuDesk") renders a full-viewport
+	// The onboarding walkthrough ("Welcome to Filinq") renders a full-viewport
 	// dim layer (.cn-walkthrough__dim--full) that intercepts pointer events, so
 	// every left-navigation click fails with "subtree intercepts pointer events"
 	// even though the target link is visible and enabled. Close it via its own
 	// button; Escape alone does not always dismiss it.
 	const walkthrough = page
-		.locator('.cn-walkthrough, [aria-label="Welcome to DocuDesk"]')
+		.locator('.cn-walkthrough, [aria-label="Welcome to Filinq"]')
 		.first()
 	for (
 		let i = 0;
@@ -121,23 +121,23 @@ export async function dismissOverlays(page: Page): Promise<void> {
  *
  * ⚠️ The prefix is load-bearing on CI and must not be dropped. The shared
  * `E2E Tests (Playwright)` workflow serves Nextcloud with `php -S 0.0.0.0:8080`
- * and NO router script, so nothing rewrites `/apps/docudesk` onto `index.php`
+ * and NO router script, so nothing rewrites `/apps/filinq` onto `index.php`
  * the way Nextcloud's `.htaccess` does under Apache. PHP's built-in server
  * resolves the path against the document root itself, finds no matching file,
- * and answers its OWN 404 page — "The requested resource /apps/docudesk was not
+ * and answers its OWN 404 page — "The requested resource /apps/filinq was not
  * found on this server". That page has a `<body>`, is not `/login`, and carries
  * no `#header` and no `requesttoken` meta, so it fails every spec at a
  * *selector* while looking like an app that would not mount. (Measured: 37 of
  * 66 specs failed this way on run 30797589151.)
  *
- * `/index.php/apps/docudesk` is served correctly BOTH with and without URL
+ * `/index.php/apps/filinq` is served correctly BOTH with and without URL
  * rewriting, so it is the portable form — the same reasoning that already put
  * `index.php` in `workflows/_fixtures.ts`'s API constant.
  */
-export const APP = '/index.php/apps/docudesk'
+export const APP = '/index.php/apps/filinq'
 
 /**
- * Wait until the DocuDesk SPA has actually mounted and painted its content
+ * Wait until the Filinq SPA has actually mounted and painted its content
  * region.
  *
  * ⚠️ This replaces the `await page.waitForLoadState('networkidle').catch(() => {})`
@@ -152,7 +152,7 @@ export const APP = '/index.php/apps/docudesk'
  * turned that timeout into a pass, so nothing ever reported it.
  *
  * The deterministic form of the same intent is two explicit waits:
- *  1. `#docudesk-app` — the mount point `templates/index.php` server-renders.
+ *  1. `#filinq-app` — the mount point `templates/index.php` server-renders.
  *     Its presence also separates a real Nextcloud response from PHP's
  *     built-in-server 404 page (see the `APP` docblock above), which has a
  *     `<body>` and a non-`/login` URL and so satisfied several assertions.
@@ -168,7 +168,7 @@ export const APP = '/index.php/apps/docudesk'
  * @return Resolves once the SPA has mounted and painted.
  */
 export async function waitForAppReady(page: Page, timeout = 30_000): Promise<void> {
-	await page.locator('#docudesk-app').waitFor({ state: 'attached', timeout })
+	await page.locator('#filinq-app').waitFor({ state: 'attached', timeout })
 	await page
 		.locator('main, #app-content, .app-content, #content-vue')
 		.first()
@@ -180,8 +180,8 @@ export async function waitForAppReady(page: Page, timeout = 30_000): Promise<voi
  * painted its authenticated content region.
  *
  * Same rationale as `waitForAppReady` — `networkidle` never fires on
- * Nextcloud — but these routes are not the DocuDesk SPA, so there is no
- * `#docudesk-app` to key on. `#content` is rendered by NC's *authenticated*
+ * Nextcloud — but these routes are not the Filinq SPA, so there is no
+ * `#filinq-app` to key on. `#content` is rendered by NC's *authenticated*
  * layout only; the guest/login layout does not have it, so this wait also
  * fails fast on a session that silently expired instead of letting a
  * `not.toHaveURL(/\/login/)` assertion decide it much later.
@@ -207,24 +207,24 @@ export async function waitForNcContentReady(
  * difference is invisible until a test deep-links.
  *
  * `src/main.js:306` builds the router as
- * `createWebHistory(generateUrl('/apps/docudesk'))`, and Nextcloud's
+ * `createWebHistory(generateUrl('/apps/filinq'))`, and Nextcloud's
  * `generateUrl` includes the `index.php` segment only when
  * `OC.config.modRewriteWorking` is FALSE:
  *
  *   - CI (`php -S`, no rewrite)  modRewriteWorking = false
- *                                -> router base `/index.php/apps/docudesk`
+ *                                -> router base `/index.php/apps/filinq`
  *   - Apache with mod_rewrite    modRewriteWorking = true   (measured on a
  *     (any normal dev/prod NC)   `nextcloud:34-apache` rig)
- *                                -> router base `/apps/docudesk`
+ *                                -> router base `/apps/filinq`
  *
- * So on Apache a navigation to `/index.php/apps/docudesk/custom-dictionaries`
+ * So on Apache a navigation to `/index.php/apps/filinq/custom-dictionaries`
  * lands on a path the router does not recognise and it falls back to the app
  * root. The failure is quiet and very easy to misread: the page renders fine,
- * the URL is still under `/apps/docudesk`, and only an assertion that names
+ * the URL is still under `/apps/filinq`, and only an assertion that names
  * the ROUTE catches it. Every assertion in this suite of the shape
- * `expect(page).toHaveURL(/\/apps\/docudesk/)` passes on the WRONG PAGE.
+ * `expect(page).toHaveURL(/\/apps\/filinq/)` passes on the WRONG PAGE.
  * (Measured: three deep-link specs failed on Apache with
- *  `Received string: "http://localhost:8097/apps/docudesk/"`.)
+ *  `Received string: "http://localhost:8097/apps/filinq/"`.)
  *
  * Hardcoding either form is therefore wrong on one of the two environments.
  * Ask the app instead: land once on `APP` — which is served correctly with and
@@ -243,7 +243,7 @@ async function resolveAppBase(page: Page): Promise<string> {
 	cachedAppBase = await page.evaluate(() => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const oc = (window as any).OC
-		return (oc?.generateUrl?.('/apps/docudesk') as string) || ''
+		return (oc?.generateUrl?.('/apps/filinq') as string) || ''
 	})
 	// An empty answer means `OC` was not on the page — that is a broken load,
 	// not a base to guess around. Fail loudly rather than silently reinstating
@@ -251,7 +251,7 @@ async function resolveAppBase(page: Page): Promise<string> {
 	// remove.
 	if (!cachedAppBase) {
 		throw new Error(
-			'Could not read OC.generateUrl("/apps/docudesk") from the running app. '
+			'Could not read OC.generateUrl("/apps/filinq") from the running app. '
 				+ `The page at ${APP} did not expose window.OC, so the SPA router base is unknown.`,
 		)
 	}

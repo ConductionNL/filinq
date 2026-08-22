@@ -4,7 +4,7 @@
  * Unit tests for SettingsService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,20 +12,20 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\LegalBasisProposalService;
-use OCA\DocuDesk\Service\OcrService;
-use OCA\DocuDesk\Service\OpenRegisterAvailabilityService;
-use OCA\DocuDesk\Service\RegisterDiscoveryService;
-use OCA\DocuDesk\Service\SettingsInitializer;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Service\LegalBasisProposalService;
+use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\OpenRegisterAvailabilityService;
+use OCA\Filinq\Service\RegisterDiscoveryService;
+use OCA\Filinq\Service\SettingsInitializer;
+use OCA\Filinq\Service\SettingsService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -36,10 +36,10 @@ use RuntimeException;
  * Unit tests for SettingsService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -209,7 +209,7 @@ class SettingsServiceTest extends TestCase {
 	public function testUpdateSettingsAcceptsOcrKeys(): void {
 		$this->mockConfig->expects($this->atLeastOnce())
 			->method('setValueString')
-			->with('docudesk', 'ocr_enabled', '1');
+			->with('filinq', 'ocr_enabled', '1');
 
 		$this->mockConfig->method('getValueString')
 			->willReturn('1');
@@ -227,7 +227,7 @@ class SettingsServiceTest extends TestCase {
 	public function testUpdateSettingsPersistsValues(): void {
 		$this->mockConfig->expects($this->once())
 			->method('setValueString')
-			->with('docudesk', 'signing_provider', 'docusign');
+			->with('filinq', 'signing_provider', 'docusign');
 
 		$this->mockConfig->method('getValueString')
 			->willReturn('docusign');

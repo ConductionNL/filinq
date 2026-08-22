@@ -3,12 +3,12 @@ SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 -->
 
-# DocuDesk API Contract Suite (Newman / Postman)
+# Filinq API Contract Suite (Newman / Postman)
 
-API-contract tests that lock the HTTP behaviour of DocuDesk's controllers
+API-contract tests that lock the HTTP behaviour of Filinq's controllers
 (`appinfo/routes.php` + `lib/Controller/*`) against a live Nextcloud instance.
 
-- Collection: `docudesk.postman_collection.json`
+- Collection: `filinq.postman_collection.json`
 - Runner: `run-newman.sh`
 
 ## Running
@@ -19,7 +19,7 @@ BASE_URL=http://localhost:8080 ./run-newman.sh
 ADMIN_USER=admin ADMIN_PASS=admin ./run-newman.sh
 ```
 
-The runner re-execs under an exclusive `flock` on `/tmp/uiaudit-docudesk.lock`
+The runner re-execs under an exclusive `flock` on `/tmp/uiaudit-filinq.lock`
 so concurrent CI agents serialise and do not trip Nextcloud's brute-force
 protection. It uses a globally-installed `newman` when present, else
 `npx newman`. `--ignore-redirects` is passed so the authz tests assert NC's

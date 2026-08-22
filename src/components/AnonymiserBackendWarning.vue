@@ -14,7 +14,7 @@ SPDX-License-Identifier: EUPL-1.2
 					class="anonymiser-backend-warning__appapi-line">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'AppAPI is not installed. Install AppAPI from the App Store before installing OpenAnonymiser.',
 						)
 					}}
@@ -22,7 +22,7 @@ SPDX-License-Identifier: EUPL-1.2
 				<p>
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Entity recognition is running in regex-only mode. For higher-quality anonymisation, install one of the supported backends:',
 						)
 					}}
@@ -32,17 +32,17 @@ SPDX-License-Identifier: EUPL-1.2
 						<a
 							:href="appStoreUrl('openanonymiser_light')"
 							class="anonymiser-backend-warning__link">
-							{{ t('docudesk', 'OpenAnonymiser Light (CPU)') }}
+							{{ t('filinq', 'OpenAnonymiser Light (CPU)') }}
 						</a>
-						{{ t('docudesk', '— lightweight, no GPU required') }}
+						{{ t('filinq', '— lightweight, no GPU required') }}
 					</li>
 					<li>
 						<a
 							:href="appStoreUrl('openanonymiser')"
 							class="anonymiser-backend-warning__link">
-							{{ t('docudesk', 'OpenAnonymiser (GPU)') }}
+							{{ t('filinq', 'OpenAnonymiser (GPU)') }}
 						</a>
-						{{ t('docudesk', '— high accuracy, requires a GPU') }}
+						{{ t('filinq', '— high accuracy, requires a GPU') }}
 					</li>
 					<li>
 						<a
@@ -50,17 +50,17 @@ SPDX-License-Identifier: EUPL-1.2
 							class="anonymiser-backend-warning__link">
 							{{
 								t(
-									'docudesk',
+									'filinq',
 									'Configure a custom anonymisation endpoint',
 								)
 							}}
 						</a>
-						{{ t('docudesk', '— via OpenRegister settings') }}
+						{{ t('filinq', '— via OpenRegister settings') }}
 					</li>
 				</ul>
 				<div class="anonymiser-backend-warning__actions">
 					<NcButton variant="tertiary" @click="dismissWarning">
-						{{ t('docudesk', 'Dismiss') }}
+						{{ t('filinq', 'Dismiss') }}
 					</NcButton>
 				</div>
 			</div>
@@ -140,7 +140,7 @@ export default {
 			this.dismissing = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/docudesk/api/admin/anonymiser-warning/dismiss',
+					'/index.php/apps/filinq/api/admin/anonymiser-warning/dismiss',
 					{ method: 'POST' },
 				)
 				if (response.ok === false) {
@@ -151,7 +151,7 @@ export default {
 			} catch (err) {
 				showError(
 					t(
-						'docudesk',
+						'filinq',
 						'Failed to dismiss the anonymiser backend warning',
 					),
 				)

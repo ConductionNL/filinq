@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Docudesk SupportedTypeProbe
+ * Filinq SupportedTypeProbe
  *
  * Answers, per document type, whether the INSTALLED office suite actually
  * edits it here — measured, never assumed.
@@ -15,7 +15,7 @@
  * date it was measured — which is what makes it visibly stale later.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Office
+ * @package  OCA\Filinq\Service\Office
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Office;
+namespace OCA\Filinq\Service\Office;
 
 /**
  * Parses a WOPI discovery document into a per-type support declaration.

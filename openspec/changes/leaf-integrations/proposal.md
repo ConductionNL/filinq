@@ -6,8 +6,8 @@ OpenRegister ships app-agnostic integration leaves (mail, calendar, contacts, fi
 and others) that any consuming app surfaces declaratively: `configuration.linkedTypes` on a
 schema makes its objects a leaf target (and, for `"mail"`, an NC Mail sidebar link target
 via `EmailService`), and `configuration.mailObjectTemplate` adds a create-object-from-email
-field map to the Mail sidebar. DocuDesk today declares **zero** `linkedTypes` and no
-`mailObjectTemplate` anywhere in `lib/Settings/docudesk_register.json` (verified at HEAD:
+field map to the Mail sidebar. Filinq today declares **zero** `linkedTypes` and no
+`mailObjectTemplate` anywhere in `lib/Settings/filinq_register.json` (verified at HEAD:
 no schema carries either key) — it operates on files through its own
 generation/anonymisation/signing pipeline, and its records are invisible to every standard
 leaf surface.
@@ -18,7 +18,7 @@ Abstractions) must be closed by *consuming* the leaves, not by app-local widgets
 - A signing request has a `deadline` and a consent record has an `objectionDeadline` (the
   Woo four-week objection window), but neither surfaces as a calendar item anywhere.
 - Signing-request and consent traffic arrives and leaves by email, but an NC Mail message
-  cannot be linked to the DocuDesk record it concerns, and a caseworker reading an
+  cannot be linked to the Filinq record it concerns, and a caseworker reading an
   objection email cannot create the consent/correspondence record from it.
 - A signer (`signerRecord`) is a person, but has no bridge to NC Contacts.
 - The pipeline's outputs (`generatedDocument.fileId`, dossier source files) are NC files,
@@ -28,7 +28,7 @@ Abstractions) must be closed by *consuming* the leaves, not by app-local widgets
 
 ## What
 
-Declare five leaf adoptions on existing schemas in `lib/Settings/docudesk_register.json` —
+Declare five leaf adoptions on existing schemas in `lib/Settings/filinq_register.json` —
 configuration-only, no property or `required` change:
 
 1. **mail linkage** — `configuration.linkedTypes: ["mail"]` on `signingRequest`,
@@ -67,7 +67,7 @@ existing detail surfaces; no bespoke sidebar-tab or widget system is introduced.
 
 ## Affected Projects
 
-- [x] Project: `docudesk` — all implementation work is in this repo (register JSON +
+- [x] Project: `filinq` — all implementation work is in this repo (register JSON +
   detail-surface leaf hosting)
 - Reference: `openregister/openspec/specs/integration-email/`,
   `integration-calendar/`, `integration-contacts/`, `integration-deck/`,
@@ -82,20 +82,20 @@ existing detail surfaces; no bespoke sidebar-tab or widget system is introduced.
 - Routing outbound signer/consent notifications through the email-leaf comms surface —
   covered by `signer-consent-notifications-to-email-leaf` (that change is the *outbound*
   comms path; this change is the Mail-sidebar *linkage and intake* direction).
-- Any MCP exposure. The leaves are authenticated UI surfaces under DocuDesk's normal RBAC;
-  they do not alter the `docudesk-mcp-adoption` exclusions (`signerRecord` and
+- Any MCP exposure. The leaves are authenticated UI surfaces under Filinq's normal RBAC;
+  they do not alter the `filinq-mcp-adoption` exclusions (`signerRecord` and
   `publicationConsent` remain OFF for agents — see design.md §Privacy boundary).
 - Modifying any OR leaf or the integration registry (consumed, not changed).
 
 ## Success Criteria
 
 - `openspec validate --strict leaf-integrations` exits 0.
-- `docudesk_register.json` imports cleanly (linkedTypes/mailObjectTemplate validation in
+- `filinq_register.json` imports cleanly (linkedTypes/mailObjectTemplate validation in
   OR's `Schema` passes) with all declared blocks present and no other schema touched.
 - NC Mail's sidebar offers signingRequest / correspondence / publicationConsent as link
   targets and offers create-from-email for consent and correspondence records.
 - Deadline calendar items, signer contacts, files, and deck leaves render on their record
   detail surfaces via the registry when the corresponding NC apps are installed, and each
   leaf is hidden without error when its app is absent.
-- DocuDesk's in-app pipeline surfaces (generation, anonymisation, eIDAS signing) are
+- Filinq's in-app pipeline surfaces (generation, anonymisation, eIDAS signing) are
   untouched.

@@ -11,7 +11,7 @@
 # printed under a Euro-Office heading.
 #
 # Usage:  verify-suite.sh <suite> <container> <internal-base-url>
-#   e.g.  verify-suite.sh onlyoffice docudesk-onlyoffice http://docudesk-onlyoffice
+#   e.g.  verify-suite.sh onlyoffice filinq-onlyoffice http://filinq-onlyoffice
 #
 # Exit code is NOT the verdict — read the table. Several checks are expected to
 # fail for some suites (Collabora serves no /healthcheck; LibreOffice headless
@@ -114,11 +114,11 @@ if [ "${conv#ok}" != "$conv" ]; then pass "conversion" "$conv"; else fail "conve
 app=$(docker exec "$NC" php occ app:list 2>/dev/null | grep -iE "^\s+- (onlyoffice|richdocuments|eurooffice|collabora)" | tr -d ' ' | tr '\n' ' ')
 info "NC connector apps present" "${app:-none}"
 
-# 7. DocuDesk's own capability probe, for THIS suite only. Asking for one suite
+# 7. Filinq's own capability probe, for THIS suite only. Asking for one suite
 #    keeps the row about the suite the row is about -- the whole-fleet output
 #    printed here would mix another suite's verdict into this one's report.
-probe=$(docker exec "$NC" php occ docudesk:office:probe --suite="$SUITE" 2>/dev/null | head -1 || true)
-info "docudesk probe" "${probe:-not covered by the probe (WOPI suites only)}"
+probe=$(docker exec "$NC" php occ filinq:office:probe --suite="$SUITE" 2>/dev/null | head -1 || true)
+info "filinq probe" "${probe:-not covered by the probe (WOPI suites only)}"
 
 # 8. What the suite reports itself as. A suite that names itself is one less
 #    thing anyone has to assume.

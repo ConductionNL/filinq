@@ -21,9 +21,9 @@ entry in `appinfo/routes.php` MUST name the controller's actual public method
 
 #### Scenario: The route resolves without a ReflectionException
 
-- GIVEN DocuDesk is installed with the `dossier` register configured
+- GIVEN Filinq is installed with the `dossier` register configured
 - AND a valid dossier UUID exists
-- WHEN a client sends `POST /apps/docudesk/api/anonymization/dossier/{dossierId}/grondslagen-pdf`
+- WHEN a client sends `POST /apps/filinq/api/anonymization/dossier/{dossierId}/grondslagen-pdf`
 - THEN the request SHALL reach `DossierController::generateGrondslagenSummary()`
 - AND the response SHALL be the generated file's metadata (or a handled error
   payload), never a router-level `ReflectionException` / HTTP 500

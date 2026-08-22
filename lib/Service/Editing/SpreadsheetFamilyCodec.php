@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk SpreadsheetFamilyCodec
+ * Filinq SpreadsheetFamilyCodec
  *
  * One spreadsheet family's answer to "read the cells" and "write this one".
  *
@@ -11,7 +11,7 @@
  * to neither and live in {@see SpreadsheetCodec}.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,14 +20,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 /**
  * Reads and writes cells for one spreadsheet family.

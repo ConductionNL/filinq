@@ -57,7 +57,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			this.folderPath = folderPath
 			try {
 				const r = await axios.post(
-					generateUrl('/apps/docudesk/api/anonymization/batch/folder'),
+					generateUrl('/apps/filinq/api/anonymization/batch/folder'),
 					{ folderPath },
 				)
 				this.batchId = r.data.batchId
@@ -142,7 +142,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			try {
 				const r = await axios.get(
 					generateUrl(
-						'/apps/docudesk/api/anonymization/batch/'
+						'/apps/filinq/api/anonymization/batch/'
 							+ this.batchId
 							+ '/status',
 					),
@@ -164,7 +164,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		async fetchEntities() {
 			try {
 				let url =
-					'/apps/docudesk/api/anonymization/batch/'
+					'/apps/filinq/api/anonymization/batch/'
 					+ this.batchId
 					+ '/entities'
 				if (this.minConfidence > 0) {
@@ -312,7 +312,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					try {
 						const r = await axios.post(
 							generateUrl(
-								`/apps/docudesk/api/anonymization/anonymize/${file.fileId}`,
+								`/apps/filinq/api/anonymization/anonymize/${file.fileId}`,
 							),
 							{
 								entities: selected,
@@ -393,7 +393,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			try {
 				const r = await axios.post(
 					generateUrl(
-						'/apps/docudesk/api/anonymization/dossier/'
+						'/apps/filinq/api/anonymization/dossier/'
 							+ this.dossier.uuid
 							+ '/grondslagen-pdf',
 					),
@@ -415,7 +415,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		// results are written back to the batch record (or a client-side
 		// summary is built).
 		// getReportUrl() {
-		//     return generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/report')
+		//     return generateUrl('/apps/filinq/api/anonymization/batch/' + this.batchId + '/report')
 		// },
 
 		reset() {

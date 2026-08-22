@@ -9,10 +9,10 @@
  * path retained from finding #287 regression coverage.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Signing
+ * @package  OCA\Filinq\Tests\Unit\Service\Signing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,10 +20,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Signing;
+namespace OCA\Filinq\Tests\Unit\Service\Signing;
 
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\Signing\NativeSigningProvider;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\Signing\NativeSigningProvider;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -34,10 +34,10 @@ use RuntimeException;
  * Tests for NativeSigningProvider C1 mitigation (issue #304)
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Signing
+ * @package  OCA\Filinq\Tests\Unit\Service\Signing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -144,7 +144,7 @@ class NativeSigningProviderTest extends TestCase {
 			}
 		);
 
-		$verifier = new \OCA\DocuDesk\Service\SigningVerificationService(
+		$verifier = new \OCA\Filinq\Service\SigningVerificationService(
 			rootFolder: $this->createMock(\OCP\Files\IRootFolder::class),
 			config: $verifierConfig
 		);
@@ -191,7 +191,7 @@ class NativeSigningProviderTest extends TestCase {
 				return $key === 'signing_verification_secret' ? $secret : $default;
 			}
 		);
-		$verifier = new \OCA\DocuDesk\Service\SigningVerificationService(
+		$verifier = new \OCA\Filinq\Service\SigningVerificationService(
 			rootFolder: $this->createMock(\OCP\Files\IRootFolder::class),
 			config: $verifierConfig
 		);

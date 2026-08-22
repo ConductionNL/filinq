@@ -5,7 +5,7 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Extend `lib/Settings/docudesk_register.json`: `template` schema (+`templateType`, `sourceFileId`, `contentHash`, `boundRegister`, `boundSchema`, `mergeFields`, `fieldMap`, `tagReport`), `templateVersion` (+`sourceFileId`, `contentHash`), new `textFragment` and `templateImportJob` schemas; bump templates register to 2.1.0
+- [ ] 1.1 Extend `lib/Settings/filinq_register.json`: `template` schema (+`templateType`, `sourceFileId`, `contentHash`, `boundRegister`, `boundSchema`, `mergeFields`, `fieldMap`, `tagReport`), `templateVersion` (+`sourceFileId`, `contentHash`), new `textFragment` and `templateImportJob` schemas; bump templates register to 2.1.0
   - All new properties optional; absent `templateType` reads as `twig`; schema refs by slug (not PascalCase)
   - `tests/validate-manifest.js` and register import on boot both pass
 
@@ -17,7 +17,7 @@
 - [ ] 2.1 `OfficeTemplateService`: upload intake (multipart), macro/`vbaProject.bin` rejection, size cap + mime sniff, ODT→DOCX normalisation via `LibreOfficeHeadlessBackend`, source storage in app folder + `sourceFileId`/`contentHash`, tag extraction via PhpWord `TemplateProcessor::getVariables()` (REQ-DDOTA-001)
   - HTTP 422 paths for macro/size/mime; `converted: true` flag on ODT normalisation
 
-- [ ] 2.2 Tag validation against bound schema: classify known/fragment/unknown by reading schema properties from OpenRegister; persist `tagReport`; honour `docudesk.templates.unknown_tag_severity` (warning default, blocking refuses upload) (REQ-DDOTA-002)
+- [ ] 2.2 Tag validation against bound schema: classify known/fragment/unknown by reading schema properties from OpenRegister; persist `tagReport`; honour `filinq.templates.unknown_tag_severity` (warning default, blocking refuses upload) (REQ-DDOTA-002)
 
 - [ ] 2.3 Office render path in `DocumentService::generateDocument()`/`generatePreview()`: fragments pre-pass → `TemplateProcessor` fill (setValue/cloneBlock/cloneRow, `fieldMap` aliasing) → `docx` output or `PdfConversionService::convertToPdf()` for pdf/pdfa; missing-data warnings; `generatedDocument` logging with template type (REQ-DDOTA-003)
   - `huisstijlId` ignored for office templates with a warning
@@ -43,7 +43,7 @@
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests (≥75% coverage on new code) incl. register-drift pins for the new schema fields; run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 5.1 Unit tests (≥75% coverage on new code) incl. register-drift pins for the new schema fields; run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
   - Fixtures: valid DOCX, macro DOCX, corrupt DOCX, ODT in `tests/sample-documents/`
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/office-template-authoring.spec.ts` + extend `templates.spec.ts` for the parity scenarios; verify on Postgres (8080), test with nldesign theme enabled

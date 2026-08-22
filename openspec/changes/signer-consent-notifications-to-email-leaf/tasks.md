@@ -1,9 +1,9 @@
 # Tasks: signer-consent-notifications-to-email-leaf
 
-All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days.
+All tasks are `[filinq]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days.
 NO apply in this change — implementation runs through Hydra later.
 
-## [docudesk] Route notifications through the email leaf
+## [filinq] Route notifications through the email leaf
 
 ### D-1. Signer/initiator notifications via the email leaf (M)
 
@@ -19,7 +19,7 @@ NO apply in this change — implementation runs through Hydra later.
     (`POST /api/objects/.../{id}/email`) is not yet shipped; verified by
     absence of any `/email` consumer in `lib/Service/SigningService.php`.
     Tracked under OR's "email leaf" change; unblocks once the endpoint
-    ships and DocuDesk can swap NativeSigningProvider / ValidSignProvider
+    ships and Filinq can swap NativeSigningProvider / ValidSignProvider
     notifications to call it.
 
 ### D-2. Consent notification via the email leaf, drive notificationStatus (M)
@@ -53,6 +53,6 @@ NO apply in this change — implementation runs through Hydra later.
 - [x] D-4.2 Integration test: trigger a signer notification and a consent notification; assert
   each produces an email-leaf link on the relevant OR object and appears on the comms surface;
   assert consent `notificationStatus` reflects the linked-message lifecycle.
-  - **Acceptance:** Tests pass against a dev instance with docudesk + OR + Mail installed;
+  - **Acceptance:** Tests pass against a dev instance with filinq + OR + Mail installed;
     `composer check:strict` passes.
   - DEFERRED with D-1.1 / D-2.1: requires a live OR with the email leaf + NC Mail; integration runs against the dev environment after the OR endpoint ships.

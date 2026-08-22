@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk Metrics Engine Factory
+ * Filinq Metrics Engine Factory
  *
  * Builds OpenRegister's AppHost `MetricsEngine` explicitly from the server
  * container. OpenRegister's own MetricsEngine factory is registered under the
@@ -10,21 +10,21 @@
  *
  * ⚠️ Every OpenRegister class name in this file is a STRING resolved inside the
  * method body, and `build()` returns `object` rather than `MetricsEngine`. That
- * is deliberate. DocuDesk does not declare `<app>openregister</app>`, so an
+ * is deliberate. Filinq does not declare `<app>openregister</app>`, so an
  * admin can run it with OpenRegister absent; a return type is resolved when the
  * method is invoked, and an `use` import is one refactor away from becoming a
  * class-declaration-time reference. Keeping the file free of both means nothing
  * here can fatal while OpenRegister is missing — the caller simply never gets
- * an engine and MetricsController degrades to 503. See docudesk#369 /
+ * an engine and MetricsController degrades to 503. See filinq#369 /
  * decidesk#377.
  *
  * @category  AppInfo
- * @package   OCA\DocuDesk\AppInfo
+ * @package   OCA\Filinq\AppInfo
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
  *
@@ -34,7 +34,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\AppInfo;
+namespace OCA\Filinq\AppInfo;
 
 use OCP\ICacheFactory;
 use OCP\IConfig;
@@ -45,10 +45,10 @@ use Psr\Log\LoggerInterface;
  * Constructs the AppHost MetricsEngine from the server container.
  *
  * @category AppInfo
- * @package  OCA\DocuDesk\AppInfo
+ * @package  OCA\Filinq\AppInfo
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
  */

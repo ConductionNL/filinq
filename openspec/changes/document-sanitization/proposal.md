@@ -24,7 +24,7 @@ Verified at HEAD:
   `revisionAttributesStripped`, `hyperlinksFlattened`,
   `metadataFieldsScrubbed`, `customXmlPartsDropped`, `fieldCodesStripped`).
   `DocumentProcessingHandler::getLastSanitizationReport()` exposes it — and
-  **DocuDesk never calls it** (zero references in lib/ and src/). The report
+  **Filinq never calls it** (zero references in lib/ and src/). The report
   of what was removed is computed, then thrown away: the orphaned-capability
   defect class.
 - PDF anonymisation sanitises **metadata only** (`PdfMetadataSanitizer`:
@@ -58,7 +58,7 @@ neither step knows whether hidden data went out with the file.
 - A **sanitization report** of exactly what was removed (counts per
   category, never content values), persisted as an OR object and shown in
   the UI — for office anonymisation runs this surfaces the report
-  OpenRegister already computes and DocuDesk discards today.
+  OpenRegister already computes and Filinq discards today.
 - **Opt-in sanitization of anonymisation output**: a `sanitize` flag on the
   anonymise call applies the outbound pass to the FINAL artifact (after PDF
   conversion and any grondslagen-summary append), so the published PDF is
@@ -91,7 +91,7 @@ neither step knows whether hidden data went out with the file.
   `DocumentSanitizationService` (delegation, report persistence, ordering
   checks); `AnonymizationService` persists the existing OR report and wires
   the opt-in final-artifact pass.
-- **Register JSON** (`lib/Settings/docudesk_register.json`): new
+- **Register JSON** (`lib/Settings/filinq_register.json`): new
   `sanitizationRecord` schema (additive).
 - **Frontend**: "Sanitize" document action, report panel, unsanitized
   hand-off warning, seal-order warning.
@@ -100,7 +100,7 @@ neither step knows whether hidden data went out with the file.
   HEAD); filed as an OR issue + PR with fail-flagged degradation
   (office-only sanitization ships day one).
 - **Sibling boundaries**: publication endpoints remain OpenCatalogi's;
-  DocuDesk only computes its own hand-off signal
+  Filinq only computes its own hand-off signal
   (`woo-publicatie-pipeline` and `document-waarmerk-certification` specs are
   referenced, not modified).
 - **No external services**: sanitisation is local byte/XML surgery, same

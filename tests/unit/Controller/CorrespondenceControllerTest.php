@@ -4,7 +4,7 @@
  * Unit tests for CorrespondenceController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-5.1
  *
@@ -22,10 +22,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\CorrespondenceController;
-use OCA\DocuDesk\Service\CorrespondenceService;
+use OCA\Filinq\Controller\CorrespondenceController;
+use OCA\Filinq\Service\CorrespondenceService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -39,10 +39,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for CorrespondenceController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -94,7 +94,7 @@ class CorrespondenceControllerTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new CorrespondenceController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			corrSvc: $this->mockCorrSvc,
 			userSession: $this->mockUserSession,
@@ -114,7 +114,7 @@ class CorrespondenceControllerTest extends TestCase {
 		$mockSession->method('getUser')->willReturn(null);
 
 		$controller = new CorrespondenceController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			corrSvc: $this->mockCorrSvc,
 			userSession: $mockSession,

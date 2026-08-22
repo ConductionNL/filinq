@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Office
+ * @package  OCA\Filinq\Tests\Unit\Service\Office
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,12 +17,12 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Office;
+namespace OCA\Filinq\Tests\Unit\Service\Office;
 
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -38,7 +38,7 @@ use SplFileInfo;
  * and the failure would stay invisible until a deployment without that suite.
  *
  * The check MUST ignore comments. `EditSessionService` names `richdocuments`
- * repeatedly while explaining why DocuDesk does NOT depend on it — the WOPI lock
+ * repeatedly while explaining why Filinq does NOT depend on it — the WOPI lock
  * reasoning is genuinely non-obvious and worth the prose. A naive
  * `grep richdocuments lib/` fails against correct code, and the natural way to
  * "fix" that failure is to delete the explanation, which makes the codebase worse.

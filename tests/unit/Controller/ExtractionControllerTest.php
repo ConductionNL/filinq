@@ -4,11 +4,11 @@
  * Unit tests for ExtractionController
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Controller
+ * @package   OCA\Filinq\Tests\Unit\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -18,11 +18,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\ExtractionController;
-use OCA\DocuDesk\Service\FinancialExtractionService;
-use OCA\DocuDesk\Service\GlAccountSuggestionService;
+use OCA\Filinq\Controller\ExtractionController;
+use OCA\Filinq\Service\FinancialExtractionService;
+use OCA\Filinq\Service\GlAccountSuggestionService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -72,7 +72,7 @@ class ExtractionControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->controller = new ExtractionController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->extractionService,
 			$this->suggestionService,
@@ -139,7 +139,7 @@ class ExtractionControllerTest extends TestCase {
 		$l10n->method('t')->willReturnCallback(static fn ($text, $params = []): string => vsprintf($text, $params));
 
 		$controller = new ExtractionController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->extractionService,
 			$this->suggestionService,

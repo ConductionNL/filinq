@@ -4,13 +4,13 @@
 
 Verified at HEAD `9cc14407`:
 
-- **`docudesk-mcp-adoption` (in-flight, this change's dependency)**: 8
+- **`filinq-mcp-adoption` (in-flight, this change's dependency)**: 8
   read-only schemas via `configuration.x-openregister-mcp` (16 derived
   tools), one curated `#[McpTool]` on
   `CorrespondenceService::generate(string $templateId, array $dataRefs,
-  array $options)` → `docudesk.generateCorrespondence` (scope `create`,
+  array $options)` → `filinq.generateCorrespondence` (scope `create`,
   `readOnlyHint: false`, `destructiveHint: false`,
-  `idempotentHint: false`), `lib/Mcp/DocudeskScannableServices.php`
+  `idempotentHint: false`), `lib/Mcp/FilinqScannableServices.php`
   returning `[CorrespondenceService::class]`, and refusals: signing,
   batch, `signerRecord`/`signingSession`/`signingAuditEntry`,
   `publicationConsent`, `publicationProhibition`, `anonymizationLink`,
@@ -22,11 +22,11 @@ Verified at HEAD `9cc14407`:
   intake seam; `anonymizeDocument(...)` takes `$entities`,
   `$acknowledgedOverrides`, runs the prohibition gate first and throws
   `ProhibitionGateException`. Wave-1 `anonymization-review-workbench`
-  adds the `documentReview` checked gate (`docudesk.review.checked_gate`)
+  adds the `documentReview` checked gate (`filinq.review.checked_gate`)
   that anonymise-commit and batch respect.
 - OpenRegister tool governance (the "OR tool-whitelist model"): tool
   grants are administered in OR per agent (default-deny; the grants
-  editor and `grants` PUT contract live in OR/hermiq); DocuDesk's job is
+  editor and `grants` PUT contract live in OR/hermiq); Filinq's job is
   to declare tools honestly, not to enforce grants.
 - Wave-1/wave-2 siblings whose posture binds here:
   `anonymization-review-workbench` (suggest-then-approve, checked gate),
@@ -52,7 +52,7 @@ Verified at HEAD `9cc14407`:
 - No retrieval of generated document bytes over MCP (the generation tool
   returns references/metadata per the adoption change; content delivery
   stays in Nextcloud's authenticated file surface).
-- No DocuDesk MCP server or transport work — OR owns the registry and
+- No Filinq MCP server or transport work — OR owns the registry and
   JSON-RPC endpoint.
 
 ## Decisions
@@ -122,22 +122,22 @@ entities" in the tool result quietly rebuilds the leak. The review UI
 ### D5 — Grants and logging are consumed, not reinvented
 
 Tool authorisation is OR's tool-grant whitelist (default-deny per agent;
-administered in OR). DocuDesk's obligations: honest complete hints on
+administered in OR). Filinq's obligations: honest complete hints on
 every curated tool (hermiq's write/destructive classifier fails open on
 hintless curated tools — the adoption change documents the same hazard),
 and attributable logging: generation already logs a `correspondence` row
 (`generatedBy`); anonymise intake runs are OR-audited like every other
 detection run and carry an `mcp` attribution the same way
 `flow-operations` runs carry `flow` (and wave-1 `ocrResult` carries its
-`triggeredBy`). No DocuDesk-side grant enforcement code — duplicating the
+`triggeredBy`). No Filinq-side grant enforcement code — duplicating the
 authz path is the ADR-022 violation the fleet keeps re-learning.
 
 ### D6 — ScannableServices reconciliation (already reconciled per F4)
 
-`DocudeskScannableServices::getScannableServices()` becomes
+`FilinqScannableServices::getScannableServices()` becomes
 `[CorrespondenceService::class, FileListingService::class,
 AnonymizationService::class]`. This wording collision with
-`docudesk-mcp-adoption` has been **reconciled in the build phase (decision
+`filinq-mcp-adoption` has been **reconciled in the build phase (decision
 F4)**: the adoption delta no longer pins the list as exactly
 `[CorrespondenceService::class]` — it now requires the list to *include*
 `CorrespondenceService::class` and explicitly permits sibling changes (this
@@ -193,7 +193,7 @@ seeded sample documents that already ship
   state] → resolved under the invoking principal's file access only; a
   file the principal cannot read yields not-found, mirroring wave-1's
   route contract.
-- [Sequencing with `docudesk-mcp-adoption`] → depends_on declared; if
+- [Sequencing with `filinq-mcp-adoption`] → depends_on declared; if
   this change is applied first by mistake, the ScannableServices class
   does not exist yet — the task list makes creating/extending it
   explicitly conditional on the adoption change's artifact.
@@ -204,7 +204,7 @@ seeded sample documents that already ship
 
 ## Migration Plan
 
-1. Land after `docudesk-mcp-adoption` (depends_on).
+1. Land after `filinq-mcp-adoption` (depends_on).
 2. Add the two attribute-bearing methods + extend the ScannableServices
    list; re-import/rescan so OR registers the tools.
 3. Verify the surface: 16 derived read tools + 3 curated tools; no tool
@@ -220,4 +220,4 @@ seeded sample documents that already ship
   already served by the derived `search` tools on the read surface;
   keeping the status tool id-keyed avoids a second search path.
 - Where should agent-call rate limits live (OR registry vs hermiq PDP)?
-  Out of DocuDesk's hands; tracked with the OR tool-grant follow-ups.
+  Out of Filinq's hands; tracked with the OR tool-grant follow-ups.

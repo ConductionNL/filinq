@@ -5,11 +5,11 @@
 
 ## 1. Schemas + register wiring
 
-- [ ] 1.1 Add the `document` schema to `lib/Settings/docudesk_register.json` under `components.schemas` (REQ-DREG-D01)
+- [ ] 1.1 Add the `document` schema to `lib/Settings/filinq_register.json` under `components.schemas` (REQ-DREG-D01)
   - Field contracts exactly per design.md D1; `hardValidation: true`; `x-openregister-lifecycle` on `status` with the five-state machine; `x-openregister-archival` default retention; `configuration.objectNameField: "title"`; `relatedCases` uses `$ref: "case"` + `x-external-register: "procest"`.
   - Drift-pin: verify every lifecycle/archival key against OpenRegister HEAD, not against this spec snapshot.
 
-- [ ] 1.2 Add the `documentType` schema to `docudesk_register.json` under `components.schemas` (REQ-DREG-D02)
+- [ ] 1.2 Add the `documentType` schema to `filinq_register.json` under `components.schemas` (REQ-DREG-D02)
   - Field contracts exactly per design.md D2; `hardValidation: true`; `identifier` unique.
 
 - [ ] 1.3 Add both slugs (`document`, `documentType`) to the `document` register's `schemas` array and bump `info.version` (REQ-DREG-D05)
@@ -29,15 +29,15 @@
 ## 3. Verification
 
 - [ ] 3.1 Import-roundtrip unit test: `document` + `documentType` import via `ConfigurationService::importFromApp()` and the imported schemas expose `hardValidation`, the `x-openregister-lifecycle` block, the `x-openregister-archival` block, and `configuration.objectNameField` intact (REQ-DREG-D01, REQ-DREG-D05)
-  - If any key is dropped on import, file an OpenRegister issue; do not add a DocuDesk-side workaround.
+  - If any key is dropped on import, file an OpenRegister issue; do not add a Filinq-side workaround.
 
-- [ ] 3.2 Register-validity test: the full `docudesk_register.json` still validates and imports cleanly with the two new schemas + seeds present (REQ-DREG-D05)
+- [ ] 3.2 Register-validity test: the full `filinq_register.json` still validates and imports cleanly with the two new schemas + seeds present (REQ-DREG-D05)
   - Run in the `nextcloud:34` container (host PHP too old): `docker run --rm -v $PWD:/app -w /app <nc-image> php vendor/bin/phpunit`.
 
 - [ ] 3.3 Lifecycle/relation smoke: create a `document` via the generic `/api/objects/document` route, transition `status` through the lifecycle, and resolve a `documentType` + `relatedObjects` reference (REQ-DREG-D01, REQ-DREG-D06)
 
 Acceptance criteria:
-- A governed `document` object exists as an OpenRegister object, queryable via generic object routes, with no new DocuDesk PHP controller or service.
+- A governed `document` object exists as an OpenRegister object, queryable via generic object routes, with no new Filinq PHP controller or service.
 - `documentType` classification vocabulary is seeded and referenceable.
 - `status` is lifecycle-governed and retention is archival-annotation-driven — no ad-hoc service writes.
 - No OpenRegister-core change; no database migration.

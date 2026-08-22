@@ -12,10 +12,10 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  *     -> anonymising -> completed
  *
  * Two entry points:
- *   - `addFiles(fileList)` — uploads to /DocuDesk/ root, then queues
+ *   - `addFiles(fileList)` — uploads to /Filinq/ root, then queues
  *     for extract + review.
  *   - `addFilesAsDossier(fileList, folderName)` — creates
- *     /DocuDesk/<folderName>/ via WebDAV MKCOL (idempotent on 405),
+ *     /Filinq/<folderName>/ via WebDAV MKCOL (idempotent on 405),
  *     uploads into root, then MOVEs each file into the dossier folder
  *     before extraction. The Nextcloud file id is preserved by MOVE so
  *     the extract+anonymise pipeline still references the same node.
@@ -161,7 +161,7 @@ function encodePath(path) {
  * so the entry shape stays a single source of truth.
  *
  * @param {File} file Source File object.
- * @param {string|null} dossier Dossier folder name (under /DocuDesk/) or null.
+ * @param {string|null} dossier Dossier folder name (under /Filinq/) or null.
  * @return {object}
  */
 function makeEntry(file, dossier) {
@@ -224,16 +224,16 @@ function makeSyntheticEntry(fileMeta) {
 
 /**
  * Infer the dossier folder name from a file path. Returns the segment
- * after `/DocuDesk/` when the file sits inside a sub-folder, else null.
+ * after `/Filinq/` when the file sits inside a sub-folder, else null.
  *
- * @param {string} path Absolute path (e.g. /DocuDesk/Foo/bar.pdf).
+ * @param {string} path Absolute path (e.g. /Filinq/Foo/bar.pdf).
  * @return {string|null}
  */
 function inferDossier(path) {
 	if (typeof path !== 'string') {
 		return null
 	}
-	const m = path.match(/\/DocuDesk\/([^/]+)\/[^/]+$/)
+	const m = path.match(/\/Filinq\/([^/]+)\/[^/]+$/)
 	return m ? m[1] : null
 }
 
@@ -434,7 +434,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		/**
 		 * Add files to the queue grouped into a dossier folder.
 		 *
-		 * Creates /DocuDesk/<folderName>/ via WebDAV MKCOL (idempotent —
+		 * Creates /Filinq/<folderName>/ via WebDAV MKCOL (idempotent —
 		 * a 405 means the folder already exists), then pipelines each
 		 * file through upload → MOVE-to-dossier → extract. Stops at
 		 * `extracted` for review just like `addFiles`. The Nextcloud
@@ -442,7 +442,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * with the same fileId.
 		 *
 		 * @param {File[] | FileList} fileList Files to enqueue.
-		 * @param {string} folderName Dossier folder name under /DocuDesk/.
+		 * @param {string} folderName Dossier folder name under /Filinq/.
 		 * @return {Promise<void>}
 		 * @throws {Error} If the folder name is empty or folder creation fails.
 		 */
@@ -467,15 +467,15 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		},
 
 		/**
-		 * Create the dossier folder under /DocuDesk/ via WebDAV MKCOL.
+		 * Create the dossier folder under /Filinq/ via WebDAV MKCOL.
 		 * A 405 response means the folder already exists — we treat
 		 * that as success so uploads can still land inside.
 		 *
-		 * @param {string} folderName Folder name under /DocuDesk/.
+		 * @param {string} folderName Folder name under /Filinq/.
 		 * @return {Promise<void>}
 		 */
 		async createDossierFolder(folderName) {
-			const url = `${davBaseUrl()}/DocuDesk/${encodePath(folderName)}/`
+			const url = `${davBaseUrl()}/Filinq/${encodePath(folderName)}/`
 			try {
 				await axios({ method: 'MKCOL', url })
 			} catch (err) {
@@ -488,8 +488,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		},
 
 		/**
-		 * Move an uploaded file from /DocuDesk/<name> into
-		 * /DocuDesk/<folderName>/<name> via WebDAV MOVE.
+		 * Move an uploaded file from /Filinq/<name> into
+		 * /Filinq/<folderName>/<name> via WebDAV MOVE.
 		 * The Nextcloud file id stays the same, so the extraction
 		 * pipeline keeps working with the same fileId.
 		 *
@@ -499,8 +499,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 */
 		async moveToDossier(fileName, folderName) {
 			const base = davBaseUrl()
-			const source = `${base}/DocuDesk/${encodePath(fileName)}`
-			const destination = `${base}/DocuDesk/${encodePath(folderName)}/${encodePath(fileName)}`
+			const source = `${base}/Filinq/${encodePath(fileName)}`
+			const destination = `${base}/Filinq/${encodePath(folderName)}/${encodePath(fileName)}`
 			await axios({
 				method: 'MOVE',
 				url: source,
@@ -541,12 +541,12 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 */
 		async uploadAndExtract(entry) {
 			try {
-				// Step 1: upload. Always lands in /DocuDesk/ root first.
+				// Step 1: upload. Always lands in /Filinq/ root first.
 				entry.status = 'uploading'
 				const formData = new FormData()
 				formData.append('file', entry._file)
 				const uploadResponse = await axios.post(
-					generateUrl('/apps/docudesk/api/anonymization/upload'),
+					generateUrl('/apps/filinq/api/anonymization/upload'),
 					formData,
 					{ headers: { 'Content-Type': 'multipart/form-data' } },
 				)
@@ -560,14 +560,14 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				if (entry.dossier) {
 					entry.status = 'moving'
 					await this.moveToDossier(entry.name, entry.dossier)
-					entry.filePath = `/DocuDesk/${entry.dossier}/${entry.name}`
+					entry.filePath = `/Filinq/${entry.dossier}/${entry.name}`
 				}
 
 				// Step 2: extract.
 				entry.status = 'extracting'
 				const extractResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
 				const entities = extractResponse.data.entities || []
@@ -662,7 +662,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 							relationIds.map((rid) =>
 								axios.patch(
 									generateUrl(
-										`/apps/docudesk/api/anonymization/relations/${rid}`,
+										`/apps/filinq/api/anonymization/relations/${rid}`,
 									),
 									{
 										bases: newBases,
@@ -720,7 +720,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				}
 				const anonymizeResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/anonymize/${entry.fileId}`,
 					),
 					anonymizePayload,
 				)
@@ -874,7 +874,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			try {
 				const extractResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
 				const entities = extractResponse.data.entities || []
@@ -913,7 +913,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			try {
 				const res = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${fileId}`,
+						`/apps/filinq/api/anonymization/extract/${fileId}`,
 					),
 					{ force: true },
 				)
@@ -977,7 +977,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			try {
 				const extractResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
 				const entities = decorateEntities(
@@ -1267,7 +1267,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 
 		/**
 		 * Create an OpenRegister dossier object for a folder under
-		 * `/DocuDesk/`. Mirrors what `folderAnonymization.createDossier`
+		 * `/Filinq/`. Mirrors what `folderAnonymization.createDossier`
 		 * does, but scoped to this widget's single-file queue.
 		 *
 		 * 1. PROPFIND the new folder to read its Nextcloud node id.
@@ -1280,7 +1280,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * in this session for the same folder, returns the cached record
 		 * without re-posting.
 		 *
-		 * @param {string} folderName Folder name under /DocuDesk/.
+		 * @param {string} folderName Folder name under /Filinq/.
 		 * @param {object} [options] Dossier metadata.
 		 * @param {string} [options.description] Free-text description.
 		 * @param {string[]} [options.bases] Default grondslagen.
@@ -1299,7 +1299,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			}
 
 			// Step 1 — PROPFIND for the folder's NC node id.
-			const propfindUrl = `${davBaseUrl()}/DocuDesk/${encodePath(cleanName)}/`
+			const propfindUrl = `${davBaseUrl()}/Filinq/${encodePath(cleanName)}/`
 			const propfindResponse = await axios({
 				method: 'PROPFIND',
 				url: propfindUrl,
@@ -1354,7 +1354,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * session for a given folder name. Returns undefined when the
 		 * folder is not bound to an OR dossier yet.
 		 *
-		 * @param {string} folderName Folder name under /DocuDesk/.
+		 * @param {string} folderName Folder name under /Filinq/.
 		 * @return {object|undefined}
 		 */
 		findDossier(folderName) {
@@ -1501,7 +1501,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		},
 
 		/**
-		 * Persist one relation's skip/include decision through DocuDesk's
+		 * Persist one relation's skip/include decision through Filinq's
 		 * guarded endpoint. Returns {ok, status, body}; a 422 body carries
 		 * {threshold, prohibitionMatch} so the caller can offer a force retry.
 		 *
@@ -1520,7 +1520,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				}
 				const res = await axios.patch(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/relations/${relationId}`,
+						`/apps/filinq/api/anonymization/relations/${relationId}`,
 					),
 					body,
 				)

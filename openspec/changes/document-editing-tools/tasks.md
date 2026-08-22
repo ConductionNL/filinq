@@ -5,12 +5,12 @@
 - [x] 0.1 Measure `w14:paraId` survival. **NEGATIVE** — round-tripped a `.docx` through Collabora's `soffice`: `['1A2B3C4D','5E6F7A8B','9C0D1E2F']` → `[]`. Every paragraph survived, zero `w14:` attributes did. ⚠️ The `w14` **namespace declaration survives**, so checking for the namespace would wrongly conclude the extension round-trips. Content-hash anchors selected.
 - [x] 0.2 Determine whether a background job can obtain a file-scoped WOPI token for its initiating user. **PASSED** — `TokenManager::generateWopiToken($fileId, null, $editoruid)` with `$editoruid = $this->userId ?? $editoruid` needs no session and no service user. No ADR escalation. **Superseded in practice:** the session is in-process (see 0.4), so no token is minted at all.
 - [x] 0.3 Stand up a WOPI host in the dev environment. `richdocuments` 11.1.0 + `richdocumentscode` 26.4.104 side-loaded.
-- [x] 0.4 **NEW, and it reverses the design.** Measured `richdocuments`' WOPI lock: `WopiController::lock()` ignores `X-WOPI-Lock` and takes an `ILockManager` `TYPE_APP` lock owned by `richdocuments`; `files_lock` **extends** a lock whose type and owner match. A WOPI client's lock is therefore indistinguishable from Collabora's own — the contention refusal is unachievable through that route. The session takes an in-process `TYPE_APP` lock owned by `docudesk` instead. See design.md §MEASURED.
+- [x] 0.4 **NEW, and it reverses the design.** Measured `richdocuments`' WOPI lock: `WopiController::lock()` ignores `X-WOPI-Lock` and takes an `ILockManager` `TYPE_APP` lock owned by `richdocuments`; `files_lock` **extends** a lock whose type and owner match. A WOPI client's lock is therefore indistinguishable from Collabora's own — the contention refusal is unachievable through that route. The session takes an in-process `TYPE_APP` lock owned by `filinq` instead. See design.md §MEASURED.
 
 ## 1. Conversion tool
 
 - [x] 1.1 `PdfConversionService::convertToPdfReporting()` wraps the existing cascade and reports the claiming backend. `convertToPdf()` delegates to it, unchanged for existing callers.
-- [x] 1.2 Annotate `convertDocumentToPdf` `#[McpTool(scope: 'create', destructiveHint: false, ...)]`; class added to `DocudeskScannableServices`.
+- [x] 1.2 Annotate `convertDocumentToPdf` `#[McpTool(scope: 'create', destructiveHint: false, ...)]`; class added to `FilinqScannableServices`.
 - [x] 1.3 Refuse with a structured error naming the source file when no backend claims it. The backend is never an agent-supplied argument, so the tool cannot be steered onto `soffice` as a process-execution primitive.
 
 ## 2. Editing session
@@ -29,7 +29,7 @@
 - [x] 3.1 Capability degrades visibly rather than silently: an unsupported format refuses **naming the editable formats**, and an instance with no lock provider still edits but reports the absent guard in `warnings[]`.
 - [x] 3.2 Conversion reports the claiming backend (asserted by test); the cascade itself is unchanged and already covered.
 - [ ] 3.3 Portability run against Euro-Office. **NOT DONE** — no Euro-Office instance available. Per the spec's own instruction the portability claim must be dropped rather than shipped unmeasured; ADR-087's claim remains unverified.
-- [x] 3.4 Both tool ids appear in the agent detail page's Tool governance grant editor, classified **Write** / **Requires explicit grant**, default-denied. Verified in the browser: all 20 `docudesk.*` tools render; `docudesk.editDocument` shows "Write" + "Requires explicit grant" with a Grant button; granting through the UI persisted.
+- [x] 3.4 Both tool ids appear in the agent detail page's Tool governance grant editor, classified **Write** / **Requires explicit grant**, default-denied. Verified in the browser: all 20 `filinq.*` tools render; `filinq.editDocument` shows "Write" + "Requires explicit grant" with a Grant button; granting through the UI persisted.
 - [x] 3.5 Concurrency + recovery, all three run live against a real file: (a) a moved version **refuses** the write and nothing lands (proven with a fresh anchor + stale version); (b) a prior version exists and was **restored**, bringing the original text back — verified by restoring, not by observing that versioning is enabled; (c) no lock is ever stolen.
 - [x] 3.6 Round-trip fidelity: a `.docx` carrying a comment, a tracked insertion, a tracked deletion, a header, a table, a text box and a PNG — every other package entry byte-identical, and the edited part still carries its comment ranges, `w:ins`/`w:delText`, `pStyle`, run formatting and `w14:paraId`.
 - [x] 3.7 Scoped `phpcs`/`phpmd`/`psalm` clean on new and touched files; zero new PHPUnit failures vs a self-measured baseline; CHANGELOG entry.
@@ -55,14 +55,14 @@
   Verified end to end afterwards: asked in the chat window to change "binnen acht weken" to "binnen zes weken" in a real `.docx`, Claude called `readDocument` then `editDocument` itself, and the bytes on disk changed on exactly that paragraph with `pStyle` and the bold run intact, the `Agent authored` tag present, and a restorable prior version created.
 
   ⚠️ The silent-degradation itself is now fixed upstream: hermiq PR #318 makes a governed turn PREFLIGHT its MCP endpoint and refuse to spawn when it is unreachable, naming `mcp_run_base_url` in the message. A governed turn that cannot reach its governance is not degraded, it is ungoverned.
-- **The `generatedDocument` audit row is not being written on this instance — ROOT CAUSE FOUND, and it is not DocuDesk's code.** `GeneratedDocumentLogger::log()` fails with "The required properties (documentType, employeeId) are missing", which DocuDesk's own `generatedDocument` (schema id 5023) requires neither.
+- **The `generatedDocument` audit row is not being written on this instance — ROOT CAUSE FOUND, and it is not Filinq's code.** `GeneratedDocumentLogger::log()` fails with "The required properties (documentType, employeeId) are missing", which Filinq's own `generatedDocument` (schema id 5023) requires neither.
 
   Measured on the dev instance:
-  1. `lib/Settings/docudesk_register.json` correctly declares the `document` register with all ten of its schemas, `generatedDocument` among them.
+  1. `lib/Settings/filinq_register.json` correctly declares the `document` register with all ten of its schemas, `generatedDocument` among them.
   2. The LIVE `document` register (id 6) has **zero schemas attached**. So has 29 of the instance's 200 registers.
   3. With no register scope to resolve within, OpenRegister falls back to resolving the schema slug **globally and case-insensitively** — and the instance carries a foreign `GeneratedDocument` (id 1467, title "Generated document", `required: [documentType, employeeId, status]`) belonging to another app's fixtures. That is what the write hits.
 
-  ⚠️ **The dangerous half is not the failure — it is that the fallback resolves ANOTHER APP'S SCHEMA BY SLUG.** This write failed only because the foreign schema happened to have stricter `required` fields. A foreign schema with looser ones would have accepted DocuDesk's audit row silently, into another app's register.
+  ⚠️ **The dangerous half is not the failure — it is that the fallback resolves ANOTHER APP'S SCHEMA BY SLUG.** This write failed only because the foreign schema happened to have stricter `required` fields. A foreign schema with looser ones would have accepted Filinq's audit row silently, into another app's register.
 
   Two fixes, neither of them here: OpenRegister's slug resolution should be register-scoped (or at least case-sensitive) rather than falling back to a global match, and the register→schema linkage needs repairing on this instance. Not attempted from this branch because the shared checkout was switched to another workstream mid-session, so re-running the import would have imported THEIR register file, not this one.
 

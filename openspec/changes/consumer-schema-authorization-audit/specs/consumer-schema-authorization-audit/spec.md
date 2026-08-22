@@ -2,7 +2,7 @@
 
 ### Requirement: Every owned schema MUST carry an explicit authorisation decision
 
-Every schema DocuDesk declares in `lib/Settings/docudesk_register.json` MUST either
+Every schema Filinq declares in `lib/Settings/filinq_register.json` MUST either
 declare an `authorization` cascade, or carry a recorded justification for being
 readable by any authenticated user in the organisation.
 

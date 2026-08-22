@@ -8,20 +8,20 @@
  * operator-facing detail without re-querying the policy layer.
  *
  * @category Exception
- * @package  OCA\DocuDesk\Exception
+ * @package  OCA\Filinq\Exception
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Exception;
+namespace OCA\Filinq\Exception;
 
 use RuntimeException;
 
@@ -29,10 +29,10 @@ use RuntimeException;
  * Thrown when PolicyMatchService returns a prohibition match during consent creation.
  *
  * @category Exception
- * @package  OCA\DocuDesk\Exception
+ * @package  OCA\Filinq\Exception
  * @author   Conduction Development Team <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
  */

@@ -3,7 +3,7 @@ SPDX-License-Identifier: EUPL-1.2
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 -->
 
-# Setting up an office suite for DocuDesk
+# Setting up an office suite for Filinq
 
 > **This page has moved to per-suite documentation.**
 >
@@ -23,10 +23,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 > inside the `nextcloud` container and are **not** bind-mounted) and how to run the
 > per-suite verification.
 
-## DocuDesk needs none of them
+## Filinq needs none of them
 
 Reading a document, editing a paragraph, changing style, writing metadata and
-embedding a chart all go through DocuDesk's in-package codec. No office suite is in
+embedding a chart all go through Filinq's in-package codec. No office suite is in
 that call path (ADR-087 §2). If you install nothing, those capabilities still work.
 
 A suite adds format conversion providers (via `IConversionManager`) and editing

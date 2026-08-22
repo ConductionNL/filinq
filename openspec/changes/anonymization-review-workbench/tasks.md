@@ -5,7 +5,7 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add the `documentReview` schema and the optional `bases` array on `publicationProhibition` and `publicationConsent` to `lib/Settings/docudesk_register.json`
+- [ ] 1.1 Add the `documentReview` schema and the optional `bases` array on `publicationProhibition` and `publicationConsent` to `lib/Settings/filinq_register.json`
   - Additive only; union-merge, never hand-pick; existing objects stay valid without `bases`.
   - `documentReview`: `fileId` (integer, idempotency key), `checkedOn`, `checkedBy`, `entityCountAtCheck`, `manualEntityCount`, `note`.
 - [ ] 1.2 Extend the register seed with workbench demo data (two `base` grondslagen, one prohibition and one standing consent carrying `bases`) per the design.md Seed Data section
@@ -19,7 +19,7 @@
   - Pre-change rules without `bases` match unchanged (regression test).
 - [ ] 2.3 Add `DocumentReviewController` with routes `GET /api/review/{fileId}`, `POST /api/review/{fileId}/check`, `DELETE /api/review/{fileId}/check`, storing `documentReview` OR objects; invalidate the check on any post-check entity mutation (REQ-DDARW-007)
   - Auth attributes on every method (route-auth gate); per-object authorization guard (no-admin-idor gate).
-- [ ] 2.4 Enforce the checked gate in `AnonymizationController::anonymize` and `BatchAnonymizationController::batchAnonymize` behind `IAppConfig` key `docudesk.review.checked_gate` (`enforced` default | `advisory`) (REQ-DDARW-008, REQ-DDARW-011)
+- [ ] 2.4 Enforce the checked gate in `AnonymizationController::anonymize` and `BatchAnonymizationController::batchAnonymize` behind `IAppConfig` key `filinq.review.checked_gate` (`enforced` default | `advisory`) (REQ-DDARW-008, REQ-DDARW-011)
   - HTTP 409 with machine-readable reason + `uncheckedFiles`; advisory mode returns `checkedGate` verdict; runs in addition to the prohibition gate.
 
 ## 3. Frontend
@@ -35,7 +35,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests for gate logic, `standingConsentMatch` attachment, policy `bases` CRUD and check-invalidation — minimum 75% coverage on new code (ADR-009)
-  - Run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - End-to-end verify with OpenRegister on Postgres (8080): detection → pre-application → gate → commit.
 - [ ] 4.2 Playwright spec `tests/e2e/spec-coverage/review-workbench.spec.ts` covering the `@e2e`-referenced scenarios
 - [ ] 4.3 Vitest coverage for the workbench store wiring (shared entity model, selection pre-fill)

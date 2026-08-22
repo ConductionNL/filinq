@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at DocuDesk HEAD:
+Verified at Filinq HEAD:
 
 - `dossier` register: schema `dossier` (`name` required, `description`,
   `bases[]` of `base` slugs, `checkedOn`; `@self.folder` binds an NC folder
@@ -124,7 +124,7 @@ folder-anonymization store already does.
 
 ### D3 — Auto-dossier on multi-upload (GH #47)
 
-On DocuDesk's upload surfaces: uploading **one** document never shows a
+On Filinq's upload surfaces: uploading **one** document never shows a
 modal; uploading **more than one** in a single action opens the auto-dossier
 modal — dossier name (prefilled with a sensible default), optional
 description, and the "grondslagen allemaal geselecteerd" toggle that

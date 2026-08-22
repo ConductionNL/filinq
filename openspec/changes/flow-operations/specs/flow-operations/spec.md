@@ -6,12 +6,12 @@ status: proposed
 
 ## Purpose
 
-DocuDesk's Nextcloud Flow integration: four file operations (anonymise
+Filinq's Nextcloud Flow integration: four file operations (anonymise
 document, run OCR, convert to PDF/A, run validation checks) registered
 with the platform workflow engine so admins and users automate document
 processing on native Flow triggers ("File created", "Tag assigned", ...)
 without code. Operations are thin asynchronous shells over existing
-DocuDesk engines — they inherit every gate (prohibition gate, human
+Filinq engines — they inherit every gate (prohibition gate, human
 review checked gate, OCR admin settings) and can bypass none. Every run
 is recorded as a `flowOperationRun` processing-log object; failures
 notify the file owner via Nextcloud notifications. All processing stays
@@ -34,11 +34,11 @@ settings UI. `validateOperation()` MUST reject a malformed operation
 configuration with `UnexpectedValueException` so an invalid rule cannot
 be saved.
 
-#### Scenario: Admin builds a rule from a DocuDesk operation
+#### Scenario: Admin builds a rule from a Filinq operation
 
-- GIVEN a Nextcloud instance with DocuDesk enabled
+- GIVEN a Nextcloud instance with Filinq enabled
 - WHEN an admin opens Settings → Flow
-- THEN all four DocuDesk operations are offered as rule operations with name, description and icon
+- THEN all four Filinq operations are offered as rule operations with name, description and icon
 - AND a rule "when File created and folder is /Inkomend, then Run OCR" can be saved
 - @e2e tests/e2e/spec-coverage/flow-operations.spec.ts
 
@@ -77,7 +77,7 @@ service's own access and policy checks MUST apply unchanged.
 
 ### Requirement: Operation outputs never re-trigger flows (REQ-DDFLO-003)
 
-Files produced by a DocuDesk Flow operation MUST NOT re-enter DocuDesk
+Files produced by a Filinq Flow operation MUST NOT re-enter Filinq
 Flow processing (e.g. the PDF/A artifact): before enqueueing, `onEvent()`
 MUST check the candidate fileId against the `producedFileId` values
 recorded on `flowOperationRun` objects and skip matches with a run in
@@ -228,7 +228,7 @@ entering `failed` MUST notify the file owner via a Nextcloud notification
 declared in the verified `x-openregister-notifications` dialect with
 recipient `{"kind": "field", "field": "ownerUserId"}` (a confirmed NC
 uid — never an external address), using the documented status-condition
-approximation of the `docudesk-notifications` capability. The system MUST
+approximation of the `filinq-notifications` capability. The system MUST
 offer a Flow-runs listing showing recent runs with status, operation,
 file and failure reason.
 
@@ -247,10 +247,10 @@ file and failure reason.
 - THEN each run shows operation, file name, status, timing and reason
 - @e2e tests/e2e/spec-coverage/flow-operations.spec.ts
 
-### Requirement: DocuDesk is listed in the workflow app-store category (REQ-DDFLO-009)
+### Requirement: Filinq is listed in the workflow app-store category (REQ-DDFLO-009)
 
 `appinfo/info.xml` MUST declare the `workflow` app-store category in
-addition to the existing `organization` category, so DocuDesk is
+addition to the existing `organization` category, so Filinq is
 discoverable in the Flow/workflow category where the reference workflow
 apps (workflow_ocr, workflow_pdf_converter) are found.
 

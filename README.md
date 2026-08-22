@@ -1,24 +1,24 @@
 <p align="center">
-  <img src="img/app-store.svg" alt="DocuDesk logo" width="80" height="80">
+  <img src="img/app-store.svg" alt="Filinq logo" width="80" height="80">
 </p>
 
-<h1 align="center">DocuDesk</h1>
+<h1 align="center">Filinq</h1>
 
 <p align="center">
   <strong>GDPR-compliant document processing for Nextcloud — local anonymization, WOO consent tracking, and automated metadata enrichment</strong>
 </p>
 
 <p align="center">
-  <a href="https://codeberg.org/Conduction/docudesk/releases"><img src="https://img.shields.io/gitea/v/release/Conduction/docudesk?gitea_url=https%3A%2F%2Fcodeberg.org&label=release" alt="Latest release"></a>
-  <a href="https://codeberg.org/Conduction/docudesk/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
-  <a href="https://codeberg.org/Conduction/docudesk/actions"><img src="https://img.shields.io/badge/quality-Forgejo%20Actions-blue" alt="Code quality"></a>
+  <a href="https://github.com/ConductionNL/filinq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/filinq?label=release" alt="Latest release"></a>
+  <a href="https://github.com/ConductionNL/filinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://github.com/ConductionNL/filinq/actions/workflows/code-quality.yml"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/filinq/code-quality.yml?branch=development&label=code%20quality" alt="Code quality"></a>
 </p>
 
 ---
 
-DocuDesk adds GDPR-safe document processing to Nextcloud. It anonymizes sensitive documents, tracks publication consent periods under the Dutch Wet Open Overheid (WOO), and automatically enriches document metadata — all without sending data to external cloud services.
+Filinq adds GDPR-safe document processing to Nextcloud. It anonymizes sensitive documents, tracks publication consent periods under the Dutch Wet Open Overheid (WOO), and automatically enriches document metadata — all without sending data to external cloud services.
 
-> **Requires:** [OpenRegister](https://codeberg.org/Conduction/openregister) — consent records and processing results are stored as OpenRegister objects.
+> **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — consent records and processing results are stored as OpenRegister objects.
 
 ## Features
 
@@ -75,7 +75,7 @@ graph TD
 ### Directory Structure
 
 ```
-docudesk/
+filinq/
 ├── appinfo/           # Nextcloud app manifest, routes
 ├── lib/               # PHP backend — controllers, services, event listeners, widgets
 │   ├── Controller/    # Anonymization, Consent, Metadata, Settings, Dashboard
@@ -96,7 +96,7 @@ docudesk/
 |-----------|---------|
 | Nextcloud | 30 – 34 |
 | PHP | 8.3+ |
-| [OpenRegister](https://codeberg.org/Conduction/openregister) | v0.2.14+ |
+| [OpenRegister](https://github.com/ConductionNL/openregister) | v0.2.14+ |
 | Presidio / OpenAnonymiser | optional — for entity recognition |
 
 ## Installation
@@ -104,7 +104,7 @@ docudesk/
 ### From the Nextcloud App Store
 
 1. Go to **Apps** in your Nextcloud instance
-2. Search for **DocuDesk**
+2. Search for **Filinq**
 3. Click **Download and enable**
 
 > OpenRegister must be installed first. [Install OpenRegister →](https://apps.nextcloud.com/apps/openregister)
@@ -113,12 +113,12 @@ docudesk/
 
 ```bash
 cd /var/www/html/custom_apps
-git clone https://codeberg.org/Conduction/docudesk.git
-cd docudesk
+git clone https://github.com/ConductionNL/filinq.git
+cd filinq
 npm install
 npm run build
 composer install
-php occ app:enable docudesk
+php occ app:enable filinq
 ```
 
 ## Development
@@ -135,7 +135,7 @@ docker compose -f openregister/docker-compose.yml --profile ai up -d
 ### Frontend development
 
 ```bash
-cd docudesk
+cd filinq
 npm install
 npm run dev        # Watch mode
 npm run build      # Production build
@@ -188,9 +188,9 @@ npm run build
 
 ## Related Apps
 
-- **[OpenRegister](https://codeberg.org/Conduction/openregister)** — Object storage layer (required dependency)
-- **[OpenCatalogi](https://codeberg.org/Conduction/opencatalogi)** — Publish anonymized documents in open catalogs
-- **[Procest](https://codeberg.org/Conduction/procest)** — Case management for document-related processes
+- **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
+- **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Publish anonymized documents in open catalogs
+- **[Procest](https://github.com/ConductionNL/procest)** — Case management for document-related processes
 
 ## Support
 

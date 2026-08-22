@@ -29,7 +29,7 @@
 
 ## 4. Quality, i18n, docs
 
-- [ ] 4.1 Unit tests ≥75% on new code: filter-option selection, fail-closed path, lang/title resolution matrix, all four checks against the fixture set incl. suppression rule and blocking escalation, lint permutations; run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 4.1 Unit tests ≥75% on new code: filter-option selection, fail-closed path, lang/title resolution matrix, all four checks against the fixture set incl. suppression rule and blocking escalation, lint permutations; run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
 - [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/pdfua-accessible-output.spec.ts` (accessible generation → findings grouping → publication warning → template lint); verify on Postgres (8080); test with nldesign theme enabled — new UI itself WCAG AA
 
@@ -41,6 +41,6 @@
 
 ## Quality checklist
 
-- No schema/register change in this change — verify `docudesk_register.json` untouched in the diff
+- No schema/register change in this change — verify `filinq_register.json` untouched in the diff
 - Honesty invariants mutation-tested: untagged output never labelled accessible; `accessible: true` never silently downgraded
 - `composer check:strict` green; hydra gates pass; verified end-to-end against OpenRegister on the Postgres dev instance

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The DocuDesk application includes comprehensive automated quality checks that run on every push and pull request. These checks ensure code quality, security, and compliance across both PHP and JavaScript dependencies.
+The Filinq application includes comprehensive automated quality checks that run on every push and pull request. These checks ensure code quality, security, and compliance across both PHP and JavaScript dependencies.
 
 ## Code Quality Workflow
 
@@ -163,7 +163,7 @@ tests/
 The `tests/bootstrap.php` file properly initializes the Nextcloud testing environment:
 - Loads Nextcloud base libraries
 - Sets up autoloading for test files
-- Ensures the DocuDesk app is loaded
+- Ensures the Filinq app is loaded
 - Provides access to Nextcloud test utilities
 
 #### Test Conventions

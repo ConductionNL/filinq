@@ -67,7 +67,7 @@ blocking gate apply to archival findings exactly as to existing checks.
 
 ### Requirement: Validation profiles MUST be configurable per document type with per-check severity
 
-Profiles MUST live in app config `docudesk.validation.profiles`: per
+Profiles MUST live in app config `filinq.validation.profiles`: per
 document type an allowed-mime list, required metadata fields, and a severity
 per check from `off | warning | blocking`. Unknown document types MUST resolve
 to the `default` profile. Shipped defaults MUST set every content and

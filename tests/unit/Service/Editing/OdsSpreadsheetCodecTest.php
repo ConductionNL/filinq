@@ -11,7 +11,7 @@
  * than failing to read it at all.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -24,9 +24,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\OdsSpreadsheetCodec;
+use OCA\Filinq\Service\Editing\OdsSpreadsheetCodec;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 

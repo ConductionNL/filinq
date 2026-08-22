@@ -1,6 +1,6 @@
 # Tasks — publication-policy-labels-and-nav
 
-> DocuDesk frontend only. Display-label + navigation-visibility change. No backend, no route/component removal, no new dependency.
+> Filinq frontend only. Display-label + navigation-visibility change. No backend, no route/component removal, no new dependency.
 
 ## 1. Hide menu items
 

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk SigningCancellationService
+ * Filinq SigningCancellationService
  *
  * Withdraws a signing request: authorise, call the provider, record the outcome.
  *
@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,15 +17,15 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Signing;
+namespace OCA\Filinq\Service\Signing;
 
-use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Service\SigningService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -57,7 +57,7 @@ use Throwable;
  * error text.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -65,7 +65,7 @@ use Throwable;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
  */
@@ -106,7 +106,7 @@ class SigningCancellationService {
 	 * mechanical and is deliberately not done here: this service refuses
 	 * every non-creator, while the controller currently lets an ADMIN cancel
 	 * any request, so swapping them silently removes an admin capability.
-	 * Tracked in docudesk#628.
+	 * Tracked in filinq#628.
 	 */
 	public function cancel(string $uid, string $requestId): array {
 		// Scoped lookup: getRequest() already collapses access-denied to null and
@@ -245,9 +245,9 @@ class SigningCancellationService {
 	 */
 	private function recordAttempt(string $uid, string $requestId, string $outcome, string $detail): void {
 		$this->logger->warning(
-			sprintf('[DocuDesk] signing cancellation %s', $outcome),
+			sprintf('[Filinq] signing cancellation %s', $outcome),
 			[
-				'app'       => 'docudesk',
+				'app'       => 'filinq',
 				'actor'     => $uid,
 				'requestId' => $requestId,
 				'outcome'   => $outcome,

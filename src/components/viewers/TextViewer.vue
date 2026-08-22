@@ -5,7 +5,7 @@
 		@mouseup="captureSelection">
 		<div v-if="loading" class="text-viewer__loading">
 			<NcLoadingIcon :size="48" />
-			<span>{{ t('docudesk', 'Loading document…') }}</span>
+			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
 		<div v-else-if="error" class="text-viewer__error">
 			{{ error }}
@@ -130,7 +130,7 @@ export default {
 				this.content = await fetchFileAsText(this.path)
 			} catch (err) {
 				console.error('[TextViewer] failed to load text:', err)
-				this.error = err.message || t('docudesk', 'Failed to load document')
+				this.error = err.message || t('filinq', 'Failed to load document')
 			} finally {
 				this.loading = false
 			}

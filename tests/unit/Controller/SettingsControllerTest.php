@@ -4,7 +4,7 @@
  * Unit tests for SettingsController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,14 +12,14 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\SettingsController;
-use OCA\DocuDesk\Service\AnonymiserBackendStateClient;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Controller\SettingsController;
+use OCA\Filinq\Service\AnonymiserBackendStateClient;
+use OCA\Filinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IConfig;
 use OCP\IGroupManager;
@@ -33,10 +33,10 @@ use Psr\Log\NullLogger;
  * Unit tests for SettingsController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -188,7 +188,7 @@ class SettingsControllerTest extends TestCase {
 		$request->method('getParams')->willReturn(['grondslag' => 'AVG-6.1.c']);
 
 		return new SettingsController(
-			'docudesk',
+			'filinq',
 			$request,
 			$this->createMock(IAppManager::class),
 			$groupManager,

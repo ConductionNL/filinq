@@ -6,9 +6,9 @@ kind: code
 
 ## Why
 
-DocuDesk's signing stack carries an open security wave (GH #282–#304, all six
+Filinq's signing stack carries an open security wave (GH #282–#304, all six
 issues verified OPEN on 2026-07-17) that blocks any honest go-to-market for
-signing: the intelligence insight "DocuDesk signing stack currently fails
+signing: the intelligence insight "Filinq signing stack currently fails
 honest-function: security wave must land before signing can be sold" and the
 market-gap feature `mg2026-signing-trust-rebuild` (evidence: GH #282–289/#304,
 ValidSign/Zynyo feature parity) both mark this as the must-have precondition
@@ -22,10 +22,10 @@ fixed in code; this change specs ONLY what is still broken or missing:
 | Issue | HEAD status | Still broken / missing (spec'd here) |
 |---|---|---|
 | #282 sign-as-anyone | **Largely fixed**: `SigningService::sign()`/`decline()` assert `signer.userId === auth uid` (lines 397–402, 470–474) and bind the signer record to the request (C4 check) | `decline()` skips the status machine entirely — a COMPLETED/CANCELLED/EXPIRED request can still be flipped to DECLINED (no `isValidTransition` call, `SigningService.php:441–512`) |
-| #284 verification-always-valid | **Partially fixed**: fail-closed HMAC verification shipped (`SigningVerificationService::verifyAssertion`) | The MAC covers ONLY the canonicalised content hash — the assertion fields (`signer`, `timestamp`, `level`, `ip`) are blanked out of the MAC input, so anyone holding a validly signed artifact can rewrite the signer identity and still verify `valid: true`. Genuinely signed external PDFs (`/Type /Sig` without a DocuDesk marker) are all reported `valid: false`, indistinguishable from tampering |
+| #284 verification-always-valid | **Partially fixed**: fail-closed HMAC verification shipped (`SigningVerificationService::verifyAssertion`) | The MAC covers ONLY the canonicalised content hash — the assertion fields (`signer`, `timestamp`, `level`, `ip`) are blanked out of the MAC input, so anyone holding a validly signed artifact can rewrite the signer identity and still verify `valid: true`. Genuinely signed external PDFs (`/Type /Sig` without a Filinq marker) are all reported `valid: false`, indistinguishable from tampering |
 | #287 in-memory sessions | **Fixed**: sessions persist as OR `signingSession` objects | `downloadSignedDocument()` still falls back to the ORIGINAL unsigned `documentPath` when `signedDocumentPath` is empty (`NativeSigningProvider.php:196–219`, docblock marks it a follow-up) |
-| #289 audit immutability | **Largely fixed**: `SigningAuditService` routes through OR's hash-chained `AuditTrailMapper` (per `signing-audit-via-or`, status done) | Entries are created from a uuid-only `ObjectEntity` stub (no register/schema/object-id binding); `getAuditTrail()` fetches ALL `docudesk.signing.*` entries fleet-wide and filters in PHP (unbounded); no test proves the OR API actually rejects update/delete of these entries |
-| #283 consent forgeable cross-tenant | **Partially fixed**: per-object ownership guards, mutable-field whitelist, server-controlled-field gate, CSRF annotation removed from mutations | Tenant/organisation binding is NOT owned here — the sibling wave-2 change `multi-tenant-hardening` (its proposal explicitly claims GH #283 org-scoping incl. consents and signing requests) delivers it. Still uncovered anywhere: `ConsentController::errorResponse()` echoes raw exception text into the 500 body (`ConsentController.php:117–126`) — the exact existence-probing oracle already fixed on `SigningController` (docudesk#100 / Wilco #6) |
+| #289 audit immutability | **Largely fixed**: `SigningAuditService` routes through OR's hash-chained `AuditTrailMapper` (per `signing-audit-via-or`, status done) | Entries are created from a uuid-only `ObjectEntity` stub (no register/schema/object-id binding); `getAuditTrail()` fetches ALL `filinq.signing.*` entries fleet-wide and filters in PHP (unbounded); no test proves the OR API actually rejects update/delete of these entries |
+| #283 consent forgeable cross-tenant | **Partially fixed**: per-object ownership guards, mutable-field whitelist, server-controlled-field gate, CSRF annotation removed from mutations | Tenant/organisation binding is NOT owned here — the sibling wave-2 change `multi-tenant-hardening` (its proposal explicitly claims GH #283 org-scoping incl. consents and signing requests) delivers it. Still uncovered anywhere: `ConsentController::errorResponse()` echoes raw exception text into the 500 body (`ConsentController.php:117–126`) — the exact existence-probing oracle already fixed on `SigningController` (filinq#100 / Wilco #6) |
 | #304 pipeline non-functional | **Largely fixed**: completion is wired (`updateRequestStatus` → `produceAndStoreSignedArtifact` → provider `produceSignedArtifact` → new file version); native + ValidSign both carry honest-completion gates | Provider/level honesty is NOT enforced: `produceAndStoreSignedArtifact` silently falls back to `getActiveProvider()` on an unknown provider (and `getActiveProvider()` itself falls back to native), and `NativeSigningProvider::produceSignedArtifact()` never checks `supportsLevel()` — a QES request routed to native completes with an SES-mechanism artifact whose assertion *claims* QES, violating the existing "SES is the only locally-produced level" requirement |
 
 This change turns those precisely-scoped residuals into an apply-ready spec so
@@ -40,7 +40,7 @@ signing reaches honest function and the six issues can be closed with evidence.
   never `valid`.
 - **Honest tri-state verification**: per-signature status becomes
   `verified | invalid | unverifiable`; external `/Type /Sig` CMS signatures
-  DocuDesk cannot yet validate report `unverifiable`, not `invalid`; the
+  Filinq cannot yet validate report `unverifiable`, not `invalid`; the
   document-level verdict distinguishes tampering from inability to verify.
 - **Provider/level honesty**: no silent provider fallback anywhere on the
   completion path; every provider refuses `produceSignedArtifact` for a level
@@ -58,7 +58,7 @@ signing reaches honest function and the six issues can be closed with evidence.
   ≥ 3650 days asserted (Archiefwet 1995).
 - **Consent endpoint oracle hardening**: consent error responses carry only
   generic translated messages (parity with the SigningController fix).
-- Close GH #282, #283 (DocuDesk-side residual), #284, #287, #289, #304 with
+- Close GH #282, #283 (Filinq-side residual), #284, #287, #289, #304 with
   live-verified evidence once applied.
 
 ## Capabilities
@@ -110,7 +110,7 @@ signing reaches honest function and the six issues can be closed with evidence.
   unchanged.
 - A completed-session download without an embedded marker returns an error,
   never the unsigned original bytes.
-- OR API update/delete attempts on a `docudesk.signing.*` audit entry are
+- OR API update/delete attempts on a `filinq.signing.*` audit entry are
   rejected — proven by a test against the live OR instance (Postgres 8080).
 - Consent endpoint error bodies are byte-identical for not-found vs internal
   failure classes (no exception text).

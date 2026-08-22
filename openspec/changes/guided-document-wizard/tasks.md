@@ -5,7 +5,7 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Extend `lib/Settings/docudesk_register.json`: new `wizardDefinition` schema in the `templates` register (name, description, namespace, templateId, active, questions[] per design.md D2); `generatedDocument` gains optional `wizardContext` object; bump templates register (additive on top of Wave-1 `2.1.0` → `2.2.0`) and document register (`2.2.0` → `2.3.0`). Apply order pinned: this change FIRST (document → `2.3.0`), `multi-format-output` SECOND (document `2.3.0` → `2.4.0`)
+- [ ] 1.1 Extend `lib/Settings/filinq_register.json`: new `wizardDefinition` schema in the `templates` register (name, description, namespace, templateId, active, questions[] per design.md D2); `generatedDocument` gains optional `wizardContext` object; bump templates register (additive on top of Wave-1 `2.1.0` → `2.2.0`) and document register (`2.2.0` → `2.3.0`). Apply order pinned: this change FIRST (document → `2.3.0`), `multi-format-output` SECOND (document `2.3.0` → `2.4.0`)
   - All new properties optional except `wizardDefinition` required `name`/`templateId`/`questions`; schema refs by slug
   - `tests/validate-manifest.js` and register import on boot both pass
 
@@ -39,7 +39,7 @@
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests (≥75% coverage on new code): definition validation, condition matrix incl. fail-safe malformed case, answer translation + precedence, generate-hook 422 paths, prefill mapping, register-drift pins for `wizardDefinition`/`wizardContext`; run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 5.1 Unit tests (≥75% coverage on new code): definition validation, condition matrix incl. fail-safe malformed case, answer translation + precedence, generate-hook 422 paths, prefill mapping, register-drift pins for `wizardDefinition`/`wizardContext`; run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/guided-document-wizard.spec.ts`: author wizard → run with skip logic both branches → generated download; twig + office template parity run; object entry point with prefill; verify on Postgres (8080) with OpenRegister, test with nldesign theme enabled
 

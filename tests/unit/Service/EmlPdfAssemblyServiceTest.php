@@ -12,7 +12,7 @@
  * render failure recovery, and the no-verbatim-embedding invariant.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,17 +20,17 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\Charts\ChartSvgRenderer;
-use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
-use OCA\DocuDesk\Service\EmlPdfAssemblyService;
-use OCA\DocuDesk\Service\PdfService;
-use OCA\DocuDesk\Service\TemplateRenderer;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Charts\ChartSvgRenderer;
+use OCA\Filinq\Service\Charts\TableHtmlRenderer;
+use OCA\Filinq\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\TemplateRenderer;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -232,7 +232,7 @@ class EmlPdfAssemblyServiceTest extends TestCase {
 	 */
 	public function testOversizeAttachmentProducesPlaceholder(): void {
 		$this->buildService(
-			config: ['docudesk.conversion.eml.max_attachment_render_size_bytes' => '10']
+			config: ['filinq.conversion.eml.max_attachment_render_size_bytes' => '10']
 		);
 		$result = (object)$this->structure(
 			body: ['plain' => 'body', 'html' => null],
@@ -339,7 +339,7 @@ class EmlPdfAssemblyServiceTest extends TestCase {
 	 */
 	public function testAppendPagesFalseRendersEnvelopeOnly(): void {
 		$this->buildService(
-			config: ['docudesk.conversion.eml.append_attachment_pages' => 'false']
+			config: ['filinq.conversion.eml.append_attachment_pages' => 'false']
 		);
 		$result = (object)$this->structure(
 			body: ['plain' => 'body', 'html' => null],

@@ -10,12 +10,12 @@
  * and recorded on the file entry without aborting the rest of the batch.
  *
  * @category  BackgroundJob
- * @package   OCA\DocuDesk\BackgroundJob
+ * @package   OCA\Filinq\BackgroundJob
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
  *
@@ -25,12 +25,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\BackgroundJob;
+namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use OCP\Files\File;
@@ -52,10 +52,10 @@ use Psr\Log\LoggerInterface;
  *     without aborting the batch.
  *
  * @category BackgroundJob
- * @package  OCA\DocuDesk\BackgroundJob
+ * @package  OCA\Filinq\BackgroundJob
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
  */

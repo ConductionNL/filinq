@@ -197,7 +197,7 @@ test.describe('custom-dictionary-recognition — a dictionary hit is detected, r
 	}) => {
 		// @e2e openspec/specs/custom-dictionary-recognition/spec.md#a-dictionary-hit-is-detected-reviewable-and-redacted
 		await go(page, 'my-documents')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/my-documents/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/my-documents/)
 
 		// Opening the document is what sets `fileViewerStore.currentFile`, which
 		// is what mounts FileViewerPage and its sidebar (MyDocumentsIndex.vue:8).

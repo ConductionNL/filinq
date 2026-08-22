@@ -1,29 +1,29 @@
 <template>
 	<div class="signature-verification">
-		<h2>{{ t('docudesk', 'Signature Verification') }}</h2>
+		<h2>{{ t('filinq', 'Signature Verification') }}</h2>
 		<div class="verify-form">
 			<input
 				v-model="verifyFileId"
 				type="text"
-				:aria-label="t('docudesk', 'File ID to verify')"
-				:placeholder="t('docudesk', 'Enter file ID')" />
+				:aria-label="t('filinq', 'File ID to verify')"
+				:placeholder="t('filinq', 'Enter file ID')" />
 			<NcButton variant="primary" :disabled="!verifyFileId" @click="verify">
-				{{ t('docudesk', 'Verify') }}
+				{{ t('filinq', 'Verify') }}
 			</NcButton>
 		</div>
 		<div v-if="signingStore.verificationResult" class="results">
 			<p>
-				<strong>{{ t('docudesk', 'File') }}:</strong>
+				<strong>{{ t('filinq', 'File') }}:</strong>
 				{{ signingStore.verificationResult.fileName }}
 			</p>
 			<p>
-				<strong>{{ t('docudesk', 'Verdict') }}:</strong>
+				<strong>{{ t('filinq', 'Verdict') }}:</strong>
 				<span class="verdict-badge" :class="'verdict-' + verdict">{{
 					verdictLabel
 				}}</span>
 			</p>
 			<p>
-				<strong>{{ t('docudesk', 'Signatures') }}:</strong>
+				<strong>{{ t('filinq', 'Signatures') }}:</strong>
 				{{ signingStore.verificationResult.signatures.length }}
 			</p>
 			<ul
@@ -45,7 +45,7 @@
 				</li>
 			</ul>
 			<p class="results__attribution">
-				{{ t('docudesk', 'Verification provided by the signing engine.') }}
+				{{ t('filinq', 'Verification provided by the signing engine.') }}
 			</p>
 		</div>
 	</div>
@@ -140,10 +140,10 @@ export default {
 		 */
 		verdictLabel_(verdict) {
 			const labels = {
-				verified: t('docudesk', 'Verified'),
-				tampered: t('docudesk', 'Tampered'),
-				unverifiable: t('docudesk', 'Unverifiable'),
-				mixed: t('docudesk', 'Mixed'),
+				verified: t('filinq', 'Verified'),
+				tampered: t('filinq', 'Tampered'),
+				unverifiable: t('filinq', 'Unverifiable'),
+				mixed: t('filinq', 'Mixed'),
 			}
 			return labels[verdict] ?? verdict
 		},
@@ -156,9 +156,9 @@ export default {
 		 */
 		statusLabel(status) {
 			const labels = {
-				verified: t('docudesk', 'Verified'),
-				invalid: t('docudesk', 'Invalid'),
-				unverifiable: t('docudesk', 'Unverifiable'),
+				verified: t('filinq', 'Verified'),
+				invalid: t('filinq', 'Invalid'),
+				unverifiable: t('filinq', 'Unverifiable'),
 			}
 			return labels[status] ?? status
 		},
@@ -172,22 +172,22 @@ export default {
 		reasonLabel(reason) {
 			const labels = {
 				'legacy-assertion-v1': t(
-					'docudesk',
+					'filinq',
 					'Legacy signature format, cannot be re-verified',
 				),
 
 				'external-signature-unsupported': t(
-					'docudesk',
+					'filinq',
 					'External signature, not yet supported',
 				),
 
 				'mac-mismatch': t(
-					'docudesk',
+					'filinq',
 					'Signature no longer matches the document',
 				),
 
 				'signing-secret-not-configured': t(
-					'docudesk',
+					'filinq',
 					'Server verification secret not configured',
 				),
 			}

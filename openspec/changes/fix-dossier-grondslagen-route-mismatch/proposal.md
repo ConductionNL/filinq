@@ -11,7 +11,7 @@ kind: code
 ```
 
 Nextcloud's router resolves `dossier#generateGrondslagenPdf` to
-`\OCA\DocuDesk\Controller\DossierController::generateGrondslagenPdf()`. That method
+`\OCA\Filinq\Controller\DossierController::generateGrondslagenPdf()`. That method
 **does not exist**. The controller's only public action is
 `generateGrondslagenSummary()` (`lib/Controller/DossierController.php:96`) — a
 different, unrelated method name from an earlier rename that never propagated to
@@ -28,7 +28,7 @@ controller method directly, in-process, bypassing the router entirely —
 
 The endpoint is not dead code — it is actively wired from the frontend:
 `src/store/modules/folderAnonymization.js:288` calls
-`generateUrl('/apps/docudesk/api/anonymization/dossier/' + this.dossier.uuid + '/grondslagen-pdf')`.
+`generateUrl('/apps/filinq/api/anonymization/dossier/' + this.dossier.uuid + '/grondslagen-pdf')`.
 Every real click on "Append a grondslagen-summary page" (Wave 4a,
 `src/views/anonymization/FolderAnonymizationView.vue:113`) currently 500s at
 the Nextcloud router layer before `DossierController` code ever runs.
@@ -54,7 +54,7 @@ the Nextcloud router layer before `DossierController` code ever runs.
 
 ## Success Criteria
 
-- `POST /apps/docudesk/api/anonymization/dossier/{dossierId}/grondslagen-pdf`
+- `POST /apps/filinq/api/anonymization/dossier/{dossierId}/grondslagen-pdf`
   reaches `DossierController::generateGrondslagenSummary()` instead of
   throwing `ReflectionException` / 500.
 - `hydra-gate-route-reachability` (Invariant 2) passes for this route.

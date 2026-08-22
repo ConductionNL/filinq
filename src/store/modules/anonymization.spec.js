@@ -118,7 +118,7 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		expect(axios.patch).not.toHaveBeenCalled()
 		expect(axios.post).toHaveBeenCalledTimes(1)
 		expect(axios.post).toHaveBeenCalledWith(
-			'/apps/docudesk/api/anonymization/anonymize/42',
+			'/apps/filinq/api/anonymization/anonymize/42',
 			{
 				entities: [
 					{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 },
@@ -139,7 +139,7 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		await store.anonymiseEntry(entry)
 
 		expect(axios.post).toHaveBeenCalledWith(
-			'/apps/docudesk/api/anonymization/anonymize/42',
+			'/apps/filinq/api/anonymization/anonymize/42',
 			{ entities: [], scope: 'document' },
 		)
 	})
@@ -156,7 +156,7 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		await store.anonymiseEntry(entry)
 
 		expect(axios.patch).toHaveBeenCalledTimes(1)
-		// Skips route through docudesk's OWN guarded endpoint since #164
+		// Skips route through filinq's OWN guarded endpoint since #164
 		// ("route skips through the guarded endpoint + lock prohibited
 		// entities", 2026-07-08) — it applies the prohibition guard before
 		// forwarding. This assertion still named OpenRegister's
@@ -164,7 +164,7 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		// it went unnoticed because the whole suite failed to load on an
 		// unrelated '@nextcloud/axios' resolution error.
 		expect(axios.patch).toHaveBeenCalledWith(
-			'/apps/docudesk/api/anonymization/relations/101',
+			'/apps/filinq/api/anonymization/relations/101',
 			{
 				bases: ['persoonsgegevens', 'strafrechtelijk'],
 				skipAnonymization: false,
@@ -197,7 +197,7 @@ describe('anonymiseEntry — grondslagen summary flags', () => {
 		})
 
 		expect(axios.post).toHaveBeenCalledWith(
-			'/apps/docudesk/api/anonymization/anonymize/42',
+			'/apps/filinq/api/anonymization/anonymize/42',
 			{
 				entities: [
 					{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 },
@@ -456,8 +456,8 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 		await store.anonymiseAllExtracted({
 			fileIds: [1, 2, 3],
 			files: [
-				{ fileId: 2, fileName: 'b.pdf', path: '/DocuDesk/D/b.pdf' },
-				{ fileId: 3, fileName: 'c.pdf', path: '/DocuDesk/D/c.pdf' },
+				{ fileId: 2, fileName: 'b.pdf', path: '/Filinq/D/b.pdf' },
+				{ fileId: 3, fileName: 'c.pdf', path: '/Filinq/D/c.pdf' },
 			],
 		})
 
@@ -504,7 +504,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 			status: 'completed',
 			viewMode: 'anonymized',
 			fileId: 42,
-			filePath: '/DocuDesk/doc.pdf',
+			filePath: '/Filinq/doc.pdf',
 			entities: [
 				{
 					type: 'PERSON',
@@ -516,7 +516,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 			entityCount: 1,
 			anonymizedFileId: 99,
 			anonymizedFileName: 'doc_anonymized.pdf',
-			anonymizedFilePath: '/DocuDesk/doc_anonymized.pdf',
+			anonymizedFilePath: '/Filinq/doc_anonymized.pdf',
 		}
 	}
 
@@ -540,7 +540,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		await store.prepareReanonymize(entry)
 
 		expect(axios.post).toHaveBeenCalledWith(
-			'/apps/docudesk/api/anonymization/extract/42',
+			'/apps/filinq/api/anonymization/extract/42',
 		)
 		expect(entry.status).toBe('extracted')
 		expect(entry.viewMode).toBeUndefined()
@@ -626,7 +626,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		await store.prepareReanonymize(entry)
 
 		expect(entry.anonymizedFileId).toBe(99)
-		expect(entry.anonymizedFilePath).toBe('/DocuDesk/doc_anonymized.pdf')
+		expect(entry.anonymizedFilePath).toBe('/Filinq/doc_anonymized.pdf')
 	})
 
 	it('settles to completed when the source has no detectable entities', async () => {

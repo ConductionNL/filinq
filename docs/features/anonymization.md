@@ -2,11 +2,11 @@
 
 ## Overview
 
-DocuDesk provides a 4-step document anonymization pipeline for GDPR-compliant processing. Files are uploaded to a per-user DocuDesk folder, analyzed for personally identifiable information (PII), and anonymized by replacing detected entities with placeholders. All processing runs 100% locally.
+Filinq provides a 4-step document anonymization pipeline for GDPR-compliant processing. Files are uploaded to a per-user Filinq folder, analyzed for personally identifiable information (PII), and anonymized by replacing detected entities with placeholders. All processing runs 100% locally.
 
 ## Pipeline Steps
 
-1. **Upload**: Drag-and-drop or select a file to upload to your DocuDesk/ folder
+1. **Upload**: Drag-and-drop or select a file to upload to your Filinq/ folder
 2. **Analyze**: Extract text and detect entities (persons, organizations, locations, etc.)
 3. **Anonymize**: Review detected entities and anonymize the document
 4. **Done**: Download the anonymized document
@@ -27,19 +27,19 @@ DocuDesk provides a 4-step document anonymization pipeline for GDPR-compliant pr
 ## Per-Entity Legal Bases (grondslagen)
 
 Legal bases for detected entities are set per-relation via OpenRegister's own
-`PATCH /api/entity-relations/{id}` endpoint, **not** via DocuDesk's anonymise
-payload. DocuDesk does not accept, forward, or persist a `bases[]` field on
+`PATCH /api/entity-relations/{id}` endpoint, **not** via Filinq's anonymise
+payload. Filinq does not accept, forward, or persist a `bases[]` field on
 anonymise requests.
 
 Any stray `bases` field that appears on an incoming entity entry is silently
-ignored — DocuDesk returns HTTP 200 and the field is dropped. This preserves
+ignored — Filinq returns HTTP 200 and the field is dropped. This preserves
 backwards-compatibility with any caller that was built against an older contract.
 
 To attach bases to a detected entity:
-1. Call DocuDesk's extract endpoint to obtain the entity key.
+1. Call Filinq's extract endpoint to obtain the entity key.
 2. PATCH the corresponding `EntityRelation` row on OpenRegister with
    `{bases: ["uuid-of-woo-art5-grondslag", ...]}`.
-3. Call DocuDesk's anonymise endpoint as normal (no `bases` field needed).
+3. Call Filinq's anonymise endpoint as normal (no `bases` field needed).
 
 ## Prohibition Match on Extract Response
 
@@ -63,7 +63,7 @@ The extract endpoint now includes a `prohibitionMatch` field per detected entity
 ```
 
 - `prohibitionMatch` is `null` when no publication-prohibition rule matches the entity.
-- `highConfidence` is `true` when `confidence >= threshold` (inclusive); threshold defaults to 0.85 and is configurable via `docudesk.prohibition.high_confidence_threshold`.
+- `highConfidence` is `true` when `confidence >= threshold` (inclusive); threshold defaults to 0.85 and is configurable via `filinq.prohibition.high_confidence_threshold`.
 - Requires `PolicyMatchService` from `anonymisation-prohibition-gate`; returns `null` for all entities when that service is not yet installed.
 
 ## CHANGELOG
@@ -111,7 +111,7 @@ See also: `docs/features/grondslagen-summary.md` (rendering details).
 
 ## Technical Details
 
-- Files stored in Nextcloud filesystem under user's `DocuDesk/` folder
+- Files stored in Nextcloud filesystem under user's `Filinq/` folder
 - Entity detection via OpenRegister's TextExtractionService (Presidio/OpenAnonymiser)
 - Anonymization via OpenRegister's FileService
 - Duplicate file names handled with counter suffix (e.g., `report_1.pdf`)
@@ -172,7 +172,7 @@ If `outputFormat` is supplied but is not `"pdf-only"`, `"pdf"`, or `"preserve"`,
 
 ### Tenant default
 
-The tenant-wide default is configurable via the **Anonymisation → Always export anonymised documents as PDF** switch in the admin settings panel. The underlying `IAppConfig` key is `docudesk.anonymisation.default_output_format` (values: `"pdf-only"` | `"pdf"` | `"preserve"`, default `"pdf-only"`). A per-call `outputFormat` always overrides the tenant default. To restore the previous keep-both behaviour tenant-wide, set the key to `"pdf"`.
+The tenant-wide default is configurable via the **Anonymisation → Always export anonymised documents as PDF** switch in the admin settings panel. The underlying `IAppConfig` key is `filinq.anonymisation.default_output_format` (values: `"pdf-only"` | `"pdf"` | `"preserve"`, default `"pdf-only"`). A per-call `outputFormat` always overrides the tenant default. To restore the previous keep-both behaviour tenant-wide, set the key to `"pdf"`.
 
 ### Conversion cascade
 

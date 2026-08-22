@@ -6,7 +6,7 @@ kind: code
 
 ## Why
 
-Dutch government DocuDesk deployments are increasingly **shared instances
+Dutch government Filinq deployments are increasingly **shared instances
 serving multiple organisations**: Dordrecht/Drechtsteden 407973 is procured by
 a service organisation working for **nine organisations** and requires
 isolated publication environments plus **per-organisation sync reports**; De
@@ -18,7 +18,7 @@ tenant-isolated environments, and shared-service constructions
 (samenwerkingsverbanden) are the dominant procurement vehicle in the current
 tender window.
 
-DocuDesk today is effectively single-tenant on a multi-tenant foundation.
+Filinq today is effectively single-tenant on a multi-tenant foundation.
 OpenRegister already ships the whole tenancy substrate — an `Organisation`
 entity (UUID identity, users, groups, status lifecycle, quotas, an
 `authorization` RBAC bag), an `OrganisationService` (active-organisation
@@ -29,7 +29,7 @@ HEAD). The hydra umbrella spec `tenant-fleet-wide-consumption` and ADR-022
 mandate that apps consume exactly this model and forbid app-local tenant
 constructs.
 
-DocuDesk actively defeats that substrate: **29 call sites across 8 service
+Filinq actively defeats that substrate: **29 call sites across 8 service
 files** force `_rbac: false` / `_multitenancy: false` (verified at HEAD:
 `ConsentService`, `PolicyCrudService`, `PolicyMatchService`,
 `PolicyRetroactiveService`, `GrondslagenSummaryService`,
@@ -37,18 +37,18 @@ files** force `_rbac: false` / `_multitenancy: false` (verified at HEAD:
 had its bypass removed as security fix C2). The consequence is
 **[CRITICAL] GH #283** (verified open): any authenticated user in any tenant
 can read and forge consent/objection decisions across all documents and
-tenants. Beyond the bypasses, nothing in DocuDesk is organisation-aware:
+tenants. Beyond the bypasses, nothing in Filinq is organisation-aware:
 settings (consent period, WOO anonymization profile) are instance-global
 IAppConfig, the template library and huisstijl (branding) are one shared pool,
 and the dashboard aggregates every organisation's counters.
 
 ## What Changes
 
-- **Adopt OR organisation scoping as the default for every DocuDesk object
+- **Adopt OR organisation scoping as the default for every Filinq object
   family** — consents, prohibitions/policies, signing requests, templates,
   huisstijl, dossiers, batch jobs, correspondence, generated documents. New
   objects are stamped with the creator's active OR organisation by OR itself;
-  DocuDesk stops opting out.
+  Filinq stops opting out.
 - **Remove the forced `_rbac:false` / `_multitenancy:false` bypasses** (29
   call sites, 8 services). Reads and writes flow through OR with enforcement
   ON. The few legitimately cross-organisation paths (instance-admin
@@ -70,7 +70,7 @@ and the dashboard aggregates every organisation's counters.
   batch/anonymisation reports are computed within the active organisation;
   reports state which organisation they cover (Dordrecht per-org sync
   reports).
-- **Shared-nothing default**: no DocuDesk surface returns another
+- **Shared-nothing default**: no Filinq surface returns another
   organisation's objects. Explicit cross-organisation sharing is out of
   scope.
 
@@ -78,7 +78,7 @@ and the dashboard aggregates every organisation's counters.
 
 ### New Capabilities
 
-- `multi-tenant-hardening`: organisation-scoped isolation for all DocuDesk
+- `multi-tenant-hardening`: organisation-scoped isolation for all Filinq
   object families on OpenRegister's organisation model — bypass removal,
   per-organisation template library + branding, organisation-scoped
   dashboards/reporting, shared-nothing default.
@@ -93,7 +93,7 @@ and the dashboard aggregates every organisation's counters.
 
 ## Impact
 
-- `lib/Settings/docudesk_register.json`: new `organisationSettings` schema in
+- `lib/Settings/filinq_register.json`: new `organisationSettings` schema in
   the `document` register, seed data, register version bump.
 - 8 services lose their `_rbac:false` / `_multitenancy:false` arguments
   (`ConsentService`, `PolicyCrudService`, `PolicyMatchService`,
@@ -108,7 +108,7 @@ and the dashboard aggregates every organisation's counters.
   via OR's object API, which applies RBAC + multitenancy server-side).
 - Dashboard endpoints and batch report generation scoped to the active
   organisation.
-- No OpenRegister change: DocuDesk consumes existing OR abstractions
+- No OpenRegister change: Filinq consumes existing OR abstractions
   (ADR-022); organisation CRUD, membership, switching and lifecycle stay
   OR-owned.
 - Evidence: Dordrecht/Drechtsteden 407973 (9 organisations, isolated
@@ -117,7 +117,7 @@ and the dashboard aggregates every organisation's counters.
 
 ## Out of Scope
 
-- Explicit cross-organisation sharing of any DocuDesk object (shared-nothing
+- Explicit cross-organisation sharing of any Filinq object (shared-nothing
   is the default and the whole scope; a sharing model would be a separate
   change).
 - Organisation management itself — creating/suspending organisations,
@@ -134,7 +134,7 @@ and the dashboard aggregates every organisation's counters.
   `lib/Service/**` outside the documented system-context seam (grep-clean).
 - The GH #283 forgery scenario fails: a user whose active organisation is A
   receives no data and no write access for organisation B's consents via any
-  DocuDesk endpoint.
+  Filinq endpoint.
 - Templates, huisstijl, dossiers, signing requests, batches and policies
   created in organisation A are invisible in organisation B across index
   pages, pickers, dashboards and reports.

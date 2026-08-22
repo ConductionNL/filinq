@@ -17,7 +17,7 @@ Adobe) all monetise exactly this workflow (research-competitors.md category
 estimates >50% of documents partly auto-redactable but ALL needing review,
 with ~€25k acquisition budgets for medium/large orgs.
 
-DocuDesk already owns every processing primitive the workflow needs —
+Filinq already owns every processing primitive the workflow needs —
 dossier register with Woo Art. 5 grondslagen (`base` schema, six canonical
 uitzonderingsgronden seeded at HEAD), batch/folder anonymisation with entity
 review and CSV audit reports, template-driven document generation
@@ -25,7 +25,7 @@ review and CSV audit reports, template-driven document generation
 but has **no request object**: no intake with statutory deadlines, no
 candidate-document collection, no dedupe, no per-document exemption
 assessment, no inventarislijst, no disclosure package, no lifecycle. An
-operator today would juggle folders and spreadsheets around DocuDesk, which
+operator today would juggle folders and spreadsheets around Filinq, which
 is exactly what the ZyLAB category sells against.
 
 ## What Changes
@@ -81,7 +81,7 @@ is exactly what the ZyLAB category sells against.
 
 ## Impact
 
-- `lib/Settings/docudesk_register.json`: `wooRequest` + `requestDocument`
+- `lib/Settings/filinq_register.json`: `wooRequest` + `requestDocument`
   schemas in the `dossier` register; additional Woo Art. 5.1/5.2 `base` seed
   objects; a seeded `woo-inventarislijst` template; register version bump.
 - New `lib/Service/WooRequestService.php` (intake, deadlines, collection,

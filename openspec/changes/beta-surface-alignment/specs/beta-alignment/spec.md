@@ -6,7 +6,7 @@ status: proposed
 
 ## Purpose
 
-Guarantee that DocuDesk's four public surfaces — `appinfo/info.xml`,
+Guarantee that Filinq's four public surfaces — `appinfo/info.xml`,
 `src/manifest.json` nav, the conduction.nl product page (EN + NL), and the
 docudesk.conduction.nl docs site — describe the same feature vocabulary, the
 same version/status, and only claims that are verifiable against `lib/` at

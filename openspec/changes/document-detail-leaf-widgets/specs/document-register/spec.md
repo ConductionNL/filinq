@@ -42,4 +42,4 @@ bespoke per-document sidebar-tab or widget system SHALL be introduced for these 
   `Handtekeningen` tabs
 - WHEN the leaf tabs are added
 - THEN the app-owned tabs SHALL remain present and unchanged
-- AND no leaf SHALL replace DocuDesk's in-app PDF/letter, eIDAS signing, or anonymisation surfaces
+- AND no leaf SHALL replace Filinq's in-app PDF/letter, eIDAS signing, or anonymisation surfaces

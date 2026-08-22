@@ -21,8 +21,8 @@
 					</template>
 					{{
 						fileViewerStore.showAnonymized
-							? t('docudesk', 'Show original')
-							: t('docudesk', 'Show anonymised')
+							? t('filinq', 'Show original')
+							: t('filinq', 'Show anonymised')
 					}}
 				</NcButton>
 			</template>
@@ -37,12 +37,12 @@
 				v-else-if="fileViewerStore.currentFile"
 				class="file-viewer-page__unsupported">
 				<FileAlertOutline :size="48" />
-				<p>{{ t('docudesk', 'This file type cannot be previewed.') }}</p>
+				<p>{{ t('filinq', 'This file type cannot be previewed.') }}</p>
 				<NcButton variant="primary" @click="downloadCurrent">
 					<template #icon>
 						<Download :size="18" />
 					</template>
-					{{ t('docudesk', 'Download') }}
+					{{ t('filinq', 'Download') }}
 				</NcButton>
 			</div>
 		</div>
@@ -126,7 +126,7 @@ export default {
 		pageTitle() {
 			return (
 				fileViewerStore.currentFile?.fileName
-				|| t('docudesk', 'File preview')
+				|| t('filinq', 'File preview')
 			)
 		},
 
@@ -215,11 +215,11 @@ export default {
 		 */
 		toggleTitle() {
 			if (!fileViewerStore.canToggleVariant) {
-				return t('docudesk', 'Anonymised version not available yet')
+				return t('filinq', 'Anonymised version not available yet')
 			}
 			return fileViewerStore.showAnonymized
-				? t('docudesk', 'Switch to the original file')
-				: t('docudesk', 'Switch to the anonymised file')
+				? t('filinq', 'Switch to the original file')
+				: t('filinq', 'Switch to the anonymised file')
 		},
 	},
 

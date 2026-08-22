@@ -7,15 +7,15 @@
  * versions (`files_versions`). Every access is resolved through the requesting
  * user's folder inside the service, so the endpoints are IDOR-safe (ADR-005):
  * an inaccessible document yields 404 with no existence disclosure, and restore
- * requires write access. No DocuDesk-owned version storage is introduced.
+ * requires write access. No Filinq-owned version storage is introduced.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-versions/spec.md
  *
@@ -25,10 +25,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\Exception\ComparisonException;
-use OCA\DocuDesk\Service\DocumentVersionService;
+use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Service\DocumentVersionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,10 +44,10 @@ use Throwable;
  * Controller for document file-version listing, download and restore.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-versions/spec.md
  */

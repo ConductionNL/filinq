@@ -138,7 +138,7 @@ The objection period complies with Wet Open Overheid requirements for a minimum 
 
 #### Scenario: Default 28-day objection period
 @e2e exclude deadline calculation is backend-only — ObjectionDeadlineChecker verified by PHPUnit; no consent creation UI
-- GIVEN DocuDesk is configured with the default objection period
+- GIVEN Filinq is configured with the default objection period
 - WHEN a consent record is created
 - THEN the objectionDeadline is 28 days from creation date
 - AND this satisfies the WOO minimum 4-week requirement
@@ -245,7 +245,7 @@ ConsentService::createConsentRequest() exists but has no REST API endpoint or au
 
 #### Scenario: Event listener does not create consents
 @e2e exclude negative assertion on event listener code path — verified by PHPUnit static analysis; ConsentService import absence is code-level
-- GIVEN the DocuDeskEventListener handles ObjectCreated events
+- GIVEN the FilinqEventListener handles ObjectCreated events
 - WHEN an object is created in OpenRegister
 - THEN only metadata enrichment is performed
 - AND ConsentService is NOT imported or called by the event listener
@@ -366,7 +366,7 @@ The consent management UI provides a list view with statistics and a detail view
 
 ### Requirement: A listener MUST subscribe to `EntityRelationDecisionUpdatedEvent`
 
-DocuDesk MUST register a Symfony event listener for `OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent`. The listener MUST inspect the event via the `isSkipAnonymizationActivated()` convenience helper and:
+Filinq MUST register a Symfony event listener for `OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent`. The listener MUST inspect the event via the `isSkipAnonymizationActivated()` convenience helper and:
 
 - Take action ONLY when the helper returns `true` (i.e. `skipAnonymization` transitioned from `false` to `true` in this change).
 - Ignore events that report only a `bases` change.
@@ -379,7 +379,7 @@ When the helper returns `true`, the listener MUST resolve the relation's entity 
 - **GIVEN** an EntityRelation with `skipAnonymization: false`
 - **WHEN** an operator PATCHes the relation setting `skipAnonymization: true`
 - **THEN** OR persists the change AND dispatches `EntityRelationDecisionUpdatedEvent`
-- **AND** the DocuDesk listener calls `ConsentService::createConsentRequest()` for the relation's entity
+- **AND** the Filinq listener calls `ConsentService::createConsentRequest()` for the relation's entity
 
 #### Scenario: Bases-only change does not trigger consent creation
 
@@ -461,7 +461,7 @@ The method's return shape MUST include a `wasUpdated` boolean — `true` if an e
 
 ### Requirement: Prohibition match MUST throw `PolicyRejectedException`
 
-When `PolicyMatchService::match()` returns a prohibition match during `createConsentRequest`, the method MUST throw `OCA\DocuDesk\Exception\PolicyRejectedException` (a new typed exception). The exception MUST carry the rule UUID and rule name so the listener can use them in operator-facing notification text. No publicationConsent record MUST be created or updated.
+When `PolicyMatchService::match()` returns a prohibition match during `createConsentRequest`, the method MUST throw `OCA\Filinq\Exception\PolicyRejectedException` (a new typed exception). The exception MUST carry the rule UUID and rule name so the listener can use them in operator-facing notification text. No publicationConsent record MUST be created or updated.
 
 #### Scenario: Prohibition match throws typed exception
 
@@ -673,7 +673,7 @@ The schema MUST add a new optional property `policyMatch`, valid only on `scope:
 
 #### Scenario: Schema definition uses items.oneOf for constraint
 
-- **GIVEN** the updated `publicationConsent` schema in `lib/Settings/docudesk_register.json`
+- **GIVEN** the updated `publicationConsent` schema in `lib/Settings/filinq_register.json`
 - **WHEN** the schema is imported by OpenRegister
 - **THEN** the `policyMatch` property is defined with `type: "object"`, `oneOf` containing `$ref` to `publicationProhibition` and `publicationConsent`, and `objectConfiguration.handling: "related-object"`
 
@@ -785,7 +785,7 @@ For detected entities that match no policy rule, the existing consent-management
 
 ### PublicationConsent Schema
 
-Defined in `lib/Settings/docudesk_register.json` and stored in OpenRegister.
+Defined in `lib/Settings/filinq_register.json` and stored in OpenRegister.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -834,7 +834,7 @@ Defined in `lib/Settings/docudesk_register.json` and stored in OpenRegister.
   - `src/views/consent/ConsentIndex.vue` -- consent listing with stats
   - `src/views/consent/ConsentDetail.vue` -- consent detail/edit view
   - `src/store/modules/consent.js` -- Pinia store
-  - `lib/Settings/docudesk_register.json` -- PublicationConsent schema
+  - `lib/Settings/filinq_register.json` -- PublicationConsent schema
 - **Known issues**:
   - No POST /api/consents endpoint (CONS-048/050)
   - RBAC/multitenancy disabled (CONS-044/045/046)

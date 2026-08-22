@@ -2,18 +2,18 @@
 
 ## Overview
 
-DocuDesk provides a dedicated administration settings section in the Nextcloud admin panel, accessible only to administrators. The settings page allows configuration of GDPR consent tracking, metadata enrichment toggles, and OpenRegister data storage integration.
+Filinq provides a dedicated administration settings section in the Nextcloud admin panel, accessible only to administrators. The settings page allows configuration of GDPR consent tracking, metadata enrichment toggles, and OpenRegister data storage integration.
 
 ## Features
 
-- **Version Information**: Displays current DocuDesk version and support contact details
+- **Version Information**: Displays current Filinq version and support contact details
 - **Consent Settings**: Configure the objection period (days) for WOO publication consent (default: 28 days)
 - **Metadata Enrichment**: Toggle automatic language detection, keyword extraction, and topic classification
 - **Data Storage**: Configure OpenRegister register and schema for consent records and templates
 
 ## Access
 
-Navigate to **Admin Settings > DocuDesk** in the Nextcloud admin panel.
+Navigate to **Admin Settings > Filinq** in the Nextcloud admin panel.
 
 ## Screenshot
 
@@ -21,8 +21,8 @@ Navigate to **Admin Settings > DocuDesk** in the Nextcloud admin panel.
 
 ## API
 
-- `GET /apps/docudesk/api/settings` - Retrieve current settings
-- `POST /apps/docudesk/api/settings` - Update settings
+- `GET /apps/filinq/api/settings` - Retrieve current settings
+- `POST /apps/filinq/api/settings` - Update settings
 
 ## Configuration Keys
 

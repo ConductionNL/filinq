@@ -1,8 +1,8 @@
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Unit tests for the docudesk settings Pinia store
+ * Unit tests for the filinq settings Pinia store
  * (src/store/modules/settings.js): fetch envelope handling (config||data),
  * openRegisters / isAdmin flag derivation, the loading/error/initialized
  * lifecycle, and the save round-trip. global fetch + the OC.requestToken
@@ -30,7 +30,7 @@ function mockFetchOnce({ ok = true, statusText = 'OK', json = {} }) {
 		.mockResolvedValueOnce({ ok, statusText, json: async () => json })
 }
 
-describe('docudesk settings store', () => {
+describe('filinq settings store', () => {
 	it('has sensible defaults', () => {
 		const store = useSettingsStore()
 		expect(store.config).toBeNull()
@@ -90,7 +90,7 @@ describe('docudesk settings store', () => {
 		const store = useSettingsStore()
 		const result = await store.saveSettings({ a: 1 })
 		const [url, opts] = globalThis.fetch.mock.calls[0]
-		expect(url).toBe('/index.php/apps/docudesk/api/settings')
+		expect(url).toBe('/index.php/apps/filinq/api/settings')
 		expect(opts.method).toBe('POST')
 		expect(opts.headers.requesttoken).toBe('test-token')
 		expect(JSON.parse(opts.body)).toEqual({ a: 1 })

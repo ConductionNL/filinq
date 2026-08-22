@@ -5,7 +5,7 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Extend `lib/Settings/docudesk_register.json`: `generatedDocument.format` enum gains `docx`; new optional `outputs` array (`{format, fileId, status, error?}`); bump the document register `2.3.0` → `2.4.0` (additive). Apply order is pinned: `guided-document-wizard` applies FIRST (`2.2.0` → `2.3.0`), this change SECOND (`2.3.0` → `2.4.0`) — no rebase-on-whichever-lands-second
+- [ ] 1.1 Extend `lib/Settings/filinq_register.json`: `generatedDocument.format` enum gains `docx`; new optional `outputs` array (`{format, fileId, status, error?}`); bump the document register `2.3.0` → `2.4.0` (additive). Apply order is pinned: `guided-document-wizard` applies FIRST (`2.2.0` → `2.3.0`), this change SECOND (`2.3.0` → `2.4.0`) — no rebase-on-whichever-lands-second
   - `tests/validate-manifest.js` and register import on boot both pass
 
 ## 2. Backend
@@ -35,7 +35,7 @@
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests (≥75% coverage on new code): formats validation, render-once/convert-N with partial failure, docx passthrough vs converted, office DOCX→HTML converter + office-html-gated-on-LibreOffice (REQ-DDMFO-007), capability report shape, matrix/503 reason equality, register-drift pin for `outputs`; run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 5.1 Unit tests (≥75% coverage on new code): formats validation, render-once/convert-N with partial failure, docx passthrough vs converted, office DOCX→HTML converter + office-html-gated-on-LibreOffice (REQ-DDMFO-007), capability report shape, matrix/503 reason equality, register-drift pin for `outputs`; run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/multi-format-output.spec.ts`: generate `["pdf","docx"]` from the seeded template → both files in the output folder, DOCX opens editable (content assertion via download); office template `html` output via DOCX→HTML with resolved data; matrix-driven disabled state in correspondence view; verify on Postgres (8080), test with nldesign theme enabled
 

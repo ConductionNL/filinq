@@ -2,7 +2,7 @@
 
 ## Why
 
-DocuDesk sends outbound notifications from two flows through bespoke, app-local notifier code
+Filinq sends outbound notifications from two flows through bespoke, app-local notifier code
 instead of the shared comms abstraction:
 
 - **Signer notifications** (`digital-signing-integration` change, `document-signing` capability):
@@ -33,7 +33,7 @@ bespoke notifier code:
 2. The consent flow raises affected-entity notifications via the same path; the linked message
    drives `notificationStatus` transitions (`sent` on send, `delivered`/`failed` on delivery
    signal) instead of a private notifier tracking its own state.
-3. The email leaf is **link-only** (NC Mail owns compose/send): DocuDesk continues to use NC's
+3. The email leaf is **link-only** (NC Mail owns compose/send): Filinq continues to use NC's
    Mail / notification capability to perform the actual send, but the *registry linkage and
    comms surface* are the email leaf — not an app-local notifier with its own state table.
 
@@ -48,7 +48,7 @@ bespoke notifier code:
 
 ## Affected Projects
 
-- [x] Project: `docudesk` — all implementation work is in this repo
+- [x] Project: `filinq` — all implementation work is in this repo
 - Reference: `openregister/openspec/changes/integration-email/` (the email leaf consumed)
 - Reference: `hydra/openspec/architecture/adr-022-apps-consume-or-abstractions.md` (policy)
 - Reference: `hydra/openspec/architecture/adr-019-*` (integration registry mechanism)

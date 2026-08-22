@@ -4,7 +4,7 @@
  * Unit tests for AnonymizationController — publication-clearance-anonymise-payload change
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-6
  *
@@ -20,11 +20,11 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\AnonymizationController;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\FileListingService;
+use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\FileListingService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -40,10 +40,10 @@ use Psr\Log\LoggerInterface;
  * Tests for the unredactedEntities[] extension on the anonymize endpoint
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress                               PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
@@ -139,7 +139,7 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase {
 		$this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
 		$this->controller = new AnonymizationController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
 			anonymizationService: $this->mockAnonService,

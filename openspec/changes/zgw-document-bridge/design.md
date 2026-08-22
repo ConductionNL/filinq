@@ -2,10 +2,10 @@
 
 ## Context
 
-DocuDesk today only processes files that already live in Nextcloud. Verified at
+Filinq today only processes files that already live in Nextcloud. Verified at
 HEAD:
 
-- `lib/Settings/docudesk_register.json` declares five registers (`consent`,
+- `lib/Settings/filinq_register.json` declares five registers (`consent`,
   `signing`, `templates`, `document`, `dossier`); none models external-system
   provenance or staging.
 - The `dossier` register's `dossier` schema binds a Nextcloud folder
@@ -15,7 +15,7 @@ HEAD:
   `OCA\OpenRegister\Service\ObjectService`, queried with
   `['@self' => ['register' => ..., 'schema' => ...]]` (pattern:
   `ConsentCrudService::listConsents()`).
-- Admin settings render via `lib/Settings/DocuDeskAdmin.php` +
+- Admin settings render via `lib/Settings/FilinqAdmin.php` +
   `src/views/settings/`; the SPA is manifest-driven (`src/manifest.json`,
   pages incl. `MyDocuments`, `Dashboard`).
 
@@ -24,9 +24,9 @@ boundary): its `synchronization-engine` spec defines the Source →
 Synchronization → SynchronizationContract triad, bidirectional
 (extern→intern pull, intern→extern push), with file handling and dedup; its
 `stuf-adapter` spec covers StUF messaging; its `synced-from-tab` spec renders
-per-object sync provenance inside OpenRegister. DocuDesk therefore specifies
+per-object sync provenance inside OpenRegister. Filinq therefore specifies
 **only the target-side contract**: which OR objects OpenConnector reads/writes,
-what the status fields mean, and what DocuDesk's UI shows.
+what the status fields mean, and what Filinq's UI shows.
 
 Stakeholders: gemeente Woo/anonymisation teams (Dordrecht 407973, Arnhem
 407824, Den Helder 306597) whose documents are mastered in Rx.Enterprise,
@@ -38,7 +38,7 @@ Djuma, zaaksysteem.nl or a generic ZGW DRC.
 
 - An OR-backed staging model (`bridge` register) that OpenConnector can sync
   ZGW/StUF documents + metadata into, ≤24h fresh.
-- A processing-status state machine that lets DocuDesk process staged copies
+- A processing-status state machine that lets Filinq process staged copies
   and hand redaction results back for write-back — with the zaaksysteem
   remaining the master record at all times.
 - Per-source connection health in admin settings; source provenance visible on
@@ -46,12 +46,12 @@ Djuma, zaaksysteem.nl or a generic ZGW DRC.
 
 **Non-Goals:**
 
-- No ZGW/StUF client code in DocuDesk (no HTTP calls to a DRC, no SOAP) — that
+- No ZGW/StUF client code in Filinq (no HTTP calls to a DRC, no SOAP) — that
   is OpenConnector's synchronization configuration.
 - No zaak management (starting/updating zaken) — only documents and their
   metadata.
 - No conflict resolution UI for concurrent edits: staged copies are read-only
-  inputs; DocuDesk output is always a *new* derivative.
+  inputs; Filinq output is always a *new* derivative.
 - No hard `info.xml` dependency on OpenConnector.
 
 ## Decisions
@@ -83,7 +83,7 @@ and MCP-exposed for free. Alternative (staging in plain NC folders only) loses
 metadata, status and provenance. Register slug `bridge` collides with no
 sibling app register at HEAD.
 
-### D2 — Bridge contract: OpenConnector writes objects, DocuDesk writes status
+### D2 — Bridge contract: OpenConnector writes objects, Filinq writes status
 
 Inbound leg: an admin configures, in OpenConnector, one Synchronization per
 source with target = OR register `bridge`, schema `externalDocument` (mapping
@@ -91,8 +91,8 @@ ZGW `EnkelvoudigInformatieObject` / StUF-ZDS document fields to the properties
 above; the file itself lands in a per-source staging folder via OpenConnector's
 file handling, and the mapping sets `stagedFileRef`). OpenConnector updates
 `bridgeSource.lastSyncAt/lastSyncStatus/lastSyncError` at the end of each run
-(a small post-sync mapping step; the alternative — DocuDesk polling
-OpenConnector's log API — couples DocuDesk to OpenConnector's REST surface and
+(a small post-sync mapping step; the alternative — Filinq polling
+OpenConnector's log API — couples Filinq to OpenConnector's REST surface and
 breaks when OpenConnector is absent).
 
 Outbound leg: a second, push-direction Synchronization watches `bridge` /
@@ -101,7 +101,7 @@ performs the DRC/StUF write; on success it sets `processingStatus =
 written_back` + `resultExternalId`, on failure `writeback_failed` +
 `writeBackError`.
 
-DocuDesk only ever transitions statuses on its side of the fence
+Filinq only ever transitions statuses on its side of the fence
 (`staged → in_processing → processed → ready_for_writeback`) and never calls
 the case system.
 
@@ -112,7 +112,7 @@ relate to zaak" may need an OpenConnector-side mapping/rule addition. This
 change pins the *contract* (the status fields and their semantics); if a gap
 surfaces during apply, it is filed as an OpenConnector issue and the outbound
 leg degrades to `ready_for_writeback` objects waiting (visible in the admin
-panel), never to DocuDesk calling ZGW itself.
+panel), never to Filinq calling ZGW itself.
 
 ### D3 — Processing-status state machine (single source of truth)
 
@@ -131,20 +131,20 @@ staged ──> in_processing ──> processed ──> ready_for_writeback ─�
 Declared as `x-openregister-lifecycle` on the `externalDocument` schema with
 canonical `initial: staged` and the transition list above, so the guard is
 declarative (ADR-031 default) and invalid transitions are rejected by OR — no
-imperative state machine in DocuDesk.
+imperative state machine in Filinq.
 
 ### D4 — Write-back = NEW informatieobject; original untouched (decided)
 
 The redacted derivative goes back to the DRC as a **new
 EnkelvoudigInformatieObject** related to the same zaak (via a new
 zaakinformatieobject relation), with metadata carrying: a title suffixed
-"(geanonimiseerd)", the relation to the original's identificatie, and DocuDesk
-processing metadata (processing date, DocuDesk version, anonymisation profile)
+"(geanonimiseerd)", the relation to the original's identificatie, and Filinq
+processing metadata (processing date, Filinq version, anonymisation profile)
 in the beschrijving/kenmerken mapping. The original informatieobject is never
 updated, re-versioned or deleted.
 
 Rationale: Arnhem 407824 and the master-record principle — a metadata update
-or new *version* of the original would make DocuDesk a co-master of the
+or new *version* of the original would make Filinq a co-master of the
 original record and break the zaaksysteem's audit trail; a sibling
 informatieobject preserves the original bit-for-bit and is the pattern
 Woo-publication tooling downstream expects (publish the derivative, never the
@@ -179,7 +179,7 @@ dossier capability.
 
 ### D7 — Frontend per ADR-012
 
-- **Bridge status panel**: a section in DocuDesk admin settings
+- **Bridge status panel**: a section in Filinq admin settings
   (`src/views/settings/`) listing sources with `CnDataTable` (name, vendor,
   type, last sync, health chip) — colors via Nextcloud CSS variables/NL Design
   tokens (ADR-003), no hardcoded colors.
@@ -196,7 +196,7 @@ dossier capability.
 | Operation | OR service |
 |---|---|
 | List/read sources + staged docs | `ObjectService::searchObjects()` with `@self.register = bridge` |
-| Status transitions from DocuDesk | `ObjectService::saveObject()` — carrying ALL fields forward (PUT semantics; partial updates would null ZGW metadata) |
+| Status transitions from Filinq | `ObjectService::saveObject()` — carrying ALL fields forward (PUT semantics; partial updates would null ZGW metadata) |
 | Lifecycle guard | declarative `x-openregister-lifecycle` on `externalDocument` (canonical `initial:` key) |
 | Provenance | OpenConnector SynchronizationContract + OR synced-from tab (consumed, not reimplemented) |
 | Audit | OR object audit trail (free with register storage) |
@@ -215,11 +215,11 @@ ADR-011 check: no new validation/formatting utilities — hashing uses PHP
   not persisted); (b) attach-to-dossier — file-system side effect (copy/link
   into the dossier folder) which no `x-openregister-*` dialect expresses;
   (c) the external ZGW/StUF I/O itself — external integration, and it lives in
-  OpenConnector, not DocuDesk.
+  OpenConnector, not Filinq.
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (nil-UUID/slug style, demo
+Shipped in `filinq_register.json` `objects[]` (nil-UUID/slug style, demo
 municipality flavour):
 
 ```json
@@ -263,11 +263,11 @@ A second seed `externalDocument` in status `written_back` (with
 - [OpenConnector mapping gap for "new informatieobject + zaak relation"] →
   contract pins semantics; outbound objects wait visibly in
   `ready_for_writeback`; OpenConnector issue filed at apply time. Never
-  fail-open into DocuDesk-side HTTP.
+  fail-open into Filinq-side HTTP.
 - [Staged copies duplicate storage] → accepted; staging folder is per-source
   and prunable once `written_back` (retention question logged below).
 - [Vendor variance (Rx.Enterprise vs Djuma vs zaaksysteem.nl)] → variance is
-  absorbed in OpenConnector source/mapping config; DocuDesk schema uses the
+  absorbed in OpenConnector source/mapping config; Filinq schema uses the
   common ZGW metadata subset only.
 - [Slug/property drift between this contract and OpenConnector mappings] →
   the contract table in the spec is the review checklist; register version
@@ -287,6 +287,6 @@ migration. Rollback = remove routes/UI; register objects remain inert.
 
 - Retention of staged copies after `written_back` (delete after N days vs keep
   for audit) — deferred; default keep, admin-configurable later.
-- Whether `bridgeSource` should be admin-writable in DocuDesk UI or only via
+- Whether `bridgeSource` should be admin-writable in Filinq UI or only via
   OpenConnector setup flow — this change ships read-only health UI; source
   CRUD stays in OpenConnector.

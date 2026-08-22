@@ -7,13 +7,13 @@ status: proposed
 ## Purpose
 
 MDTO (Metagegevens voor Duurzaam Toegankelijke Overheidsinformatie, the
-successor of TMLO) archival metadata for DocuDesk records, so that
+successor of TMLO) archival metadata for Filinq records, so that
 permanently kept records can actually reach an e-depot: the six core
 archival attributes ride OpenRegister's `retention` field (populated by the
 `archiefwet-retention-engine` dependency), a `mdtoSupplement` schema
 carries the MDTO informatieobject attributes OR does not model
 (aggregatieniveau, dekkingInTijd, beperkingGebruik, betrokkene, taal,
-omschrijving), DocuDesk prefills what it uniquely knows (AVG/Woo-derived
+omschrijving), Filinq prefills what it uniquely knows (AVG/Woo-derived
 use restrictions from consent/prohibition/anonymisation state),
 completeness validation gates overbrenging, and deterministic MDTO XML/JSON
 sidecars per document/dossier feed OR's e-depot transfer stack.
@@ -25,10 +25,10 @@ sidecars per document/dossier feed OR's e-depot transfer stack.
 The app MUST source every MDTO core archival attribute (waardering,
 bewaartermijn, archiefactiedatum, archiefstatus, classificatie) exclusively
 from the OpenRegister `retention` field populated by the retention engine,
-and MUST NOT store a second copy of any of these attributes in a DocuDesk
+and MUST NOT store a second copy of any of these attributes in a Filinq
 schema. The archiefvormer MUST default to OpenRegister's
 `organisation_identifier` app setting, overridable per record only through
-`mdtoSupplement.archiefvormerOverride`. DocuDesk MUST NOT write the
+`mdtoSupplement.archiefvormerOverride`. Filinq MUST NOT write the
 OR-owned `retention` or `tmlo` structures directly.
 
 #### Scenario: Core fields render from retention, read-only
@@ -36,12 +36,12 @@ OR-owned `retention` or `tmlo` structures directly.
 - GIVEN a record whose `retention` block carries nominatie, termijn, actiedatum and classificatie
 - WHEN the MDTO panel on the document detail page renders
 - THEN the core attributes display the retention values read-only
-- AND no DocuDesk schema property duplicates them
+- AND no Filinq schema property duplicates them
 - @e2e tests/e2e/workflows/tmlo-mdto-metadata.spec.ts
 
 #### Scenario: No app-side writes to platform metadata fields
 
-- GIVEN the DocuDesk codebase at this change's completion
+- GIVEN the Filinq codebase at this change's completion
 - WHEN `lib/` is inspected
 - THEN no code writes the `retention` or `tmlo` object fields directly
 - @e2e exclude static codebase property, enforced by review + a PHPUnit architecture test, not a browser flow
@@ -77,11 +77,11 @@ The document register MUST gain an `mdtoSupplement` schema
 - AND no detection-output entity text is copied into the supplement
 - @e2e exclude data-shape rule on a backend write — covered by PHPUnit schema-validation tests
 
-### Requirement: DocuDesk context prefills the supplement as confirmable proposals (REQ-DDTMM-003)
+### Requirement: Filinq context prefills the supplement as confirmable proposals (REQ-DDTMM-003)
 
 The app MUST prefill supplement values it can derive —
 `aggregatieniveau` from the record type, `dekkingInTijd` from
-document/dossier dates, and `beperkingGebruik` proposals from DocuDesk
+document/dossier dates, and `beperkingGebruik` proposals from Filinq
 state (an unresolved or objected consent record proposes
 `avg-persoonsgegevens` with its grondslag; an active publication
 prohibition match proposes `woo-uitzondering` with its legal authority; an
@@ -166,7 +166,7 @@ see design.md).
 
 The overbrenging action MUST deliver via OpenRegister's
 `EdepotTransferService` (SIP built with the transport and profile
-configured in OR's e-depot settings); DocuDesk MUST NOT contain any e-depot
+configured in OR's e-depot settings); Filinq MUST NOT contain any e-depot
 transport, protocol or HTTP client code. On confirmed ingestion the record
 MUST get `retention.archiefstatus = overgebracht` (read-only per the
 retention engine) and the exported sidecar MUST be attached to the record
@@ -189,9 +189,9 @@ transport is configured, the action MUST degrade to an explicit
 - THEN the UI offers the sidecar download for manual delivery and states that no transport is configured
 - @e2e tests/e2e/workflows/tmlo-mdto-metadata.spec.ts
 
-#### Scenario: No transport code in DocuDesk
+#### Scenario: No transport code in Filinq
 
-- GIVEN the DocuDesk codebase at this change's completion
+- GIVEN the Filinq codebase at this change's completion
 - WHEN `lib/` is inspected
 - THEN no class implements or calls an e-depot transport/protocol directly
 - @e2e exclude static codebase property, enforced by review + a PHPUnit architecture test, not a browser flow

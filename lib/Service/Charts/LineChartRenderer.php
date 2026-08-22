@@ -7,12 +7,12 @@
  * with a break wherever a point was skipped, plus point markers.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Charts
+ * @package   OCA\Filinq\Service\Charts
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/template-charts/specs/template-charts/spec.md
  *
@@ -22,16 +22,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Charts;
+namespace OCA\Filinq\Service\Charts;
 
 /**
  * Renders line charts as deterministic SVG.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Charts
+ * @package  OCA\Filinq\Service\Charts
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/template-charts/tasks.md#task-1.1
  */

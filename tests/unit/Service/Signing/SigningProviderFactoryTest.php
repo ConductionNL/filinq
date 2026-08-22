@@ -7,11 +7,11 @@
  * and error handling for unknown providers per REQ-SIGN-03.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Service\Signing
+ * @package   OCA\Filinq\Tests\Unit\Service\Signing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,11 +21,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Signing;
+namespace OCA\Filinq\Tests\Unit\Service\Signing;
 
-use OCA\DocuDesk\Service\Signing\NativeSigningProvider;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
-use OCA\DocuDesk\Service\Signing\ValidSignProvider;
+use OCA\Filinq\Service\Signing\NativeSigningProvider;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Service\Signing\ValidSignProvider;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -35,10 +35,10 @@ use RuntimeException;
  * Tests for SigningProviderFactory provider resolution
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Signing
+ * @package  OCA\Filinq\Tests\Unit\Service\Signing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -86,7 +86,7 @@ class SigningProviderFactoryTest extends TestCase {
 	 */
 	private function buildFactory(string $configuredProvider = 'native'): SigningProviderFactory {
 		$this->config->method('getValueString')
-			->with('docudesk', 'signing_provider', 'native')
+			->with('filinq', 'signing_provider', 'native')
 			->willReturn($configuredProvider);
 
 		return new SigningProviderFactory(

@@ -1,8 +1,8 @@
-# Beta surface alignment — DocuDesk
+# Beta surface alignment — Filinq
 
 ## Why
 
-DocuDesk is Technical Core, already on `/connext`, but its four public/code
+Filinq is Technical Core, already on `/connext`, but its four public/code
 surfaces (info.xml, manifest nav, conduction.nl product page, docudesk.conduction.nl
 docs) disagreed with each other and, in several cases, with what `lib/` actually
 implements. Per the fleet beta-readiness pass, an unverified marketing/compliance
@@ -74,7 +74,7 @@ real routes/components and were used as the canonical vocabulary source.
 
 ### 3. Product page — `conduction-website/src/pages/apps/docudesk.mdx` (+ nl)
 - `status`: `Stable` → `Beta` (matches sibling pre-1.0 apps pipelinq/shillinq
-  convention; DocuDesk is 0.0.x and has features marked
+  convention; Filinq is 0.0.x and has features marked
   `@e2e exclude ... not yet shipped` in `docs/features.json`, e.g.
   anonymization-entity-review).
 - `version`: fabricated `v1.8` → `v0.0.34` (matches info.xml truth).
@@ -91,7 +91,7 @@ real routes/components and were used as the canonical vocabulary source.
   AppCrossLinks present on EN) was **not** rebuilt — flagged as a remaining
   gap below, out of scope for a vocabulary-alignment pass.
 
-### 4. Docs — `docudesk/docs/` (Docusaurus, served at docudesk.conduction.nl)
+### 4. Docs — `filinq/docs/` (Docusaurus, served at docudesk.conduction.nl)
 - `docs/intro.md`: removed SharePoint/Office 365/WCAG claims, fixed
   Word/Excel → PDF/ODF/HTML, fixed install category ("Office & Text" → the
   actual `organization` category), fixed Presidio framing to "configurable
@@ -131,9 +131,9 @@ convention. No change needed.
 |---|---|---|
 | "Microsoft Presidio under the hood" (exclusive) | **Corrected** | `AnonymiserBackendStateClient` supports `method` ∈ {regex, openanonymiser, presidio, llm}; regex is the fallback default. Presidio is one option, not the engine. |
 | "Word and PDF templates... Edit in Office" | **Removed/corrected** | `DocumentService::VALID_FORMATS = ['pdf','odf','html']`; template schema description says "Twig/HTML templates voor PDF-generatie." No DOCX/XLSX output path exists. |
-| "Twelve templates... beschikkingen, jaarverslagen, bezwaarbrieven, subsidy decisions, permits" | **Removed** | Only 3 seed templates exist in `lib/Settings/docudesk_register.json` (`beschikking-standaard`, `brief-algemeen`, `rapportage-kwartaal`) — no jaarverslag/bezwaarbrief/subsidy/permit templates ship. |
+| "Twelve templates... beschikkingen, jaarverslagen, bezwaarbrieven, subsidy decisions, permits" | **Removed** | Only 3 seed templates exist in `lib/Settings/filinq_register.json` (`beschikking-standaard`, `brief-algemeen`, `rapportage-kwartaal`) — no jaarverslag/bezwaarbrief/subsidy/permit templates ship. |
 | "Per-instance signing certificate" | **Removed** | Zero matches for "certificate" anywhere in `lib/Service/Signing/`; signing is level-based (SES/AdES/QES) via `NativeSigningProvider`/`ValidSignProvider`, not a certificate object. |
-| "TMLO-conforme archivering for inbound, with retention rules per recordtype" | **Removed** | No retention/archival/TMLO code in `lib/` — `docs/GOVERNMENT-FEATURES.md` itself already correctly marks TMLO/MDTO as "Via platform / Via OpenRegister," not a DocuDesk feature. |
+| "TMLO-conforme archivering for inbound, with retention rules per recordtype" | **Removed** | No retention/archival/TMLO code in `lib/` — `docs/GOVERNMENT-FEATURES.md` itself already correctly marks TMLO/MDTO as "Via platform / Via OpenRegister," not a Filinq feature. |
 | "SharePoint, Office 365... integration" | **Removed** | Zero matches for SharePoint/Office365/`$integrationService` in `lib/` or `src/`. "Office App" backend in code means Collabora/OnlyOffice/EuroOffice via NC's `IConversionManager`, not Microsoft 365. |
 | Two-pass Presidio+LLM MCP redaction pipeline (product page AgentTrace) | **Removed** | Zero matches for MCP/`context_check`/"two-pass" in `lib/`. |
 | WCAG 2.1 AAA / PDF-UA document compliance checking + auto-fix | **Removed, replaced with honest "not implemented"** | Zero matches for "wcag" anywhere in `lib/`. |

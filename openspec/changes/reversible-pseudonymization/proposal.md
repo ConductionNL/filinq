@@ -19,7 +19,7 @@ under authorisation — has become the default pattern the market converges on:
   source-anonymisation tool works the same way (R2 C6, D row "Reversible /
   pseudonymizing anonymization", demand_score **6** — the single
   highest-demand capability in the wave).
-- R2 D marks DocuDesk **PARTIAL** here: "`anonymization` built (redaction-style);
+- R2 D marks Filinq **PARTIAL** here: "`anonymization` built (redaction-style);
   reversible/pseudonymize not explicit." The demand is proven and the gap is
   named.
 
@@ -39,18 +39,18 @@ Verified at HEAD — this is an EXTENSION, not a rebuild (the brief's
   the exact emitted map through `getLastPlaceholderMap()` — `global entity id →
   placeholder string` (`lib/Service/File/DocumentProcessingHandler.php`,
   `lib/Service/FileService.php`).
-- DocuDesk **already consumes that map**:
+- Filinq **already consumes that map**:
   `AnonymizationService::anonymizeDocument()` reads
   `getLastPlaceholderMap()` and threads it into the grondslagen summary
   (Robert's `anonimiseren-bij-de-bron` merge, PR#314). The placeholder half of
   "pseudonymise" already ships and is live.
-- DocuDesk **already records the source↔anonymised pairing**:
+- Filinq **already records the source↔anonymised pairing**:
   `recordAnonymizationLink()` writes an `anonymizationLink` object
   (`sourceFileId`/`anonymizedFileId`, both facetable) — the anchor a reversible
   mapping attaches to.
-- What is genuinely **missing**: (1) DocuDesk stores **no** reverse mapping
+- What is genuinely **missing**: (1) Filinq stores **no** reverse mapping
   (placeholder → original value), so today's placeholder output is
-  irreversible; (2) there is **no** restore operation; (3) DocuDesk has **no**
+  irreversible; (2) there is **no** restore operation; (3) Filinq has **no**
   encrypted/`writeOnly` secret store at all (grep: zero `_render:false` /
   `writeOnly` usage in `lib/` + register).
 
@@ -62,7 +62,7 @@ existing `anonymizationLink`, not re-implementing replacement.
 
 - **Reversible output mode**: `anonymizeDocument` gains a
   `reversible` mode alongside the existing (irreversible) behaviour. In
-  reversible mode DocuDesk captures OR's `getLastPlaceholderMap()` plus the
+  reversible mode Filinq captures OR's `getLastPlaceholderMap()` plus the
   original entity values and persists an encrypted mapping; the default mode is
   unchanged and stores nothing (the irreversible guarantee is preserved).
 - **Encrypted mapping store (`pseudonymMap`)**: a new register object keyed to
@@ -104,7 +104,7 @@ existing `anonymizationLink`, not re-implementing replacement.
 
 ## Impact
 
-- `lib/Settings/docudesk_register.json`: new `pseudonymMap` schema in the
+- `lib/Settings/filinq_register.json`: new `pseudonymMap` schema in the
   `document` register — `anonymizationLink` reference, `sourceFileId`,
   a `writeOnly` / `_render:false` encrypted `mappings` payload, `entryCount`,
   `algorithm`; register-i18n on user-facing labels; register version bump with
@@ -120,7 +120,7 @@ existing `anonymizationLink`, not re-implementing replacement.
   copy).
 - New `lib/Controller/PseudonymisationController.php` +
   `api/pseudonymisation/{link}/restore` (fail-closed group gate, audit log).
-- Admin setting: `docudesk.pseudonymisation.restore_allowed_groups`
+- Admin setting: `filinq.pseudonymisation.restore_allowed_groups`
   (default `[]` = admins only, fail-closed).
 - `src/manifest.json` + views: anonymise-mode choice + gated restore action;
   restore-confirm dialog in its own `src/dialogs/` file.
@@ -136,5 +136,5 @@ existing `anonymizationLink`, not re-implementing replacement.
   irreversible/redaction path is explicitly left as the default and untouched.
 - Evidence: Presidio PII Shield + xxllnc readability-preserving + Hoeksche
   Waard convergence (R2 C6); R2 D reversible-pseudonymization row (demand 6,
-  DocuDesk PARTIAL); Robert's `anonimiseren-bij-de-bron` placeholder work
+  Filinq PARTIAL); Robert's `anonimiseren-bij-de-bron` placeholder work
   (PR#314, extended here).

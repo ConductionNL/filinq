@@ -2,19 +2,19 @@
 
 ## Overview
 
-DocuDesk provides a shared, reusable PDF rendering service that any co-installed Nextcloud app can use. The service accepts a Twig template string and data context, renders HTML, and converts to PDF via mPDF. The service is stateless and injectable via DI.
+Filinq provides a shared, reusable PDF rendering service that any co-installed Nextcloud app can use. The service accepts a Twig template string and data context, renders HTML, and converts to PDF via mPDF. The service is stateless and injectable via DI.
 
 ## Usage
 
 ### Via DI Container
 ```php
-$pdfService = $container->get(\OCA\DocuDesk\Service\PdfService::class);
+$pdfService = $container->get(\OCA\Filinq\Service\PdfService::class);
 $pdfContent = $pdfService->renderPdf('<h1>{{ title }}</h1>', ['title' => 'Hello']);
 ```
 
 ### Via REST API
 ```
-POST /apps/docudesk/api/pdf/render
+POST /apps/filinq/api/pdf/render
 ```
 
 #### Request Body

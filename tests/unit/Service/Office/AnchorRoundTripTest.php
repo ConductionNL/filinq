@@ -10,7 +10,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Office
+ * @package  OCA\Filinq\Tests\Unit\Service\Office
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -18,15 +18,15 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Office;
+namespace OCA\Filinq\Tests\Unit\Service\Office;
 
-use OCA\DocuDesk\Service\Editing\PackageCodec;
-use OCA\DocuDesk\Service\Editing\XmlBlockScanner;
+use OCA\Filinq\Service\Editing\PackageCodec;
+use OCA\Filinq\Service\Editing\XmlBlockScanner;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -49,7 +49,7 @@ use PHPUnit\Framework\TestCase;
  * a document to itself.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Office
+ * @package  OCA\Filinq\Tests\Unit\Service\Office
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -57,7 +57,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 class AnchorRoundTripTest extends TestCase {
 
@@ -76,11 +76,11 @@ class AnchorRoundTripTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->serviceUrl = (string)getenv('DOCUDESK_OFFICE_CONVERT_URL');
+		$this->serviceUrl = (string)getenv('FILINQ_OFFICE_CONVERT_URL');
 		if ($this->serviceUrl === '') {
 			$this->markTestSkipped(
 				'NOT MEASURED: no office suite reachable. '
-				. 'Set DOCUDESK_OFFICE_CONVERT_URL (see docs/office-suite-setup.md) to run it. '
+				. 'Set FILINQ_OFFICE_CONVERT_URL (see docs/office-suite-setup.md) to run it. '
 				. 'This is NOT a pass — the anchor-stability question is unanswered in this run.'
 			);
 		}
@@ -231,12 +231,12 @@ class AnchorRoundTripTest extends TestCase {
 	 * @return string The URL.
 	 */
 	private function publish(string $bytes, string $extension): string {
-		$dir = (string)getenv('DOCUDESK_OFFICE_FIXTURE_DIR');
-		$url = (string)getenv('DOCUDESK_OFFICE_FIXTURE_URL');
+		$dir = (string)getenv('FILINQ_OFFICE_FIXTURE_DIR');
+		$url = (string)getenv('FILINQ_OFFICE_FIXTURE_URL');
 
 		if ($dir === '' || $url === '') {
 			$this->markTestSkipped(
-				'NOT MEASURED: DOCUDESK_OFFICE_FIXTURE_DIR / _URL are unset, so the suite '
+				'NOT MEASURED: FILINQ_OFFICE_FIXTURE_DIR / _URL are unset, so the suite '
 				. 'has no way to fetch the document. This is NOT a pass.'
 			);
 		}

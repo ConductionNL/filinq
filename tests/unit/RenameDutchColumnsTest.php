@@ -27,10 +27,10 @@
  * "no shard tables on this install" and the tests passed while migrating nothing.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,9 +38,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit;
+namespace OCA\Filinq\Tests\Unit;
 
-use OCA\DocuDesk\Repair\RenameDutchColumns;
+use OCA\Filinq\Repair\RenameDutchColumns;
 use OCP\DB\Exception;
 use OCP\DB\IPreparedStatement;
 use OCP\DB\IResult;
@@ -53,10 +53,10 @@ use Psr\Log\LoggerInterface;
  * A result that yields a fixed list of scalars.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 final class FakeResult implements IResult {
 	/**
@@ -116,10 +116,10 @@ final class FakeResult implements IResult {
  * A prepared statement over a fixed set of information_schema rows.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 final class FakeStatement implements IPreparedStatement {
 	/** @var array<string, mixed> Values bound by the caller. */
@@ -222,7 +222,7 @@ final class FakeStatement implements IPreparedStatement {
 }//end class
 
 /**
- * @covers \OCA\DocuDesk\Repair\RenameDutchColumns
+ * @covers \OCA\Filinq\Repair\RenameDutchColumns
  */
 class RenameDutchColumnsTest extends TestCase {
 	/** @var array<int, string> Every statement the step executed. */
@@ -354,7 +354,7 @@ class RenameDutchColumnsTest extends TestCase {
 	 */
 	public function testGetNameDescribesTheMigration(): void {
 		$step = $this->step([], [], []);
-		$this->assertStringContainsString('docudesk', strtolower($step->getName()));
+		$this->assertStringContainsString('filinq', strtolower($step->getName()));
 	}//end testGetNameDescribesTheMigration()
 
 	/**

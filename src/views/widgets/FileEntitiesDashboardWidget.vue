@@ -10,7 +10,7 @@ import { generateUrl } from '@nextcloud/router'
 		<div v-if="loading" class="loading-area">
 			<NcLoadingIcon :size="28" />
 			<p class="loading-text">
-				{{ t('docudesk', 'Loading files...') }}
+				{{ t('filinq', 'Loading files...') }}
 			</p>
 		</div>
 
@@ -25,7 +25,7 @@ import { generateUrl } from '@nextcloud/router'
 		<div v-else-if="files.length === 0" class="empty-area">
 			<FileDocumentOutline :size="32" class="empty-icon" />
 			<p class="empty-text">
-				{{ t('docudesk', 'No processed files yet') }}
+				{{ t('filinq', 'No processed files yet') }}
 			</p>
 		</div>
 
@@ -34,18 +34,18 @@ import { generateUrl } from '@nextcloud/router'
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th scope="col">{{ t('docudesk', 'File') }}</th>
+						<th scope="col">{{ t('filinq', 'File') }}</th>
 						<th scope="col" class="col-number">
-							{{ t('docudesk', 'Entities') }}
+							{{ t('filinq', 'Entities') }}
 						</th>
 						<th scope="col" class="col-risk">
-							{{ t('docudesk', 'Risk') }}
+							{{ t('filinq', 'Risk') }}
 						</th>
 						<th scope="col" class="col-status">
-							{{ t('docudesk', 'Status') }}
+							{{ t('filinq', 'Status') }}
 						</th>
 						<th scope="col" class="col-ocr">
-							{{ t('docudesk', 'OCR') }}
+							{{ t('filinq', 'OCR') }}
 						</th>
 					</tr>
 				</thead>
@@ -80,8 +80,8 @@ import { generateUrl } from '@nextcloud/router'
 							<span
 								v-if="file.ocrProcessed"
 								class="ocr-badge"
-								:title="t('docudesk', 'Processed with OCR')">
-								{{ t('docudesk', 'OCR') }}
+								:title="t('filinq', 'Processed with OCR')">
+								{{ t('filinq', 'OCR') }}
 							</span>
 						</td>
 					</tr>
@@ -91,7 +91,7 @@ import { generateUrl } from '@nextcloud/router'
 
 		<!-- Footer -->
 		<a class="widget-footer" :href="appUrl">
-			{{ t('docudesk', 'Open DocuDesk') }}
+			{{ t('filinq', 'Open Filinq') }}
 		</a>
 	</div>
 </template>
@@ -124,12 +124,12 @@ export default {
 
 	computed: {
 		/**
-		 * Deep link to the DocuDesk app from the widget footer.
+		 * Deep link to the Filinq app from the widget footer.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		appUrl() {
-			return generateUrl('/apps/docudesk')
+			return generateUrl('/apps/filinq')
 		},
 	},
 
@@ -148,12 +148,12 @@ export default {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/docudesk/api/anonymization/files'),
+					generateUrl('/apps/filinq/api/anonymization/files'),
 				)
 				this.files = response.data
 			} catch (e) {
-				console.error('[DocuDesk] Failed to fetch processed files:', e)
-				this.error = t('docudesk', 'Failed to load files')
+				console.error('[Filinq] Failed to fetch processed files:', e)
+				this.error = t('filinq', 'Failed to load files')
 			} finally {
 				this.loading = false
 			}
@@ -191,11 +191,11 @@ export default {
 		 */
 		riskLevelLabel(level) {
 			const labels = {
-				none: t('docudesk', 'None'),
-				low: t('docudesk', 'Low'),
-				medium: t('docudesk', 'Medium'),
-				high: t('docudesk', 'High'),
-				very_high: t('docudesk', 'Very High'),
+				none: t('filinq', 'None'),
+				low: t('filinq', 'Low'),
+				medium: t('filinq', 'Medium'),
+				high: t('filinq', 'High'),
+				very_high: t('filinq', 'Very High'),
 			}
 			return labels[level] || labels.none
 		},
@@ -208,9 +208,9 @@ export default {
 		 */
 		statusLabel(status) {
 			const labels = {
-				uploaded: t('docudesk', 'Uploaded'),
-				extracted: t('docudesk', 'Extracted'),
-				anonymized: t('docudesk', 'Anonymized'),
+				uploaded: t('filinq', 'Uploaded'),
+				extracted: t('filinq', 'Extracted'),
+				anonymized: t('filinq', 'Anonymized'),
 			}
 			return labels[status] || status
 		},

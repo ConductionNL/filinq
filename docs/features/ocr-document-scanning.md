@@ -14,7 +14,7 @@ keywords:
 
 # OCR Document Scanning
 
-DocuDesk integrates Tesseract OCR to extract searchable text from scanned documents and
+Filinq integrates Tesseract OCR to extract searchable text from scanned documents and
 image-based files. OCR is transparent to the rest of the pipeline — once text is extracted,
 it feeds into the existing entity detection and anonymization workflows.
 
@@ -52,25 +52,25 @@ invoked automatically by `DocumentTextExtractor` when it encounters an image or 
 Direct OCR triggering uses the standard file processing endpoint:
 
 ```
-POST /apps/docudesk/api/anonymization/extract/{fileId}
+POST /apps/filinq/api/anonymization/extract/{fileId}
 ```
 
 The response includes an `ocrApplied: true` flag when OCR was used.
 
 ## Configuration Options
 
-Configured via the DocuDesk admin settings page or `occ config:app:set`:
+Configured via the Filinq admin settings page or `occ config:app:set`:
 
 | Config key                   | Default      | Description                                       |
 |-----------------------------|--------------|---------------------------------------------------|
-| `docudesk_ocr_enabled`       | `true`       | Enable or disable OCR processing globally         |
-| `docudesk_ocr_languages`     | `nld+eng`    | Tesseract language codes (e.g. `nld+eng+fra`)     |
-| `docudesk_ocr_dpi`           | `300`        | Resolution for image extraction (higher = better quality, slower) |
+| `filinq_ocr_enabled`       | `true`       | Enable or disable OCR processing globally         |
+| `filinq_ocr_languages`     | `nld+eng`    | Tesseract language codes (e.g. `nld+eng+fra`)     |
+| `filinq_ocr_dpi`           | `300`        | Resolution for image extraction (higher = better quality, slower) |
 
 ### Setting OCR Language
 
 ```bash
-docker exec nextcloud php occ config:app:set docudesk docudesk_ocr_languages --value="nld+eng+fra"
+docker exec nextcloud php occ config:app:set filinq filinq_ocr_languages --value="nld+eng+fra"
 ```
 
 Available language packs depend on which Tesseract language data files are installed in the

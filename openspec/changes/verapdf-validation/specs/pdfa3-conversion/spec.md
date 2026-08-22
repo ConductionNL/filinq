@@ -31,7 +31,7 @@ result as a `conformanceReport` with `trigger: "conversion"`
 - **Report mode (default):** a non-compliant verdict logs a warning,
   ships the bytes unchanged (adoption-safe), and leaves the persisted
   report + header as the truth.
-- **Strict mode (`docudesk.pdfa3.strict_verify`, default `false`):** a
+- **Strict mode (`filinq.pdfa3.strict_verify`, default `false`):** a
   non-compliant verdict MUST raise `Pdfa3ConversionException` with reason
   `output_validation_failed` and return no bytes — the existing
   no-silent-passthrough contract, now backed by a real validator.
@@ -53,7 +53,7 @@ information, not as a mystery failure.
 
 #### Scenario: Strict mode refuses non-compliant output
 
-- GIVEN `docudesk.pdfa3.strict_verify` enabled and an imported source whose wrapped output fails ISO 19005-3 font rules
+- GIVEN `filinq.pdfa3.strict_verify` enabled and an imported source whose wrapped output fails ISO 19005-3 font rules
 - WHEN conversion runs
 - THEN it raises `Pdfa3ConversionException` with reason `output_validation_failed`
 - AND no bytes are returned to the caller

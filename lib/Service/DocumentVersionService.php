@@ -4,19 +4,19 @@
  * Document Version Service
  *
  * Thin, read/restore consumer of the Nextcloud `files_versions` capability for a
- * document's underlying Nextcloud file. Introduces NO DocuDesk-owned version
+ * document's underlying Nextcloud file. Introduces NO Filinq-owned version
  * storage: versions are read exclusively from Nextcloud via `IVersionManager`.
  * Subjects are resolved through the requesting user's folder, so a file the user
  * cannot read is indistinguishable from a non-existent one (IDOR-safe, ADR-005),
  * and restore requires write access.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-versions/spec.md
  *
@@ -26,9 +26,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
-use OCA\DocuDesk\Exception\ComparisonException;
+use OCA\Filinq\Exception\ComparisonException;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;
@@ -42,10 +42,10 @@ use Throwable;
  * Service listing, reading and restoring a document's Nextcloud file versions.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-versions/spec.md
  */

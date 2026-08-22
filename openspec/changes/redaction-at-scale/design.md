@@ -5,7 +5,7 @@
 Verified at HEAD:
 
 - `BatchStateService` stores batch state in `ICache` (TTL 7200s, prefix
-  `docudesk_batch_`, `DEFAULT_MAX_FILES = 100`); TTL is refreshed on writes
+  `filinq_batch_`, `DEFAULT_MAX_FILES = 100`); TTL is refreshed on writes
   and status polls.
 - `BatchAnonymizationController::batchExtract` extracts one file per HTTP
   call; `::batchAnonymize` → `BatchAnonymizeService::anonymizeBatch` loops
@@ -20,8 +20,8 @@ Verified at HEAD:
   status implementing, change `docudesk-adopt-or-abstractions`): batch
   state as `batchAnonymizationJob` OR objects with per-file child objects
   and lifecycle annotations, scheduled via OR Background Jobs, with the
-  cap promoted to `IAppConfig docudesk.batch.max_files_per_run`. Those
-  schemas are NOT yet present in `lib/Settings/docudesk_register.json` —
+  cap promoted to `IAppConfig filinq.batch.max_files_per_run`. Those
+  schemas are NOT yet present in `lib/Settings/filinq_register.json` —
   the migration is in flight.
 - Sibling change `anonymization-review-workbench` introduces the
   per-document `documentReview` checked gate this change's sampling QA
@@ -62,8 +62,8 @@ the orphaned-capability pattern this fleet keeps paying for.
 
 **Decision:** a `BatchJobCoordinator` cron job (NC `TimedJob`, interval ≤ 5
 min) claims pending batches and processes bounded **work units**: at most
-`docudesk.batch.files_per_tick` files (default 25) AND at most
-`docudesk.batch.seconds_per_tick` wall seconds (default 120) per run,
+`filinq.batch.files_per_tick` files (default 25) AND at most
+`filinq.batch.seconds_per_tick` wall seconds (default 120) per run,
 whichever ends first, then yields. Progress is written per file, so the
 unit boundary is also the crash-recovery boundary — resume is "by
 construction" (D4). Both extract and anonymize phases run through the same
@@ -93,7 +93,7 @@ skipped, not double-processed. Extraction idempotency is OR-side
 ### D5 — Sampling QA routes into the workbench checked gate
 
 **Decision:** at batch anonymize completion, a uniform random sample of
-`docudesk.batch.qa_sample_rate` percent (default 5, min 1 file when the
+`filinq.batch.qa_sample_rate` percent (default 5, min 1 file when the
 batch is non-empty and the rate > 0) of successfully auto-anonymized files
 is marked `qaSampled: true` on their per-file objects. Sampled files
 REQUIRE human review: they surface in the review workbench queue, and the
@@ -118,9 +118,9 @@ next tick — visible, not silent. No PHP `sys_getloadavg()` gating in v1
 ### D7 — Two caps: synchronous stays 100, background gets 1000
 
 **Decision:** the existing synchronous upload/extract path keeps
-`docudesk.batch.max_files_per_run` (default 100). Batches above it are not
+`filinq.batch.max_files_per_run` (default 100). Batches above it are not
 rejected anymore but require the background path
-(`docudesk.batch.max_files_background`, default 1000; hard server-side
+(`filinq.batch.max_files_background`, default 1000; hard server-side
 clamp). Folder batches route by the same thresholds. Arnhem-scale yearly
 volume (55.000 docs ≈ 220/working day) fits comfortably; single mega-dossiers
 beyond 1000 files must be split (explicit product decision — an unbounded
@@ -131,7 +131,7 @@ cap invites an unbounded outage).
 - Batch/per-file state, lifecycle transitions
   (`pending → extracting → review → anonymizing → completed | error` +
   `cancelling/cancelled`), progress fields, QA flags: **declarative** —
-  schemas + `x-openregister-lifecycle` in `lib/Settings/docudesk_register.json`
+  schemas + `x-openregister-lifecycle` in `lib/Settings/filinq_register.json`
   (extending the REQ-BANON-00 schemas).
 - The coordinator job, work-unit loop, cancellation checks, sampler and
   throughput aggregation: **imperative** — scheduled bulk work is an
@@ -208,7 +208,7 @@ operations view and report render meaningfully on a clean install.
 
 1. Land/absorb the REQ-BANON-00 OR-state schemas; add progress,
    cancellation and QA fields (additive).
-2. Ship coordinator + work units behind config `docudesk.batch.engine`
+2. Ship coordinator + work units behind config `filinq.batch.engine`
    (`background` default | `legacy-sync` kill switch, one release).
 3. Ship cancel/resume/report/ops-view + QA sampler.
 4. Rollback: `legacy-sync` restores in-request behaviour; OR batch objects

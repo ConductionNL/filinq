@@ -1,6 +1,6 @@
 ## Why
 
-DocuDesk owns the "document" domain across the Conduction fleet, yet a document
+Filinq owns the "document" domain across the Conduction fleet, yet a document
 today is only ever a **file plus derived analysis** — an OpenRegister File
 Attachment enriched with `x-openregister-calculations` (risk score, OCR
 confidence, anonymisation coverage). The `document` register (title "Document
@@ -19,12 +19,12 @@ row): the top recurring themes are **document-type management**
 (informatieobjecttype), **attach-document-to-object**, **classification**, and
 **retention**. Per the fleet rule that *content types live in leaf apps while
 OpenRegister provides storage and abstraction* (ADR-001, ADR-022), the document
-content type belongs in DocuDesk, not in OpenRegister core.
+content type belongs in Filinq, not in OpenRegister core.
 
 ## What Changes
 
-Add two schemas to DocuDesk's existing `document` register in
-`lib/Settings/docudesk_register.json`, making documents first-class governed
+Add two schemas to Filinq's existing `document` register in
+`lib/Settings/filinq_register.json`, making documents first-class governed
 objects:
 
 - A **`document`** schema — the governed document object (VNG ZGW/DRC
@@ -49,7 +49,7 @@ Additional mechanics:
   annotation for the default retention, and `configuration.objectNameField:
   "title"` so list UIs render the document title.
 - File binding uses OpenRegister's native `@self.folder` / file-attachment
-  contract — no new DocuDesk endpoint. Attaching a document to a case/object is
+  contract — no new Filinq endpoint. Attaching a document to a case/object is
   done through `relatedCases` / `relatedObjects` slug/UUID arrays plus the
   `$ref` cross-register convention already used by `correspondence.caseReference`
   (`$ref: "case"`, `x-external-register: "procest"`).
@@ -89,14 +89,14 @@ it rather than creating a parallel one.
 
 ## Impact
 
-**Affected code (DocuDesk):**
+**Affected code (Filinq):**
 
-- `lib/Settings/docudesk_register.json` — add `document` and `documentType`
+- `lib/Settings/filinq_register.json` — add `document` and `documentType`
   under `components.schemas`; add both slugs to the `document` register's
   `schemas` array; add seed objects under `components.objects`; bump
   `info.version`.
 - No PHP code change. All CRUD flows through OpenRegister's generic
-  `/api/objects/{register}` routes and `ObjectEntityService`; DocuDesk does not
+  `/api/objects/{register}` routes and `ObjectEntityService`; Filinq does not
   add a `DocumentService`.
 
 **Affected code (OpenRegister):** None. The `@self.folder` file binding, the
@@ -112,18 +112,18 @@ to; nothing they depend on today changes.
 generic object routes — `POST /api/objects/document`,
 `GET /api/objects/documentType`, etc. No new OCS controllers.
 
-**Data / migrations:** DocuDesk's `SettingsInitializer` / repair step re-imports
+**Data / migrations:** Filinq's `SettingsInitializer` / repair step re-imports
 the register on the version bump; seed objects are upserted. No database
 migration — everything lives in OpenRegister's `object` table.
 
 **Architectural alignment:**
 
-- ADR-001 / ADR-022: content type in the leaf app (DocuDesk); OpenRegister
+- ADR-001 / ADR-022: content type in the leaf app (Filinq); OpenRegister
   supplies storage and abstraction only.
 - ADR-006 (Schema Standards): schema.org-aligned vocabulary, explicit types,
   OpenAPI 3.0.0 shape, Dutch property titles.
 - ADR-013 (Loadable Register Templates): schemas + seed data ship in the
-  `docudesk_register.json` envelope.
+  `filinq_register.json` envelope.
 - ADR-016 (Mandatory Seed Data): `documentType` seeded with canonical types;
   realistic `document` seeds reference them.
 - ADR-031 (Schema-declarative logic): status is governed by

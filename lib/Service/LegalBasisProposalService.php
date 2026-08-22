@@ -12,29 +12,29 @@
  *
  * Decisions (see openspec/changes/propose-grondslag-per-entity-type):
  *   - Mapping is instance-global app-config JSON
- *     (`docudesk.grondslagen.entity_type_bases`), value
+ *     (`filinq.grondslagen.entity_type_bases`), value
  *     `{ "<TYPE>": ["<base-slug>", ...] }`.
  *   - Bases are stored as plain slug strings, matching the existing
  *     `EntityRelation.bases` shape and `LegalBasesSummaryService` resolver.
- *   - Selectable entity types come from a curated in-DocuDesk list (v1).
+ *   - Selectable entity types come from a curated in-Filinq list (v1).
  *     Sourcing them live from the anonymiser backend is deferred until that
  *     backend exposes a supported-types endpoint; {@see getSelectableEntityTypes}
  *     is the single seam to swap when it does.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\App\IAppManager;
@@ -46,10 +46,10 @@ use Psr\Log\LoggerInterface;
  * Proposes grondslagen per entity type and pre-fills them at detection time.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
  */
@@ -60,7 +60,7 @@ class LegalBasisProposalService {
 	 *
 	 * @var string
 	 */
-	public const CONFIG_KEY = 'docudesk.grondslagen.entity_type_bases';
+	public const CONFIG_KEY = 'filinq.grondslagen.entity_type_bases';
 
 	/**
 	 * App config key holding the JSON array of entity types left enabled for
@@ -68,14 +68,14 @@ class LegalBasisProposalService {
 	 *
 	 * @var string
 	 */
-	public const ENABLED_TYPES_CONFIG_KEY = 'docudesk.anonymisation.enabled_entity_types';
+	public const ENABLED_TYPES_CONFIG_KEY = 'filinq.anonymisation.enabled_entity_types';
 
 	/**
-	 * The DocuDesk app id, used as the app-config namespace.
+	 * The Filinq app id, used as the app-config namespace.
 	 *
 	 * @var string
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * Curated list of entity types offered in the settings selector (v1).

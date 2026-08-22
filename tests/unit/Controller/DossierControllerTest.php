@@ -4,7 +4,7 @@
  * Unit tests for DossierController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,11 +17,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
-use OCA\DocuDesk\Controller\DossierController;
-use OCA\DocuDesk\Service\LegalBasesSummaryService;
+use OCA\Filinq\Controller\DossierController;
+use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCP\Files\File;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
  * failure surfacing as HTTP 500 with a localised message.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
@@ -104,7 +104,7 @@ class DossierControllerTest extends TestCase {
 		);
 
 		$this->controller = new DossierController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
 			grondslagenSummary: $this->mockSummaryService,

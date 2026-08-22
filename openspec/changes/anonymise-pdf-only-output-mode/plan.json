@@ -1,7 +1,7 @@
 {
   "change": "anonymise-pdf-only-output-mode",
-  "project": "docudesk",
-  "repo": "Conduction/docudesk",
+  "project": "filinq",
+  "repo": "Conduction/filinq",
   "base_branch": "test/anonimiseren-bij-de-bron-dd",
   "feature_branch": "feature/155/anonymise-pdf-only-output-mode",
   "created": "2026-06-30",
@@ -32,7 +32,7 @@
     {
       "id": 3,
       "title": "SettingsService default flips to pdf-only",
-      "description": "Change the docudesk.anonymisation.default_output_format fallback from 'pdf' to 'pdf-only'; update the adjacent comment to describe the three modes.",
+      "description": "Change the filinq.anonymisation.default_output_format fallback from 'pdf' to 'pdf-only'; update the adjacent comment to describe the three modes.",
       "status": "done",
       "spec_ref": "anonymization",
       "acceptance_criteria": [],
@@ -194,7 +194,7 @@
     {
       "id": 18,
       "title": "Admin settings UI: 3-option output-format radio",
-      "description": "Replace the boolean PDF switch in Settings.vue with a pdf-only/pdf/preserve radio group bound to docudesk.anonymisation.default_output_format; default + load fallback pdf-only.",
+      "description": "Replace the boolean PDF switch in Settings.vue with a pdf-only/pdf/preserve radio group bound to filinq.anonymisation.default_output_format; default + load fallback pdf-only.",
       "status": "done",
       "spec_ref": "anonymization",
       "acceptance_criteria": [],

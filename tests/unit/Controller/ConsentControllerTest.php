@@ -4,7 +4,7 @@
  * Unit tests for ConsentController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,17 +12,17 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\ConsentController;
-use OCA\DocuDesk\Exception\PolicyRejectedException;
-use OCA\DocuDesk\Service\ConsentCrudService;
+use OCA\Filinq\Controller\ConsentController;
+use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Service\ConsentCrudService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -37,10 +37,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for ConsentController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -108,7 +108,7 @@ class ConsentControllerTest extends TestCase {
 		$this->mockGroupManager->method('isAdmin')->willReturn(false);
 
 		$this->controller = new ConsentController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$this->mockLogger,
 			$this->mockCrudService,
@@ -405,7 +405,7 @@ class ConsentControllerTest extends TestCase {
 	 * the #283 residual): exception text carrying a record UUID must NEVER
 	 * reach the response body — only the generic translated message. Full
 	 * detail goes to the logger only. Mirrors the proven
-	 * SigningController::errorResponse() fix (docudesk#100 / Wilco #6).
+	 * SigningController::errorResponse() fix (filinq#100 / Wilco #6).
 	 *
 	 * @return void
 	 */
@@ -453,7 +453,7 @@ class ConsentControllerTest extends TestCase {
 		$notFoundCrudService->method('getConsent')->willReturn(null);
 
 		$notFoundController = new ConsentController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$this->mockLogger,
 			$notFoundCrudService,

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The document register defines the data model for DocuDesk's document analysis results, stored separately from the consent register. It is defined in `lib/Settings/document_register.json` and contains three schemas for different document management aspects.
+The document register defines the data model for Filinq's document analysis results, stored separately from the consent register. It is defined in `lib/Settings/document_register.json` and contains three schemas for different document management aspects.
 
 ## Schemas
 
@@ -21,4 +21,4 @@ The document register defines the data model for DocuDesk's document analysis re
 
 ## Note
 
-The document register is separate from `docudesk_register.json` which handles consent-related schemas. The document register is not auto-loaded on boot and needs manual import.
+The document register is separate from `filinq_register.json` which handles consent-related schemas. The document register is not auto-loaded on boot and needs manual import.

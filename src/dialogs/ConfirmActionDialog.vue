@@ -7,10 +7,10 @@
 		</template>
 		<template #actions>
 			<NcButton :disabled="busy" @click="$emit('cancel')">
-				{{ cancelLabel || t('docudesk', 'Cancel') }}
+				{{ cancelLabel || t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton :variant="variant" :disabled="busy" @click="$emit('confirm')">
-				{{ confirmLabel || t('docudesk', 'Delete') }}
+				{{ confirmLabel || t('filinq', 'Delete') }}
 			</NcButton>
 		</template>
 	</NcDialog>

@@ -3,32 +3,32 @@
 /**
  * Unit tests for DocumentSigningRequestedListener
  *
- * Verifies the cross-app delegated-signing contract (docudesk-signing-events):
+ * Verifies the cross-app delegated-signing contract (filinq-signing-events):
  * the listener maps a DocumentSigningRequestedEvent onto
  * SigningService::createRequest, writes the result slot on success, and is
  * fail-soft (no exception escapes, event left unhandled) on failure.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\EventListener
+ * @package   OCA\Filinq\Tests\Unit\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\EventListener;
+namespace OCA\Filinq\Tests\Unit\EventListener;
 
-use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
-use OCA\DocuDesk\Event\SigningProvenance;
-use OCA\DocuDesk\EventListener\DocumentSigningRequestedListener;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Event\DocumentSigningRequestedEvent;
+use OCA\Filinq\Event\SigningProvenance;
+use OCA\Filinq\EventListener\DocumentSigningRequestedListener;
+use OCA\Filinq\Service\SigningService;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -38,10 +38,10 @@ use RuntimeException;
  * Tests for DocumentSigningRequestedListener.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\EventListener
+ * @package  OCA\Filinq\Tests\Unit\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class DocumentSigningRequestedListenerTest extends TestCase {
 

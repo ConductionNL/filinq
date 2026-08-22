@@ -29,8 +29,8 @@ import {
 				<DdSearchBar
 					v-model="searchQuery"
 					class="entity-search"
-					:placeholder="t('docudesk', 'Search by letter or type')"
-					:clearLabel="t('docudesk', 'Clear')" />
+					:placeholder="t('filinq', 'Search by letter or type')"
+					:clearLabel="t('filinq', 'Clear')" />
 				<!-- Toggle (left) + Add button (right). The toggle switches the
 				     cards between editable review and read-only defaults; Add
 				     opens the add-entity panel. -->
@@ -39,13 +39,13 @@ import {
 						class="grondslagen-toggle"
 						:checked="grondslagen"
 						@update:checked="fileViewerStore.setGrondslagen($event)">
-						{{ t('docudesk', 'Use legal grounds (grondslagen)') }}
+						{{ t('filinq', 'Use legal grounds (grondslagen)') }}
 					</DdToggle>
 					<NcButton variant="secondary" @click="onEdit">
 						<template #icon>
 							<Plus :size="20" />
 						</template>
-						{{ t('docudesk', 'Add') }}
+						{{ t('filinq', 'Add') }}
 					</NcButton>
 				</div>
 			</div>
@@ -63,12 +63,12 @@ import {
 			<div v-else-if="isAnonymising" class="anonymising-state">
 				<NcLoadingIcon :size="44" />
 				<p class="anonymising-state__label">
-					{{ t('docudesk', 'Anonymising…') }}
+					{{ t('filinq', 'Anonymising…') }}
 				</p>
 				<p class="anonymising-state__hint">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Removing the selected entities from the document. This can take a moment.',
 						)
 					}}
@@ -77,7 +77,7 @@ import {
 
 			<!-- Error state. -->
 			<NcNoteCard v-else-if="entry && entry.status === 'error'" type="error">
-				{{ entry.error || t('docudesk', 'Failed to load entities') }}
+				{{ entry.error || t('filinq', 'Failed to load entities') }}
 			</NcNoteCard>
 
 			<!-- Completed result: the file finished anonymising and a downloadable
@@ -88,11 +88,11 @@ import {
 			<div v-else-if="isCompletedResult" class="entities-list">
 				<!-- Success: everything the user selected was removed. -->
 				<NcNoteCard v-if="entry.complete !== false" type="success">
-					<div>{{ t('docudesk', 'Anonymisation complete') }}</div>
+					<div>{{ t('filinq', 'Anonymisation complete') }}</div>
 					<div class="muted">
 						{{
 							n(
-								'docudesk',
+								'filinq',
 								'%n entity replaced',
 								'%n entities replaced',
 								entry.replacementCount || 0,
@@ -100,7 +100,7 @@ import {
 						}}
 					</div>
 					<a :href="downloadUrl" download class="download-link">
-						{{ t('docudesk', 'Download anonymised file') }}
+						{{ t('filinq', 'Download anonymised file') }}
 					</a>
 				</NcNoteCard>
 
@@ -110,11 +110,11 @@ import {
 				     entities is not part of this result view, so we only flag the
 				     residuals and tell the operator to check the file. -->
 				<NcNoteCard v-else type="warning">
-					<div>{{ t('docudesk', 'Anonymisation incomplete') }}</div>
+					<div>{{ t('filinq', 'Anonymisation incomplete') }}</div>
 					<div class="muted">
 						{{
 							n(
-								'docudesk',
+								'filinq',
 								'%n entity could not be fully removed. Check the file below before using it.',
 								'%n entities could not be fully removed. Check the file below before using it.',
 								entry.residualCount || 0,
@@ -136,7 +136,7 @@ import {
 						</li>
 					</ul>
 					<a :href="downloadUrl" download class="download-link">
-						{{ t('docudesk', 'Download anonymised file') }}
+						{{ t('filinq', 'Download anonymised file') }}
 					</a>
 				</NcNoteCard>
 
@@ -166,15 +166,15 @@ import {
 					{{
 						selectedText
 							? t(
-									'docudesk',
+									'filinq',
 									'This text will be added to the anonymisation list.',
 								)
-							: t('docudesk', 'Select text in the document to add it.')
+							: t('filinq', 'Select text in the document to add it.')
 					}}
 				</NcNoteCard>
 				<div class="add-entity-panel__field">
 					<span class="add-entity-panel__label">{{
-						t('docudesk', 'Selected text')
+						t('filinq', 'Selected text')
 					}}</span>
 					<div class="add-entity-panel__selection">
 						{{ selectedText || '—' }}
@@ -186,8 +186,8 @@ import {
 					:options="typeOptions"
 					label="label"
 					:reduce="(o) => o.value"
-					:inputLabel="t('docudesk', 'Type')"
-					:placeholder="t('docudesk', 'Pick a type…')" />
+					:inputLabel="t('filinq', 'Type')"
+					:placeholder="t('filinq', 'Pick a type…')" />
 				<NcSelect
 					v-if="grondslagen"
 					v-model="newBases"
@@ -196,8 +196,8 @@ import {
 					label="label"
 					:reduce="(o) => o.value"
 					:multiple="true"
-					:inputLabel="t('docudesk', 'Grondslagen')"
-					:placeholder="t('docudesk', 'Pick grondslagen…')" />
+					:inputLabel="t('filinq', 'Grondslagen')"
+					:placeholder="t('filinq', 'Pick grondslagen…')" />
 				<NcNoteCard v-if="saveError" type="error">
 					{{ saveError }}
 				</NcNoteCard>
@@ -207,7 +207,7 @@ import {
 			<div
 				v-else-if="entry && entry.entities.length === 0"
 				class="empty-state">
-				<p>{{ t('docudesk', 'No entities detected in this file.') }}</p>
+				<p>{{ t('filinq', 'No entities detected in this file.') }}</p>
 			</div>
 
 			<!-- Entity list — one card per detected entity. Filtered by the
@@ -215,7 +215,7 @@ import {
 			     `entry.entities` so the store mutators target the right row. -->
 			<div v-else-if="entry" class="entities-list">
 				<div v-if="filteredEntities.length === 0" class="empty-state">
-					<p>{{ t('docudesk', 'No entities match your search.') }}</p>
+					<p>{{ t('filinq', 'No entities match your search.') }}</p>
 				</div>
 				<DdEntityCard
 					v-for="{ item, idx } in filteredEntities"
@@ -243,12 +243,12 @@ import {
 					"
 					:title="
 						t(
-							'docudesk',
+							'filinq',
 							'Confidentiality label from files_confidential',
 						)
 					">
 					{{
-						t('docudesk', 'Confidentiality: {label}', {
+						t('filinq', 'Confidentiality: {label}', {
 							label: entry.confidentialityLabel,
 						})
 					}}
@@ -271,7 +271,7 @@ import {
 			v-if="entry && entry.status === 'extracted' && isAdding"
 			class="sidebar-action-bar">
 			<NcButton variant="tertiary" :disabled="savingNew" @click="onCancelEdit">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
@@ -280,7 +280,7 @@ import {
 				<template v-if="savingNew" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ t('docudesk', 'Add entity') }}
+				{{ t('filinq', 'Add entity') }}
 			</NcButton>
 		</div>
 		<!-- Dossier mode: the whole batch footer (anonymise-all + progress
@@ -325,7 +325,7 @@ import {
 					<NcLoadingIcon v-if="reanonymising" :size="20" />
 					<ShieldRefreshOutline v-else :size="20" />
 				</template>
-				{{ t('docudesk', 'Re-anonymize') }}
+				{{ t('filinq', 'Re-anonymize') }}
 			</NcButton>
 			<!-- Second step of a re-anonymise: the source is re-extracted, run the
 			     new anonymisation for just this file (overwrites its output). -->
@@ -340,7 +340,7 @@ import {
 				</template>
 				{{
 					n(
-						'docudesk',
+						'filinq',
 						'Anonymize %n entity',
 						'Anonymize %n entities',
 						includedCount,
@@ -361,8 +361,8 @@ import {
 				</template>
 				{{
 					zipping
-						? t('docudesk', 'Preparing download…')
-						: t('docudesk', 'Download all anonymised files ({count})', {
+						? t('filinq', 'Preparing download…')
+						: t('filinq', 'Download all anonymised files ({count})', {
 								count: completedCount,
 							})
 				}}
@@ -386,7 +386,7 @@ import {
 				</template>
 				{{
 					n(
-						'docudesk',
+						'filinq',
 						'Anonymize %n entity',
 						'Anonymize %n entities',
 						includedCount,
@@ -408,7 +408,7 @@ import {
 					<NcLoadingIcon v-if="reanonymising" :size="20" />
 					<ShieldRefreshOutline v-else :size="20" />
 				</template>
-				{{ t('docudesk', 'Re-anonymize') }}
+				{{ t('filinq', 'Re-anonymize') }}
 			</NcButton>
 		</div>
 		<!-- Single anonymised file (outside a dossier): offer a one-click
@@ -425,8 +425,8 @@ import {
 				</template>
 				{{
 					exporting
-						? t('docudesk', 'Preparing download…')
-						: t('docudesk', 'Export file(s)')
+						? t('filinq', 'Preparing download…')
+						: t('filinq', 'Export file(s)')
 				}}
 			</NcButton>
 			<p
@@ -609,13 +609,13 @@ export default {
 
 		/**
 		 * True when the open file lives inside a dossier (a subfolder of
-		 * /DocuDesk). Mirrors App.vue's `inDossier`: in this mode the action
+		 * /Filinq). Mirrors App.vue's `inDossier`: in this mode the action
 		 * bar offers the dossier-wide batch button instead of the per-file one.
 		 *
 		 * @return {boolean}
 		 */
 		inDossier() {
-			return myDocumentsStore.currentPath !== '/DocuDesk'
+			return myDocumentsStore.currentPath !== '/Filinq'
 		},
 
 		/**
@@ -739,12 +739,12 @@ export default {
 		batchButtonLabel() {
 			if (this.batchState.running) {
 				const processed = this.batchState.done + this.batchState.failed
-				return t('docudesk', 'Anonymizing… ({processed}/{total})', {
+				return t('filinq', 'Anonymizing… ({processed}/{total})', {
 					processed,
 					total: this.batchState.total,
 				})
 			}
-			return t('docudesk', 'Anonymize all files ({count})', {
+			return t('filinq', 'Anonymize all files ({count})', {
 				count: this.batchCount,
 			})
 		},
@@ -761,12 +761,12 @@ export default {
 				return ''
 			}
 			if (failed > 0) {
-				return t('docudesk', '{done} anonymized, {failed} failed.', {
+				return t('filinq', '{done} anonymized, {failed} failed.', {
 					done,
 					failed,
 				})
 			}
-			return t('docudesk', 'All {total} files anonymized.', { total })
+			return t('filinq', 'All {total} files anonymized.', { total })
 		},
 
 		/**
@@ -1050,25 +1050,25 @@ export default {
 		 */
 		sidebarTitle() {
 			if (this.isAdding) {
-				return t('docudesk', 'Add new data')
+				return t('filinq', 'Add new data')
 			}
 			// Anonymised result — re-opened document or the just-finished run:
 			// the title summarises the removed data (unique values found) instead
 			// of a bare "items anonymised" count.
 			if (this.entry?.viewMode === 'anonymized' || this.isCompletedResult) {
-				return t('docudesk', '{found} unique data found', {
+				return t('filinq', '{found} unique data found', {
 					found: this.summaryFound,
 				})
 			}
 			if (this.entry && Array.isArray(this.entry.entities)) {
 				return n(
-					'docudesk',
+					'filinq',
 					'%n entity detected',
 					'%n entities detected',
 					this.entry.entities.length,
 				)
 			}
-			return fileViewerStore.currentFile?.fileName || t('docudesk', 'Entities')
+			return fileViewerStore.currentFile?.fileName || t('filinq', 'Entities')
 		},
 
 		/**
@@ -1081,30 +1081,30 @@ export default {
 		sidebarSubtitle() {
 			if (this.isAdding) {
 				return t(
-					'docudesk',
+					'filinq',
 					'Select text in the document, then choose a type.',
 				)
 			}
 			if (this.entry?.viewMode === 'anonymized') {
 				if (this.entry.sourceFileName) {
-					return t('docudesk', 'Anonymised version of {source}', {
+					return t('filinq', 'Anonymised version of {source}', {
 						source: this.entry.sourceFileName,
 					})
 				}
-				return t('docudesk', 'Resolved from the GDPR register.')
+				return t('filinq', 'Resolved from the GDPR register.')
 			}
 			if (this.isLoading) {
-				return t('docudesk', 'Detecting entities…')
+				return t('filinq', 'Detecting entities…')
 			}
 			if (this.entry?.status === 'error') {
-				return t('docudesk', 'Failed to load')
+				return t('filinq', 'Failed to load')
 			}
 			if (
 				this.entry
 				&& Array.isArray(this.entry.entities)
 				&& this.entry.entities.length > 0
 			) {
-				return t('docudesk', 'Automatic detection. Always verify yourself.')
+				return t('filinq', 'Automatic detection. Always verify yourself.')
 			}
 			return ''
 		},
@@ -1417,7 +1417,7 @@ export default {
 				}
 				if (!usedNames.size) {
 					this.zipError = t(
-						'docudesk',
+						'filinq',
 						'Could not download any of the anonymised files.',
 					)
 					return
@@ -1429,14 +1429,14 @@ export default {
 				)
 				if (failed > 0) {
 					this.zipError = t(
-						'docudesk',
+						'filinq',
 						'{failed} file(s) could not be added to the download.',
 						{ failed },
 					)
 				}
 			} catch (err) {
 				console.error('Download-all: zip generation failed', err)
-				this.zipError = t('docudesk', 'Preparing the download failed.')
+				this.zipError = t('filinq', 'Preparing the download failed.')
 			} finally {
 				this.zipping = false
 			}
@@ -1463,7 +1463,7 @@ export default {
 			const url = this.downloadUrlFor(file?.path)
 			if (!url) {
 				this.exportError = t(
-					'docudesk',
+					'filinq',
 					'Could not locate the file to export.',
 				)
 				return
@@ -1476,7 +1476,7 @@ export default {
 				this.triggerBlobDownload(res.data, name)
 			} catch (err) {
 				console.error('Export: could not download', url, err)
-				this.exportError = t('docudesk', 'Exporting the file failed.')
+				this.exportError = t('filinq', 'Exporting the file failed.')
 			} finally {
 				this.exporting = false
 			}
@@ -1585,7 +1585,7 @@ export default {
 				this.resetNewEntityForm()
 			} catch (err) {
 				this.saveError =
-					err?.message || t('docudesk', 'Failed to add the selected text')
+					err?.message || t('filinq', 'Failed to add the selected text')
 			} finally {
 				this.savingNew = false
 			}

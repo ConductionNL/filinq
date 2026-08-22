@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk SigningCancellationNotSupportedException
+ * Filinq SigningCancellationNotSupportedException
  *
  * Raised when a signing provider cannot withdraw a request it issued.
  *
@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Exception
- * @package  OCA\DocuDesk\Exception
+ * @package  OCA\Filinq\Exception
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,12 +17,12 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Exception;
+namespace OCA\Filinq\Exception;
 
 use RuntimeException;
 
@@ -47,7 +47,7 @@ use RuntimeException;
  * indistinguishable from a transient failure.
  *
  * @category Exception
- * @package  OCA\DocuDesk\Exception
+ * @package  OCA\Filinq\Exception
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -55,7 +55,7 @@ use RuntimeException;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
  */

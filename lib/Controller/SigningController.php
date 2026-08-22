@@ -6,12 +6,12 @@
  * REST API controller for digital document signing operations.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -19,13 +19,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningService;
-use OCA\DocuDesk\Service\SigningVerificationService;
+use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\SigningVerificationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -39,10 +39,10 @@ use Psr\Log\LoggerInterface;
  * Controller for signing-specific endpoints
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
  */
@@ -176,7 +176,7 @@ class SigningController extends Controller {
 				);
 			}
 
-			// WF2 + Wilco #6 fix (docudesk#100, 2026-06-06): pass the caller
+			// WF2 + Wilco #6 fix (filinq#100, 2026-06-06): pass the caller
 			// identity so the service enforces that only the initiator or a
 			// signer can read a request — and returns null on BOTH not-found
 			// and access-denied so we emit a single 404 (never a 404-vs-403
@@ -225,7 +225,7 @@ class SigningController extends Controller {
 				);
 			}
 
-			// WF1 fix (docudesk#100): only the initiator or an admin may
+			// WF1 fix (filinq#100): only the initiator or an admin may
 			// cancel a signing request. A non-initiator, non-admin caller is
 			// rejected with 403 BEFORE cancelRequest() is ever called.
 			//
@@ -425,7 +425,7 @@ class SigningController extends Controller {
 				);
 			}
 
-			// Security (M2 + Wilco #6 / docudesk#100): only the initiator,
+			// Security (M2 + Wilco #6 / filinq#100): only the initiator,
 			// a listed signer, or an admin may read the audit trail —
 			// it contains IP addresses + user identifiers that must not
 			// leak to unrelated parties. getRequest() now returns null on
@@ -464,7 +464,7 @@ class SigningController extends Controller {
 	 * @return JSONResponse The error response
 	 */
 	private function errorResponse(string $message, Exception $exception): JSONResponse {
-		// Wilco #6 fix (docudesk#100, 2026-06-06): do NOT include the
+		// Wilco #6 fix (filinq#100, 2026-06-06): do NOT include the
 		// exception message in the response body. Previously, a not-found
 		// exception ("Signing request not found: <UUID>") and an access-
 		// denied exception ("Access denied: signing request belongs to
@@ -482,7 +482,7 @@ class SigningController extends Controller {
 			$statusCode = $exception->getCode();
 		}
 
-		// Wilco #6 fix (docudesk#100): the response body carries ONLY the
+		// Wilco #6 fix (filinq#100): the response body carries ONLY the
 		// generic translated message — never the exception text — so it can
 		// no longer act as an existence-probing oracle. The status code is
 		// still honoured from the exception (e.g. 400 for invalid input) so

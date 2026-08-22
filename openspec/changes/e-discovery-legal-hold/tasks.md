@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `legalHoldCase` schema to the document register in `lib/Settings/docudesk_register.json` (REQ-DDEDL-001)
+- [ ] 1.1 Add the `legalHoldCase` schema to the document register in `lib/Settings/filinq_register.json` (REQ-DDEDL-001)
   - Properties/enums per design.md D1; `hardValidation: true`; `x-openregister-lifecycle` with canonical `initial: active` and only `active → released`; `archive.defaultNominatie: bewaren`; no `x-openregister-archival`; register version bump.
 
 - [ ] 1.2 Seed one demo `woo-appeal` case (design.md Seed Data)
@@ -14,7 +14,7 @@
 ## 2. Backend
 
 - [ ] 2.1 Implement `lib/Service/LegalHoldCaseService.php` — activation fan-out (REQ-DDEDL-002)
-  - Places OR legal holds (reason `docudesk-hold-case:{uuid}`) per in-scope object via OR's legal-hold API; per-object fan-out status persisted on the case; retry for failures; pre-existing third-party holds recorded, never overwritten; verify the exact OR endpoint/service signatures against OR HEAD, not this spec's snapshot.
+  - Places OR legal holds (reason `filinq-hold-case:{uuid}`) per in-scope object via OR's legal-hold API; per-object fan-out status persisted on the case; retry for failures; pre-existing third-party holds recorded, never overwritten; verify the exact OR endpoint/service signatures against OR HEAD, not this spec's snapshot.
 
 - [ ] 2.2 Implement overlap-safe release + incremental scope additions (REQ-DDEDL-003, REQ-DDEDL-006)
   - Coverage derived by querying active cases' scopes (no duplicated state); release lifts a hold only when no other active case covers the object, otherwise re-stamps the reason; mandatory releaseReason; additions to an active case fan out only for the added references; PUT-semantic saves carry ALL case fields forward.
@@ -42,7 +42,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: overlap matrix (two cases/one record, release order permutations) for BOTH the OR record hold and the files_lock file lock, partial fan-out failure visibility, file-lock backstop-unavailable degradation, incremental additions, release-reason guard, notification recipients, controller 403 for non-authority users, register-lint (lifecycle shape, bewaren config, no archival annotation), PUT-semantics survival of a non-changed case field.
 
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/e-discovery-legal-hold.spec.ts` covering the `@e2e`-referenced scenarios

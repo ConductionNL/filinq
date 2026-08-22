@@ -1,18 +1,18 @@
 <?php
 
 /**
- * DocuDesk PDF Conversion Registrar
+ * Filinq PDF Conversion Registrar
  *
  * Wires the ordered PDF-conversion backend cascade into the container.
  * Extracted from `Application`.
  *
  * @category  AppInfo
- * @package   OCA\DocuDesk\AppInfo
+ * @package   OCA\Filinq\AppInfo
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdf-conversion/spec.md
  *
@@ -22,14 +22,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\AppInfo;
+namespace OCA\Filinq\AppInfo;
 
-use OCA\DocuDesk\Service\Conversion\EmlBackend;
-use OCA\DocuDesk\Service\Conversion\LibreOfficeHeadlessBackend;
-use OCA\DocuDesk\Service\Conversion\MpdfBackend;
-use OCA\DocuDesk\Service\Conversion\OfficeAppBackend;
-use OCA\DocuDesk\Service\Conversion\PhpWordBackend;
-use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\Filinq\Service\Conversion\EmlBackend;
+use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
+use OCA\Filinq\Service\Conversion\MpdfBackend;
+use OCA\Filinq\Service\Conversion\OfficeAppBackend;
+use OCA\Filinq\Service\Conversion\PhpWordBackend;
+use OCA\Filinq\Service\PdfConversionService;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Log\LoggerInterface;
 
@@ -37,10 +37,10 @@ use Psr\Log\LoggerInterface;
  * Registers the PdfConversionService backend cascade.
  *
  * @category AppInfo
- * @package  OCA\DocuDesk\AppInfo
+ * @package  OCA\Filinq\AppInfo
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class PdfConversionRegistrar {
 	/**

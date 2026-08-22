@@ -8,12 +8,12 @@
  * a document type, falling back to the shipped default profile.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Validation
+ * @package   OCA\Filinq\Service\Validation
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  *
@@ -23,9 +23,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Validation;
+namespace OCA\Filinq\Service\Validation;
 
-use OCA\DocuDesk\Service\DocumentValidationService;
+use OCA\Filinq\Service\DocumentValidationService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -34,10 +34,10 @@ use Throwable;
  * Resolves the effective validation profile for a document type.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Validation
+ * @package  OCA\Filinq\Service\Validation
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  */
@@ -220,7 +220,7 @@ class ValidationProfileResolver {
 	 * @return array<string, mixed> The decoded profiles (empty on error).
 	 */
 	private function loadProfiles(): array {
-		$raw = $this->appConfig->getValueString('docudesk', self::CONFIG_PROFILES, '');
+		$raw = $this->appConfig->getValueString('filinq', self::CONFIG_PROFILES, '');
 		if ($raw === '') {
 			return [];
 		}
@@ -228,7 +228,7 @@ class ValidationProfileResolver {
 		try {
 			$decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 		} catch (Throwable $e) {
-			$this->logger->warning('Invalid docudesk.validation.profiles JSON; using defaults.');
+			$this->logger->warning('Invalid filinq.validation.profiles JSON; using defaults.');
 			return [];
 		}
 

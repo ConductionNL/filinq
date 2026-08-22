@@ -18,10 +18,10 @@ WANT="${1:-all}"
 
 # suite | container | internal base url | host port
 SUITES=(
-  "onlyoffice|docudesk-onlyoffice|http://docudesk-onlyoffice|8092"
-  "eurooffice|docudesk-eurooffice|http://docudesk-eurooffice|8093"
-  "collabora|docudesk-collabora|http://docudesk-collabora:9980|9980"
-  "libreoffice|docudesk-libreoffice|http://docudesk-libreoffice:2004|8094"
+  "onlyoffice|filinq-onlyoffice|http://filinq-onlyoffice|8092"
+  "eurooffice|filinq-eurooffice|http://filinq-eurooffice|8093"
+  "collabora|filinq-collabora|http://filinq-collabora:9980|9980"
+  "libreoffice|filinq-libreoffice|http://filinq-libreoffice:2004|8094"
 )
 
 echo "### 1. fixture the suites can fetch"
@@ -31,7 +31,7 @@ echo "### 1. fixture the suites can fetch"
 docker exec "$NC" sh -c 'mkdir -p /tmp/officefx' >/dev/null 2>&1
 if ! docker exec "$NC" test -f /tmp/officefx/probe.docx 2>/dev/null; then
   docker exec "$NC" php -r '
-    require "/var/www/html/custom_apps/docudesk/vendor/autoload.php";
+    require "/var/www/html/custom_apps/filinq/vendor/autoload.php";
     $w = new \PhpOffice\PhpWord\PhpWord(); $s = $w->addSection();
     $s->addTitle("Probe document", 1);
     $s->addText("The assessment period is eight weeks.");
@@ -88,7 +88,7 @@ for row in "${SUITES[@]}"; do
 done
 
 echo "### 5. Nextcloud's own view"
-docker exec "$NC" php occ docudesk:office:probe 2>&1 || echo "  (docudesk not deployed here)"
+docker exec "$NC" php occ filinq:office:probe 2>&1 || echo "  (filinq not deployed here)"
 
 cat <<'NOTE'
 

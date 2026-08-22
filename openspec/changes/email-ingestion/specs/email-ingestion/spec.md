@@ -12,7 +12,7 @@ are filed into their mapped dossier as source `.eml` + PDF/A-3b derivative
 (via the existing conversion cascade) with an `emailDocument` record carrying
 envelope and threading metadata. Scanning is a bounded, idempotent cron job;
 failures (including unsupported `.msg`) are visible records, never silent
-skips. Mailbox connectivity and credentials stay out of DocuDesk
+skips. Mailbox connectivity and credentials stay out of Filinq
 (OpenConnector boundary). Threading metadata is captured for the wave-1
 woo-request-workflow's future email-thread dedupe (referenced, not
 modified). Evidence: the mailbox-integration canonical-feature cluster, the
@@ -32,13 +32,13 @@ The app MUST declare an `emailDocument` schema in the `document` register:
 (enum `watched-folder`|`manual`), `ingestedAt` (required, with `status`).
 All data MUST be stored as OpenRegister objects (ADR-001) with a register
 version bump for boot import. The schema MUST carry a
-`docudesk-email-ingestion` `x-openregister-processing` annotation so the
+`filinq-email-ingestion` `x-openregister-processing` annotation so the
 activity appears in the platform AVG Art. 30 verwerkingsregister. The
 existing outbound `correspondence` schema MUST NOT be reused or modified.
 
 #### Scenario: Register import creates the schema and seed
 
-- GIVEN DocuDesk and OpenRegister installed
+- GIVEN Filinq and OpenRegister installed
 - WHEN `ConfigurationService::importFromApp()` runs on boot
 - THEN the `emailDocument` schema exists in the `document` register, the seeded demo email record is queryable, and the processing annotation is declared
 - @e2e exclude boot-time register import with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
@@ -46,9 +46,9 @@ existing outbound `correspondence` schema MUST NOT be reused or modified.
 ### Requirement: Bounded, idempotent watched-folder ingestion (REQ-DDEIN-002)
 
 The app MUST scan admin-configured inbox folders
-(`docudesk.email_ingestion.inbox_folders`: mappings of folder → target
+(`filinq.email_ingestion.inbox_folders`: mappings of folder → target
 dossier) via a cron background job processing at most
-`docudesk.email_ingestion.files_per_tick` (default 25) files per run, so a
+`filinq.email_ingestion.files_per_tick` (default 25) files per run, so a
 bulk drop drains over successive ticks without starving the instance.
 Ingestion MUST be idempotent: a file whose `contentHash` — or whose
 `messageId` for the same target dossier — matches an existing
@@ -87,7 +87,7 @@ Each filed email MUST get a PDF/A-3b derivative produced by the existing
 `EmlPdfAssemblyService`), written beside the filed `.eml`, recorded in
 `pdfFileRef`. No new conversion or rendering engine may be introduced, and
 the cascade itself MUST NOT be modified. When conversion fails or is
-disabled (`docudesk.conversion.backends.eml_enabled` off, or OpenRegister
+disabled (`filinq.conversion.backends.eml_enabled` off, or OpenRegister
 absent), the email MUST still be filed (`status: filed`, `pdfFileRef` null)
 with a visible not-converted state and a retry action that re-runs
 conversion only — a conversion outage MUST NOT lose or defer the capture of
@@ -126,18 +126,18 @@ woo-request-workflow's future step, which this metadata feeds.
 - THEN B's record stores A's message id in `inReplyTo` and `references`, and both records share the same `threadKey`
 - @e2e exclude header-extraction arithmetic — covered exhaustively by PHPUnit fixture emails (tests/unit/Service/EmailIngestionServiceTest.php::testThreadingHeadersExtracted)
 
-### Requirement: Mailbox connectivity stays out of DocuDesk (REQ-DDEIN-005)
+### Requirement: Mailbox connectivity stays out of Filinq (REQ-DDEIN-005)
 
 The app MUST NOT contain an IMAP/POP/Graph client and MUST NOT store any
 mailbox credential in its configuration. The optional mailbox feed is an
 OpenConnector flow whose documented contract is: deliver each message as a
-raw `.eml` file into the mapped watched folder; DocuDesk's idempotency
+raw `.eml` file into the mapped watched folder; Filinq's idempotency
 absorbs redeliveries. The admin settings surface MUST document this
 boundary where the inbox mapping is configured.
 
 #### Scenario: No mailbox credential surface exists
 
-- WHEN DocuDesk's settings surfaces and configuration keys are inspected
+- WHEN Filinq's settings surfaces and configuration keys are inspected
 - THEN no mailbox host/username/password/token setting exists, and the inbox-mapping admin section explains the OpenConnector delivery contract
 - @e2e exclude negative code/config guard — covered by PHPUnit (tests/unit/Settings/ negative-guard assertions on the settings registry and config keys)
 

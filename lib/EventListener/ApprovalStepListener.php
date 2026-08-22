@@ -4,17 +4,17 @@
  * ApprovalStepListener
  *
  * Bridges OpenRegister `ApprovalStep*Event`s (Initiated, Approved, Rejected,
- * Completed) into docudesk's typed `Signer*Event` family, and triggers the
+ * Completed) into filinq's typed `Signer*Event` family, and triggers the
  * matching `SigningProviderInterface` invocation when a step linked to a
- * docudesk signing-request becomes pending.
+ * filinq signing-request becomes pending.
  *
- * Per ADR-022 docudesk's signing workflow delegates state to OR's
+ * Per ADR-022 filinq's signing workflow delegates state to OR's
  * ApprovalService; this listener is the single ingress point for OR's
  * dispatched events. The listener:
  *
- *  1. Filters OR events to those belonging to a docudesk signing-request
+ *  1. Filters OR events to those belonging to a filinq signing-request
  *     (by `register_slug` / `schema_slug` recorded on the chain).
- *  2. Re-dispatches a typed docudesk-shaped event so other docudesk
+ *  2. Re-dispatches a typed filinq-shaped event so other filinq
  *     components (audit, notifications, UI state) can subscribe without
  *     depending on OR's event surface directly.
  *  3. On `pending` (Initiated, Approved with next step), invokes the active
@@ -23,12 +23,12 @@
  *     `ApprovalService::approveStep` / `rejectStep` back, closing the loop.
  *
  * @category  EventListener
- * @package   OCA\DocuDesk\EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\EventListener;
+namespace OCA\Filinq\EventListener;
 
 use OCA\OpenRegister\Event\ApprovalStepApprovedEvent;
 use OCA\OpenRegister\Event\ApprovalStepCompletedEvent;
@@ -51,13 +51,13 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Listener for OR ApprovalStep events relevant to docudesk signing requests.
+ * Listener for OR ApprovalStep events relevant to filinq signing requests.
  *
  * @category EventListener
- * @package  OCA\DocuDesk\EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @implements IEventListener<Event>
  */
@@ -66,9 +66,9 @@ class ApprovalStepListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param SignerEventTranslator $translator Translates OR approval-step
-	 *                                          transitions into docudesk signer
+	 *                                          transitions into filinq signer
 	 *                                          events and notifies the provider.
-	 * @param IAppConfig $config App config (reads the docudesk
+	 * @param IAppConfig $config App config (reads the filinq
 	 *                           signing-request register/schema
 	 *                           slugs to filter foreign chains).
 	 * @param LoggerInterface $logger Logger.
@@ -91,7 +91,7 @@ class ApprovalStepListener implements IEventListener {
 	 * @return void
 	 */
 	public function handle(Event $event): void {
-		if ($this->isDocudeskChain(event: $event) === false) {
+		if ($this->isFilinqChain(event: $event) === false) {
 			return;
 		}
 
@@ -128,25 +128,25 @@ class ApprovalStepListener implements IEventListener {
 	}//end handle()
 
 	/**
-	 * Decide whether an event belongs to a docudesk signing-request chain.
+	 * Decide whether an event belongs to a filinq signing-request chain.
 	 *
-	 * A chain belongs to docudesk iff its `registerSlug` + `schemaSlug` match
-	 * the docudesk signing-request register + schema configured in app config.
+	 * A chain belongs to filinq iff its `registerSlug` + `schemaSlug` match
+	 * the filinq signing-request register + schema configured in app config.
 	 * When neither slug is configured (fresh install, schema not yet imported),
 	 * the listener treats the event as foreign and skips it.
 	 *
 	 * @param Event $event The OR event.
 	 *
-	 * @return bool True when the event targets a docudesk signing-request.
+	 * @return bool True when the event targets a filinq signing-request.
 	 */
-	private function isDocudeskChain(Event $event): bool {
+	private function isFilinqChain(Event $event): bool {
 		$chain = $this->extractChain(event: $event);
 		if ($chain === null) {
 			return false;
 		}
 
-		$expectedRegister = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-		$expectedSchema = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+		$expectedRegister = $this->config->getValueString('filinq', 'signingRequest_register', '');
+		$expectedSchema = $this->config->getValueString('filinq', 'signingRequest_schema', '');
 
 		if ($expectedRegister === '' || $expectedSchema === '') {
 			return false;
@@ -156,7 +156,7 @@ class ApprovalStepListener implements IEventListener {
 		$schema = (string)($chain->getSchemaSlug() ?? '');
 
 		return $register === $expectedRegister && $schema === $expectedSchema;
-	}//end isDocudeskChain()
+	}//end isFilinqChain()
 
 	/**
 	 * Extract the ApprovalChain from any of the four OR event types.

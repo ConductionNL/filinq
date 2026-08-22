@@ -11,7 +11,7 @@
  *   - Batch outputs land in `<source>/<subfolder>/<clean-base>.<ext>`
  *     instead of the legacy `<source>/<base>_anonymized.<ext>` location.
  *   - The configured subfolder name comes from `IAppConfig`
- *     (`docudesk.anonymisation.output_subfolder_name`, default `anonymised`)
+ *     (`filinq.anonymisation.output_subfolder_name`, default `anonymised`)
  *     and is validated against `/^[a-z0-9_-]+$/`.
  *   - Source-side `_anonymized` suffixes on the base name are stripped so
  *     re-running the batch on its own output does not pile up `_anonymized`
@@ -24,12 +24,12 @@
  * canonical target path so those callers stay testable in isolation.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Conversion;
+namespace OCA\Filinq\Service\Conversion;
 
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -49,10 +49,10 @@ use Psr\Log\LoggerInterface;
  * Computes batch-output destinations for the anonymisation pipeline.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Conversion
+ * @package  OCA\Filinq\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  */
 class OutputLayoutResolver {
 
@@ -184,7 +184,7 @@ class OutputLayoutResolver {
 	/**
 	 * Resolve the configured subfolder name with validation and fallback.
 	 *
-	 * Reads `docudesk.anonymisation.output_subfolder_name`; falls back to
+	 * Reads `filinq.anonymisation.output_subfolder_name`; falls back to
 	 * `anonymised` and logs a warning when the value does not match the
 	 * `/^[a-z0-9_-]+$/` validation regex.
 	 *
@@ -192,7 +192,7 @@ class OutputLayoutResolver {
 	 */
 	public function getSubfolderName(): string {
 		$value = $this->config->getValueString(
-			'docudesk',
+			'filinq',
 			self::SUBFOLDER_CONFIG_KEY,
 			self::DEFAULT_SUBFOLDER_NAME
 		);

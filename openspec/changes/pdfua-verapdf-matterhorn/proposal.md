@@ -24,7 +24,7 @@ inside the structure tree, figures without alternative descriptions, headings
 that don't map to real structure elements, tables without proper header
 associations, an incomplete role map. The **Matterhorn Protocol** (the PDF
 Association's PDF/UA test suite: 31 checkpoints, 136 failure conditions) is
-the accepted way to test conformance, and **veraPDF** — which DocuDesk is
+the accepted way to test conformance, and **veraPDF** — which Filinq is
 already adopting for PDF/A in `verapdf-validation` — implements it as its
 `ua1` validation flavour.
 
@@ -48,7 +48,7 @@ accessibility heuristics with validator truth when that binary is present.
 
 - **PDF/UA-1 (Matterhorn) validation through the shared veraPDF backend**: the
   `VeraPdfService` integration introduced by `verapdf-validation` (probed,
-  admin-installed local CLI binary, `docudesk.verapdf.*` config, honest
+  admin-installed local CLI binary, `filinq.verapdf.*` config, honest
   degradation) is EXTENDED with a PDF/UA validation path (veraPDF `ua1`
   flavour). No second binary, no second probe, no second admin status row —
   one validator integration serves both PDF/A (archival) and PDF/UA
@@ -69,9 +69,9 @@ accessibility heuristics with validator truth when that binary is present.
   separate so a PDF/A report is not overwritten by a PDF/UA run and vice
   versa.
 - **Honest remediation guidance** derived from the failure shape: documents
-  produced by DocuDesk's own tagged-output path advise regeneration through
-  DocuDesk with the accessible option; imported/uploaded PDFs advise
-  re-authoring from an accessible source and state honestly that DocuDesk
+  produced by Filinq's own tagged-output path advise regeneration through
+  Filinq with the accessible option; imported/uploaded PDFs advise
+  re-authoring from an accessible source and state honestly that Filinq
   does not retag imported pages. The report and UI MUST NOT claim PDF/UA
   certification — they report a conformance verdict with references.
 - **Local processing only**: veraPDF runs on the instance; document bytes
@@ -102,15 +102,15 @@ accessibility heuristics with validator truth when that binary is present.
   `accessibility`-category validator checks in
   `lib/Service/DocumentValidationService.php`; a new accessibility
   conformance endpoint + report persistence.
-- **Register JSON** (`lib/Settings/docudesk_register.json`): new
+- **Register JSON** (`lib/Settings/filinq_register.json`): new
   `accessibilityConformanceReport` schema (additive, union-merge).
 - **Frontend**: the `accessibility` findings group (wave-1) gains
   validator-backed findings labelled as such; a PDF/UA conformance card on
   document detail (flavour, verdict, failed checkpoints, guidance); no new
   admin status row (reuses the veraPDF row from `verapdf-validation`).
 - **Config**: PDF/UA checks ride the existing
-  `docudesk.validation.profiles` per-check severity mechanism and the
-  existing `docudesk.verapdf.*` binary config; validator-backed checks
+  `filinq.validation.profiles` per-check severity mechanism and the
+  existing `filinq.verapdf.*` binary config; validator-backed checks
   default `off` (admin opt-in), consistent with `archival` checks.
 - **Relationship to `verapdf-validation`**: hard build dependency on its
   `VeraPdfService` and admin/probe plumbing (shared integration). Modelled as
@@ -118,7 +118,7 @@ accessibility heuristics with validator truth when that binary is present.
   on `pdfua-accessible-output` (whose heuristics this upgrades) — see design
   for the sequencing note.
 - **Sibling boundaries**: publication endpoints remain OpenCatalogi/OpenWoo's;
-  DocuDesk only reports conformance and gates its own hand-off readiness via
+  Filinq only reports conformance and gates its own hand-off readiness via
   the wave-1 publication-readiness signal (REQ-DDPUA-005, referenced not
   modified).
 - **No new dependencies**: no second binary; veraPDF is the same Java CLI

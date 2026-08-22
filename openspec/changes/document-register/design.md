@@ -2,13 +2,13 @@
 
 ## Context
 
-DocuDesk owns the document content type for the Conduction fleet (ADR-001,
+Filinq owns the document content type for the Conduction fleet (ADR-001,
 ADR-022: content types live in leaf apps; OpenRegister supplies storage and
 abstraction). Its `document` register today holds operational data
 (correspondence audit logs, huisstijl config, batch-job tracking, financial
 extractions) but no first-class governed *document* object. This change adds two
 schemas — `document` and `documentType` — to the existing register envelope in
-`lib/Settings/docudesk_register.json`, with zero PHP code and zero OpenRegister
+`lib/Settings/filinq_register.json`, with zero PHP code and zero OpenRegister
 change. All runtime behaviour (lifecycle, archival retention, file binding,
 cross-register relations) is delegated to OpenRegister capabilities that already
 exist at OR HEAD.
@@ -70,7 +70,7 @@ Consumers resolve them via a second object fetch. This matches the
 
 ### D4 — idempotent re-import via version bump
 
-Bump `document` register `info.version` in `docudesk_register.json`.
+Bump `document` register `info.version` in `filinq_register.json`.
 `SettingsInitializer::initialize()` → `ConfigurationService::importFromApp()`
 re-imports on upgrade; seed objects upsert by slug. No DB migration.
 
@@ -90,7 +90,7 @@ sign-off, same posture as `archiefwet-retention-engine` task 1.4). Seed 3–5
   VNG codes before done (a seed-lint PHPUnit test fails on any `TODO-`).
 - **Import drops `archive`/lifecycle keys**: pinned by an import-roundtrip unit
   test; if a key is dropped, file an OpenRegister issue (degradation is OR-side
-  schema config, never a DocuDesk-side code workaround).
+  schema config, never a Filinq-side code workaround).
 - **Relation integrity is soft**: acceptable for v1; hard FK is an explicit
   non-goal and a possible OR-core follow-up.
 

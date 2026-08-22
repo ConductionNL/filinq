@@ -27,12 +27,12 @@ import {
 				<img :src="uploadIcon" alt="" class="upload-icon" />
 				<div class="drop-content">
 					<p class="drop-title">
-						{{ t('docudesk', 'Drag and drop one or more documents') }}
+						{{ t('filinq', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
 						{{
 							t(
-								'docudesk',
+								'filinq',
 								'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.',
 							)
 						}}
@@ -41,14 +41,14 @@ import {
 						type="button"
 						class="fake-button"
 						@click="$refs.fileInput.click()">
-						{{ t('docudesk', '+ Select files') }}
+						{{ t('filinq', '+ Select files') }}
 					</button>
 				</div>
 				<input
 					ref="fileInput"
 					type="file"
 					multiple
-					:aria-label="t('docudesk', 'Select files to anonymise')"
+					:aria-label="t('filinq', 'Select files to anonymise')"
 					accept=".docx,.odt,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,application/pdf,message/rfc822"
 					class="file-input"
 					@change="handleFileSelect" />
@@ -60,7 +60,7 @@ import {
 			v-if="recentLoading || recentItems.length > 0"
 			class="recent-section">
 			<h3 class="recent-section__title">
-				{{ t('docudesk', 'Recent documents') }}
+				{{ t('filinq', 'Recent documents') }}
 			</h3>
 			<div v-if="recentLoading" class="recent-section__loading">
 				<NcLoadingIcon :size="24" />
@@ -145,14 +145,14 @@ export default {
 		greeting() {
 			const hour = new Date().getHours()
 			if (hour >= 5 && hour < 12) {
-				return t('docudesk', 'Good morning {name},', { name: this.userName })
+				return t('filinq', 'Good morning {name},', { name: this.userName })
 			}
 			if (hour >= 12 && hour < 18) {
-				return t('docudesk', 'Good afternoon {name},', {
+				return t('filinq', 'Good afternoon {name},', {
 					name: this.userName,
 				})
 			}
-			return t('docudesk', 'Good evening {name},', { name: this.userName })
+			return t('filinq', 'Good evening {name},', { name: this.userName })
 		},
 
 		/**
@@ -181,7 +181,7 @@ export default {
 	methods: {
 		/**
 		 * Fetch the most-recent anonymized files and dossier folders under
-		 * /DocuDesk/ for the "Recent documents" cards. Read-only — does not
+		 * /Filinq/ for the "Recent documents" cards. Read-only — does not
 		 * touch the My Documents store's navigation state.
 		 *
 		 * @return {Promise<void>}
@@ -279,7 +279,7 @@ export default {
 				const names = rejected.map((f) => f.name).join(', ')
 				showError(
 					t(
-						'docudesk',
+						'filinq',
 						'Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}',
 						{ names },
 					),
@@ -341,7 +341,7 @@ export default {
 		/**
 		 * Confirm handler for the dossier dialog. With a title the files are
 		 * grouped into a new dossier folder and bound to OpenRegister; with
-		 * no title each file is uploaded loose under /DocuDesk/, matching
+		 * no title each file is uploaded loose under /Filinq/, matching
 		 * the single-file flow. Keeps the dialog open on failure so the
 		 * user sees the error inline.
 		 */
@@ -375,7 +375,7 @@ export default {
 					// folder so `FolderFilesNavigation` lists every file we
 					// just put inside it.
 					try {
-						await myDocumentsStore.fetchDocuments(`/DocuDesk/${name}`)
+						await myDocumentsStore.fetchDocuments(`/Filinq/${name}`)
 					} catch (err) {
 						console.error('Failed to open dossier folder:', err)
 					}

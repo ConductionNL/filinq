@@ -1,16 +1,16 @@
 {
   "change": "propose-grondslag-per-entity-type",
-  "project": "docudesk",
-  "repo": "Conduction/docudesk",
-  "host": "codeberg.org",
+  "project": "filinq",
+  "repo": "ConductionNL/filinq",
+  "host": "github.com",
   "created": "2026-06-17",
   "tracking_issue": 122,
-  "tracking_issue_url": "https://codeberg.org/Conduction/docudesk/issues/122",
+  "tracking_issue_url": "https://github.com/ConductionNL/filinq/issues/122",
   "tasks": [
     {
       "id": 1,
       "ref": "1.1",
-      "title": "`SettingsService`: add `docudesk.grondslagen.entity_type_bases` — load via `json_decode(getValueString(...))` (default `{}`), save via `setValueString(json_encode(...))`; value is `{ \"<TYPE>\": [\"<base-slug>\", …] }`.",
+      "title": "`SettingsService`: add `filinq.grondslagen.entity_type_bases` — load via `json_decode(getValueString(...))` (default `{}`), save via `setValueString(json_encode(...))`; value is `{ \"<TYPE>\": [\"<base-slug>\", …] }`.",
       "section": "Mapping configuration",
       "status": "done"
     },
@@ -24,7 +24,7 @@
     {
       "id": 3,
       "ref": "2.1",
-      "title": "Define a curated entity-type constant in DocuDesk, seeded from the backend's known emitted types (GLiNER `entity_mapping` targets + enabled pattern recognizers' types); document its provenance and verify the identifier strings against a live `/analyze` response.",
+      "title": "Define a curated entity-type constant in Filinq, seeded from the backend's known emitted types (GLiNER `entity_mapping` targets + enabled pattern recognizers' types); document its provenance and verify the identifier strings against a live `/analyze` response.",
       "section": "Curated entity-type list + base options (data for the selector)",
       "status": "done"
     },
@@ -45,7 +45,7 @@
     {
       "id": 6,
       "ref": "3.1",
-      "title": "Add a grondslag-mapping section to the DocuDesk settings page: one row per curated entity type (from 2.1), each with a multi-select of `base` records (from 2.2), defaulting to a single selection.",
+      "title": "Add a grondslag-mapping section to the Filinq settings page: one row per curated entity type (from 2.1), each with a multi-select of `base` records (from 2.2), defaulting to a single selection.",
       "section": "Settings UI (Vue)",
       "status": "done"
     },
@@ -115,7 +115,7 @@
     {
       "id": 16,
       "ref": "6.2",
-      "title": "Update DocuDesk settings/help docs to describe the grondslag-per-entity-type mapping.",
+      "title": "Update Filinq settings/help docs to describe the grondslag-per-entity-type mapping.",
       "section": "Quality & docs",
       "status": "done"
     },
@@ -143,7 +143,7 @@
     {
       "id": 20,
       "ref": "7.3",
-      "title": "DocuDesk: swap the curated-list seam (2.3) for the live backend list, cached with fallback to the curated list.",
+      "title": "Filinq: swap the curated-list seam (2.3) for the live backend list, cached with fallback to the curated list.",
       "section": "Deferred (follow-up, not in this change)",
       "status": "pending"
     }

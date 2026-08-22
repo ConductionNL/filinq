@@ -60,16 +60,16 @@ export default {
 
 		hint() {
 			if (this.options.length === 0) {
-				return t('docudesk', 'No entity types are available.')
+				return t('filinq', 'No entity types are available.')
 			}
 			if (this.allEnabled) {
 				return t(
-					'docudesk',
+					'filinq',
 					'All entity types are detected. Turn a type off to stop detecting it automatically — you can still add it manually per document.',
 				)
 			}
 			return t(
-				'docudesk',
+				'filinq',
 				'Only the enabled types are detected automatically. Disabled types can still be added manually per document.',
 			)
 		},

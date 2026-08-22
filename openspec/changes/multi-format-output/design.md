@@ -155,7 +155,7 @@ additive and the apply order is **pinned**, not "whichever lands second":
 `2.2.0` → `2.3.0` (its own additive `wizardContext` on `generatedDocument`);
 this change applies second and bumps `2.3.0` → `2.4.0` (`docx` enum value +
 `outputs` array). `2.2.0` is the verified current version in
-`lib/Settings/docudesk_register.json` at HEAD. Register import is idempotent;
+`lib/Settings/filinq_register.json` at HEAD. Register import is idempotent;
 the two bumps touch disjoint properties of the same schema.
 
 ### D6 — Flows read the matrix
@@ -177,7 +177,7 @@ the existing choice list is populated.
 Format conversion is an explicitly valid imperative exception
 (external-binary invocation — soffice/mPDF), identical in kind to the
 existing generation/conversion services. The data side is declarative:
-`generatedDocument` schema extension is a pure `docudesk_register.json` edit;
+`generatedDocument` schema extension is a pure `filinq_register.json` edit;
 no lifecycle/aggregation/notification annotations are added or needed.
 
 ## OpenRegister usage (ADR-001)

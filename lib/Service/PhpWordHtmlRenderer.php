@@ -5,7 +5,7 @@
  *
  * Injectable seam around PhpOffice\PhpWord's document readers and HTML writer.
  * Extracted from {@see EmlPdfAssemblyService} so the assembly pipeline depends
- * on a DocuDesk-owned collaborator it can substitute in tests, rather than on
+ * on a Filinq-owned collaborator it can substitute in tests, rather than on
  * PhpWord's static `IOFactory` facade.
  *
  * Readers and the writer are instantiated directly — `IOFactory::load()` and
@@ -13,17 +13,17 @@
  * `new` expressions, so the behaviour is identical without the static facade.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use PhpOffice\PhpWord\Reader\MsDoc;
 use PhpOffice\PhpWord\Reader\ODText;
@@ -36,11 +36,11 @@ use RuntimeException;
  * Renders Word-family bytes to an HTML fragment via PhpWord.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class PhpWordHtmlRenderer {
 

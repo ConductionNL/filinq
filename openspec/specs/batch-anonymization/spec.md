@@ -6,21 +6,21 @@ or_adoption_change: docudesk-adopt-or-abstractions
 # Batch Anonymization
 
 **Status**: in-progress
-**Scope**: docudesk
+**Scope**: filinq
 **OpenSpec changes**:
 - [docudesk-adopt-or-abstractions](../../changes/archive/2026-06-14-docudesk-adopt-or-abstractions/) _(implementing)_ — REQ-BANON-00: ICache batch state replaced by `batchAnonymizationJob` OR objects with per-file lifecycle children, scheduled via OR Background Jobs (kind: code)
 - [redaction-at-scale](../../changes/redaction-at-scale/) _(active)_ — batch anonymize becomes a background operation above the synchronous cap (HTTP 202 + work-unit processing, cancel/resume, throughput report, sampling QA) (kind: code)
 
 ## Purpose
 
-@e2e exclude batch anonymization API not yet exposed in the DocuDesk UI — batch upload/extraction/review flow is API-only; covered by PHPUnit and API contract tests
+@e2e exclude batch anonymization API not yet exposed in the Filinq UI — batch upload/extraction/review flow is API-only; covered by PHPUnit and API contract tests
 
-Provides batch anonymization of multiple files in a single operation. Per-file state is tracked as **child OR objects** with `x-openregister-lifecycle` annotations (`pending → processing → success | error`). The previous `ICache`-backed status tracking is replaced by OR Background Jobs and child-object lifecycle. Maximum batch size is admin-configurable via `IAppConfig` key `docudesk.batch.max_files_per_run` (default: 100).
+Provides batch anonymization of multiple files in a single operation. Per-file state is tracked as **child OR objects** with `x-openregister-lifecycle` annotations (`pending → processing → success | error`). The previous `ICache`-backed status tracking is replaced by OR Background Jobs and child-object lifecycle. Maximum batch size is admin-configurable via `IAppConfig` key `filinq.batch.max_files_per_run` (default: 100).
 
 ## OR Adoption decisions (from docudesk-adopt-or-abstractions)
 
 - **Task 8** — `ICache`-backed per-file status tracking is replaced by per-file child OR objects. Each file in a batch is a child object of the `batchAnonymizationJob` schema with lifecycle states `pending → processing → success | error`. OR Background Jobs schedule and execute the batch; no custom cache TTL machinery is needed.
-- **Task 11** — `BatchStateService::CACHE_TTL` (7200) and `DEFAULT_MAX_FILES` (100) are promoted to admin-config keys `docudesk.batch.cache_ttl_seconds` and `docudesk.batch.max_files_per_run`. `CACHE_PREFIX` is dropped after the ICache state machine is removed. Default values are preserved.
+- **Task 11** — `BatchStateService::CACHE_TTL` (7200) and `DEFAULT_MAX_FILES` (100) are promoted to admin-config keys `filinq.batch.cache_ttl_seconds` and `filinq.batch.max_files_per_run`. `CACHE_PREFIX` is dropped after the ICache state machine is removed. Default values are preserved.
 - **Decision 5** — Status strings on the wire stay the same (`pending`, `processing`, `success`, `error`). Lifecycle annotation maps these values; no renaming.
 
 ## Requirements
@@ -55,7 +55,7 @@ A `batchAnonymizationJob` schema MUST be declared with `x-openregister-lifecycle
 
 #### Scenario: Max batch size from admin-config
 
-- **GIVEN** admin has set `docudesk.batch.max_files_per_run = 50`
+- **GIVEN** admin has set `filinq.batch.max_files_per_run = 50`
 - **WHEN** a user uploads 51 files
 - **THEN** the system returns HTTP 400 "Batch size exceeds maximum of 50 files"
 - **AND** the limit is read from `IAppConfig`, not from `BatchStateService::DEFAULT_MAX_FILES`
@@ -64,7 +64,7 @@ A `batchAnonymizationJob` schema MUST be declared with `x-openregister-lifecycle
 
 - **GIVEN** a batch job object is created with status `pending`
 - **WHEN** OR's Background Jobs scheduler runs
-- **THEN** OR SHALL dispatch the batch anonymization job without docudesk managing its own scheduling
+- **THEN** OR SHALL dispatch the batch anonymization job without filinq managing its own scheduling
 - **AND** the job progress SHALL update the child object lifecycles
 
 | ID | Requirement | Priority | Status |
@@ -73,16 +73,16 @@ A `batchAnonymizationJob` schema MUST be declared with `x-openregister-lifecycle
 | BANON-001 | Per-file child objects carry `pending → processing → success | error` lifecycle | MUST | Implementing |
 | BANON-002 | `BatchStateService` ICache reads/writes replaced by OR child-object lifecycle | MUST | Apply-phase |
 | BANON-003 | `CACHE_PREFIX` constant removed after apply phase | MUST | Apply-phase |
-| BANON-004 | `max_files_per_run` read from `IAppConfig docudesk.batch.max_files_per_run` (default: 100) | MUST | Apply-phase |
-| BANON-005 | OR Background Jobs schedule batch execution; docudesk does not manage its own scheduler | MUST | Apply-phase |
+| BANON-004 | `max_files_per_run` read from `IAppConfig filinq.batch.max_files_per_run` (default: 100) | MUST | Apply-phase |
+| BANON-005 | OR Background Jobs schedule batch execution; filinq does not manage its own scheduler | MUST | Apply-phase |
 
 ### Requirement: Batch creation via multi-file upload
-The system SHALL accept multiple files in a single upload request to `POST /api/anonymization/batch/upload` and return a batch ID. Each file SHALL be stored as an OR File Attachment. Batch state SHALL be persisted as OR child objects. The batch SHALL track each file's processing status via per-file lifecycle. Maximum batch size is admin-configurable via `docudesk.batch.max_files_per_run` (default: 100).
+The system SHALL accept multiple files in a single upload request to `POST /api/anonymization/batch/upload` and return a batch ID. Each file SHALL be stored as an OR File Attachment. Batch state SHALL be persisted as OR child objects. The batch SHALL track each file's processing status via per-file lifecycle. Maximum batch size is admin-configurable via `filinq.batch.max_files_per_run` (default: 100).
 
 #### Scenario: Upload multiple files as a batch
 - **WHEN** an authenticated user uploads 5 PDF files to `POST /api/anonymization/batch/upload`
 - **THEN** the system creates a batch with a unique batchId
-- **AND** all 5 files are stored in the user's DocuDesk/ folder
+- **AND** all 5 files are stored in the user's Filinq/ folder
 - **AND** the response includes batchId, fileCount, and per-file details (fileId, fileName, status: "uploaded")
 - **AND** batch state is stored in ICache with 2-hour TTL
 
@@ -163,7 +163,7 @@ The system SHALL generate a CSV audit report via `GET /api/anonymization/batch/{
 - **THEN** the system returns HTTP 409 with error "Batch is not yet completed"
 
 ### Requirement: WOO entity category profiles
-The system SHALL support pre-configured entity category profiles stored in IAppConfig key `docudesk_woo_entity_profiles`. The default WOO profile SHALL anonymize: PERSON, BSN, PHONE, EMAIL, IBAN, ADDRESS. The default WOO profile SHALL keep visible: ORGANIZATION, LOCATION, DATE. Profiles SHALL be retrievable via `GET /api/anonymization/profiles` and configurable by admins via `PUT /api/anonymization/profiles`. The entity review step SHALL pre-select entities based on the active profile.
+The system SHALL support pre-configured entity category profiles stored in IAppConfig key `filinq_woo_entity_profiles`. The default WOO profile SHALL anonymize: PERSON, BSN, PHONE, EMAIL, IBAN, ADDRESS. The default WOO profile SHALL keep visible: ORGANIZATION, LOCATION, DATE. Profiles SHALL be retrievable via `GET /api/anonymization/profiles` and configurable by admins via `PUT /api/anonymization/profiles`. The entity review step SHALL pre-select entities based on the active profile.
 
 #### Scenario: Retrieve default WOO profile
 - **WHEN** `GET /api/anonymization/profiles` is called and no custom profile exists

@@ -4,7 +4,7 @@
  * Stubs for OpenRegister classes used in tests
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,7 +27,7 @@ namespace OCA\OpenRegister\Service;
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ObjectService {
 	/**
@@ -229,7 +229,7 @@ class ObjectService {
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class OrganisationService {
 	/**
@@ -251,7 +251,7 @@ class OrganisationService {
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class RegisterService {
 	/**
@@ -271,7 +271,7 @@ class RegisterService {
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ConfigurationService {
 	/**
@@ -291,7 +291,7 @@ class ConfigurationService {
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class TextExtractionService {
 	public function extractFile(int $fileId, bool $force = false): void {
@@ -305,7 +305,7 @@ class TextExtractionService {
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class FileService {
 }//end class
@@ -317,7 +317,7 @@ class FileService {
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class RiskLevelService {
 	/**
@@ -335,7 +335,7 @@ class RiskLevelService {
 /**
  * Stub for LanguageService
  *
- * Mirrors the OR LanguageService API the docudesk
+ * Mirrors the OR LanguageService API the filinq
  * LanguageNegotiationMiddleware consumes. Provides in-memory state so
  * tests can assert the middleware pushed the right values into it.
  *
@@ -343,7 +343,7 @@ class RiskLevelService {
  * @package  OCA\OpenRegister\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class LanguageService {
 	/**
@@ -490,7 +490,7 @@ namespace OCA\OpenRegister\Db;
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Register {
 	/**
@@ -537,7 +537,7 @@ class Register {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Schema {
 	/**
@@ -575,7 +575,7 @@ class Schema {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ObjectEntity {
 
@@ -653,7 +653,7 @@ class ObjectEntity {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class AuditTrail {
 
@@ -776,7 +776,7 @@ class AuditTrail {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class AuditTrailMapper {
 
@@ -831,7 +831,7 @@ class AuditTrailMapper {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SchemaMapper {
 
@@ -884,7 +884,7 @@ class SchemaMapper {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class EntityRelationMapper {
 
@@ -976,7 +976,7 @@ class EntityRelationMapper {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class GdprEntity {
 	/** @var int|null */
@@ -1137,7 +1137,7 @@ class GdprEntity {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class GdprEntityMapper {
 	/**
@@ -1171,7 +1171,7 @@ class GdprEntityMapper {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Chunk {
 	/** @var int|null */
@@ -1278,7 +1278,7 @@ class Chunk {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ChunkMapper {
 	/**
@@ -1301,7 +1301,7 @@ class ChunkMapper {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class EntityRelation {
 
@@ -1433,7 +1433,7 @@ namespace OC\Hooks;
  * @package  OC\Hooks
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface Emitter {
 }//end interface
@@ -1447,7 +1447,7 @@ namespace OCP;
  * @package  OCP
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IUserSession {
 	/**
@@ -1470,7 +1470,7 @@ namespace Psr\Log;
  * @package  Psr\Log
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface LoggerInterface {
 	public function emergency(string|\Stringable $message, array $context = []): void;
@@ -1501,7 +1501,7 @@ namespace OCP;
  * @package  OCP
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IUser {
 	public function getUID(): string;
@@ -1520,7 +1520,7 @@ interface IUser {
  * @package  OCP
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IGroupManager {
 	public function isAdmin(string $userId): bool;
@@ -1535,7 +1535,7 @@ namespace OCP\Files;
  * @package  OCP\Files
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface Folder extends Node {
 	/**
@@ -1597,7 +1597,7 @@ interface Folder extends Node {
  * @package  OCP\Files
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface Node {
 	public function getName(): string;
@@ -1641,7 +1641,7 @@ interface Node {
  * @package  OCP\Files
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface File extends Node {
 	public function getContent(): string;
@@ -1683,7 +1683,7 @@ interface File extends Node {
  * @package  OCP\Files
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IRootFolder {
 	/**
@@ -1707,7 +1707,7 @@ namespace OCA\OpenRegister\Db;
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalChain {
 	private ?int $id = null;
@@ -1780,7 +1780,7 @@ class ApprovalChain {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalStep {
 	private ?string $uuid = null;
@@ -1864,7 +1864,7 @@ class ApprovalStep {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalChainMapper {
 	public function insert(ApprovalChain $chain): ApprovalChain {
@@ -1883,7 +1883,7 @@ class ApprovalChainMapper {
  * @package  OCA\OpenRegister\Db
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalStepMapper {
 	public function insert(ApprovalStep $step): ApprovalStep {
@@ -1905,7 +1905,7 @@ namespace OCA\OpenRegister\Exception;
  *
  * Mirrors the real class in `openregister/lib/Exception/`: OpenRegister's
  * `ObjectService::deleteObject()` throws it for every user-driven delete on a
- * schema that declares `x-openregister-archival`. DocuDesk's
+ * schema that declares `x-openregister-archival`. Filinq's
  * `publicationProhibition` schema does, so `PolicyController` must translate
  * this into an honest client status rather than a 500.
  *
@@ -1913,7 +1913,7 @@ namespace OCA\OpenRegister\Exception;
  * @package  OCA\OpenRegister\Exception
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ArchivalImmutableException extends \Exception {
 	/**
@@ -1973,7 +1973,7 @@ use OCP\EventDispatcher\Event;
  * @package  OCA\OpenRegister\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalStepInitiatedEvent extends Event {
 	public function __construct(
@@ -2004,7 +2004,7 @@ class ApprovalStepInitiatedEvent extends Event {
  * @package  OCA\OpenRegister\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalStepApprovedEvent extends Event {
 	public function __construct(
@@ -2053,7 +2053,7 @@ class ApprovalStepApprovedEvent extends Event {
  * @package  OCA\OpenRegister\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalStepRejectedEvent extends Event {
 	public function __construct(
@@ -2093,7 +2093,7 @@ class ApprovalStepRejectedEvent extends Event {
  * @package  OCA\OpenRegister\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ApprovalStepCompletedEvent extends Event {
 	public function __construct(
@@ -2135,7 +2135,7 @@ namespace OCA\OpenRegister\AppHost;
  * @package  OCA\OpenRegister\AppHost
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Routes {
 	/**
@@ -2193,15 +2193,15 @@ if (interface_exists(IMcpScannableServices::class) === false) {
 	/**
 	 * Stub for IMcpScannableServices (ADR-063 chain 3/3).
 	 *
-	 * Mirrors openregister's real interface so DocudeskScannableServices can be
+	 * Mirrors openregister's real interface so FilinqScannableServices can be
 	 * loaded and asserted on in a standalone unit run where the openregister app
-	 * is not installed. DocuDesk has no composer dependency on openregister.
+	 * is not installed. Filinq has no composer dependency on openregister.
 	 *
 	 * @category Tests
 	 * @package  OCA\OpenRegister\Mcp
 	 * @author   Conduction B.V. <info@conduction.nl>
 	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
-	 * @link     https://www.DocuDesk.app
+	 * @link     https://www.filinq.app
 	 */
 	interface IMcpScannableServices {
 		/**
@@ -2228,7 +2228,7 @@ if (class_exists(McpTool::class) === false) {
 	 * @package  OCA\OpenRegister\Mcp\Attribute
 	 * @author   Conduction B.V. <info@conduction.nl>
 	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
-	 * @link     https://www.DocuDesk.app
+	 * @link     https://www.filinq.app
 	 */
 	#[\Attribute(\Attribute::TARGET_METHOD)]
 	final class McpTool {
@@ -2273,7 +2273,7 @@ if (interface_exists(ObjectEntityInterface::class) === false) {
 	 * @package  OCA\OpenRegister\Contract
 	 * @author   Conduction B.V. <info@conduction.nl>
 	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
-	 * @link     https://www.DocuDesk.app
+	 * @link     https://www.filinq.app
 	 */
 	interface ObjectEntityInterface {
 		/**
@@ -2325,7 +2325,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 	 * Stub for OpenRegister's published ObjectServiceInterface (ADR-084).
 	 *
 	 * Mirrors openregister/lib/Contract/ObjectServiceInterface.php verbatim,
-	 * including every optional parameter and its default. DocuDesk services
+	 * including every optional parameter and its default. Filinq services
 	 * type-hint this interface rather than OR's concrete class, and the binding
 	 * is stated in RegistrationBootstrap — but the interface lives in
 	 * openregister, which this app has no composer dependency on. Without this
@@ -2340,7 +2340,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 	 * @package  OCA\OpenRegister\Contract
 	 * @author   Conduction B.V. <info@conduction.nl>
 	 * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
-	 * @link     https://www.DocuDesk.app
+	 * @link     https://www.filinq.app
 	 *
 	 * @SuppressWarnings(PHPMD.TooManyPublicMethods)
 	 */

@@ -11,7 +11,7 @@
  * Why a stub rather than a suppression: PHPStan refuses to let
  * "implements unknown interface" be silenced through `ignoreErrors` and points
  * at `excludePaths` instead — which would stop analysing
- * `DocudeskScannableServices` altogether. Declaring the real contracts here is
+ * `FilinqScannableServices` altogether. Declaring the real contracts here is
  * the truthful fix, and it additionally makes PHPStan check that the named
  * arguments every `#[McpTool]` declaration passes actually match the
  * attribute's constructor. A suppression would not.
@@ -32,7 +32,7 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ namespace OCA\OpenRegister\Mcp;
  * @package  OCA\OpenRegister\Mcp
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IMcpScannableServices {
 	/**
@@ -69,7 +69,7 @@ namespace OCA\OpenRegister\Mcp\Attribute;
  * @package  OCA\OpenRegister\Mcp\Attribute
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 #[\Attribute(\Attribute::TARGET_METHOD)]
 final class McpTool {

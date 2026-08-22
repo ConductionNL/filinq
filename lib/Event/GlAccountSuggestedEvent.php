@@ -1,24 +1,24 @@
 <?php
 
 /**
- * DocuDesk GlAccountSuggestedEvent
+ * Filinq GlAccountSuggestedEvent
  *
- * Public cross-app event DocuDesk dispatches when a GL-account suggestion has
+ * Public cross-app event Filinq dispatches when a GL-account suggestion has
  * been computed for a prior financial extraction. This is a **sibling** event
- * to `nl.conduction.docudesk.extraction.completed` (financial-document-field-
+ * to `nl.conduction.filinq.extraction.completed` (financial-document-field-
  * extraction) — it is intentionally NOT merged into that shipped contract;
  * see design.md Decision D6. Consumer fleet apps (e.g. shillinq's
  * gl-account-suggestion-consume follow-up) subscribe to this event to surface
- * a booking-account suggestion — DocuDesk owns the ranking only, never the
+ * a booking-account suggestion — Filinq owns the ranking only, never the
  * consumer's chart of accounts (ADR-022).
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
@@ -28,20 +28,20 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCP\EventDispatcher\Event;
 
 /**
- * Cross-app completion event: DocuDesk reports a computed GL-account
- * suggestion. Fully immutable — DocuDesk constructs it from the computed
+ * Cross-app completion event: Filinq reports a computed GL-account
+ * suggestion. Fully immutable — Filinq constructs it from the computed
  * suggestion result; consumers only read.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
@@ -155,7 +155,7 @@ class GlAccountSuggestedEvent extends Event {
 	}//end getRequestedBy()
 
 	/**
-	 * Build the wire payload for `nl.conduction.docudesk.gl-account.suggested`.
+	 * Build the wire payload for `nl.conduction.filinq.gl-account.suggested`.
 	 *
 	 * @return array<string, mixed> The payload shape.
 	 *

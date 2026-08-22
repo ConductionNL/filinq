@@ -11,12 +11,12 @@
  * phpunit-provable seam for this change (design.md §D2).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -26,7 +26,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use ErrorException;
 
@@ -47,10 +47,10 @@ use ErrorException;
  * redaction pipeline already consumes elsewhere in this codebase.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
@@ -79,7 +79,7 @@ class CustomDictionaryMatchService {
 	/**
 	 * The set of match modes this service accepts. An unrecognised mode
 	 * falls back to {@see MODE_CASE_INSENSITIVE} (mirrors the schema
-	 * default declared in `docudesk_register.json`).
+	 * default declared in `filinq_register.json`).
 	 *
 	 * @var array<int, string>
 	 */

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — dashboard spec
@@ -14,7 +14,7 @@
 // @e2e openspec/specs/dashboard/spec.md#dashboard-with-no-data
 // @e2e openspec/specs/dashboard/spec.md#quick-anonymization-from-dashboard
 // @e2e openspec/specs/dashboard/spec.md#widgets-available-on-nextcloud-dashboard
-// @e2e openspec/specs/dashboard/spec.md#widget-links-to-docudesk
+// @e2e openspec/specs/dashboard/spec.md#widget-links-to-filinq
 // @e2e openspec/specs/dashboard/spec.md#navigate-between-views
 // @e2e openspec/specs/dashboard/spec.md#navigation-items-and-icons
 // @e2e openspec/specs/dashboard/spec.md#status-badge-color-mapping
@@ -30,7 +30,7 @@ import { waitForAppReady, waitForNcContentReady } from './_helpers'
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
 // PHP's own 404 page instead of Nextcloud).
-const APP = '/index.php/apps/docudesk'
+const APP = '/index.php/apps/filinq'
 
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')
@@ -63,12 +63,12 @@ async function go(page: Page, route = ''): Promise<void> {
 // ---------------------------------------------------------------------------
 
 test.describe('dashboard — main view', () => {
-	test('loads DocuDesk dashboard page', async ({ page }) => {
+	test('loads Filinq dashboard page', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#dashboard-with-no-data
 		// @e2e openspec/specs/dashboard/spec.md#view-dashboard-with-consent-data
 		// @e2e openspec/specs/dashboard/spec.md#view-recent-consent-activity
 		await go(page)
-		await expect(page).toHaveURL(/\/apps\/docudesk/)
+		await expect(page).toHaveURL(/\/apps\/filinq/)
 		// The Nextcloud chrome (header) should be visible
 		const header = page.locator('#header, header.header').first()
 		await expect(header).toBeVisible()
@@ -91,8 +91,8 @@ test.describe('dashboard — main view', () => {
 		await go(page)
 		// Dashboard should have an anonymization element or at minimum a navigatable section
 		await expect(page.locator('body')).toBeVisible()
-		// The URL should remain on docudesk
-		await expect(page).toHaveURL(/\/apps\/docudesk/)
+		// The URL should remain on filinq
+		await expect(page).toHaveURL(/\/apps\/filinq/)
 	})
 })
 
@@ -101,14 +101,14 @@ test.describe('dashboard — main view', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('dashboard — NC dashboard widgets', () => {
-	test('Nextcloud Dashboard page is accessible and DocuDesk widgets can be added', async ({
+	test('Nextcloud Dashboard page is accessible and Filinq widgets can be added', async ({
 		page,
 	}) => {
 		// @e2e openspec/specs/dashboard/spec.md#widgets-available-on-nextcloud-dashboard
 		await page.goto('/index.php/apps/dashboard', {
 			waitUntil: 'domcontentloaded',
 		})
-		// Nextcloud's own Dashboard app, not the DocuDesk SPA — wait for NC's
+		// Nextcloud's own Dashboard app, not the Filinq SPA — wait for NC's
 		// authenticated content region. Not `networkidle`: it never settles on
 		// Nextcloud, and the `.catch(() => {})` this line used to carry turned
 		// its own timeout into a pass (ADR-074 rule 4 / gate-58).
@@ -120,11 +120,11 @@ test.describe('dashboard — NC dashboard widgets', () => {
 		await expect(page.locator('body')).toBeVisible()
 	})
 
-	test('DocuDesk navigation entry icon is app.svg', async ({ page }) => {
+	test('Filinq navigation entry icon is app.svg', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#navigation-icon
-		// Navigate to NC and check DocuDesk nav entry
+		// Navigate to NC and check Filinq nav entry
 		await page.goto('/index.php/apps/files', { waitUntil: 'domcontentloaded' })
-		// NC app list / navigation — DocuDesk should appear with app icon
+		// NC app list / navigation — Filinq should appear with app icon
 		const navMenu = page.locator('#appmenu, nav.app-menu, #navigation').first()
 		// Wait for exactly the element this test then asserts on. The previous
 		// `waitForLoadState('networkidle').catch(() => {})` waited for a state
@@ -136,11 +136,11 @@ test.describe('dashboard — NC dashboard widgets', () => {
 		await expect(navMenu).toBeVisible()
 	})
 
-	test('widget links navigate to DocuDesk app', async ({ page }) => {
-		// @e2e openspec/specs/dashboard/spec.md#widget-links-to-docudesk
-		// Navigate to DocuDesk from the dashboard route
+	test('widget links navigate to Filinq app', async ({ page }) => {
+		// @e2e openspec/specs/dashboard/spec.md#widget-links-to-filinq
+		// Navigate to Filinq from the dashboard route
 		await go(page)
-		await expect(page).toHaveURL(/\/apps\/docudesk/)
+		await expect(page).toHaveURL(/\/apps\/filinq/)
 	})
 })
 
@@ -149,7 +149,7 @@ test.describe('dashboard — NC dashboard widgets', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('dashboard — navigation menu', () => {
-	test('navigation menu is present with DocuDesk app items', async ({ page }) => {
+	test('navigation menu is present with Filinq app items', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#navigation-items-and-icons
 		await go(page)
 		// App navigation sidebar should be present
@@ -164,7 +164,7 @@ test.describe('dashboard — navigation menu', () => {
 		await go(page)
 		// Navigate to anonymization route
 		await go(page, 'anonymization')
-		await expect(page).toHaveURL(/\/apps\/docudesk/)
+		await expect(page).toHaveURL(/\/apps\/filinq/)
 		await expect(page.locator('body')).toBeVisible()
 	})
 })
@@ -182,7 +182,7 @@ test.describe('dashboard — status badges', () => {
 		// @e2e openspec/specs/dashboard/spec.md#badge-consistency-across-views
 		// Navigate to consent list where badges are rendered
 		await go(page, 'consent')
-		await expect(page).toHaveURL(/\/apps\/docudesk/)
+		await expect(page).toHaveURL(/\/apps\/filinq/)
 		// Page should render without JS errors causing blank page
 		await expect(page.locator('body')).toBeVisible()
 	})
@@ -193,15 +193,15 @@ test.describe('dashboard — status badges', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('dashboard — icon files', () => {
-	test('DocuDesk admin settings page loads (settings icon uses app-dark.svg)', async ({
+	test('Filinq admin settings page loads (settings icon uses app-dark.svg)', async ({
 		page,
 	}) => {
 		// @e2e openspec/specs/dashboard/spec.md#dashboard-widget-icon
 		// @e2e openspec/specs/dashboard/spec.md#admin-settings-section-icon
-		await page.goto('/index.php/settings/admin/docudesk', {
+		await page.goto('/index.php/settings/admin/filinq', {
 			waitUntil: 'domcontentloaded',
 		})
-		// NC admin settings, not the DocuDesk SPA — wait for NC's authenticated
+		// NC admin settings, not the Filinq SPA — wait for NC's authenticated
 		// content region instead of `networkidle`, which never fires here
 		// (ADR-074 rule 4 / gate-58) and was swallowed when it timed out.
 		await waitForNcContentReady(page)

@@ -6,7 +6,7 @@ status: proposed
 
 ## Purpose
 
-Archiefwet 1995 retention for DocuDesk records, built entirely on
+Archiefwet 1995 retention for Filinq records, built entirely on
 OpenRegister's records-management stack (verified at OR HEAD ebedbdd5a):
 selectielijst master data with VNG waardering semantics
 (bewaren/vernietigen + termijn), retention categories and schedule
@@ -14,7 +14,7 @@ computation delegated to OR (trigger event + term via afleidingswijze),
 a vernietigingslijst review/approval workflow ending in a verklaring van
 vernietiging, a transfer-to-archive (overbrenging) state for permanent
 records, and destruction-date propagation into the wave-1 Woo publication
-pipeline and zaaksysteem bridge. DocuDesk computes nothing itself and adds
+pipeline and zaaksysteem bridge. Filinq computes nothing itself and adds
 no pass-through controllers; it ships master data, schema configuration,
 UI surfaces and one propagation rule.
 
@@ -23,7 +23,7 @@ UI surfaces and one propagation rule.
 ### Requirement: Archief register hosts selectielijst and disposal-workflow homes (REQ-DDARE-001)
 
 The app MUST declare an `archief` register in
-`lib/Settings/docudesk_register.json` with three schemas, all
+`lib/Settings/filinq_register.json` with three schemas, all
 `hardValidation: true`, stored as OpenRegister objects (ADR-001):
 `selectielijstEntry` (`categorie` string unique, `omschrijving`,
 `bewaartermijn` ISO-8601 duration string, `archiefnominatie` enum
@@ -42,7 +42,7 @@ only during authoring and MUST NOT remain in the seed at apply time.
 
 #### Scenario: Register import creates the archief schemas and seeds
 
-- GIVEN a fresh Nextcloud instance with DocuDesk and OpenRegister installed
+- GIVEN a fresh Nextcloud instance with Filinq and OpenRegister installed
 - WHEN the app boots and `ConfigurationService::importFromApp()` runs
 - THEN the `archief` register exists with schemas `selectielijstEntry`, `destructionList` and `destructionCertificate`
 - AND the seeded selectielijst entries are queryable via `ObjectService::searchObjects()` with `@self.register = archief`
@@ -59,7 +59,7 @@ only during authoring and MUST NOT remain in the seed at apply time.
 
 ### Requirement: OR archival settings are wired through an explicit admin action (REQ-DDARE-002)
 
-The DocuDesk admin settings MUST gain an Archiefbeheer section that displays
+The Filinq admin settings MUST gain an Archiefbeheer section that displays
 OpenRegister's current archival settings (via OR's
 `GET /api/settings/archival`) and offers an explicit "Koppel
 archiefregister" action that sets `selectielijstRegister`,
@@ -72,7 +72,7 @@ admin action to rewire.
 
 #### Scenario: Admin wires the archief register
 
-- GIVEN an admin on the DocuDesk Archiefbeheer settings section with OR archival settings unset
+- GIVEN an admin on the Filinq Archiefbeheer settings section with OR archival settings unset
 - WHEN they click "Koppel archiefregister" and confirm
 - THEN OR's archival settings point at the `archief` register for selectielijst, destruction lists and certificates
 - AND the panel reflects the wired state
@@ -81,7 +81,7 @@ admin action to rewire.
 #### Scenario: Existing wiring is never silently overwritten
 
 - GIVEN OR's `selectielijstRegister` already points at another register
-- WHEN DocuDesk boots or the admin opens the panel without clicking the action
+- WHEN Filinq boots or the admin opens the panel without clicking the action
 - THEN the settings are unchanged
 - AND the panel shows which register currently owns the selectielijst wiring
 - @e2e exclude negative boot-time assertion (no write occurs) — covered by PHPUnit asserting the app registers no repair step or boot hook that writes OR archival settings
@@ -95,7 +95,7 @@ true`, `classificatie` referencing a selectielijst `categorie`, an
 trigger field) so that OR populates `retention.archiefnominatie`,
 `retention.classificatie`, `retention.bewaartermijn` and
 `retention.archiefactiedatum` at object creation and recalculates the date
-when the trigger field changes. DocuDesk MUST NOT contain any retention
+when the trigger field changes. Filinq MUST NOT contain any retention
 date arithmetic, eligibility scanning or destruction execution code
 (ADR-022/ADR-011); its `RetentionSurfaceService` only reads retention state
 for display and implements the propagation rule of REQ-DDARE-007.
@@ -105,7 +105,7 @@ for display and implements the propagation rule of REQ-DDARE-007.
 - GIVEN the `correspondence` schema carries `archive` config with a `classificatie` resolving to a seeded selectielijst entry (`vernietigen`, `P7Y`)
 - WHEN a correspondence record is created
 - THEN its `retention` block carries `archiefnominatie: vernietigen`, the entry's `bewaartermijn`, the `classificatie` and a computed `archiefactiedatum`
-- AND the values were computed by OpenRegister, not by DocuDesk code
+- AND the values were computed by OpenRegister, not by Filinq code
 - @e2e exclude backend stamping performed by OpenRegister on save — covered by PHPUnit integration-style tests on created objects (tests/unit/Service/RetentionSurfaceServiceTest.php)
 
 #### Scenario: Trigger-event change recomputes the schedule
@@ -113,12 +113,12 @@ for display and implements the propagation rule of REQ-DDARE-007.
 - GIVEN a record whose schema derives `archiefactiedatum` from a closure field
 - WHEN the closure field value changes
 - THEN OpenRegister recalculates `retention.archiefactiedatum` from the new trigger date plus the bewaartermijn
-- AND no DocuDesk code writes the date
+- AND no Filinq code writes the date
 - @e2e exclude recalculation is OR-side save behaviour — covered by PHPUnit on a saved object with a changed trigger field
 
-#### Scenario: No retention arithmetic in DocuDesk
+#### Scenario: No retention arithmetic in Filinq
 
-- GIVEN the DocuDesk codebase at this change's completion
+- GIVEN the Filinq codebase at this change's completion
 - WHEN `lib/` is inspected
 - THEN no class computes archiefactiedatum, scans for destruction eligibility, executes destruction or generates certificates
 - @e2e exclude static codebase property, enforced by review + a PHPUnit architecture test, not a browser flow
@@ -132,7 +132,7 @@ object (title, schema, register, archiefactiedatum, selectielijst
 category), full approval, partial approval with a mandatory per-object
 exclusion reason, and rejection with a mandatory reason. All operations
 MUST call OR's `/api/archival/destruction-lists*` endpoints directly from
-the frontend; DocuDesk MUST NOT add pass-through controllers or a parallel
+the frontend; Filinq MUST NOT add pass-through controllers or a parallel
 approval path, and MUST rely on OR's authorization (403 for
 non-archivists) rather than UI hiding for access control.
 
@@ -152,11 +152,11 @@ non-archivists) rather than UI hiding for access control.
 - AND on submission OR's reject endpoint receives the reason
 - @e2e tests/e2e/workflows/archiefwet-retention.spec.ts
 
-#### Scenario: No DocuDesk pass-through controllers
+#### Scenario: No Filinq pass-through controllers
 
-- GIVEN the DocuDesk routes and controllers at this change's completion
+- GIVEN the Filinq routes and controllers at this change's completion
 - WHEN `appinfo/routes.php` and `lib/Controller/` are inspected
-- THEN no DocuDesk endpoint proxies OR's destruction-list or certificate operations
+- THEN no Filinq endpoint proxies OR's destruction-list or certificate operations
 - @e2e exclude static codebase property (redundant-controller gate) — enforced by review + gates, not a browser flow
 
 ### Requirement: Verklaring van vernietiging is listed and permanent (REQ-DDARE-005)
@@ -190,7 +190,7 @@ The app MUST surface records with `retention.archiefnominatie = bewaren`
 whose `archiefactiedatum` has passed in the Archiefbeheer UI as awaiting
 overbrenging. Marking a record as transferred MUST result in
 `retention.archiefstatus = overgebracht`, after which OpenRegister rejects
-updates with 409 `OBJECT_TRANSFERRED` and the DocuDesk UI presents the
+updates with 409 `OBJECT_TRANSFERRED` and the Filinq UI presents the
 record read-only with a transfer indicator. The actual e-depot packaging
 and delivery are owned by the dependent `tmlo-mdto-metadata` change; for a
 dossier as transfer unit, this engine defines the stamping semantics while
@@ -207,7 +207,7 @@ capability (sibling change — see design.md D4).
 #### Scenario: Transferred record is read-only
 
 - GIVEN a record with `retention.archiefstatus = overgebracht`
-- WHEN a user attempts to edit it through the DocuDesk UI
+- WHEN a user attempts to edit it through the Filinq UI
 - THEN the UI presents the record read-only with a transfer indicator
 - AND a forced API write is rejected by OpenRegister with 409 `OBJECT_TRANSFERRED`
 - @e2e exclude the 409 guard is OR-side — covered by PHPUnit asserting the surfaced read-only state; UI indicator covered in tests/e2e/workflows/archiefwet-retention.spec.ts
@@ -259,20 +259,20 @@ that annotation is unusable for records because OR's
 hourly sweep deletes annotated rows without any vernietigingslijst
 approval (verified at OR HEAD). The annotation remains permitted only for
 operational-log schemas, and any remaining annotation in
-`docudesk_register.json` MUST use the object shape OR HEAD validates
+`filinq_register.json` MUST use the object shape OR HEAD validates
 (`{"retention": {"default": "<ISO-8601>"}}`), never the legacy bare-string
 shape.
 
 #### Scenario: Record schemas carry no auto-delete annotation
 
-- GIVEN the shipped `docudesk_register.json` at this change's completion
+- GIVEN the shipped `filinq_register.json` at this change's completion
 - WHEN every schema with `archive.classificatie` is checked for `x-openregister-archival`
 - THEN none declares the annotation
 - @e2e exclude declarative register-content rule — covered by a PHPUnit register-lint test (tests/unit/Settings/)
 
 #### Scenario: Remaining annotations use the validated object shape
 
-- GIVEN the shipped `docudesk_register.json`
+- GIVEN the shipped `filinq_register.json`
 - WHEN every `x-openregister-archival` occurrence is validated against OR's annotation shape (`retention` object with `default`)
 - THEN each occurrence parses without validation errors
 - AND no bare-string `retention` value remains

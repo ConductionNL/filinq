@@ -5,7 +5,7 @@
 		@mouseup="captureSelection">
 		<div v-if="loading" class="odt-viewer__loading">
 			<NcLoadingIcon :size="48" />
-			<span>{{ t('docudesk', 'Loading document…') }}</span>
+			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
 		<div v-else-if="error" class="odt-viewer__error">
 			{{ error }}
@@ -137,13 +137,13 @@ export default {
 				const zip = await JSZip.loadAsync(arrayBuffer)
 				const contentFile = zip.file('content.xml')
 				if (!contentFile) {
-					throw new Error(t('docudesk', 'Not a valid ODT document'))
+					throw new Error(t('filinq', 'Not a valid ODT document'))
 				}
 				const contentXml = await contentFile.async('string')
 				this.html = odfXmlToHtml(contentXml)
 			} catch (err) {
 				console.error('[OdtViewer] failed to load odt:', err)
-				this.error = err.message || t('docudesk', 'Failed to load document')
+				this.error = err.message || t('filinq', 'Failed to load document')
 			} finally {
 				this.loading = false
 			}

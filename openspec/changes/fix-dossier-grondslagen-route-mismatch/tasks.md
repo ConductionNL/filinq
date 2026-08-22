@@ -1,8 +1,8 @@
 # Tasks: fix-dossier-grondslagen-route-mismatch
 
-All tasks are `[docudesk]`. Estimates: S = half-day.
+All tasks are `[filinq]`. Estimates: S = half-day.
 
-## [docudesk] Route correction
+## [filinq] Route correction
 
 ### R-1. Fix the route-to-method binding (S)
 

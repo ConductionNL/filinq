@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — consent-management spec
@@ -32,10 +32,10 @@ async function dismissOverlays(page: Page): Promise<void> {
 
 async function go(page: Page, route: string): Promise<void> {
 	// `appUrl`, not a hardcoded `/index.php/...`. The router base is
-	// `generateUrl('/apps/docudesk')`, which carries the `index.php` segment
+	// `generateUrl('/apps/filinq')`, which carries the `index.php` segment
 	// only when `OC.config.modRewriteWorking` is false (CI's `php -S`) — on a
 	// rewriting Apache the hardcoded form silently falls back to the app root,
-	// so `toHaveURL(/\/apps\/docudesk/)` below would pass on the DASHBOARD.
+	// so `toHaveURL(/\/apps\/filinq/)` below would pass on the DASHBOARD.
 	// See `resolveAppBase` in ./_helpers. No-op on CI.
 	const url = await appUrl(page, route)
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
@@ -59,8 +59,8 @@ test.describe('consent-management — consent list UI', () => {
 		// @e2e openspec/specs/consent-management/spec.md#view-consent-statistics
 		// @e2e openspec/specs/consent-management/spec.md#empty-consent-list
 		await go(page, 'consent')
-		// Should be on docudesk
-		await expect(page).toHaveURL(/\/apps\/docudesk/)
+		// Should be on filinq
+		await expect(page).toHaveURL(/\/apps\/filinq/)
 		// NC content area should be visible
 		await expect(page.locator('body')).toBeVisible()
 		// Should not be redirected to login
@@ -87,7 +87,7 @@ test.describe('consent-management — consent list UI', () => {
 		// @e2e openspec/specs/consent-management/spec.md#click-consent-to-view-details
 		// Navigate to consent list first
 		await go(page, 'consent')
-		await expect(page).toHaveURL(/\/apps\/docudesk/)
+		await expect(page).toHaveURL(/\/apps\/filinq/)
 		// Check if any consent rows exist to click; if empty, verify empty state renders
 		const rows = page.locator('tr[data-id], .consent-row, .list-item').first()
 		const rowVisible = await rows.isVisible().catch(() => false)
@@ -101,8 +101,8 @@ test.describe('consent-management — consent list UI', () => {
 			// requiring it back is a real check that something rendered.
 			await waitForAppReady(page)
 			await page.waitForTimeout(500)
-			// Should still be on docudesk (either detail route or unchanged)
-			await expect(page).toHaveURL(/\/apps\/docudesk/)
+			// Should still be on filinq (either detail route or unchanged)
+			await expect(page).toHaveURL(/\/apps\/filinq/)
 		} else {
 			// No consents exist — empty state should render without crash
 			await expect(page.locator('body')).toBeVisible()

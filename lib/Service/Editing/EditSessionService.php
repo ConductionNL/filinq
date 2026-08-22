@@ -22,7 +22,7 @@
  * So a WOPI client's lock is indistinguishable from Collabora's own: a document
  * open in the editor would have its lock silently extended rather than
  * refusing, which is precisely the data-loss case the lock exists to prevent.
- * Taking the same `ILockManager` lock in-process under the owner `docudesk`
+ * Taking the same `ILockManager` lock in-process under the owner `filinq`
  * conflicts with Collabora's lock (the refusal we want) while staying distinct
  * from it (which WOPI could not give us). It also drops the self-addressed HTTP
  * call and its bearer token, in line with ADR-041's in-process posture.
@@ -32,12 +32,12 @@
  * WOPI was providing here.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Editing
+ * @package   OCA\Filinq\Service\Editing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-editing-tools/tasks.md#task-2-2
  *
@@ -47,9 +47,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
-use OCA\DocuDesk\AppInfo\Application;
+use OCA\Filinq\AppInfo\Application;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Lock\ILock;
@@ -66,10 +66,10 @@ use Throwable;
  * Runs an agent's document edit under a lock and a version precondition.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
  *

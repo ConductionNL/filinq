@@ -6,7 +6,7 @@ status: done
 
 ## Purpose
 
-@e2e exclude backend service not yet surfaced in the DocuDesk UI — correspondence generation is API/DI-only; covered by PHPUnit service tests
+@e2e exclude backend service not yet surfaced in the Filinq UI — correspondence generation is API/DI-only; covered by PHPUnit service tests
 
 Provides a dedicated correspondence generation workflow for government users to generate letters, beschikkingen, and other correspondence from templates with merge fields populated from case/citizen data. Supports batch generation for multiple recipients, multiple output formats (PDF, DOCX, HTML, email), huisstijl enforcement, and correspondence audit logging. Builds on the existing template-management and pdf-generation capabilities.
 
@@ -14,7 +14,7 @@ Provides a dedicated correspondence generation workflow for government users to 
 
 ### Requirement: Correspondence generation API
 
-The system SHALL provide a dedicated `CorrespondenceService` at `OCA\DocuDesk\Service\CorrespondenceService` that orchestrates the end-to-end correspondence generation workflow: resolve recipient data from OpenRegister objects, merge into a template, apply huisstijl defaults (margins, header, footer, logo), and produce the output document. The service SHALL delegate template lookup to `TemplateService`, data resolution to `DataResolverService`, template rendering to `TemplateRenderer`, and PDF output to `PdfService`.
+The system SHALL provide a dedicated `CorrespondenceService` at `OCA\Filinq\Service\CorrespondenceService` that orchestrates the end-to-end correspondence generation workflow: resolve recipient data from OpenRegister objects, merge into a template, apply huisstijl defaults (margins, header, footer, logo), and produce the output document. The service SHALL delegate template lookup to `TemplateService`, data resolution to `DataResolverService`, template rendering to `TemplateRenderer`, and PDF output to `PdfService`.
 
 #### Scenario: Generate a single letter from template and case data
 - **WHEN** `CorrespondenceService::generate(string $templateId, array $dataRefs, array $options)` is called with a valid template UUID and an object reference `{register: "brp", schema: "ingeschreven-persoon", id: "<uuid>"}`
@@ -112,7 +112,7 @@ The system SHALL support a huisstijl configuration object stored in OpenRegister
 
 ### Requirement: Correspondence register logging
 
-The system SHALL log every generated correspondence as an object in the document register (schema: `correspondence`, register: `document`). Each entry SHALL contain: `templateId` (UUID of template used), `templateName` (human-readable), `recipientId` (UUID of recipient object), `recipientType` (e.g., PERSON, ORGANIZATION), `caseReference` (optional UUID linking to source zaak/case), `generatedAt` (ISO 8601 datetime), `format` (pdf/docx/html), `status` (generated/failed), and `generatedBy` (Nextcloud user ID). The schema SHALL be added to `docudesk_register.json`.
+The system SHALL log every generated correspondence as an object in the document register (schema: `correspondence`, register: `document`). Each entry SHALL contain: `templateId` (UUID of template used), `templateName` (human-readable), `recipientId` (UUID of recipient object), `recipientType` (e.g., PERSON, ORGANIZATION), `caseReference` (optional UUID linking to source zaak/case), `generatedAt` (ISO 8601 datetime), `format` (pdf/docx/html), `status` (generated/failed), and `generatedBy` (Nextcloud user ID). The schema SHALL be added to `filinq_register.json`.
 
 #### Scenario: Successful generation creates register entry
 - **WHEN** a letter is successfully generated
