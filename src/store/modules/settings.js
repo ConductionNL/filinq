@@ -28,17 +28,14 @@ export const useSettingsStore = defineStore('settings', {
 			this.error = null
 
 			try {
-				const response = await fetch(
-					'/index.php/apps/filinq/api/settings',
-					{
-						method: 'GET',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+				const response = await fetch('/index.php/apps/filinq/api/settings', {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken,
+						'OCS-APIREQUEST': 'true',
 					},
-				)
+				})
 
 				if (!response.ok) {
 					throw new Error(
@@ -86,18 +83,15 @@ export const useSettingsStore = defineStore('settings', {
 			this.error = null
 
 			try {
-				const response = await fetch(
-					'/index.php/apps/filinq/api/settings',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(settingsData),
+				const response = await fetch('/index.php/apps/filinq/api/settings', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken,
+						'OCS-APIREQUEST': 'true',
 					},
-				)
+					body: JSON.stringify(settingsData),
+				})
 
 				if (!response.ok) {
 					throw new Error(

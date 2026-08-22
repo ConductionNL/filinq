@@ -17,10 +17,7 @@
 					class="custom-dictionary-detail__swatch"
 					:style="{ backgroundColor: dictionary.colour || '#0082C9' }" />
 				{{
-					displayValue(
-						dictionary.label,
-						t('filinq', 'Custom dictionary'),
-					)
+					displayValue(dictionary.label, t('filinq', 'Custom dictionary'))
 				}}
 			</h2>
 			<div class="custom-dictionary-detail__header-actions">

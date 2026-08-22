@@ -84,11 +84,7 @@
 						{{ t('filinq', 'Cancel') }}
 					</NcButton>
 					<NcButton variant="primary" type="submit" :disabled="saving">
-						{{
-							saving
-								? t('filinq', 'Saving…')
-								: t('filinq', 'Create')
-						}}
+						{{ saving ? t('filinq', 'Saving…') : t('filinq', 'Create') }}
 					</NcButton>
 				</div>
 			</form>

@@ -918,9 +918,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			entry.status = 'extracting'
 			try {
 				const res = await axios.post(
-					generateUrl(
-						`/apps/filinq/api/anonymization/extract/${fileId}`,
-					),
+					generateUrl(`/apps/filinq/api/anonymization/extract/${fileId}`),
 					{ force: true },
 				)
 				const entities = res.data.entities || []

@@ -72,10 +72,7 @@
 			<div class="setting-item">
 				<div class="setting-label">
 					{{
-						t(
-							'filinq',
-							'Default output format for anonymised documents',
-						)
+						t('filinq', 'Default output format for anonymised documents')
 					}}
 				</div>
 				<NcCheckboxRadioSwitch
@@ -200,10 +197,7 @@
 		<NcSettingsSection
 			:name="t('filinq', 'Metadata Enrichment')"
 			:description="
-				t(
-					'filinq',
-					'Configure automatic metadata enrichment for documents',
-				)
+				t('filinq', 'Configure automatic metadata enrichment for documents')
 			">
 			<div class="setting-item">
 				<div class="setting-label">
@@ -218,10 +212,7 @@
 					" />
 				<div class="setting-description">
 					{{
-						t(
-							'filinq',
-							'Automatically detect the language of documents',
-						)
+						t('filinq', 'Automatically detect the language of documents')
 					}}
 				</div>
 			</div>
@@ -616,9 +607,7 @@
 							{{ t('filinq', 'SES — Simple Electronic Signature') }}
 						</option>
 						<option value="AdES">
-							{{
-								t('filinq', 'AdES — Advanced Electronic Signature')
-							}}
+							{{ t('filinq', 'AdES — Advanced Electronic Signature') }}
 						</option>
 						<option value="QES">
 							{{
@@ -1095,13 +1084,14 @@ export default {
 					// files-confidential-labels — read-only signal settings.
 					this.settings['filinq.confidentiality.prioritise_analysis'] =
 						data['filinq.confidentiality.prioritise_analysis'] ?? false
-					this.settings['filinq.confidentiality.label_vocabulary'] =
-						data['filinq.confidentiality.label_vocabulary'] || {
-							Public: 0,
-							Internal: 1,
-							Confidential: 2,
-							Secret: 3,
-						}
+					this.settings['filinq.confidentiality.label_vocabulary'] = data[
+						'filinq.confidentiality.label_vocabulary'
+					] || {
+						Public: 0,
+						Internal: 1,
+						Confidential: 2,
+						Secret: 3,
+					}
 					this.confidentialityVocabularyText = JSON.stringify(
 						this.settings['filinq.confidentiality.label_vocabulary'],
 						null,
@@ -1287,8 +1277,7 @@ export default {
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,
 				// Sent as an array; the backend json-encodes it for storage.
-				'filinq.anonymisation.enabled_entity_types':
-					this.enabledEntityTypes,
+				'filinq.anonymisation.enabled_entity_types': this.enabledEntityTypes,
 
 				// files-confidential-labels — off by default; reorders analysis
 				// only, never gates/blocks/redacts (design.md D3).

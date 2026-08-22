@@ -169,9 +169,7 @@ export default {
 				required />
 			<NcTextField
 				v-model="form.legalAuthority"
-				:label="
-					t('filinq', 'Legal authority (court order, statute, …)')
-				" />
+				:label="t('filinq', 'Legal authority (court order, statute, …)')" />
 			<NcTextField
 				v-model="form.caseReference"
 				:label="t('filinq', 'Case reference (optional)')" />

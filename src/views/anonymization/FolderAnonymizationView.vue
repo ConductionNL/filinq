@@ -239,10 +239,7 @@
 						{{
 							store.report.generating
 								? t('filinq', 'Generating…')
-								: t(
-										'filinq',
-										'Generate dossier grondslagen report',
-									)
+								: t('filinq', 'Generate dossier grondslagen report')
 						}}
 					</NcButton>
 				</div>

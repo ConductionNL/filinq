@@ -77,10 +77,7 @@ SPDX-License-Identifier: EUPL-1.2
 		<div v-if="unredactedEntities.length > 0" class="comparison-view__advisory">
 			<h3>
 				{{
-					t(
-						'filinq',
-						'Verify manually — entities with no detected change',
-					)
+					t('filinq', 'Verify manually — entities with no detected change')
 				}}
 			</h3>
 			<ul>

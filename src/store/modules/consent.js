@@ -123,9 +123,7 @@ export const useConsentStore = defineStore('consent', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl(
-						`/apps/filinq/api/consents/document/${documentId}`,
-					),
+					generateUrl(`/apps/filinq/api/consents/document/${documentId}`),
 				)
 				return response.data
 			} catch (err) {

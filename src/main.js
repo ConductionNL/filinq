@@ -57,10 +57,7 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn(
-		'[filinq] registerTranslations failed; falling back to English',
-		e,
-	)
+	console.warn('[filinq] registerTranslations failed; falling back to English', e)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs only allow the

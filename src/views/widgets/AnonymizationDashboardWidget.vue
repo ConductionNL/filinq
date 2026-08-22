@@ -119,10 +119,7 @@ import { anonymizationStore } from '../../store/store.js'
 						{{
 							anonymizationStore.hasFiles
 								? t('filinq', 'Drop more files to anonymize')
-								: t(
-										'filinq',
-										'Drag and drop one or more documents',
-									)
+								: t('filinq', 'Drag and drop one or more documents')
 						}}
 					</p>
 					<p v-if="!anonymizationStore.hasFiles" class="drop-subtitle">

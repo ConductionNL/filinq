@@ -253,8 +253,7 @@ export default {
 		 */
 		deleteMessage() {
 			const name =
-				this.deleteTarget?.entityText
-				|| t('filinq', 'this standing consent')
+				this.deleteTarget?.entityText || t('filinq', 'this standing consent')
 			return t('filinq', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},

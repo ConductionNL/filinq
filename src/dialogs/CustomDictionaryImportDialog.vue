@@ -103,9 +103,7 @@ export default {
 				v-model="pastedContent"
 				:disabled="selectedFile !== null"
 				:label="t('filinq', 'Terms (one per line)')"
-				:placeholder="
-					t('filinq', 'Operatie Zilverreiger\nDossier Karekiet')
-				"
+				:placeholder="t('filinq', 'Operatie Zilverreiger\nDossier Karekiet')"
 				:rows="6" />
 
 			<div v-if="result" class="custom-dictionary-import__result">

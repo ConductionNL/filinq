@@ -126,8 +126,7 @@ export default {
 		 */
 		pageTitle() {
 			return (
-				fileViewerStore.currentFile?.fileName
-				|| t('filinq', 'File preview')
+				fileViewerStore.currentFile?.fileName || t('filinq', 'File preview')
 			)
 		},
 

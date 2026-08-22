@@ -650,9 +650,7 @@ test.describe('anonymization-entity-review — review table UI', () => {
 		// nothing at all — which reads exactly like "the button does nothing".
 		const payloads: string[] = []
 		page.on('request', (r) => {
-			if (
-				/\/apps\/filinq\/api\/anonymization\/anonymize\/\d+/.test(r.url())
-			) {
+			if (/\/apps\/filinq\/api\/anonymization\/anonymize\/\d+/.test(r.url())) {
 				payloads.push(r.postData() ?? '')
 			}
 		})

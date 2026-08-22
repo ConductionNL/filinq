@@ -242,10 +242,7 @@ import {
 						+ (entry.confidentialityLevel ?? 0)
 					"
 					:title="
-						t(
-							'filinq',
-							'Confidentiality label from files_confidential',
-						)
+						t('filinq', 'Confidentiality label from files_confidential')
 					">
 					{{
 						t('filinq', 'Confidentiality: {label}', {

@@ -66,10 +66,7 @@ import { consentStore } from '../../store/store.js'
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
 					:aria-label="
-						t(
-							'filinq',
-							'Approved consents — open the consent overview',
-						)
+						t('filinq', 'Approved consents — open the consent overview')
 					">
 					<CnStatsBlock
 						:title="t('filinq', 'Approved')"
@@ -86,10 +83,7 @@ import { consentStore } from '../../store/store.js'
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
 					:aria-label="
-						t(
-							'filinq',
-							'Objected consents — open the consent overview',
-						)
+						t('filinq', 'Objected consents — open the consent overview')
 					">
 					<CnStatsBlock
 						:title="t('filinq', 'Objected')"
@@ -105,9 +99,7 @@ import { consentStore } from '../../store/store.js'
 				<NcEmptyContent
 					v-if="!consentStore.loading && pendingConsents.length === 0"
 					:name="t('filinq', 'No pending consents')"
-					:description="
-						t('filinq', 'All consents have been handled.')
-					" />
+					:description="t('filinq', 'All consents have been handled.')" />
 				<CnDataTable
 					v-else
 					:rows="pendingConsents"
@@ -265,10 +257,9 @@ export default {
 		 */
 		async fetchAnonymiserBackendState() {
 			try {
-				const response = await fetch(
-					'/index.php/apps/filinq/api/settings',
-					{ method: 'GET' },
-				)
+				const response = await fetch('/index.php/apps/filinq/api/settings', {
+					method: 'GET',
+				})
 				if (response.ok === false) {
 					return
 				}

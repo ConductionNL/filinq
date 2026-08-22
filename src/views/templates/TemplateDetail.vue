@@ -175,9 +175,7 @@
 					class="template-detail__raw-btn"
 					@click="showRaw = !showRaw">
 					{{
-						showRaw
-							? t('filinq', 'Hide HTML')
-							: t('filinq', 'Edit HTML')
+						showRaw ? t('filinq', 'Hide HTML') : t('filinq', 'Edit HTML')
 					}}
 				</button>
 			</div>
@@ -219,10 +217,7 @@
 				v-else
 				:name="t('filinq', 'No preview yet')"
 				:description="
-					t(
-						'filinq',
-						'Click \'Refresh preview\' to render the template.',
-					)
+					t('filinq', 'Click \'Refresh preview\' to render the template.')
 				" />
 		</div>
 

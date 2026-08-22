@@ -56,14 +56,10 @@ export default {
 			</p>
 			<p class="confidence">
 				{{
-					t(
-						'filinq',
-						'Detection confidence {conf}% (threshold {thr}%).',
-						{
-							conf: Math.round((match.confidence || 0) * 100),
-							thr: Math.round((block.threshold || 0) * 100),
-						},
-					)
+					t('filinq', 'Detection confidence {conf}% (threshold {thr}%).', {
+						conf: Math.round((match.confidence || 0) * 100),
+						thr: Math.round((block.threshold || 0) * 100),
+					})
 				}}
 			</p>
 			<p v-if="!releasable" class="warn-text">

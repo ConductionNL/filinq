@@ -150,10 +150,7 @@ export default {
 				this.$emit('dismissed')
 			} catch (err) {
 				showError(
-					t(
-						'filinq',
-						'Failed to dismiss the anonymiser backend warning',
-					),
+					t('filinq', 'Failed to dismiss the anonymiser backend warning'),
 				)
 			} finally {
 				this.dismissing = false

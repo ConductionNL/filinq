@@ -7,9 +7,7 @@
 		<div class="dossier-dialog">
 			<!-- Single file: read-only filename, no dossier name -->
 			<div v-if="singleFile" class="single-file">
-				<span class="single-file__label">{{
-					t('filinq', 'Document')
-				}}</span>
+				<span class="single-file__label">{{ t('filinq', 'Document') }}</span>
 				<span class="single-file__name">{{ fileName }}</span>
 				<NcNoteCard v-if="error" type="error">
 					{{ error }}

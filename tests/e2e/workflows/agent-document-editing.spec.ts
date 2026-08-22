@@ -612,9 +612,7 @@ test.describe('agent document editing', () => {
 		// `filinq.readDocument`), and the real guard is the non-empty check
 		// above: if the surface is missing entirely, the test fails there rather
 		// than reporting this invariant it never got to evaluate.
-		const writeVerbs = filinq.filter((n) =>
-			/\.(create|update|delete)$/.test(n),
-		)
+		const writeVerbs = filinq.filter((n) => /\.(create|update|delete)$/.test(n))
 		expect(
 			writeVerbs,
 			'no Filinq schema may expose a derived write verb',
