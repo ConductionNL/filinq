@@ -91,7 +91,16 @@ class FilinqEventListener implements IEventListener {
 				metadataService: $metadataService,
 				logger: $logger
 			);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
+			/* Throwable, not Exception. This listener runs INSIDE another
+			   app's object save — OpenRegister dispatches the event — so
+			   anything that escapes here does not just lose this app's
+			   enrichment, it fails the caller's write. A \Error from a
+			   collaborator (a TypeError on a changed signature, say) is
+			   exactly the kind that used to escape, and
+			   ValidationRunner::runFallbackForEvent() on this very path
+			   already catches Throwable, so the two disagreed inside one
+			   method. */
 			$this->logHandlerError(exception: $e, event: $event);
 		}//end try
 
@@ -158,7 +167,7 @@ class FilinqEventListener implements IEventListener {
 	/**
 	 * Log an error from the event handler
 	 *
-	 * @param \Exception $exception The exception that occurred
+	 * @param \Throwable $exception The error or exception that occurred
 	 * @param Event $event The event being processed
 	 *
 	 * @return void
@@ -166,7 +175,7 @@ class FilinqEventListener implements IEventListener {
 	 * @psalm-suppress UnusedParam $exception and $event are passed to the runtime-resolved logger,
 	 *                             but Psalm cannot see the call because \OC::$server->get() is mixed.
 	 */
-	private function logHandlerError(\Exception $exception, Event $event): void {
+	private function logHandlerError(\Throwable $exception, Event $event): void {
 		try {
 			$logger = \OC::$server->get(LoggerInterface::class);
 			$logger->error(
@@ -178,8 +187,12 @@ class FilinqEventListener implements IEventListener {
 					'line' => $exception->getLine(),
 				]
 			);
-		} catch (\Exception $logException) {
-			// Silently fail if logging fails.
+		} catch (\Throwable $logException) {
+			/* Silently fail if logging itself fails — and Throwable here too,
+			   both because a logger blowing up must never be the thing that
+			   fails another app's write, and because referencing only
+			   Throwable in this class keeps its CouplingBetweenObjects at 12
+			   rather than adding \Exception as a thirteenth type. */
 		}//end try
 
 	}//end logHandlerError()

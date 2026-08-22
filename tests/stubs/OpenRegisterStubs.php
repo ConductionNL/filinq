@@ -588,6 +588,9 @@ class ObjectEntity {
 	/** @var string|null */
 	protected ?string $schema = null;
 
+	/** @var array<string, mixed> */
+	protected array $object = [];
+
 	/**
 	 * Set UUID.
 	 *
@@ -610,6 +613,18 @@ class ObjectEntity {
 	}//end getUuid()
 
 	/**
+	 * Set register.
+	 *
+	 * @param string|null $register Register identifier.
+	 *
+	 * @return void
+	 */
+	public function setRegister(?string $register): void {
+		$this->register = $register;
+
+	}//end setRegister()
+
+	/**
 	 * Get register.
 	 *
 	 * @return string|null
@@ -619,6 +634,18 @@ class ObjectEntity {
 	}//end getRegister()
 
 	/**
+	 * Set schema.
+	 *
+	 * @param string|null $schema Schema identifier.
+	 *
+	 * @return void
+	 */
+	public function setSchema(?string $schema): void {
+		$this->schema = $schema;
+
+	}//end setSchema()
+
+	/**
 	 * Get schema.
 	 *
 	 * @return string|null
@@ -626,6 +653,27 @@ class ObjectEntity {
 	public function getSchema(): ?string {
 		return $this->schema;
 	}//end getSchema()
+
+	/**
+	 * Set the object payload.
+	 *
+	 * @param array<string, mixed> $object The object payload.
+	 *
+	 * @return void
+	 */
+	public function setObject(array $object): void {
+		$this->object = $object;
+
+	}//end setObject()
+
+	/**
+	 * Get the object payload.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getObject(): array {
+		return $this->object;
+	}//end getObject()
 
 	/**
 	 * Get integer ID.
@@ -1964,6 +2012,7 @@ namespace OCA\OpenRegister\Event;
 
 use OCA\OpenRegister\Db\ApprovalChain;
 use OCA\OpenRegister\Db\ApprovalStep;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\EventDispatcher\Event;
 
 /**
@@ -2123,6 +2172,81 @@ class ApprovalStepCompletedEvent extends Event {
 
 	public function getObjectUuid(): string {
 		return $this->finalStep->getObjectUuid() ?? '';
+	}
+}//end class
+
+/**
+ * Stub for ObjectCreatedEvent.
+ *
+ * OpenRegister dispatches this after an object is persisted for the first
+ * time. Filinq subscribes to it in ObjectEventRegistrar and routes it through
+ * FilinqEventListener -> FilinqEventHandler::handleObjectCreated().
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class ObjectCreatedEvent extends Event {
+	public function __construct(
+		private readonly ?ObjectEntity $object = null,
+	) {
+		parent::__construct();
+	}
+
+	public function getObject(): ?ObjectEntity {
+		return $this->object;
+	}
+}//end class
+
+/**
+ * Stub for ObjectUpdatedEvent.
+ *
+ * Carries both the pre- and post-update object state so listeners can diff
+ * them. Filinq uses the pair to decide whether content actually changed.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class ObjectUpdatedEvent extends Event {
+	public function __construct(
+		private readonly ?ObjectEntity $newObject = null,
+		private readonly ?ObjectEntity $oldObject = null,
+	) {
+		parent::__construct();
+	}
+
+	public function getNewObject(): ?ObjectEntity {
+		return $this->newObject;
+	}
+
+	public function getOldObject(): ?ObjectEntity {
+		return $this->oldObject;
+	}
+}//end class
+
+/**
+ * Stub for ObjectDeletedEvent.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class ObjectDeletedEvent extends Event {
+	public function __construct(
+		private readonly ?ObjectEntity $object = null,
+	) {
+		parent::__construct();
+	}
+
+	public function getObject(): ?ObjectEntity {
+		return $this->object;
 	}
 }//end class
 
