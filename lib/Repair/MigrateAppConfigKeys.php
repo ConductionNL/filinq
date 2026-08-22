@@ -190,21 +190,32 @@ class MigrateAppConfigKeys implements IRepairStep {
 				continue;
 			}
 
-			$old = $this->appConfig->getValueString(self::OLD_APP_ID, $key, '');
-			if ($old === '') {
-				$emptySource++;
-				continue;
-			}
-
-			$newKey = $this->newKeyFor(oldKey: $key);
-
-			$existing = $this->appConfig->getValueString(self::NEW_APP_ID, $newKey, '');
-			if ($existing !== '') {
-				$alreadyPresent++;
-				continue;
-			}
+			/* The two READS belong inside the try as much as the write does.
+			   They used to sit outside it, so a read that threw propagated
+			   out of run() and aborted `occ upgrade` — the exact outcome the
+			   class docblock promises cannot happen ("every failure is
+			   logged and the loop continues"). One unreadable key is not
+			   worth failing an install over; the app falls back to its
+			   defaults and the admin re-enters that setting. */
+			/* Pre-set so the catch below can always name it: the first read
+			   can now throw, before newKeyFor() has run. */
+			$newKey = $key;
 
 			try {
+				$old = $this->appConfig->getValueString(self::OLD_APP_ID, $key, '');
+				if ($old === '') {
+					$emptySource++;
+					continue;
+				}
+
+				$newKey = $this->newKeyFor(oldKey: $key);
+
+				$existing = $this->appConfig->getValueString(self::NEW_APP_ID, $newKey, '');
+				if ($existing !== '') {
+					$alreadyPresent++;
+					continue;
+				}
+
 				$this->appConfig->setValueString(self::NEW_APP_ID, $newKey, $old);
 				$migrated++;
 			} catch (\Throwable $e) {

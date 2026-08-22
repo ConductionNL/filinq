@@ -329,4 +329,336 @@ final class MigrateUserPreferencesTest extends TestCase {
 		$this->assertStringContainsString('docudesk', $step->getName());
 		$this->assertStringContainsString('filinq', $step->getName());
 	}//end testNameNamesBothAppIds()
+
+	/**
+	 * An IOutput double that records every `info()` line it is handed.
+	 *
+	 * @param array<int, string> $messages Collected lines, by reference.
+	 *
+	 * @return IOutput
+	 */
+	private function recordingOutput(array &$messages): IOutput {
+		$output = $this->createMock(IOutput::class);
+		$output->method('info')->willReturnCallback(
+			static function ($message) use (&$messages): void {
+				$messages[] = (string)$message;
+			}
+		);
+
+		return $output;
+	}//end recordingOutput()
+
+	/**
+	 * Wire a store into an IConfig double whose READ fails for one user.
+	 *
+	 * The destination read sits inside the same `try` as the write, so it is
+	 * part of the log-and-continue contract. It gets its own double rather
+	 * than a flag on the shared store because the tests' own assertions read
+	 * through that store and must not blow up alongside the step.
+	 *
+	 * @param UserPreferenceStore $store The backing store.
+	 * @param string $failUser The user whose destination read throws.
+	 *
+	 * @return IConfig
+	 */
+	private function configOverWithFailingRead(UserPreferenceStore $store, string $failUser): IConfig {
+		$mock = $this->createMock(IConfig::class);
+		$mock->method('getUsersForUserValue')->willReturnCallback(
+			static fn ($app, $key, $value): array => $store->usersFor((string)$app, (string)$key, (string)$value)
+		);
+		$mock->method('getUserValue')->willReturnCallback(
+			static function ($userId, $app, $key, $default = '') use ($store, $failUser): string {
+				if ((string)$userId === $failUser) {
+					throw new RuntimeException('preferences unreadable');
+				}
+
+				return $store->get((string)$userId, (string)$app, (string)$key, (string)$default);
+			}
+		);
+		$mock->method('setUserValue')->willReturnCallback(
+			static function ($userId, $app, $key, $value, $preCondition = null) use ($store) {
+				$store->set((string)$userId, (string)$app, (string)$key, (string)$value);
+				return null;
+			}
+		);
+
+		return $mock;
+	}//end configOverWithFailingRead()
+
+	/**
+	 * Only the exact stored value the key can hold is enumerated.
+	 *
+	 * `MIGRATED_KEYS` lists `'1'` alone because `'1'` is the only value these
+	 * keys are ever written with — a dismissal is recorded by writing `'1'`
+	 * and undone by DELETING the row. A user holding anything else is a user
+	 * who has not dismissed the nag, and copying that across would be copying
+	 * a value the readers already treat as the default.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheDismissedValueIsMigrated(): void {
+		[$step, $store] = $this->stepOver([
+			'docudesk' => [
+				'alice' => ['anonymiser_warning_dismissed' => '1'],
+				'bob' => ['anonymiser_warning_dismissed' => '0'],
+				'carol' => ['anonymiser_warning_dismissed' => 'true'],
+			],
+		]);
+
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame('1', $store->get('alice', 'filinq', 'anonymiser_warning_dismissed'));
+		$this->assertSame('', $store->get('bob', 'filinq', 'anonymiser_warning_dismissed'));
+		$this->assertSame('', $store->get('carol', 'filinq', 'anonymiser_warning_dismissed'));
+	}//end testOnlyTheDismissedValueIsMigrated()
+
+	/**
+	 * Key names cross verbatim — no prefix rewrite happens here.
+	 *
+	 * Unlike the app-config step, no per-user key in this app embeds the app
+	 * id, so borrowing that step's `newKeyFor()` rewrite would invent keys
+	 * (`filinq_support-dialog-seen`) that nextcloud-vue never reads.
+	 *
+	 * @return void
+	 */
+	public function testKeyNamesAreCopiedVerbatim(): void {
+		[$step, $store] = $this->stepOver([
+			'docudesk' => [
+				'alice' => [
+					'anonymiser_warning_dismissed' => '1',
+					'pref_support-dialog-seen' => '1',
+				],
+			],
+		]);
+
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame(
+			['anonymiser_warning_dismissed', 'pref_support-dialog-seen'],
+			array_keys($store->snapshot()['filinq']['alice'])
+		);
+	}//end testKeyNamesAreCopiedVerbatim()
+
+	/**
+	 * Dismissals are per user AND per key; neither leaks to the other.
+	 *
+	 * `getUsersForUserValue()` is queried once per key, so a step that hoisted
+	 * the user list out of the key loop would hand every dismisser of one nag
+	 * a dismissal of the other — silently suppressing a dialog the user has
+	 * never seen.
+	 *
+	 * @return void
+	 */
+	public function testDismissalsDoNotLeakBetweenKeysOrUsers(): void {
+		[$step, $store] = $this->stepOver([
+			'docudesk' => [
+				'alice' => ['anonymiser_warning_dismissed' => '1'],
+				'bob' => ['pref_support-dialog-seen' => '1'],
+			],
+		]);
+
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame('', $store->get('alice', 'filinq', 'pref_support-dialog-seen'));
+		$this->assertSame('', $store->get('bob', 'filinq', 'anonymiser_warning_dismissed'));
+		$this->assertSame(
+			['anonymiser_warning_dismissed'],
+			array_keys($store->snapshot()['filinq']['alice'])
+		);
+	}//end testDismissalsDoNotLeakBetweenKeysOrUsers()
+
+	/**
+	 * An empty string under the new app id is an absence, so the copy runs.
+	 *
+	 * @return void
+	 */
+	public function testEmptyDestinationValueIsTreatedAsFreeSpace(): void {
+		[$step, $store] = $this->stepOver([
+			'docudesk' => ['alice' => ['anonymiser_warning_dismissed' => '1']],
+			'filinq' => ['alice' => ['anonymiser_warning_dismissed' => '']],
+		]);
+
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame('1', $store->get('alice', 'filinq', 'anonymiser_warning_dismissed'));
+	}//end testEmptyDestinationValueIsTreatedAsFreeSpace()
+
+	/**
+	 * One user's already-set preference does not stop the next user's copy.
+	 *
+	 * The skip is a `continue` inside the user loop; a `break` or a `return`
+	 * would strand every user enumerated after the first one who had already
+	 * been migrated — which, on a re-run, is most of them.
+	 *
+	 * @return void
+	 */
+	public function testAnAlreadyPresentUserDoesNotStopLaterUsers(): void {
+		[$step, $store] = $this->stepOver([
+			'docudesk' => [
+				'alice' => ['anonymiser_warning_dismissed' => '1'],
+				'bob' => ['anonymiser_warning_dismissed' => '1'],
+				'carol' => ['anonymiser_warning_dismissed' => '1'],
+			],
+			'filinq' => ['alice' => ['anonymiser_warning_dismissed' => '0']],
+		]);
+
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame('0', $store->get('alice', 'filinq', 'anonymiser_warning_dismissed'));
+		$this->assertSame('1', $store->get('bob', 'filinq', 'anonymiser_warning_dismissed'));
+		$this->assertSame('1', $store->get('carol', 'filinq', 'anonymiser_warning_dismissed'));
+	}//end testAnAlreadyPresentUserDoesNotStopLaterUsers()
+
+	/**
+	 * An unreadable destination is logged and the remaining users still move.
+	 *
+	 * The destination read is inside the `try`, so a preferences backend that
+	 * fails for one user must not abort the install — a repair step that
+	 * throws takes `occ upgrade` down with it.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableDestinationIsLoggedAndDoesNotStopTheLoop(): void {
+		$store = new UserPreferenceStore(
+			rows: [
+				'docudesk' => [
+					'alice' => ['anonymiser_warning_dismissed' => '1'],
+					'boom' => ['anonymiser_warning_dismissed' => '1'],
+					'carol' => ['anonymiser_warning_dismissed' => '1'],
+				],
+			]
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('warning');
+
+		$step = new MigrateUserPreferences(
+			$this->configOverWithFailingRead(store: $store, failUser: 'boom'),
+			$logger
+		);
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame('1', $store->get('alice', 'filinq', 'anonymiser_warning_dismissed'));
+		$this->assertSame('1', $store->get('carol', 'filinq', 'anonymiser_warning_dismissed'));
+		$this->assertSame('', $store->get('boom', 'filinq', 'anonymiser_warning_dismissed'));
+	}//end testUnreadableDestinationIsLoggedAndDoesNotStopTheLoop()
+
+	/**
+	 * The summary counts migrations and skips in separate buckets.
+	 *
+	 * @return void
+	 */
+	public function testSummaryReportsMigratedAndAlreadyPresentCounts(): void {
+		[$step] = $this->stepOver([
+			'docudesk' => [
+				'alice' => ['anonymiser_warning_dismissed' => '1'],
+				'bob' => ['anonymiser_warning_dismissed' => '1'],
+				'carol' => ['pref_support-dialog-seen' => '1'],
+			],
+			'filinq' => ['carol' => ['pref_support-dialog-seen' => '1']],
+		]);
+
+		$messages = [];
+		$step->run($this->recordingOutput($messages));
+
+		$this->assertSame(
+			['MigrateUserPreferences: migrated 2 preference(s); 1 already set under filinq.'],
+			$messages
+		);
+	}//end testSummaryReportsMigratedAndAlreadyPresentCounts()
+
+	/**
+	 * An install where everything is already migrated is NOT "nothing to do".
+	 *
+	 * The no-op branch is guarded on BOTH counters. Reporting "nothing to do"
+	 * on a re-run that found rows and deliberately left them alone would tell
+	 * an admin investigating a reverted preference that the step never saw
+	 * their data — pointing the investigation at the wrong place entirely.
+	 *
+	 * @return void
+	 */
+	public function testAllAlreadyPresentIsReportedAsASkipNotANoOp(): void {
+		[$step] = $this->stepOver([
+			'docudesk' => ['alice' => ['anonymiser_warning_dismissed' => '1']],
+			'filinq' => ['alice' => ['anonymiser_warning_dismissed' => '1']],
+		]);
+
+		$messages = [];
+		$step->run($this->recordingOutput($messages));
+
+		$this->assertSame(
+			['MigrateUserPreferences: migrated 0 preference(s); 1 already set under filinq.'],
+			$messages
+		);
+	}//end testAllAlreadyPresentIsReportedAsASkipNotANoOp()
+
+	/**
+	 * A preference whose write threw is not counted as migrated.
+	 *
+	 * @return void
+	 */
+	public function testFailedWriteIsNotCountedAsMigrated(): void {
+		$store = new UserPreferenceStore(
+			rows: [
+				'docudesk' => [
+					'alice' => ['anonymiser_warning_dismissed' => '1'],
+					'boom' => ['anonymiser_warning_dismissed' => '1'],
+				],
+			],
+			throwOnUser: 'boom'
+		);
+		$step = new MigrateUserPreferences(
+			$this->configOver(store: $store),
+			$this->createMock(LoggerInterface::class)
+		);
+
+		$messages = [];
+		$step->run($this->recordingOutput($messages));
+
+		$this->assertSame(
+			['MigrateUserPreferences: migrated 1 preference(s); 0 already set under filinq.'],
+			$messages
+		);
+	}//end testFailedWriteIsNotCountedAsMigrated()
+
+	/**
+	 * A re-run after a user has changed the preference keeps the user's choice.
+	 *
+	 * The step is registered under `<post-migration>`, so it runs on every
+	 * upgrade — long after users have started toggling these dismissals under
+	 * the new app id.
+	 *
+	 * @return void
+	 */
+	public function testRerunAfterAUserChangeKeepsTheChange(): void {
+		[$step, $store] = $this->stepOver([
+			'docudesk' => ['alice' => ['pref_support-dialog-seen' => '1']],
+		]);
+
+		$step->run($this->createMock(IOutput::class));
+		$this->assertSame('1', $store->get('alice', 'filinq', 'pref_support-dialog-seen'));
+
+		$store->set('alice', 'filinq', 'pref_support-dialog-seen', '0');
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame('0', $store->get('alice', 'filinq', 'pref_support-dialog-seen'));
+	}//end testRerunAfterAUserChangeKeepsTheChange()
+
+	/**
+	 * The old rows are never deleted, for either key or any user.
+	 *
+	 * @return void
+	 */
+	public function testOldNamespaceIsUntouchedForEveryMigratedUser(): void {
+		[$step, $store] = $this->stepOver([
+			'docudesk' => [
+				'alice' => ['anonymiser_warning_dismissed' => '1'],
+				'bob' => ['pref_support-dialog-seen' => '1'],
+			],
+		]);
+
+		$before = $store->snapshot()['docudesk'];
+		$step->run($this->createMock(IOutput::class));
+
+		$this->assertSame($before, $store->snapshot()['docudesk']);
+	}//end testOldNamespaceIsUntouchedForEveryMigratedUser()
 }//end class

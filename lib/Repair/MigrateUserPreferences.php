@@ -159,7 +159,23 @@ class MigrateUserPreferences implements IRepairStep {
 
 		foreach (self::MIGRATED_KEYS as $key => $values) {
 			foreach ($values as $value) {
-				$userIds = $this->config->getUsersForUserValue(self::OLD_APP_ID, $key, $value);
+				/* Guarded like the per-user work below it. This enumeration
+				   used to sit outside any try, so an unreadable preference
+				   store propagated out of run() and aborted `occ upgrade` —
+				   the one thing this class's docblock promises it will not
+				   do. One unreadable key/value pair costs those users their
+				   stored preference; it should not cost everyone the
+				   upgrade. */
+				try {
+					$userIds = $this->config->getUsersForUserValue(self::OLD_APP_ID, $key, $value);
+				} catch (\Throwable $e) {
+					$this->logger->warning(
+						'MigrateUserPreferences: could not enumerate users for one preference; leaving it under the old app id.',
+						['key' => $key, 'value' => $value, 'exception' => $e->getMessage()]
+					);
+					continue;
+				}//end try
+
 				foreach ($userIds as $userId) {
 					try {
 						$existing = $this->config->getUserValue($userId, self::NEW_APP_ID, $key, '');
