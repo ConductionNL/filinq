@@ -24,6 +24,31 @@ define('PHPUNIT_RUN', 1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// THE OpenRegister CONTRACT INTERFACES, OPTED INTO RATHER THAN AUTOLOADED.
+//
+// conduction/hydra-gates claims `OCA\OpenRegister\Contract\` as a RUNTIME psr-4
+// prefix, so consumers get these interfaces implicitly. That prefix is LONGER
+// than openregister's own `OCA\OpenRegister\` -> `lib/`, and PSR-4 is
+// longest-prefix-wins, so whichever app's autoloader registers first defines
+// OpenRegister's contract for the whole process (ConductionNL/.github#531).
+//
+// Required before tests/stubs/OpenRegisterStubs.php, which references the
+// contract, so the interface has to exist by then or PHP fatals in the
+// bootstrap itself rather than failing a test.
+//
+// interface_exists() is order-independent — it asks whether the interface is
+// RESOLVABLE, not who registered first. Appending a fallback autoloader does
+// NOT work: spl_autoload_register appends relative to registration order, and
+// that order across independently loaded apps is what nobody controls.
+foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
+		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
+		if (file_exists($shipped) === true) {
+			require_once $shipped;
+		}
+	}
+}
+
 // Load global-namespace stubs first (\OC class, etc.).
 require_once __DIR__ . '/stubs/GlobalStubs.php';
 
