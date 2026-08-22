@@ -60,7 +60,7 @@ export const useFileViewerStore = defineStore('fileViewer', {
 		 * @param {number} file.fileId   Nextcloud file id.
 		 * @param {string} file.fileName File name with extension.
 		 * @param {string} file.mimeType MIME type.
-		 * @param {string} file.path     Absolute path inside the user's storage (e.g. /Filinq/foo.pdf).
+		 * @param {string} file.path     Absolute path inside the user's storage (e.g. /DocuDesk/foo.pdf).
 		 * @param {object} [options]             Viewer options.
 		 * @param {boolean} [options.grondslagen] Whether the entity cards
 		 *        start editable (review mode). Defaults to `true` so callers

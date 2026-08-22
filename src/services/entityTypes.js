@@ -85,6 +85,7 @@ export function entityTypeColor(type) {
  *
  * @param {string} type Raw entity type (any casing).
  * @return {string} Translated label, or the raw uppercase token when untranslated.
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-review-ui-layout
  */
 export function entityTypeLabel(type) {
 	const upper = String(type || '')

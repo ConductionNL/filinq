@@ -365,6 +365,9 @@ export default {
 		 *   - referent is a prohibition  → ON + locked
 		 *   - referent is a standing consent (scope=entity) → OFF + interactive
 		 *   - no policyMatch → driven by consentStatus (legacy UX)
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-ui-toggle-behavior-must-be-derived-from-policymatch-referent-type
 		 */
 		async refreshPolicyMatch() {
 			const item = consentStore.consentItem
@@ -411,6 +414,7 @@ export default {
 		 * comes from OpenRegister's mapper-level history.
 		 *
 		 * @param checked
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-ui-toggle-behavior-must-be-derived-from-policymatch-referent-type
 		 */
 		async onToggleAnonymise(checked) {
 			if (this.policyMatchKind === 'prohibition') {

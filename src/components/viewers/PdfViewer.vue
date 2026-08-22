@@ -165,6 +165,7 @@ export default {
 		 * Fetch the PDF, parse it, then render every page sequentially.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/document-preview/spec.md#requirement-format-specific-in-app-document-preview-req-ddprv-001
 		 */
 		async load() {
 			this.loading = true

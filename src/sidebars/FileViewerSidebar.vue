@@ -609,13 +609,14 @@ export default {
 
 		/**
 		 * True when the open file lives inside a dossier (a subfolder of
-		 * /Filinq). Mirrors App.vue's `inDossier`: in this mode the action
+		 * /DocuDesk). Mirrors App.vue's `inDossier`: in this mode the action
 		 * bar offers the dossier-wide batch button instead of the per-file one.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		inDossier() {
-			return myDocumentsStore.currentPath !== '/Filinq'
+			return myDocumentsStore.currentPath !== '/DocuDesk'
 		},
 
 		/**
@@ -735,6 +736,7 @@ export default {
 		 * FolderFilesNavigation so both entry points read identically.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		batchButtonLabel() {
 			if (this.batchState.running) {
@@ -754,6 +756,7 @@ export default {
 		 * or running. Mirrors FolderFilesNavigation.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
 		 */
 		batchSummary() {
 			const { running, total, done, failed } = this.batchState
@@ -1047,6 +1050,7 @@ export default {
 		 * produced a result, otherwise fall back to the file name.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-review-ui-layout
 		 */
 		sidebarTitle() {
 			if (this.isAdding) {
@@ -1077,6 +1081,7 @@ export default {
 		 * disclaimer shown during the review step.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-review-ui-layout
 		 */
 		sidebarSubtitle() {
 			if (this.isAdding) {
@@ -1388,6 +1393,7 @@ export default {
 		 * `zipError` rather than aborting the whole bundle.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-checked-gate-blocks-anonymize-commit-and-export-req-ddarw-008
 		 */
 		async downloadAll() {
 			if (this.zipping) {
@@ -1454,6 +1460,7 @@ export default {
 		 * instead of opening inline. Mirrors `downloadAll` for one file.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-checked-gate-blocks-anonymize-commit-and-export-req-ddarw-008
 		 */
 		async onExport() {
 			if (this.exporting) {
@@ -1565,6 +1572,7 @@ export default {
 		 * (back to the review list) — adding one entity completes the process.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-select-text-in-the-preview-to-create-a-manual-entity-req-ddarw-003
 		 */
 		async onSaveNew() {
 			if (!this.canSaveNew || !this.entry || this.savingNew) {

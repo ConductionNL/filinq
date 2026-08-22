@@ -51,6 +51,14 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		hasDossier: (state) => state.dossier.uuid !== null,
 	},
 	actions: {
+		/**
+		 * Start a folder batch on an existing Nextcloud folder and begin
+		 * polling its extraction progress.
+		 *
+		 * @param {string} folderPath Absolute Nextcloud path of the folder.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-folder-batch-initiation-from-existing-nextcloud-folder
+		 */
 		async startFolderBatch(folderPath) {
 			this.processing = true
 			this.error = null
@@ -137,6 +145,14 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Read the batch status endpoint once, refreshing per-file status and
+		 * progress; stops polling and loads entities when the batch reaches
+		 * `review`.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
+		 */
 		async pollStatus() {
 			if (!this.batchId) return
 			try {
@@ -161,6 +177,13 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Load the batch's consolidated entity list, optionally filtered by the
+		 * operator's minimum-confidence setting.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-progressive-entity-consolidation-during-extraction
+		 */
 		async fetchEntities() {
 			try {
 				let url =
@@ -227,6 +250,9 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 * `POST /api/anonymization/anonymize/{fileId}` — the same endpoint the
 		 * single-file flow exercises — with a dossier scope so placeholder
 		 * numbering stays consistent across the whole folder.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
 		 */
 		async anonymizeFolder() {
 			this.processing = true
@@ -381,6 +407,9 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 * Only meaningful when a dossier has been created via
 		 * {@link createDossier}; without a dossier UUID the button stays
 		 * disabled on the view side.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
 		 */
 		async generateDossierReport() {
 			if (!this.dossier.uuid) {

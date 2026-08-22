@@ -71,6 +71,13 @@ export default {
 			return this.editingRecord !== null
 		},
 
+		/**
+		 * Modal heading — "Edit" when an existing standing consent was handed
+		 * in, "Add" for a create on the Standing Publication Consents surface.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		dialogTitle() {
 			return this.editing
 				? t('filinq', 'Edit standing consent')

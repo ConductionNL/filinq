@@ -122,6 +122,7 @@ export default {
 		 * Page title — current file name with a generic fallback.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/document-preview/spec.md#requirement-format-specific-in-app-document-preview-req-ddprv-001
 		 */
 		pageTitle() {
 			return (
@@ -212,6 +213,7 @@ export default {
 		 * the anonymised variant is not (yet) available.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		toggleTitle() {
 			if (!fileViewerStore.canToggleVariant) {

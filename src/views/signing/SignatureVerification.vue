@@ -137,6 +137,7 @@ export default {
 		 *
 		 * @param {string} verdict The verdict key (verified|tampered|unverifiable|mixed).
 		 * @return {string} The translated verdict label.
+		 * @spec openspec/specs/document-signing/spec.md#requirement-verification-reports-three-honest-states-req-ddstr-005
 		 */
 		verdictLabel_(verdict) {
 			const labels = {
@@ -153,6 +154,7 @@ export default {
 		 *
 		 * @param {string} status The signature status (verified|invalid|unverifiable).
 		 * @return {string} The translated status label.
+		 * @spec openspec/specs/document-signing/spec.md#requirement-verification-reports-three-honest-states-req-ddstr-005
 		 */
 		statusLabel(status) {
 			const labels = {
@@ -168,6 +170,7 @@ export default {
 		 *
 		 * @param {string} reason The reason code.
 		 * @return {string} The translated reason label.
+		 * @spec openspec/specs/document-signing/spec.md#requirement-verification-reports-three-honest-states-req-ddstr-005
 		 */
 		reasonLabel(reason) {
 			const labels = {

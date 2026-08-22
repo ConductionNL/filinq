@@ -233,6 +233,13 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * NcEmptyContent heading for the Consent Workflow list — the store's
+		 * error when loading failed, otherwise the empty-list message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+		 */
 		emptyContentName() {
 			if (consentStore.error) {
 				return consentStore.error

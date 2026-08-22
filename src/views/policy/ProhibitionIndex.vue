@@ -196,6 +196,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the Publication Prohibitions surface.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		tableColumns() {
 			return [
 				{
@@ -221,6 +227,13 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state text for the Publication Prohibitions surface — the
+		 * store's error when loading failed, otherwise the no-rules message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		emptyText() {
 			if (prohibitionStore.error) {
 				return prohibitionStore.error
@@ -297,6 +310,14 @@ export default {
 			this.dialogOpen = true
 		},
 
+		/**
+		 * Create or update a `publicationProhibition` record from the modal
+		 * form; the write itself is RBAC-governed server-side.
+		 *
+		 * @param {object} formData Modal form payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
 		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''

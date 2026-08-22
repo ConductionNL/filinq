@@ -121,6 +121,8 @@ class PolicyMatchService {
 	 * threshold governs `highConfidence` in the extract response and the gate.
 	 *
 	 * @return float The configured threshold (default 0.85).
+	 *
+	 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md#requirement-overrides-must-only-release-low-confidence-prohibition-matches
 	 */
 	public function highConfidenceThreshold(): float {
 		return (float)$this->config->getValueString(

@@ -58,6 +58,13 @@ export default {
 			)
 		},
 
+		/**
+		 * Explanatory text under the selector: how the curated set behaves when
+		 * every type is on (detect-all, no whitelist sent) versus a subset.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/enable-kenteken-entity-type/specs/anonymization/spec.md#requirement-kenteken-must-be-a-curated-toggleable-entity-type
+		 */
 		hint() {
 			if (this.options.length === 0) {
 				return t('filinq', 'No entity types are available.')

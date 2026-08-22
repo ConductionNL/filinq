@@ -51,8 +51,17 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		loading: false,
 		error: null,
 		total: 0,
-		currentPath: '/Filinq',
-		breadcrumbs: [{ name: 'Filinq', path: '/Filinq' }],
+		// ⚠️ THE FILES FOLDER IS FROZEN AT `DocuDesk` ACROSS THE FILINQ RENAME.
+		// Every document the app has ever generated or uploaded lives under
+		// `<user>/files/DocuDesk/…`, and the backend still writes there — see
+		// DocumentService::DEFAULT_OUTPUT_FOLDER_PREFIX and FileUploadService.
+		// Renaming this to `/Filinq` points the listing at a folder that does
+		// not exist: PROPFIND 404s, the store returns an empty list, and every
+		// existing document silently disappears with no error. The breadcrumb
+		// label deliberately reads `DocuDesk` too, so the UI never claims a
+		// folder that isn't there.
+		currentPath: '/DocuDesk',
+		breadcrumbs: [{ name: 'DocuDesk', path: '/DocuDesk' }],
 		// anonymizationLink records (sourceFileId ↔ anonymizedFileId) for the
 		// current user, fetched alongside the document listing.
 		anonymizationLinks: [],
@@ -602,15 +611,16 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 * Navigate to a specific folder path.
 		 *
 		 * @param {string} path The folder path to navigate to.
+		 * @spec exclude client-side breadcrumb/currentPath bookkeeping over the Nextcloud Files tree; no Filinq openspec requirement governs folder traversal chrome — the listing's authoritative source/anonymised pairing is specified at openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		navigateTo(path) {
 			this.currentPath = path
 
 			// Build breadcrumbs from path
 			const parts = path.split('/').filter(Boolean)
-			this.breadcrumbs = [{ name: 'Filinq', path: '/Filinq' }]
+			this.breadcrumbs = [{ name: 'DocuDesk', path: '/DocuDesk' }]
 
-			let currentPath = '/Filinq'
+			let currentPath = '/DocuDesk'
 			for (let i = 1; i < parts.length; i++) {
 				currentPath += `/${parts[i]}`
 				this.breadcrumbs.push({
@@ -632,7 +642,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 
 		/**
 		 * Fetch the most-recent anonymized files and dossier folders under
-		 * /Filinq/, sorted newest first. Does NOT mutate store state —
+		 * /DocuDesk/, sorted newest first. Does NOT mutate store state —
 		 * intended for read-only widgets (e.g. the dashboard "Recent
 		 * documents" cards) that must not clobber the currentPath /
 		 * breadcrumbs of the My Documents page.
@@ -642,6 +652,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 *
 		 * @param {number} [limit] Maximum number of items to return (default 4).
 		 * @return {Promise<object[]>} Items shaped like the documents array.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-filinq-dashboard-view-req-dash-01
 		 */
 		async fetchRecentAnonymized(limit = 4) {
 			const user = getCurrentUser()
@@ -650,7 +661,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 			}
 
 			const davPrefix = `/remote.php/dav/files/${user.uid}`
-			const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}/Filinq`)
+			const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}/DocuDesk`)
 
 			let response
 			try {
@@ -673,7 +684,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 							</d:propfind>`,
 				})
 			} catch (err) {
-				// /Filinq/ may not exist yet for fresh users — return empty list.
+				// /DocuDesk/ may not exist yet for fresh users — return empty list.
 				if (err.response && err.response.status === 404) {
 					return []
 				}
@@ -686,7 +697,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 
 			const items = []
 			responses.forEach((resp, index) => {
-				// First response is /Filinq/ itself — skip.
+				// First response is /DocuDesk/ itself — skip.
 				if (index === 0) return
 
 				const href = resp.querySelector('href')?.textContent || ''

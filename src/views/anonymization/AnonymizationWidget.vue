@@ -141,6 +141,7 @@ export default {
 		 * Morning: 05:00–11:59. Afternoon: 12:00–17:59. Evening: 18:00–04:59.
 		 *
 		 * @return {string} Localised greeting like 'Good morning Marco,'.
+		 * @spec exclude decorative time-of-day salutation above the upload zone; the widget's specified behaviour (drag-and-drop upload, progress, result display) is at openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08, which mandates no greeting
 		 */
 		greeting() {
 			const hour = new Date().getHours()
@@ -181,7 +182,7 @@ export default {
 	methods: {
 		/**
 		 * Fetch the most-recent anonymized files and dossier folders under
-		 * /Filinq/ for the "Recent documents" cards. Read-only — does not
+		 * /DocuDesk/ for the "Recent documents" cards. Read-only — does not
 		 * touch the My Documents store's navigation state.
 		 *
 		 * @return {Promise<void>}
@@ -272,6 +273,7 @@ export default {
 		 *
 		 * @param {FileList | File[]} files Incoming files from drop or input.
 		 * @return {File[]} Accepted subset.
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		filterAllowed(files) {
 			const { accepted, rejected } = partitionFiles(files)
@@ -341,9 +343,12 @@ export default {
 		/**
 		 * Confirm handler for the dossier dialog. With a title the files are
 		 * grouped into a new dossier folder and bound to OpenRegister; with
-		 * no title each file is uploaded loose under /Filinq/, matching
+		 * no title each file is uploaded loose under /DocuDesk/, matching
 		 * the single-file flow. Keeps the dialog open on failure so the
 		 * user sees the error inline.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async confirmDossier() {
 			const name = this.dossierName.trim()
@@ -375,7 +380,7 @@ export default {
 					// folder so `FolderFilesNavigation` lists every file we
 					// just put inside it.
 					try {
-						await myDocumentsStore.fetchDocuments(`/Filinq/${name}`)
+						await myDocumentsStore.fetchDocuments(`/DocuDesk/${name}`)
 					} catch (err) {
 						console.error('Failed to open dossier folder:', err)
 					}

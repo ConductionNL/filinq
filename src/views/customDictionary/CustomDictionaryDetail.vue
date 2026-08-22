@@ -270,6 +270,14 @@ export default {
 			return resolveI18nValue(value, fallback)
 		},
 
+		/**
+		 * Translated label for a dictionary match mode, falling back to the raw
+		 * value and finally to the schema default.
+		 *
+		 * @param {string} mode Stored match mode.
+		 * @return {string} Displayable label.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		matchModeLabel(mode) {
 			const labels = {
 				exact: t('filinq', 'Exact'),
@@ -288,6 +296,14 @@ export default {
 			this.editDialogOpen = true
 		},
 
+		/**
+		 * Persist edited dictionary metadata through the organisation-gated
+		 * management API.
+		 *
+		 * @param {object} formData Dialog form payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-organisation-gated-dictionary-and-term-management-api-req-ddcdr-004
+		 */
 		async onEditSubmit(formData) {
 			this.savingMeta = true
 			this.metaError = ''
@@ -377,6 +393,14 @@ export default {
 			this.importError = ''
 		},
 
+		/**
+		 * Import terms into this dictionary from a CSV upload or newline-
+		 * separated list.
+		 *
+		 * @param {object} payload Import dialog payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-csv-and-newline-term-import-req-ddcdr-005
+		 */
 		async onImportSubmit(payload) {
 			this.importing = true
 			this.importError = ''

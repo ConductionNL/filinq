@@ -72,6 +72,13 @@ export default {
 			return this.editingRecord !== null
 		},
 
+		/**
+		 * Dialog heading — "Edit" when an existing dictionary was handed in,
+		 * "Add" for a create.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		dialogTitle() {
 			return this.editing
 				? t('filinq', 'Edit dictionary')

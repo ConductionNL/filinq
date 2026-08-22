@@ -327,6 +327,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the document listing.
+		 *
+		 * @return {object[]}
+		 * @spec exclude column header labels for the file listing; no openspec requirement fixes this table's columns — the "Kind" column's authoritative value is specified at openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
+		 */
 		tableColumns() {
 			return [
 				{ key: 'fileName', label: t('filinq', 'Name') },
@@ -360,6 +366,13 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state heading for the document listing — the store's error when
+		 * loading failed, otherwise the no-documents message.
+		 *
+		 * @return {string}
+		 * @spec exclude presentational empty/error placeholder for the file listing; no openspec requirement governs the listing chrome — the rows' authoritative anonymised/concept state is specified at openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
+		 */
 		emptyContentName() {
 			if (myDocumentsStore.error) {
 				return myDocumentsStore.error
@@ -823,6 +836,7 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {string} Badge label.
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		kindLabel(row) {
 			if (row.isFolder) {

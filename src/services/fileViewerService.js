@@ -79,6 +79,7 @@ export async function fetchUrlAsArrayBuffer(url) {
  *
  * @param {number} fileId Nextcloud file id of the source .eml.
  * @return {string} App-relative URL of the preview endpoint.
+ * @spec openspec/changes/eml-viewer-preview/specs/eml-preview/spec.md#requirement-the-file-viewer-must-render-eml-via-the-server-rendered-preview
  */
 export function emlPreviewUrl(fileId) {
 	return generateUrl('/apps/filinq/api/anonymization/eml-preview/{fileId}', {

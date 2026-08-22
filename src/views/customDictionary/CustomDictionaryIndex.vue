@@ -171,6 +171,13 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the dictionaries index: label, term count,
+		 * match mode and active state.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		tableColumns() {
 			return [
 				{ key: 'label', label: t('filinq', 'Label'), sortable: true },
@@ -190,6 +197,13 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state text for the dictionaries index — the store's error when
+		 * loading failed, otherwise the no-dictionaries message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		emptyText() {
 			if (customDictionaryStore.error) {
 				return customDictionaryStore.error
@@ -229,6 +243,14 @@ export default {
 			return resolveI18nValue(row.label, t('filinq', 'Custom dictionary'))
 		},
 
+		/**
+		 * Translated label for a dictionary match mode, falling back to the raw
+		 * value and finally to the schema default.
+		 *
+		 * @param {string} mode Stored match mode.
+		 * @return {string} Displayable label.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		matchModeLabel(mode) {
 			const labels = {
 				exact: t('filinq', 'Exact'),
@@ -266,6 +288,14 @@ export default {
 			this.dialogOpen = true
 		},
 
+		/**
+		 * Create a dictionary through the organisation-gated management API and
+		 * open its detail page.
+		 *
+		 * @param {object} formData Dialog form payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-organisation-gated-dictionary-and-term-management-api-req-ddcdr-004
+		 */
 		async onCreateSubmit(formData) {
 			this.saving = true
 			this.formError = ''

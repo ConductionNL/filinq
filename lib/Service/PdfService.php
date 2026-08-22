@@ -418,6 +418,8 @@ class PdfService {
 	 * @return Mpdf The configured mPDF instance.
 	 *
 	 * @throws Exception When mPDF cannot be instantiated.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md#requirement-mpdf-temp-directory-management-req-pdf-04
 	 */
 	public function createMpdfInstance(array $options = []): Mpdf {
 		$tempDir = '/tmp/mpdf';

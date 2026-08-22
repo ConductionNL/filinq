@@ -124,6 +124,7 @@ export default {
 		 * HTML for display.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/odt-viewer-preview/specs/document-preview/spec.md#requirement-the-anonymisation-viewer-must-render-an-odt-preview
 		 */
 		async load() {
 			this.loading = true

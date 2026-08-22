@@ -278,6 +278,14 @@ export default {
 			event.target.value = ''
 		},
 
+		/**
+		 * Drop files whose extension/MIME isn't in the supported set, naming
+		 * each rejected file in a toast.
+		 *
+		 * @param {FileList | File[]} files Incoming files from drop or input.
+		 * @return {File[]} Accepted subset.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		filterAllowed(files) {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {

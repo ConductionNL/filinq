@@ -189,6 +189,8 @@ class OutputLayoutResolver {
 	 * `/^[a-z0-9_-]+$/` validation regex.
 	 *
 	 * @return string A safe, validated subfolder name.
+	 *
+	 * @spec openspec/specs/folder-analysis-anonymization/spec.md#requirement-folder-driven-anonymisation-must-write-outputs-to-the-configured-subfolder
 	 */
 	public function getSubfolderName(): string {
 		$value = $this->config->getValueString(

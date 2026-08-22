@@ -5,7 +5,7 @@
  * DEEP, data-dependent workflow test — the Nextcloud Dashboard widget.
  *
  * `src/views/widgets/FileEntitiesDashboardWidget.vue` is mounted by
- * `src/dashboard.js` through `OCA.Dashboard.register('filinq-file-entities')`
+ * `src/dashboard.js` through `OCA.Dashboard.register('docudesk-file-entities')`
  * and by nothing else — it has no in-app route, so the ONLY surface that can
  * render it is Nextcloud's Dashboard. A widget renders there only when it is
  * in the viewing user's dashboard layout, and the shipped default layout is
@@ -22,8 +22,18 @@
 import { test, expect } from '@playwright/test'
 import { harvestToken } from './_fixtures'
 
-/** Widget id — `FileEntitiesWidget::getId()` in lib/Dashboard/. */
-const WIDGET_ID = 'filinq-file-entities'
+/**
+ * Widget id — `FileEntitiesWidget::getId()` in lib/Dashboard/.
+ *
+ * FROZEN at the old app id, deliberately: the Dashboard app persists this
+ * string in each user's own layout, so renaming it with the app would
+ * silently drop the widget from every dashboard that already has it. Three
+ * places must agree on it — the PHP getId(), the OCA.Dashboard.register()
+ * call in src/dashboard.js, and this constant — because Nextcloud pairs the
+ * registration to the widget by exact id and a mismatch renders an empty
+ * tile with no error.
+ */
+const WIDGET_ID = 'docudesk-file-entities'
 
 test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added to the layout', async ({
 	page,

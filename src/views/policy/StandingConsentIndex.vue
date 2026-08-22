@@ -197,6 +197,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the Standing Publication Consents surface.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		tableColumns() {
 			return [
 				{
@@ -226,6 +232,13 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state text for the Standing Publication Consents surface — the
+		 * store's error when loading failed, otherwise the no-records message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		emptyText() {
 			if (standingConsentStore.error) {
 				return standingConsentStore.error

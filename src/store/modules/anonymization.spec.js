@@ -456,8 +456,8 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 		await store.anonymiseAllExtracted({
 			fileIds: [1, 2, 3],
 			files: [
-				{ fileId: 2, fileName: 'b.pdf', path: '/Filinq/D/b.pdf' },
-				{ fileId: 3, fileName: 'c.pdf', path: '/Filinq/D/c.pdf' },
+				{ fileId: 2, fileName: 'b.pdf', path: '/DocuDesk/D/b.pdf' },
+				{ fileId: 3, fileName: 'c.pdf', path: '/DocuDesk/D/c.pdf' },
 			],
 		})
 
@@ -504,7 +504,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 			status: 'completed',
 			viewMode: 'anonymized',
 			fileId: 42,
-			filePath: '/Filinq/doc.pdf',
+			filePath: '/DocuDesk/doc.pdf',
 			entities: [
 				{
 					type: 'PERSON',
@@ -516,7 +516,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 			entityCount: 1,
 			anonymizedFileId: 99,
 			anonymizedFileName: 'doc_anonymized.pdf',
-			anonymizedFilePath: '/Filinq/doc_anonymized.pdf',
+			anonymizedFilePath: '/DocuDesk/doc_anonymized.pdf',
 		}
 	}
 
@@ -626,7 +626,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		await store.prepareReanonymize(entry)
 
 		expect(entry.anonymizedFileId).toBe(99)
-		expect(entry.anonymizedFilePath).toBe('/Filinq/doc_anonymized.pdf')
+		expect(entry.anonymizedFilePath).toBe('/DocuDesk/doc_anonymized.pdf')
 	})
 
 	it('settles to completed when the source has no detectable entities', async () => {

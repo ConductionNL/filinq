@@ -114,6 +114,7 @@ export default {
 		 * by `MyDocumentsIndex` so the color map stays consistent.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		pillLabel() {
 			if (this.item.isFolder) return t('filinq', 'Dossier')
