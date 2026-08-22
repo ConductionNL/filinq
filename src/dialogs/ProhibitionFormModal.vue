@@ -20,7 +20,7 @@ function blankForm() {
 		reason: '',
 		legalAuthority: '',
 		caseReference: '',
-		severity: 'medium', // matches the publicationProhibition.severity default in docudesk_register.json
+		severity: 'medium', // matches the publicationProhibition.severity default in filinq_register.json
 		jurisdiction: '',
 		validUntil: '',
 		active: true,
@@ -53,7 +53,7 @@ export default {
 			form: blankForm(),
 			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
 			// Canonical set per the publicationProhibition schema's severity
-			// enum in docudesk_register.json. Keep in lock-step with the
+			// enum in filinq_register.json. Keep in lock-step with the
 			// register; widening here without widening the schema would
 			// silently fail the OR write-time validation.
 			severityOptions: ['high', 'medium', 'low'],
@@ -66,10 +66,17 @@ export default {
 			return this.editingRecord !== null
 		},
 
+		/**
+		 * Modal heading — "Edit" when an existing prohibition was handed in,
+		 * "Add" for a create on the Publication Prohibitions surface.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		dialogTitle() {
 			return this.editing
-				? t('docudesk', 'Edit publish-never rule')
-				: t('docudesk', 'Add publish-never rule')
+				? t('filinq', 'Edit publish-never rule')
+				: t('filinq', 'Add publish-never rule')
 		},
 
 		canSubmit() {
@@ -148,46 +155,44 @@ export default {
 		<div class="prohibition-form">
 			<NcTextField
 				v-model="form.primaryName"
-				:label="t('docudesk', 'Primary name (Dutch)')"
+				:label="t('filinq', 'Primary name (Dutch)')"
 				required />
 			<NcSelect
 				v-model="form.entityType"
 				:options="entityTypeOptions"
-				:inputLabel="t('docudesk', 'Entity type')"
-				:label="t('docudesk', 'Entity type')"
+				:inputLabel="t('filinq', 'Entity type')"
+				:label="t('filinq', 'Entity type')"
 				required />
 			<NcTextField
 				v-model="form.reason"
-				:label="t('docudesk', 'Reason (markdown allowed)')"
+				:label="t('filinq', 'Reason (markdown allowed)')"
 				required />
 			<NcTextField
 				v-model="form.legalAuthority"
-				:label="
-					t('docudesk', 'Legal authority (court order, statute, …)')
-				" />
+				:label="t('filinq', 'Legal authority (court order, statute, …)')" />
 			<NcTextField
 				v-model="form.caseReference"
-				:label="t('docudesk', 'Case reference (optional)')" />
+				:label="t('filinq', 'Case reference (optional)')" />
 			<NcSelect
 				v-model="form.severity"
 				:options="severityOptions"
-				:inputLabel="t('docudesk', 'Severity')"
-				:label="t('docudesk', 'Severity')" />
+				:inputLabel="t('filinq', 'Severity')"
+				:label="t('filinq', 'Severity')" />
 			<NcTextField
 				v-model="form.jurisdiction"
-				:label="t('docudesk', 'Jurisdiction (optional)')" />
+				:label="t('filinq', 'Jurisdiction (optional)')" />
 			<NcTextField
 				v-model="form.validUntil"
-				:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
+				:label="t('filinq', 'Valid until (ISO 8601, optional)')" />
 			<NcCheckboxRadioSwitch v-model="form.active" type="switch">
-				{{ t('docudesk', 'Active') }}
+				{{ t('filinq', 'Active') }}
 			</NcCheckboxRadioSwitch>
 
-			<h4>{{ t('docudesk', 'Match rules') }}</h4>
+			<h4>{{ t('filinq', 'Match rules') }}</h4>
 			<div v-if="!form.matchRules?.length" class="form-warning">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches — names alone produce false positives.',
 					)
 				}}
@@ -199,11 +204,11 @@ export default {
 				<NcSelect
 					v-model="rule.type"
 					:options="matchTypeOptions"
-					:inputLabel="t('docudesk', 'Match type')"
-					:label="t('docudesk', 'Match type')" />
+					:inputLabel="t('filinq', 'Match type')"
+					:label="t('filinq', 'Match type')" />
 				<NcTextField
 					v-model="rule.value"
-					:label="t('docudesk', 'Match value')" />
+					:label="t('filinq', 'Match value')" />
 				<!--
 					Icon-only, so it needs its own name. The row index is part of
 					it: every row renders the same icon, and "Remove match rule"
@@ -213,7 +218,7 @@ export default {
 				<NcButton
 					variant="tertiary"
 					:aria-label="
-						t('docudesk', 'Remove match rule {number}', {
+						t('filinq', 'Remove match rule {number}', {
 							number: idx + 1,
 						})
 					"
@@ -224,13 +229,13 @@ export default {
 				</NcButton>
 			</div>
 			<NcButton variant="secondary" @click="addRule">
-				{{ t('docudesk', 'Add match rule') }}
+				{{ t('filinq', 'Add match rule') }}
 			</NcButton>
 
 			<div v-if="onlyNameRules" class="form-warning">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Warning: only name-based rules are present. Names alone often produce false positives — consider adding a BSN or KvK match.',
 					)
 				}}
@@ -243,7 +248,7 @@ export default {
 
 		<template #actions>
 			<NcButton variant="tertiary" @click="onCancel">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
@@ -252,7 +257,7 @@ export default {
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ editing ? t('docudesk', 'Save') : t('docudesk', 'Create') }}
+				{{ editing ? t('filinq', 'Save') : t('filinq', 'Create') }}
 			</NcButton>
 		</template>
 	</NcDialog>

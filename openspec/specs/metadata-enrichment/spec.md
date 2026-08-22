@@ -11,11 +11,11 @@ retrofit_extensions:
 
 @e2e exclude pure backend event-driven processing service — no dedicated UI surface; enrichment logic covered by PHPUnit unit tests
 
-Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment outputs are declared as **`x-openregister-calculations`** annotations on the relevant schemas; the custom service is retained as the computation backend but MUST NOT write derived fields directly — OR's calculation engine invokes the service and stores the result. All processing is performed locally using heuristic algorithms — no external NLP services are required.
+Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, Filinq detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment outputs are declared as **`x-openregister-calculations`** annotations on the relevant schemas; the custom service is retained as the computation backend but MUST NOT write derived fields directly — OR's calculation engine invokes the service and stores the result. All processing is performed locally using heuristic algorithms — no external NLP services are required.
 
 ## OR Adoption decisions (from docudesk-adopt-or-abstractions)
 
-- **Task 9** — Metadata enrichment is declared as a `x-openregister-calculations` annotation rather than a custom service that writes fields ad-hoc. Each enrichment output (language, keywords, documentType, topicCategory, dates) is a declared calculation whose expression calls the relevant `MetadataEnrichmentService` method. The service remains in docudesk as the domain algorithm; OR's calculation engine dispatches it and persists the result.
+- **Task 9** — Metadata enrichment is declared as a `x-openregister-calculations` annotation rather than a custom service that writes fields ad-hoc. Each enrichment output (language, keywords, documentType, topicCategory, dates) is a declared calculation whose expression calls the relevant `MetadataEnrichmentService` method. The service remains in filinq as the domain algorithm; OR's calculation engine dispatches it and persists the result.
 - **Rationale** — This follows ADR-031 (schema-declarative business logic). The enrichment outputs are derived/virtual fields that fit `x-openregister-calculations` exactly. The service is NOT removed — it is the computation backend. Only the wiring changes: instead of the event listener writing `$object['language'] = $lang` directly, it declares `language` as a calculation and OR invokes the service.
 
 ### Requirement: Enrichment Outputs as OR Calculations (REQ-META-CAL)
@@ -50,7 +50,7 @@ Enrichment fields `language`, `keywords`, `documentType`, `topicCategory`, and n
 
 - **GIVEN** `enable_language_detection` is `0` in admin settings
 - **WHEN** OR's calculation engine would invoke the language calculation
-- **THEN** the calculation expression SHALL call `IAppConfig::getValueBool('docudesk', 'enable_language_detection', true)` before proceeding
+- **THEN** the calculation expression SHALL call `IAppConfig::getValueBool('filinq', 'enable_language_detection', true)` before proceeding
 - **AND** if disabled, the calculation returns `null` (no write)
 
 | ID | Requirement | Priority | Status |
@@ -246,7 +246,7 @@ Automatically enrich metadata when objects are created or updated in OpenRegiste
 - GIVEN a document object is created in OpenRegister with text content
 - AND all enrichment features are enabled
 - WHEN ObjectCreatedEvent is dispatched
-- THEN DocuDeskEventListener processes the event
+- THEN FilinqEventListener processes the event
 - AND MetadataService enhances the metadata
 - AND enriched fields are saved back to the object
 
@@ -347,7 +347,7 @@ MetadataService has its own private getObjectService() duplicating the pattern f
 The event listener resolves services via `\OC::$server->get()` at handle time rather than constructor DI to avoid circular dependencies.
 
 #### Scenario: Lazy service resolution at handle time
-- GIVEN DocuDeskEventListener has an empty constructor
+- GIVEN FilinqEventListener has an empty constructor
 - WHEN an event is dispatched
 - THEN services are resolved via `\OC::$server->get()` inside handle()
 - AND this avoids premature service resolution during app registration
@@ -451,8 +451,8 @@ MetadataService extracts text content from object data fields in a defined prior
   - `lib/Service/LanguageClassifier.php` -- language detection and topic classification
   - `lib/Service/DocumentTextExtractor.php` -- text extraction and date normalization
   - `lib/Controller/MetadataController.php` -- REST API endpoint
-  - `lib/EventListener/DocuDeskEventListener.php` -- event handling
-  - `lib/EventListener/DocuDeskEventHandler.php` -- event dispatch logic
+  - `lib/EventListener/FilinqEventListener.php` -- event handling
+  - `lib/EventListener/FilinqEventHandler.php` -- event dispatch logic
   - `lib/EventListener/EnrichmentRunner.php` -- enrichment execution
 
 ### Standards & References
@@ -471,7 +471,7 @@ Reverse-engineered from already-shipped code on 2026-05-24 via ghost change
 
 ### Requirement: Language and Topic Classifier Class Boundary (REQ-META-11)
 
-DocuDesk SHALL implement the language-detection and topic-classification algorithms in a dedicated `LanguageClassifier` service that owns the word-list vocabularies, the minimum-match threshold, and the scoring tiebreaker. Other services (`TextAnalysisService`, `MetadataService`) SHALL consume the classifier via dependency injection; they MUST NOT re-implement the vocabulary or scoring logic.
+Filinq SHALL implement the language-detection and topic-classification algorithms in a dedicated `LanguageClassifier` service that owns the word-list vocabularies, the minimum-match threshold, and the scoring tiebreaker. Other services (`TextAnalysisService`, `MetadataService`) SHALL consume the classifier via dependency injection; they MUST NOT re-implement the vocabulary or scoring logic.
 
 The class encapsulates three constants — `DUTCH_WORDS` (10 stop-ish high-frequency Dutch words), `ENGLISH_WORDS` (10 high-frequency English words), and `TOPIC_KEYWORDS` (4 topic categories with 6 keywords each: `legal`, `financial`, `medical`, `technical`). The detection helpers share a private `countWordOccurrences()` implementation that counts whitespace-padded `' word '` substrings (so word boundaries are required on both sides, matching what REQ-META-01 / REQ-META-03 already specify abstractly).
 
@@ -507,4 +507,4 @@ The class encapsulates three constants — `DUTCH_WORDS` (10 stop-ish high-frequ
 - The class is stateless and has no constructor dependencies; it can be resolved either via DI or instantiated directly (used as a unit-test seam).
 - `TextAnalysisService` still defines its own public `countWordOccurrences()` with byte-identical logic — that is a residual duplicate not yet consolidated. TODO: remove `TextAnalysisService::countWordOccurrences()` once no external caller relies on it (the coverage scan flagged `LanguageClassifier::countWordOccurrences` as the duplicate, but at HEAD the situation has inverted — the classifier owns the logic, the analyzer is the leftover).
 - The 5-match threshold and the 10-keyword vocabularies are constants, not config — by design (REQ-META-04 calibration). Changing them requires a code change + spec revision.
-- `countWordOccurrences()` is byte-naive — non-ASCII whitespace (NBSP, tabs) is not treated as a boundary. Real-world DocuDesk text is whitespace-normalised earlier in the pipeline; if that ever changes, detection accuracy will drop.
+- `countWordOccurrences()` is byte-naive — non-ASCII whitespace (NBSP, tabs) is not treated as a boundary. Real-world Filinq text is whitespace-normalised earlier in the pipeline; if that ever changes, detection accuracy will drop.

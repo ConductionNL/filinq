@@ -3,7 +3,7 @@
 /**
  * Unit tests for the Portaliq portal contribution provider.
  *
- * Pins DocuDesk's ADR-046 contract-v2.1 contribution: the dependency-free
+ * Pins Filinq's ADR-046 contract-v2.1 contribution: the dependency-free
  * duck-typed shape (inert without portaliq), the v2 getAudiences() + v1
  * getAudience() pair, the per-audience read manifest (scoping map, claim
  * names, minTrust, the one-hop `via` join to signingRequest) and the
@@ -27,11 +27,11 @@
  * (amendment A1), so no mocks and no container are involved.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Portal
+ * @package   OCA\Filinq\Tests\Unit\Portal
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,9 +42,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Portal;
+namespace OCA\Filinq\Tests\Unit\Portal;
 
-use OCA\DocuDesk\Portal\PortalContributionProvider;
+use OCA\Filinq\Portal\PortalContributionProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -106,7 +106,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$reflection = new ReflectionClass(PortalContributionProvider::class);
 
 		$this->assertSame(
-			'OCA\\DocuDesk\\Portal\\PortalContributionProvider',
+			'OCA\\Filinq\\Portal\\PortalContributionProvider',
 			$reflection->getName(),
 			'Provider must live at the convention FQCN portaliq probes for'
 		);
@@ -158,7 +158,7 @@ final class PortalContributionProviderTest extends TestCase {
 	public function testDataSubjectConsentCollectionIsScopedAndProjected(): void {
 		$manifest = $this->provider->getContribution(self::DATA_SUBJECT);
 		$this->assertIsArray($manifest);
-		$this->assertSame('DocuDesk', $manifest['label']);
+		$this->assertSame('Filinq', $manifest['label']);
 		$this->assertSame([], $manifest['actions'], 'No create/endpoint actions ship this wave');
 		$this->assertSame([], $manifest['notifications']);
 
@@ -227,7 +227,7 @@ final class PortalContributionProviderTest extends TestCase {
 	public function testSignerRecordCollectionIsScopedAndProjected(): void {
 		$manifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
 		$this->assertIsArray($manifest);
-		$this->assertSame('DocuDesk', $manifest['label']);
+		$this->assertSame('Filinq', $manifest['label']);
 
 		$record = $this->indexById($manifest['collections'])['signerRecords'];
 		$this->assertSame('signing', $record['register']);
@@ -398,7 +398,7 @@ final class PortalContributionProviderTest extends TestCase {
 			$this->assertSame($method, $action['method']);
 			$this->assertSame('substantial', $action['minTrust'], "action '{$id}' must be eIDAS-substantial gated");
 			$this->assertIsString($action['endpoint']);
-			$this->assertStringStartsWith('/apps/docudesk/api/portal/signing/', $action['endpoint'], "action '{$id}' endpoint must be instance-local relative under the portal signing receiver path");
+			$this->assertStringStartsWith('/apps/filinq/api/portal/signing/', $action['endpoint'], "action '{$id}' endpoint must be instance-local relative under the portal signing receiver path");
 			$this->assertStringNotContainsStringIgnoringCase('://', $action['endpoint'], "action '{$id}' endpoint must carry no scheme");
 			$this->assertStringNotContainsString('..', $action['endpoint'], "action '{$id}' endpoint must not traverse ('..')");
 			$this->assertNotEmpty($action['label']);
@@ -485,7 +485,7 @@ final class PortalContributionProviderTest extends TestCase {
 	 */
 	private function loadRegisterSchemaProperties(): array {
 		$root = dirname(__DIR__, 3);
-		$file = $root . '/lib/Settings/docudesk_register.json';
+		$file = $root . '/lib/Settings/filinq_register.json';
 
 		$decoded = json_decode((string)file_get_contents($file), true);
 		$this->assertIsArray($decoded, 'Shipped register JSON must parse');

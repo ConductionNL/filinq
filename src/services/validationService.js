@@ -19,7 +19,7 @@ import { generateUrl } from '@nextcloud/router'
  * @spec openspec/specs/document-validation-checks/spec.md
  */
 export async function validateFile(fileId, documentType) {
-	const url = generateUrl('/apps/docudesk/api/validation/validate')
+	const url = generateUrl('/apps/filinq/api/validation/validate')
 	const body = { fileId }
 	if (documentType) {
 		body.documentType = documentType

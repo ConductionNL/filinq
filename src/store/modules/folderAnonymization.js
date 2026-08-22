@@ -51,13 +51,21 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		hasDossier: (state) => state.dossier.uuid !== null,
 	},
 	actions: {
+		/**
+		 * Start a folder batch on an existing Nextcloud folder and begin
+		 * polling its extraction progress.
+		 *
+		 * @param {string} folderPath Absolute Nextcloud path of the folder.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-folder-batch-initiation-from-existing-nextcloud-folder
+		 */
 		async startFolderBatch(folderPath) {
 			this.processing = true
 			this.error = null
 			this.folderPath = folderPath
 			try {
 				const r = await axios.post(
-					generateUrl('/apps/docudesk/api/anonymization/batch/folder'),
+					generateUrl('/apps/filinq/api/anonymization/batch/folder'),
 					{ folderPath },
 				)
 				this.batchId = r.data.batchId
@@ -137,12 +145,20 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Read the batch status endpoint once, refreshing per-file status and
+		 * progress; stops polling and loads entities when the batch reaches
+		 * `review`.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
+		 */
 		async pollStatus() {
 			if (!this.batchId) return
 			try {
 				const r = await axios.get(
 					generateUrl(
-						'/apps/docudesk/api/anonymization/batch/'
+						'/apps/filinq/api/anonymization/batch/'
 							+ this.batchId
 							+ '/status',
 					),
@@ -161,10 +177,17 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Load the batch's consolidated entity list, optionally filtered by the
+		 * operator's minimum-confidence setting.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-progressive-entity-consolidation-during-extraction
+		 */
 		async fetchEntities() {
 			try {
 				let url =
-					'/apps/docudesk/api/anonymization/batch/'
+					'/apps/filinq/api/anonymization/batch/'
 					+ this.batchId
 					+ '/entities'
 				if (this.minConfidence > 0) {
@@ -227,6 +250,9 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 * `POST /api/anonymization/anonymize/{fileId}` — the same endpoint the
 		 * single-file flow exercises — with a dossier scope so placeholder
 		 * numbering stays consistent across the whole folder.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
 		 */
 		async anonymizeFolder() {
 			this.processing = true
@@ -312,7 +338,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					try {
 						const r = await axios.post(
 							generateUrl(
-								`/apps/docudesk/api/anonymization/anonymize/${file.fileId}`,
+								`/apps/filinq/api/anonymization/anonymize/${file.fileId}`,
 							),
 							{
 								entities: selected,
@@ -381,6 +407,9 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 * Only meaningful when a dossier has been created via
 		 * {@link createDossier}; without a dossier UUID the button stays
 		 * disabled on the view side.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
 		 */
 		async generateDossierReport() {
 			if (!this.dossier.uuid) {
@@ -393,7 +422,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			try {
 				const r = await axios.post(
 					generateUrl(
-						'/apps/docudesk/api/anonymization/dossier/'
+						'/apps/filinq/api/anonymization/dossier/'
 							+ this.dossier.uuid
 							+ '/grondslagen-pdf',
 					),
@@ -415,7 +444,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		// results are written back to the batch record (or a client-side
 		// summary is built).
 		// getReportUrl() {
-		//     return generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/report')
+		//     return generateUrl('/apps/filinq/api/anonymization/batch/' + this.batchId + '/report')
 		// },
 
 		reset() {

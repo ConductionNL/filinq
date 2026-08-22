@@ -1,12 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-26 visual-coverage — per-page-component rendering tests.
  *
  * WHAT THIS FILE IS FOR
  * ---------------------
- * Every DocuDesk page component under `src/views/` needs a visual proof:
+ * Every Filinq page component under `src/views/` needs a visual proof:
  * either a pixel baseline under `tests/e2e/visual/**` or an e2e test that
  * drives the component in a browser (hydra gate-26). Pixel baselines are not
  * an option here — `tests/e2e/playwright.config.ts` deliberately excludes
@@ -37,7 +37,7 @@ import { test, expect } from '@playwright/test'
 import { go, waitForNcContentReady, dismissOverlays } from './_helpers'
 
 /**
- * A syntactically valid UUID that no DocuDesk object can have.
+ * A syntactically valid UUID that no Filinq object can have.
  *
  * Used by the two detail-page tests. Both detail components catch their own
  * fetch failure (`customDictionaryStore.fetchDictionary` / the consent store
@@ -143,7 +143,7 @@ test.describe('page components — dashboard', () => {
 		page,
 	}) => {
 		await go(page, '')
-		const widget = page.locator('.docudesk-anon-widget')
+		const widget = page.locator('.filinq-anon-widget')
 		await expect(widget).toBeVisible()
 		// The dashboard widget's supported-format line omits ODT; the in-app
 		// AnonymizationWidget's includes it. Asserting the exact string keeps
@@ -276,7 +276,7 @@ test.describe('page components — standalone pages', () => {
 		const gallery = page.locator('.dd-gallery')
 		await expect(
 			gallery.getByRole('heading', {
-				name: 'DocuDesk component gallery',
+				name: 'Filinq component gallery',
 				level: 1,
 			}),
 		).toBeVisible()
@@ -306,10 +306,10 @@ test.describe('page components — standalone pages', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — admin settings', () => {
-	test('EntityTypeSelector paints its detection hint on the DocuDesk admin settings page', async ({
+	test('EntityTypeSelector paints its detection hint on the Filinq admin settings page', async ({
 		page,
 	}) => {
-		await page.goto('/index.php/settings/admin/docudesk', {
+		await page.goto('/index.php/settings/admin/filinq', {
 			waitUntil: 'domcontentloaded',
 		})
 		await waitForNcContentReady(page)

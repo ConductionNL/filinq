@@ -4,7 +4,7 @@
  * Unit tests for register/schema binding resolution and its fail-closed arm.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,22 +12,22 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
-use OCA\DocuDesk\Service\LegalBasisProposalService;
-use OCA\DocuDesk\Service\OcrService;
-use OCA\DocuDesk\Service\OpenRegisterAvailabilityService;
-use OCA\DocuDesk\Service\OpenRegisterResolver;
-use OCA\DocuDesk\Service\RegisterDiscoveryService;
-use OCA\DocuDesk\Service\SettingsInitializer;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Service\LegalBasisProposalService;
+use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\OpenRegisterAvailabilityService;
+use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\RegisterDiscoveryService;
+use OCA\Filinq\Service\SettingsInitializer;
+use OCA\Filinq\Service\SettingsService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;

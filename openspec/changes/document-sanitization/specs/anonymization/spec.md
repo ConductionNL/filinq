@@ -8,7 +8,7 @@ status: proposed
 
 Wire sanitisation into the anonymisation pipeline: anonymisation runs persist
 and surface the sanitization report OpenRegister already computes (and
-DocuDesk currently discards), and the anonymise endpoint gains an additive
+Filinq currently discards), and the anonymise endpoint gains an additive
 opt-in `sanitize` flag that applies the outbound sanitization pass to the
 FINAL artifact. Existing requirements (REQ-ANON-00..10 and the
 outputFormat/appendBasisSummary requirements) are unchanged; this delta only
@@ -24,7 +24,7 @@ OpenRegister's run report via
 `FileService`) and persist it as a `sanitizationRecord` with `trigger:
 "anonymisation"`, surfaced alongside the run result. At HEAD the office
 sanitiser runs unconditionally inside OR anonymisation and its report is
-computed then discarded by DocuDesk (zero callers — the orphaned-capability
+computed then discarded by Filinq (zero callers — the orphaned-capability
 class); this requirement consumes it without changing anonymisation
 behaviour. Runs of non-sanitisable formats (plain text, PDF-text
 replacement) produce no office report and MUST NOT fabricate one.
@@ -48,7 +48,7 @@ replacement) produce no office report and MUST NOT fabricate one.
 
 The anonymise endpoint (single and batch) MUST accept an additive boolean
 `sanitize` (default `false`; tenant default via app config
-`docudesk.sanitization.default`). When true, the outbound sanitization pass
+`filinq.sanitization.default`). When true, the outbound sanitization pass
 (`document-sanitization` REQ-DDSAN-001/002) MUST run on the FINAL artifact —
 after the `outputFormat` conversion gate and any grondslagen-summary append —
 because PDF conversion mints fresh metadata the source-side sanitisation

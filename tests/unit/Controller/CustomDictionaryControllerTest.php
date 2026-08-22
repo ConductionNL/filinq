@@ -13,10 +13,10 @@
  * record, 403 for the organisation gate, 400 for bad input.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  *
@@ -26,10 +26,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\CustomDictionaryController;
-use OCA\DocuDesk\Service\CustomDictionaryService;
+use OCA\Filinq\Controller\CustomDictionaryController;
+use OCA\Filinq\Service\CustomDictionaryService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -46,10 +46,10 @@ use RuntimeException;
  * Tests for the custom-dictionary term endpoints.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress                              PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
@@ -120,7 +120,7 @@ class CustomDictionaryControllerTest extends TestCase {
 	 */
 	private function buildController(IUserSession $session): CustomDictionaryController {
 		return new CustomDictionaryController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->createMock(LoggerInterface::class),
 			$this->service,
@@ -207,7 +207,7 @@ class CustomDictionaryControllerTest extends TestCase {
 		$service->expects($this->never())->method('listTerms');
 
 		$controller = new CustomDictionaryController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->createMock(LoggerInterface::class),
 			$service,

@@ -1,6 +1,6 @@
 # Entity Management
 
-DocuDesk provides advanced entity management capabilities to handle detected sensitive information across multiple documents. This system ensures consistent handling of entities and provides detailed tracking and anonymization controls.
+Filinq provides advanced entity management capabilities to handle detected sensitive information across multiple documents. This system ensures consistent handling of entities and provides detailed tracking and anonymization controls.
 
 ## Overview
 
@@ -36,7 +36,7 @@ When a document is processed:
 
 ## Entity Types
 
-DocuDesk supports detection of various entity types:
+Filinq supports detection of various entity types:
 
 - **PERSON**: Names of individuals
 - **EMAIL_ADDRESS**: Email addresses
@@ -104,8 +104,8 @@ Entity management is configured through app settings:
 
 ```php
 // Entity configuration
-$entityRegisterType = $this->appConfig->getValueString('docudesk', 'entity_register', 'document');
-$entitySchemaType = $this->appConfig->getValueString('docudesk', 'entity_schema', 'entity');
+$entityRegisterType = $this->appConfig->getValueString('filinq', 'entity_register', 'document');
+$entitySchemaType = $this->appConfig->getValueString('filinq', 'entity_schema', 'entity');
 ```
 
 ## API Endpoints
@@ -160,7 +160,7 @@ Entities in reports now include enhanced information:
 ## Configuration Consistency
 
 All services now use consistent configuration naming:
-- App name: `'docudesk'` (lowercase) across all services
+- App name: `'filinq'` (lowercase) across all services
 - Entity register: Configurable via `entity_register` setting
 - Entity schema: Configurable via `entity_schema` setting
 

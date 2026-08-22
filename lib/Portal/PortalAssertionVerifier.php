@@ -1,10 +1,10 @@
 <?php
 
 /**
- * DocuDesk Portal Assertion Verifier
+ * Filinq Portal Assertion Verifier
  *
  * Verifies portaliq's frozen `X-Portal-Subject` A6 assertion — the ONLY
- * legitimate identity source for a portal-driven request to DocuDesk's
+ * legitimate identity source for a portal-driven request to Filinq's
  * signing receiver (ADR-046, contribution contract v2, portal-signing-actions
  * REQ-DDPSA-002). Copied — deliberately verbatim in structure and security
  * posture — from the fleet's reference implementation
@@ -23,7 +23,7 @@
  * byte-identical or every forward 401s:
  *
  *   1. `IConfig::getAppValue('portaliq', 'jwt_signing_secret', '')` — the
- *      dedicated app-config secret OF THE PORTALIQ APP ID (not DocuDesk's).
+ *      dedicated app-config secret OF THE PORTALIQ APP ID (not Filinq's).
  *   2. When that is empty or shorter than 16 chars:
  *      `IConfig::getSystemValue('secret', str_pad('portaliq', 32, '_'))` —
  *      the Nextcloud instance secret with portaliq's default-of-last-resort.
@@ -32,12 +32,12 @@
  * band. The secret never comes from the request.
  *
  * @category  Portal
- * @package   OCA\DocuDesk\Portal
+ * @package   OCA\Filinq\Portal
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Portal;
+namespace OCA\Filinq\Portal;
 
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
@@ -95,7 +95,7 @@ class PortalAssertionVerifier {
 
 	/**
 	 * The app id whose config carries the signing secret (portaliq's, NOT
-	 * DocuDesk's — the receiver reads the minter's secret).
+	 * Filinq's — the receiver reads the minter's secret).
 	 */
 	private const PORTALIQ_APP_ID = 'portaliq';
 
@@ -265,7 +265,7 @@ class PortalAssertionVerifier {
 	 */
 	private function reject(string $reason): null {
 		if ($this->logger !== null) {
-			$this->logger->debug('DocuDesk: portal assertion rejected', ['reason' => $reason]);
+			$this->logger->debug('Filinq: portal assertion rejected', ['reason' => $reason]);
 		}
 
 		return null;

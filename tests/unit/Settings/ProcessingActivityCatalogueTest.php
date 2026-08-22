@@ -2,14 +2,14 @@
 
 /**
  * Unit tests for the AVG Art. 30 processing-activity catalogue annotations
- * added to `docudesk_register.json` by the `processing-activity-export` change.
+ * added to `filinq_register.json` by the `processing-activity-export` change.
  *
- * DocuDesk is a THIN CONSUMER of OpenRegister's platform processing-activity
+ * Filinq is a THIN CONSUMER of OpenRegister's platform processing-activity
  * register (OR-PA-1..9): it declares its four processing activities as
  * `x-openregister-processing` catalogue annotations and opts the carrying
  * schemas into OpenRegister's per-access read-logging. The aggregation,
  * export, no-literal-PII contract, and access gating live in OpenRegister
- * (ADR-022); DocuDesk owns NO export service, controller, or template.
+ * (ADR-022); Filinq owns NO export service, controller, or template.
  *
  * These tests assert:
  *   - the four activities are declared with the required catalogue fields;
@@ -17,23 +17,23 @@
  *     own activity code (resolvable by OpenRegister's ProcessingLogService);
  *   - retention references mirror the existing `x-openregister-archival`
  *     annotations ("not declared" where the schema has none);
- *   - DocuDesk ships NO route or controller that aggregates / exports
+ *   - Filinq ships NO route or controller that aggregates / exports
  *     processing activities (the export is OR-PA-7's).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Settings
+ * @package  OCA\Filinq\Tests\Unit\Settings
  *
  * @author  Conduction Development Team <info@conduction.nl>
  * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/specs/processing-activity-export/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Settings;
+namespace OCA\Filinq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 
@@ -67,12 +67,12 @@ class ProcessingActivityCatalogueTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$path = __DIR__ . '/../../../lib/Settings/docudesk_register.json';
+		$path = __DIR__ . '/../../../lib/Settings/filinq_register.json';
 		$raw = file_get_contents($path);
-		$this->assertNotFalse($raw, 'docudesk_register.json must be readable');
+		$this->assertNotFalse($raw, 'filinq_register.json must be readable');
 
 		$decoded = json_decode($raw, true);
-		$this->assertIsArray($decoded, 'docudesk_register.json must be valid JSON');
+		$this->assertIsArray($decoded, 'filinq_register.json must be valid JSON');
 		$this->config = $decoded;
 
 	}//end setUp()
@@ -184,12 +184,12 @@ class ProcessingActivityCatalogueTest extends TestCase {
 	}//end testRegisterRequiresProcessingCapableOpenRegister()
 
 	/**
-	 * DocuDesk ships NO endpoint that aggregates / exports processing
+	 * Filinq ships NO endpoint that aggregates / exports processing
 	 * activities — that surface is OpenRegister's (OR-PA-7), per ADR-022.
 	 *
 	 * @return void
 	 */
-	public function testNoDocudeskProcessingExportEndpointExists(): void {
+	public function testNoFilinqProcessingExportEndpointExists(): void {
 		$routesPath = __DIR__ . '/../../../appinfo/routes.php';
 		$routes = require $routesPath;
 		$this->assertIsArray($routes);
@@ -205,7 +205,7 @@ class ProcessingActivityCatalogueTest extends TestCase {
 				$this->assertStringNotContainsString(
 					$needle,
 					$name,
-					"DocuDesk MUST NOT register a processing-activity export route ($name) — the export is OR-PA-7's"
+					"Filinq MUST NOT register a processing-activity export route ($name) — the export is OR-PA-7's"
 				);
 			}
 		}
@@ -215,7 +215,7 @@ class ProcessingActivityCatalogueTest extends TestCase {
 		$this->assertDirectoryExists($controllerDir);
 		$hits = glob($controllerDir . '/*ProcessingActivit*Controller.php') ?: [];
 		$hits = array_merge($hits, (glob($controllerDir . '/*Verwerking*Controller.php') ?: []));
-		$this->assertSame([], $hits, 'DocuDesk MUST NOT ship a processing-activity / verwerkingsregister controller');
+		$this->assertSame([], $hits, 'Filinq MUST NOT ship a processing-activity / verwerkingsregister controller');
 
-	}//end testNoDocudeskProcessingExportEndpointExists()
+	}//end testNoFilinqProcessingExportEndpointExists()
 }//end class

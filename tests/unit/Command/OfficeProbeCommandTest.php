@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Command
+ * @package  OCA\Filinq\Tests\Unit\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,15 +17,15 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Command;
+namespace OCA\Filinq\Tests\Unit\Command;
 
-use OCA\DocuDesk\Command\OfficeProbeCommand;
-use OCA\DocuDesk\Service\Office\OfficeSuiteCapabilityService;
+use OCA\Filinq\Command\OfficeProbeCommand;
+use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -73,7 +73,7 @@ class OfficeProbeCommandTest extends TestCase {
 	/**
 	 * REQ: the command the setup documentation names must exist and be runnable.
 	 *
-	 * The guide told operators to run `occ docudesk:office:probe` and showed its
+	 * The guide told operators to run `occ filinq:office:probe` and showed its
 	 * output while the command did not exist. Asserting the registered name is what
 	 * makes that particular regression impossible to repeat silently.
 	 *
@@ -87,7 +87,7 @@ class OfficeProbeCommandTest extends TestCase {
 			appConfig: $this->createMock(IAppConfig::class)
 		);
 
-		$this->assertSame('docudesk:office:probe', $command->getName());
+		$this->assertSame('filinq:office:probe', $command->getName());
 		$this->assertTrue($command->getDefinition()->hasOption('suite'));
 	}//end testCommandIsRegisteredUnderTheDocumentedName()
 

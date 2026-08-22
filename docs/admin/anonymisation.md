@@ -1,6 +1,6 @@
-# DocuDesk — Anonymisation Backends
+# Filinq — Anonymisation Backends
 
-DocuDesk delegates entity recognition to OpenRegister's `EntityRecognitionHandler`.
+Filinq delegates entity recognition to OpenRegister's `EntityRecognitionHandler`.
 The handler supports four backend modes, each with different accuracy and infrastructure
 requirements.
 
@@ -28,20 +28,20 @@ requirements.
    `/settings/admin/openregister` and select the backend from the
    *Anonymisation backend* dropdown.
 
-4. **Verify** — reload the DocuDesk admin settings page. If the backend is
+4. **Verify** — reload the Filinq admin settings page. If the backend is
    detected, the warning banner disappears automatically.
 
 ## Admin Warning Banner
 
 When entity recognition is operating in regex-only mode and no non-regex backend
-is configured, DocuDesk shows an informational warning banner on:
+is configured, Filinq shows an informational warning banner on:
 
-- The **DocuDesk admin settings page** (top of section, persistent).
-- The **DocuDesk dashboard** (top of page, admin users only).
+- The **Filinq admin settings page** (top of section, persistent).
+- The **Filinq dashboard** (top of page, admin users only).
 
 The banner provides direct links to the App Store entries and to OpenRegister
 settings, and can be **dismissed per admin**. A dismissed admin can re-enable
-the banner from the *Anonymisation* section of the DocuDesk admin settings page
+the banner from the *Anonymisation* section of the Filinq admin settings page
 by toggling *Show anonymiser backend warning*.
 
 > **Note:** Dismissal is informational only — regex-only mode continues to work.
@@ -59,7 +59,7 @@ The deep-link CTAs remain visible and navigate to the standard Nextcloud
 This feature implements the responsibility split defined in
 [ADR-017](../../openspec/architecture/adr-017-ai-exapp-backend-discovery.md):
 
-- **DocuDesk** owns the warning UX and deep links.
+- **Filinq** owns the warning UX and deep links.
 - **OpenRegister** owns backend selection UI and the actual health check.
-- DocuDesk reads state via `OCA\OpenRegister\Service\AnonymisationBackendService::getState()`.
-- DocuDesk does NOT query `IAppManager`, AppAPI services, or HTTP health endpoints directly.
+- Filinq reads state via `OCA\OpenRegister\Service\AnonymisationBackendService::getState()`.
+- Filinq does NOT query `IAppManager`, AppAPI services, or HTTP health endpoints directly.

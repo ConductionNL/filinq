@@ -16,12 +16,12 @@
  * from a non-existent one (IDOR-safe per ADR-005).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-comparison/spec.md
  *
@@ -31,11 +31,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
-use OCA\DocuDesk\Exception\ComparisonException;
-use OCA\DocuDesk\Service\Comparison\RedactionAnnotator;
-use OCA\DocuDesk\Service\Comparison\WordDiffer;
+use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Service\Comparison\RedactionAnnotator;
+use OCA\Filinq\Service\Comparison\WordDiffer;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -49,10 +49,10 @@ use Throwable;
  * Service computing structured, redaction-aware document comparisons.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-comparison/spec.md
  */
@@ -367,7 +367,7 @@ class DocumentComparisonService {
 	 * @return int Maximum bytes.
 	 */
 	private function getMaxTextBytes(): int {
-		$value = $this->appConfig->getValueInt('docudesk', self::CONFIG_MAX_TEXT_BYTES, self::DEFAULT_MAX_TEXT_BYTES);
+		$value = $this->appConfig->getValueInt('filinq', self::CONFIG_MAX_TEXT_BYTES, self::DEFAULT_MAX_TEXT_BYTES);
 		if ($value <= 0) {
 			return self::DEFAULT_MAX_TEXT_BYTES;
 		}

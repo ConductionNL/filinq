@@ -4,20 +4,20 @@
  * Prohibition Override Committer
  *
  * Commits the overrides the prohibition gate validated: for each released
- * override it writes the DocuDesk audit entry FIRST and only then PATCHes the
+ * override it writes the Filinq audit entry FIRST and only then PATCHes the
  * OpenRegister EntityRelation. AVG Art. 30 / 10-year archival means an override
- * released into OpenRegister without a DocuDesk audit record is a compliance
+ * released into OpenRegister without a Filinq audit record is a compliance
  * violation, so the audit write is fail-closed.
  *
  * Extracted verbatim from AnonymizationService.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,7 +27,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -39,10 +39,10 @@ use Throwable;
  * Writes the audit entry and the OpenRegister skip flag for released overrides.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
  */
@@ -79,7 +79,7 @@ class ProhibitionOverrideCommitter {
 	/**
 	 * Commit validated override entries: write audit + PATCH OR skip flag.
 	 *
-	 * Processes overrides sequentially. Writes the DocuDesk audit entry BEFORE
+	 * Processes overrides sequentially. Writes the Filinq audit entry BEFORE
 	 * the OR PATCH for each override. On OR PATCH failure, stops processing
 	 * further overrides and throws RuntimeException (HTTP 500).
 	 *
@@ -138,7 +138,7 @@ class ProhibitionOverrideCommitter {
 	}//end commit()
 
 	/**
-	 * Write the DocuDesk audit entry for one released override.
+	 * Write the Filinq audit entry for one released override.
 	 *
 	 * If the audit write fails we MUST NOT proceed to the OR PATCH — fail-closed.
 	 *

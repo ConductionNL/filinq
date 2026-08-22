@@ -4,7 +4,7 @@
  * Unit tests for TemplatesController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,19 +12,19 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\TemplateRequestHandler;
-use OCA\DocuDesk\Controller\TemplatesController;
-use OCA\DocuDesk\Service\TemplatePreviewService;
-use OCA\DocuDesk\Service\TemplateService;
-use OCA\DocuDesk\Service\TemplateVersionService;
+use OCA\Filinq\Controller\TemplateRequestHandler;
+use OCA\Filinq\Controller\TemplatesController;
+use OCA\Filinq\Service\TemplatePreviewService;
+use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Service\TemplateVersionService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -36,10 +36,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for TemplatesController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -106,7 +106,7 @@ class TemplatesControllerTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new TemplatesController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$this->mockTemplateService,
 			$this->mockRequestHandler,

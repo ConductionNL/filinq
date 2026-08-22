@@ -17,7 +17,7 @@ keywords:
 ## Overview
 
 The **Versies** (Versions) view surfaces the Nextcloud file-version history of a
-document — read directly from the platform's `files_versions` capability. DocuDesk
+document — read directly from the platform's `files_versions` capability. Filinq
 introduces **no** version storage of its own: every version is read through
 Nextcloud's `IVersionManager`, so retention, deduplication and storage remain
 Nextcloud's responsibility (ADR-022).

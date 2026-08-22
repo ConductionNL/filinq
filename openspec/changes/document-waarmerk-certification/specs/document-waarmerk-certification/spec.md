@@ -33,7 +33,7 @@ expired certificate MUST be refused.
 
 #### Scenario: Admin configures the organisation certificate
 
-- GIVEN a Nextcloud admin on the DocuDesk admin settings page
+- GIVEN a Nextcloud admin on the Filinq admin settings page
 - WHEN they upload the organisation certificate PEM and set the private-key `credentialRef`
 - THEN the panel shows the certificate subject, fingerprint, and expiry
 - AND no private-key material appears in any register object, app-config value, or log line

@@ -8,7 +8,7 @@
  * value so two admins can independently choose to see or hide the banner.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,10 +21,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\AppInfo\Application;
-use OCA\DocuDesk\Settings\DocuDeskAdmin;
+use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * Admin endpoints to dismiss or restore the anonymiser backend warning banner.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
@@ -82,7 +82,7 @@ class AnonymiserWarningController extends Controller {
 	 *
 	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
 	 */
-	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function dismiss(): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
@@ -118,7 +118,7 @@ class AnonymiserWarningController extends Controller {
 	 *
 	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
 	 */
-	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function reset(): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {

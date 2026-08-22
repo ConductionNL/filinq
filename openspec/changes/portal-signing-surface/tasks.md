@@ -54,4 +54,4 @@ assurance-level field is recorded/exposed beyond the general
 - Manifest labels ship in English source (i18n policy); portaliq owns portal-side translation.
 - No register JSON change — `signerRecord.signatureData/declineReason`, `signingRequest.status` verified against HEAD; the portal identity keys live inside the existing `v: 2` evidence JSON.
 - QES is explicitly out of scope; the surface claims SES/AES only.
-- No DocuDesk UI ships (portaliq owns the SPA) — no Playwright; covered by PHPUnit.
+- No Filinq UI ships (portaliq owns the SPA) — no Playwright; covered by PHPUnit.

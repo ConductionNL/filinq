@@ -11,7 +11,7 @@
  * fallback.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -19,14 +19,14 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Conversion;
+namespace OCA\Filinq\Tests\Unit\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\Conversion\EmlBackend;
-use OCA\DocuDesk\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Conversion\EmlBackend;
+use OCA\Filinq\Service\EmlPdfAssemblyService;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -171,7 +171,7 @@ class EmlBackendTest extends TestCase {
 	 */
 	public function testIsAvailableWhenBothDepsPresent(): void {
 		$this->appConfig->method('getValueString')->willReturn('true');
-		$this->appManager->method('getInstalledApps')->willReturn(['openregister', 'docudesk']);
+		$this->appManager->method('getInstalledApps')->willReturn(['openregister', 'filinq']);
 		$this->container->method('get')->willReturn(new FakeOrFileService());
 
 		$this->assertTrue($this->backend()->isAvailable());
@@ -199,7 +199,7 @@ class EmlBackendTest extends TestCase {
 	 */
 	public function testIsUnavailableWhenOrNotInstalled(): void {
 		$this->appConfig->method('getValueString')->willReturn('true');
-		$this->appManager->method('getInstalledApps')->willReturn(['docudesk']);
+		$this->appManager->method('getInstalledApps')->willReturn(['filinq']);
 
 		$this->assertFalse($this->backend()->isAvailable());
 

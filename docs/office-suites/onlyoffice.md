@@ -14,14 +14,14 @@ Collabora or LibreOffice, even where the products are related.
 
 | | |
 |---|---|
-| Document server | **sidecar container** `docudesk-onlyoffice`, image `onlyoffice/documentserver:latest` (3.32 GB), host port **8092** |
+| Document server | **sidecar container** `filinq-onlyoffice`, image `onlyoffice/documentserver:latest` (3.32 GB), host port **8092** |
 | Nextcloud connector | app id **`onlyoffice`**, inside the `nextcloud` container at `/var/www/html/custom_apps/onlyoffice` — **not bind-mounted**, see [README](README.md) |
 
 ## 1. Start the server
 
 ```bash
 docker compose -f docker-compose.office.yml --profile onlyoffice up -d
-docker inspect docudesk-onlyoffice --format '{{.State.Health.Status}}'   # want: healthy
+docker inspect filinq-onlyoffice --format '{{.State.Health.Status}}'   # want: healthy
 ```
 
 First boot takes 1–3 minutes. The port answers well before the converters are ready,
@@ -71,7 +71,7 @@ docker exec nextcloud php occ config:app:set onlyoffice DocumentServerUrl \
 
 # NEXTCLOUD -> server. Resolved inside the container, so it IS the container name.
 docker exec nextcloud php occ config:app:set onlyoffice DocumentServerInternalUrl \
-    --value="http://docudesk-onlyoffice/"
+    --value="http://filinq-onlyoffice/"
 
 # SERVER -> NEXTCLOUD, to fetch and save the file.
 docker exec nextcloud php occ config:app:set onlyoffice StorageUrl \
@@ -80,7 +80,7 @@ docker exec nextcloud php occ config:app:set onlyoffice StorageUrl \
 
 Setting only the first to the container name renders the editor and immediately
 shows **"ONLYOFFICE cannot be reached"** — the *browser* cannot resolve
-`docudesk-onlyoffice`. Everything else is correct; only the direction is wrong.
+`filinq-onlyoffice`. Everything else is correct; only the direction is wrong.
 
 ## 5. Verified 2026-08-16
 

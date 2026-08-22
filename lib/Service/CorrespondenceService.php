@@ -8,12 +8,12 @@
  * multiple formats, and log to the correspondence register.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
  * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-output-format-selection
@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
@@ -44,10 +44,10 @@ use RuntimeException;
  * Service for generating correspondence from templates with recipient data
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -109,14 +109,14 @@ class CorrespondenceService {
 	/**
 	 * Resolve the configured sync-batch limit, falling back to the constant.
 	 *
-	 * Reads `docudesk.correspondence.sync_batch_limit` (canonical key declared
+	 * Reads `filinq.correspondence.sync_batch_limit` (canonical key declared
 	 * in manifest.yaml under docudesk-adopt-or-abstractions task 11).
 	 *
 	 * @return int
 	 */
 	private function getSyncBatchLimit(): int {
 		$value = $this->appConfig->getValueString(
-			'docudesk',
+			'filinq',
 			'correspondence.sync_batch_limit',
 			''
 		);
@@ -130,14 +130,14 @@ class CorrespondenceService {
 	/**
 	 * Resolve the configured default output format, falling back to the constant.
 	 *
-	 * Reads `docudesk.correspondence.default_format` (canonical key declared in
+	 * Reads `filinq.correspondence.default_format` (canonical key declared in
 	 * manifest.yaml under docudesk-adopt-or-abstractions task 11).
 	 *
 	 * @return string
 	 */
 	private function getDefaultFormat(): string {
 		$value = $this->appConfig->getValueString(
-			'docudesk',
+			'filinq',
 			'correspondence.default_format',
 			''
 		);
@@ -184,7 +184,7 @@ class CorrespondenceService {
 	 * @throws Exception If generation fails
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
-	 * @spec openspec/changes/docudesk-mcp-adoption/tasks.md#task-2-1
+	 * @spec openspec/changes/filinq-mcp-adoption/tasks.md#task-2-1
 	 */
 	#[McpTool(
 		name: 'generateCorrespondence',
@@ -192,7 +192,7 @@ class CorrespondenceService {
 		// data source, which is a different authority from authoring one.
 		subject: 'correspondence',
 		action: 'generate',
-		description: 'Generate one letter from a DocuDesk template for one recipient: resolves the '
+		description: 'Generate one letter from a Filinq template for one recipient: resolves the '
 			. 'recipient\'s data from OpenRegister, applies the organisation huisstijl, renders the '
 			. 'template and logs the result to the correspondence register. Use searchTemplate first '
 			. 'to find the template id. Generates a single letter only -- batch mail-merge is not '
@@ -398,7 +398,7 @@ class CorrespondenceService {
 		$jobId = $this->generateJobId();
 
 		$this->jobList->add(
-			\OCA\DocuDesk\BackgroundJob\BatchCorrespondenceJob::class,
+			\OCA\Filinq\BackgroundJob\BatchCorrespondenceJob::class,
 			[
 				'jobId' => $jobId,
 				'templateId' => $templateId,
@@ -459,7 +459,7 @@ class CorrespondenceService {
 			$container = $this->container;
 			$config = $container->get(\OCP\IAppConfig::class);
 			$config->setValueString(
-				'docudesk',
+				'filinq',
 				'correspondence_job_' . $jobId,
 				json_encode($data)
 			);
@@ -486,7 +486,7 @@ class CorrespondenceService {
 			$container = $this->container;
 			$config = $container->get(\OCP\IAppConfig::class);
 			$value = $config->getValueString(
-				'docudesk',
+				'filinq',
 				'correspondence_job_' . $jobId,
 				''
 			);
@@ -736,7 +736,7 @@ class CorrespondenceService {
 		}
 
 		// Write HTML to temp file.
-		$tempDir = '/tmp/docudesk_convert';
+		$tempDir = '/tmp/filinq_convert';
 		if (file_exists($tempDir) === false) {
 			mkdir($tempDir, 0777, true);
 		}

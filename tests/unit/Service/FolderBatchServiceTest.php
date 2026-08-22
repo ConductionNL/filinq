@@ -4,7 +4,7 @@
  * Unit tests for FolderBatchService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-3
  *
@@ -20,15 +20,15 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
-use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\ConfidentialityLabelService;
-use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
-use OCA\DocuDesk\Service\FolderBatchService;
+use OCA\Filinq\BackgroundJob\FolderExtractionJob;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\ConfidentialityLabelService;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\FolderBatchService;
 use OCP\BackgroundJob\IJobList;
 use OCP\Constants;
 use OCP\Files\File;
@@ -47,10 +47,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for FolderBatchService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @phpstan-extends                                TestCase
@@ -712,7 +712,7 @@ class FolderBatchServiceTest extends TestCase {
 	}//end testEnumerateFilesAllLegacyOutputsThrows400()
 
 	/**
-	 * `docudesk.confidentiality.prioritise_analysis` off (the default —
+	 * `filinq.confidentiality.prioritise_analysis` off (the default —
 	 * unconfigured mock `getValueBool` returns false) MUST leave the
 	 * enumeration order byte-for-byte identical to the pre-change directory
 	 * listing order, even though a confidentiality label is resolvable.
@@ -734,7 +734,7 @@ class FolderBatchServiceTest extends TestCase {
 		// consult it for ordering purposes.
 		$this->mockConfidentialityLabel->method('getLabelForFile')
 			->willReturnCallback(
-				static fn (int $fileId) => $fileId === 901 ? new \OCA\DocuDesk\Service\ConfidentialityLabel('Secret', 3) : null
+				static fn (int $fileId) => $fileId === 901 ? new \OCA\Filinq\Service\ConfidentialityLabel('Secret', 3) : null
 			);
 
 		$this->mockStateService->method('getMaxFiles')->willReturn(100);
@@ -766,7 +766,7 @@ class FolderBatchServiceTest extends TestCase {
 	}//end testPriorityOffLeavesOrderingUnchanged()
 
 	/**
-	 * `docudesk.confidentiality.prioritise_analysis` on orders a higher
+	 * `filinq.confidentiality.prioritise_analysis` on orders a higher
 	 * (Secret, level 3) confidentiality file ahead of an unlabelled
 	 * (level 0) file that appeared first in the directory listing — a pure
 	 * secondary/tie-break sort, never a skip/block/redaction.
@@ -789,8 +789,8 @@ class FolderBatchServiceTest extends TestCase {
 		$this->mockConfidentialityLabel->method('getLabelForFile')->willReturnCallback(
 			static function (int $fileId) {
 				return match ($fileId) {
-					901 => new \OCA\DocuDesk\Service\ConfidentialityLabel('Secret', 3),
-					903 => new \OCA\DocuDesk\Service\ConfidentialityLabel('Internal', 1),
+					901 => new \OCA\Filinq\Service\ConfidentialityLabel('Secret', 3),
+					903 => new \OCA\Filinq\Service\ConfidentialityLabel('Internal', 1),
 					default => null,
 				};
 			}

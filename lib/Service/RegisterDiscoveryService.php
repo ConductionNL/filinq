@@ -8,12 +8,12 @@
  * Extracted from SettingsService to reduce class complexity.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/admin-settings/spec.md
  *
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
@@ -35,10 +35,10 @@ use Throwable;
  * Service for discovering available registers and loading object type config
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class RegisterDiscoveryService {
 
@@ -65,7 +65,7 @@ class RegisterDiscoveryService {
 		private readonly RegisterService $registerService,
 		private readonly SchemaMapper $schemaMapper,
 	) {
-		$this->appName = 'docudesk';
+		$this->appName = 'filinq';
 
 	}//end __construct()
 
@@ -80,7 +80,7 @@ class RegisterDiscoveryService {
 	 *
 	 * Mirrors the expansion logic in OpenRegister's
 	 * `RegistersController::index` for `_extend: ['schemas']`, but performed
-	 * inline so docudesk doesn't depend on a non-existent serialized helper.
+	 * inline so filinq doesn't depend on a non-existent serialized helper.
 	 * Catches `Throwable` (the only common ancestor of `Exception` and
 	 * `Error` in PHP 7+) so any failure — including a missing method on an
 	 * older OR sidecar — falls back to an empty registers list rather than

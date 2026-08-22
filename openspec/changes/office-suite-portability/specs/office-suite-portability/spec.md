@@ -54,7 +54,7 @@ and fails in the hands of a user.
 
 ### Requirement: No document capability may require a specific office suite
 
-Every capability DocuDesk exposes over a document MUST be reachable through the
+Every capability Filinq exposes over a document MUST be reachable through the
 suite-independent path — `IConversionManager` for conversion, in-package XML editing
 for manipulation. A capability that works only when one named suite is present is
 prohibited (ADR-087 §4, §5).
@@ -82,7 +82,7 @@ deployment without that suite.
 ### Requirement: Anchor stability across a suite round-trip MUST be measured, not assumed
 
 ADR-087 records anchor stability as a known unknown and instructs that it be
-measured before building on §2. DocuDesk already builds on §2 with content-hash
+measured before building on §2. Filinq already builds on §2 with content-hash
 anchors, chosen on the expectation that `w14:paraId` would not survive a save.
 
 The system MUST carry a test that opens a document, has a real office suite save it,

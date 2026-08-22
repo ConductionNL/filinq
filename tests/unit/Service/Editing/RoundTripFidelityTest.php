@@ -10,24 +10,24 @@
  * look identical from the call site.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#4-verify
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\PackagePartIo;
-use OCA\DocuDesk\Service\Editing\PresentationCodec;
-use OCA\DocuDesk\Service\Editing\SpreadsheetCodec;
+use OCA\Filinq\Service\Editing\PackagePartIo;
+use OCA\Filinq\Service\Editing\PresentationCodec;
+use OCA\Filinq\Service\Editing\SpreadsheetCodec;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 

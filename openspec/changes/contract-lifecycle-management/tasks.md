@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `contract` schema to the `dossier` register in `lib/Settings/docudesk_register.json` (REQ-DDCLM-001, REQ-DDCLM-002, REQ-DDCLM-003)
+- [ ] 1.1 Add the `contract` schema to the `dossier` register in `lib/Settings/filinq_register.json` (REQ-DDCLM-001, REQ-DDCLM-002, REQ-DDCLM-003)
   - Properties per design.md D1; `x-openregister-lifecycle` in OR's CANONICAL dialect (canonical `initial: draft` — verify against OR HEAD, do NOT copy the drifted `initialState` blocks); two `x-openregister-notifications` entries (`noticeDeadline`, `endDate`) mirroring the shipped `objectionDeadline` dialect; additive register version bump with changelog entry.
 
 - [ ] 1.2 Add seed data: one notice-due `active` contract, one long-running `active` contract, one `draft` (design.md Seed Data)
@@ -36,7 +36,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests for services, controller guards, defaulting, suggestion flow, drift pins — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
 
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/contract-lifecycle.spec.ts` + `tests/e2e/spec-coverage/contracts.spec.ts` covering the `@e2e`-referenced scenarios on the Postgres dev instance
   - Includes the nldesign-theme accessibility pass on the new views.

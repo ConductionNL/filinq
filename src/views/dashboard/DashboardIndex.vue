@@ -13,7 +13,7 @@ import { consentStore } from '../../store/store.js'
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<CnDashboardPage
-			:title="t('docudesk', 'Dashboard')"
+			:title="t('filinq', 'Dashboard')"
 			:widgets="widgetDefs"
 			:layout="dashboardLayout"
 			:loading="consentStore.loading">
@@ -32,12 +32,12 @@ import { consentStore } from '../../store/store.js'
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
 					:aria-label="
-						t('docudesk', 'Total Consents — open the consent overview')
+						t('filinq', 'Total Consents — open the consent overview')
 					">
 					<CnStatsBlock
-						:title="t('docudesk', 'Total Consents')"
+						:title="t('filinq', 'Total Consents')"
 						:count="consentStore.consentStats.total"
-						:countLabel="t('docudesk', 'records')"
+						:countLabel="t('filinq', 'records')"
 						variant="default"
 						showZeroCount />
 				</RouterLink>
@@ -49,12 +49,12 @@ import { consentStore } from '../../store/store.js'
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
 					:aria-label="
-						t('docudesk', 'Pending consents — open the consent overview')
+						t('filinq', 'Pending consents — open the consent overview')
 					">
 					<CnStatsBlock
-						:title="t('docudesk', 'Pending')"
+						:title="t('filinq', 'Pending')"
 						:count="consentStore.consentStats.pending"
-						:countLabel="t('docudesk', 'pending')"
+						:countLabel="t('filinq', 'pending')"
 						variant="warning"
 						showZeroCount />
 				</RouterLink>
@@ -66,15 +66,12 @@ import { consentStore } from '../../store/store.js'
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
 					:aria-label="
-						t(
-							'docudesk',
-							'Approved consents — open the consent overview',
-						)
+						t('filinq', 'Approved consents — open the consent overview')
 					">
 					<CnStatsBlock
-						:title="t('docudesk', 'Approved')"
+						:title="t('filinq', 'Approved')"
 						:count="consentStore.consentStats.approved"
-						:countLabel="t('docudesk', 'approved')"
+						:countLabel="t('filinq', 'approved')"
 						variant="success"
 						showZeroCount />
 				</RouterLink>
@@ -86,15 +83,12 @@ import { consentStore } from '../../store/store.js'
 					class="dashboard-kpi-link"
 					:to="{ name: 'Consent' }"
 					:aria-label="
-						t(
-							'docudesk',
-							'Objected consents — open the consent overview',
-						)
+						t('filinq', 'Objected consents — open the consent overview')
 					">
 					<CnStatsBlock
-						:title="t('docudesk', 'Objected')"
+						:title="t('filinq', 'Objected')"
 						:count="consentStore.consentStats.objected"
-						:countLabel="t('docudesk', 'objected')"
+						:countLabel="t('filinq', 'objected')"
 						variant="error"
 						showZeroCount />
 				</RouterLink>
@@ -104,10 +98,8 @@ import { consentStore } from '../../store/store.js'
 			<template #widget-pending-consents>
 				<NcEmptyContent
 					v-if="!consentStore.loading && pendingConsents.length === 0"
-					:name="t('docudesk', 'No pending consents')"
-					:description="
-						t('docudesk', 'All consents have been handled.')
-					" />
+					:name="t('filinq', 'No pending consents')"
+					:description="t('filinq', 'All consents have been handled.')" />
 				<CnDataTable
 					v-else
 					:rows="pendingConsents"
@@ -216,33 +208,33 @@ export default {
 		/**
 		 * Widget definitions for CnDashboardPage.
 		 *
-		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 * @spec openspec/specs/dashboard/spec.md#requirement-filinq-dashboard-view-req-dash-01
 		 */
 		widgetDefs() {
 			return [
-				{ id: 'total-consents', title: t('docudesk', 'Total Consents') },
-				{ id: 'pending', title: t('docudesk', 'Pending') },
-				{ id: 'approved', title: t('docudesk', 'Approved') },
-				{ id: 'objected', title: t('docudesk', 'Objected') },
-				{ id: 'pending-consents', title: t('docudesk', 'Pending Consents') },
-				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
+				{ id: 'total-consents', title: t('filinq', 'Total Consents') },
+				{ id: 'pending', title: t('filinq', 'Pending') },
+				{ id: 'approved', title: t('filinq', 'Approved') },
+				{ id: 'objected', title: t('filinq', 'Objected') },
+				{ id: 'pending-consents', title: t('filinq', 'Pending Consents') },
+				{ id: 'anonymization', title: t('filinq', 'Quick Anonymization') },
 			]
 		},
 
 		/**
 		 * Column definitions for the Pending Consents CnDataTable.
 		 *
-		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 * @spec openspec/specs/dashboard/spec.md#requirement-filinq-dashboard-view-req-dash-01
 		 */
 		consentColumns() {
-			return [{ key: 'entity', label: t('docudesk', 'Entity') }]
+			return [{ key: 'entity', label: t('filinq', 'Entity') }]
 		},
 
 		/**
 		 * Consent records with status "pending", capped at 10 rows.
 		 * The `id` field is retained so row-click can navigate to ConsentDetail.
 		 *
-		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 * @spec openspec/specs/dashboard/spec.md#requirement-filinq-dashboard-view-req-dash-01
 		 */
 		pendingConsents() {
 			return consentStore.consents
@@ -265,10 +257,9 @@ export default {
 		 */
 		async fetchAnonymiserBackendState() {
 			try {
-				const response = await fetch(
-					'/index.php/apps/docudesk/api/settings',
-					{ method: 'GET' },
-				)
+				const response = await fetch('/index.php/apps/filinq/api/settings', {
+					method: 'GET',
+				})
 				if (response.ok === false) {
 					return
 				}

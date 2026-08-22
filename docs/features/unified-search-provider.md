@@ -1,11 +1,11 @@
 # Unified Search provider
 
-DocuDesk surfaces its documents in **Nextcloud's global (Unified) search** without
+Filinq surfaces its documents in **Nextcloud's global (Unified) search** without
 registering a search provider of its own. It consumes OpenRegister's shared
 `openregister_objects` provider (ADR-022): a schema opts in with `searchable:true`
 and becomes navigable through a manifest `deepLinks[]` entry. Organisation scoping,
 RBAC and pagination are inherited from OpenRegister's `searchObjectsPaginated`
-(`_rbac` / `_multitenancy`) — DocuDesk owns no `OCP\Search\IProvider`.
+(`_rbac` / `_multitenancy`) — Filinq owns no `OCP\Search\IProvider`.
 
 ## The searchable ⟺ deep-link invariant
 
@@ -21,8 +21,8 @@ After this change only two schemas remain searchable, each with a deep-link:
 
 | Register  | Schema           | Deep-link route                       | Label            |
 |-----------|------------------|---------------------------------------|------------------|
-| templates | `template`       | `/apps/docudesk/templates/{uuid}`     | Template         |
-| signing   | `signingRequest` | `/apps/docudesk/signing/{uuid}`       | Signing request  |
+| templates | `template`       | `/apps/filinq/templates/{uuid}`     | Template         |
+| signing   | `signingRequest` | `/apps/filinq/signing/{uuid}`       | Signing request  |
 
 ## Deferrals
 

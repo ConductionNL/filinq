@@ -1,7 +1,7 @@
 ---
 kind: code
 depends_on:
-  - docudesk-mcp-adoption
+  - filinq-mcp-adoption
 ---
 
 # Proposal: mcp-generation-tools
@@ -20,12 +20,12 @@ besluit?" is the workflow the market is converging on — and the moat is
 doing it *governed*: grants, logging, and a hard line on what never
 crosses the agent boundary.
 
-The in-flight sibling change **`docudesk-mcp-adoption`** (read at HEAD
-`9cc14407`, proposal/design/specs/tasks complete) establishes DocuDesk's
+The in-flight sibling change **`filinq-mcp-adoption`** (read at HEAD
+`9cc14407`, proposal/design/specs/tasks complete) establishes Filinq's
 baseline: 8 read-only schemas via `x-openregister-mcp`
-(`docudesk.template.search|get`, `docudesk.generatedDocument.search|get`,
-`docudesk.signingRequest.search|get`, ...), the curated generation write
-tool `docudesk.generateCorrespondence` (its sole *generation* tool, which
+(`filinq.template.search|get`, `filinq.generatedDocument.search|get`,
+`filinq.signingRequest.search|get`, ...), the curated generation write
+tool `filinq.generateCorrespondence` (its sole *generation* tool, which
 the adoption delta explicitly permits sibling changes to extend, per
 decision F4), and standing refusals (no signing, no batch mail-merge, no
 `publicationConsent`/`publicationProhibition`/`anonymizationLink`/
@@ -34,7 +34,7 @@ further curated tools and contradicts none of it.
 
 Measured against the market's four assistant-facing document operations
 (the Carbone MCP feature set: generate document, get status, list
-templates — plus DocuDesk's differentiator, anonymisation):
+templates — plus Filinq's differentiator, anonymisation):
 
 - **generate_document** and **list_templates** are already covered by
   the adoption change (`generateCorrespondence`; `template.search|get`) —
@@ -52,33 +52,33 @@ templates — plus DocuDesk's differentiator, anonymisation):
 ## What
 
 - **An operation map, not four new tools** (ADR-063 discipline):
-  `list_templates` ≡ the derived `docudesk.template.search|get`;
-  `generate_document` ≡ the curated `docudesk.generateCorrespondence`
-  (both from `docudesk-mcp-adoption`, referenced — not redeclared).
-- **One curated read tool** `docudesk.getDocumentStatus` — a genuine
+  `list_templates` ≡ the derived `filinq.template.search|get`;
+  `generate_document` ≡ the curated `filinq.generateCorrespondence`
+  (both from `filinq-mcp-adoption`, referenced — not redeclared).
+- **One curated read tool** `filinq.getDocumentStatus` — a genuine
   non-CRUD aggregate on a real service method (`FileListingService`),
   returning per-file processing status: pipeline status, entity COUNTS,
   OCR state/confidence, review checked state, validation verdict, and
   references to generation/signing records. Read-only, honestly hinted.
-- **One curated write tool** `docudesk.anonymizeDocument` — triggers the
+- **One curated write tool** `filinq.anonymizeDocument` — triggers the
   anonymisation intake pipeline (`AnonymizationService`) for one file:
   extraction, detection, grondslag proposals, policy matching, review
   queue. It can NEVER bypass the human gates: no `acknowledgedOverrides`
   parameter exists on the tool (prohibition gate always enforced), it
   never creates/updates `documentReview` (checked gate untouched), and
   anonymise-commit follows the same gate rules as every other surface.
-- **The entity-value firewall**: no MCP response from any DocuDesk tool
+- **The entity-value firewall**: no MCP response from any Filinq tool
   ever contains detected entity values, anonymisation placeholder maps,
   or document text — counts, types, statuses and references only.
 - **Governance rails**: both curated tools carry complete honest
   `#[McpTool]` hints (hermiq's write/destructive classifier fails open on
   hintless curated tools); tool availability is governed by OpenRegister's
   tool-grant whitelist (default-deny per agent, grants administered in
-  OR — DocuDesk only declares); every invocation is attributable and
+  OR — Filinq only declares); every invocation is attributable and
   logged (a `correspondence` row for generation — existing behaviour —
   and OR-audited processing records with an `mcp` attribution for
   anonymisation intake).
-- **All `docudesk-mcp-adoption` refusals restated as binding here**: this
+- **All `filinq-mcp-adoption` refusals restated as binding here**: this
   change adds no schema exposure, no signing surface, no batch surface.
 
 ## Capabilities
@@ -92,8 +92,8 @@ templates — plus DocuDesk's differentiator, anonymisation):
 
 ### Modified Capabilities
 
-- None in this repo's canonical specs. The `docudesk-mcp-adoption` delta
-  now requires `DocudeskScannableServices` to *include*
+- None in this repo's canonical specs. The `filinq-mcp-adoption` delta
+  now requires `FilinqScannableServices` to *include*
   `CorrespondenceService::class` and explicitly permits sibling changes to
   extend the list; this change adds the services carrying the two new
   curated tools. The wording collision was reconciled in the build phase
@@ -105,7 +105,7 @@ templates — plus DocuDesk's differentiator, anonymisation):
 - **Code**: `#[McpTool]` attribute + small public aggregate method on
   `lib/Service/FileListingService.php`; `#[McpTool]` on a new narrow
   `AnonymizationService` intake seam (attribute-bearing method only — the
-  pipeline logic is untouched); `lib/Mcp/DocudeskScannableServices.php`
+  pipeline logic is untouched); `lib/Mcp/FilinqScannableServices.php`
   list extended.
 - **Config**: no `x-openregister-mcp` changes — zero new schema
   exposure; the register JSON is untouched by this change.
@@ -117,5 +117,5 @@ templates — plus DocuDesk's differentiator, anonymisation):
   anonymise tool creates review work for humans, it cannot publish,
   export, or override.
 - **Out of scope**: no MCP tool for signing, batch operations,
-  publication, destruction, or entity review decisions; no DocuDesk-side
+  publication, destruction, or entity review decisions; no Filinq-side
   MCP server (OR owns the JSON-RPC surface); no n8n/OpenConnector tools.

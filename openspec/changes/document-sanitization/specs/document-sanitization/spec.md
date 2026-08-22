@@ -138,7 +138,7 @@ being handed off — and the Woo publication hand-off surface MUST warn before
 handing off an artifact whose signal is false. The warning MUST NOT
 hard-block: gating stays with the publication record's readiness lifecycle
 (`woo-publicatie-pipeline` REQ-DDWPP-003, referenced not modified), and the
-signal is computed DocuDesk-side (sibling boundary: OpenCatalogi owns
+signal is computed Filinq-side (sibling boundary: OpenCatalogi owns
 publication endpoints).
 
 #### Scenario: Unsanitized hand-off warns

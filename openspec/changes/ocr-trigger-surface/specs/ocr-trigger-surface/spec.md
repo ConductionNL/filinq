@@ -6,7 +6,7 @@ status: proposed
 
 ## Purpose
 
-The invocation surface for DocuDesk's existing local Tesseract OCR engine
+The invocation surface for Filinq's existing local Tesseract OCR engine
 (`OcrService`): an API route, a "Run OCR" UI action on scanned/image
 documents, an automatic OCR fallback inside the anonymisation extract
 pipeline (so scans get entity detection instead of silently skipping —
@@ -14,7 +14,7 @@ GDPR Art. 5(1)(f) integrity: undetected PII in scans is unprotected PII),
 honest persisted per-file OCR status, and end-to-end enforcement of the
 existing admin settings (enable toggle, languages, DPI). OpenRegister
 remains the single owner of chunking and entity detection and performs no
-OCR; DocuDesk's Tesseract path is the local OCR provider. All OCR runs
+OCR; Filinq's Tesseract path is the local OCR provider. All OCR runs
 100% on the server (no external services).
 
 ## ADDED Requirements
@@ -134,7 +134,7 @@ Recovered OCR text MUST be handed to OpenRegister through a provided-text
 ingestion seam (an `extractFromProvidedText(int $fileId, string $text)`
 style API on OR's `TextExtractionService`) that chunks, persists and runs
 entity recognition for the file, keeping OpenRegister the single owner of
-chunk storage and entity detection. DocuDesk MUST NOT write OR chunk
+chunk storage and entity detection. Filinq MUST NOT write OR chunk
 persistence directly and MUST NOT run its own entity detection over OCR
 text. Until the OR seam is available at runtime, the pipeline MUST
 degrade fail-flagged: the extract response and review UI mark the file

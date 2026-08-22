@@ -6,7 +6,7 @@
   false, destructiveHint: false, idempotentHint: false)]` to
   `SigningService::createRequest()`; logic and signature unchanged.
 - [ ] 1.2 Append `SigningService::class` to
-  `DocudeskScannableServices::getScannableServiceClasses()`, updating the class docblock
+  `FilinqScannableServices::getScannableServiceClasses()`, updating the class docblock
   that currently documents "nothing under `Service/Signing/`, no `SigningService`" to
   state the narrowed boundary (initiation gated, the act never).
 - [ ] 1.3 Extend `DocumentAgentServiceTest::testNoSigningServiceIsReachableByAnAgent` to
@@ -25,14 +25,14 @@
   `contactEmail`, `contactAddress`, `entityText`, and `objectionReason` never appear in
   a tool result, and that an inaccessible id yields a not-found identical in shape to a
   nonexistent id.
-- [ ] 2.3 Append the consent service class to `DocudeskScannableServices`.
+- [ ] 2.3 Append the consent service class to `FilinqScannableServices`.
 
 ## 3. Attribution and governance wiring
 
 - [ ] 3.1 Record `mcp` attribution with the invoking principal on agent-initiated signing
   requests and consent updates (mirror the anonymisation-intake attribution contract).
 - [ ] 3.2 Verify in Hermiq's tool-governance grant editor that both tools classify as
-  approval-required writes (hint-driven; no DocuDesk-side gate code), and that an
+  approval-required writes (hint-driven; no Filinq-side gate code), and that an
   ungranted agent does not see them.
 
 ## 4. Verify

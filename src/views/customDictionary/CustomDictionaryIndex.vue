@@ -17,10 +17,10 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Custom dictionaries')"
+			:title="t('filinq', 'Custom dictionaries')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.',
 				)
 			"
@@ -70,8 +70,8 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 				<CnStatusBadge
 					:label="
 						row.active === false
-							? t('docudesk', 'Inactive')
-							: t('docudesk', 'Active')
+							? t('filinq', 'Inactive')
+							: t('filinq', 'Active')
 					"
 					:colorMap="activeColorMap" />
 			</template>
@@ -85,13 +85,13 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
-						{{ t('docudesk', 'Manage terms') }}
+						{{ t('filinq', 'Manage terms') }}
 					</NcActionButton>
 					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
-						{{ t('docudesk', 'Delete') }}
+						{{ t('filinq', 'Delete') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -112,7 +112,7 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 		-->
 		<ConfirmActionDialog
 			v-if="deleteTarget"
-			:name="t('docudesk', 'Delete dictionary')"
+			:name="t('filinq', 'Delete dictionary')"
 			:message="deleteMessage"
 			:busy="deleting"
 			@confirm="executeDelete"
@@ -164,23 +164,30 @@ export default {
 			},
 
 			activeColorMap: {
-				[t('docudesk', 'Active')]: 'success',
-				[t('docudesk', 'Inactive')]: 'default',
+				[t('filinq', 'Active')]: 'success',
+				[t('filinq', 'Inactive')]: 'default',
 			},
 		}
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the dictionaries index: label, term count,
+		 * match mode and active state.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		tableColumns() {
 			return [
-				{ key: 'label', label: t('docudesk', 'Label'), sortable: true },
-				{ key: 'termCount', label: t('docudesk', 'Terms'), sortable: true },
+				{ key: 'label', label: t('filinq', 'Label'), sortable: true },
+				{ key: 'termCount', label: t('filinq', 'Terms'), sortable: true },
 				{
 					key: 'matchMode',
-					label: t('docudesk', 'Match mode'),
+					label: t('filinq', 'Match mode'),
 					sortable: true,
 				},
-				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
+				{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 			]
 		},
 
@@ -190,11 +197,18 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state text for the dictionaries index — the store's error when
+		 * loading failed, otherwise the no-dictionaries message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		emptyText() {
 			if (customDictionaryStore.error) {
 				return customDictionaryStore.error
 			}
-			return t('docudesk', 'No custom dictionaries defined yet.')
+			return t('filinq', 'No custom dictionaries defined yet.')
 		},
 
 		/**
@@ -203,9 +217,9 @@ export default {
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
 		deleteMessage() {
-			const name = this.deleteTarget?.label || t('docudesk', 'this dictionary')
+			const name = this.deleteTarget?.label || t('filinq', 'this dictionary')
 			return t(
-				'docudesk',
+				'filinq',
 				'Delete "{name}" and all its terms? This cannot be undone.',
 				{ name },
 			)
@@ -226,16 +240,24 @@ export default {
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
 		displayLabel(row) {
-			return resolveI18nValue(row.label, t('docudesk', 'Custom dictionary'))
+			return resolveI18nValue(row.label, t('filinq', 'Custom dictionary'))
 		},
 
+		/**
+		 * Translated label for a dictionary match mode, falling back to the raw
+		 * value and finally to the schema default.
+		 *
+		 * @param {string} mode Stored match mode.
+		 * @return {string} Displayable label.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		matchModeLabel(mode) {
 			const labels = {
-				exact: t('docudesk', 'Exact'),
-				caseInsensitive: t('docudesk', 'Case-insensitive'),
-				wordBoundary: t('docudesk', 'Word boundary'),
+				exact: t('filinq', 'Exact'),
+				caseInsensitive: t('filinq', 'Case-insensitive'),
+				wordBoundary: t('filinq', 'Word boundary'),
 			}
-			return labels[mode] || mode || t('docudesk', 'Case-insensitive')
+			return labels[mode] || mode || t('filinq', 'Case-insensitive')
 		},
 
 		async handleRefresh() {
@@ -266,6 +288,14 @@ export default {
 			this.dialogOpen = true
 		},
 
+		/**
+		 * Create a dictionary through the organisation-gated management API and
+		 * open its detail page.
+		 *
+		 * @param {object} formData Dialog form payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-organisation-gated-dictionary-and-term-management-api-req-ddcdr-004
+		 */
 		async onCreateSubmit(formData) {
 			this.saving = true
 			this.formError = ''
@@ -278,7 +308,7 @@ export default {
 				this.formError =
 					err.response?.data?.error
 					|| err.message
-					|| t('docudesk', 'Save failed')
+					|| t('filinq', 'Save failed')
 			} finally {
 				this.saving = false
 			}

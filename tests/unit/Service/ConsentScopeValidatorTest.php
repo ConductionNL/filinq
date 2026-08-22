@@ -14,7 +14,7 @@
  *   - valid entity-scope                  → accept
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,7 +22,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,10 +30,10 @@
  * @spec openspec/changes/publication-consent-policy-fields/tasks.md
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use InvalidArgumentException;
-use OCA\DocuDesk\Service\ConsentScopeValidator;
+use OCA\Filinq\Service\ConsentScopeValidator;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 
@@ -41,13 +41,13 @@ use PHPUnit\Framework\TestCase;
  * Tests for ConsentScopeValidator.
  *
  * @internal
- * @coversDefaultClass \OCA\DocuDesk\Service\ConsentScopeValidator
+ * @coversDefaultClass \OCA\Filinq\Service\ConsentScopeValidator
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

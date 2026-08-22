@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk GuardedWriter
+ * Filinq GuardedWriter
  *
  * Performs the guarded read-modify-write: take the lock, check the version
  * precondition, run the caller's transform, mark the artefact, write, release.
@@ -15,7 +15,7 @@
  * so there is exactly one of them, here.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -24,16 +24,16 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
-use OCA\DocuDesk\AppInfo\Application;
+use OCA\Filinq\AppInfo\Application;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\Files\Lock\ILock;
@@ -261,7 +261,7 @@ class GuardedWriter {
 		} catch (NoLockProviderException) {
 			return false;
 		} catch (Throwable $e) {
-			$this->logger->warning('DocuDesk could not take an edit lock: ' . $e->getMessage());
+			$this->logger->warning('Filinq could not take an edit lock: ' . $e->getMessage());
 
 			return false;
 		}//end try
@@ -279,7 +279,7 @@ class GuardedWriter {
 		try {
 			$this->lockManager->unlock($lock);
 		} catch (Throwable $e) {
-			$this->logger->warning('DocuDesk could not release an edit lock: ' . $e->getMessage());
+			$this->logger->warning('Filinq could not release an edit lock: ' . $e->getMessage());
 		}
 
 	}//end release()

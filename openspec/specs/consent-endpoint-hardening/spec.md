@@ -5,7 +5,7 @@ status: done
 # consent-endpoint-hardening Specification
 
 ## Purpose
-The DocuDesk-owned residual of GH #283: consent ownership guards, the mutable-field whitelist and CSRF-annotation removal have shipped, and tenant/organisation binding is owned by the sibling change `multi-tenant-hardening`. This capability closes the remaining information-leak oracle: `ConsentController::errorResponse()` must never interpolate raw exception text into an error response body — the same defect already fixed on `SigningController` (docudesk#100 / Wilco #6).
+The Filinq-owned residual of GH #283: consent ownership guards, the mutable-field whitelist and CSRF-annotation removal have shipped, and tenant/organisation binding is owned by the sibling change `multi-tenant-hardening`. This capability closes the remaining information-leak oracle: `ConsentController::errorResponse()` must never interpolate raw exception text into an error response body — the same defect already fixed on `SigningController` (filinq#100 / Wilco #6).
 
 @e2e exclude Backend error-response hardening; no navigable UI surface. Covered by PHPUnit (tests/unit/Controller/ConsentControllerTest.php).
 ## Requirements

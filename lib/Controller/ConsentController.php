@@ -8,12 +8,12 @@
  * Delegates CRUD logic to ConsentCrudService.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
@@ -25,11 +25,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Exception\PolicyRejectedException;
-use OCA\DocuDesk\Service\ConsentCrudService;
+use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Service\ConsentCrudService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -43,10 +43,10 @@ use Psr\Log\LoggerInterface;
  * Controller for consent-specific endpoints
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/consent-endpoint-hardening/spec.md
  */
@@ -115,7 +115,7 @@ class ConsentController extends Controller {
 	 * never the exception text, a record identifier, or any other detail that
 	 * differs by failure class. Full detail goes to the logger only. Mirrors
 	 * the fix already shipped on `SigningController::errorResponse()`
-	 * (docudesk#100 / Wilco #6). A legitimate HTTP status carried on the
+	 * (filinq#100 / Wilco #6). A legitimate HTTP status carried on the
 	 * exception code (e.g. 400 for invalid input) is still honoured so client
 	 * errors are not masked as a generic 500.
 	 *

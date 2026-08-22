@@ -4,12 +4,12 @@
  * Document Comparison Service Test
  *
  * @category  Test
- * @package   OCA\DocuDesk\Tests\Unit\Service
+ * @package   OCA\Filinq\Tests\Unit\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
  *
@@ -19,10 +19,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Exception\ComparisonException;
-use OCA\DocuDesk\Service\DocumentComparisonService;
+use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Service\DocumentComparisonService;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -39,10 +39,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for DocumentComparisonService.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class DocumentComparisonServiceTest extends TestCase {
 	/**

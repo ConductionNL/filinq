@@ -3,40 +3,40 @@
 /**
  * Unit tests for the cross-app signing event contract
  *
- * Verifies the docudesk-signing-events contract classes: the request event's
+ * Verifies the filinq-signing-events contract classes: the request event's
  * immutable getters + writable result slot, and the conclusion event's
  * immutable getters + fromRequest() factory.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Event
+ * @package   OCA\Filinq\Tests\Unit\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Event;
+namespace OCA\Filinq\Tests\Unit\Event;
 
-use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
-use OCA\DocuDesk\Event\SigningConcludedEventFactory;
-use OCA\DocuDesk\Event\SigningProvenance;
+use OCA\Filinq\Event\DocumentSigningRequestedEvent;
+use OCA\Filinq\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Event\SigningProvenance;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the signing event contract classes.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Event
+ * @package  OCA\Filinq\Tests\Unit\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SigningEventsTest extends TestCase {
 

@@ -1,13 +1,13 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/85
+tracking_issue: https://github.com/ConductionNL/filinq/issues/85
 ---
 
 # Proposal: ocr-trigger-surface
 
 ## Why
 
-DocuDesk ships a complete local OCR engine that the anonymisation product
+Filinq ships a complete local OCR engine that the anonymisation product
 cannot reach. Verified at HEAD:
 
 - `lib/Service/OcrService.php` (634 LOC, Tesseract via
@@ -65,7 +65,7 @@ docs/yr) is heavy on scanned correspondence.
   (`ocr.default_dpi`, legacy `ocr_dpi`) drive every run (existing
   `OcrService` config reads).
 - **Documented OR relationship**: OpenRegister owns text extraction,
-  chunking and entity detection and does no OCR; DocuDesk's Tesseract path
+  chunking and entity detection and does no OCR; Filinq's Tesseract path
   is the local OCR provider that hands recovered text to OR. The OR-side
   ingestion seam for externally-provided text is specified as this
   change's cross-app dependency.

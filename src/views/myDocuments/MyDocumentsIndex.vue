@@ -8,7 +8,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 		<FileViewerPage v-if="fileViewerStore.currentFile" />
 
 		<template v-else>
-			<DdPageHeader :title="t('docudesk', 'Documents')" />
+			<DdPageHeader :title="t('filinq', 'Documents')" />
 
 			<DdIndexPage
 				:objects="paginatedDocuments"
@@ -18,18 +18,18 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 				:viewMode="viewMode"
 				rowKey="fileId"
 				:emptyText="emptyContentName"
-				:tableLabel="t('docudesk', 'List')"
-				:cardsLabel="t('docudesk', 'Tiles')"
-				:viewToggleLabel="t('docudesk', 'View mode')"
-				:itemsPerPageLabel="t('docudesk', 'Items per page:')"
-				:pageInfoFormat="t('docudesk', 'Page {current} of {total}')"
-				:firstLabel="t('docudesk', 'First')"
-				:previousLabel="t('docudesk', 'Previous')"
-				:nextLabel="t('docudesk', 'Next')"
-				:lastLabel="t('docudesk', 'Last')"
+				:tableLabel="t('filinq', 'List')"
+				:cardsLabel="t('filinq', 'Tiles')"
+				:viewToggleLabel="t('filinq', 'View mode')"
+				:itemsPerPageLabel="t('filinq', 'Items per page:')"
+				:pageInfoFormat="t('filinq', 'Page {current} of {total}')"
+				:firstLabel="t('filinq', 'First')"
+				:previousLabel="t('filinq', 'Previous')"
+				:nextLabel="t('filinq', 'Next')"
+				:lastLabel="t('filinq', 'Last')"
 				:selectable="bulkSelect"
 				:selectedKeys="selectedIds"
-				:selectAllLabel="t('docudesk', 'Select all')"
+				:selectAllLabel="t('filinq', 'Select all')"
 				@pageChanged="onPageChanged"
 				@pageSizeChanged="onPageSizeChanged"
 				@update:viewMode="onViewModeChange"
@@ -40,8 +40,8 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 					<DdSearchBar
 						v-model="searchQuery"
 						class="my-documents-search"
-						:placeholder="t('docudesk', 'Search by name')"
-						:clearLabel="t('docudesk', 'Clear search')" />
+						:placeholder="t('filinq', 'Search by name')"
+						:clearLabel="t('filinq', 'Clear search')" />
 				</template>
 
 				<template #column-fileName="{ row }">
@@ -93,7 +93,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 					<NcActions
 						class="my-documents-options"
 						forceMenu
-						:aria-label="t('docudesk', 'Options')">
+						:aria-label="t('filinq', 'Options')">
 						<template #icon>
 							<component
 								:is="bulkSelect ? 'Cog' : 'FilterOutline'"
@@ -101,8 +101,8 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 								class="my-documents-filter-icon"
 								:title="
 									bulkSelect
-										? t('docudesk', 'Options')
-										: t('docudesk', 'Filter')
+										? t('filinq', 'Options')
+										: t('filinq', 'Filter')
 								" />
 						</template>
 						<NcActionButton closeAfterClick @click="toggleBulkSelect">
@@ -111,8 +111,8 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							</template>
 							{{
 								bulkSelect
-									? t('docudesk', 'Cancel bulk selection')
-									: t('docudesk', 'Bulk selection')
+									? t('filinq', 'Cancel bulk selection')
+									: t('filinq', 'Bulk selection')
 							}}
 						</NcActionButton>
 						<NcActionButton
@@ -123,7 +123,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 								<Delete :size="20" />
 							</template>
 							{{
-								t('docudesk', 'Delete selected ({count})', {
+								t('filinq', 'Delete selected ({count})', {
 									count: selectedIds.length,
 								})
 							}}
@@ -140,7 +140,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							<template #icon>
 								<Eye :size="20" />
 							</template>
-							{{ t('docudesk', 'Open') }}
+							{{ t('filinq', 'Open') }}
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
@@ -149,7 +149,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							<template #icon>
 								<Download :size="20" />
 							</template>
-							{{ t('docudesk', 'Download') }}
+							{{ t('filinq', 'Download') }}
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
@@ -158,7 +158,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							<template #icon>
 								<ShieldCheckOutline :size="20" />
 							</template>
-							{{ t('docudesk', 'Validate') }}
+							{{ t('filinq', 'Validate') }}
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
@@ -167,7 +167,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							<template #icon>
 								<Compare :size="20" />
 							</template>
-							{{ t('docudesk', 'Compare…') }}
+							{{ t('filinq', 'Compare…') }}
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
@@ -176,13 +176,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							<template #icon>
 								<History :size="20" />
 							</template>
-							{{ t('docudesk', 'Versions') }}
+							{{ t('filinq', 'Versions') }}
 						</NcActionButton>
 						<NcActionButton closeAfterClick @click="confirmDelete(row)">
 							<template #icon>
 								<Delete :size="20" />
 							</template>
-							{{ t('docudesk', 'Delete') }}
+							{{ t('filinq', 'Delete') }}
 						</NcActionButton>
 					</NcActions>
 				</template>
@@ -205,7 +205,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 		-->
 		<ConfirmActionDialog
 			v-if="deleteTarget"
-			:name="t('docudesk', 'Delete document')"
+			:name="t('filinq', 'Delete document')"
 			:message="deleteMessage"
 			:busy="deleting"
 			@confirm="executeDelete"
@@ -213,7 +213,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 
 		<ConfirmActionDialog
 			v-if="bulkDeleteNames.length > 0"
-			:name="t('docudesk', 'Delete selected items')"
+			:name="t('filinq', 'Delete selected items')"
 			:message="bulkDeleteMessage"
 			:busy="deleting"
 			@confirm="executeBulkDelete"
@@ -249,7 +249,7 @@ import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { validateFile } from '../../services/validationService.js'
 
-const VIEW_MODE_STORAGE_KEY = 'docudesk:myDocuments:viewMode'
+const VIEW_MODE_STORAGE_KEY = 'filinq:myDocuments:viewMode'
 const VALID_VIEW_MODES = ['table', 'cards']
 
 /**
@@ -316,8 +316,8 @@ export default {
 			},
 
 			kindColorMap: {
-				[t('docudesk', 'Concept')]: 'warning',
-				[t('docudesk', 'Anonymized')]: 'success',
+				[t('filinq', 'Concept')]: 'warning',
+				[t('filinq', 'Anonymized')]: 'success',
 			},
 
 			deleteTarget: null, // row awaiting delete confirmation, or null
@@ -327,15 +327,21 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the document listing.
+		 *
+		 * @return {object[]}
+		 * @spec exclude column header labels for the file listing; no openspec requirement fixes this table's columns — the "Kind" column's authoritative value is specified at openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
+		 */
 		tableColumns() {
 			return [
-				{ key: 'fileName', label: t('docudesk', 'Name') },
-				{ key: 'kind', label: t('docudesk', 'Kind') },
+				{ key: 'fileName', label: t('filinq', 'Name') },
+				{ key: 'kind', label: t('filinq', 'Kind') },
 				// TODO: re-enable once a real per-document checked/reviewed status
 				// is available from the backend (label is hardcoded for now).
-				// { key: 'status', label: t('docudesk', 'Status') },
-				{ key: 'modified', label: t('docudesk', 'Date') },
-				{ key: 'fileSize', label: t('docudesk', 'Size') },
+				// { key: 'status', label: t('filinq', 'Status') },
+				{ key: 'modified', label: t('filinq', 'Date') },
+				{ key: 'fileSize', label: t('filinq', 'Size') },
 			]
 		},
 
@@ -360,11 +366,18 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state heading for the document listing — the store's error when
+		 * loading failed, otherwise the no-documents message.
+		 *
+		 * @return {string}
+		 * @spec exclude presentational empty/error placeholder for the file listing; no openspec requirement governs the listing chrome — the rows' authoritative anonymised/concept state is specified at openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
+		 */
 		emptyContentName() {
 			if (myDocumentsStore.error) {
 				return myDocumentsStore.error
 			}
-			return t('docudesk', 'No documents found')
+			return t('filinq', 'No documents found')
 		},
 
 		/**
@@ -379,11 +392,11 @@ export default {
 			}
 			return row.isFolder
 				? t(
-						'docudesk',
+						'filinq',
 						'Delete dossier "{name}" and all documents inside it? This cannot be undone.',
 						{ name: row.fileName },
 					)
-				: t('docudesk', 'Delete "{name}"? This cannot be undone.', {
+				: t('filinq', 'Delete "{name}"? This cannot be undone.', {
 						name: this.displayName(row),
 					})
 		},
@@ -395,7 +408,7 @@ export default {
 		 */
 		bulkDeleteMessage() {
 			return t(
-				'docudesk',
+				'filinq',
 				'Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone.',
 				{ count: this.bulkDeleteNames.length },
 			)
@@ -497,7 +510,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no Filinq domain semantics).
 		 */
 		bulkDelete() {
 			const names = myDocumentsStore.documents
@@ -510,7 +523,7 @@ export default {
 		/**
 		 * Dismiss the bulk-delete confirmation without deleting anything.
 		 *
-		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no Filinq domain semantics).
 		 */
 		cancelBulkDelete() {
 			this.bulkDeleteNames = []
@@ -523,7 +536,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no Filinq domain semantics).
 		 */
 		async executeBulkDelete() {
 			const names = this.bulkDeleteNames
@@ -533,20 +546,20 @@ export default {
 				const failed = await myDocumentsStore.deleteDocuments(names)
 				if (failed.length > 0) {
 					showError(
-						t('docudesk', 'Failed to delete {count} item(s)', {
+						t('filinq', 'Failed to delete {count} item(s)', {
 							count: failed.length,
 						}),
 					)
 				} else {
 					showSuccess(
-						t('docudesk', 'Deleted {count} item(s)', {
+						t('filinq', 'Deleted {count} item(s)', {
 							count: names.length,
 						}),
 					)
 				}
 			} catch (err) {
 				console.error('Bulk delete failed:', err)
-				showError(t('docudesk', 'Failed to delete the selected items'))
+				showError(t('filinq', 'Failed to delete the selected items'))
 			} finally {
 				this.selectedIds = []
 				this.bulkDeleteNames = []
@@ -622,7 +635,7 @@ export default {
 		 * @param {object} row Document row.
 		 * @return {Promise<void>}
 		 *
-		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no Filinq domain semantics).
 		 */
 		confirmDelete(row) {
 			if (!row || !row.fileName) return
@@ -632,7 +645,7 @@ export default {
 		/**
 		 * Dismiss the delete confirmation without deleting anything.
 		 *
-		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no Filinq domain semantics).
 		 */
 		cancelDelete() {
 			this.deleteTarget = null
@@ -645,7 +658,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no Filinq domain semantics).
 		 */
 		async executeDelete() {
 			const row = this.deleteTarget
@@ -654,14 +667,14 @@ export default {
 			try {
 				await myDocumentsStore.deleteDocument(row.fileName)
 				showSuccess(
-					t('docudesk', 'Deleted "{name}"', {
+					t('filinq', 'Deleted "{name}"', {
 						name: this.displayName(row),
 					}),
 				)
 			} catch (err) {
 				console.error('Failed to delete document:', err)
 				showError(
-					t('docudesk', 'Failed to delete "{name}"', {
+					t('filinq', 'Failed to delete "{name}"', {
 						name: this.displayName(row),
 					}),
 				)
@@ -672,7 +685,7 @@ export default {
 		},
 
 		/**
-		 * Preview the file inline using DocuDesk's own file viewer modal
+		 * Preview the file inline using Filinq's own file viewer modal
 		 * (PDF / docx / text). Folders are ignored.
 		 *
 		 * The overview only lists the anonymized copy once a file has been
@@ -740,7 +753,7 @@ export default {
 				this.validation.findings = result.validationFindings || []
 			} catch (e) {
 				const reason = e.response && e.response.data && e.response.data.error
-				this.validation.error = reason || t('docudesk', 'Validation failed')
+				this.validation.error = reason || t('filinq', 'Validation failed')
 			} finally {
 				this.validation.loading = false
 			}
@@ -791,7 +804,7 @@ export default {
 		},
 
 		/**
-		 * Pick a DocuDesk icon name based on the file's MIME type / extension.
+		 * Pick a Filinq icon name based on the file's MIME type / extension.
 		 *
 		 * @param {object} row Document row.
 		 * @return {string} DdIcon name ('folder', 'pdf' or 'article').
@@ -823,16 +836,17 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {string} Badge label.
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		kindLabel(row) {
 			if (row.isFolder) {
 				return row.allChildrenAnonymized
-					? t('docudesk', 'Anonymized')
-					: t('docudesk', 'Concept')
+					? t('filinq', 'Anonymized')
+					: t('filinq', 'Concept')
 			}
 			return row.isAnonymized
-				? t('docudesk', 'Anonymized')
-				: t('docudesk', 'Concept')
+				? t('filinq', 'Anonymized')
+				: t('filinq', 'Concept')
 		},
 
 		// TODO: re-enable when the app has a real per-document checked/reviewed
@@ -840,7 +854,7 @@ export default {
 		// definition and template) because this was hardcoded to "Not checked".
 		// /** Placeholder status until the app has a real "checked" signal. */
 		// statusLabel() {
-		//     return t('docudesk', 'Not checked')
+		//     return t('filinq', 'Not checked')
 		// },
 		/**
 		 * Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY.

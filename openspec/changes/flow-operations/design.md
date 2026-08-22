@@ -3,7 +3,7 @@
 ## Context
 
 Verified against the Nextcloud server checkout
-(`workspace/server/lib/public/WorkflowEngine/`) and DocuDesk HEAD
+(`workspace/server/lib/public/WorkflowEngine/`) and Filinq HEAD
 `9cc14407`:
 
 - The public Flow contract is `OCP\WorkflowEngine\IOperation` /
@@ -22,7 +22,7 @@ Verified against the Nextcloud server checkout
   request; the community reference implementations (workflow_ocr,
   workflow_pdf_converter) therefore enqueue a background job from
   `onEvent()` and do the work in cron. We copy that shape.
-- DocuDesk has no `OCP\WorkflowEngine` reference at HEAD; existing
+- Filinq has no `OCP\WorkflowEngine` reference at HEAD; existing
   QueuedJob precedent is `lib/BackgroundJob/` (five jobs, e.g.
   `FolderExtractionJob`).
 - The four delegated engines all exist at HEAD:
@@ -35,9 +35,9 @@ Verified against the Nextcloud server checkout
   `DocumentValidationService::validate(File $file, array $record,
   ?string $documentType)` with `resolveProfile()` + `aggregate()`.
 - `appinfo/info.xml` category is `organization` only.
-- Notification conventions: DocuDesk declares notifications in the
+- Notification conventions: Filinq declares notifications in the
   verified `x-openregister-notifications` dialect on register schemas
-  (`docudesk-notifications` capability, status done); recipients are
+  (`filinq-notifications` capability, status done); recipients are
   confirmed NC uids/groups/object-ACL only, and "fire only when status =
   X" conditions are approximated (`created`, or `scheduled` + `filter`)
   until the engine grows field-change conditions.
@@ -46,7 +46,7 @@ Verified against the Nextcloud server checkout
 
 **Goals:**
 
-- Give DocuDesk's four automatable engines a Flow operation each, with
+- Give Filinq's four automatable engines a Flow operation each, with
   the engine owning triggers and matching.
 - Keep every run observable: a persisted processing-log object per run,
   failure notifications, and a runs listing.
@@ -61,7 +61,7 @@ Verified against the Nextcloud server checkout
   queued-job model; municipal-scale batching remains `redaction-at-scale`.
 - No Flow operation for signing, publication, or destruction — acts with
   legal effect stay deliberate human actions (same posture as
-  `docudesk-mcp-adoption`'s refusals).
+  `filinq-mcp-adoption`'s refusals).
 - No n8n/OpenConnector integration — this change is NC-native Flow only.
 
 ## Decisions
@@ -173,12 +173,12 @@ selectielijst-manager-approved value MUST replace it before apply, enforced
 by a register-lint. Failure notification is
 declared in the verified `x-openregister-notifications` dialect on this
 schema, recipient `{"kind": "field", "field": "ownerUserId"}` — a
-confirmed NC uid, satisfying the `docudesk-notifications` staff-safe
+confirmed NC uid, satisfying the `filinq-notifications` staff-safe
 rule. Because the engine cannot yet express "only when status becomes
 failed", the rule uses the documented approximation (`scheduled` +
 `filter` on `status: failed`), and the precise field-change form is
 deferred to `notification-updated-field-change-condition` exactly as the
-`docudesk-notifications` capability prescribes.
+`filinq-notifications` capability prescribes.
 
 `resultSummary` for anonymise runs carries counts only (entities per
 type, proposals applied, policy matches) — NEVER detected entity values;
@@ -204,7 +204,7 @@ store (same data-minimisation argument as wave-1's `ocrResult`).
 `organization` (multiple categories are legal and common). This is the
 ecosystem-research insight made concrete: admins searching the store's
 workflow category find workflow_ocr and workflow_pdf_converter today;
-DocuDesk belongs on that shelf.
+Filinq belongs on that shelf.
 
 ## Seed Data
 
@@ -247,7 +247,7 @@ a clean install (nil-consequence fixture fileIds, self-evidently fake).
   `acknowledgedOverrides` channel exists in the operation config) and
   cannot mark documents reviewed.
 - Notification recipients are confirmed NC uids only (file owner) — never
-  external addresses (`docudesk-notifications` rule).
+  external addresses (`filinq-notifications` rule).
 - `validateOperation()` rejects malformed configs at rule-save time, so a
   stored rule cannot smuggle arbitrary paths; `targetFolder` is resolved
   relative to the owner's own folder tree only.
@@ -265,7 +265,7 @@ a clean install (nil-consequence fixture fileIds, self-evidently fake).
   and the run fails flagged (never silent) when disabled.
 - [Notification approximation may over- or under-fire until the engine
   grows field-change conditions] → same accepted trade-off the
-  `docudesk-notifications` capability already documents; the runs listing
+  `filinq-notifications` capability already documents; the runs listing
   is the authoritative surface.
 - [`SCOPE_USER` lets any user automate anonymisation intake on their own
   files] → intake creates review work but exports nothing; the checked

@@ -3,17 +3,17 @@
 /**
  * File Upload Service
  *
- * Service for uploading files to the user's DocuDesk folder.
+ * Service for uploading files to the user's Filinq folder.
  * Handles folder creation and unique file name resolution.
  * Extracted from FileListingService to reduce class complexity.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
  *
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\Files\IRootFolder;
@@ -31,13 +31,13 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
- * Service for uploading files to the DocuDesk folder
+ * Service for uploading files to the Filinq folder
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class FileUploadService {
 	/**
@@ -76,29 +76,35 @@ class FileUploadService {
 	}//end getCurrentUserId()
 
 	/**
-	 * Get the DocuDesk folder for the current user, creating it if needed
+	 * Get the Filinq folder for the current user, creating it if needed
 	 *
-	 * @return \OCP\Files\Folder The DocuDesk folder
+	 * @return \OCP\Files\Folder The Filinq folder
 	 *
 	 * @throws Exception If folder creation fails
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
-	public function getDocuDeskFolder(): \OCP\Files\Folder {
+	public function getFilinqFolder(): \OCP\Files\Folder {
 		$userId = $this->getCurrentUserId();
 		$userFolder = $this->rootFolder->getUserFolder($userId);
 
+		// ⚠️ THE FOLDER NAME STAYS `DocuDesk` ACROSS THE FILINQ RENAME. This is
+		// a real directory in the user's Files tree holding every document the
+		// app has uploaded or generated. Renaming it here moves nothing: the
+		// app would create a new, empty `Filinq/` folder and every existing
+		// document would be orphaned in a folder nothing reads, with no error
+		// and nothing in the log. See DocumentService::DEFAULT_OUTPUT_FOLDER_PREFIX.
 		if ($userFolder->nodeExists('DocuDesk') === false) {
 			$userFolder->newFolder('DocuDesk');
 		}
 
-		$docuDeskNode = $userFolder->get('DocuDesk');
-		if ($docuDeskNode instanceof \OCP\Files\Folder === false) {
+		$filinqNode = $userFolder->get('DocuDesk');
+		if ($filinqNode instanceof \OCP\Files\Folder === false) {
 			throw new Exception('DocuDesk path exists but is not a folder.');
 		}
 
-		return $docuDeskNode;
-	}//end getDocuDeskFolder()
+		return $filinqNode;
+	}//end getFilinqFolder()
 
 	/**
 	 * Resolve a unique file name within a folder by appending a counter
@@ -129,7 +135,7 @@ class FileUploadService {
 	}//end resolveUniqueFileName()
 
 	/**
-	 * Upload a file to the user's DocuDesk folder
+	 * Upload a file to the user's Filinq folder
 	 *
 	 * @param string $fileName The name of the file to upload
 	 * @param string $fileContent The raw file content
@@ -142,9 +148,9 @@ class FileUploadService {
 	 */
 	public function uploadFile(string $fileName, string $fileContent): array {
 		try {
-			$docuDeskFolder = $this->getDocuDeskFolder();
-			$targetName = $this->resolveUniqueFileName(folder: $docuDeskFolder, fileName: $fileName);
-			$file = $docuDeskFolder->newFile($targetName, $fileContent);
+			$filinqFolder = $this->getFilinqFolder();
+			$targetName = $this->resolveUniqueFileName(folder: $filinqFolder, fileName: $fileName);
+			$file = $filinqFolder->newFile($targetName, $fileContent);
 
 			$this->logger->info(
 				'File uploaded to DocuDesk folder',

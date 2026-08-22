@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `organisationSettings` schema to the `document` register in `lib/Settings/docudesk_register.json` (REQ-DDMTH-007)
+- [ ] 1.1 Add the `organisationSettings` schema to the `document` register in `lib/Settings/filinq_register.json` (REQ-DDMTH-007)
   - Properties per design.md D4, all overrides nullable; no organisation property (REQ-DDMTH-001); additive register version bump with changelog entry; `authorization` block limiting write to the admin surface.
   - Verify against HEAD before editing: schema list and register slugs may have moved since this spec was authored.
 
@@ -53,7 +53,7 @@
 ## 6. Quality
 
 - [ ] 6.1 PHPUnit unit tests for seam, flag removal, resolution helper, backfill, fail-closed paths — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
 
 - [ ] 6.2 Playwright e2e `tests/e2e/workflows/multi-tenant-isolation.spec.ts` + `tests/e2e/spec-coverage/multi-tenant.spec.ts` + `tests/e2e/spec-coverage/organisation-settings.spec.ts` covering the `@e2e`-referenced scenarios with two seeded organisations on the Postgres dev instance
   - Includes the GH #283 forgery scenario failing and the nldesign-theme accessibility pass on the new settings section.

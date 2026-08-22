@@ -3,29 +3,29 @@
 		<!-- Header bar -->
 		<div class="template-detail__header">
 			<NcButton variant="tertiary" @click="handleBack">
-				{{ t('docudesk', 'Back to templates') }}
+				{{ t('filinq', 'Back to templates') }}
 			</NcButton>
 			<h2 class="template-detail__title">
 				{{
 					isNew
-						? t('docudesk', 'New template')
-						: form.name || t('docudesk', 'Edit template')
+						? t('filinq', 'New template')
+						: form.name || t('filinq', 'Edit template')
 				}}
 			</h2>
 			<div class="template-detail__header-actions">
 				<span
 					v-if="lockOwner && !isLockMine"
 					class="template-detail__lock-warning">
-					{{ t('docudesk', 'Locked by {user}', { user: lockOwner }) }}
+					{{ t('filinq', 'Locked by {user}', { user: lockOwner }) }}
 				</span>
 				<NcButton variant="secondary" :disabled="saving" @click="handleBack">
-					{{ t('docudesk', 'Cancel') }}
+					{{ t('filinq', 'Cancel') }}
 				</NcButton>
 				<NcButton
 					variant="primary"
 					:disabled="saving || (lockOwner && !isLockMine)"
 					@click="saveTemplate">
-					{{ saving ? t('docudesk', 'Saving…') : t('docudesk', 'Save') }}
+					{{ saving ? t('filinq', 'Saving…') : t('filinq', 'Save') }}
 				</NcButton>
 			</div>
 		</div>
@@ -36,20 +36,20 @@
 				class="template-detail__tab"
 				:class="[{ active: activeTab === 'edit' }]"
 				@click="activeTab = 'edit'">
-				{{ t('docudesk', 'Editor') }}
+				{{ t('filinq', 'Editor') }}
 			</button>
 			<button
 				class="template-detail__tab"
 				:class="[{ active: activeTab === 'preview' }]"
 				@click="loadPreview">
-				{{ t('docudesk', 'Preview') }}
+				{{ t('filinq', 'Preview') }}
 			</button>
 			<button
 				v-if="!isNew"
 				class="template-detail__tab"
 				:class="[{ active: activeTab === 'versions' }]"
 				@click="loadVersions">
-				{{ t('docudesk', 'Versions') }}
+				{{ t('filinq', 'Versions') }}
 			</button>
 		</div>
 
@@ -59,33 +59,33 @@
 			<div class="template-detail__meta">
 				<NcTextField
 					v-model="form.name"
-					:label="t('docudesk', 'Name')"
+					:label="t('filinq', 'Name')"
 					:required="true"
 					class="template-detail__field" />
 				<NcTextField
 					v-model="form.namespace"
-					:label="t('docudesk', 'Namespace')"
+					:label="t('filinq', 'Namespace')"
 					:required="true"
 					:disabled="!isNew"
 					class="template-detail__field" />
 				<NcTextField
 					v-model="form.category"
-					:label="t('docudesk', 'Category')"
-					:placeholder="t('docudesk', 'e.g. beschikkingen, brieven')"
+					:label="t('filinq', 'Category')"
+					:placeholder="t('filinq', 'e.g. beschikkingen, brieven')"
 					class="template-detail__field" />
 				<NcTextField
 					v-model="form.tagsInput"
-					:label="t('docudesk', 'Tags (comma-separated)')"
-					:placeholder="t('docudesk', 'tag1, tag2, tag3')"
+					:label="t('filinq', 'Tags (comma-separated)')"
+					:placeholder="t('filinq', 'tag1, tag2, tag3')"
 					class="template-detail__field" />
 				<NcTextField
 					v-model="form.description"
-					:label="t('docudesk', 'Description')"
+					:label="t('filinq', 'Description')"
 					class="template-detail__field" />
 				<NcTextField
 					v-model="form.changelog"
-					:label="t('docudesk', 'Change note (optional)')"
-					:placeholder="t('docudesk', 'Describe what changed...')"
+					:label="t('filinq', 'Change note (optional)')"
+					:placeholder="t('filinq', 'Describe what changed...')"
 					class="template-detail__field" />
 			</div>
 
@@ -93,21 +93,21 @@
 			<div class="template-detail__toolbar">
 				<button
 					type="button"
-					:title="t('docudesk', 'Bold')"
+					:title="t('filinq', 'Bold')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('bold')">
 					<strong>B</strong>
 				</button>
 				<button
 					type="button"
-					:title="t('docudesk', 'Italic')"
+					:title="t('filinq', 'Italic')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('italic')">
 					<em>I</em>
 				</button>
 				<button
 					type="button"
-					:title="t('docudesk', 'Underline')"
+					:title="t('filinq', 'Underline')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('underline')">
 					<u>U</u>
@@ -115,14 +115,14 @@
 				<span class="template-detail__toolbar-sep" />
 				<button
 					type="button"
-					:title="t('docudesk', 'Heading 1')"
+					:title="t('filinq', 'Heading 1')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execBlock('h1')">
 					H1
 				</button>
 				<button
 					type="button"
-					:title="t('docudesk', 'Heading 2')"
+					:title="t('filinq', 'Heading 2')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execBlock('h2')">
 					H2
@@ -130,14 +130,14 @@
 				<span class="template-detail__toolbar-sep" />
 				<button
 					type="button"
-					:title="t('docudesk', 'Unordered list')"
+					:title="t('filinq', 'Unordered list')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('insertUnorderedList')">
 					&#8226;&#8212;
 				</button>
 				<button
 					type="button"
-					:title="t('docudesk', 'Ordered list')"
+					:title="t('filinq', 'Ordered list')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('insertOrderedList')">
 					1&#8212;
@@ -145,17 +145,17 @@
 				<span class="template-detail__toolbar-sep" />
 				<button
 					type="button"
-					:title="t('docudesk', 'Insert merge field')"
+					:title="t('filinq', 'Insert merge field')"
 					class="template-detail__toolbar-btn"
 					@click="showMergeDialog = true">
-					{{ t('docudesk', '{ }') }}
+					{{ t('filinq', '{ }') }}
 				</button>
 				<button
 					type="button"
-					:title="t('docudesk', 'Insert conditional section')"
+					:title="t('filinq', 'Insert conditional section')"
 					class="template-detail__toolbar-btn"
 					@click="showConditionalDialog = true">
-					{{ t('docudesk', 'if…') }}
+					{{ t('filinq', 'if…') }}
 				</button>
 			</div>
 
@@ -164,7 +164,7 @@
 				ref="editor"
 				class="template-detail__content-editor"
 				contenteditable="true"
-				:aria-label="t('docudesk', 'Template content')"
+				:aria-label="t('filinq', 'Template content')"
 				@input="syncFromEditor"
 				v-html="editorHtml" />
 
@@ -175,9 +175,7 @@
 					class="template-detail__raw-btn"
 					@click="showRaw = !showRaw">
 					{{
-						showRaw
-							? t('docudesk', 'Hide HTML')
-							: t('docudesk', 'Edit HTML')
+						showRaw ? t('filinq', 'Hide HTML') : t('filinq', 'Edit HTML')
 					}}
 				</button>
 			</div>
@@ -185,7 +183,7 @@
 				v-if="showRaw"
 				:value="form.content"
 				class="template-detail__raw-area"
-				:aria-label="t('docudesk', 'Raw HTML')"
+				:aria-label="t('filinq', 'Raw HTML')"
 				@input="syncFromRaw" />
 		</div>
 
@@ -194,15 +192,15 @@
 			v-else-if="activeTab === 'preview'"
 			class="template-detail__preview-panel">
 			<div class="template-detail__preview-header">
-				<h3>{{ t('docudesk', 'Preview') }}</h3>
+				<h3>{{ t('filinq', 'Preview') }}</h3>
 				<NcButton variant="secondary" @click="loadPreview">
-					{{ t('docudesk', 'Refresh preview') }}
+					{{ t('filinq', 'Refresh preview') }}
 				</NcButton>
 			</div>
 			<div class="template-detail__sample-data">
 				<NcTextField
 					v-model="sampleDataJson"
-					:label="t('docudesk', 'Sample data (JSON)')"
+					:label="t('filinq', 'Sample data (JSON)')"
 					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
 			</div>
@@ -217,12 +215,9 @@
 				v-html="previewHtml" />
 			<NcEmptyContent
 				v-else
-				:name="t('docudesk', 'No preview yet')"
+				:name="t('filinq', 'No preview yet')"
 				:description="
-					t(
-						'docudesk',
-						'Click \'Refresh preview\' to render the template.',
-					)
+					t('filinq', 'Click \'Refresh preview\' to render the template.')
 				" />
 		</div>
 
@@ -230,21 +225,21 @@
 		<div
 			v-else-if="activeTab === 'versions'"
 			class="template-detail__versions-panel">
-			<h3>{{ t('docudesk', 'Version history') }}</h3>
+			<h3>{{ t('filinq', 'Version history') }}</h3>
 			<NcLoadingIcon v-if="versionsLoading" />
 			<NcEmptyContent
 				v-else-if="!versions.length"
-				:name="t('docudesk', 'No versions yet')"
+				:name="t('filinq', 'No versions yet')"
 				:description="
-					t('docudesk', 'Versions are saved automatically on each update.')
+					t('filinq', 'Versions are saved automatically on each update.')
 				" />
 			<table v-else class="template-detail__versions-table">
 				<thead>
 					<tr>
-						<th scope="col">{{ t('docudesk', 'Version') }}</th>
-						<th scope="col">{{ t('docudesk', 'Editor') }}</th>
-						<th scope="col">{{ t('docudesk', 'Change note') }}</th>
-						<th scope="col">{{ t('docudesk', 'Actions') }}</th>
+						<th scope="col">{{ t('filinq', 'Version') }}</th>
+						<th scope="col">{{ t('filinq', 'Editor') }}</th>
+						<th scope="col">{{ t('filinq', 'Change note') }}</th>
+						<th scope="col">{{ t('filinq', 'Actions') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -256,7 +251,7 @@
 							<NcButton
 								variant="tertiary"
 								@click="restoreVersion(ver)">
-								{{ t('docudesk', 'Restore') }}
+								{{ t('filinq', 'Restore') }}
 							</NcButton>
 						</td>
 					</tr>
@@ -493,7 +488,7 @@ export default {
 					sampleData,
 				)
 			} catch (err) {
-				this.previewError = err.message || t('docudesk', 'Preview failed')
+				this.previewError = err.message || t('filinq', 'Preview failed')
 			} finally {
 				this.previewLoading = false
 			}

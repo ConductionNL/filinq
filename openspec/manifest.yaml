@@ -1,4 +1,4 @@
-# DocuDesk — OpenSpec Manifest
+# Filinq — OpenSpec Manifest
 #
 # Declares this app's tier, dependencies, and consumed shared specs for Hydra
 # coordination. The `dependencies.openregister.minVersion` replaces the dropped
@@ -11,7 +11,7 @@ apiVersion: hydra/v1
 kind: AppManifest
 
 app:
-  id: docudesk
+  id: filinq
   tier: 2
   description: |
     Document-management app: OCR, anonymization, correspondence generation,
@@ -29,7 +29,7 @@ dependencies:
       TextExtractionService, FileService).
 
 consumes:
-  # OR-side shared specs that docudesk adopts
+  # OR-side shared specs that filinq adopts
   - id: register-resolver-service
     source: openregister
     reason: >
@@ -50,13 +50,13 @@ consumes:
     reason: >
       Translatable fields on report/template/entity schemas (label, description,
       lifecycle-state-display-name, notification copy) adopt OR's i18n-source-of-truth
-      once that spec ships. Until then, docudesk maintains its own l10n strings.
+      once that spec ships. Until then, filinq maintains its own l10n strings.
 
   - id: i18n-api-language-negotiation
     source: openregister
     status: p2-gated
     reason: >
-      The docudesk public API will respect Accept-Language headers and return
+      The filinq public API will respect Accept-Language headers and return
       localised field values via OR's i18n-api-language-negotiation middleware
       once that spec ships.
 
@@ -64,7 +64,7 @@ consumes:
     source: nextcloud-vue
     status: p2-gated
     reason: >
-      Every docudesk frontend store will read currentTenant from the
+      Every filinq frontend store will read currentTenant from the
       useTenantContext() composable shipped by nc-vue. All hand-rolled tenant
       lookup is removed at that point.
 
@@ -112,34 +112,34 @@ abstractions:
 # Admin-config keys replacing hardcoded constants (apply-phase only — not
 # implemented in this spec-only change; listed here for Hydra coordination)
 adminConfig:
-  - key: docudesk.ocr.default_languages
+  - key: filinq.ocr.default_languages
     default: "nld+eng"
     replaces: "OcrService::DEFAULT_LANGUAGES"
 
-  - key: docudesk.ocr.default_dpi
+  - key: filinq.ocr.default_dpi
     default: 300
     replaces: "OcrService::DEFAULT_DPI"
 
-  - key: docudesk.templates.lock_timeout_minutes
+  - key: filinq.templates.lock_timeout_minutes
     default: 15
     replaces: "TemplateService::LOCK_TIMEOUT_MINUTES"
 
-  - key: docudesk.batch.cache_ttl_seconds
+  - key: filinq.batch.cache_ttl_seconds
     default: 7200
     replaces: "BatchStateService::CACHE_TTL"
 
-  - key: docudesk.batch.max_files_per_run
+  - key: filinq.batch.max_files_per_run
     default: 100
     replaces: "BatchStateService::DEFAULT_MAX_FILES"
 
-  - key: docudesk.correspondence.sync_batch_limit
+  - key: filinq.correspondence.sync_batch_limit
     default: 10
     replaces: "CorrespondenceService::SYNC_BATCH_LIMIT"
 
-  - key: docudesk.correspondence.default_format
+  - key: filinq.correspondence.default_format
     default: "pdf"
     replaces: "CorrespondenceService::DEFAULT_FORMAT"
 
-  - key: docudesk.resolver.max_depth
+  - key: filinq.resolver.max_depth
     default: 3
     replaces: "DataResolverService::MAX_DEPTH"

@@ -4,7 +4,7 @@
  * Unit tests for PrintJobService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,17 +12,17 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\PdfService;
-use OCA\DocuDesk\Service\PrintJobService;
-use OCA\DocuDesk\Service\TemplateService;
+use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Service\TemplateService;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -34,10 +34,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for PrintJobService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -243,7 +243,7 @@ class PrintJobServiceTest extends TestCase {
 		$this->appConfig->expects($this->once())
 			->method('setValueString')
 			->with(
-				'docudesk',
+				'filinq',
 				'print_job_' . $jobId,
 				json_encode($data)
 			);

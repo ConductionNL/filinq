@@ -1,12 +1,12 @@
 // @vitest-environment node
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Reachability guard — openspec/changes/orphaned-surface-restoration
  * (design.md D2, REQ-DDOSR-002).
  *
- * A DocuDesk view can be "built but unreachable": the component compiles,
+ * A Filinq view can be "built but unreachable": the component compiles,
  * its backend route is live, but nothing in the manifest-driven router
  * (src/main.js → routesFromManifest()) ever routes to it — the historical
  * cause was a dead `src/router/index.js` that LISTED the view (so it
@@ -42,7 +42,7 @@ const RECOGNISED_KINDS = new Set([
 
 /**
  * The three webpack entry points (webpack.config.js `entry`) that mount a
- * DocuDesk Vue app. `main.js` is the manifest-V2 shell (routesFromManifest);
+ * Filinq Vue app. `main.js` is the manifest-V2 shell (routesFromManifest);
  * `settings.js` / `dashboard.js` are separate Nextcloud mount points
  * (admin settings page, dashboard app widgets) that never go through the
  * manifest router — a view reachable only from one of these two is not an

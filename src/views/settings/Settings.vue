@@ -1,8 +1,8 @@
 <template>
 	<CnAdminSettingsShell
-		appId="docudesk"
-		appName="DocuDesk"
-		docUrl="https://docudesk.app"
+		appId="filinq"
+		appName="Filinq"
+		docUrl="https://filinq.app"
 		:showReimport="false">
 		<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->
 		<AnonymiserBackendWarning
@@ -12,14 +12,14 @@
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<NcSettingsSection
-			:name="t('docudesk', 'Consent Settings')"
+			:name="t('filinq', 'Consent Settings')"
 			:description="
-				t('docudesk', 'Configure GDPR publication consent tracking settings')
+				t('filinq', 'Configure GDPR publication consent tracking settings')
 			">
 			<div class="setting-item">
 				<div class="input-field">
 					<label for="objection-period">{{
-						t('docudesk', 'Objection Period (days)')
+						t('filinq', 'Objection Period (days)')
 					}}</label>
 					<input
 						id="objection-period"
@@ -32,7 +32,7 @@
 				<span class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Minimum number of days entities have to submit an objection before publication (Wet Open Overheid: minimum 4 weeks)',
 						)
 					}}
@@ -41,10 +41,10 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('docudesk', 'Anonymisation')"
+			:name="t('filinq', 'Anonymisation')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Configure how anonymised documents are written back to Nextcloud',
 				)
 			">
@@ -52,17 +52,17 @@
 				v-if="isAdmin && anonymiserBackend.warningDismissed"
 				class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'Show anonymiser backend warning') }}
+					{{ t('filinq', 'Show anonymiser backend warning') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:aria-label="t('docudesk', 'Show anonymiser backend warning')"
+					:aria-label="t('filinq', 'Show anonymiser backend warning')"
 					:modelValue="false"
 					type="switch"
 					@update:modelValue="resetAnonymiserWarning" />
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load.',
 						)
 					}}
@@ -72,73 +72,70 @@
 			<div class="setting-item">
 				<div class="setting-label">
 					{{
-						t(
-							'docudesk',
-							'Default output format for anonymised documents',
-						)
+						t('filinq', 'Default output format for anonymised documents')
 					}}
 				</div>
 				<NcCheckboxRadioSwitch
 					:modelValue="
-						settings['docudesk.anonymisation.default_output_format']
+						settings['filinq.anonymisation.default_output_format']
 					"
 					value="pdf-only"
 					name="anonymisation_output_format"
 					type="radio"
 					@update:modelValue="
-						settings['docudesk.anonymisation.default_output_format'] =
+						settings['filinq.anonymisation.default_output_format'] =
 							$event
 					">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'PDF only — delete the native anonymised file (recommended)',
 						)
 					}}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					:modelValue="
-						settings['docudesk.anonymisation.default_output_format']
+						settings['filinq.anonymisation.default_output_format']
 					"
 					value="pdf"
 					name="anonymisation_output_format"
 					type="radio"
 					@update:modelValue="
-						settings['docudesk.anonymisation.default_output_format'] =
+						settings['filinq.anonymisation.default_output_format'] =
 							$event
 					">
-					{{ t('docudesk', 'PDF and native file — keep both') }}
+					{{ t('filinq', 'PDF and native file — keep both') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					:modelValue="
-						settings['docudesk.anonymisation.default_output_format']
+						settings['filinq.anonymisation.default_output_format']
 					"
 					value="preserve"
 					name="anonymisation_output_format"
 					type="radio"
 					@update:modelValue="
-						settings['docudesk.anonymisation.default_output_format'] =
+						settings['filinq.anonymisation.default_output_format'] =
 							$event
 					">
-					{{ t('docudesk', 'Native format only — no PDF conversion') }}
+					{{ t('filinq', 'Native format only — no PDF conversion') }}
 				</NcCheckboxRadioSwitch>
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Controls what the anonymise endpoints write back to Nextcloud Files by default. "PDF only" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. "PDF and native file" also keeps the native version (DOCX, ODT, …) alongside the PDF. "Native format only" skips conversion entirely. Callers can always override per-request by sending outputFormat: "pdf-only", "pdf", or "preserve".',
 						)
 					}}
 				</div>
 				<div
 					v-if="
-						settings['docudesk.anonymisation.default_output_format']
+						settings['filinq.anonymisation.default_output_format']
 						!== 'preserve'
 					"
 					class="setting-description">
 					<em>{{
 						t(
-							'docudesk',
+							'filinq',
 							'Conversion requires either a supported Office app integration (Collabora, OnlyOffice, or Euro Office) for the best fidelity, or the bundled PhpWord + mPDF fallback for DOC/DOCX/ODT/RTF/HTML/TXT. Spreadsheet and presentation formats are not supported in the fallback tier and will return an error unless an Office app is configured.',
 						)
 					}}</em>
@@ -147,10 +144,10 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('docudesk', 'Legal basis per entity type')"
+			:name="t('filinq', 'Legal basis per entity type')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.',
 				)
 			">
@@ -158,7 +155,7 @@
 				<NcNoteCard type="info">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'No legal bases (grondslagen) are available yet. Add base records to the dossier register to map them here.',
 						)
 					}}
@@ -177,18 +174,18 @@
 						:multiple="true"
 						:closeOnSelect="false"
 						:modelValue="selectedBasesFor(entityType)"
-						:inputLabel="t('docudesk', 'Proposed legal basis')"
-						:placeholder="t('docudesk', 'No proposal')"
+						:inputLabel="t('filinq', 'Proposed legal basis')"
+						:placeholder="t('filinq', 'No proposal')"
 						@update:modelValue="onBasesChange(entityType, $event)" />
 				</div>
 			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('docudesk', 'Entity types to detect')"
+			:name="t('filinq', 'Entity types to detect')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Choose which entity types are detected automatically during analysis. Types left off are not detected or stored, but can still be added manually per document and will be anonymised. Leaving every type on detects all types.',
 				)
 			">
@@ -198,19 +195,16 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('docudesk', 'Metadata Enrichment')"
+			:name="t('filinq', 'Metadata Enrichment')"
 			:description="
-				t(
-					'docudesk',
-					'Configure automatic metadata enrichment for documents',
-				)
+				t('filinq', 'Configure automatic metadata enrichment for documents')
 			">
 			<div class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'Language Detection') }}
+					{{ t('filinq', 'Language Detection') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:aria-label="t('docudesk', 'Language Detection')"
+					:aria-label="t('filinq', 'Language Detection')"
 					:modelValue="settings.enable_language_detection"
 					type="switch"
 					@update:modelValue="
@@ -218,20 +212,17 @@
 					" />
 				<div class="setting-description">
 					{{
-						t(
-							'docudesk',
-							'Automatically detect the language of documents',
-						)
+						t('filinq', 'Automatically detect the language of documents')
 					}}
 				</div>
 			</div>
 
 			<div class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'Keyword Extraction') }}
+					{{ t('filinq', 'Keyword Extraction') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:aria-label="t('docudesk', 'Keyword Extraction')"
+					:aria-label="t('filinq', 'Keyword Extraction')"
 					:modelValue="settings.enable_keyword_extraction"
 					type="switch"
 					@update:modelValue="
@@ -240,7 +231,7 @@
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Automatically extract keywords from document content',
 						)
 					}}
@@ -249,26 +240,26 @@
 
 			<div class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'Topic Classification') }}
+					{{ t('filinq', 'Topic Classification') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:aria-label="t('docudesk', 'Topic Classification')"
+					:aria-label="t('filinq', 'Topic Classification')"
 					:modelValue="settings.enable_topic_classification"
 					type="switch"
 					@update:modelValue="
 						settings.enable_topic_classification = $event
 					" />
 				<div class="setting-description">
-					{{ t('docudesk', 'Automatically classify documents by topic') }}
+					{{ t('filinq', 'Automatically classify documents by topic') }}
 				</div>
 			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('docudesk', 'OCR Document Scanning')"
+			:name="t('filinq', 'OCR Document Scanning')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Configure Tesseract OCR for extracting text from scanned documents and images',
 				)
 			">
@@ -276,7 +267,7 @@
 			<div v-if="ocrStatus.tesseractAvailable" class="setting-item">
 				<NcNoteCard type="success">
 					{{
-						t('docudesk', 'Tesseract OCR is installed: {version}', {
+						t('filinq', 'Tesseract OCR is installed: {version}', {
 							version: ocrStatus.tesseractVersion || 'unknown',
 						})
 					}}
@@ -286,7 +277,7 @@
 				<NcNoteCard type="warning">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Tesseract OCR is not installed. Install tesseract-ocr on the server to enable OCR for scanned documents.',
 						)
 					}}
@@ -296,17 +287,17 @@
 			<!-- OCR enable/disable toggle -->
 			<div class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'Enable OCR') }}
+					{{ t('filinq', 'Enable OCR') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:aria-label="t('docudesk', 'Enable OCR')"
+					:aria-label="t('filinq', 'Enable OCR')"
 					:modelValue="settings.ocr_enabled"
 					type="switch"
 					@update:modelValue="settings.ocr_enabled = $event" />
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Automatically extract text from scanned documents and images using Tesseract OCR',
 						)
 					}}
@@ -316,34 +307,34 @@
 			<!-- Language selection -->
 			<div class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'OCR Languages') }}
+					{{ t('filinq', 'OCR Languages') }}
 				</div>
 				<div class="ocr-languages">
 					<NcCheckboxRadioSwitch
 						:modelValue="ocrLanguages.nld"
 						@update:modelValue="ocrLanguages.nld = $event">
-						{{ t('docudesk', 'Dutch (nld)') }}
+						{{ t('filinq', 'Dutch (nld)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
 						:modelValue="ocrLanguages.eng"
 						@update:modelValue="ocrLanguages.eng = $event">
-						{{ t('docudesk', 'English (eng)') }}
+						{{ t('filinq', 'English (eng)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
 						:modelValue="ocrLanguages.deu"
 						@update:modelValue="ocrLanguages.deu = $event">
-						{{ t('docudesk', 'German (deu)') }}
+						{{ t('filinq', 'German (deu)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
 						:modelValue="ocrLanguages.fra"
 						@update:modelValue="ocrLanguages.fra = $event">
-						{{ t('docudesk', 'French (fra)') }}
+						{{ t('filinq', 'French (fra)') }}
 					</NcCheckboxRadioSwitch>
 				</div>
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Select languages for OCR text recognition. At least one language must be selected.',
 						)
 					}}
@@ -353,7 +344,7 @@
 			<!-- DPI configuration -->
 			<div class="setting-item">
 				<div class="input-field">
-					<label for="ocr-dpi">{{ t('docudesk', 'OCR DPI') }}</label>
+					<label for="ocr-dpi">{{ t('filinq', 'OCR DPI') }}</label>
 					<input
 						id="ocr-dpi"
 						v-model.number="settings.ocr_dpi"
@@ -365,7 +356,7 @@
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'DPI for PDF-to-image conversion during OCR. Higher values improve accuracy but increase processing time. Default: 300.',
 						)
 					}}
@@ -379,10 +370,10 @@
 		     and the priority hint (off by default) only reorders batch/folder
 		     analysis. -->
 		<NcSettingsSection
-			:name="t('docudesk', 'Confidentiality Labels')"
+			:name="t('filinq', 'Confidentiality Labels')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.',
 				)
 			">
@@ -390,7 +381,7 @@
 				<div class="setting-label">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Prioritise higher-confidentiality files in batch/folder analysis',
 						)
 					}}
@@ -398,22 +389,22 @@
 				<NcCheckboxRadioSwitch
 					:aria-label="
 						t(
-							'docudesk',
+							'filinq',
 							'Prioritise higher-confidentiality files in batch/folder analysis',
 						)
 					"
 					:modelValue="
-						settings['docudesk.confidentiality.prioritise_analysis']
+						settings['filinq.confidentiality.prioritise_analysis']
 					"
 					type="switch"
 					@update:modelValue="
-						settings['docudesk.confidentiality.prioritise_analysis'] =
+						settings['filinq.confidentiality.prioritise_analysis'] =
 							$event
 					" />
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.',
 						)
 					}}
@@ -423,7 +414,7 @@
 			<div class="setting-item">
 				<div class="input-field">
 					<label for="confidentiality-vocabulary">{{
-						t('docudesk', 'Label vocabulary (JSON)')
+						t('filinq', 'Label vocabulary (JSON)')
 					}}</label>
 					<textarea
 						id="confidentiality-vocabulary"
@@ -438,7 +429,7 @@
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.',
 						)
 					}}
@@ -447,10 +438,10 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('docudesk', 'Data Storage')"
+			:name="t('filinq', 'Data Storage')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Configure Open Register integration for consent data storage',
 				)
 			">
@@ -459,8 +450,8 @@
 					<NcNoteCard type="info">
 						{{
 							t(
-								'docudesk',
-								'Open Registers is not installed. It is required for DocuDesk to function properly.',
+								'filinq',
+								'Open Registers is not installed. It is required for Filinq to function properly.',
 							)
 						}}
 					</NcNoteCard>
@@ -475,7 +466,7 @@
 						<template #icon>
 							<Restart :size="20" />
 						</template>
-						{{ t('docudesk', 'Install Open Registers') }}
+						{{ t('filinq', 'Install Open Registers') }}
 					</NcButton>
 				</div>
 
@@ -483,7 +474,7 @@
 					<h3>
 						{{
 							type === 'publicationConsent'
-								? t('docudesk', 'Publication Consent')
+								? t('filinq', 'Publication Consent')
 								: type
 						}}
 					</h3>
@@ -491,7 +482,7 @@
 						<NcSelect
 							v-bind="availableRegistersOptions"
 							v-model="sections[type].selectedRegister"
-							:inputLabel="t('docudesk', 'Register')"
+							:inputLabel="t('filinq', 'Register')"
 							:loading="sections[type].loading"
 							:disabled="loading || sections[type].loading"
 							@update:modelValue="onRegisterChange(type)" />
@@ -504,7 +495,7 @@
 								]
 							"
 							v-model="sections[type].selectedSchema"
-							:inputLabel="t('docudesk', 'Schema')"
+							:inputLabel="t('filinq', 'Schema')"
 							:loading="sections[type].loading"
 							:disabled="loading || sections[type].loading" />
 
@@ -524,7 +515,7 @@
 									:size="20" />
 								<Plus v-else :size="20" />
 							</template>
-							{{ t('docudesk', 'Save') }}
+							{{ t('filinq', 'Save') }}
 						</NcButton>
 					</div>
 				</div>
@@ -534,30 +525,30 @@
 				class="loadingIcon"
 				:size="64"
 				appearance="dark"
-				:name="t('docudesk', 'Loading settings')" />
+				:name="t('filinq', 'Loading settings')" />
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			:name="t('docudesk', 'Digital Signing')"
+			:name="t('filinq', 'Digital Signing')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Configure digital document signing capabilities (eIDAS SES, AdES, QES)',
 				)
 			">
 			<div class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'Enable Digital Signing') }}
+					{{ t('filinq', 'Enable Digital Signing') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:aria-label="t('docudesk', 'Enable Digital Signing')"
+					:aria-label="t('filinq', 'Enable Digital Signing')"
 					:modelValue="settings.signing_enabled"
 					type="switch"
 					@update:modelValue="settings.signing_enabled = $event" />
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Allow users to create and manage digital signing requests',
 						)
 					}}
@@ -567,7 +558,7 @@
 			<div class="setting-item">
 				<div class="input-field">
 					<label for="signing-provider">{{
-						t('docudesk', 'Signing Provider')
+						t('filinq', 'Signing Provider')
 					}}</label>
 					<select
 						id="signing-provider"
@@ -580,17 +571,17 @@
 							color: var(--color-main-text);
 						">
 						<option value="native">
-							{{ t('docudesk', 'Native (built-in SES)') }}
+							{{ t('filinq', 'Native (built-in SES)') }}
 						</option>
 						<option value="validsign">
-							{{ t('docudesk', 'ValidSign') }}
+							{{ t('filinq', 'ValidSign') }}
 						</option>
 					</select>
 				</div>
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'The signing provider to use for new signing requests',
 						)
 					}}
@@ -600,7 +591,7 @@
 			<div class="setting-item">
 				<div class="input-field">
 					<label for="signing-default-level">{{
-						t('docudesk', 'Default Signature Level')
+						t('filinq', 'Default Signature Level')
 					}}</label>
 					<select
 						id="signing-default-level"
@@ -613,17 +604,15 @@
 							color: var(--color-main-text);
 						">
 						<option value="SES">
-							{{ t('docudesk', 'SES — Simple Electronic Signature') }}
+							{{ t('filinq', 'SES — Simple Electronic Signature') }}
 						</option>
 						<option value="AdES">
-							{{
-								t('docudesk', 'AdES — Advanced Electronic Signature')
-							}}
+							{{ t('filinq', 'AdES — Advanced Electronic Signature') }}
 						</option>
 						<option value="QES">
 							{{
 								t(
-									'docudesk',
+									'filinq',
 									'QES — Qualified Electronic Signature (PKIoverheid)',
 								)
 							}}
@@ -633,7 +622,7 @@
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'The eIDAS signature level applied to new signing requests unless overridden',
 						)
 					}}
@@ -643,7 +632,7 @@
 			<div class="setting-item">
 				<div class="input-field">
 					<label for="signing-expiry-days">{{
-						t('docudesk', 'Default Request Expiry (days)')
+						t('filinq', 'Default Request Expiry (days)')
 					}}</label>
 					<input
 						id="signing-expiry-days"
@@ -656,7 +645,7 @@
 				<div class="setting-description">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'Number of days before an unsigned signing request expires (1–365). Archiefwet requires minimum 10-year audit trail retention.',
 						)
 					}}
@@ -667,19 +656,19 @@
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
 			v-if="isAdmin"
-			:name="t('docudesk', 'Processing Activity Register (AVG Art. 30)')"
+			:name="t('filinq', 'Processing Activity Register (AVG Art. 30)')"
 			:description="
 				t(
-					'docudesk',
-					'DocuDesk\'s document-processing activities are recorded in OpenRegister\'s platform processing-activity register. The Art. 30 register, per-access logging, exports, and access control are provided by OpenRegister; DocuDesk contributes the four activity categories.',
+					'filinq',
+					'Filinq\'s document-processing activities are recorded in OpenRegister\'s platform processing-activity register. The Art. 30 register, per-access logging, exports, and access control are provided by OpenRegister; Filinq contributes the four activity categories.',
 				)
 			"
-			docUrl="https://conduction.gitbook.io/docudesk-nextcloud/">
+			docUrl="https://conduction.gitbook.io/filinq-nextcloud/">
 			<div v-if="!openRegisterInstalled" class="setting-item">
 				<NcNoteCard type="warning">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'OpenRegister is not installed. The processing-activity register and Art. 30 export are provided by OpenRegister and are unavailable until it is installed.',
 						)
 					}}
@@ -691,7 +680,7 @@
 					<NcNoteCard type="info">
 						{{
 							t(
-								'docudesk',
+								'filinq',
 								'The verantwoordelijke (controller) identity for the Art. 30 register is maintained centrally in OpenRegister. If it has not been configured, the export still succeeds with identity fields rendered as "not configured". Configure it once in OpenRegister to have it appear on every export.',
 							)
 						}}
@@ -709,23 +698,23 @@
 						</template>
 						{{
 							t(
-								'docudesk',
+								'filinq',
 								'Configure controller identity in OpenRegister',
 							)
 						}}
 					</NcButton>
 				</div>
 
-				<!-- Activity catalogue (the four DocuDesk categories) -->
+				<!-- Activity catalogue (the four Filinq categories) -->
 				<div class="setting-item">
 					<div class="setting-label">
-						{{ t('docudesk', 'DocuDesk processing activities') }}
+						{{ t('filinq', 'Filinq processing activities') }}
 					</div>
 					<div class="setting-description">
 						{{
 							t(
-								'docudesk',
-								'DocuDesk declares four processing activities. They are seeded into OpenRegister as drafts when the DocuDesk register configuration is imported; activate them in OpenRegister to make DocuDesk processing attributable in the Art. 30 register.',
+								'filinq',
+								'Filinq declares four processing activities. They are seeded into OpenRegister as drafts when the Filinq register configuration is imported; activate them in OpenRegister to make Filinq processing attributable in the Art. 30 register.',
 							)
 						}}
 					</div>
@@ -738,7 +727,7 @@
 								activity.purpose
 							}}</span>
 							<span class="processing-meta">{{
-								t('docudesk', 'Retention: {ref}', {
+								t('filinq', 'Retention: {ref}', {
 									ref: activity.retention,
 								})
 							}}</span>
@@ -749,13 +738,13 @@
 				<!-- Art. 30 export entry point (delegates to OpenRegister, OR-PA-7) -->
 				<div class="setting-item">
 					<div class="setting-label">
-						{{ t('docudesk', 'Art. 30 export') }}
+						{{ t('filinq', 'Art. 30 export') }}
 					</div>
 					<div class="setting-description">
 						{{
 							t(
-								'docudesk',
-								"The Art. 30 export and per-subject (betrokkene) inzage extract are produced by OpenRegister, scoped to DocuDesk's registers, and never contain literal personal data beyond what the data subject is entitled to. Access is restricted to administrators and the privacy officer (FG) group; non-admins are denied.",
+								'filinq',
+								"The Art. 30 export and per-subject (betrokkene) inzage extract are produced by OpenRegister, scoped to Filinq's registers, and never contain literal personal data beyond what the data subject is entitled to. Access is restricted to administrators and the privacy officer (FG) group; non-admins are denied.",
 							)
 						}}
 					</div>
@@ -766,7 +755,7 @@
 							</template>
 							{{
 								t(
-									'docudesk',
+									'filinq',
 									'Open processing-activity log in OpenRegister',
 								)
 							}}
@@ -782,13 +771,13 @@
 							<template #icon>
 								<AccountSearchOutline :size="20" />
 							</template>
-							{{ t('docudesk', 'Per-subject (betrokkene) extract') }}
+							{{ t('filinq', 'Per-subject (betrokkene) extract') }}
 						</NcButton>
 					</div>
 					<div class="setting-description">
 						<em>{{
 							t(
-								'docudesk',
+								'filinq',
 								'Note: the per-access read log and per-subject extract are available now. The aggregate Art. 30 register export to JSON/CSV/PDF is a forthcoming OpenRegister capability; until it lands, use the read-log query surface above.',
 							)
 						}}</em>
@@ -803,7 +792,7 @@
 					<NcLoadingIcon v-if="saving" :size="20" />
 					<Plus v-else :size="20" />
 				</template>
-				{{ t('docudesk', 'Save All Settings') }}
+				{{ t('filinq', 'Save All Settings') }}
 			</NcButton>
 		</div>
 	</CnAdminSettingsShell>
@@ -886,10 +875,10 @@ export default {
 				signing_provider: 'native',
 				signing_default_level: 'SES',
 				signing_request_expiry_days: 30,
-				'docudesk.anonymisation.default_output_format': 'pdf-only',
+				'filinq.anonymisation.default_output_format': 'pdf-only',
 				// files-confidential-labels — off by default (design.md D3).
-				'docudesk.confidentiality.prioritise_analysis': false,
-				'docudesk.confidentiality.label_vocabulary': {
+				'filinq.confidentiality.prioritise_analysis': false,
+				'filinq.confidentiality.label_vocabulary': {
 					Public: 0,
 					Internal: 1,
 					Confidential: 2,
@@ -897,7 +886,7 @@ export default {
 				},
 			},
 
-			// Editable JSON text backing 'docudesk.confidentiality.label_vocabulary'
+			// Editable JSON text backing 'filinq.confidentiality.label_vocabulary'
 			// — kept separate from `settings` so an in-progress edit can be
 			// invalid JSON without corrupting the object that gets submitted.
 			confidentialityVocabularyText: '',
@@ -926,9 +915,9 @@ export default {
 		},
 
 		/**
-		 * The four DocuDesk processing activities surfaced in the AVG Art. 30
+		 * The four Filinq processing activities surfaced in the AVG Art. 30
 		 * compliance section. Mirrors the x-openregister-processing catalogue
-		 * annotations in lib/Settings/docudesk_register.json (authoring source
+		 * annotations in lib/Settings/filinq_register.json (authoring source
 		 * of truth); the register itself is owned and rendered by OpenRegister.
 		 *
 		 * @return {Array<{code: string, name: string, purpose: string, retention: string}>} Catalogue rows.
@@ -937,48 +926,57 @@ export default {
 		processingActivities() {
 			return [
 				{
+					// ⚠️ The four `code` values below deliberately keep the
+					// pre-rename `docudesk-` spelling. They are the AVG Art. 30
+					// processing-activity CODES declared in
+					// lib/Settings/filinq_register.json and already recorded on
+					// every OpenRegister read-log row this app has attributed.
+					// Renaming them would detach the existing log rows from the
+					// catalogue entry that describes them, so an Art. 30 export
+					// would silently show an activity with no history and
+					// history with no activity.
 					code: 'docudesk-anonymisation',
-					name: t('docudesk', 'Anonymisation of documents'),
+					name: t('filinq', 'Anonymisation of documents'),
 					purpose: t(
-						'docudesk',
+						'filinq',
 						'Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.',
 					),
 
 					retention: t(
-						'docudesk',
+						'filinq',
 						'P7Y (selectielijst category to be confirmed)',
 					),
 				},
 				{
 					code: 'docudesk-ocr',
-					name: t('docudesk', 'OCR text extraction'),
+					name: t('filinq', 'OCR text extraction'),
 					purpose: t(
-						'docudesk',
+						'filinq',
 						'Extract machine-readable text from scanned documents and images.',
 					),
 
-					retention: t('docudesk', 'not declared'),
+					retention: t('filinq', 'not declared'),
 				},
 				{
 					code: 'docudesk-metadata-enrichment',
-					name: t('docudesk', 'Document metadata enrichment'),
+					name: t('filinq', 'Document metadata enrichment'),
 					purpose: t(
-						'docudesk',
+						'filinq',
 						'Language detection, keyword extraction, and topic classification.',
 					),
 
-					retention: t('docudesk', 'not declared'),
+					retention: t('filinq', 'not declared'),
 				},
 				{
 					code: 'docudesk-signing',
-					name: t('docudesk', 'Digital document signing'),
+					name: t('filinq', 'Digital document signing'),
 					purpose: t(
-						'docudesk',
+						'filinq',
 						'Maintain a tamper-evident audit trail of electronic signing activities.',
 					),
 
 					retention: t(
-						'docudesk',
+						'filinq',
 						'P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)',
 					),
 				},
@@ -1036,7 +1034,7 @@ export default {
 		 */
 		fetchAll() {
 			this.loading = true
-			fetch('/index.php/apps/docudesk/api/settings', { method: 'GET' })
+			fetch('/index.php/apps/filinq/api/settings', { method: 'GET' })
 				.then((response) => response.json())
 				.then((data) => {
 					this.openRegisterInstalled = data.openRegisters
@@ -1076,25 +1074,26 @@ export default {
 						data.signing_default_level || 'SES'
 					this.settings.signing_request_expiry_days =
 						parseInt(data.signing_request_expiry_days, 10) || 30
-					this.settings['docudesk.anonymisation.default_output_format'] =
-						data['docudesk.anonymisation.default_output_format']
+					this.settings['filinq.anonymisation.default_output_format'] =
+						data['filinq.anonymisation.default_output_format']
 						?? 'pdf-only'
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
-						data['docudesk.anonymisation.enabled_entity_types'] || []
+						data['filinq.anonymisation.enabled_entity_types'] || []
 
 					// files-confidential-labels — read-only signal settings.
-					this.settings['docudesk.confidentiality.prioritise_analysis'] =
-						data['docudesk.confidentiality.prioritise_analysis'] ?? false
-					this.settings['docudesk.confidentiality.label_vocabulary'] =
-						data['docudesk.confidentiality.label_vocabulary'] || {
-							Public: 0,
-							Internal: 1,
-							Confidential: 2,
-							Secret: 3,
-						}
+					this.settings['filinq.confidentiality.prioritise_analysis'] =
+						data['filinq.confidentiality.prioritise_analysis'] ?? false
+					this.settings['filinq.confidentiality.label_vocabulary'] = data[
+						'filinq.confidentiality.label_vocabulary'
+					] || {
+						Public: 0,
+						Internal: 1,
+						Confidential: 2,
+						Secret: 3,
+					}
 					this.confidentialityVocabularyText = JSON.stringify(
-						this.settings['docudesk.confidentiality.label_vocabulary'],
+						this.settings['filinq.confidentiality.label_vocabulary'],
 						null,
 						2,
 					)
@@ -1120,7 +1119,7 @@ export default {
 					this.grondslagEntityTypes = data.grondslagEntityTypes || []
 					this.grondslagBases = data.grondslagBases || []
 					this.entityTypeBases =
-						data['docudesk.grondslagen.entity_type_bases'] || {}
+						data['filinq.grondslagen.entity_type_bases'] || {}
 
 					// Build available registers options
 					this.availableRegistersOptions = {
@@ -1203,18 +1202,18 @@ export default {
 				[`${type}_source`]: 'openregister',
 			}
 
-			fetch('/index.php/apps/docudesk/api/settings', {
+			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then((response) => response.json())
 				.then(() => {
-					showSuccess(t('docudesk', 'Configuration saved'))
+					showSuccess(t('filinq', 'Configuration saved'))
 				})
 				.catch((err) => {
 					console.error(err)
-					showError(t('docudesk', 'Failed to save configuration'))
+					showError(t('filinq', 'Failed to save configuration'))
 				})
 				.finally(() => {
 					this.saving = false
@@ -1223,7 +1222,7 @@ export default {
 		},
 
 		/**
-		 * Save all DocuDesk settings (consent period, feature toggles, OCR, registers).
+		 * Save all Filinq settings (consent period, feature toggles, OCR, registers).
 		 *
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
 		 */
@@ -1265,33 +1264,32 @@ export default {
 					this.settings.signing_request_expiry_days || 30,
 				),
 
-				'docudesk.anonymisation.default_output_format': [
+				'filinq.anonymisation.default_output_format': [
 					'pdf-only',
 					'pdf',
 					'preserve',
 				].includes(
-					this.settings['docudesk.anonymisation.default_output_format'],
+					this.settings['filinq.anonymisation.default_output_format'],
 				)
-					? this.settings['docudesk.anonymisation.default_output_format']
+					? this.settings['filinq.anonymisation.default_output_format']
 					: 'pdf-only',
 
 				// Sent as an object; the backend json-encodes it for storage.
-				'docudesk.grondslagen.entity_type_bases': this.entityTypeBases,
+				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,
 				// Sent as an array; the backend json-encodes it for storage.
-				'docudesk.anonymisation.enabled_entity_types':
-					this.enabledEntityTypes,
+				'filinq.anonymisation.enabled_entity_types': this.enabledEntityTypes,
 
 				// files-confidential-labels — off by default; reorders analysis
 				// only, never gates/blocks/redacts (design.md D3).
-				'docudesk.confidentiality.prioritise_analysis': this.settings[
-					'docudesk.confidentiality.prioritise_analysis'
+				'filinq.confidentiality.prioritise_analysis': this.settings[
+					'filinq.confidentiality.prioritise_analysis'
 				]
 					? '1'
 					: '0',
 
 				// Sent as an object; the backend json-encodes it for storage.
-				'docudesk.confidentiality.label_vocabulary':
-					this.settings['docudesk.confidentiality.label_vocabulary'],
+				'filinq.confidentiality.label_vocabulary':
+					this.settings['filinq.confidentiality.label_vocabulary'],
 			}
 
 			// Add register/schema configs
@@ -1303,18 +1301,18 @@ export default {
 				payload[`${type}_source`] = 'openregister'
 			})
 
-			fetch('/index.php/apps/docudesk/api/settings', {
+			fetch('/index.php/apps/filinq/api/settings', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
 				.then((response) => response.json())
 				.then(() => {
-					showSuccess(t('docudesk', 'All settings saved successfully'))
+					showSuccess(t('filinq', 'All settings saved successfully'))
 				})
 				.catch((err) => {
 					console.error(err)
-					showError(t('docudesk', 'Failed to save settings'))
+					showError(t('filinq', 'Failed to save settings'))
 				})
 				.finally(() => {
 					this.saving = false
@@ -1326,7 +1324,7 @@ export default {
 		 *
 		 * Parses `confidentialityVocabularyText` on blur; a valid object of
 		 * string keys to numeric levels replaces
-		 * `settings['docudesk.confidentiality.label_vocabulary']` (submitted
+		 * `settings['filinq.confidentiality.label_vocabulary']` (submitted
 		 * by `saveAll`). Invalid JSON shows an inline error and leaves the
 		 * previously-saved vocabulary untouched (files-confidential-labels).
 		 *
@@ -1338,7 +1336,7 @@ export default {
 				parsed = JSON.parse(this.confidentialityVocabularyText)
 			} catch {
 				this.confidentialityVocabularyError = t(
-					'docudesk',
+					'filinq',
 					'Invalid JSON — the previous vocabulary was kept.',
 				)
 				return
@@ -1350,14 +1348,14 @@ export default {
 				|| Array.isArray(parsed)
 			) {
 				this.confidentialityVocabularyError = t(
-					'docudesk',
+					'filinq',
 					'Expected a JSON object mapping label names to numbers.',
 				)
 				return
 			}
 
 			this.confidentialityVocabularyError = null
-			this.settings['docudesk.confidentiality.label_vocabulary'] = parsed
+			this.settings['filinq.confidentiality.label_vocabulary'] = parsed
 		},
 
 		/**
@@ -1383,7 +1381,7 @@ export default {
 		async resetAnonymiserWarning() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/docudesk/api/admin/anonymiser-warning/reset',
+					'/index.php/apps/filinq/api/admin/anonymiser-warning/reset',
 					{ method: 'POST' },
 				)
 				if (response.ok === false) {
@@ -1396,7 +1394,7 @@ export default {
 				}
 			} catch (err) {
 				showError(
-					t('docudesk', 'Failed to reset the anonymiser backend warning'),
+					t('filinq', 'Failed to reset the anonymiser backend warning'),
 				)
 			}
 		},
@@ -1414,10 +1412,10 @@ export default {
 
 		/**
 		 * Open OpenRegister's AVG per-access processing log (verwerkingenlogging)
-		 * scoped to DocuDesk's registers. The export and access control are
-		 * provided by OpenRegister (OR-PA-7/OR-PA-8); DocuDesk only deep-links.
+		 * scoped to Filinq's registers. The export and access control are
+		 * provided by OpenRegister (OR-PA-7/OR-PA-8); Filinq only deep-links.
 		 *
-		 * @spec openspec/specs/processing-activity-export/spec.md#requirement-the-admin-ui-must-surface-the-platform-register-scoped-to-docudesk
+		 * @spec openspec/specs/processing-activity-export/spec.md#requirement-the-admin-ui-must-surface-the-platform-register-scoped-to-filinq
 		 */
 		openProcessingExport() {
 			const registers = ['document', 'signing', 'dossier', 'consent']

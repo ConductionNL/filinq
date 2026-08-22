@@ -9,7 +9,7 @@
  * stores the manifest.
  *
  * @category BackgroundJob
- * @package  OCA\DocuDesk\BackgroundJob
+ * @package  OCA\Filinq\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,7 +17,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/print-functionality/tasks.md#task-4
  *
@@ -27,12 +27,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\BackgroundJob;
+namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\DocuDesk\Service\PdfService;
-use OCA\DocuDesk\Service\PrintJobService;
-use OCA\DocuDesk\Service\TemplateService;
+use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Service\TemplateService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -41,10 +41,10 @@ use Psr\Log\LoggerInterface;
  * Queued background job for batch PDF print generation
  *
  * @category BackgroundJob
- * @package  OCA\DocuDesk\BackgroundJob
+ * @package  OCA\Filinq\BackgroundJob
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/print-functionality/tasks.md#task-4
  */

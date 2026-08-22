@@ -1,6 +1,6 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/234
+tracking_issue: https://github.com/ConductionNL/filinq/issues/234
 depends_on: [archiefwet-retention-engine]
 ---
 
@@ -18,7 +18,7 @@ team needs a first-class way to freeze records that is stronger than
 commercial category (ZyLAB and peers) bundles this into full eDiscovery
 review platforms; municipalities that only need hold-and-freeze are forced
 to buy the whole suite. Evidence: tracking issue
-ConductionNL/docudesk#234; ZyLAB category from the woo-request-workflow
+ConductionNL/filinq#234; ZyLAB category from the woo-request-workflow
 research row (`mg2026-woo-request-workflow`).
 
 **Verified at OpenRegister HEAD (ebedbdd5a)**: OR already enforces
@@ -30,7 +30,7 @@ and `DestructionCheckJob` excludes held objects from destruction lists.
 What is missing is the *case level*: municipalities hold a matter (a
 lawsuit, an audit, a Woo appeal) covering many documents and dossiers, with
 a custodian, owner notifications, a release procedure and a searchable
-register. Per ADR-022 DocuDesk adds exactly that case layer and delegates
+register. Per ADR-022 Filinq adds exactly that case layer and delegates
 every freeze decision to OR.
 
 ## What
@@ -84,7 +84,7 @@ review platform:
 
 ## Affected Projects
 
-- [x] Project: `docudesk` — `legalHoldCase` schema + seed,
+- [x] Project: `filinq` — `legalHoldCase` schema + seed,
   `LegalHoldCaseService` (fan-out/release orchestration, overlap
   accounting), hold register UI + detail indicators, notifications, this
   OpenSpec change.
@@ -99,7 +99,7 @@ review platform:
 
 - Document review, tagging, redaction-for-production, TAR/analytics,
   custodian interviews, export-for-counsel — the ZyLAB feature set
-  (design.md Non-Goals); DocuDesk ships hold + freeze + audit only.
+  (design.md Non-Goals); Filinq ships hold + freeze + audit only.
 - Query/saved-search-based hold scopes (explicit references only in this
   wave; re-evaluated scopes are a follow-up).
 - The dossier-register canonical spec file (sibling ownership) — dossier

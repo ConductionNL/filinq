@@ -8,12 +8,12 @@
  * scanned PDFs, and graceful degradation when Tesseract is not installed.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/ocr-document-scanning/spec.md
  * @spec openspec/specs/ocr-document-scanning/spec.md
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use Imagick;
@@ -46,10 +46,10 @@ use thiagoalessio\TesseractOCR\TesseractOCR;
  * Service for OCR text extraction from scanned documents
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class OcrService {
 
@@ -94,7 +94,7 @@ class OcrService {
 	 *
 	 * @var string
 	 */
-	private const APP_NAME = 'docudesk';
+	private const APP_NAME = 'filinq';
 
 	/**
 	 * Constructor for OcrService
@@ -368,7 +368,7 @@ class OcrService {
 			$allText = '';
 			$totalConfidence = 0.0;
 
-			$tempDir = sys_get_temp_dir() . '/docudesk_ocr_' . uniqid();
+			$tempDir = sys_get_temp_dir() . '/filinq_ocr_' . uniqid();
 			mkdir($tempDir, 0700, true);
 
 			for ($page = 0; $page < $pageCount; $page++) {
@@ -550,7 +550,7 @@ class OcrService {
 	 */
 	private function writeToTemp(File $file): string {
 		$extension = pathinfo($file->getName(), PATHINFO_EXTENSION);
-		$tempFile = sys_get_temp_dir() . '/docudesk_ocr_' . uniqid() . '.' . $extension;
+		$tempFile = sys_get_temp_dir() . '/filinq_ocr_' . uniqid() . '.' . $extension;
 
 		$content = $file->getContent();
 		if (file_put_contents($tempFile, $content) === false) {

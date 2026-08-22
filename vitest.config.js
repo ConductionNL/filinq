@@ -1,8 +1,8 @@
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Vitest configuration for DocuDesk frontend unit tests.
+ * Vitest configuration for Filinq frontend unit tests.
  *
  * This OFFLINE suite targets PURE logic the rendered UI relies on but never
  * asserts exactly:

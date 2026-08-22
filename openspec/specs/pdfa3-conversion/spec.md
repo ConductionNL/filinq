@@ -6,10 +6,10 @@ status: in-progress
 
 **Status**: in-progress
 **OpenSpec changes**:
-- [verapdf-validation](../../changes/verapdf-validation/) _(active)_ — adds veraPDF output verification after conversion: `X-Docudesk-Pdfa3-Verified` header, persisted `conformanceReport` (`trigger: "conversion"`), report mode by default and a `docudesk.pdfa3.strict_verify` fail-loud mode (REQ-DDVPV-006) (kind: code)
+- [verapdf-validation](../../changes/verapdf-validation/) _(active)_ — adds veraPDF output verification after conversion: `X-Docudesk-Pdfa3-Verified` header, persisted `conformanceReport` (`trigger: "conversion"`), report mode by default and a `filinq.pdfa3.strict_verify` fail-loud mode (REQ-DDVPV-006) (kind: code)
 
 ## Purpose
-Converts HTML and existing PDFs into genuine PDF/A-3b archival documents via the vendored mPDF/FPDI stack: real XMP `pdfaid` identification, embedded fonts and ICC output intent for rendered content, caller-supplied embedded attachments plus an auto-generated MDTO metadata sidecar, and MDTO/archival metadata mapped into a `docudesk:` XMP namespace. Conversion is guarded (size caps, wall-clock budget, output validation) and fails loud with typed `Pdfa3ConversionException` reasons rather than silently returning non-compliant bytes; the capability is reachable via `POST /api/pdfa3/convert` (IDOR-safe) and from DocuDesk's own PDF/A generation endpoint.
+Converts HTML and existing PDFs into genuine PDF/A-3b archival documents via the vendored mPDF/FPDI stack: real XMP `pdfaid` identification, embedded fonts and ICC output intent for rendered content, caller-supplied embedded attachments plus an auto-generated MDTO metadata sidecar, and MDTO/archival metadata mapped into a `filinq:` XMP namespace. Conversion is guarded (size caps, wall-clock budget, output validation) and fails loud with typed `Pdfa3ConversionException` reasons rather than silently returning non-compliant bytes; the capability is reachable via `POST /api/pdfa3/convert` (IDOR-safe) and from Filinq's own PDF/A generation endpoint.
 ## Requirements
 ### Requirement: Converting HTML MUST produce a genuine PDF/A-3b document
 
@@ -71,7 +71,7 @@ provide an XML attachment.
 
 Standard fields (`title`, `author`, `creator`, `subject`, `keywords`) MUST
 use mPDF's dedicated setters. Every other metadata key MUST be folded into a
-`docudesk:`-namespaced custom XMP RDF block via `SetAdditionalXmpRdf()`
+`filinq:`-namespaced custom XMP RDF block via `SetAdditionalXmpRdf()`
 rather than being dropped or silently merged into `/Keywords`.
 
 #### Scenario: Archival fields appear in the custom XMP namespace
@@ -79,8 +79,8 @@ rather than being dropped or silently merged into `/Keywords`.
 - **GIVEN** metadata `{title: "Beschikking", identifier: "ZAAK-1",
   caseReference: "BEK-42"}`
 - **WHEN** conversion runs
-- **THEN** the output's XMP contains `<docudesk:identifier>ZAAK-1</docudesk:identifier>`
-  and `<docudesk:caseReference>BEK-42</docudesk:caseReference>`
+- **THEN** the output's XMP contains `<filinq:identifier>ZAAK-1</filinq:identifier>`
+  and `<filinq:caseReference>BEK-42</filinq:caseReference>`
 
 ### Requirement: Conversion MUST fail loud rather than pass through a non-compliant file
 
@@ -102,7 +102,7 @@ fallback to a plain, non-PDF/A file.
 
 #### Scenario: A disabled converter fails gracefully with an admin hint
 
-- **GIVEN** `docudesk.pdfa3.enabled` is set to `false`
+- **GIVEN** `filinq.pdfa3.enabled` is set to `false`
 - **WHEN** any conversion is attempted
 - **THEN** it raises `Pdfa3ConversionException` with reason
   `converter_unavailable`, HTTP-style code 503, and a non-empty admin hint
@@ -110,13 +110,13 @@ fallback to a plain, non-PDF/A file.
 ### Requirement: Source and attachment size MUST be capped
 
 The service MUST reject a source PDF larger than
-`docudesk.pdfa3.max_input_bytes` (default 50 MiB) before reading its content,
+`filinq.pdfa3.max_input_bytes` (default 50 MiB) before reading its content,
 and MUST reject any single attachment larger than
-`docudesk.pdfa3.max_attachment_bytes` (default 20 MiB).
+`filinq.pdfa3.max_attachment_bytes` (default 20 MiB).
 
 #### Scenario: An oversized source is rejected before its content is read
 
-- **GIVEN** `docudesk.pdfa3.max_input_bytes` set below the source file's size
+- **GIVEN** `filinq.pdfa3.max_input_bytes` set below the source file's size
 - **WHEN** `convertExistingPdf()` is called
 - **THEN** it raises `Pdfa3ConversionException` with reason
   `source_too_large` and HTTP-style code 413
@@ -124,7 +124,7 @@ and MUST reject any single attachment larger than
 
 ### Requirement: Conversion MUST be bounded by a wall-clock time budget
 
-The service MUST check elapsed time against `docudesk.pdfa3.max_seconds`
+The service MUST check elapsed time against `filinq.pdfa3.max_seconds`
 (default 60) before rendering begins, before finalising output, and — for
 `convertExistingPdf()` — between every imported page.
 
@@ -140,7 +140,7 @@ The service MUST check elapsed time against `docudesk.pdfa3.max_seconds`
 
 `POST /api/pdfa3/convert` MUST resolve the source file through the
 requesting user's folder (IDOR-safe — a file the user cannot read returns
-404, not 403), and docudesk's own PDF/A generation endpoint
+404, not 403), and filinq's own PDF/A generation endpoint
 (`PdfController::renderPdfA`) MUST delegate to this service when the request
 carries `metadata` or `attachments`, so the capability has a real in-app
 caller in addition to the standalone endpoint.

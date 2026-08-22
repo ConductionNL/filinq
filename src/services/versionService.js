@@ -1,6 +1,6 @@
 /**
- * Document version service — thin client over the DocuDesk version endpoints,
- * which delegate to Nextcloud `files_versions`. No DocuDesk-owned version store.
+ * Document version service — thin client over the Filinq version endpoints,
+ * which delegate to Nextcloud `files_versions`. No Filinq-owned version store.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,7 +22,7 @@ import { generateUrl } from '@nextcloud/router'
  * @spec openspec/specs/document-versions/spec.md
  */
 export async function listVersions(fileId, opts = {}) {
-	const url = generateUrl('/apps/docudesk/api/documents/{fileId}/versions', {
+	const url = generateUrl('/apps/filinq/api/documents/{fileId}/versions', {
 		fileId,
 	})
 	const { data } = await axios.get(url, {
@@ -41,7 +41,7 @@ export async function listVersions(fileId, opts = {}) {
  */
 export function versionDownloadUrl(fileId, versionTimestamp) {
 	return generateUrl(
-		'/apps/docudesk/api/documents/{fileId}/versions/{versionTimestamp}/download',
+		'/apps/filinq/api/documents/{fileId}/versions/{versionTimestamp}/download',
 		{ fileId, versionTimestamp },
 	)
 }
@@ -56,7 +56,7 @@ export function versionDownloadUrl(fileId, versionTimestamp) {
  */
 export async function restoreVersion(fileId, versionTimestamp) {
 	const url = generateUrl(
-		'/apps/docudesk/api/documents/{fileId}/versions/{versionTimestamp}/restore',
+		'/apps/filinq/api/documents/{fileId}/versions/{versionTimestamp}/restore',
 		{ fileId, versionTimestamp },
 	)
 	const { data } = await axios.post(url, {})

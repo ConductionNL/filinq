@@ -36,14 +36,14 @@ use NL Design System tokens via Nextcloud CSS variables.
 
 ### Requirement: Open accessibility findings warn before Woo publication hand-off (REQ-DDPUA-005)
 
-Publication-facing actions in DocuDesk MUST consult a
+Publication-facing actions in Filinq MUST consult a
 publication-readiness signal derived from the document's stored validation
 findings: when open `accessibility`-category findings exist, the action MUST
 show a warning naming the findings (with a link to the validation detail)
 before the user proceeds. The warning MUST NOT hard-block by itself —
 blocking remains the domain of the existing profile severity mechanism
 (escalating a check to `blocking` engages the standard intake/verdict gate).
-The signal MUST be computed within DocuDesk; publication endpoints remain
+The signal MUST be computed within Filinq; publication endpoints remain
 owned by OpenCatalogi/OpenWoo and any publication pipeline consumes the same
 signal.
 

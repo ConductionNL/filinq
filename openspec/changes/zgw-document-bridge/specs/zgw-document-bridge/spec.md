@@ -6,16 +6,16 @@ status: proposed
 
 ## Purpose
 
-DocuDesk-side contract for processing documents that are mastered in an
+Filinq-side contract for processing documents that are mastered in an
 external case system (zaaksysteem): an OR-backed staging register that
 OpenConnector synchronizes ZGW Documenten API (DRC) and StUF-ZDS documents +
 metadata into (Rx.Enterprise, Djuma, zaaksysteem.nl, generic ZGW — per
-Dordrecht 407973); a processing-status lifecycle through which DocuDesk runs
+Dordrecht 407973); a processing-status lifecycle through which Filinq runs
 its anonymize/consent/publish flows on the staged copy and releases the
 redacted derivative for write-back as a **new** informatieobject; ≤24h
 freshness health per source in admin settings; and source provenance on
 documents. The originals never leave the zaaksysteem as master record (Arnhem
-407824). The connector/sync engine itself is OpenConnector's; DocuDesk defines
+407824). The connector/sync engine itself is OpenConnector's; Filinq defines
 schemas, status semantics, hooks and UI only.
 
 ## ADDED Requirements
@@ -23,7 +23,7 @@ schemas, status semantics, hooks and UI only.
 ### Requirement: Bridge staging register schemas (REQ-DDZGW-001)
 
 The app MUST declare a `bridge` register in
-`lib/Settings/docudesk_register.json` with two schemas: `bridgeSource` (per
+`lib/Settings/filinq_register.json` with two schemas: `bridgeSource` (per
 configured case-system source: `name`, `sourceType` enum `zgw-drc`|`stuf-zds`,
 `vendor`, `synchronizationId`, `syncIntervalMinutes`, `lastSyncAt`,
 `lastSyncStatus` enum `success`|`error`, `lastSyncError`, `active`) and
@@ -37,20 +37,20 @@ be bumped so `ConfigurationService::importFromApp()` imports it on boot.
 
 #### Scenario: Register import creates the bridge schemas
 
-- GIVEN a Nextcloud instance with DocuDesk and OpenRegister installed
+- GIVEN a Nextcloud instance with Filinq and OpenRegister installed
 - WHEN the app boots and `ConfigurationService::importFromApp()` runs
 - THEN the `bridge` register exists with schemas `bridgeSource` and `externalDocument`
 - AND the seeded demo source and staged documents are queryable via `ObjectService::searchObjects()` with `@self.register = bridge`
 - @e2e exclude register import is a boot-time backend concern with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
 
-### Requirement: Inbound sync contract — OpenConnector stages, DocuDesk never fetches (REQ-DDZGW-002)
+### Requirement: Inbound sync contract — OpenConnector stages, Filinq never fetches (REQ-DDZGW-002)
 
 External connectivity MUST remain in OpenConnector: one OpenConnector
 Synchronization per source targets register `bridge`, schema
 `externalDocument`, mapping ZGW/StUF document metadata onto the schema
 properties, staging the file content into a per-source Nextcloud staging
 folder and setting `stagedFileRef`, and updating the owning `bridgeSource`'s
-`lastSyncAt`/`lastSyncStatus`/`lastSyncError` after each run. DocuDesk MUST
+`lastSyncAt`/`lastSyncStatus`/`lastSyncError` after each run. Filinq MUST
 NOT contain any ZGW, StUF or case-system HTTP/SOAP client code, and MUST NOT
 declare an `info.xml` dependency on OpenConnector (the bridge register is
 inert without it).
@@ -61,18 +61,18 @@ inert without it).
 - WHEN the synchronization runs and delivers a new informatieobject
 - THEN an `externalDocument` object exists with the ZGW metadata, a `stagedFileRef` pointing at the staged copy and `processingStatus` `staged`
 - AND `bridgeSource.lastSyncAt` and `lastSyncStatus` reflect the run
-- @e2e exclude requires a live OpenConnector + mock DRC environment out of scope for DocuDesk's Playwright suite — contract pinned by PHPUnit fixture tests on BridgeService reading pre-seeded objects (tests/unit/Service/BridgeServiceTest.php)
+- @e2e exclude requires a live OpenConnector + mock DRC environment out of scope for Filinq's Playwright suite — contract pinned by PHPUnit fixture tests on BridgeService reading pre-seeded objects (tests/unit/Service/BridgeServiceTest.php)
 
-#### Scenario: No case-system client in DocuDesk
+#### Scenario: No case-system client in Filinq
 
-- GIVEN the DocuDesk codebase at this change's completion
+- GIVEN the Filinq codebase at this change's completion
 - WHEN `lib/` is inspected
 - THEN no class performs HTTP or SOAP calls to a ZGW Documenten API or StUF-ZDS endpoint
 - @e2e exclude static codebase property, enforced by review + a PHPUnit architecture test, not a browser flow
 
 ### Requirement: Originals stay mastered in the zaaksysteem (REQ-DDZGW-003)
 
-DocuDesk MUST treat every staged copy as a read-only input: it MUST NOT
+Filinq MUST treat every staged copy as a read-only input: it MUST NOT
 modify, re-version or delete the original informatieobject in the source
 system, MUST NOT edit the staged source file in place (all processing output
 goes to new derivative files), and MUST NOT expose the staged copy as an
@@ -95,7 +95,7 @@ annotation with canonical `initial: staged` and exactly the transitions
 staged`, `processed → ready_for_writeback`, `ready_for_writeback →
 written_back`, `ready_for_writeback → writeback_failed`, `writeback_failed →
 ready_for_writeback`. Invalid transitions MUST be rejected by OpenRegister's
-lifecycle guard. DocuDesk-side transitions (`staged → in_processing →
+lifecycle guard. Filinq-side transitions (`staged → in_processing →
 processed → ready_for_writeback`) are set by `BridgeService`; the
 `written_back`/`writeback_failed` transitions belong to OpenConnector's push
 leg.
@@ -119,12 +119,12 @@ leg.
 The bridge write-back contract MUST deliver the redacted derivative to the
 source system as a **new** informatieobject related to the same zaak — never
 as an update, new version or replacement of the original. When an operator (or
-policy) releases a processed document, DocuDesk MUST set `processingStatus =
+policy) releases a processed document, Filinq MUST set `processingStatus =
 ready_for_writeback` with `resultFileRef` populated; OpenConnector's push
 synchronization performs the external write and records the outcome by setting
 `processingStatus = written_back` + `resultExternalId` (success) or
 `writeback_failed` + `writeBackError` (failure). The new informatieobject's
-metadata MUST identify it as a DocuDesk derivative (title suffix
+metadata MUST identify it as a Filinq derivative (title suffix
 "(geanonimiseerd)", reference to the original's identificatie, processing
 date and anonymisation profile).
 
@@ -146,7 +146,7 @@ date and anonymisation profile).
 
 ### Requirement: Dossier pick-up of bridge documents (REQ-DDZGW-006)
 
-An operator MUST be able to attach staged external documents to a DocuDesk
+An operator MUST be able to attach staged external documents to a Filinq
 dossier: the staged file is copied into the dossier's Nextcloud folder (the
 unit the existing folder-batch anonymisation and grondslagen capabilities
 operate on), `externalDocument.dossierRef` is set to the dossier object UUID
@@ -179,7 +179,7 @@ MUST be computed at read time from stored telemetry, not persisted.
 
 ### Requirement: Bridge status panel in admin settings (REQ-DDZGW-008)
 
-DocuDesk admin settings MUST include a bridge status panel listing each
+Filinq admin settings MUST include a bridge status panel listing each
 configured source with name, vendor, source type, last sync time and a health
 chip (`fresh`/`stale`/`failing`/`inactive`), rendered with
 `@conduction/nextcloud-vue` components (ADR-012) and Nextcloud CSS
@@ -189,7 +189,7 @@ instead of an error.
 
 #### Scenario: Admin sees per-source health
 
-- GIVEN an admin on the DocuDesk admin settings page with one fresh and one failing source seeded
+- GIVEN an admin on the Filinq admin settings page with one fresh and one failing source seeded
 - WHEN the bridge status panel renders
 - THEN both sources are listed with their vendor and last sync time
 - AND the failing source shows a `failing` health chip with its error message
@@ -210,7 +210,7 @@ document detail header, so an operator always sees that the master record
 lives in the case system. The badge lookup MUST be batched per listing (one
 bridge query per page, not per row). Provenance detail beyond the badge links
 to OpenRegister's synced-from surface and MUST NOT be reimplemented in
-DocuDesk.
+Filinq.
 
 #### Scenario: Badge on a bridge document
 

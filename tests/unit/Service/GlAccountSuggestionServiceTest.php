@@ -9,11 +9,11 @@
  * candidate-set-only guarantee (REQ-GLS-04).
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Service
+ * @package   OCA\Filinq\Tests\Unit\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,15 +23,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
-use OCA\DocuDesk\Service\GlAccountSuggestionService;
-use OCA\DocuDesk\Service\OpenRegisterResolver;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\Suggestion\CategoryKeywordMapper;
-use OCA\DocuDesk\Service\Suggestion\HistoryRanker;
-use OCA\DocuDesk\Service\Suggestion\SupplierIdentityResolver;
+use OCA\Filinq\Service\GlAccountSuggestionService;
+use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
+use OCA\Filinq\Service\Suggestion\HistoryRanker;
+use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;

@@ -4,7 +4,7 @@
  * Unit tests for AnonymizationService — publication-clearance-anonymise-payload change
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
  *
@@ -20,14 +20,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymizationPersistenceService;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\ConsentCrudService;
-use OCA\DocuDesk\Service\ConsentService;
-use OCA\DocuDesk\Service\EntityDetectionService;
-use OCA\DocuDesk\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\AnonymizationPersistenceService;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\ConsentCrudService;
+use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\EntityDetectionService;
+use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -38,10 +38,10 @@ use Psr\Log\NullLogger;
  * Tests for unredactedEntities orchestration in AnonymizationService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  *
@@ -235,7 +235,7 @@ class AnonymizationServicePublicationClearanceTest extends TestCase {
 		// @var ConsentCrudService|MockObject $consentCrud
 		$consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
 		$consentCrud->method('getConsentConfig')->willReturn(
-			['register' => 'docudesk', 'schema' => 'publicationConsent']
+			['register' => 'filinq', 'schema' => 'publicationConsent']
 		);
 
 		// @var ConsentService|MockObject $consentService

@@ -4,7 +4,7 @@
  * Unit tests for PackageCodec
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,12 +12,12 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\PackageCodec;
+use OCA\Filinq\Service\Editing\PackageCodec;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use ZipArchive;
@@ -26,10 +26,10 @@ use ZipArchive;
  * Unit tests for the byte-surgical ODF/OOXML codec.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -148,7 +148,7 @@ class PackageCodecTest extends TestCase {
 	 * @return string The package bytes.
 	 */
 	private function zip(array $entries): string {
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-test-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-test-');
 		$this->spilled[] = $path;
 		unlink($path);
 
@@ -173,7 +173,7 @@ class PackageCodecTest extends TestCase {
 	 * @return string|false The entry body.
 	 */
 	private function entry(string $bytes, string $entry): string|false {
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-test-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-test-');
 		$this->spilled[] = $path;
 		file_put_contents($path, $bytes);
 
@@ -325,7 +325,7 @@ class PackageCodecTest extends TestCase {
 
 		// Every entry except the body part comes back byte-identical — on a package
 		// this codec did not author.
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-test-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-test-');
 		$this->spilled[] = $path;
 		file_put_contents($path, $before);
 		$zip = new ZipArchive();
@@ -565,7 +565,7 @@ class PackageCodecTest extends TestCase {
 			array_column($this->codec->readBlocks($after, 'odt')['blocks'], 'text')
 		);
 
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-test-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-test-');
 		$this->spilled[] = $path;
 		file_put_contents($path, $before);
 		$zip = new ZipArchive();

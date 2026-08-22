@@ -2,17 +2,17 @@
 
 ## Context
 
-Verified at HEAD (DocuDesk `development` @ spec/market-gap-wave2 base, and
+Verified at HEAD (Filinq `development` @ spec/market-gap-wave2 base, and
 OpenRegister HEAD):
 
 - **Where detected entities actually live**: in OpenRegister, not in
-  DocuDesk. OR's `oc_openregister_entities` table is the per-instance entity
+  Filinq. OR's `oc_openregister_entities` table is the per-instance entity
   catalogue (`id`, `uuid`, `type`, `value`, `category`, `organisation`,
   `detected_at`); `oc_openregister_entity_relations` holds one row per
   occurrence (`entityId`, `fileId`, `objectId`, `emailId`, `chunkId`,
   `positionStart/End`, `confidence`, `detectionMethod`, `anonymized`,
   `anonymizedValue`, `bases[]`, `skipAnonymization`). They are populated by
-  OR's `TextExtractionService` detection pipeline that DocuDesk's
+  OR's `TextExtractionService` detection pipeline that Filinq's
   extract/anonymise flows already drive.
 - **OR already exposes a read API**: `GdprEntitiesController` —
   `GET /api/entities` (`search` = case-insensitive substring on `value`,
@@ -31,10 +31,10 @@ OpenRegister HEAD):
 - `dossier.@self.folder` (dossier register) binds a dossier to an NC folder
   node id — dossier membership of a file is resolvable from its parent
   folder.
-- DocuDesk's `processing-activity-export` capability (status done) declares
-  DocuDesk's processing activities as `x-openregister-processing`
-  annotations in `docudesk_register.json` and explicitly forbids a
-  DocuDesk-side aggregation/export engine (OR-PA-7 owns the export).
+- Filinq's `processing-activity-export` capability (status done) declares
+  Filinq's processing activities as `x-openregister-processing`
+  annotations in `filinq_register.json` and explicitly forbids a
+  Filinq-side aggregation/export engine (OR-PA-7 owns the export).
 - Wave-1 `woo-request-workflow` (sibling change, referenced not modified)
   collects candidate documents into a request dossier via its collection
   step (REQ-DDWRW-003) and its own dedupe.
@@ -61,13 +61,13 @@ OpenRegister HEAD):
   assigned to this change; see Deferred below).
 - No entity deletion/merge management UI (OR owns catalogue lifecycle).
 - No client-side calls to OR's `/api/entities` from this surface — the gate
-  and the log live server-side in DocuDesk.
+  and the log live server-side in Filinq.
 
 ## Decisions
 
-### D1 — Consume OR's catalogue through a DocuDesk chokepoint (justified non-pass-through)
+### D1 — Consume OR's catalogue through a Filinq chokepoint (justified non-pass-through)
 
-DocuDesk ships `EntitySearchService` + `EntitySearchController`
+Filinq ships `EntitySearchService` + `EntitySearchController`
 (`api/entity-search`, `api/entity-search/{entityUuid}`). Per ADR-022 a bare
 OR proxy would be forbidden (redundant-controller gate); these endpoints are
 justified because they add three things that must not be client-side:
@@ -75,17 +75,17 @@ justified because they add three things that must not be client-side:
 1. the fail-closed **group permission gate** (D3),
 2. the **Art. 30 processing-log write** (D4) — logging in the browser would
    be bypassable,
-3. **cross-register enrichment** (D2) joining OR relations with DocuDesk's
+3. **cross-register enrichment** (D2) joining OR relations with Filinq's
    `anonymizationLink` and `dossier` objects.
 
 Mechanism: the service resolves OR's `EntityMapper`, `EntityRelationMapper`
 and `RiskLevelService` lazily via the DI container by FQCN string (the
-existing `EmlPdfAssemblyService`/`EmlBackend` cross-app pattern), so DocuDesk
+existing `EmlPdfAssemblyService`/`EmlBackend` cross-app pattern), so Filinq
 stays loadable without OR; without OR the endpoints return an explanatory
 503-style empty state. Tenant scoping is preserved by reusing OR's
 `OrganisationService` to resolve the caller's accessible organisation UUIDs
 and filtering catalogue queries to them (admins unscoped) — mirroring the
-`GdprEntitiesController` #1825 rule so DocuDesk can never show a wider set
+`GdprEntitiesController` #1825 rule so Filinq can never show a wider set
 than OR itself would. **Deferred question**: OR should export a reusable
 `EntityQueryService` so this scoping rule lives once (OR spec not assigned
 here; recorded as a follow-up, not silently duplicated forever).
@@ -109,7 +109,7 @@ aggregate — the gate grants entity search, not file read rights.
 
 ### D3 — Permission gate (fail-closed)
 
-`docudesk.entity_search.allowed_groups` (IAppConfig, JSON array of NC group
+`filinq.entity_search.allowed_groups` (IAppConfig, JSON array of NC group
 ids; default `[]`). A user may use the surface iff they are an admin or a
 member of a listed group. Enforced in the controller on **every**
 entity-search route (`#[NoAdminRequired]` + explicit in-method gate — the
@@ -133,17 +133,17 @@ object (`document` register):
 - detail: `entityRef` (OR entity **uuid** — a pointer into the catalogue, not
   a value copy), `occurrenceCount`
 
-The schema carries a `docudesk-entity-search` `x-openregister-processing`
+The schema carries a `filinq-entity-search` `x-openregister-processing`
 annotation (purpose: targeted PII discovery for Woo/AVG case handling;
 rechtsgrond `public-task`; `logReads: true`), so the activity surfaces in the
-platform verwerkingsregister exactly like DocuDesk's existing activities.
+platform verwerkingsregister exactly like Filinq's existing activities.
 The write is part of the request path and **fail-closed**: if the log write
 fails, the search/detail response is refused (an unlogged PII lookup must not
 happen). Log objects are never updated or deleted by the app (append-only by
 code; OR audit trail covers the rest).
 
 **Relationship note (touch discipline):** the canonical
-`processing-activity-export` spec says DocuDesk declares "four" activities.
+`processing-activity-export` spec says Filinq declares "four" activities.
 This change adds a fifth via the same declared mechanism; the enumeration in
 that canonical spec needs a one-word amendment in a follow-up — that file is
 not assigned to this change, so the amendment is recorded as a deferred
@@ -208,7 +208,7 @@ extraction runs (e2e tests seed it by extracting fixture documents).
 ## Security Considerations
 
 - Fail-closed gate on every route; empty `allowed_groups` = admins only.
-- Organisation scoping mirrors OR's #1825 rule; DocuDesk can never widen it.
+- Organisation scoping mirrors OR's #1825 rule; Filinq can never widen it.
 - Unreadable files never leak names/paths (opaque no-access aggregate, D2).
 - Log stores digests and catalogue pointers, never raw searched values (D4).
 - Log write failure blocks the response (no unlogged lookups).

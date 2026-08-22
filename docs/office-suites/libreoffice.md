@@ -18,18 +18,18 @@ look the same would be hiding what it is.
 
 | | |
 |---|---|
-| Converter | **sidecar container** `docudesk-libreoffice`, image `libreofficedocker/libreoffice-unoserver:3.19` (1.49 GB), host port **8094** → container 2004 |
+| Converter | **sidecar container** `filinq-libreoffice`, image `libreofficedocker/libreoffice-unoserver:3.19` (1.49 GB), host port **8094** → container 2004 |
 | Nextcloud connector | **none** — LibreOffice has no server-side Nextcloud integration of this kind |
 
 ```bash
 docker compose -f docker-compose.office.yml --profile libreoffice up -d
 ```
 
-## ⚠️ DocuDesk cannot currently use this container
+## ⚠️ Filinq cannot currently use this container
 
 `LibreOfficeHeadlessBackend` invokes `soffice --headless` through `proc_open` as a
 **local subprocess**, configured by
-`docudesk.conversion.libreoffice_binary_path` (default `soffice`).
+`filinq.conversion.libreoffice_binary_path` (default `soffice`).
 
 Measured 2026-08-16:
 
@@ -60,7 +60,7 @@ Multipart upload, `convert-to` as a **form field** — not a query parameter:
 
 ```bash
 curl -F 'file=@probe.docx' -F 'convert-to=pdf' \
-     http://docudesk-libreoffice:2004/request -o out.pdf
+     http://filinq-libreoffice:2004/request -o out.pdf
 ```
 
 Passing `?convert-to=pdf` in the query string returns **400**:
@@ -73,12 +73,12 @@ container running                          PASS  running
 reachable from nextcloud                   PASS  HTTP 200 (on :2004)
 WOPI discovery                             FAIL  no path answered 200   <- EXPECTED: not a WOPI host
 conversion (docx->pdf)                     PASS  HTTP 200, 18890 bytes, %PDF- magic
-docudesk:office:probe                      ----  not listed: the probe covers WOPI suites only
+filinq:office:probe                      ----  not listed: the probe covers WOPI suites only
 ```
 
 ## What is NOT verified for LibreOffice
 
-- **Anything through DocuDesk.** The app cannot reach this container (see above), so
-  no DocuDesk conversion has gone through LibreOffice on this deployment.
+- **Anything through Filinq.** The app cannot reach this container (see above), so
+  no Filinq conversion has gone through LibreOffice on this deployment.
 - **Anchor stability.** Not applicable in the same way — there is no editing session
   to round-trip through. A conversion is one-way.

@@ -9,12 +9,12 @@
  * to Twig if blocks.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdf-generation/spec.md
  *
@@ -24,11 +24,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\DocuDesk\Service\Charts\ChartSvgRenderer;
-use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
+use OCA\Filinq\Service\Charts\ChartSvgRenderer;
+use OCA\Filinq\Service\Charts\TableHtmlRenderer;
 use Psr\Log\LoggerInterface;
 use Twig\Environment;
 use Twig\Extension\SandboxExtension;
@@ -40,10 +40,10 @@ use Twig\TwigFunction;
  * Service for rendering Twig templates in a sandboxed environment
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/pdf-generation/spec.md
  */

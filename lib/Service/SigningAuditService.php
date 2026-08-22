@@ -8,18 +8,18 @@
  * Complies with Archiefwet 1995 minimum 10-year retention.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-1
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
@@ -33,10 +33,10 @@ use Throwable;
  * Service for immutable signing audit trail via OR audit-trail-immutable.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-1
  */
@@ -124,6 +124,16 @@ class SigningAuditService {
 			throw new RuntimeException('Invalid audit action: ' . $action);
 		}
 
+		// ⚠️ THE `docudesk.signing.` PREFIX STAYS ACROSS THE FILINQ RENAME. It
+		// is not a label: it is the `action` value PERSISTED on every
+		// openregister_audit_trails row this app has ever written, and
+		// getAuditTrail() below filters by exactly these strings. Rename it and
+		// new entries stop matching old ones — every historical signing audit
+		// entry drops out of the trail a user or auditor is shown, silently and
+		// with no error, because "no rows matched" is indistinguishable from
+		// "nothing happened". This is the evidential record of a legal
+		// signature process. Moving the prefix requires a data migration over
+		// the stored rows, or a reader that accepts both.
 		$actionType = 'docudesk.signing.' . $action;
 
 		// Context is persisted in the `changed` JSON column on openregister_audit_trails.
@@ -169,8 +179,8 @@ class SigningAuditService {
 				throw new RuntimeException('OpenRegister is not available');
 			}
 
-			$register = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-			$schema = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+			$register = $this->config->getValueString('filinq', 'signingRequest_register', '');
+			$schema = $this->config->getValueString('filinq', 'signingRequest_schema', '');
 
 			$object = $objectService->find(id: $signingRequestId, register: $register, schema: $schema);
 			if ($object instanceof ObjectEntity) {
@@ -180,7 +190,7 @@ class SigningAuditService {
 			throw new RuntimeException('Signing request did not resolve to an ObjectEntity');
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'DocuDesk: signing audit entry for ' . $signingRequestId . ' could not resolve the real '
+				'Filinq: signing audit entry for ' . $signingRequestId . ' could not resolve the real '
 				. 'signing-request object; falling back to a uuid-only stub (unlinked but not dropped): '
 				. $e->getMessage()
 			);

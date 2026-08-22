@@ -1,6 +1,6 @@
 # Tasks — enable-kenteken-entity-type
 
-> DocuDesk-only. No OpenRegister change (unmapped whitelist types already pass through to OpenAnonymiser). No schema, migration, or new dependency.
+> Filinq-only. No OpenRegister change (unmapped whitelist types already pass through to OpenAnonymiser). No schema, migration, or new dependency.
 
 ## 1. Add KENTEKEN to the curated vocabulary
 

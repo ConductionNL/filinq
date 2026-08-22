@@ -12,7 +12,7 @@ OpenRegister objects with business metadata, lifecycle-governed status,
 confidentiality, archival retention, and relations to cases and objects — built
 entirely on OpenRegister capabilities that already exist at OR HEAD (lifecycle
 runtime, archival annotation, `@self.folder` file binding, cross-register
-`$ref`). DocuDesk ships schemas + seed data only: no PHP code, no OpenRegister
+`$ref`). Filinq ships schemas + seed data only: no PHP code, no OpenRegister
 change, no database migration.
 
 ## ADDED Requirements
@@ -20,7 +20,7 @@ change, no database migration.
 ### Requirement: Governed document object schema (REQ-DREG-D01)
 
 The document register MUST declare a `document` schema in
-`lib/Settings/docudesk_register.json` under `components.schemas`, aligned to the
+`lib/Settings/filinq_register.json` under `components.schemas`, aligned to the
 VNG DRC *EnkelvoudigInformatieObject*, with `hardValidation: true` and
 `configuration.objectNameField: "title"`.
 
@@ -38,7 +38,7 @@ The schema MUST declare an `x-openregister-archival` annotation providing a
 default retention that is overridable per object via `retentionClass`.
 
 The document body MUST bind through OpenRegister's native `@self.folder` /
-File Attachment contract; the change MUST NOT add a DocuDesk document upload
+File Attachment contract; the change MUST NOT add a Filinq document upload
 endpoint.
 
 #### Scenario: Create and govern a document
@@ -55,7 +55,7 @@ endpoint.
 ### Requirement: Document type classification vocabulary (REQ-DREG-D02)
 
 The document register MUST declare a `documentType` schema in
-`docudesk_register.json` under `components.schemas`, aligned to the VNG ZTC
+`filinq_register.json` under `components.schemas`, aligned to the VNG ZTC
 *InformatieObjectType*, with `hardValidation: true`. It MUST carry `name`
 (required, name field), `description`, `identifier` (unique business key),
 `category`, `retentionPeriod` (ISO-8601 duration), `selectielijstCategory`
@@ -84,7 +84,7 @@ seeded types with distinct `status` and `confidentiality` values.
 
 #### Scenario: Seed data present after import
 
-- **GIVEN** a clean DocuDesk install or an upgrade
+- **GIVEN** a clean Filinq install or an upgrade
 - **WHEN** `SettingsInitializer::initialize()` imports the register
 - **THEN** the canonical `documentType` set and the sample `document` objects
   exist and are queryable via the generic object routes.
@@ -111,7 +111,7 @@ configuration idempotently on upgrade. An import-roundtrip test MUST pin that
 the imported `document` schema retains `hardValidation`, its
 `x-openregister-lifecycle` block, its `x-openregister-archival` block, and
 `configuration.objectNameField`. If the import path drops any key, an
-OpenRegister issue MUST be filed rather than a DocuDesk-side workaround added.
+OpenRegister issue MUST be filed rather than a Filinq-side workaround added.
 
 #### Scenario: Upgrade re-imports without duplication
 
@@ -126,7 +126,7 @@ The `document` schema MUST support relating a document to one or more cases
 (`relatedCases`) and arbitrary objects (`relatedObjects`) via string slug/UUID
 arrays, enabling "attach this document to that case/object" and "list all
 documents of type X" queries through OpenRegister's generic object search
-without a bespoke DocuDesk endpoint.
+without a bespoke Filinq endpoint.
 
 #### Scenario: Attach a document to a case
 

@@ -3,7 +3,7 @@
 		<div class="summary-bar">
 			{{
 				t(
-					'docudesk',
+					'filinq',
 					'{selected} of {total} entities selected across {files} files',
 					{
 						selected: selectedCount,
@@ -17,11 +17,11 @@
 			<input
 				v-model="searchQuery"
 				type="text"
-				:aria-label="t('docudesk', 'Search entities')"
-				:placeholder="t('docudesk', 'Search entities...')" />
+				:aria-label="t('filinq', 'Search entities')"
+				:placeholder="t('filinq', 'Search entities...')" />
 			<select v-model="typeFilter">
 				<option value="">
-					{{ t('docudesk', 'All types') }}
+					{{ t('filinq', 'All types') }}
 				</option>
 				<option v-for="t in availableTypes" :key="t" :value="t">
 					{{ entityTypeLabel(t) }}
@@ -37,7 +37,7 @@
 						filteredEntities.map((i) => i.idx),
 					)
 				">
-				{{ t('docudesk', 'Select All Visible') }}
+				{{ t('filinq', 'Select All Visible') }}
 			</NcButton>
 			<NcButton
 				variant="tertiary"
@@ -47,13 +47,13 @@
 						filteredEntities.map((i) => i.idx),
 					)
 				">
-				{{ t('docudesk', 'Deselect All Visible') }}
+				{{ t('filinq', 'Deselect All Visible') }}
 			</NcButton>
 			<NcButton
 				v-if="defaultBases.length > 0"
 				variant="tertiary"
 				@click="applyDefaultBasesToVisible">
-				{{ t('docudesk', 'Apply dossier grondslagen to visible') }}
+				{{ t('filinq', 'Apply dossier grondslagen to visible') }}
 			</NcButton>
 		</div>
 		<table class="entity-table">
@@ -61,22 +61,22 @@
 				<tr>
 					<th />
 					<th scope="col" @click="sortBy('type')">
-						{{ t('docudesk', 'Type') }}
+						{{ t('filinq', 'Type') }}
 					</th>
 					<th scope="col" @click="sortBy('value')">
-						{{ t('docudesk', 'Value') }}
+						{{ t('filinq', 'Value') }}
 					</th>
 					<th scope="col" @click="sortBy('highestConfidence')">
-						{{ t('docudesk', 'Confidence') }}
+						{{ t('filinq', 'Confidence') }}
 					</th>
 					<th scope="col" @click="sortBy('fileCount')">
-						{{ t('docudesk', 'Files') }}
+						{{ t('filinq', 'Files') }}
 					</th>
 					<th scope="col" class="bases-col">
-						{{ t('docudesk', 'Grondslag (bases)') }}
+						{{ t('filinq', 'Grondslag (bases)') }}
 					</th>
 					<th scope="col">
-						{{ t('docudesk', 'Skip') }}
+						{{ t('filinq', 'Skip') }}
 					</th>
 				</tr>
 			</thead>
@@ -86,7 +86,7 @@
 						<input
 							type="checkbox"
 							:aria-label="
-								t('docudesk', 'Include {entity} in anonymisation', {
+								t('filinq', 'Include {entity} in anonymisation', {
 									entity: item.e.value,
 								})
 							"
@@ -108,8 +108,8 @@
 							label="label"
 							:reduce="(o) => o.value"
 							:multiple="true"
-							:inputLabel="t('docudesk', 'Grondslagen')"
-							:placeholder="t('docudesk', 'Pick grondslagen…')"
+							:inputLabel="t('filinq', 'Grondslagen')"
+							:placeholder="t('filinq', 'Pick grondslagen…')"
 							:disabled="
 								!Array.isArray(item.e.relationIds)
 								|| item.e.relationIds.length === 0
@@ -123,7 +123,7 @@
 							class="warn-text">
 							{{
 								t(
-									'docudesk',
+									'filinq',
 									'(no relation ids — grondslagen will not persist)',
 								)
 							}}
@@ -138,7 +138,7 @@
 					<td>
 						<NcCheckboxRadioSwitch
 							:aria-label="
-								t('docudesk', 'Skip {entity}', {
+								t('filinq', 'Skip {entity}', {
 									entity: item.e.value,
 								})
 							"

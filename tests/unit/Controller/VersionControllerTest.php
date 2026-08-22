@@ -10,10 +10,10 @@
  * Throwable escape to a white-screen.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-versions/spec.md
  *
@@ -23,11 +23,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\VersionController;
-use OCA\DocuDesk\Exception\ComparisonException;
-use OCA\DocuDesk\Service\DocumentVersionService;
+use OCA\Filinq\Controller\VersionController;
+use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Service\DocumentVersionService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -43,10 +43,10 @@ use RuntimeException;
  * Tests for the document file-version restore endpoint.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -95,7 +95,7 @@ class VersionControllerTest extends TestCase {
 		$session->method('getUser')->willReturn($user);
 
 		$this->controller = new VersionController(
-			'docudesk',
+			'filinq',
 			$this->createMock(IRequest::class),
 			$this->createMock(LoggerInterface::class),
 			$this->service,
@@ -135,7 +135,7 @@ class VersionControllerTest extends TestCase {
 		$session->method('getUser')->willReturn(null);
 
 		$controller = new VersionController(
-			'docudesk',
+			'filinq',
 			$this->createMock(IRequest::class),
 			$this->createMock(LoggerInterface::class),
 			$this->service,

@@ -2,7 +2,7 @@
 
 ## Overview
 
-DocuDesk provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister objects. Templates are scoped per-app via a namespace field, enabling multiple Nextcloud apps to maintain their own template collections through a shared service.
+Filinq provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister objects. Templates are scoped per-app via a namespace field, enabling multiple Nextcloud apps to maintain their own template collections through a shared service.
 
 ## API Endpoints
 
@@ -30,6 +30,6 @@ DocuDesk provides CRUD operations for reusable Twig/HTML templates stored as Ope
 Other Nextcloud apps can use the TemplateService directly:
 
 ```php
-$templateService = $container->get(\OCA\DocuDesk\Service\TemplateService::class);
+$templateService = $container->get(\OCA\Filinq\Service\TemplateService::class);
 $templates = $templateService->getTemplatesByNamespace('myapp');
 ```

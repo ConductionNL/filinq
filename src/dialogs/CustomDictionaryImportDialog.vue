@@ -70,7 +70,7 @@ export default {
 
 <template>
 	<NcDialog
-		:name="t('docudesk', 'Import terms')"
+		:name="t('filinq', 'Import terms')"
 		:open="true"
 		size="normal"
 		@update:open="onClose">
@@ -78,7 +78,7 @@ export default {
 			<p class="custom-dictionary-import__hint">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.',
 					)
 				}}
@@ -87,7 +87,7 @@ export default {
 			<label
 				class="custom-dictionary-import__file-label"
 				for="custom-dictionary-import-file">
-				{{ t('docudesk', 'CSV file') }}
+				{{ t('filinq', 'CSV file') }}
 			</label>
 			<input
 				id="custom-dictionary-import-file"
@@ -96,22 +96,20 @@ export default {
 				@change="onFileChange" />
 
 			<div class="custom-dictionary-import__divider">
-				{{ t('docudesk', 'or paste a newline-separated list') }}
+				{{ t('filinq', 'or paste a newline-separated list') }}
 			</div>
 
 			<NcTextArea
 				v-model="pastedContent"
 				:disabled="selectedFile !== null"
-				:label="t('docudesk', 'Terms (one per line)')"
-				:placeholder="
-					t('docudesk', 'Operatie Zilverreiger\nDossier Karekiet')
-				"
+				:label="t('filinq', 'Terms (one per line)')"
+				:placeholder="t('filinq', 'Operatie Zilverreiger\nDossier Karekiet')"
 				:rows="6" />
 
 			<div v-if="result" class="custom-dictionary-import__result">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'{added} added, {skipped} skipped, {total} total.',
 						result,
 					)
@@ -125,7 +123,7 @@ export default {
 
 		<template #actions>
 			<NcButton variant="tertiary" @click="onClose">
-				{{ t('docudesk', 'Close') }}
+				{{ t('filinq', 'Close') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
@@ -134,7 +132,7 @@ export default {
 				<template v-if="importing" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ t('docudesk', 'Import') }}
+				{{ t('filinq', 'Import') }}
 			</NcButton>
 		</template>
 	</NcDialog>

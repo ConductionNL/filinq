@@ -41,7 +41,7 @@ Verified at HEAD:
 - Give the existing OCR engine an invocation surface: route, UI action,
   and automatic anonymisation-pipeline fallback.
 - Make per-file OCR status honest and persistent.
-- Pin the DocuDesk↔OpenRegister OCR division of labour in a spec.
+- Pin the Filinq↔OpenRegister OCR division of labour in a spec.
 
 **Non-Goals:**
 
@@ -57,18 +57,18 @@ Verified at HEAD:
 
 ## Decisions
 
-### D1 — OCR stays in DocuDesk; OR ingests text (the boundary decision)
+### D1 — OCR stays in Filinq; OR ingests text (the boundary decision)
 
 Per the project boundaries, extraction/detection engines live in
 OpenRegister — but OCR is a *text acquisition* step OR deliberately does
-not perform, and DocuDesk already owns a hardened local Tesseract path
-used by scan-en-herken. **Decision:** DocuDesk remains the OCR provider;
+not perform, and Filinq already owns a hardened local Tesseract path
+used by scan-en-herken. **Decision:** Filinq remains the OCR provider;
 OpenRegister remains the single owner of chunking + entity detection. The
 recovered OCR text must therefore enter OR's pipeline, which requires an
 OR-side ingestion seam (D2). Rejected alternatives: (a) moving OcrService
 into OR — right long-term home, but a cross-app engine migration is out
 of this change's scope and would orphan the scan-en-herken caller; (b)
-DocuDesk running its own entity detection over OCR text — duplicates the
+Filinq running its own entity detection over OCR text — duplicates the
 engine (ADR-022 violation) and forks entity storage.
 
 ### D2 — Cross-app dependency: an OR provided-text ingestion seam
@@ -84,7 +84,7 @@ change's task 2.3 can complete. **Degraded behaviour until it lands
 (fail-flagged, never fail-silent):** the extract response and review UI
 mark the file `ocrDetectionPending` — OCR ran, text was recovered, but
 entity detection could not consume it. The requirement (REQ-DDOCR-004)
-scenarios cover both states. Rejected: DocuDesk writing OR `Chunk` rows
+scenarios cover both states. Rejected: Filinq writing OR `Chunk` rows
 via container-resolved mappers — reaching into another app's private
 persistence dialect is how silent drift defects happen.
 
@@ -180,7 +180,7 @@ clean install.
 ## Risks / Trade-offs
 
 - [OR ingestion seam is cross-app and may lag] → D2 degraded-but-flagged
-  behaviour; the DocuDesk surface (route, UI, status, settings) is
+  behaviour; the Filinq surface (route, UI, status, settings) is
   independently shippable and testable; the fallback's detection leg
   activates when the seam lands.
 - [OCR on large PDFs is slow (Imagick rasterisation at 300 DPI)] → the

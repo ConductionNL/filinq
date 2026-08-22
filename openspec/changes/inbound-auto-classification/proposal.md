@@ -7,7 +7,7 @@ kind: code
 ## Why
 
 Every serious document-management competitor auto-classifies inbound
-documents and DocuDesk classifies almost nothing. The market evidence
+documents and Filinq classifies almost nothing. The market evidence
 (theme 11 of the gap research): **Paperless-ngx** ships ML auto-tagging
 of document type and correspondent as its headline feature; **BCT Corsa**
 sells Intelligent Document Tooling (IDT) classification; **Visma Circle
@@ -20,7 +20,7 @@ records". Dutch municipal intake (postkamer) is exactly this workload:
 every inbound brief/besluit/factuur/rapport must be typed, attributed to
 a correspondent, and filed to a dossier — today by hand.
 
-DocuDesk already has the substrate, verified at HEAD `9cc14407`:
+Filinq already has the substrate, verified at HEAD `9cc14407`:
 
 - `MetadataService::enhanceMetadata()` enriches OR objects on
   create/update events (language, keywords, topic, documentType

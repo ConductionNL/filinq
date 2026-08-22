@@ -1,6 +1,6 @@
 ## Context
 
-DocuDesk's document path does not use an office suite. `PackageCodec` opens the
+Filinq's document path does not use an office suite. `PackageCodec` opens the
 ODF/OOXML package, rewrites the targeted paragraph's byte range, and leaves every
 other part byte-identical. Nothing in that path talks to Collabora, ONLYOFFICE or
 LibreOffice. Conversion is the only place a suite participates, and it participates
@@ -21,7 +21,7 @@ unguarded, unmeasured one. Three concrete gaps:
 
 One further constraint shapes where things go: `.github/` is a **separate
 repository**, mounted here as a submodule. Adding office-suite services to the fleet
-compose would put a DocuDesk concern into a shared repo and split this change across
+compose would put a Filinq concern into a shared repo and split this change across
 two review surfaces.
 
 ## Goals / Non-Goals
@@ -35,7 +35,7 @@ two review surfaces.
 
 **Non-Goals:**
 
-- Building a WOPI client. DocuDesk edits packages directly; it does not need a WOPI
+- Building a WOPI client. Filinq edits packages directly; it does not need a WOPI
   session, and ADR-087 §3 governs sessions we do not currently open. The probe
   reports availability for the *feature-gating* purpose ADR-075 §4 describes.
 - Live in-editor manipulation (Collabora `postMessage` / ONLYOFFICE plugin API).
@@ -67,8 +67,8 @@ expensive one.
 ### D2 — The §5 guard is a test, not a gate
 
 A hydra gate would live in `.github`, a separate repo, and would apply fleet-wide to
-apps that legitimately *are* an office integration. The constraint is DocuDesk's, so
-it lives in DocuDesk's suite.
+apps that legitimately *are* an office integration. The constraint is Filinq's, so
+it lives in Filinq's suite.
 
 The check must ignore comments. A file explaining *why* it does not depend on
 `richdocuments` — which `EditSessionService` does at length, because the WOPI lock
@@ -120,7 +120,7 @@ are a single `.docx` used by the round-trip test, already present in the E2E sui
 | §5 conformance check | **Imperative** | A test over source files; not a runtime behaviour at all. |
 
 No behaviour here matches a declarative category (lifecycle, aggregation, derived
-field, notification, relation, widget), so no `lib/Settings/docudesk_register.json`
+field, notification, relation, widget), so no `lib/Settings/filinq_register.json`
 patch is appropriate.
 
 ## Risks / Trade-offs

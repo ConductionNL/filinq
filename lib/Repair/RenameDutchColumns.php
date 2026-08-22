@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk RenameDutchColumns Repair Step
+ * Filinq RenameDutchColumns Repair Step
  *
  * Moves stored data from the Dutch columns to the English ones the shillinq
  * register now declares. Covers every vocabulary cluster migrated so far, not
@@ -38,7 +38,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Repair
- * @package  OCA\DocuDesk\Repair
+ * @package  OCA\Filinq\Repair
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -51,7 +51,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Repair;
+namespace OCA\Filinq\Repair;
 
 use OCP\DB\Exception;
 use OCP\IDBConnection;
@@ -70,7 +70,7 @@ class RenameDutchColumns implements IRepairStep {
 	/**
 	 * Slug prefix of the registers in scope.
 	 *
-	 * DocuDesk declares FIVE registers in one settings file and the renamed
+	 * Filinq declares FIVE registers in one settings file and the renamed
 	 * property could sit under any of them, so all five are listed. Picking one
 	 * silently skips the rest.
 	 *
@@ -113,11 +113,11 @@ class RenameDutchColumns implements IRepairStep {
 	 *  requirement that says nothing about it.
 	 */
 	public function getName(): string {
-		return 'Move docudesk data from the Dutch columns to the English ones';
+		return 'Move filinq data from the Dutch columns to the English ones';
 	}//end getName()
 
 	/**
-	 * Run the column migration across every docudesk shard table.
+	 * Run the column migration across every filinq shard table.
 	 *
 	 * @param IOutput $output Repair output.
 	 *
@@ -130,7 +130,7 @@ class RenameDutchColumns implements IRepairStep {
 	public function run(IOutput $output): void {
 		$tables = $this->shardTables();
 		if ($tables === []) {
-			$output->info('RenameDutchColumns: no docudesk shard tables on this install; nothing to do.');
+			$output->info('RenameDutchColumns: no filinq shard tables on this install; nothing to do.');
 			return;
 		}
 

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * V2 component registry for docudesk (hydra ADR-036).
+ * V2 component registry for filinq (hydra ADR-036).
  *
  * Keys must match the `component` strings used in the manifest's
  * `type: "custom"` pages and the `widgetKey` strings used in the
@@ -29,9 +29,9 @@
  * of a `type:"dashboard"` page, which nested CnDashboardPage inside
  * CnDashboardPage (the hydra dashboard-antipattern) — fixed here.
  *
- * Every other page entry stays `kind:"page"` because docudesk's domain
+ * Every other page entry stays `kind:"page"` because filinq's domain
  * pages fall back to bespoke views — consent, anonymization, templates
- * and signing have hybrid data paths (docudesk PHP controllers + custom
+ * and signing have hybrid data paths (filinq PHP controllers + custom
  * sidebars) that the library's built-in index/detail page-types do not
  * cover yet. See each page's `_note` in src/manifest.json for the
  * specific reason a `type:"custom"` entry stayed in place.

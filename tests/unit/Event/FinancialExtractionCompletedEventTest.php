@@ -4,11 +4,11 @@
  * Unit tests for FinancialExtractionCompletedEvent
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Event
+ * @package   OCA\Filinq\Tests\Unit\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -18,9 +18,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Event;
+namespace OCA\Filinq\Tests\Unit\Event;
 
-use OCA\DocuDesk\Event\FinancialExtractionCompletedEvent;
+use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
 use PHPUnit\Framework\TestCase;
 
 /**

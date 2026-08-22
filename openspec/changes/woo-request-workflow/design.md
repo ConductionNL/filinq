@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at DocuDesk HEAD:
+Verified at Filinq HEAD:
 
 - The `dossier` register holds `dossier` (binds a Nextcloud folder via
   `@self.folder`; `name`, `description`, `bases[]` — array of `base` slugs —
@@ -222,7 +222,7 @@ app-owned by legal necessity (D2); no BSN/date/slug utilities duplicated.
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (demo-municipality flavour,
+Shipped in `filinq_register.json` `objects[]` (demo-municipality flavour,
 placeholder identifiers only):
 
 ```json
@@ -266,7 +266,7 @@ Art. 5.1/5.2 `base` seed objects (D5); a `woo-inventarislijst` and a
 
 - [Statutory-term errors are legal risk] → single clock-injected service,
   exhaustive unit tests incl. extension refusal; deadline always displayed,
-  never enforced silently (the operator decides, DocuDesk tracks).
+  never enforced silently (the operator decides, Filinq tracks).
 - [Hash dedupe misses near-duplicates/email threads] → explicitly scoped
   future work; verdict field is an enum so a `near_duplicate` value can be
   added without migration.

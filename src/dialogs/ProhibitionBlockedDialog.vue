@@ -42,13 +42,13 @@ export default {
 <template>
 	<NcDialog
 		:open="open"
-		:name="t('docudesk', 'Entity may not be skipped')"
+		:name="t('filinq', 'Entity may not be skipped')"
 		@update:open="$emit('update:open', $event)">
 		<div v-if="match" class="prohibition-blocked">
 			<p>
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'“{name}” matches the prohibition rule “{rule}” and must be anonymised.',
 						{ name: match.entityName, rule: match.ruleName },
 					)
@@ -56,20 +56,16 @@ export default {
 			</p>
 			<p class="confidence">
 				{{
-					t(
-						'docudesk',
-						'Detection confidence {conf}% (threshold {thr}%).',
-						{
-							conf: Math.round((match.confidence || 0) * 100),
-							thr: Math.round((block.threshold || 0) * 100),
-						},
-					)
+					t('filinq', 'Detection confidence {conf}% (threshold {thr}%).', {
+						conf: Math.round((match.confidence || 0) * 100),
+						thr: Math.round((block.threshold || 0) * 100),
+					})
 				}}
 			</p>
 			<p v-if="!releasable" class="warn-text">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'This match is at or above the threshold and cannot be skipped.',
 					)
 				}}
@@ -77,7 +73,7 @@ export default {
 			<p v-else>
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'You may override and skip it anyway; the override is recorded in the audit trail.',
 					)
 				}}
@@ -85,10 +81,10 @@ export default {
 		</div>
 		<template #actions>
 			<NcButton @click="close">
-				{{ t('docudesk', 'Keep anonymised') }}
+				{{ t('filinq', 'Keep anonymised') }}
 			</NcButton>
 			<NcButton v-if="releasable" variant="warning" @click="confirmForce">
-				{{ t('docudesk', 'Skip anyway (force)') }}
+				{{ t('filinq', 'Skip anyway (force)') }}
 			</NcButton>
 		</template>
 	</NcDialog>

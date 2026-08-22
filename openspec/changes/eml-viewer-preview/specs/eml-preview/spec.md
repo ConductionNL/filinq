@@ -26,7 +26,7 @@ The anonymisation upload widget MUST accept `message/rfc822` (`.eml`) files for 
 
 ### Requirement: A backend endpoint MUST render an original-EML preview as PDF
 
-DocuDesk MUST expose `GET /api/anonymization/eml-preview/{fileId}` that returns a PDF/A-3b rendering of the ORIGINAL (un-redacted) content of the `message/rfc822` file identified by `fileId`. The endpoint MUST require an authenticated user (`#[NoAdminRequired]`). The render MUST be produced by calling OpenRegister's anonymise-EML API with an EMPTY entity set (so nothing is redacted) and assembling the result via `eml-pdf-assembly`'s `EmlPdfAssemblyService`. On a render failure the endpoint MUST return a `422` JSON error and MUST NOT write any file.
+Filinq MUST expose `GET /api/anonymization/eml-preview/{fileId}` that returns a PDF/A-3b rendering of the ORIGINAL (un-redacted) content of the `message/rfc822` file identified by `fileId`. The endpoint MUST require an authenticated user (`#[NoAdminRequired]`). The render MUST be produced by calling OpenRegister's anonymise-EML API with an EMPTY entity set (so nothing is redacted) and assembling the result via `eml-pdf-assembly`'s `EmlPdfAssemblyService`. On a render failure the endpoint MUST return a `422` JSON error and MUST NOT write any file.
 
 #### Scenario: Preview returns the rendered original message
 
@@ -55,7 +55,7 @@ The in-app file viewer MUST render a `message/rfc822` / `.eml` file by loading t
 
 #### Scenario: Opening an EML shows the rendered preview
 
-- **GIVEN** an `.eml` file opened in the DocuDesk file viewer
+- **GIVEN** an `.eml` file opened in the Filinq file viewer
 - **WHEN** the viewer resolves the file type
 - **THEN** it renders the PDF preview fetched from `/api/anonymization/eml-preview/{fileId}`
 - **AND** it does not show the "cannot be previewed" fallback

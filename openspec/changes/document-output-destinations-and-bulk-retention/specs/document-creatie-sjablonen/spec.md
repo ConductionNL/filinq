@@ -18,7 +18,7 @@ generation (`options.output` omitted) is unchanged; this delta only ADDs.
 
 ### Requirement: options.output selects return, files, or both (REQ-DDOB-001)
 
-`POST /apps/docudesk/api/documents/generate` MUST accept an optional
+`POST /apps/filinq/api/documents/generate` MUST accept an optional
 `options.output.mode` of `return`, `files`, or `both`, defaulting to
 `return` when `options.output` is omitted entirely. `mode: return` MUST
 produce byte-for-byte the same response `DocumentController` produces
@@ -28,7 +28,7 @@ no additional service calls made during generation.
 
 #### Scenario: options.output omitted behaves exactly as before
 
-- GIVEN a `POST /apps/docudesk/api/documents/generate` request with no `options.output` field
+- GIVEN a `POST /apps/filinq/api/documents/generate` request with no `options.output` field
 - WHEN the request is processed
 - THEN the response is identical (status, headers, body bytes) to the response produced before this change existed
 - @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
@@ -56,7 +56,7 @@ no additional service calls made during generation.
 When `options.output.mode` is `files` or `both`, the system MUST store the
 generated binary via `IRootFolder::getUserFolder($userId)` at
 `options.output.targetPath` if provided, else at
-`DocuDesk/<template namespace>/` by default. The destination folder MUST
+`Filinq/<template namespace>/` by default. The destination folder MUST
 be created if it does not exist, recursively and idempotently (an existing
 folder is reused, never recreated or emptied). The stored filename MUST be
 the same name the `mode: return` download would have used for that format
@@ -73,7 +73,7 @@ created or file written.
 
 - GIVEN a template with `namespace: "procest"` and no `options.output.targetPath`
 - WHEN a document is generated with `options.output.mode: "files"`
-- THEN the file is stored under `DocuDesk/procest/` in the requesting user's Files
+- THEN the file is stored under `Filinq/procest/` in the requesting user's Files
 - @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
 
 #### Scenario: A second generation with the same filename is deduped, not overwritten
@@ -125,7 +125,7 @@ describing the storage failure.
 `DocumentService::logGeneratedDocument()` MUST record `fileId` and
 `filePath` on the `generatedDocument` audit object whenever the document
 was stored to Files (`mode: files` or `mode: both` with a successful
-store), and MUST record them as `null` otherwise. `docudesk_register.json`'s
+store), and MUST record them as `null` otherwise. `filinq_register.json`'s
 `generatedDocument` schema MUST declare matching optional, nullable
 `fileId`/`filePath` properties.
 
@@ -170,7 +170,7 @@ the `userId` captured in `options` at dispatch time (the same value
 already used for the job-status authorization check), under
 `<targetPath>/<jobId>/`, where `<targetPath>` is the request's
 `options.output.targetPath` if provided, else the same
-`DocuDesk/<template namespace>/` default single-generate uses. Each
+`Filinq/<template namespace>/` default single-generate uses. Each
 per-object entry in the job's `results` array MUST gain `fileId` and
 `path` on success; `GET /api/documents/jobs/{jobId}` MUST surface them
 unchanged as part of the existing `results` array.
@@ -211,7 +211,7 @@ independent implementation rather than reusing shared plumbing.
 
 #### Scenario: Correspondence generation behaviour is unchanged
 
-- GIVEN `POST /apps/docudesk/api/correspondence/generate` is called with any request body
+- GIVEN `POST /apps/filinq/api/correspondence/generate` is called with any request body
 - WHEN the request is processed
 - THEN behaviour is identical to before this change (no `options.output` support exists on this endpoint)
 - @e2e exclude scope-exclusion pin, not a behaviour to browser-test; covered by code review confirming no changes to CorrespondenceService/CorrespondenceController

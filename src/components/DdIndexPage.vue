@@ -82,7 +82,7 @@ import DdPagination from './DdPagination.vue'
 import DdViewToggle from './DdViewToggle.vue'
 
 /**
- * Top-level index-page component for DocuDesk list views.
+ * Top-level index-page component for Filinq list views.
  *
  * Layout is fixed: a tools bar (consumer-controlled `header-actions`
  * slot on the left, list/cards toggle on the right), then the list or

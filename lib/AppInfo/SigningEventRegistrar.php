@@ -1,19 +1,19 @@
 <?php
 
 /**
- * DocuDesk Signing Event Registrar
+ * Filinq Signing Event Registrar
  *
  * Wires the signing-related event listeners: the bridge from OpenRegister's
- * ApprovalStep events into DocuDesk's typed Signer* events, and the cross-app
+ * ApprovalStep events into Filinq's typed Signer* events, and the cross-app
  * delegated-signing request contract. Extracted from `Application`.
  *
  * @category  AppInfo
- * @package   OCA\DocuDesk\AppInfo
+ * @package   OCA\Filinq\AppInfo
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
  *
@@ -23,11 +23,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\AppInfo;
+namespace OCA\Filinq\AppInfo;
 
-use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
-use OCA\DocuDesk\EventListener\ApprovalStepListener;
-use OCA\DocuDesk\EventListener\DocumentSigningRequestedListener;
+use OCA\Filinq\Event\DocumentSigningRequestedEvent;
+use OCA\Filinq\EventListener\ApprovalStepListener;
+use OCA\Filinq\EventListener\DocumentSigningRequestedListener;
 use OCA\OpenRegister\Event\ApprovalStepApprovedEvent;
 use OCA\OpenRegister\Event\ApprovalStepCompletedEvent;
 use OCA\OpenRegister\Event\ApprovalStepInitiatedEvent;
@@ -38,10 +38,10 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
  * Registers the approval-step bridge and the cross-app signing-request listener.
  *
  * @category AppInfo
- * @package  OCA\DocuDesk\AppInfo
+ * @package  OCA\Filinq\AppInfo
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SigningEventRegistrar {
 	/**
@@ -54,7 +54,7 @@ class SigningEventRegistrar {
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	public function register(IRegistrationContext $context): void {
-		// Bridge OR ApprovalStep events into typed docudesk Signer*Events
+		// Bridge OR ApprovalStep events into typed filinq Signer*Events
 		// and invoke the configured SigningProviderInterface when a step
 		// becomes pending. Per migrate-signing-to-or-approval-workflow
 		// (D2.1) — OR's `add-approval-step-events` shipped upstream as of
@@ -66,12 +66,12 @@ class SigningEventRegistrar {
 		$context->registerEventListener(ApprovalStepRejectedEvent::class, ApprovalStepListener::class);
 		$context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
 
-		// Cross-app delegated-signing contract (docudesk-signing-events): any
+		// Cross-app delegated-signing contract (filinq-signing-events): any
 		// installed consumer app (e.g. shillinq) dispatches
-		// DocumentSigningRequestedEvent and DocuDesk raises the signing request
+		// DocumentSigningRequestedEvent and Filinq raises the signing request
 		// synchronously via SigningService::createRequest, writing the resolved
 		// signingRequestId back onto the event. The in-process replacement for
-		// the broken $registry->call('docudesk','createSigningRequest',…) path.
+		// the broken $registry->call('filinq','createSigningRequest',…) path.
 		$context->registerEventListener(
 			DocumentSigningRequestedEvent::class,
 			DocumentSigningRequestedListener::class

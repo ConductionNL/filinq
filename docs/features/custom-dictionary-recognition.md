@@ -21,13 +21,13 @@ as core, not a nice-to-have:
   value-lists rather than a fixed entity model.
 
 Custom dictionary recognition closes this recall gap: an organisation
-maintains its own list of terms, DocuDesk matches those terms against every
+maintains its own list of terms, Filinq matches those terms against every
 document's extracted text, and a match becomes a `CUSTOM_DICTIONARY`
 occurrence in OpenRegister's shared entity catalogue — appearing in
 detection results, the review workbench, the grondslagen summary and
 redaction exactly like a Presidio or regex hit.
 
-DocuDesk adds a **recognizer**, not an engine: OpenRegister still owns
+Filinq adds a **recognizer**, not an engine: OpenRegister still owns
 extraction, the catalogue, review and redaction. Nothing about
 `EntityRecognitionHandler`, its type constants, its regex set or its
 redaction placeholder format changes.
@@ -41,7 +41,7 @@ redaction placeholder format changes.
    import** (server-side parsing only; trims, skips blanks, de-duplicates
    case-insensitively, and reports `{added, skipped, total}`).
 3. When a document is extracted and detected
-   (`AnonymizationService::extractAndDetectEntities`), DocuDesk runs a
+   (`AnonymizationService::extractAndDetectEntities`), Filinq runs a
    best-effort pass **after** OpenRegister's own extraction: for every
    active dictionary the caller's organisation can access, it matches that
    dictionary's terms against the file's text chunks
@@ -90,7 +90,7 @@ fallback).
 
 ## API
 
-All routes live under `api/custom-dictionaries` (DocuDesk's own controller,
+All routes live under `api/custom-dictionaries` (Filinq's own controller,
 not a bare OpenRegister object proxy — see `CustomDictionaryController`'s
 ADR-022 justification):
 

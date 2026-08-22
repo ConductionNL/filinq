@@ -5,13 +5,13 @@
  * outputFormat validation, tenant default resolution, and HTTP 422/207 outcomes.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-8
  *
@@ -19,21 +19,21 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\AnonymizationController;
-use OCA\DocuDesk\Controller\BatchAnonymizationController;
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\BatchAnonymizeService;
-use OCA\DocuDesk\Service\BatchExtractionService;
-use OCA\DocuDesk\Service\BatchReportService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\BatchUploadService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\FileListingService;
-use OCA\DocuDesk\Service\FolderBatchService;
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchExtractionService;
+use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\BatchUploadService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Service\FolderBatchService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -52,10 +52,10 @@ use Psr\Log\LoggerInterface;
  * Tests for outputFormat validation and conversion failure handling in controllers
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -455,7 +455,7 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		);
 		// phpcs:disable CustomSn.Functions.NamedParameters
 		$batchController = new BatchAnonymizationController(
-			'docudesk',
+			'filinq',
 			$mockRequest,
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(BatchStateService::class),
@@ -579,7 +579,7 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 	private function buildController(): AnonymizationController {
 		// phpcs:disable CustomSn.Functions.NamedParameters
 		return new AnonymizationController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$this->createMock(LoggerInterface::class),
 			$this->mockAnonService,
@@ -613,7 +613,7 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 
 		// phpcs:disable CustomSn.Functions.NamedParameters
 		$controller = new BatchAnonymizationController(
-			'docudesk',
+			'filinq',
 			$mockRequest,
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(BatchStateService::class),

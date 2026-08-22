@@ -57,12 +57,12 @@ export default {
 			// value (same {value, label} + reduce convention as
 			// EntityReviewTable's grondslagen NcSelect).
 			matchModeOptions: [
-				{ value: 'exact', label: t('docudesk', 'Exact (case-sensitive)') },
+				{ value: 'exact', label: t('filinq', 'Exact (case-sensitive)') },
 				{
 					value: 'caseInsensitive',
-					label: t('docudesk', 'Case-insensitive'),
+					label: t('filinq', 'Case-insensitive'),
 				},
-				{ value: 'wordBoundary', label: t('docudesk', 'Word boundary') },
+				{ value: 'wordBoundary', label: t('filinq', 'Word boundary') },
 			],
 		}
 	},
@@ -72,10 +72,17 @@ export default {
 			return this.editingRecord !== null
 		},
 
+		/**
+		 * Dialog heading — "Edit" when an existing dictionary was handed in,
+		 * "Add" for a create.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		dialogTitle() {
 			return this.editing
-				? t('docudesk', 'Edit dictionary')
-				: t('docudesk', 'Add custom dictionary')
+				? t('filinq', 'Edit dictionary')
+				: t('filinq', 'Add custom dictionary')
 		},
 
 		canSubmit() {
@@ -112,16 +119,16 @@ export default {
 		<div class="custom-dictionary-form">
 			<NcTextField
 				v-model="form.label"
-				:label="t('docudesk', 'Label')"
+				:label="t('filinq', 'Label')"
 				required />
 			<NcTextField
 				v-model="form.description"
-				:label="t('docudesk', 'Description (optional)')" />
+				:label="t('filinq', 'Description (optional)')" />
 			<div class="custom-dictionary-form__colour-row">
 				<label
 					class="custom-dictionary-form__colour-label"
 					for="custom-dictionary-colour">
-					{{ t('docudesk', 'Colour') }}
+					{{ t('filinq', 'Colour') }}
 				</label>
 				<input
 					id="custom-dictionary-colour"
@@ -130,7 +137,7 @@ export default {
 					class="custom-dictionary-form__colour-input" />
 				<NcTextField
 					v-model="form.colour"
-					:label="t('docudesk', 'Hex value')"
+					:label="t('filinq', 'Hex value')"
 					class="custom-dictionary-form__colour-hex" />
 			</div>
 			<!--
@@ -158,18 +165,18 @@ export default {
 				label="label"
 				:reduce="(o) => o.value"
 				:clearable="false"
-				:inputLabel="t('docudesk', 'Match mode')"
+				:inputLabel="t('filinq', 'Match mode')"
 				required />
 			<p class="custom-dictionary-form__hint">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.',
 					)
 				}}
 			</p>
 			<NcCheckboxRadioSwitch v-model="form.active" type="switch">
-				{{ t('docudesk', 'Active (used in automatic detection)') }}
+				{{ t('filinq', 'Active (used in automatic detection)') }}
 			</NcCheckboxRadioSwitch>
 
 			<div v-if="formError" class="custom-dictionary-form__error">
@@ -179,7 +186,7 @@ export default {
 
 		<template #actions>
 			<NcButton variant="tertiary" @click="onCancel">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
@@ -188,7 +195,7 @@ export default {
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ editing ? t('docudesk', 'Save') : t('docudesk', 'Create') }}
+				{{ editing ? t('filinq', 'Save') : t('filinq', 'Create') }}
 			</NcButton>
 		</template>
 	</NcDialog>

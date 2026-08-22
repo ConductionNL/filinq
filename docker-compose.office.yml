@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 #
 ##############################################################################
-# DocuDesk — office suite overlay
+# Filinq — office suite overlay
 #
 # THREE SEPARATE PRODUCTS. None runs by default; each sits behind its own
 # profile, and each is verified on its own:
@@ -19,11 +19,11 @@
 #
 # Why this file lives HERE and not in .github/docker-compose.yml:
 # `.github` is a separate repository shared by the whole fleet, and an office
-# suite is a DocuDesk concern. Putting it there would split one change across
+# suite is a Filinq concern. Putting it there would split one change across
 # two review surfaces and start a 3 GB image for apps that never touch a
 # document.
 #
-# DocuDesk does NOT require any of them. Reading and editing documents goes
+# Filinq does NOT require any of them. Reading and editing documents goes
 # through the in-package codec with no suite in the call path (ADR-087 §2).
 # These exist to (a) exercise the conversion cascade against a real provider
 # and (b) measure anchor stability across a real save round-trip, which
@@ -65,7 +65,7 @@ services:
   onlyoffice:
     profiles:
       - onlyoffice
-    container_name: docudesk-onlyoffice
+    container_name: filinq-onlyoffice
     image: onlyoffice/documentserver:latest
     restart: unless-stopped
     ports:
@@ -119,7 +119,7 @@ services:
   eurooffice:
     profiles:
       - eurooffice
-    container_name: docudesk-eurooffice
+    container_name: filinq-eurooffice
     image: ghcr.io/euro-office/documentserver:latest
     restart: unless-stopped
     ports:
@@ -152,21 +152,21 @@ services:
   # being a different shape, and a harness that forced it to look the same would
   # be hiding what it is.
   #
-  # ⚠️ DocuDesk's own LibreOfficeHeadlessBackend CANNOT USE THIS CONTAINER.
+  # ⚠️ Filinq's own LibreOfficeHeadlessBackend CANNOT USE THIS CONTAINER.
   #    It invokes `soffice --headless` via proc_open as a LOCAL SUBPROCESS
-  #    (config key `docudesk.conversion.libreoffice_binary_path`, default
+  #    (config key `filinq.conversion.libreoffice_binary_path`, default
   #    "soffice"). Measured 2026-08-16: `soffice` is not present in the
   #    nextcloud container, so that cascade tier is dead on this deployment --
   #    it fails at conversion time, not at startup, so nothing reports it.
   #
   #    This service exists to verify LibreOffice ITSELF as a converter and to
-  #    make the gap visible. Wiring DocuDesk to a remote unoserver is a code
+  #    make the gap visible. Wiring Filinq to a remote unoserver is a code
   #    change (an HTTP backend beside the subprocess one), not a config change.
   # ===========================================================================
   libreoffice:
     profiles:
       - libreoffice
-    container_name: docudesk-libreoffice
+    container_name: filinq-libreoffice
     image: libreofficedocker/libreoffice-unoserver:3.19
     restart: unless-stopped
     ports:
@@ -192,7 +192,7 @@ services:
   collabora:
     profiles:
       - collabora
-    container_name: docudesk-collabora
+    container_name: filinq-collabora
     image: collabora/code:latest
     restart: unless-stopped
     ports:
@@ -209,7 +209,7 @@ services:
       - MKNOD
     # NO HEALTHCHECK, deliberately.
     #
-    # This image ships no shell and no curl -- `docker exec docudesk-collabora sh`
+    # This image ships no shell and no curl -- `docker exec filinq-collabora sh`
     # fails with "executable file not found in $PATH". A CMD-SHELL healthcheck
     # therefore cannot run, and Docker reports the container UNHEALTHY forever.
     #

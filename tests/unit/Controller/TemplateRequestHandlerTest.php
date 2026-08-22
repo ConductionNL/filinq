@@ -4,7 +4,7 @@
  * Unit tests for TemplateRequestHandler
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,12 +12,12 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\TemplateRequestHandler;
+use OCA\Filinq\Controller\TemplateRequestHandler;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -28,10 +28,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for TemplateRequestHandler
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -68,7 +68,7 @@ class TemplateRequestHandlerTest extends TestCase {
 		$mockRequest = $this->createMock(IRequest::class);
 		$mockRequest->method('getParam')
 			->willReturnMap([
-				['namespace', null, 'docudesk'],
+				['namespace', null, 'filinq'],
 				['_search', null, 'invoice'],
 				['_limit', '20', '10'],
 				['_offset', '0', '5'],
@@ -76,7 +76,7 @@ class TemplateRequestHandlerTest extends TestCase {
 
 		$result = $this->handler->parseListParams($mockRequest);
 
-		$this->assertEquals('docudesk', $result['filters']['namespace']);
+		$this->assertEquals('filinq', $result['filters']['namespace']);
 		$this->assertEquals('invoice', $result['filters']['_search']);
 		$this->assertEquals(10, $result['limit']);
 		$this->assertEquals(5, $result['offset']);

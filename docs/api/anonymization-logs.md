@@ -5,11 +5,11 @@ title: Anonymization Logs
 
 # Anonymization Logs
 
-DocuDesk provides comprehensive anonymization capabilities to help you protect personal data in your documents. This page explains how anonymization logs work and how they can help you maintain GDPR compliance.
+Filinq provides comprehensive anonymization capabilities to help you protect personal data in your documents. This page explains how anonymization logs work and how they can help you maintain GDPR compliance.
 
 ## Overview
 
-The Anonymization Logs system in DocuDesk enables you to:
+The Anonymization Logs system in Filinq enables you to:
 
 - Track all anonymization operations performed on documents
 - Store detailed information about detected personal data
@@ -70,7 +70,7 @@ Each replacement made during anonymization has the following structure:
 
 ## Anonymization Process
 
-When a document is submitted for anonymization, DocuDesk follows these steps:
+When a document is submitted for anonymization, Filinq follows these steps:
 
 1. **Document Analysis**: The document is analyzed to detect personal data
 2. **Entity Detection**: Personal data entities are identified and categorized
@@ -82,7 +82,7 @@ When a document is submitted for anonymization, DocuDesk follows these steps:
 
 ## Entity Types
 
-DocuDesk can detect and anonymize various types of personal data entities:
+Filinq can detect and anonymize various types of personal data entities:
 
 - **PERSON**: Names of individuals
 - **LOCATION**: Physical locations (cities, countries, addresses)
@@ -98,7 +98,7 @@ DocuDesk can detect and anonymize various types of personal data entities:
 
 ## Presidio Integration
 
-DocuDesk integrates with Microsoft Presidio for entity detection and anonymization. The response from Presidio is processed and stored in the anonymization log. Here's an example of a Presidio response:
+Filinq integrates with Microsoft Presidio for entity detection and anonymization. The response from Presidio is processed and stored in the anonymization log. Here's an example of a Presidio response:
 
 ```json
 {
@@ -187,7 +187,7 @@ Here's a complete example of an anonymization object:
 
 ## De-anonymization
 
-DocuDesk supports de-anonymization of documents using the replacement keys. This feature is useful in scenarios where:
+Filinq supports de-anonymization of documents using the replacement keys. This feature is useful in scenarios where:
 
 - The original document is needed for legal proceedings
 - The anonymization was too aggressive and removed non-personal data
@@ -200,12 +200,12 @@ De-anonymization is a secure process that requires:
 
 ## API Endpoints
 
-DocuDesk provides the following API endpoints for managing anonymization logs:
+Filinq provides the following API endpoints for managing anonymization logs:
 
 ### List Anonymization Logs
 
 ```
-GET /apps/docudesk/api/v1/anonymization/logs
+GET /apps/filinq/api/v1/anonymization/logs
 ```
 
 Returns a list of anonymization logs. You can filter the logs by:
@@ -216,7 +216,7 @@ Returns a list of anonymization logs. You can filter the logs by:
 ### Create Anonymization Log
 
 ```
-POST /apps/docudesk/api/v1/anonymization/logs
+POST /apps/filinq/api/v1/anonymization/logs
 ```
 
 Creates a new anonymization log. You need to specify:
@@ -228,7 +228,7 @@ Creates a new anonymization log. You need to specify:
 ### Get Anonymization Log
 
 ```
-GET /apps/docudesk/api/v1/anonymization/logs/{logId}
+GET /apps/filinq/api/v1/anonymization/logs/{logId}
 ```
 
 Returns a specific anonymization log by ID.
@@ -236,7 +236,7 @@ Returns a specific anonymization log by ID.
 ### Update Anonymization Log
 
 ```
-PUT /apps/docudesk/api/v1/anonymization/logs/{logId}
+PUT /apps/filinq/api/v1/anonymization/logs/{logId}
 ```
 
 Updates a specific anonymization log.
@@ -244,7 +244,7 @@ Updates a specific anonymization log.
 ### Get Latest Anonymization Log for Node
 
 ```
-GET /apps/docudesk/api/v1/anonymization/logs/node/{nodeId}
+GET /apps/filinq/api/v1/anonymization/logs/node/{nodeId}
 ```
 
 Returns the latest anonymization log for a specific Nextcloud node.
@@ -252,7 +252,7 @@ Returns the latest anonymization log for a specific Nextcloud node.
 ### De-anonymize Document
 
 ```
-POST /apps/docudesk/api/v1/anonymization/deanonymize
+POST /apps/filinq/api/v1/anonymization/deanonymize
 ```
 
 De-anonymizes a document using the anonymization log.
@@ -263,7 +263,7 @@ De-anonymizes a document using the anonymization log.
 
 ```php
 // Get the anonymization service
-$anonymizationService = \OC::$server->get(OCA\DocuDesk\Service\AnonymizationService::class);
+$anonymizationService = \OC::$server->get(OCA\Filinq\Service\AnonymizationService::class);
 
 // Process anonymization for a file node
 $fileNode = $rootFolder->get('path/to/document.txt');
@@ -286,7 +286,7 @@ if ($anonymization['status'] === 'completed') {
 
 ```php
 // Get anonymization data for a file node
-$anonymizationService = \OC::$server->get(OCA\DocuDesk\Service\AnonymizationService::class);
+$anonymizationService = \OC::$server->get(OCA\Filinq\Service\AnonymizationService::class);
 $anonymization = $anonymizationService->getAnonymization($fileNode);
 
 // Or retrieve anonymization by ID
@@ -304,7 +304,7 @@ $anonymization = $anonymizationService->getAnonymizationById('anonymization-id')
 
 ## Integration with Document Reports
 
-The anonymization logs system integrates with DocuDesk's document reports:
+The anonymization logs system integrates with Filinq's document reports:
 
 - Anonymization results are included in document reports
 - Document reports can trigger anonymization operations

@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <id>docudesk</id>
-    <name>DocuDesk</name>
+    <id>filinq</id>
+    <name>Filinq</name>
     <summary lang="en">Document generation, anonymisation, signing, and GDPR/WOO publication consent for Nextcloud</summary>
     <summary lang="nl">Documentgeneratie, anonimisering, ondertekening en AVG/Woo-publicatie-instemming voor Nextcloud</summary>
     <description><![CDATA[Document generation, anonymisation, signing, and GDPR/WOO publication consent for Nextcloud
 
-DocuDesk generates documents from templates bound to Open Register fields, anonymises personal data (PII) in documents through a configurable entity-detection backend, signs outbound documents (eIDAS SES/AdES/QES), and tracks GDPR and Wet Open Overheid (Woo) publication consent — all processed locally on the customer's own Nextcloud instance. It integrates with Open Register via events to enrich documents as they are created and updated.
+Filinq generates documents from templates bound to Open Register fields, anonymises personal data (PII) in documents through a configurable entity-detection backend, signs outbound documents (eIDAS SES/AdES/QES), and tracks GDPR and Wet Open Overheid (Woo) publication consent — all processed locally on the customer's own Nextcloud instance. It integrates with Open Register via events to enrich documents as they are created and updated.
 
 ## Key Features
 
@@ -36,7 +36,12 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
     <version>0.0.38-unstable.20260821053327</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
-    <namespace>DocuDesk</namespace>
+    <namespace>Filinq</namespace>
+    <!--
+        The docs subdomain deliberately stays `docudesk.conduction.nl`: DNS for
+        the fleet rename moves on its own schedule, and pointing these at a
+        hostname that does not resolve yet would ship three dead links.
+    -->
     <documentation>
         <user>https://docudesk.conduction.nl</user>
         <admin>https://docudesk.conduction.nl</admin>
@@ -54,7 +59,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         per-access read-logging capability (x-openregister-processing dialect,
         ProcessingLogService / ProcessingLogController). That capability ships
         from OpenRegister >= 0.2.14. The minimum is also recorded as the
-        `openregister` constraint in lib/Settings/docudesk_register.json.
+        `openregister` constraint in lib/Settings/filinq_register.json.
     -->
     <dependencies>
         <php min-version="8.3" min-int-size="64"/>
@@ -78,7 +83,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         -->
         <lib>zip</lib>
         <!--
-        App dependency (not expressible in app-info.xsd): OpenRegister — Docudesk's
+        App dependency (not expressible in app-info.xsd): OpenRegister — Filinq's
         documents, templates and reports are OpenRegister objects, and
         src/manifest.json lists "openregister" as a required dependency.
 
@@ -96,7 +101,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <nextcloud min-version="32" max-version="34"/>
     </dependencies>
     <background-jobs>
-        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
+        <job>OCA\Filinq\BackgroundJob\SigningExpirationJob</job>
     </background-jobs>
     <!--
         info.xsd fixes the order of these elements: background-jobs, repair-steps,
@@ -105,18 +110,59 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <settings> — not after <navigations>, where it fails validation with
         "Element 'commands': This element is not expected."
     -->
+    <!--
+        docudesk -> filinq APP-ID RENAME (applies to BOTH blocks below).
+
+        Nextcloud has no in-place app-id upgrade: changing <id> makes the server
+        discover a DIFFERENT app. On a real deployment the old `docudesk` app is
+        removed and `filinq` is installed fresh, so <install> — not just
+        <post-migration> — is the hook this actually runs through. Both steps are
+        registered under both hooks so neither path can miss them.
+
+        `oc_appconfig` and `oc_preferences` are BOTH namespaced by app id, and
+        they are different stores: MigrateAppConfigKeys covers the first,
+        MigrateUserPreferences the second. Copying one does nothing for the
+        other, which is why there are two steps and not one.
+
+        ORDERING vs. settings initialisation. This app has no InitializeSettings
+        repair step — SettingsInitializer runs from RegistrationBootstrap::boot()
+        instead, i.e. only once the app is enabled and loaded for a request,
+        which is strictly after every repair step of the install has run. The
+        migrations therefore still land before the register import reads
+        `configuration_version` out of the app-config namespace. If an
+        InitializeSettings repair step is ever added, it MUST be listed AFTER
+        these two: it would otherwise see an unconfigured app, re-import from
+        scratch, and write fresh values that MigrateAppConfigKeys then refuses to
+        overwrite — silently pointing the install at newly created, empty
+        registers instead of the existing data-carrying ones.
+
+        Both steps are idempotent and copy-only (no `docudesk` row is ever
+        deleted), so they are safe no-ops on an instance that never had
+        `docudesk` installed, and a rollback to the old app id still finds its
+        data intact.
+    -->
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
+            <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+        </post-migration>
+        <install>
+            <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
+            <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+        </install>
+    </repair-steps>
     <commands>
-        <command>OCA\DocuDesk\Command\OfficeProbeCommand</command>
+        <command>OCA\Filinq\Command\OfficeProbeCommand</command>
     </commands>
     <settings>
-        <admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
-        <admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
+        <admin>OCA\Filinq\Settings\FilinqAdmin</admin>
+        <admin-section>OCA\Filinq\Sections\FilinqAdmin</admin-section>
     </settings>
     <navigations>
         <navigation>
-            <id>docudesk</id>
-            <name>DocuDesk</name>
-            <route>docudesk.dashboard.page</route>
+            <id>filinq</id>
+            <name>Filinq</name>
+            <route>filinq.dashboard.page</route>
             <icon>app.svg</icon>
         </navigation>
     </navigations>

@@ -15,7 +15,7 @@ Art. 5 grondslagen (`base`) register, generate the inventarislijst from a
 template, assemble the disclosure package (redacted PDFs + inventory +
 besluit letter via correspondence generation), and track the request
 lifecycle through decision, disclosure and publication. This is the
-ZyLAB/INDICA/Octobox competitive category; DocuDesk orchestrates its existing
+ZyLAB/INDICA/Octobox competitive category; Filinq orchestrates its existing
 anonymisation, generation and publication capabilities — it adds no new
 engines.
 
@@ -41,7 +41,7 @@ bump for boot import.
 
 #### Scenario: Register import creates the workflow schemas
 
-- GIVEN DocuDesk and OpenRegister installed
+- GIVEN Filinq and OpenRegister installed
 - WHEN `ConfigurationService::importFromApp()` runs on boot
 - THEN `wooRequest` and `requestDocument` exist in the `dossier` register and the seeded demo request is queryable
 - AND neither schema declares a requester name, email or address property

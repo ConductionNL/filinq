@@ -4,7 +4,7 @@
  * Unit tests for PolicyMatchService — prohibition-only matching + threshold.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,12 +12,12 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\PolicyMatchService;
+use OCA\Filinq\Service\PolicyMatchService;
 use OCP\App\IAppManager;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\IAppConfig;
@@ -45,7 +45,7 @@ class PolicyMatchServiceTest extends TestCase {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			static function (string $app, string $key, string $default = '') use ($threshold): string {
-				if ($key === 'docudesk.prohibition.high_confidence_threshold') {
+				if ($key === 'filinq.prohibition.high_confidence_threshold') {
 					return $threshold;
 				}
 

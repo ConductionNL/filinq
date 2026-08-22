@@ -11,7 +11,7 @@ all of these (`actions: []`, `REQ-DDPORT-006`). Two sibling changes now supply
 the plumbing; this change supplies the SURFACE and the portal-identity evidence
 binding.
 
-### Verified facts (HEAD, docudesk)
+### Verified facts (HEAD, filinq)
 
 - **The signer manifest** (`lib/Portal/PortalContributionProvider.php`,
   `signerContribution()`) exposes `signerRecords` (schema `signerRecord`, scope

@@ -25,7 +25,7 @@ access, no external chart service, and no GD/Imagick dependency. Input is
 `{labels, series}` data with options for title, dimensions, palette, legend,
 and value formatting. Rendering MUST be deterministic (identical input yields
 byte-identical SVG), MUST escape every data-derived text node, MUST enforce a
-configurable point cap (`docudesk.charts.max_points`, default 1000), and MUST
+configurable point cap (`filinq.charts.max_points`, default 1000), and MUST
 emit a conservative SVG subset (shapes, paths, text, solid fills — no
 scripts, gradients, filters, or external references). The default palette
 MUST derive from the active huisstijl `primaryColor` when a `huisstijlId` is
@@ -139,7 +139,7 @@ dimensions). Resolution MUST run as the generating user through the user
 folder — an image placeholder MUST NOT read any file the requesting user
 cannot read. Only raster formats (png, jpeg, gif, webp) are accepted —
 user-supplied SVG files MUST be rejected — and a configurable size cap
-(`docudesk.templates.max_image_bytes`, default 5 MB) MUST be enforced. Any
+(`filinq.templates.max_image_bytes`, default 5 MB) MUST be enforced. Any
 resolution failure (unreadable, missing, oversized, wrong type) MUST render a
 visible `[image unavailable: reason]` marker plus a generation warning —
 never a silent blank and never an ACL bypass.

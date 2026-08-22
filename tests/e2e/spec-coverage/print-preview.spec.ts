@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — print-preview (Vue component surface).
@@ -29,7 +29,7 @@ test.describe('print-preview — preview component UI', () => {
 		// @e2e openspec/specs/print-preview/spec.md#preview-with-inline-template
 		const guard = attachConsoleGuard(page)
 		await go(page, PrintPreview)
-		await expect(page).toHaveURL(/\/apps\/docudesk\/print-preview/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/print-preview/)
 
 		// Without a templateId the inline path renders the default title "document".
 		await expect(

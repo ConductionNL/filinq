@@ -5,7 +5,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
 # Office suites — four products, four verifications
 
-DocuDesk works with **no office suite at all**. Reading, editing, styling, metadata
+Filinq works with **no office suite at all**. Reading, editing, styling, metadata
 and charts go through the in-package codec with nothing else in the call path
 (ADR-087 §2). Everything here is additive.
 
@@ -14,10 +14,10 @@ for another.
 
 | Suite | Page | Shape | Sidecar | Verified |
 |---|---|---|---|---|
-| ONLYOFFICE | [onlyoffice.md](onlyoffice.md) | WOPI host + browser editor | `docudesk-onlyoffice` :8092 | ✅ |
-| Euro-Office | [eurooffice.md](eurooffice.md) | WOPI host + browser editor | `docudesk-eurooffice` :8093 | ✅ server + connector; anchors/charts **not** repeated here |
-| Collabora Online | [collabora.md](collabora.md) | WOPI host + browser editor | `docudesk-collabora` :9980 | ✅ |
-| LibreOffice | [libreoffice.md](libreoffice.md) | **converter only** — no WOPI, no editor | `docudesk-libreoffice` :8094 | ✅ as converter |
+| ONLYOFFICE | [onlyoffice.md](onlyoffice.md) | WOPI host + browser editor | `filinq-onlyoffice` :8092 | ✅ |
+| Euro-Office | [eurooffice.md](eurooffice.md) | WOPI host + browser editor | `filinq-eurooffice` :8093 | ✅ server + connector; anchors/charts **not** repeated here |
+| Collabora Online | [collabora.md](collabora.md) | WOPI host + browser editor | `filinq-collabora` :9980 | ✅ |
+| LibreOffice | [libreoffice.md](libreoffice.md) | **converter only** — no WOPI, no editor | `filinq-libreoffice` :8094 | ✅ as converter |
 
 ## Why they are documented separately
 
@@ -68,10 +68,10 @@ docker compose -f docker-compose.office.yml --profile libreoffice up -d
 One script, run once per suite, same eight checks each time:
 
 ```bash
-bash docs/office-suites/verify-suite.sh onlyoffice  docudesk-onlyoffice  http://docudesk-onlyoffice
-bash docs/office-suites/verify-suite.sh eurooffice  docudesk-eurooffice  http://docudesk-eurooffice
-bash docs/office-suites/verify-suite.sh collabora   docudesk-collabora   http://docudesk-collabora:9980
-bash docs/office-suites/verify-suite.sh libreoffice docudesk-libreoffice http://docudesk-libreoffice:2004
+bash docs/office-suites/verify-suite.sh onlyoffice  filinq-onlyoffice  http://filinq-onlyoffice
+bash docs/office-suites/verify-suite.sh eurooffice  filinq-eurooffice  http://filinq-eurooffice
+bash docs/office-suites/verify-suite.sh collabora   filinq-collabora   http://filinq-collabora:9980
+bash docs/office-suites/verify-suite.sh libreoffice filinq-libreoffice http://filinq-libreoffice:2004
 ```
 
 It needs a fixture the suites can fetch:
@@ -85,7 +85,7 @@ docker exec nextcloud sh -c 'php -S 0.0.0.0:8123 -t /tmp/officefx >/tmp/officefx
 And from Nextcloud's side, per suite:
 
 ```bash
-docker exec nextcloud php occ docudesk:office:probe
+docker exec nextcloud php occ filinq:office:probe
 ```
 
 ### Reading the output honestly
@@ -136,7 +136,7 @@ ONLYOFFICE 1.0 · LibreOffice 7.6.7.2
 ### Read the columns carefully — they do not mean the same thing
 
 ⚠️ **The LibreOffice column is a different measurement.** LibreOffice desktop has
-**no server seam**: it exposes no WOPI discovery, so DocuDesk cannot open an
+**no server seam**: it exposes no WOPI discovery, so Filinq cannot open an
 editing session against it at all. Its ticks are *conversion filters* — what
 `soffice --convert-to` produces — which is useful for format conversion and
 useless for in-place editing. A ✅ in that column never means "an agent can edit
@@ -155,7 +155,7 @@ may require them (ADR-087 §4). They resolve absent, visibly.
 **Draw (`odg`) is Collabora-only** — the ONLYOFFICE lineage ships its own diagram
 model rather than the ODF one.
 
-**PDF editing exists only on the ONLYOFFICE lineage**, and DocuDesk restricts it
+**PDF editing exists only on the ONLYOFFICE lineage**, and Filinq restricts it
 to annotation and form-fill regardless. A PDF is a final-form artefact; silently
 rewriting its text produces something forgery-shaped.
 
@@ -163,9 +163,9 @@ rewriting its text produces something forgery-shaped.
 Euro-Office is ONLYOFFICE lineage — and it is worth knowing that choosing between
 them is a sovereignty and support decision, not a capability one.
 
-### What DocuDesk itself can edit, which is less
+### What Filinq itself can edit, which is less
 
-The table above is what the *suite* can open. DocuDesk's own in-package codecs
+The table above is what the *suite* can open. Filinq's own in-package codecs
 now cover text, spreadsheets and presentations:
 
 | Kind | Formats | Read | Edit | Style & layout |
@@ -189,7 +189,7 @@ Addressing differs by kind, because the durable identity differs:
 - Writing a literal over a cell holding a **formula** is refused unless that
   edit sets `replaceFormula`. The flag is per cell and is not carried across a
   bulk write.
-- Dependent cells are reported **stale**, not recalculated. DocuDesk has no
+- Dependent cells are reported **stale**, not recalculated. Filinq has no
   formula engine, and the difference is observable: after one write the same
   file showed `1218` in ODS (LibreOffice recalculated on open) and `290` in
   XLSX (it served the cached value).

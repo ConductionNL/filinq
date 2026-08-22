@@ -1,6 +1,6 @@
 <template>
 	<NcDialog
-		:name="t('docudesk', 'Create dossier')"
+		:name="t('filinq', 'Create dossier')"
 		:canClose="!submitting"
 		size="normal"
 		@closing="$emit('cancel')">
@@ -8,8 +8,8 @@
 			<NcTextField
 				ref="dossierInput"
 				:modelValue="modelValue"
-				:label="t('docudesk', 'Dossier name')"
-				:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
+				:label="t('filinq', 'Dossier name')"
+				:placeholder="t('filinq', 'e.g. Buurtinitiatieven 2026')"
 				:disabled="submitting"
 				:error="!!error"
 				:helperText="error"
@@ -18,7 +18,7 @@
 			<NcNoteCard type="info">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.',
 					)
 				}}
@@ -29,7 +29,7 @@
 				variant="tertiary"
 				:disabled="submitting"
 				@click="$emit('cancel')">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
@@ -38,7 +38,7 @@
 				<template v-if="submitting" #icon>
 					<NcLoadingIcon :size="18" />
 				</template>
-				{{ t('docudesk', 'Continue to anonymization') }}
+				{{ t('filinq', 'Continue to anonymization') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -56,7 +56,7 @@ import {
 
 /**
  * Dossier-name prompt shown when two or more files are dropped on the
- * DocuDesk dashboard widget.
+ * Filinq dashboard widget.
  *
  * Lives in `src/dialogs/` per ADR-004: a dialog is its own component, not
  * markup inlined in the surface that opens it. It owns no upload logic —

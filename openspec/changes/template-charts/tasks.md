@@ -57,4 +57,4 @@
 - No sed/awk/scripted code edits; Edit tool or full-file writes only
 - `composer check:strict` green for the HTML/PDF-path code (lint/phpcs/phpmd/psalm/phpstan/phpunit all clean or pre-existing-baselined); hydra gates (spdx, spec-coverage) satisfied for new code — no route changes
 - No external chart service, no client-side chart JS, no GD/Imagick dependency introduced
-- Live-verified against the docudesk documents API on the served instance (see PR) using OpenRegister `spectr-live` data, not synthetic-only fixtures
+- Live-verified against the filinq documents API on the served instance (see PR) using OpenRegister `spectr-live` data, not synthetic-only fixtures

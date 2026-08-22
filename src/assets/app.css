@@ -1,7 +1,7 @@
 /* DO NOT OVERWRITE THE DEFAULT NEXTCLOUD CSS VARIABLES, BAD IDEA, WILL BREAK A LOT OF VISUAL PARTS */
 
 /**
- * Global (unscoped) styles for DocuDesk.
+ * Global (unscoped) styles for Filinq.
  *
  * Component-specific overrides — including overrides of @nextcloud/vue
  * internals — live in the relevant SFC's <style scoped> block, using
@@ -13,9 +13,9 @@
  *   1. NEVER override a Nextcloud token (`--color-*`, `--border-radius-*`, …)
  *      on `:root`. `:root` is the document root shared with the page chrome
  *      (header, profile menu, modals teleported to <body>), so a `:root`
- *      remap leaks DocuDesk's brand into Nextcloud itself. Scope any NC-token
- *      override to `.app-docudesk` (the app content root) or a component class.
- *   2. Define DocuDesk's own colours as `--dd-*` tokens here. The tokens are
+ *      remap leaks Filinq's brand into Nextcloud itself. Scope any NC-token
+ *      override to `.app-filinq` (the app content root) or a component class.
+ *   2. Define Filinq's own colours as `--dd-*` tokens here. The tokens are
  *      theme-aware: light values live in `:root`, dark values are re-declared
  *      under Nextcloud's dark-theme selectors below. Components reference the
  *      `--dd-*` token and flip automatically — they must NOT hard-code a hex
@@ -25,7 +25,7 @@
  *      brand requirement — those already track the theme.
  */
 
-/* DocuDesk design tokens. This stylesheet is only loaded inside the DocuDesk
+/* Filinq design tokens. This stylesheet is only loaded inside the Filinq
    bundle (see main.js); the `--dd-*` tokens are namespaced so they are inert
    anywhere they are not referenced, and may safely live on `:root`. */
 :root {
@@ -61,7 +61,7 @@
 		--dd-color-white
 	); /* text/border on the brand-blue button */
 
-	/* Brand pill radius. Scoped to `.app-docudesk` below (not `:root`) so it
+	/* Brand pill radius. Scoped to `.app-filinq` below (not `:root`) so it
 	   does not reshape the Nextcloud header's pills. */
 
 	/* Shared elevation + radius scale. Bare 4px / 12px values map to NC's
@@ -141,11 +141,11 @@
 }
 
 /* App content root (the element NcContent renders, `<div class="content
-   app-docudesk">`). Scope brand text + pill radius here, NOT on `:root`, so
+   app-filinq">`). Scope brand text + pill radius here, NOT on `:root`, so
    the Nextcloud header and profile menu keep their own theming. Remapping
    `--color-main-text` to the brand ink makes @nextcloud/vue children pick up
    the brand colour; --dd-ink is theme-aware so this stays legible in dark. */
-.app-docudesk {
+.app-filinq {
 	color: var(--dd-ink);
 	--color-main-text: var(--dd-ink);
 	--border-radius-pill: var(--dd-border-radius-pill, 6px);
@@ -236,7 +236,7 @@
    <canvas class="hiddenCanvasElement"> to <body> for glyph metrics (see
    TextLayer.#getCtx in pdfjs-dist) and relies on this rule from its own
    pdf_viewer.css to keep it invisible. We don't ship pdf_viewer.css (the
-   text-layer rules DocuDesk needs are mirrored in PdfViewer.vue), so without
+   text-layer rules Filinq needs are mirrored in PdfViewer.vue), so without
    this the canvas renders at its default 300x150 as a black box in the
    top-left corner. It lands on <body> whenever pdfjs touches text — including
    the /my-documents "Anonymize" flow, which extracts text without mounting the

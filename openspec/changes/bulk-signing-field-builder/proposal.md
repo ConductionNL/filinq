@@ -8,15 +8,15 @@ depends_on: [signing-trust-rebuild]
 ## Why
 
 Three signing workflow features are table stakes in every serious e-signature
-product and absent from DocuDesk (competitor evidence verified in the
-intelligence DB, `competitor_features` app_slug `docudesk`):
+product and absent from Filinq (competitor evidence verified in the
+intelligence DB, `competitor_features` app_slug `filinq`):
 
 - **Bulk send** — DocuSeal: "Bulk send via CSV/XLSX — mass signature
   campaigns"; DocuSign eSignature: "Envelope-based bulk workflows — templates,
   bulk send". Municipalities send the same declaration/contract to dozens of
   recipients at once; today that is N manual `SigningRequestForm` submissions.
 - **Signature field placement** — DocuSeal: "WYSIWYG field-placement builder —
-  12 field types, conditional fields and formulas". DocuDesk's native artifact
+  12 field types, conditional fields and formulas". Filinq's native artifact
   is an appended marker with no visible signature block where the reader
   expects one; there is no way to say "signer 2 initials page 3, bottom
   right".
@@ -100,4 +100,4 @@ bulk *sending* (one document, N recipients) — plus placement and envelopes.
   ceremony, produces 3 verifiable artifacts and 3 complete audit trails, and
   reports COMPLETED only when all member requests are COMPLETED.
 - All batch/envelope/placement objects are OpenRegister objects (ADR-001);
-  no DocuDesk-local tables.
+  no Filinq-local tables.

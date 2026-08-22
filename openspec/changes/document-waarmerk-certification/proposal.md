@@ -23,7 +23,7 @@ distinct from a natural person's signature):
 - User-wishes #10 ranks "document certification/waarmerk + immutable audit"
   in the deduplicated top-10.
 
-DocuDesk already produces the two artifact families worth certifying —
+Filinq already produces the two artifact families worth certifying —
 anonymized/published PDFs (`AnonymizationService`, which records every run as
 an `anonymizationLink` object with real, verified replacement counts, closing
 GH #286) and generated documents — and already owns a fail-closed
@@ -38,7 +38,7 @@ documents).
 
 ## What Changes
 
-- **Organisation certificate management** in DocuDesk admin settings: upload/
+- **Organisation certificate management** in Filinq admin settings: upload/
   reference an X.509 organisation certificate for sealing. The private key is
   NEVER stored in a register schema or app config — the seal service resolves
   it at signing time via a `credentialRef` per the ADR-064 custody model
@@ -83,7 +83,7 @@ documents).
   PDF from anonymization data via the existing `PdfService`), new
   `WaarmerkController`; admin settings section for the org certificate.
 - **Register**: new `certification` register in
-  `lib/Settings/docudesk_register.json` with a `waarmerk` schema (record of
+  `lib/Settings/filinq_register.json` with a `waarmerk` schema (record of
   each seal: document refs, hash, certificate fingerprint, verification
   code, status).
 - **Routes**: seal/list/show/revoke endpoints (authenticated) + public

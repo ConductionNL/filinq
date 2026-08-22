@@ -10,7 +10,7 @@
  * the damage shows up as "the formatting is gone" rather than as an error.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -23,9 +23,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\PackagePartIo;
+use OCA\Filinq\Service\Editing\PackagePartIo;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use ZipArchive;

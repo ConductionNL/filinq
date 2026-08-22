@@ -19,10 +19,10 @@
  * refused with 401 before the decision is applied.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
@@ -33,11 +33,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\AnonymizationController;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\FileListingService;
+use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\Folder;
@@ -56,10 +56,10 @@ use RuntimeException;
  * Tests for the anonymization upload and relation-decision endpoints.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -167,7 +167,7 @@ class AnonymizationControllerContractTest extends TestCase {
 		$rootFolder->method('getUserFolder')->willReturn($folder);
 
 		return new AnonymizationController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->request,
 			logger: $this->createMock(LoggerInterface::class),
 			anonymizationService: $this->anonService,
@@ -329,7 +329,7 @@ class AnonymizationControllerContractTest extends TestCase {
 	}//end testUploadSurfacesCodedStorageFailure()
 
 	/**
-	 * An anonymous caller cannot upload into someone else's DocuDesk folder.
+	 * An anonymous caller cannot upload into someone else's Filinq folder.
 	 *
 	 * @return void
 	 */

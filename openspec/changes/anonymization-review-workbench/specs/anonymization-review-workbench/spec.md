@@ -188,7 +188,7 @@ the existing `entityType` property; the enum is NOT widened by this change.
 
 The workbench MUST show the per-entity-type grondslag proposals that
 `GrondslagProposalService` already writes at extraction time (config key
-`docudesk.grondslagen.entity_type_bases`, CB #122) as the pre-filled value
+`filinq.grondslagen.entity_type_bases`, CB #122) as the pre-filled value
 of each entity row's grondslag picker, visually marked as proposed until
 the reviewer confirms or changes it. The proposal MUST also pre-fill the
 grondslag picker of the manual-entity modal based on the chosen entity
@@ -240,7 +240,7 @@ the document as unchecked until re-checked.
 ### Requirement: Checked gate blocks anonymize-commit and export (REQ-DDARW-008)
 
 The system MUST enforce the checked gate at commit time while the admin
-setting `docudesk.review.checked_gate` is `enforced` (default):
+setting `filinq.review.checked_gate` is `enforced` (default):
 `POST /api/anonymization/anonymize/{fileId}` MUST return HTTP 409 with a
 machine-readable reason when the file has no valid `documentReview`, and
 `POST /api/anonymization/batch/{batchId}/anonymize` MUST return HTTP 409

@@ -6,13 +6,13 @@ status: proposed
 
 ## Purpose
 
-DocuDesk gives an external **signer** (a person WITHOUT a Nextcloud account) a
+Filinq gives an external **signer** (a person WITHOUT a Nextcloud account) a
 real outside signing frontend through **portaliq**, the shared external portal
 (hydra ADR-046, contribution contract v2). Today `portal-contribution` exposes a
 READ-ONLY signer surface (its `REQ-DDPORT-006` mandates the signer manifest's
 `actions` be empty). This change closes the write path: it declares the
 contract-v2 A6 `endpoint`-type actions `sign`, `decline` and `viewDocument` on
-the signer manifest, and adds a bearer-guarded DocuDesk **receiver** plus a
+the signer manifest, and adds a bearer-guarded Filinq **receiver** plus a
 `PortalAssertionVerifier` that validates portaliq's frozen `X-Portal-Subject`
 HS256 assertion, derives the signer identity SERVER-SIDE from that assertion
 (never from client input), verifies the signer is genuinely invited on the
@@ -24,7 +24,7 @@ primitive delivered by `signing-trust-rebuild`. Every path fails closed
 
 ### Requirement: Signer manifest declares three substantial-gated endpoint actions (REQ-DDPSA-001)
 
-`OCA\DocuDesk\Portal\PortalContributionProvider`'s `signer` manifest MUST
+`OCA\Filinq\Portal\PortalContributionProvider`'s `signer` manifest MUST
 declare an `actions` array containing exactly three contract-v2 A6 endpoint
 actions, each shaped `{id, label, endpoint, method, minTrust}`:
 
@@ -34,7 +34,7 @@ actions, each shaped `{id, label, endpoint, method, minTrust}`:
 - `viewDocument` — `method: GET`, `minTrust: substantial`.
 
 Every `endpoint` MUST be an instance-local RELATIVE path under
-`/apps/docudesk/api/portal/signing/…` (leading slash, no scheme, no host, no
+`/apps/filinq/api/portal/signing/…` (leading slash, no scheme, no host, no
 `..`), so portaliq's SSRF guard and its `urlGenerator->getAbsoluteURL()` forward
 accept it. This requirement RELAXES `portal-contribution`'s read-only signer
 constraint for the `signer` audience only; the `data-subject` manifest's
@@ -47,13 +47,13 @@ action declarations.
 - GIVEN a constructed `PortalContributionProvider` and a subject with `audience: 'signer'`
 - WHEN `getContribution($subject)` is called
 - THEN the returned manifest's `actions` contains exactly `sign`, `decline` and `viewDocument`
-- AND each action declares an instance-local relative `endpoint` under `/apps/docudesk/api/portal/signing/`, a `method` of `POST`/`POST`/`GET` respectively, and `minTrust: substantial`
+- AND each action declares an instance-local relative `endpoint` under `/apps/filinq/api/portal/signing/`, a `method` of `POST`/`POST`/`GET` respectively, and `minTrust: substantial`
 - AND the `data-subject` manifest's `actions` is still empty
-- @e2e exclude backend contract-data declaration consumed by portaliq, no DocuDesk UI surface — covered by PHPUnit (tests/unit/Portal/PortalContributionProviderTest.php::testSignerManifestDeclaresEndpointActions)
+- @e2e exclude backend contract-data declaration consumed by portaliq, no Filinq UI surface — covered by PHPUnit (tests/unit/Portal/PortalContributionProviderTest.php::testSignerManifestDeclaresEndpointActions)
 
 ### Requirement: Bearer-guarded receiver validates the frozen portaliq assertion (REQ-DDPSA-002)
 
-DocuDesk MUST ship a receiver controller for the three action endpoints, each
+Filinq MUST ship a receiver controller for the three action endpoints, each
 route declaring `#[PublicPage]` + `#[NoCSRFRequired]` (portaliq forwards
 server-to-server without a Nextcloud session or CSRF token). A
 `PortalAssertionVerifier` MUST validate the inbound `X-Portal-Subject` header as
@@ -74,7 +74,7 @@ unsigned or empty-secret assertion.
 - WHEN the `X-Portal-Subject` header is absent, has `alg` other than `HS256`, has `iss` other than `portaliq`, has `use` other than `assertion`, is expired, or its signature does not match the shared secret
 - THEN the receiver responds `401` and performs no OpenRegister read or write and no `SigningService` call
 - AND when no shared signing secret is configured the receiver also responds `401`
-- @e2e exclude server-to-server verifier contract with no DocuDesk UI surface — covered by PHPUnit (tests/unit/Portal/PortalAssertionVerifierTest.php) and a Newman 401 contract
+- @e2e exclude server-to-server verifier contract with no Filinq UI surface — covered by PHPUnit (tests/unit/Portal/PortalAssertionVerifierTest.php) and a Newman 401 contract
 
 ### Requirement: Signer identity is derived server-side, never from the client (REQ-DDPSA-003)
 
@@ -85,7 +85,7 @@ or `Authorization` header. It MUST require `audience` = `signer` and re-check
 already gates the action, but the receiver MUST NOT rely on that); any other
 audience or a lower trust MUST fail closed with `403`. The signer's scoping
 identity is the invited email carried as the assertion's resolved `signerEmail`
-scope claim (the same `claims.docudesk.signerEmail` value `portal-contribution`
+scope claim (the same `claims.filinq.signerEmail` value `portal-contribution`
 scopes the signer collections by); the receiver MUST take that email from the
 verified assertion only and MUST fail closed with `403` when no
 signer-identifying claim is present. A client-supplied email, `userId`,
@@ -98,7 +98,7 @@ signer-identifying claim is present. A client-supplied email, `userId`,
 - WHEN the receiver resolves the acting signer
 - THEN the identity used is the assertion's `signerEmail`, and the body's `email`/`userId` are ignored entirely
 - AND an assertion with `audience` other than `signer`, with `trust` below `substantial`, or with no signer-identifying claim is rejected `403`
-- @e2e exclude server-derived-identity contract with no DocuDesk UI surface — covered by PHPUnit (tests/unit/Portal/SigningReceiverControllerTest.php::testIdentityIsServerDerived)
+- @e2e exclude server-derived-identity contract with no Filinq UI surface — covered by PHPUnit (tests/unit/Portal/SigningReceiverControllerTest.php::testIdentityIsServerDerived)
 
 ### Requirement: No cross-signer IDOR — the actor must be an invited signer on the target request (REQ-DDPSA-004)
 
@@ -128,7 +128,7 @@ existence oracle) and MUST NOT touch `SigningService`.
 ### Requirement: Sign and decline call the honest SigningService primitive with the verified external actor (REQ-DDPSA-005)
 
 On a verified, authorised request the receiver MUST perform the signing act
-through the existing `OCA\DocuDesk\Service\SigningService::sign()` /
+through the existing `OCA\Filinq\Service\SigningService::sign()` /
 `decline()` primitive (the honest, status-machine-gated, identity-bound version
 delivered by `signing-trust-rebuild`), acting as the resolved verified external
 signer rather than a Nextcloud user session. Because those methods derive the
@@ -154,7 +154,7 @@ or OpenRegister failure (never leaking transport or exception internals).
 - AND the signer-belongs-to-request and terminal-state guards still apply, so a `decline` on a COMPLETED request is rejected unchanged
 - AND a signing-audit entry is written recording the portal signer email and the assertion `jti`
 - AND a downstream/OpenRegister failure is relayed as `502` with no internal detail
-- @e2e exclude backend receiver → service contract with no DocuDesk UI surface (the signing UI is portaliq's SPA) — covered by PHPUnit (tests/unit/Portal/SigningReceiverControllerTest.php) and a Newman happy-path contract
+- @e2e exclude backend receiver → service contract with no Filinq UI surface (the signing UI is portaliq's SPA) — covered by PHPUnit (tests/unit/Portal/SigningReceiverControllerTest.php) and a Newman happy-path contract
 
 ### Requirement: Document view returns the target document to the verified signer only (REQ-DDPSA-006)
 
@@ -175,7 +175,7 @@ never returning another request's document.
 - WHEN the receiver processes `viewDocument` for a `signingRequestId` on which `A` is invited
 - THEN it returns the document metadata and base64 content resolved from that request's `documentFileId`
 - AND when `A` is NOT invited on the target the receiver returns the identical not-authorised result as `sign`/`decline`, and a missing/unreadable document fails closed
-- @e2e exclude backend document-read receiver with no DocuDesk UI surface — covered by PHPUnit (tests/unit/Portal/SigningReceiverControllerTest.php::testViewDocumentScopedToInvitedSigner)
+- @e2e exclude backend document-read receiver with no Filinq UI surface — covered by PHPUnit (tests/unit/Portal/SigningReceiverControllerTest.php::testViewDocumentScopedToInvitedSigner)
 
 ### Requirement: Assertion is never a portal session and every path fails closed (REQ-DDPSA-007)
 
@@ -195,5 +195,5 @@ verified assertion, and no receiver response may echo raw exception text.
 - GIVEN any receiver call whose assertion is absent/invalid, whose audience/trust is insufficient, whose signer is not invited, or whose downstream fails
 - WHEN the receiver handles it
 - THEN it returns `401`/`403`/`404`/`502` per the mode above, performs no signing act on any non-authorised path, and returns no raw exception text
-- AND an `X-Portal-Subject` assertion presented as an `Authorization: Bearer` to any DocuDesk endpoint is never treated as a valid session
+- AND an `X-Portal-Subject` assertion presented as an `Authorization: Bearer` to any Filinq endpoint is never treated as a valid session
 - @e2e exclude fail-closed security invariant on a backend-only receiver — covered by PHPUnit fail-closed matrix (tests/unit/Portal/SigningReceiverControllerTest.php, PortalAssertionVerifierTest.php) and a Newman error-contract collection

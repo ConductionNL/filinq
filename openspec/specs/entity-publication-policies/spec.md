@@ -13,7 +13,7 @@ The `publicationProhibition` schema MUST be defined in the consent register and 
 
 #### Scenario: Schema is registered on app install
 
-- **GIVEN** a fresh DocuDesk install
+- **GIVEN** a fresh Filinq install
 - **WHEN** the app's register configuration is imported
 - **THEN** the `consent` register contains a `publicationProhibition` schema with the documented properties: `primaryName`, `entityType`, `matchRules`, `reason`, `legalAuthority`, `caseReference`, `severity`, `jurisdiction`, `addedBy`, `validFrom`, `validUntil`, `active`, `notes`
 
@@ -306,7 +306,7 @@ scope-write RBAC contract is enforced in exactly one place.
 
 #### Scenario: No orphaned duplicate create path exists
 
-- **GIVEN** the docudesk service layer
+- **GIVEN** the filinq service layer
 - **WHEN** the codebase is scanned for scope=entity consent create methods
 - **THEN** exactly one wired create path exists
   (`PolicyCrudService::createStandingConsent`)

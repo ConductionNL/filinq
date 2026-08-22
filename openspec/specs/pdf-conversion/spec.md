@@ -9,7 +9,7 @@ status: in-progress
 - [multi-format-output](../../changes/multi-format-output/) _(active)_ — adds non-throwing capability introspection: `PdfConversionService::getCapabilities()` reports per-backend `{name, available, supports}` in cascade order, reusing the `ConversionFailedException` report shape (REQ-DDMFO-005) (kind: code)
 
 ## Purpose
-Converts Nextcloud files to PDF/A-3b through a `PdfConversionService` that walks a cascade of conversion backends in order, falling through to the next on failure. It accepts any Nextcloud file, leaves the source unchanged, and on total failure throws a typed exception carrying a per-backend report of availability, supported types, and the reason each backend did not apply. This gives DocuDesk a single, archival-grade PDF conversion entry point usable by anonymisation, comparison, and summary flows.
+Converts Nextcloud files to PDF/A-3b through a `PdfConversionService` that walks a cascade of conversion backends in order, falling through to the next on failure. It accepts any Nextcloud file, leaves the source unchanged, and on total failure throws a typed exception carrying a per-backend report of availability, supported types, and the reason each backend did not apply. This gives Filinq a single, archival-grade PDF conversion entry point usable by anonymisation, comparison, and summary flows.
 ## Requirements
 ### Requirement: A `PdfConversionService` MUST exist that converts files to PDF/A-3b
 
@@ -88,13 +88,13 @@ interface ConversionBackendInterface {
 
 #### Scenario: Backend reports unavailable when disabled by tenant config
 
-- **GIVEN** `docudesk.conversion.backends.libreoffice_enabled` is `false`
+- **GIVEN** `filinq.conversion.backends.libreoffice_enabled` is `false`
 - **WHEN** the LibreOffice backend's `isAvailable()` is called
 - **THEN** it returns false without attempting any runtime probe
 
 #### Scenario: Backend reports unavailable when binary missing
 
-- **GIVEN** the configured `docudesk.conversion.libreoffice_binary_path` does not resolve to an executable
+- **GIVEN** the configured `filinq.conversion.libreoffice_binary_path` does not resolve to an executable
 - **WHEN** the LibreOffice backend's `isAvailable()` is called
 - **THEN** it returns false
 - **AND** the cascade proceeds to the next backend
@@ -124,26 +124,26 @@ The service MUST read tenant-level configuration to enable / disable backends an
 
 | Key | Default | Purpose |
 |---|---|---|
-| `docudesk.conversion.backends.office_app_enabled` | `true` | Office app backend on/off |
-| `docudesk.conversion.backends.libreoffice_enabled` | `true` | LibreOffice headless on/off |
-| `docudesk.conversion.backends.phpword_enabled` | `true` | PhpWord + mPDF on/off |
-| `docudesk.conversion.backends.mpdf_enabled` | `true` | mPDF direct on/off |
-| `docudesk.conversion.backends.eml_enabled` | `true` | OR-EML-extractor backend on/off |
-| `docudesk.conversion.libreoffice_binary_path` | `soffice` | Path to soffice binary |
-| `docudesk.conversion.timeout_seconds` | `60` | Per-backend timeout |
+| `filinq.conversion.backends.office_app_enabled` | `true` | Office app backend on/off |
+| `filinq.conversion.backends.libreoffice_enabled` | `true` | LibreOffice headless on/off |
+| `filinq.conversion.backends.phpword_enabled` | `true` | PhpWord + mPDF on/off |
+| `filinq.conversion.backends.mpdf_enabled` | `true` | mPDF direct on/off |
+| `filinq.conversion.backends.eml_enabled` | `true` | OR-EML-extractor backend on/off |
+| `filinq.conversion.libreoffice_binary_path` | `soffice` | Path to soffice binary |
+| `filinq.conversion.timeout_seconds` | `60` | Per-backend timeout |
 
 The service MUST honour these at request time (no restart needed for config changes).
 
 #### Scenario: Disabled backend is skipped
 
-- **GIVEN** `docudesk.conversion.backends.office_app_enabled` is `false`
+- **GIVEN** `filinq.conversion.backends.office_app_enabled` is `false`
 - **WHEN** a conversion runs with a DOCX input
 - **THEN** the Office app backend is not consulted (no HTTP probe)
 - **AND** the cascade starts at LibreOffice
 
 #### Scenario: Backend timeout is enforced
 
-- **GIVEN** `docudesk.conversion.timeout_seconds` is `10`
+- **GIVEN** `filinq.conversion.timeout_seconds` is `10`
 - **AND** a backend's `convert()` runs longer than 10 seconds
 - **WHEN** the cascade is processing the input
 - **THEN** the conversion attempt is terminated
@@ -212,14 +212,14 @@ When the cascade fails, the thrown exception MUST expose a method (e.g. `getAtte
 The `EmlBackend.isAvailable()` MUST return true if and only if BOTH conditions hold:
 
 1. OpenRegister's `TextExtractionService` exposes `parseEmlStructured()` (the paired `text-extraction-eml` change has been applied).
-2. DocuDesk's `EmlPdfAssemblyService` is registered in the DI container (this change is applied).
+2. Filinq's `EmlPdfAssemblyService` is registered in the DI container (this change is applied).
 
 When `convert()` runs, the backend MUST call `TextExtractionService::parseEmlStructured($file)` and pass the resulting `EmlStructure` to `EmlPdfAssemblyService::assemble()`. The backend MUST NOT fall back to the original placeholder "extract flat text + render plaintext" path when the structured method is available.
 
 #### Scenario: Both changes applied — backend is available
 
 - **GIVEN** an OR install with `text-extraction-eml` applied (parseEmlStructured exists)
-- **AND** a DocuDesk install with this change applied (EmlPdfAssemblyService registered)
+- **AND** a Filinq install with this change applied (EmlPdfAssemblyService registered)
 - **WHEN** `EmlBackend::isAvailable()` is called
 - **THEN** it returns true
 
@@ -323,9 +323,9 @@ For each entry in `EmlStructure.attachments[]`, the assembly MUST embed the raw 
 
 ### Requirement: Renderable attachments MUST be appended as pages with dividers (when enabled)
 
-When `docudesk.conversion.eml.append_attachment_pages` is true (default), the assembly MUST append rendered pages for each renderable attachment. Each set of attachment pages MUST be preceded by a divider page identifying the attachment by index, filename, MIME type, and size. The renderable set is: `application/pdf`, `image/png`, `image/jpeg`, `image/gif`, `image/webp`, plain-text MIMEs, `message/rfc822` (recursive nested EML), and the Word MIMEs supported by Change A's PhpWord backend (DOCX/ODT/RTF/HTML).
+When `filinq.conversion.eml.append_attachment_pages` is true (default), the assembly MUST append rendered pages for each renderable attachment. Each set of attachment pages MUST be preceded by a divider page identifying the attachment by index, filename, MIME type, and size. The renderable set is: `application/pdf`, `image/png`, `image/jpeg`, `image/gif`, `image/webp`, plain-text MIMEs, `message/rfc822` (recursive nested EML), and the Word MIMEs supported by Change A's PhpWord backend (DOCX/ODT/RTF/HTML).
 
-Attachments larger than `docudesk.conversion.eml.max_attachment_render_size_bytes` (default 26214400 = 25 MB) MUST be embedded but NOT rendered as pages; the divider page indicates "te groot om weer te geven".
+Attachments larger than `filinq.conversion.eml.max_attachment_render_size_bytes` (default 26214400 = 25 MB) MUST be embedded but NOT rendered as pages; the divider page indicates "te groot om weer te geven".
 
 #### Scenario: PDF attachment renders as appended pages
 

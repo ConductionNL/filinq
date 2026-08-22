@@ -46,65 +46,65 @@ Expose a Prometheus-compatible metrics endpoint with proper content type and aut
 
 **Priority:** MUST
 
-Every DocuDesk installation exposes standard metrics for version info, health, and basic operational data.
+Every Filinq installation exposes standard metrics for version info, health, and basic operational data.
 
 #### Scenario: Application info metric
-- GIVEN DocuDesk version 0.0.32 is installed on PHP 8.2 and Nextcloud 29
+- GIVEN Filinq version 0.0.32 is installed on PHP 8.2 and Nextcloud 29
 - WHEN metrics are retrieved
-- THEN `docudesk_info{version="0.0.32",php_version="8.2.x",nextcloud_version="29.x.x"} 1` is present
+- THEN `filinq_info{version="0.0.32",php_version="8.2.x",nextcloud_version="29.x.x"} 1` is present
 
 #### Scenario: Up gauge
-- GIVEN DocuDesk is running
+- GIVEN Filinq is running
 - WHEN metrics are retrieved
-- THEN `docudesk_up 1` is present indicating the app is healthy
+- THEN `filinq_up 1` is present indicating the app is healthy
 
 #### Scenario: Version label accuracy
-- GIVEN DocuDesk is upgraded from 0.0.31 to 0.0.32
+- GIVEN Filinq is upgraded from 0.0.31 to 0.0.32
 - WHEN metrics are retrieved after upgrade
 - THEN the version label reflects "0.0.32"
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| PROM-010 | `docudesk_info` gauge with version, php_version, nextcloud_version labels | MUST | Implemented |
-| PROM-011 | `docudesk_up` gauge (1 = healthy) | MUST | Implemented |
+| PROM-010 | `filinq_info` gauge with version, php_version, nextcloud_version labels | MUST | Implemented |
+| PROM-011 | `filinq_up` gauge (1 = healthy) | MUST | Implemented |
 | PROM-012 | Version labels from IConfig app values | MUST | Implemented |
 
 ### Requirement: App-Specific Metrics (REQ-PROM-03)
 
 **Priority:** MUST
 
-DocuDesk exposes metrics specific to its document processing capabilities.
+Filinq exposes metrics specific to its document processing capabilities.
 
 #### Scenario: Document count metric
-- GIVEN 50 documents exist in DocuDesk
+- GIVEN 50 documents exist in Filinq
 - WHEN metrics are retrieved
-- THEN `docudesk_documents_total 50` is present
+- THEN `filinq_documents_total 50` is present
 - AND the count is fetched via MetricsCollector::countDocuments()
 
 #### Scenario: Template count metric
-- GIVEN 15 templates exist in DocuDesk
+- GIVEN 15 templates exist in Filinq
 - WHEN metrics are retrieved
-- THEN `docudesk_templates_total 15` is present
+- THEN `filinq_templates_total 15` is present
 - AND the count is fetched via MetricsCollector::countTemplates()
 
 #### Scenario: PDF generation counter
 - GIVEN 200 PDFs have been generated since installation
 - WHEN metrics are retrieved
-- THEN `docudesk_pdf_generations_total 200` is present
+- THEN `filinq_pdf_generations_total 200` is present
 - AND the value is read from IConfig app value `pdf_generations_total`
 
 #### Scenario: Anonymization counter
 - GIVEN 75 anonymization operations have been performed
 - WHEN metrics are retrieved
-- THEN `docudesk_anonymizations_total 75` is present
+- THEN `filinq_anonymizations_total 75` is present
 - AND the value is read from IConfig app value `anonymizations_total`
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| PROM-020 | `docudesk_documents_total` gauge via MetricsCollector | MUST | Implemented |
-| PROM-021 | `docudesk_templates_total` gauge via MetricsCollector | MUST | Implemented |
-| PROM-022 | `docudesk_pdf_generations_total` counter from IConfig | MUST | Implemented |
-| PROM-023 | `docudesk_anonymizations_total` counter from IConfig | MUST | Implemented |
+| PROM-020 | `filinq_documents_total` gauge via MetricsCollector | MUST | Implemented |
+| PROM-021 | `filinq_templates_total` gauge via MetricsCollector | MUST | Implemented |
+| PROM-022 | `filinq_pdf_generations_total` counter from IConfig | MUST | Implemented |
+| PROM-023 | `filinq_anonymizations_total` counter from IConfig | MUST | Implemented |
 
 ### Requirement: Planned Standard Metrics (REQ-PROM-04)
 
@@ -113,25 +113,25 @@ The app MUST expose additional standard metrics for request tracking and error m
 **Priority:** Should
 
 #### Scenario: Request counter (planned)
-- GIVEN DocuDesk handles HTTP requests
+- GIVEN Filinq handles HTTP requests
 - WHEN request metrics are implemented
-- THEN `docudesk_requests_total` counter with method, endpoint, status labels is exposed
+- THEN `filinq_requests_total` counter with method, endpoint, status labels is exposed
 
 #### Scenario: Request latency (planned)
-- GIVEN DocuDesk handles HTTP requests
+- GIVEN Filinq handles HTTP requests
 - WHEN latency metrics are implemented
-- THEN `docudesk_request_duration_seconds` histogram with method, endpoint labels is exposed
+- THEN `filinq_request_duration_seconds` histogram with method, endpoint labels is exposed
 
 #### Scenario: Error counter (planned)
-- GIVEN DocuDesk encounters errors
+- GIVEN Filinq encounters errors
 - WHEN error metrics are implemented
-- THEN `docudesk_errors_total` counter with type label is exposed
+- THEN `filinq_errors_total` counter with type label is exposed
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| PROM-030 | `docudesk_requests_total` counter with method/endpoint/status labels | SHOULD | Planned |
-| PROM-031 | `docudesk_request_duration_seconds` histogram | SHOULD | Planned |
-| PROM-032 | `docudesk_errors_total` counter with type label | SHOULD | Planned |
+| PROM-030 | `filinq_requests_total` counter with method/endpoint/status labels | SHOULD | Planned |
+| PROM-031 | `filinq_request_duration_seconds` histogram | SHOULD | Planned |
+| PROM-032 | `filinq_errors_total` counter with type label | SHOULD | Planned |
 
 ### Requirement: Planned Duration Metrics (REQ-PROM-05)
 
@@ -142,18 +142,18 @@ The app MUST expose duration histograms for PDF generation and anonymization ope
 #### Scenario: PDF generation duration (planned)
 - GIVEN PDF generation operations vary in duration
 - WHEN duration metrics are implemented
-- THEN `docudesk_pdf_generation_duration_seconds` histogram is exposed
+- THEN `filinq_pdf_generation_duration_seconds` histogram is exposed
 - AND percentiles (p50, p95, p99) can be derived from the histogram
 
 #### Scenario: Anonymization duration (planned)
 - GIVEN anonymization operations vary based on document size
 - WHEN duration metrics are implemented
-- THEN `docudesk_anonymization_duration_seconds` histogram is exposed
+- THEN `filinq_anonymization_duration_seconds` histogram is exposed
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| PROM-040 | `docudesk_pdf_generation_duration_seconds` histogram | SHOULD | Planned |
-| PROM-041 | `docudesk_anonymization_duration_seconds` histogram | SHOULD | Planned |
+| PROM-040 | `filinq_pdf_generation_duration_seconds` histogram | SHOULD | Planned |
+| PROM-041 | `filinq_anonymization_duration_seconds` histogram | SHOULD | Planned |
 
 ### Requirement: Health Check Endpoint (REQ-PROM-06)
 
@@ -230,7 +230,7 @@ MetricsController delegates count queries to MetricsCollector for separation of 
   - `lib/Controller/MetricsController.php` -- metrics endpoint with info, up, documents, templates, PDF, anonymization metrics
   - `lib/Controller/MetricsCollector.php` -- document and template counting
   - `lib/Controller/HealthController.php` -- health check endpoint
-- **Implemented metrics**: docudesk_info, docudesk_up, docudesk_documents_total, docudesk_templates_total, docudesk_pdf_generations_total, docudesk_anonymizations_total
+- **Implemented metrics**: filinq_info, filinq_up, filinq_documents_total, filinq_templates_total, filinq_pdf_generations_total, filinq_anonymizations_total
 - **Not yet implemented**: requests_total, request_duration_seconds, errors_total, PDF/anonymization duration histograms
 
 ### Standards & References

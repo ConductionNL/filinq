@@ -15,10 +15,10 @@
  *  7. rejectUpdate() and rejectDelete() are absent (finding #289 — retained).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-2.1
  * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-3.1
@@ -29,11 +29,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use DateTime;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\SigningAuditService;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\SigningAuditService;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -49,10 +49,10 @@ use RuntimeException;
  * Unit tests for the migrated SigningAuditService.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

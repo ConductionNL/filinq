@@ -16,7 +16,7 @@
   `POST /api/retention/legal-holds` (+ `/bulk`).
 - `DestructionCheckJob` excludes objects with `retention.legalHold.active
   = true` from destruction lists (archival-destruction-workflow REQ-001),
-  so the freeze is enforced at the platform layer, not by DocuDesk UI
+  so the freeze is enforced at the platform layer, not by Filinq UI
   discipline.
 
 **Limitation, stated**: OR's hold is a single slot per object (`active` +
@@ -25,7 +25,7 @@ matter A must not unfreeze a record matter B still needs. OR has no
 multi-hold model — the case layer therefore owns the overlap accounting
 (D3) and an OR issue proposing native multi-hold is filed at apply time.
 
-### DocuDesk side
+### Filinq side
 
 `archiefwet-retention-engine` (dependency) supplies the disposal workflow
 being overridden and the Archiefbeheer surfaces where exclusions become
@@ -93,7 +93,7 @@ prevents any other transition path).
 
 - **Activate** (on create): for each in-scope object (documents + dossier
   objects), place an OR legal hold with
-  `reason = "docudesk-hold-case:{caseUuid}"` via OR's legal-hold API. If
+  `reason = "filinq-hold-case:{caseUuid}"` via OR's legal-hold API. If
   the object is ALREADY held: record the pre-existing hold in the case
   audit and do not overwrite it (single-slot limitation) — the case still
   lists the object; the overlap ledger (below) covers it. Partial failures
@@ -107,7 +107,7 @@ prevents any other transition path).
   to the surviving case's reference. OR's `releaseHold()` preserves the
   full history slot; the case object records `releasedBy/At/Reason`.
 
-Rejected alternative — DocuDesk-side freeze checks in the disposal UI:
+Rejected alternative — Filinq-side freeze checks in the disposal UI:
 that would be UI discipline where OR already enforces at the
 DestructionCheckJob layer; the case layer must never become the
 enforcement point (fail-closed stays platform-side).
@@ -145,9 +145,9 @@ user with Files/WebDAV/sync access from deleting the underlying Nextcloud
 file. That gap is a real evidence-spoliation risk under a running matter.
 **Decision:** alongside every OR hold, place an app-scoped lock on the
 document's file node via OCP `\OCP\Files\Lock\ILockManager`
-(`ILock::TYPE_APP`, owner = the DocuDesk app id — an app lock, not a user
+(`ILock::TYPE_APP`, owner = the Filinq app id — an app lock, not a user
 lock, so it is not tied to the placing user's session and blocks all raw file
-mutation). The lock provider is the `files_lock` app; DocuDesk consumes the
+mutation). The lock provider is the `files_lock` app; Filinq consumes the
 OCP interface, never `files_lock` internals.
 
 - **Primary vs backstop:** the OR record freeze stays authoritative for
@@ -192,7 +192,7 @@ in OR.
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (nil-UUID placeholders,
+Shipped in `filinq_register.json` `objects[]` (nil-UUID placeholders,
 demo-municipality flavour):
 
 ```json

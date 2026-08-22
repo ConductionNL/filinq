@@ -3,18 +3,18 @@
 /**
  * SignerStepApprovedEvent
  *
- * Typed docudesk-side event fired when a `pending` OR approval step linked to
- * a docudesk signing-request is approved (i.e. a signer signed). Bridges OR's
+ * Typed filinq-side event fired when a `pending` OR approval step linked to
+ * a filinq signing-request is approved (i.e. a signer signed). Bridges OR's
  * `ApprovalStepApprovedEvent`; carries the next step (if any) so internal
- * docudesk subscribers can decide whether the chain has advanced or stalled.
+ * filinq subscribers can decide whether the chain has advanced or stalled.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,20 +24,20 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCA\OpenRegister\Db\ApprovalChain;
 use OCA\OpenRegister\Db\ApprovalStep;
 use OCP\EventDispatcher\Event;
 
 /**
- * Fired after an approval step linked to a docudesk sign-request is approved.
+ * Fired after an approval step linked to a filinq sign-request is approved.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SignerStepApprovedEvent extends Event {
 	/**
@@ -108,7 +108,7 @@ class SignerStepApprovedEvent extends Event {
 	}//end isFinalStep()
 
 	/**
-	 * Get the docudesk signing-request UUID this step relates to.
+	 * Get the filinq signing-request UUID this step relates to.
 	 *
 	 * @return string Signing-request UUID.
 	 */

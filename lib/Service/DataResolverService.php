@@ -8,12 +8,12 @@
  * merging ad-hoc data on top of resolved data.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
  *
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\App\IAppManager;
@@ -36,10 +36,10 @@ use RuntimeException;
  * Service for resolving data from OpenRegister objects
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-2
  */
@@ -271,7 +271,7 @@ class DataResolverService {
 
 		// Resolve nested references if within depth limit.
 		$maxDepth = (int)$this->appConfig->getValueString(
-			'docudesk',
+			'filinq',
 			'resolver.max_depth',
 			(string)self::MAX_DEPTH
 		);

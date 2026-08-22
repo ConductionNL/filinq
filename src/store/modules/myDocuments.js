@@ -51,6 +51,15 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		loading: false,
 		error: null,
 		total: 0,
+		// ⚠️ THE FILES FOLDER IS FROZEN AT `DocuDesk` ACROSS THE FILINQ RENAME.
+		// Every document the app has ever generated or uploaded lives under
+		// `<user>/files/DocuDesk/…`, and the backend still writes there — see
+		// DocumentService::DEFAULT_OUTPUT_FOLDER_PREFIX and FileUploadService.
+		// Renaming this to `/Filinq` points the listing at a folder that does
+		// not exist: PROPFIND 404s, the store returns an empty list, and every
+		// existing document silently disappears with no error. The breadcrumb
+		// label deliberately reads `DocuDesk` too, so the UI never claims a
+		// folder that isn't there.
 		currentPath: '/DocuDesk',
 		breadcrumbs: [{ name: 'DocuDesk', path: '/DocuDesk' }],
 		// anonymizationLink records (sourceFileId ↔ anonymizedFileId) for the
@@ -602,6 +611,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 * Navigate to a specific folder path.
 		 *
 		 * @param {string} path The folder path to navigate to.
+		 * @spec exclude client-side breadcrumb/currentPath bookkeeping over the Nextcloud Files tree; no Filinq openspec requirement governs folder traversal chrome — the listing's authoritative source/anonymised pairing is specified at openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		navigateTo(path) {
 			this.currentPath = path
@@ -642,6 +652,7 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 *
 		 * @param {number} [limit] Maximum number of items to return (default 4).
 		 * @return {Promise<object[]>} Items shaped like the documents array.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-filinq-dashboard-view-req-dash-01
 		 */
 		async fetchRecentAnonymized(limit = 4) {
 			const user = getCurrentUser()

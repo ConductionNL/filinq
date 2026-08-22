@@ -84,7 +84,7 @@ flowchart TD
 When a document is prepared for publication:
 
 1. **Text Extraction**: OpenRegister extracts text from the document (if not already done)
-2. **Entity Detection**: DocuDesk uses Presidio to detect entities:
+2. **Entity Detection**: Filinq uses Presidio to detect entities:
    - **PERSON**: Names of individuals
    - **ORGANIZATION**: Names of organizations
    - Other PII types (EMAIL_ADDRESS, PHONE_NUMBER, etc.) may also trigger the process
@@ -292,7 +292,7 @@ When an operator decides to anonymise a standing-consent-matched entity anyway:
 
 ### Application Settings
 
-Configure the publication consent process via DocuDesk settings:
+Configure the publication consent process via Filinq settings:
 
 - `publication_objection_period_days`: Number of days for objection period (default: 28, minimum: 28)
 - `publication_notification_email_template`: Email template for notifications
@@ -302,7 +302,7 @@ Configure the publication consent process via DocuDesk settings:
 
 ### Register Configuration
 
-The `publicationConsent` schema is configured in `docudesk_register.json`:
+The `publicationConsent` schema is configured in `filinq_register.json`:
 
 - Register: `document`
 - Schema: `publicationConsent`
@@ -313,7 +313,7 @@ The `publicationConsent` schema is configured in `docudesk_register.json`:
 ### Create Publication Consent Records
 
 ```http
-POST /apps/docudesk/api/publication-consent/create
+POST /apps/filinq/api/publication-consent/create
 Content-Type: application/json
 
 {
@@ -331,7 +331,7 @@ Content-Type: application/json
 ### Update Consent Status
 
 ```http
-PUT /apps/docudesk/api/publication-consent/{id}
+PUT /apps/filinq/api/publication-consent/{id}
 Content-Type: application/json
 
 {
@@ -343,13 +343,13 @@ Content-Type: application/json
 ### Get Consent Records for Document
 
 ```http
-GET /apps/docudesk/api/publication-consent/document/{documentId}
+GET /apps/filinq/api/publication-consent/document/{documentId}
 ```
 
 ### Make Publication Decision
 
 ```http
-POST /apps/docudesk/api/publication-consent/{id}/decision
+POST /apps/filinq/api/publication-consent/{id}/decision
 Content-Type: application/json
 
 {
@@ -473,7 +473,7 @@ Rather than submitting entities separately via `POST /api/consents`, include the
 `unredactedEntities[]` array of the same anonymise request:
 
 ```json
-POST /index.php/apps/docudesk/api/v1/anonymize/{fileId}
+POST /index.php/apps/filinq/api/v1/anonymize/{fileId}
 {
   "entities": [
     { "entityId": 1, "text": "Amsterdam", "type": "LOCATION" }
@@ -563,7 +563,7 @@ usual `replacementCount` and `anonymizedFileId`.
 
 ## Entity-Level Policy Layer
 
-Beyond the per-document workflow, DocuDesk supports two **entity-level** policy surfaces that pre-empt the workflow at detection time:
+Beyond the per-document workflow, Filinq supports two **entity-level** policy surfaces that pre-empt the workflow at detection time:
 
 ### Publication Prohibitions (`publicationProhibition` schema)
 
@@ -666,7 +666,7 @@ Admin users implicitly belong to both groups (NC convention). Adjust group membe
 
 **policyMatch re-evaluation:** If `policyMatch` was previously `null` and `PolicyMatchService::match()` now returns a standing-consent match, `policyMatch` is set. If it was previously set and the rule no longer matches, it is **not** cleared (the prior decision stands).
 
-**Prohibition rejection:** If `PolicyMatchService::match()` returns a prohibition match, `createConsentRequest()` throws `OCA\DocuDesk\Exception\PolicyRejectedException` carrying the rule UUID and name. No record is created or updated.
+**Prohibition rejection:** If `PolicyMatchService::match()` returns a prohibition match, `createConsentRequest()` throws `OCA\Filinq\Exception\PolicyRejectedException` carrying the rule UUID and name. No record is created or updated.
 
 ### Sentinel-Tagged Additional-Bases Serialisation in notes
 

@@ -78,7 +78,7 @@ export const useTemplateStore = defineStore('template', {
 					}
 				})
 				const response = await axios.get(
-					generateUrl('/apps/docudesk/api/templates')
+					generateUrl('/apps/filinq/api/templates')
 						+ '?'
 						+ params.toString(),
 					{ headers: this.buildLanguageHeaders() },
@@ -104,7 +104,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl(`/apps/docudesk/api/templates/${id}`),
+					generateUrl(`/apps/filinq/api/templates/${id}`),
 					{ headers: this.buildLanguageHeaders() },
 				)
 				this.templateItem = response.data
@@ -129,7 +129,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.post(
-					generateUrl('/apps/docudesk/api/templates'),
+					generateUrl('/apps/filinq/api/templates'),
 					data,
 				)
 				this.templateItem = response.data
@@ -154,7 +154,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.put(
-					generateUrl(`/apps/docudesk/api/templates/${id}`),
+					generateUrl(`/apps/filinq/api/templates/${id}`),
 					data,
 				)
 				this.templateItem = response.data
@@ -177,7 +177,7 @@ export const useTemplateStore = defineStore('template', {
 			this.loading = true
 			this.error = null
 			try {
-				await axios.delete(generateUrl(`/apps/docudesk/api/templates/${id}`))
+				await axios.delete(generateUrl(`/apps/filinq/api/templates/${id}`))
 				this.templates = this.templates.filter((t) => t.id !== id)
 				return true
 			} catch (err) {
@@ -199,7 +199,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.post(
-					generateUrl(`/apps/docudesk/api/templates/${id}/duplicate`),
+					generateUrl(`/apps/filinq/api/templates/${id}/duplicate`),
 				)
 				return response.data
 			} catch (err) {
@@ -221,7 +221,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl(`/apps/docudesk/api/templates/${id}/versions`),
+					generateUrl(`/apps/filinq/api/templates/${id}/versions`),
 				)
 				this.versions = response.data.results || []
 				return response.data
@@ -246,7 +246,7 @@ export const useTemplateStore = defineStore('template', {
 			try {
 				const response = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/templates/${templateId}/versions/${versionId}/restore`,
+						`/apps/filinq/api/templates/${templateId}/versions/${versionId}/restore`,
 					),
 				)
 				this.templateItem = response.data
@@ -270,7 +270,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.post(
-					generateUrl('/apps/docudesk/api/templates/preview'),
+					generateUrl('/apps/filinq/api/templates/preview'),
 					{ content, data },
 				)
 				return response.data.html
@@ -290,7 +290,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.post(
-					generateUrl(`/apps/docudesk/api/templates/${id}/lock`),
+					generateUrl(`/apps/filinq/api/templates/${id}/lock`),
 				)
 				return response.data
 			} catch (err) {
@@ -309,7 +309,7 @@ export const useTemplateStore = defineStore('template', {
 			this.error = null
 			try {
 				const response = await axios.delete(
-					generateUrl(`/apps/docudesk/api/templates/${id}/lock`),
+					generateUrl(`/apps/filinq/api/templates/${id}/lock`),
 				)
 				return response.data
 			} catch (err) {

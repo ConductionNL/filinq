@@ -1,6 +1,6 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/160
+tracking_issue: https://github.com/ConductionNL/filinq/issues/160
 ---
 
 # Proposal: portal-contribution
@@ -14,7 +14,7 @@ the convention FQCN `OCA\{App}\Portal\PortalContributionProvider`, which
 portaliq discovers and duck-types (`method_exists`, never `instanceof`). The
 class is inert when portaliq is not installed (amendment A1).
 
-DocuDesk has two natural external audiences that today have **no** self-service
+Filinq has two natural external audiences that today have **no** self-service
 surface:
 
 - a **data subject** — a WOO-affected entity who was notified that a document
@@ -30,7 +30,7 @@ subject can see their consent/objection status and a signer can see the
 documents awaiting their signature — with every staff-only and other-party
 column projected out server-side.
 
-Tracking issue: Conduction/docudesk#160.
+Tracking issue: Conduction/filinq#160.
 
 ## What
 
@@ -57,13 +57,13 @@ objection, sign/decline) are deferred — see design.md "Deferred actions".
 
 ### Added Capabilities
 
-- `portal-contribution`: DocuDesk contributes `data-subject` and `signer` read
+- `portal-contribution`: Filinq contributes `data-subject` and `signer` read
   surfaces to portaliq via a plain, dependency-free provider class with
   server-side field projection and UUID/email claim scoping (ADR-046 v2.1).
 
 ## Affected Projects
 
-- [x] Project: `docudesk` — new `lib/Portal/PortalContributionProvider.php`, unit tests under `tests/unit/Portal/`, this OpenSpec change. No register or runtime-wiring changes.
+- [x] Project: `filinq` — new `lib/Portal/PortalContributionProvider.php`, unit tests under `tests/unit/Portal/`, this OpenSpec change. No register or runtime-wiring changes.
 - Reference: `apps-extra/petstore` — the fleet-reference provider (copied shape).
 - Reference: `apps-extra/pipelinq` — multi-audience + field-projection + register-drift-pin reference.
 - Reference: `hydra` ADR-046 (portaliq external portal, contribution contract v2.1).
@@ -72,12 +72,12 @@ objection, sign/decline) are deferred — see design.md "Deferred actions".
 ## Out of Scope
 
 - Any portal UI, auth edge, inbox, session or rendering — portaliq owns the
-  entire external surface (ADR-046); DocuDesk ships zero portal frontend.
+  entire external surface (ADR-046); Filinq ships zero portal frontend.
 - Create-actions and A6 endpoint actions (objection intake, sign/decline) —
   deferred to a follow-up (design.md "Deferred actions").
-- Any change to `lib/Settings/docudesk_register.json` — the manifest reuses
+- Any change to `lib/Settings/filinq_register.json` — the manifest reuses
   existing schema properties verified at HEAD.
-- Any change to portaliq itself, or to DocuDesk's existing consent/signing
+- Any change to portaliq itself, or to Filinq's existing consent/signing
   services.
 
 ## Success Criteria

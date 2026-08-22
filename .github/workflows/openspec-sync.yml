@@ -10,6 +10,6 @@ jobs:
   sync:
     uses: ConductionNL/.github/.github/workflows/openspec-sync.yml@main
     with:
-      app-name: docudesk
+      app-name: filinq
     secrets:
       PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}

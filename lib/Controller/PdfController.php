@@ -7,12 +7,12 @@
  * Accepts a Twig template and data context, returns a generated PDF.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdf-generation/spec.md
  * @spec openspec/specs/print-preview/spec.md
@@ -24,12 +24,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Exception\Pdfa3ConversionException;
-use OCA\DocuDesk\Service\Pdfa3ConversionService;
-use OCA\DocuDesk\Service\PdfService;
+use OCA\Filinq\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Service\Pdfa3ConversionService;
+use OCA\Filinq\Service\PdfService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -43,10 +43,10 @@ use Psr\Log\LoggerInterface;
  * Controller for PDF generation endpoints
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
@@ -357,7 +357,7 @@ class PdfController extends Controller {
 	 *
 	 * @return DataDownloadResponse
 	 *
-	 * @throws \OCA\DocuDesk\Exception\Pdfa3ConversionException Propagated to renderPdfA()'s catch block.
+	 * @throws \OCA\Filinq\Exception\Pdfa3ConversionException Propagated to renderPdfA()'s catch block.
 	 *
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
 	 */

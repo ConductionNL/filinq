@@ -4,7 +4,7 @@
  * Unit tests for BatchAnonymizationController outputFormat handling
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,10 +12,10 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
 use PHPUnit\Framework\TestCase;
 
@@ -24,10 +24,10 @@ use PHPUnit\Framework\TestCase;
  * batch endpoint: the widened three-value enum and the new pdf-only default.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -88,7 +88,7 @@ class BatchAnonymizationControllerOutputFormatTest extends TestCase {
 		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/BatchAnonymizationController.php');
 
 		$this->assertStringContainsString(
-			'docudesk.anonymisation.default_output_format',
+			'filinq.anonymisation.default_output_format',
 			$content,
 			'Batch controller must read tenant default via the documented IAppConfig key'
 		);

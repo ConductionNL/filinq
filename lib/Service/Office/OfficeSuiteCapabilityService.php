@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk OfficeSuiteCapabilityService
+ * Filinq OfficeSuiteCapabilityService
  *
  * Determines whether a WOPI host is actually usable on this instance, by asking
  * it rather than by asking whether an app is installed.
@@ -10,7 +10,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Office
+ * @package  OCA\Filinq\Service\Office
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -18,12 +18,12 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Office;
+namespace OCA\Filinq\Service\Office;
 
 use OCP\Http\Client\IClientService;
 use Psr\Log\LoggerInterface;
@@ -55,7 +55,7 @@ use Throwable;
  * and the second is much the more expensive mistake.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Office
+ * @package  OCA\Filinq\Service\Office
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -63,7 +63,7 @@ use Throwable;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/office-suite-portability/spec.md
  */
@@ -269,8 +269,8 @@ class OfficeSuiteCapabilityService {
 	 */
 	private function absent(string $reason): array {
 		$this->logger->debug(
-			'[DocuDesk] WOPI capability resolved absent: ' . $reason,
-			['app' => 'docudesk']
+			'[Filinq] WOPI capability resolved absent: ' . $reason,
+			['app' => 'filinq']
 		);
 
 		return [
@@ -283,7 +283,7 @@ class OfficeSuiteCapabilityService {
 	/**
 	 * Name the responding suite when it identifies itself.
 	 *
-	 * Reporting only. Nothing in DocuDesk branches on which suite answered — a
+	 * Reporting only. Nothing in Filinq branches on which suite answered — a
 	 * capability that behaved differently per suite would be the per-suite driver
 	 * set ADR-087 §5 bans.
 	 *

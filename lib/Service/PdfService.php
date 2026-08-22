@@ -8,12 +8,12 @@
  * to TemplateRenderer. Supports PDF/A-3b archival compliance mode.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdf-generation/spec.md
  * @spec openspec/specs/print-preview/spec.md
@@ -28,7 +28,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use Mpdf\Mpdf;
@@ -43,10 +43,10 @@ use Psr\Log\LoggerInterface;
  * CSS is injected automatically.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
@@ -78,7 +78,7 @@ class PdfService {
 	 *                       - title: PDF document title metadata. Default: empty
 	 *                       - pdfa: Enable PDF/A-3b compliance. Default: false
 	 *                       - cropMarks: Add 3mm bleed and crop marks. Default: false
-	 *                       - author: Author name for XMP metadata. Default: DocuDesk
+	 *                       - author: Author name for XMP metadata. Default: Filinq
 	 *                       - caseReference: Case reference for XMP keywords. Default: empty
 	 *
 	 * @return string PDF binary content
@@ -418,6 +418,8 @@ class PdfService {
 	 * @return Mpdf The configured mPDF instance.
 	 *
 	 * @throws Exception When mPDF cannot be instantiated.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md#requirement-mpdf-temp-directory-management-req-pdf-04
 	 */
 	public function createMpdfInstance(array $options = []): Mpdf {
 		$tempDir = '/tmp/mpdf';
@@ -435,8 +437,8 @@ class PdfService {
 			}
 
 			if ($isPdfA === true) {
-				$mpdf->SetAuthor('DocuDesk');
-				$mpdf->SetCreator('DocuDesk PDF/A Generator');
+				$mpdf->SetAuthor('Filinq');
+				$mpdf->SetCreator('Filinq PDF/A Generator');
 			}
 
 			return $mpdf;
@@ -509,7 +511,7 @@ class PdfService {
 			$html = $printCss . $html;
 		}
 
-		$author = (string)($options['author'] ?? 'DocuDesk');
+		$author = (string)($options['author'] ?? 'Filinq');
 		$caseReference = (string)($options['caseReference'] ?? '');
 		$hasCropMarks = ($options['cropMarks'] ?? false) === true;
 
@@ -527,9 +529,9 @@ class PdfService {
 			$mpdf->SetAuthor($author);
 
 			if ($isPdfA === true) {
-				$mpdf->SetCreator('DocuDesk PDF/A Generator');
+				$mpdf->SetCreator('Filinq PDF/A Generator');
 
-				$keywords = 'DocuDesk';
+				$keywords = 'Filinq';
 				if ($caseReference !== '') {
 					$keywords .= ' ' . $caseReference;
 				}

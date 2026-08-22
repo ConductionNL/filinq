@@ -17,12 +17,12 @@
  * collaborators.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Charts
+ * @package   OCA\Filinq\Service\Charts
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/template-charts/specs/template-charts/spec.md
  *
@@ -32,7 +32,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Charts;
+namespace OCA\Filinq\Service\Charts;
 
 /**
  * Renders bar, line, and pie charts as self-contained, deterministic SVG.
@@ -44,10 +44,10 @@ namespace OCA\DocuDesk\Service\Charts;
  * bar/line/pie per the template-charts spec (REQ-DDTCH-001).
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Charts
+ * @package  OCA\Filinq\Service\Charts
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/template-charts/tasks.md#task-1.1
  */
@@ -76,7 +76,7 @@ class ChartSvgRenderer {
 
 	/**
 	 * Default cap on the number of data points (labels) per chart.
-	 * Overridable via the `docudesk.charts.max_points` app config value.
+	 * Overridable via the `filinq.charts.max_points` app config value.
 	 *
 	 * @var int
 	 */

@@ -7,7 +7,7 @@
  * rendering paths (PdfService is mocked so mPDF itself is not invoked).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -15,7 +15,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/pdf-conversion-service/tasks.md#task-11
  *
@@ -23,11 +23,11 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Conversion;
+namespace OCA\Filinq\Tests\Unit\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\Conversion\MpdfBackend;
-use OCA\DocuDesk\Service\PdfService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Conversion\MpdfBackend;
+use OCA\Filinq\Service\PdfService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\IAppConfig;
@@ -40,10 +40,10 @@ use RuntimeException;
  * Unit tests for MpdfBackend
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

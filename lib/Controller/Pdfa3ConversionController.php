@@ -10,12 +10,12 @@
  * with MDTO/archival metadata and embedded attachments.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  *
@@ -25,10 +25,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\Exception\Pdfa3ConversionException;
-use OCA\DocuDesk\Service\Pdfa3ConversionService;
+use OCA\Filinq\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,10 +46,10 @@ use Throwable;
  * Controller for the PDF/A-3 conversion endpoint.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
@@ -153,6 +153,14 @@ class Pdfa3ConversionController extends Controller {
 			// Surfaced so callers (e.g. procest's TemplateEngineAdapterInterface,
 			// which expects {checksumSha256, paginas}) can read the composition
 			// metadata without a second round trip.
+			// ⚠️ THE `X-Docudesk-*` HEADER NAMES STAY ACROSS THE FILINQ RENAME.
+			// They are a CROSS-APP response contract: dossiq's (procest's)
+			// beschikking/archival pipeline reads them off this endpoint. A
+			// renamed header is not an error to a consumer — it is an ABSENT
+			// header, so the integration degrades silently rather than failing.
+			// Rename them only together with the consumers, in a coordinated
+			// change; the same applies to the `X-Docudesk-File-*` headers in
+			// DocumentController.
 			$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
 			$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
 			$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);

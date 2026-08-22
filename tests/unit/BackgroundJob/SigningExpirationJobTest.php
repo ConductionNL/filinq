@@ -8,7 +8,7 @@
  * within their deadline.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\BackgroundJob
+ * @package  OCA\Filinq\Tests\Unit\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,12 +21,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\BackgroundJob;
+namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
-use OCA\DocuDesk\BackgroundJob\SigningExpirationJob;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\BackgroundJob\SigningExpirationJob;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -39,7 +39,7 @@ use ReflectionClass;
  * Tests for SigningExpirationJob deadline enforcement
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\BackgroundJob
+ * @package  OCA\Filinq\Tests\Unit\BackgroundJob
  * @author   Conduction Development Team <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
@@ -90,8 +90,8 @@ class SigningExpirationJobTest extends TestCase {
 		$this->config = $this->createMock(IAppConfig::class);
 		$this->config->method('getValueString')->willReturnMap(
 			[
-				['docudesk', 'signingRequest_register', '', 'signing'],
-				['docudesk', 'signingRequest_schema', '', 'signingRequest'],
+				['filinq', 'signingRequest_register', '', 'signing'],
+				['filinq', 'signingRequest_schema', '', 'signingRequest'],
 			]
 		);
 

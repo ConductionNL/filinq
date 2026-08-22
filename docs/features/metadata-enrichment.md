@@ -2,7 +2,7 @@
 
 ## Overview
 
-DocuDesk automatically enriches document metadata when documents are created or updated in OpenRegister. Enrichment includes language detection, keyword extraction, topic classification, document type standardization, and date normalization. All processing runs locally using heuristic algorithms.
+Filinq automatically enriches document metadata when documents are created or updated in OpenRegister. Enrichment includes language detection, keyword extraction, topic classification, document type standardization, and date normalization. All processing runs locally using heuristic algorithms.
 
 ## Enrichment Pipeline
 
@@ -16,7 +16,7 @@ DocuDesk automatically enriches document metadata when documents are created or 
 
 ## API
 
-- `POST /apps/docudesk/api/metadata/enrich` - Trigger enrichment for a document object
+- `POST /apps/filinq/api/metadata/enrich` - Trigger enrichment for a document object
 
 ### Request Body
 
@@ -31,4 +31,4 @@ DocuDesk automatically enriches document metadata when documents are created or 
 
 ## Event-Driven Processing
 
-Enrichment runs automatically via the `DocuDeskEventListener` when OpenRegister fires `ObjectCreatedEvent` or `ObjectUpdatedEvent`. Feature toggles in admin settings control which enrichments are active.
+Enrichment runs automatically via the `FilinqEventListener` when OpenRegister fires `ObjectCreatedEvent` or `ObjectUpdatedEvent`. Feature toggles in admin settings control which enrichments are active.

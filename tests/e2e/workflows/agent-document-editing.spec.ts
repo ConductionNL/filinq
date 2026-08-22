@@ -1,17 +1,17 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * End-to-end regression for the agent-reachable document tools
- * (`docudesk-mcp-adoption` + `document-editing-tools`).
+ * (`filinq-mcp-adoption` + `document-editing-tools`).
  *
  * WHAT THIS PROVES, AND WHY IT IS DRIVEN THROUGH MCP
  * -------------------------------------------------
- * The tools have no DocuDesk UI of their own: they exist to be called by an
+ * The tools have no Filinq UI of their own: they exist to be called by an
  * agent, and the surface a caller actually reaches them through is
  * OpenRegister's MCP JSON-RPC endpoint. Driving them there is therefore not a
  * shortcut past the UI — it IS the integration boundary. Everything below the
- * endpoint is real: OR's tool registry resolving DocuDesk's `#[McpTool]`
+ * endpoint is real: OR's tool registry resolving Filinq's `#[McpTool]`
  * methods, the acting user's session, the file lock, the etag precondition,
  * the codec, and the ADR-088 system tag.
  *
@@ -101,7 +101,7 @@ async function openMcpSession(
 			params: {
 				protocolVersion: '2025-06-18',
 				capabilities: {},
-				clientInfo: { name: 'docudesk-e2e', version: '1' },
+				clientInfo: { name: 'filinq-e2e', version: '1' },
 			},
 		},
 	})
@@ -291,7 +291,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 
@@ -330,7 +330,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 		const blocks = read.payload.blocks as Array<{ anchor: string; text: string }>
@@ -344,7 +344,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.editDocument',
+			'filinq.editDocument',
 			{
 				fileId,
 				version: read.payload.version,
@@ -372,7 +372,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 		const afterTexts = (after.payload.blocks as Array<{ text: string }>).map(
@@ -408,14 +408,14 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 		const blocks = read.payload.blocks as Array<{ anchor: string; text: string }>
 		const first = blocks[0]
 
 		// Move the file out from under the reader, exactly as a second writer would.
-		await callTool(request, token, sessionId, 'docudesk.editDocument', {
+		await callTool(request, token, sessionId, 'filinq.editDocument', {
 			fileId,
 			version: read.payload.version,
 			edits: [
@@ -434,7 +434,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 		const freshAnchor = (
@@ -445,7 +445,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.editDocument',
+			'filinq.editDocument',
 			{
 				fileId,
 				version: read.payload.version,
@@ -466,7 +466,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 		expect(after.text, 'a refused edit must write nothing').not.toContain(
@@ -481,7 +481,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 		const blocks = read.payload.blocks as Array<{ anchor: string; text: string }>
@@ -490,7 +490,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.editDocument',
+			'filinq.editDocument',
 			{
 				fileId,
 				version: read.payload.version,
@@ -512,7 +512,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId },
 		)
 		expect((after.payload.blocks as Array<{ text: string }>)[0].text).toBe(
@@ -544,7 +544,7 @@ test.describe('agent document editing', () => {
 			request,
 			token,
 			sessionId,
-			'docudesk.readDocument',
+			'filinq.readDocument',
 			{ fileId: pdfId },
 		)
 
@@ -569,10 +569,10 @@ test.describe('agent document editing', () => {
 		expect(res.status()).toBe(200)
 
 		// ⚠️ Assert on `id`, NOT on `name`. `tools/list` carries BOTH: `id` is the
-		// dotted registry id (`docudesk.readDocument`, `openconnector.endpoint.search`)
+		// dotted registry id (`filinq.readDocument`, `openconnector.endpoint.search`)
 		// and `name` is the MCP-safe local name (`readDocument`, `endpoint_search`).
 		// `tools/call` takes the dotted id, which makes `name` easy to reach for by
-		// mistake — a filter on `name.startsWith('docudesk.')` matches NOTHING and
+		// mistake — a filter on `name.startsWith('filinq.')` matches NOTHING and
 		// the "no write verb is exposed" assertion below then passes over an empty
 		// list, reporting a guarantee it never checked. Measured against the live
 		// endpoint before relying on it.
@@ -580,23 +580,23 @@ test.describe('agent document editing', () => {
 			id?: string
 			name: string
 		}>
-		const docudesk = tools
+		const filinq = tools
 			.map((t) => String(t.id ?? ''))
-			.filter((id) => id.startsWith('docudesk.'))
+			.filter((id) => id.startsWith('filinq.'))
 
 		// POSITIVE CONTROL: if the register had not imported, this list would be
 		// empty and every assertion below would pass vacuously.
 		expect(
-			docudesk.length,
-			'DocuDesk must expose an MCP surface at all',
+			filinq.length,
+			'Filinq must expose an MCP surface at all',
 		).toBeGreaterThan(0)
 
 		for (const name of [
-			'docudesk.readDocument',
-			'docudesk.editDocument',
-			'docudesk.convertDocumentToPdf',
+			'filinq.readDocument',
+			'filinq.editDocument',
+			'filinq.convertDocumentToPdf',
 		]) {
-			expect(docudesk, `${name} must be exposed`).toContain(name)
+			expect(filinq, `${name} must be exposed`).toContain(name)
 		}
 
 		// The standing refusals, as a shape rather than a promise: no schema-derived
@@ -608,21 +608,19 @@ test.describe('agent document editing', () => {
 		// all. So this expectation cannot currently be falsified by live data, and
 		// on its own it would pass just as happily against a broken filter. The
 		// regex was therefore checked in isolation (it matches
-		// `docudesk.template.create` and not `docudesk.template.search` or
-		// `docudesk.readDocument`), and the real guard is the non-empty check
+		// `filinq.template.create` and not `filinq.template.search` or
+		// `filinq.readDocument`), and the real guard is the non-empty check
 		// above: if the surface is missing entirely, the test fails there rather
 		// than reporting this invariant it never got to evaluate.
-		const writeVerbs = docudesk.filter((n) =>
-			/\.(create|update|delete)$/.test(n),
-		)
+		const writeVerbs = filinq.filter((n) => /\.(create|update|delete)$/.test(n))
 		expect(
 			writeVerbs,
-			'no DocuDesk schema may expose a derived write verb',
+			'no Filinq schema may expose a derived write verb',
 		).toEqual([])
 		// ⚠️ WHAT "batch and signing stay unreachable" ACTUALLY MEANS. An earlier
 		// version of this check filtered every id matching /batch|sign/ and expected
 		// nothing — and it FAILED against the real surface on
-		// `docudesk.batchCorrespondenceJob.get`. The TEST was at fault, not the
+		// `filinq.batchCorrespondenceJob.get`. The TEST was at fault, not the
 		// product: `batchCorrespondenceJob` and `signingRequest` are two of the
 		// eight deliberately exposed READ schemas, and "did the mail-merge finish?"
 		// and "has that contract been signed yet?" are the questions the proposal
@@ -632,9 +630,9 @@ test.describe('agent document editing', () => {
 		//
 		// The refusal is about ACTIONS — no curated tool that RUNS a batch or
 		// applies a signature. Curated tools are two-segment
-		// (`docudesk.generateCorrespondence`); a three-segment id is a
+		// (`filinq.generateCorrespondence`); a three-segment id is a
 		// schema-derived verb, already covered by the write-verb check above.
-		const curated = docudesk.filter((n) => n.split('.').length === 2)
+		const curated = filinq.filter((n) => n.split('.').length === 2)
 		expect(
 			curated.filter((n) => /batch|sign/i.test(n)),
 			'no curated tool may run a batch or apply a signature',
@@ -643,12 +641,12 @@ test.describe('agent document editing', () => {
 		// And the converse, asserted positively, so a future over-broad "refusal"
 		// cannot quietly remove these and call it hardening.
 		expect(
-			docudesk,
+			filinq,
 			'the batch audit record stays readable — that is the point of the surface',
-		).toContain('docudesk.batchCorrespondenceJob.get')
+		).toContain('filinq.batchCorrespondenceJob.get')
 		expect(
-			docudesk,
+			filinq,
 			'the signing request stays readable, so an agent can report on it',
-		).toContain('docudesk.signingRequest.get')
+		).toContain('filinq.signingRequest.get')
 	})
 })

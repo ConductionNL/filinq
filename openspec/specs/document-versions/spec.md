@@ -76,8 +76,8 @@ new diff implementation. The compare action SHALL be offered only for text-extra
 
 The system SHALL expose a read endpoint that lists a document's versions by delegating to
 `IVersionManager`, guarded per-object so a user can only list versions of a document whose
-underlying Nextcloud file they can read. The endpoint SHALL NOT introduce any DocuDesk-owned
-version storage, and SHALL paginate large histories (limit/offset) consistent with DocuDesk's
+underlying Nextcloud file they can read. The endpoint SHALL NOT introduce any Filinq-owned
+version storage, and SHALL paginate large histories (limit/offset) consistent with Filinq's
 other list endpoints.
 
 #### Scenario: Listing is scoped to the caller's file permissions
@@ -86,9 +86,9 @@ other list endpoints.
 - WHEN the caller requests that document's version list
 - THEN the request is rejected (no versions are disclosed)
 
-#### Scenario: No DocuDesk-owned version storage is created
+#### Scenario: No Filinq-owned version storage is created
 @e2e exclude architecture invariant — verified by code review / route + schema inspection, not a UI flow
-- WHEN DocuDesk's schemas and routes are inspected
-- THEN no DocuDesk-owned table, schema, or store persists file versions
+- WHEN Filinq's schemas and routes are inspected
+- THEN no Filinq-owned table, schema, or store persists file versions
 - AND versions are read exclusively from Nextcloud `files_versions` via `IVersionManager`
 

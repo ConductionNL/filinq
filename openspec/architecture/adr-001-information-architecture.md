@@ -5,12 +5,12 @@
 
 ## Context
 
-DocuDesk is the document-lifecycle workspace for organisations that must combine
+Filinq is the document-lifecycle workspace for organisations that must combine
 everyday document work (templates, PDF rendering, letters, contracts) with
 regulated archival and privacy obligations (TMLO/MDTO metadata, Archiefwet
 retention, Woo-publicatie, eIDAS QES, redaction, anonymisation, legal hold).
 Most document tools optimise for one pole — either "Office-style authoring" or
-"eDiscovery / records management". DocuDesk treats both as one register-backed
+"eDiscovery / records management". Filinq treats both as one register-backed
 surface: every document carries enrichment, retention, lineage, consent and
 signature evidence alongside the file itself, so the case-worker and the
 records officer / FG work on the same object.
@@ -24,13 +24,13 @@ Prometheus, …) trivially explodes into a 20+ item sidebar if every spec earns
 its own nav entry. We need a discipline that holds the top-level count under
 the 7-item ceiling and stays stable as new spec families land.
 
-The cross-app IA brief (`docudesk / decidesk / opencatalogi / openconnector`,
-2026-05-23) proposes a four-section structure for DocuDesk. This ADR captures
+The cross-app IA brief (`filinq / decidesk / opencatalogi / openconnector`,
+2026-05-23) proposes a four-section structure for Filinq. This ADR captures
 that proposal as the per-app IA contract.
 
 ## Decision
 
-DocuDesk uses **four top-level menu items**, in this order:
+Filinq uses **four top-level menu items**, in this order:
 
 1. **Documenten** — the working surface (single + batch, OCR, enrichment,
    redaction, signatures, holds; everything that is a "verb on a document")
@@ -154,12 +154,12 @@ aggregates KPIs across the other three sections.
 
 ## Consequences
 
-- The DocuDesk left-nav holds at four items even as Phase 4 (archive +
+- The Filinq left-nav holds at four items even as Phase 4 (archive +
   compliance) and Phase 5 (trust + signing) ship. Rules 1 + 4 cap top-level
   growth.
-- `p3-document-management` is the anchor of *Documenten* in DocuDesk even
+- `p3-document-management` is the anchor of *Documenten* in Filinq even
   though the spec context-brief labels it Decidesk — the slug + register +
-  install target are DocuDesk's; Decidesk consumes the same register through
+  install target are Filinq's; Decidesk consumes the same register through
   its meeting "Stukken" tab (see decidesk IA brief, §G).
 - Anonimisation surfaces in three places by design: single-doc tab
   (`Documenten > detail > Anonimisatie`), batch panel (`Documenten > bulk
@@ -181,8 +181,8 @@ aggregates KPIs across the other three sections.
 
 ## References
 
-- Cross-app IA brief, 2026-05-23: `docudesk / decidesk / opencatalogi /
-  openconnector` — §1 "docudesk" (purpose, top-level navigation, sub-
+- Cross-app IA brief, 2026-05-23: `filinq / decidesk / opencatalogi /
+  openconnector` — §1 "filinq" (purpose, top-level navigation, sub-
   architecture, mapping table, phases, design rules).
 - Sibling-app IA ADRs (when filed): decidesk, opencatalogi, openconnector.
 - Hydra ADR-022 (apps consume OR abstractions) — Documenten lists / detail

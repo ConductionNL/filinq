@@ -5,7 +5,7 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add additive `anonymizationLink` fields `burnedRegionCount` (int) and `imageRedactionPending` (bool) to `lib/Settings/docudesk_register.json` — union-merge only, never hand-pick (REQ-DDIMR-006)
+- [ ] 1.1 Add additive `anonymizationLink` fields `burnedRegionCount` (int) and `imageRedactionPending` (bool) to `lib/Settings/filinq_register.json` — union-merge only, never hand-pick (REQ-DDIMR-006)
 - [ ] 1.2 Seed one scanned Demostad sample letter (printed BSN + handwritten-style signature block) under `tests/sample-documents/` for overlay/burn demos on a clean install
 
 ## 2. Cross-app (OpenRegister)
@@ -30,11 +30,11 @@
 ## 5. Quality
 
 - [ ] 5.1 PHPUnit for submission plumbing, degradation flags, burn verification, count derivation and additive response shape — 75% coverage on new code (ADR-009)
-  - Run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify on Postgres (8080) with OpenRegister + an image-capable backend: upload scan → regions in workbench → burn → output has opaque region and no recoverable value.
 - [ ] 5.2 Playwright spec `tests/e2e/spec-coverage/image-redaction.spec.ts` for the `@e2e`-referenced scenarios
 - [ ] 5.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
-- [ ] 5.4 Docs: `docs/features/image-redaction.md` with Playwright screenshots (overlays, SIGNATURE badge, degradation warnings, burned output) and the DocuDesk↔OpenRegister image division of labour (ADR-010)
+- [ ] 5.4 Docs: `docs/features/image-redaction.md` with Playwright screenshots (overlays, SIGNATURE badge, degradation warnings, burned output) and the Filinq↔OpenRegister image division of labour (ADR-010)
 - [ ] 5.5 Validate: `openspec validate image-redaction --type change --strict` passes; hydra gates green
 
 ## Quality checklist

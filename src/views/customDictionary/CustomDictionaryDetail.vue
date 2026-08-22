@@ -10,22 +10,19 @@
 	<div class="custom-dictionary-detail">
 		<div class="custom-dictionary-detail__header">
 			<NcButton variant="tertiary" @click="handleBack">
-				{{ t('docudesk', 'Back to custom dictionaries') }}
+				{{ t('filinq', 'Back to custom dictionaries') }}
 			</NcButton>
 			<h2 class="custom-dictionary-detail__title">
 				<span
 					class="custom-dictionary-detail__swatch"
 					:style="{ backgroundColor: dictionary.colour || '#0082C9' }" />
 				{{
-					displayValue(
-						dictionary.label,
-						t('docudesk', 'Custom dictionary'),
-					)
+					displayValue(dictionary.label, t('filinq', 'Custom dictionary'))
 				}}
 			</h2>
 			<div class="custom-dictionary-detail__header-actions">
 				<NcButton variant="secondary" @click="openEditDialog">
-					{{ t('docudesk', 'Edit') }}
+					{{ t('filinq', 'Edit') }}
 				</NcButton>
 			</div>
 		</div>
@@ -48,24 +45,24 @@
 					<CnStatusBadge
 						:label="
 							dictionary.active === false
-								? t('docudesk', 'Inactive')
-								: t('docudesk', 'Active')
+								? t('filinq', 'Inactive')
+								: t('filinq', 'Active')
 						"
 						:colorMap="activeColorMap" />
 					<span class="custom-dictionary-detail__term-count">
-						{{ t('docudesk', '{count} terms', { count: terms.length }) }}
+						{{ t('filinq', '{count} terms', { count: terms.length }) }}
 					</span>
 				</div>
 			</div>
 
 			<div class="custom-dictionary-detail__terms-panel">
 				<div class="custom-dictionary-detail__terms-header">
-					<h3>{{ t('docudesk', 'Terms') }}</h3>
+					<h3>{{ t('filinq', 'Terms') }}</h3>
 					<div class="custom-dictionary-detail__terms-actions">
 						<NcButton
 							variant="secondary"
 							@click="importDialogOpen = true">
-							{{ t('docudesk', 'Import…') }}
+							{{ t('filinq', 'Import…') }}
 						</NcButton>
 					</div>
 				</div>
@@ -73,17 +70,17 @@
 				<div class="custom-dictionary-detail__add-term">
 					<NcTextField
 						v-model="newTermValue"
-						:label="t('docudesk', 'New term value')"
-						:placeholder="t('docudesk', 'e.g. Operatie Zilverreiger')"
+						:label="t('filinq', 'New term value')"
+						:placeholder="t('filinq', 'e.g. Operatie Zilverreiger')"
 						@keyup.enter="addTerm" />
 					<NcTextField
 						v-model="newTermLabel"
-						:label="t('docudesk', 'Display label (optional)')" />
+						:label="t('filinq', 'Display label (optional)')" />
 					<NcButton
 						variant="primary"
 						:disabled="!newTermValue.trim() || addingTerm"
 						@click="addTerm">
-						{{ t('docudesk', 'Add term') }}
+						{{ t('filinq', 'Add term') }}
 					</NcButton>
 				</div>
 
@@ -92,19 +89,19 @@
 					:size="24" />
 				<NcEmptyContent
 					v-else-if="!terms.length"
-					:name="t('docudesk', 'No terms yet')"
+					:name="t('filinq', 'No terms yet')"
 					:description="
 						t(
-							'docudesk',
+							'filinq',
 							'Add a term above, or import a CSV / newline list.',
 						)
 					" />
 				<table v-else class="custom-dictionary-detail__terms-table">
 					<thead>
 						<tr>
-							<th scope="col">{{ t('docudesk', 'Value') }}</th>
-							<th scope="col">{{ t('docudesk', 'Label') }}</th>
-							<th scope="col">{{ t('docudesk', 'Actions') }}</th>
+							<th scope="col">{{ t('filinq', 'Value') }}</th>
+							<th scope="col">{{ t('filinq', 'Label') }}</th>
+							<th scope="col">{{ t('filinq', 'Actions') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -120,7 +117,7 @@
 									<template #icon>
 										<Delete :size="20" />
 									</template>
-									{{ t('docudesk', 'Remove') }}
+									{{ t('filinq', 'Remove') }}
 								</NcButton>
 							</td>
 						</tr>
@@ -152,9 +149,9 @@
 		-->
 		<ConfirmActionDialog
 			v-if="removeTarget"
-			:name="t('docudesk', 'Remove term')"
+			:name="t('filinq', 'Remove term')"
 			:message="removeMessage"
-			:confirmLabel="t('docudesk', 'Remove')"
+			:confirmLabel="t('filinq', 'Remove')"
 			:busy="removing"
 			@confirm="executeRemoveTerm"
 			@cancel="cancelRemoveTerm" />
@@ -212,8 +209,8 @@ export default {
 			},
 
 			activeColorMap: {
-				[t('docudesk', 'Active')]: 'success',
-				[t('docudesk', 'Inactive')]: 'default',
+				[t('filinq', 'Active')]: 'success',
+				[t('filinq', 'Inactive')]: 'default',
 			},
 		}
 	},
@@ -237,7 +234,7 @@ export default {
 		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
 		 */
 		removeMessage() {
-			return t('docudesk', 'Remove "{value}"?', {
+			return t('filinq', 'Remove "{value}"?', {
 				value: this.removeTarget?.value || '',
 			})
 		},
@@ -270,13 +267,21 @@ export default {
 			return resolveI18nValue(value, fallback)
 		},
 
+		/**
+		 * Translated label for a dictionary match mode, falling back to the raw
+		 * value and finally to the schema default.
+		 *
+		 * @param {string} mode Stored match mode.
+		 * @return {string} Displayable label.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-custom-dictionary-admin-ui-req-ddcdr-006
+		 */
 		matchModeLabel(mode) {
 			const labels = {
-				exact: t('docudesk', 'Exact'),
-				caseInsensitive: t('docudesk', 'Case-insensitive'),
-				wordBoundary: t('docudesk', 'Word boundary'),
+				exact: t('filinq', 'Exact'),
+				caseInsensitive: t('filinq', 'Case-insensitive'),
+				wordBoundary: t('filinq', 'Word boundary'),
 			}
-			return labels[mode] || mode || t('docudesk', 'Case-insensitive')
+			return labels[mode] || mode || t('filinq', 'Case-insensitive')
 		},
 
 		handleBack() {
@@ -288,6 +293,14 @@ export default {
 			this.editDialogOpen = true
 		},
 
+		/**
+		 * Persist edited dictionary metadata through the organisation-gated
+		 * management API.
+		 *
+		 * @param {object} formData Dialog form payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-organisation-gated-dictionary-and-term-management-api-req-ddcdr-004
+		 */
 		async onEditSubmit(formData) {
 			this.savingMeta = true
 			this.metaError = ''
@@ -301,7 +314,7 @@ export default {
 				this.metaError =
 					err.response?.data?.error
 					|| err.message
-					|| t('docudesk', 'Save failed')
+					|| t('filinq', 'Save failed')
 			} finally {
 				this.savingMeta = false
 			}
@@ -377,6 +390,14 @@ export default {
 			this.importError = ''
 		},
 
+		/**
+		 * Import terms into this dictionary from a CSV upload or newline-
+		 * separated list.
+		 *
+		 * @param {object} payload Import dialog payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md#requirement-csv-and-newline-term-import-req-ddcdr-005
+		 */
 		async onImportSubmit(payload) {
 			this.importing = true
 			this.importError = ''
@@ -386,7 +407,7 @@ export default {
 				this.importError =
 					err.response?.data?.error
 					|| err.message
-					|| t('docudesk', 'Import failed')
+					|| t('filinq', 'Import failed')
 			} finally {
 				this.importing = false
 			}

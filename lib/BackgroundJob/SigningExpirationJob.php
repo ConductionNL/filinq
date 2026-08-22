@@ -8,7 +8,7 @@
  * (deadline enforcement) from openspec/changes/document-signing/specs/document-signing/spec.md.
  *
  * @category BackgroundJob
- * @package  OCA\DocuDesk\BackgroundJob
+ * @package  OCA\Filinq\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,14 +21,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\BackgroundJob;
+namespace OCA\Filinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * and logs an audit entry.
  *
  * @category BackgroundJob
- * @package  OCA\DocuDesk\BackgroundJob
+ * @package  OCA\Filinq\BackgroundJob
  * @author   Conduction Development Team <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
@@ -103,8 +103,8 @@ class SigningExpirationJob extends TimedJob {
 			return;
 		}
 
-		$register = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-		$schema = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+		$register = $this->config->getValueString('filinq', 'signingRequest_register', '');
+		$schema = $this->config->getValueString('filinq', 'signingRequest_schema', '');
 
 		if ($register === '' || $schema === '') {
 			$this->logger->info('[SigningExpirationJob] Signing register/schema not configured, skipping');
@@ -210,7 +210,7 @@ class SigningExpirationJob extends TimedJob {
 		$request['status'] = 'EXPIRED';
 		$objectService->saveObject(object: $request, register: $register, schema: $schema);
 
-		// Cross-app delegated-signing contract (docudesk-signing-events): an
+		// Cross-app delegated-signing contract (filinq-signing-events): an
 		// expired request is terminal — emit SigningConcludedEvent
 		// (status=expired) for a delegated (provenance-carrying) request.
 		// Internal requests emit nothing. Fail-soft inside the service.

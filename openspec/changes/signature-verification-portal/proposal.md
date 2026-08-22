@@ -7,7 +7,7 @@ kind: code
 ## Why
 
 A signature is only worth as much as a third party's ability to *check* it.
-DocuDesk can produce signed and waarmerked PDFs, but a citizen, a journalist
+Filinq can produce signed and waarmerked PDFs, but a citizen, a journalist
 or a counterparty who holds one has **no way to verify it** without a
 Nextcloud account and file-read access — the exact eIDAS "trust loop" the
 market is now closing:
@@ -86,7 +86,7 @@ cryptographically bound*.
 ### New Capabilities
 
 - `signature-verification-portal`: a public, account-free QR-linked page that
-  verifies a signed/waarmerked DocuDesk document, presenting content-integrity
+  verifies a signed/waarmerked Filinq document, presenting content-integrity
   and signer-identity as distinct (honestly-bounded) guarantees plus waarmerk
   seal status, backed by a non-enumerable verification token and rate-limited
   fail-closed endpoints.
@@ -108,7 +108,7 @@ cryptographically bound*.
   minting/looking up tokens; QR generation reusing the waarmerk change's
   dependency-free QR approach (no new heavy dep).
 - **Register**: new `signatureVerification` schema in the `document` register
-  of `lib/Settings/docudesk_register.json` (token, fileRef, contentHash,
+  of `lib/Settings/filinq_register.json` (token, fileRef, contentHash,
   captured signature summary, level, waarmerkRef?, createdAt, revoked) with
   register-i18n tags and a register **version bump**; one nil-token seed.
 - **Signing path**: signing completion (`SigningService`) and the waarmerk

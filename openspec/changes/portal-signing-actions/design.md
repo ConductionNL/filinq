@@ -13,13 +13,13 @@ SUBJECT's own aggregated manifest, then forwards the call server-to-server
 attaching a short-lived (~60 s) HS256 `X-Portal-Subject` assertion and NEVER the
 client's `Authorization` header, and relays the domain app's JSON status+body.
 
-`portal-contribution` already ships DocuDesk's plain `PortalContributionProvider`
+`portal-contribution` already ships Filinq's plain `PortalContributionProvider`
 with a `signer` audience, but with `actions: []` (`REQ-DDPORT-006`) — its
 design.md explicitly defers sign/decline as "A6 endpoint actions … so the
 receiver + `PortalAssertionVerifier` land as a reviewed unit". This change is
 that reviewed unit.
 
-### Verified facts (HEAD, docudesk + portaliq)
+### Verified facts (HEAD, filinq + portaliq)
 
 - **portaliq mints the assertion** in `PortalJwtService::createAssertion()`
   (`lib/Service/PortalJwtService.php:160`): header `{"alg":"HS256","typ":"JWT"}`,
@@ -33,7 +33,7 @@ that reviewed unit.
   `#[NoCSRFRequired]`, rejects full http(s) URLs (SSRF guard), forwards the
   client body as-is, relays the decoded JSON body + status, and returns `502` on
   transport failure. The receiver must mirror that JSON-only relay shape.
-- **`signerRecord`** (`lib/Settings/docudesk_register.json`, register `signing`)
+- **`signerRecord`** (`lib/Settings/filinq_register.json`, register `signing`)
   properties: `signingRequestId, userId, displayName, email, order, status,
   signedAt, declineReason, ipAddress, signatureData`. There is NO external
   contact UUID — the invited `email` is the only stable external identity (same
@@ -54,12 +54,12 @@ that reviewed unit.
 
 ```
 portaliq SPA (accountless signer, magic-link/eIDAS session, trust=substantial)
-  → POST /portal/api/actions/docudesk/sign     body: {signingRequestId, ...}
+  → POST /portal/api/actions/filinq/sign     body: {signingRequestId, ...}
   → portaliq authorises against the signer's OWN manifest, re-checks minTrust
-  → forwards to /apps/docudesk/api/portal/signing/sign
+  → forwards to /apps/filinq/api/portal/signing/sign
         header  X-Portal-Subject: <HS256 assertion>   (client bearer dropped)
         body    {signingRequestId, ...}                (client-supplied)
-  → DocuDesk receiver:
+  → Filinq receiver:
         1. PortalAssertionVerifier: verify HS256 vs shared secret; alg=HS256 only;
            iss=portaliq; use=assertion; unexpired; frozen claim set  → else 401
         2. audience==signer && trust>=substantial (re-check)          → else 403
@@ -161,7 +161,7 @@ a signing request before signing.
   forward side.)
 - **Token confusion:** the `X-Portal-Subject` assertion carries `use:
   assertion`; portaliq's `resolveFromBearer` already rejects it as a session
-  bearer, and the DocuDesk receiver treats it only as an action assertion, never
+  bearer, and the Filinq receiver treats it only as an action assertion, never
   a session.
 - **Audit:** every act writes a signing-audit entry (via the honest
   `SigningService`/`SigningAuditService` path) recording the portal signer email
@@ -195,8 +195,8 @@ $signerAssertionClaims = [
 ];
 ```
 
-Live seeding (a portalAccount carrying `claims.docudesk.signerEmail`, an invited
-`signerRecord` on a PENDING `signingRequest`) belongs to portaliq's + DocuDesk's
+Live seeding (a portalAccount carrying `claims.filinq.signerEmail`, an invited
+`signerRecord` on a PENDING `signingRequest`) belongs to portaliq's + Filinq's
 shared e2e environment, not to this change.
 
 ## Open questions (apply-blocker dependencies)
@@ -204,22 +204,22 @@ shared e2e environment, not to this change.
 1. **The A6 assertion does not carry the resolved scope claim.** The FROZEN
    wire format is `sub, audience, organisation, trust, jti, use, iat, exp,
    iss` — there is NO `signerEmail`, and `sub` is portaliq's subjectRef UUID,
-   which DocuDesk cannot map to an invited email (DocuDesk owns no portalAccount).
+   which Filinq cannot map to an invited email (Filinq owns no portalAccount).
    The receiver's identity step REQUIRES the invited email server-side. Resolution
    options, both keeping identity server-derived:
    - **(a, preferred)** a small portaliq A6 amendment: for a claim-scoped
      action, `createAssertion` also forwards the resolved scope claim (e.g.
      `signerEmail`) it already resolved server-side for the collection read; the
-     DocuDesk verifier consumes it. This spec is written to consume that claim.
-   - **(b)** the DocuDesk receiver resolves `sub` → invited email via a
+     Filinq verifier consumes it. This spec is written to consume that claim.
+   - **(b)** the Filinq receiver resolves `sub` → invited email via a
      portaliq server-to-server callback.
    This is a **named apply-blocker**: portal-signing-actions cannot go live until
-   (a) or (b) lands on the portaliq side. The DocuDesk receiver is authored to
+   (a) or (b) lands on the portaliq side. The Filinq receiver is authored to
    fail closed (`403`) when no signer-identifying claim is present, so shipping
    it early is safe (it simply refuses every act until the claim arrives).
 2. **Large-document `viewDocument`.** base64-in-JSON is fine for typical signing
    documents; a streaming / short-lived signed-URL transport for large PDFs is a
    follow-up.
-3. **Shared-secret provisioning.** Confirm DocuDesk reads portaliq's
+3. **Shared-secret provisioning.** Confirm Filinq reads portaliq's
    `jwt_signing_secret` app value directly (same instance) vs a dedicated
    shared-secret config surface — an install/ops decision to confirm at apply.

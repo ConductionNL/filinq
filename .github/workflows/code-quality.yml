@@ -102,7 +102,7 @@ jobs:
   quality:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
-      app-name: docudesk
+      app-name: filinq
       php-version: "8.3"
       # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
       # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
@@ -139,7 +139,7 @@ jobs:
       # the explicit entry is what keeps 15 generated report files out).
       frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n", "format"]'
       enable-phpunit: true
-      # OpenRegister is a hard dependency: DocuDesk stores every template,
+      # OpenRegister is a hard dependency: Filinq stores every template,
       # signing request and consent record as an OpenRegister object, and
       # `tests/e2e/ci-seed.sh` provisions the registers through OpenRegister's
       # own admin importer. Tracking `development` rather than `beta` so CI
@@ -161,13 +161,13 @@ jobs:
       enable-playwright: true
       playwright-test-path: tests/e2e
       # Provisions the OpenRegister registers/schemas and the app-config
-      # object-type bindings DocuDesk needs, then gates on the frontend bundle
+      # object-type bindings Filinq needs, then gates on the frontend bundle
       # actually serving as JavaScript. Runs with cwd = Nextcloud server root.
-      playwright-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh'
+      playwright-seed-command: 'bash apps/filinq/tests/e2e/ci-seed.sh'
 
       # ── Integration tests ────────────────────────────────────────────────
       # `enable-newman` defaults to FALSE and this caller never set it, so
-      # tests/integration/docudesk.postman_collection.json had never executed in
+      # tests/integration/filinq.postman_collection.json had never executed in
       # CI. It sits at the default `newman-collection-path` (tests/integration),
       # which is both the directory the validator counts collections in and the
       # directory the run step globs `*.postman_collection.json` in — flat, not
@@ -178,12 +178,12 @@ jobs:
       # ever visits ONE directory and `newman-collection-path` is never set
       # away from its default. Measured 2026-08-09:
       #
-      #   tests/newman/docudesk-api.postman_collection.json
+      #   tests/newman/filinq-api.postman_collection.json
       #       50 requests / 107 pm.test assertions. NOT ONE request declared
       #       `OCS-APIRequest`, so all 39 of its writes (34 POST + 5 DELETE)
       #       would have been rejected 412 by Nextcloud middleware before
       #       reaching a controller — it had never exercised a write path.
-      #   tests/newman/docudesk-api-collection.json
+      #   tests/newman/filinq-api-collection.json
       #       8 requests / 15 assertions, and invisible even to the validator:
       #       its name does not match `*.postman_collection.json`. Its own
       #       `baseUrl` variable was the literal string "{{baseUrl}}".
@@ -195,7 +195,7 @@ jobs:
       enable-newman: true
 
       # The Newman job needs the SAME provisioning the Playwright job gets, and
-      # for the same reason: DocuDesk resolves every template / consent /
+      # for the same reason: Filinq resolves every template / consent /
       # signing write through app-config bindings
       # (`<schemaSlug>_register` / `_schema`) that an ADMINISTRATOR sets in the
       # admin settings UI. Nothing auto-provisions them on a fresh install
@@ -220,7 +220,7 @@ jobs:
       # for Playwright; the `api` argument reuses it verbatim and only skips
       # the closing SPA-bundle gate, which would `exit 1` here because the
       # Newman job has no frontend build step.
-      newman-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh api'
+      newman-seed-command: 'bash apps/filinq/tests/e2e/ci-seed.sh api'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both
@@ -256,9 +256,9 @@ jobs:
       # FINDINGS, including future ones on our own markup.
       enable-axe: true
 
-      # NOT the `#content-vue, #content` default. DocuDesk mounts on a dedicated
+      # NOT the `#content-vue, #content` default. Filinq mounts on a dedicated
       # host element — `templates/index.php` renders exactly
-      # `<div id="docudesk-app"></div>` and `src/main.js` mounts there — for a
+      # `<div id="filinq-app"></div>` and `src/main.js` mounts there — for a
       # documented reason: Vue 3's mount() renders INSIDE the match, so mounting
       # on `#content` would nest the app inside Nextcloud's own wrapper from
       # layout.user.php and leave two `#content` elements, with which one gets
@@ -267,9 +267,9 @@ jobs:
       # Core's layout wraps that div in `#content`, so the default selector
       # WOULD match — and would drag core's chrome (navigation, header, app
       # menu) back inside the scope, re-attributing core's violations to this
-      # app. `#docudesk-app` is exactly this app's own rendered DOM and nothing
+      # app. `#filinq-app` is exactly this app's own rendered DOM and nothing
       # else, which is what the input is for.
-      axe-include-selector: '#docudesk-app'
+      axe-include-selector: '#filinq-app'
       enable-hydra-gates: true
       # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
       # to @main, and this workflow is itself consumed at @main, so the two

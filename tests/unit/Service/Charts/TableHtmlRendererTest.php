@@ -4,18 +4,18 @@
  * Unit tests for TableHtmlRenderer.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Charts
+ * @package  OCA\Filinq\Tests\Unit\Service\Charts
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Charts;
+namespace OCA\Filinq\Tests\Unit\Service\Charts;
 
-use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
+use OCA\Filinq\Service\Charts\TableHtmlRenderer;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,10 +23,10 @@ use PHPUnit\Framework\TestCase;
  * of TableHtmlRenderer.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Charts
+ * @package  OCA\Filinq\Tests\Unit\Service\Charts
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

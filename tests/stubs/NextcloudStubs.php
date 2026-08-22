@@ -4,7 +4,7 @@
  * Stubs for Nextcloud OCP classes used in unit tests (no NC server required)
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,10 +24,10 @@ namespace OCP;
  * Stub for OCP\IRequest
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IRequest {
 	/**
@@ -84,10 +84,10 @@ interface IRequest {
  * Stub for OCP\IL10N
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IL10N {
 	/**
@@ -105,10 +105,10 @@ interface IL10N {
  * Stub for OCP\Constants
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Constants {
 	public const PERMISSION_READ = 1;
@@ -125,10 +125,10 @@ namespace OCP\AppFramework;
  * Stub for OCP\AppFramework\Controller
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Controller {
 	/**
@@ -153,13 +153,13 @@ namespace OCP\AppFramework;
  * Stub for OCP\AppFramework\Http
  *
  * Provides the HTTP status code constants referenced throughout the
- * DocuDesk controllers (e.g. Http::STATUS_OK, Http::STATUS_NOT_FOUND).
+ * Filinq controllers (e.g. Http::STATUS_OK, Http::STATUS_NOT_FOUND).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Http {
 	public const STATUS_OK = 200;
@@ -203,10 +203,10 @@ namespace OCP\AppFramework\OCS;
  * Stub for OCP\AppFramework\OCS\OCSForbiddenException
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class OCSForbiddenException extends \RuntimeException {
 	/**
@@ -227,10 +227,10 @@ namespace OCP\AppFramework\Http;
  * Stub for OCP\AppFramework\Http\JSONResponse
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 /**
  * Stub for the OCP\AppFramework\Http\Response base class.
@@ -239,10 +239,10 @@ namespace OCP\AppFramework\Http;
  * stack. Minimal — only the surface our middleware + tests use.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Response {
 	/**
@@ -334,10 +334,10 @@ class JSONResponse extends Response {
  * checksum/pages/conformance as response headers.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class DataDownloadResponse extends Response {
 
@@ -390,10 +390,10 @@ namespace OCP\AppFramework;
  * Stub for OCP\AppFramework\App
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class App {
 	/**
@@ -423,10 +423,10 @@ namespace OCP\AppFramework\Bootstrap;
  * Stub for OCP\AppFramework\Bootstrap\IBootstrap
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IBootstrap {
 	/**
@@ -452,10 +452,10 @@ interface IBootstrap {
  * Stub for OCP\AppFramework\Bootstrap\IRegistrationContext
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IRegistrationContext {
 	/**
@@ -504,10 +504,10 @@ interface IRegistrationContext {
  * Stub for OCP\AppFramework\Bootstrap\IBootContext
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IBootContext {
 	/**
@@ -524,10 +524,10 @@ namespace OCP\AppFramework\Http;
  * Stub for OCP\AppFramework\Http\TextPlainResponse
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class TextPlainResponse {
 
@@ -593,10 +593,10 @@ class TextPlainResponse {
  * Stub for OCP\AppFramework\Http\TemplateResponse
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class TemplateResponse {
 
@@ -706,10 +706,10 @@ namespace OCP;
  * Stub for OCP\ICache
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface ICache {
 	/**
@@ -764,10 +764,10 @@ interface ICache {
  * Stub for OCP\ICacheFactory
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface ICacheFactory {
 	/**
@@ -811,10 +811,10 @@ namespace OCP\Files;
  * Stub for OCP\Files\NotFoundException
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class NotFoundException extends \RuntimeException {
 }//end class
@@ -823,10 +823,10 @@ class NotFoundException extends \RuntimeException {
  * Stub for OCP\Files\NotPermittedException
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class NotPermittedException extends \RuntimeException {
 }//end class
@@ -837,10 +837,10 @@ namespace OCP\AppFramework\Utility;
  * Stub for OCP\AppFramework\Utility\ITimeFactory
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface ITimeFactory {
 	/**
@@ -874,10 +874,10 @@ namespace OCP\BackgroundJob;
  * Stub for OCP\BackgroundJob\QueuedJob
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 abstract class QueuedJob {
 
@@ -943,13 +943,13 @@ abstract class QueuedJob {
  * Stub for OCP\BackgroundJob\TimedJob
  *
  * Mirrors QueuedJob but adds the interval/last-run scheduling helpers used
- * by DocuDesk's TimedJob subclasses (e.g. SigningExpirationJob).
+ * by Filinq's TimedJob subclasses (e.g. SigningExpirationJob).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 abstract class TimedJob {
 
@@ -1051,10 +1051,10 @@ abstract class TimedJob {
  * Stub for OCP\BackgroundJob\IJobList
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IJobList {
 	/**
@@ -1094,10 +1094,10 @@ namespace OCP;
  * Stub for OCP\IConfig
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IConfig {
 	/**
@@ -1217,19 +1217,36 @@ interface IConfig {
 	 * @return void
 	 */
 	public function deleteUserValue(string $userId, string $appName, string $key): void;
+
+	/**
+	 * Every user id holding one exact value for one app-scoped preference key.
+	 *
+	 * The only enumeration IConfig offers over `oc_preferences`: there is no
+	 * "list every key this app stored for every user" call, which is why
+	 * MigrateUserPreferences enumerates by value instead. Omitted from this
+	 * stub until that step needed it, and its absence made the step
+	 * untestable rather than failing anywhere visible.
+	 *
+	 * @param string $appName App identifier
+	 * @param string $key Config key
+	 * @param string $value The exact stored value to match
+	 *
+	 * @return array<int, string> Matching user ids
+	 */
+	public function getUsersForUserValue(string $appName, string $key, string $value): array;
 }//end interface
 
 /**
  * Stub for OCP\IAppConfig
  *
- * The lazy/typed app-configuration API used by DocuDesk services and
+ * The lazy/typed app-configuration API used by Filinq services and
  * background jobs (getValueString/Int/Float, setValueString, etc.).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IAppConfig {
 	/**
@@ -1358,10 +1375,10 @@ namespace OCP\App;
  * apps and resolve app versions.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IAppManager {
 	/**
@@ -1408,10 +1425,10 @@ namespace OCP\Notification;
  * A minimal fluent builder mirror of the Nextcloud notification model.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface INotification {
 	/**
@@ -1457,10 +1474,10 @@ interface INotification {
  * Stub for OCP\Notification\IManager
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IManager {
 	/**
@@ -1494,14 +1511,14 @@ namespace OCP\AppFramework;
 /**
  * Stub for OCP\AppFramework\Middleware
  *
- * Minimal base class so docudesk's LanguageNegotiationMiddleware compiles
+ * Minimal base class so filinq's LanguageNegotiationMiddleware compiles
  * in the standalone unit-test runner.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Middleware {
 	/**
@@ -1550,10 +1567,10 @@ namespace OCP;
  * Stub for OCP\ITempManager
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface ITempManager {
 	public function getTemporaryFile(string $postfix = ''): string|false;
@@ -1566,10 +1583,10 @@ interface ITempManager {
  * Stub for OCP\IDBConnection
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IDBConnection {
 	public function getQueryBuilder(): mixed;
@@ -1596,10 +1613,10 @@ interface IDBConnection {
  * bootstrap, mirroring the real Nextcloud service-locator shim.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Server {
 	/**
@@ -1624,10 +1641,10 @@ namespace OCP\Lock;
  * Stub for OCP\Lock\ILockingProvider
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface ILockingProvider {
 	public const LOCK_SHARED = 1;
@@ -1643,10 +1660,10 @@ interface ILockingProvider {
  * Stub for OCP\Lock\LockedException
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class LockedException extends \Exception {
 	/**
@@ -1680,10 +1697,10 @@ namespace OCP\Files\Conversion;
  * Stub for OCP\Files\Conversion\IConversionManager
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IConversionManager {
 	public function hasProviders(): bool;
@@ -1699,10 +1716,10 @@ namespace OCP\TaskProcessing;
  * `runTask()` executes synchronously and returns the completed Task.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IManager {
 	public function runTask(Task $task): Task;
@@ -1714,10 +1731,10 @@ interface IManager {
  * Stub for OCP\TaskProcessing\Task.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Task implements \JsonSerializable {
 	public const STATUS_UNKNOWN = 0;
@@ -1777,10 +1794,10 @@ namespace OCP\TaskProcessing\TaskTypes;
  * Stub for OCP\TaskProcessing\TaskTypes\TextToText.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class TextToText {
 	public const ID = 'core:text2text';
@@ -1794,10 +1811,10 @@ namespace OCP\TextProcessing;
  * synchronously and returns the output string directly.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IManager {
 	public function runTask(Task $task): string;
@@ -1807,10 +1824,10 @@ interface IManager {
  * Stub for OCP\TextProcessing\Task.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Task implements \JsonSerializable {
 	public function __construct(
@@ -1831,10 +1848,10 @@ class Task implements \JsonSerializable {
  * Stub for OCP\TextProcessing\FreePromptTaskType.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class FreePromptTaskType {
 }//end class
@@ -1849,10 +1866,10 @@ namespace OCP\DB;
  * loaded in the serverless unit suite.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class Exception extends \RuntimeException {
 }//end class
@@ -1861,10 +1878,10 @@ class Exception extends \RuntimeException {
  * Stub for OCP\DB\IResult.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IResult {
 	/**
@@ -1922,10 +1939,10 @@ interface IResult {
  * this app does not ship.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface IPreparedStatement {
 	/**
@@ -2042,7 +2059,7 @@ interface IResponse {
 /**
  * Stub of OCP\Http\Client\IClient.
  *
- * Only the verbs DocuDesk uses are declared.
+ * Only the verbs Filinq uses are declared.
  */
 interface IClient {
 

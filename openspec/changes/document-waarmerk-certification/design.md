@@ -7,7 +7,7 @@ Verified current state (HEAD of this worktree):
 - `SigningVerificationService::verifyDocument(fileId, userId)` verifies
   embedded `/DocuDesk-Signature(...)` assertions with an HMAC-SHA256 over a
   canonicalised document using a server-held secret
-  (`docudesk.signing_verification_secret`), **fail-closed** after security
+  (`filinq.signing_verification_secret`), **fail-closed** after security
   finding #284 (self-asserted blobs report `valid => false`). Real PAdES/CMS
   validation is not implemented. Route: `GET api/signing/verify/{fileId}`
   (authenticated, user-folder scoped).
@@ -23,7 +23,7 @@ Verified current state (HEAD of this worktree):
   produce a CSV audit report (`BatchReportService::generateReport`).
 - `PdfService::renderPdf()` renders Twig→HTML→mPDF (PDF/A-3B capable via
   `pdfa` option); `PdfConversionService` converts arbitrary files to PDF.
-- No credential/crypto custody code exists in DocuDesk today (verified: no
+- No credential/crypto custody code exists in Filinq today (verified: no
   `credentialRef`/`ICrypto` usage under `lib/`).
 
 Fleet context: ADR-064 (hydra#107) fixes custody — secrets are never stored
@@ -90,7 +90,7 @@ the public verification URL.
   `/ByteRange` placeholder arithmetic; pure-PHP support means adopting
   SetaPDF (commercial) or TCPDF's signing (would replace mPDF for this
   path). Cost/risk is out of proportion for a v1 whose verification surface
-  is DocuDesk's own page — and Adobe-validatable embedded seals can be added
+  is Filinq's own page — and Adobe-validatable embedded seals can be added
   later without breaking the record model (the CMS + hash stay valid).
 - *Reusing the HMAC `/DocuDesk-Signature` marker*: an HMAC proves only "this
   server knew its own secret" — it is not attributable to an organisation
@@ -145,11 +145,11 @@ via ObjectService with a system-operation context.
 ### D5 — Stamp page + QR composition
 
 The stamp page is rendered with the existing `PdfService` (Twig template in
-the templates register, namespace `docudesk`, so the mark is
+the templates register, namespace `filinq`, so the mark is
 huisstijl-brandable) and appended to the source PDF; the QR is generated
 locally as an SVG (small pure-PHP QR encoder vendored under `lib/`, or —
 ADR-011 reuse check — OpenRegister's existing QR utility if one exists at
-implementation time; verified: DocuDesk has none today). No external QR API
+implementation time; verified: Filinq has none today). No external QR API
 (local-only rule).
 
 ### D6 — Processing certificate grounded in `anonymizationLink`
@@ -158,7 +158,7 @@ implementation time; verified: DocuDesk has none today). No external QR API
 **already-recorded** data only: the `anonymizationLink` fields listed in
 Context, per-entity-type counts from the run result (types + counts, never
 values), the configured detection backend identifier (from the OR
-anonymizer-backend state DocuDesk already reads for its admin warning), and
+anonymizer-backend state Filinq already reads for its admin warning), and
 the acting user (`anonymizedBy`). The certificate PDF is then sealed via the
 same `WaarmerkService` path (`sealType: processing-certificate`,
 `anonymizationLinkId` on the record). Nothing is re-derived from document
@@ -174,7 +174,7 @@ Imperative, with justification: cryptographic sealing, CMS/OpenSSL calls,
 PDF composition, and broker resolution are external-integration/
 document-generation work — listed valid exceptions. Declarative parts stay
 declarative: the `certification` register + `waarmerk` schema are pure
-`docudesk_register.json` additions. **No lifecycle annotation** on
+`filinq_register.json` additions. **No lifecycle annotation** on
 `waarmerk.status`: the only transition is `active → revoked` and it needs an
 authorization guard (admin or sealer) — a lifecycle-guard imperative
 exception; the guard lives in the controller/service, and the record is
@@ -188,8 +188,8 @@ after creation; revocation only sets `status`, `revokedAt`, `revokedBy`,
   toevoegen" action + waarmerk badge, via existing view integration points.
 - Public verification page: minimal standalone Vue entry (no app shell),
   NL Design System tokens, WCAG AA (it is citizen-facing).
-- Admin settings: certificate panel in the existing DocuDesk admin settings
-  (`lib/Settings/DocuDeskAdmin.php` section) — upload PEM, show fingerprint/
+- Admin settings: certificate panel in the existing Filinq admin settings
+  (`lib/Settings/FilinqAdmin.php` section) — upload PEM, show fingerprint/
   expiry, set `credentialRef`, test-seal button. Registered via the settings
   framework, NOT the vue-router (hydra-gate-admin-router rule).
 - Dialogs as separate components in `src/modals/` (modal-isolation).
@@ -201,7 +201,7 @@ after creation; revocation only sets `status`, `revokedAt`, `revokedBy`,
 | `waarmerk` record CRUD (create/find/list/revoke-update) | `ObjectService` via the same resolver pattern as existing services |
 | Public verification lookup by code | `ObjectService` search with system-operation context (no user folder) |
 | Evidence source | existing `anonymizationLink` objects (read-only) |
-| Register/schema definition | `certification` register in `docudesk_register.json`, imported on boot via `ConfigurationService::importFromApp()` |
+| Register/schema definition | `certification` register in `filinq_register.json`, imported on boot via `ConfigurationService::importFromApp()` |
 
 No custom tables. `waarmerk` schema (all evidence fields write-once):
 `documentFileId`, `documentName`, `documentHash` (sha256 hex),

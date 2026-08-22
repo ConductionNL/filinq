@@ -8,11 +8,11 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<div class="comparison-view">
 		<div class="comparison-view__header">
-			<h2>{{ t('docudesk', 'Document comparison') }}</h2>
+			<h2>{{ t('filinq', 'Document comparison') }}</h2>
 			<p class="comparison-view__subtitle">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Compare two versions of a file or two distinct files side by side.',
 					)
 				}}
@@ -27,28 +27,28 @@ SPDX-License-Identifier: EUPL-1.2
 			<div class="comparison-view__field">
 				<NcTextField
 					v-model="leftFileId"
-					:label="t('docudesk', 'Left file ID')"
+					:label="t('filinq', 'Left file ID')"
 					type="number" />
 				<NcTextField
 					v-model="leftVersion"
-					:label="t('docudesk', 'Left version timestamp (optional)')"
+					:label="t('filinq', 'Left version timestamp (optional)')"
 					type="number" />
 			</div>
 			<div class="comparison-view__field">
 				<NcTextField
 					v-model="rightFileId"
-					:label="t('docudesk', 'Right file ID')"
+					:label="t('filinq', 'Right file ID')"
 					type="number" />
 				<NcTextField
 					v-model="rightVersion"
-					:label="t('docudesk', 'Right version timestamp (optional)')"
+					:label="t('filinq', 'Right version timestamp (optional)')"
 					type="number" />
 			</div>
 			<NcButton
 				variant="primary"
 				:disabled="loading || !canCompare"
 				@click="runComparison">
-				{{ t('docudesk', 'Compare') }}
+				{{ t('filinq', 'Compare') }}
 			</NcButton>
 		</div>
 
@@ -57,7 +57,7 @@ SPDX-License-Identifier: EUPL-1.2
 		<NcNoteCard v-if="result && result.crossFormat" type="warning">
 			{{
 				t(
-					'docudesk',
+					'filinq',
 					'The two subjects have different formats; layout-derived differences may appear as noise.',
 				)
 			}}
@@ -68,7 +68,7 @@ SPDX-License-Identifier: EUPL-1.2
 			type="info">
 			{{
 				t(
-					'docudesk',
+					'filinq',
 					'Redaction annotation is unavailable (OpenRegister not reachable).',
 				)
 			}}
@@ -77,10 +77,7 @@ SPDX-License-Identifier: EUPL-1.2
 		<div v-if="unredactedEntities.length > 0" class="comparison-view__advisory">
 			<h3>
 				{{
-					t(
-						'docudesk',
-						'Verify manually — entities with no detected change',
-					)
+					t('filinq', 'Verify manually — entities with no detected change')
 				}}
 			</h3>
 			<ul>
@@ -227,7 +224,7 @@ export default {
 				)
 			} catch (e) {
 				const reason = e.response && e.response.data && e.response.data.error
-				this.error = reason || t('docudesk', 'Comparison failed')
+				this.error = reason || t('filinq', 'Comparison failed')
 			} finally {
 				this.loading = false
 			}

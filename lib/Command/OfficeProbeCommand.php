@@ -1,12 +1,12 @@
 <?php
 
 /**
- * DocuDesk office-suite probe command
+ * Filinq office-suite probe command
  *
  * Reports, per configured suite, whether WOPI is actually usable on this instance.
  *
  * @category Command
- * @package  OCA\DocuDesk\Command
+ * @package  OCA\Filinq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -14,7 +14,7 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -22,9 +22,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Command;
+namespace OCA\Filinq\Command;
 
-use OCA\DocuDesk\Service\Office\OfficeSuiteCapabilityService;
+use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
 use OCP\IAppConfig;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,7 +32,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * `occ docudesk:office:probe` — the command the setup documentation told people to run.
+ * `occ filinq:office:probe` — the command the setup documentation told people to run.
  *
  * It was documented before it existed. The setup guide instructed operators to
  * verify with this command and showed its expected output; running it returned
@@ -45,7 +45,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * that impossible to do by accident.
  *
  * @category Command
- * @package  OCA\DocuDesk\Command
+ * @package  OCA\Filinq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -53,7 +53,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/office-suite-portability/spec.md
  *
@@ -111,7 +111,7 @@ class OfficeProbeCommand extends Command {
 	/**
 	 * Define the command.
 	 *
-	 * Registers `docudesk:office:probe` — the verification step the setup guide
+	 * Registers `filinq:office:probe` — the verification step the setup guide
 	 * already instructed operators to run. The requirement below forbids inferring
 	 * availability from installation, which is only enforceable if the probe the
 	 * documentation names actually exists.
@@ -121,7 +121,7 @@ class OfficeProbeCommand extends Command {
 	 * @spec openspec/specs/office-suite-portability/spec.md#requirement-wopi-availability-must-be-probed-never-inferred-from-installation
 	 */
 	protected function configure(): void {
-		$this->setName(name: 'docudesk:office:probe')
+		$this->setName(name: 'filinq:office:probe')
 			->setDescription('Probe each office suite separately and report whether WOPI is usable')
 			->addOption('suite', null, InputOption::VALUE_REQUIRED, 'Probe only this suite.');
 	}//end configure()

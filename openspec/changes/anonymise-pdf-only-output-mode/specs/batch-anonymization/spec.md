@@ -10,7 +10,7 @@ This delta extends the existing `batch-anonymization` capability so the batch an
 
 ### Requirement: The batch anonymise endpoint MUST accept `outputFormat: "pdf-only"` and default to it
 
-The batch anonymise endpoint MUST accept `outputFormat` value `"pdf-only"` in addition to `"pdf"` and `"preserve"`. `BatchAnonymizationController::VALID_OUTPUT_FORMATS` MUST be exactly `["pdf-only", "pdf", "preserve"]`. When `outputFormat` is omitted, the batch resolves the tenant default `docudesk.anonymisation.default_output_format`, whose default value MUST be `"pdf-only"`. Any value outside the allowed set MUST be rejected with HTTP 400 citing the three allowed values.
+The batch anonymise endpoint MUST accept `outputFormat` value `"pdf-only"` in addition to `"pdf"` and `"preserve"`. `BatchAnonymizationController::VALID_OUTPUT_FORMATS` MUST be exactly `["pdf-only", "pdf", "preserve"]`. When `outputFormat` is omitted, the batch resolves the tenant default `filinq.anonymisation.default_output_format`, whose default value MUST be `"pdf-only"`. Any value outside the allowed set MUST be rejected with HTTP 400 citing the three allowed values.
 
 #### Scenario: Batch default mode is pdf-only
 - **GIVEN** a batch anonymise request with no `outputFormat`

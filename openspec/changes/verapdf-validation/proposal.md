@@ -1,13 +1,13 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/315
+tracking_issue: https://github.com/ConductionNL/filinq/issues/315
 ---
 
 # Proposal: verapdf-validation
 
 ## Why
 
-DocuDesk claims archival conformance it never verifies. GitHub #315 (this
+Filinq claims archival conformance it never verifies. GitHub #315 (this
 change's tracking issue; GitHub is primary — it mirrors the original Codeberg
 #182, referenced below for the analysis history) documents both limitations
 verified at HEAD:
@@ -32,7 +32,7 @@ verified at HEAD:
   explicitly out of their scope.
 - The gap is already operational: `docs/features/eml-pdf-assembly.md` tells
   admins to run `verapdf --validate-profile 3b` **by hand** to check
-  DocuDesk's own output.
+  Filinq's own output.
 
 Archival conformance is a statutory chain: Archiefwet substitution and
 e-depot ingest (Nationaal Archief / TMLO-MDTO practice) expect genuinely
@@ -54,7 +54,7 @@ stored, per-document fact.
   clause/specification references).
 - **Font-embedding verification with remediation guidance**: non-embedded
   fonts are reported per font, with guidance that distinguishes documents
-  DocuDesk can fix by re-rendering (its own generation paths embed fonts)
+  Filinq can fix by re-rendering (its own generation paths embed fonts)
   from imported opaque pages it cannot fix retroactively (the CB #182
   limitation — advise re-conversion from the source file).
 - **A conformance report stored on the document**: a persisted, re-runnable
@@ -89,13 +89,13 @@ stored, per-document fact.
   time budget); `DocumentValidationService` gains the `archival` checks;
   `Pdfa3ConversionService` gains the post-output verification hook; a
   conformance endpoint on the existing validation controller surface.
-- **Register JSON** (`lib/Settings/docudesk_register.json`): new
+- **Register JSON** (`lib/Settings/filinq_register.json`): new
   `conformanceReport` schema (additive).
 - **Frontend**: `archival` category in the findings panel (grouping shipped
   with wave 1), conformance report on document detail, remediation guidance
   strings, admin-settings validator status row.
 - **Dependencies**: veraPDF is an admin-installed local binary (Java);
-  DocuDesk gains **no** composer/npm dependency. Alternatives (Apache
+  Filinq gains **no** composer/npm dependency. Alternatives (Apache
   PDFBox preflight, JHOVE) are rejected in design.md D1.
 - **Sibling boundaries**: PDF/UA (Matterhorn) validation stays out of scope
   — wave-1 `pdfua-accessible-output` heuristics are untouched; only the

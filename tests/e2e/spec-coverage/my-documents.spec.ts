@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — document-register / My Documents (UI).
@@ -27,7 +27,7 @@ test.describe('document-register — my documents UI', () => {
 		// @e2e openspec/specs/document-register/spec.md#generated-correspondence-lifecycle
 		const guard = attachConsoleGuard(page)
 		await go(page, 'my-documents')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/my-documents/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/my-documents/)
 
 		// DdPageHeader title
 		await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible()
@@ -58,14 +58,14 @@ test.describe('document-register — my documents UI', () => {
 		await page.waitForTimeout(500)
 		// Still on the My Documents page, header intact.
 		await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible()
-		await expect(page).toHaveURL(/\/apps\/docudesk\/my-documents/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/my-documents/)
 	})
 
 	test('My Documents is reachable via the left navigation', async ({ page }) => {
 		// @e2e openspec/specs/document-register/spec.md#generated-correspondence-lifecycle
 		await go(page, '')
 		await navClick(page, 'My Documents')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/my-documents/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/my-documents/)
 		await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible()
 	})
 })

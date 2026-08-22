@@ -14,7 +14,7 @@ The service MUST expose two public methods:
 - `appendSummaryToPdf(File $anonymisedFile, int $sourceFileId): File` — renders the per-document summary and appends it to the anonymised PDF. Returns the modified file.
 - `renderDossierSummary(int $dossierId): File` — renders the per-dossier summary PDF and writes it to the dossier's destination location. Returns the file.
 
-The service MUST resolve base UUIDs to human-readable names by querying DocuDesk's `dossier` register's `base` schema. It MUST handle unresolvable UUIDs and `null` bases gracefully per the documented label patterns.
+The service MUST resolve base UUIDs to human-readable names by querying Filinq's `dossier` register's `base` schema. It MUST handle unresolvable UUIDs and `null` bases gracefully per the documented label patterns.
 
 #### Scenario: Service resolves base UUIDs to names
 

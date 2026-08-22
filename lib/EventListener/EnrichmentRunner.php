@@ -5,15 +5,15 @@
  *
  * Service for running metadata enrichment on OpenRegister objects.
  * Checks if enrichment is enabled and delegates to MetadataService.
- * Extracted from DocuDeskEventHandler to reduce class complexity.
+ * Extracted from FilinqEventHandler to reduce class complexity.
  *
  * @category  EventListener
- * @package   OCA\DocuDesk\EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  * @spec openspec/specs/metadata-enrichment/spec.md
@@ -24,20 +24,20 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\EventListener;
+namespace OCA\Filinq\EventListener;
 
-use OCA\DocuDesk\Service\MetadataService;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Service\MetadataService;
+use OCA\Filinq\Service\SettingsService;
 use Psr\Log\LoggerInterface;
 
 /**
- * Runs metadata enrichment for DocuDesk objects
+ * Runs metadata enrichment for Filinq objects
  *
  * @category EventListener
- * @package  OCA\DocuDesk\EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  */
@@ -90,7 +90,7 @@ class EnrichmentRunner {
 		$objectId = $object->getUuid();
 
 		$logger->info(
-			'DocuDesk: Processing ' . $logContext,
+			'Filinq: Processing ' . $logContext,
 			[
 				'objectId' => $objectId,
 				'schemaId' => $object->getSchema(),
@@ -120,7 +120,7 @@ class EnrichmentRunner {
 			);
 
 			$logger->info(
-				'DocuDesk: Metadata enrichment completed for ' . $logContext,
+				'Filinq: Metadata enrichment completed for ' . $logContext,
 				[
 					'objectId' => $objectId,
 					'enrichedFields' => array_keys($metadata),
@@ -128,7 +128,7 @@ class EnrichmentRunner {
 			);
 		} catch (\Exception $e) {
 			$logger->error(
-				'DocuDesk: Failed to enrich metadata for ' . $logContext,
+				'Filinq: Failed to enrich metadata for ' . $logContext,
 				[
 					'objectId' => $objectId,
 					'exception' => $e->getMessage(),

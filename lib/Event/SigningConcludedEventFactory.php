@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk SigningConcludedEvent Factory
+ * Filinq SigningConcludedEvent Factory
  *
  * Maps a persisted signing-request array onto the public cross-app
  * SigningConcludedEvent. Extracted from the event's former `fromRequest()`
@@ -10,14 +10,14 @@
  * fully immutable value object that consumers only read.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -25,18 +25,18 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 /**
  * Builds a SigningConcludedEvent from a persisted signing-request array.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  */
 class SigningConcludedEventFactory {
 	/**
@@ -53,7 +53,7 @@ class SigningConcludedEventFactory {
 	 *
 	 * @return SigningConcludedEvent The mapped conclusion event.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function create(
 		array $request,

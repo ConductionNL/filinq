@@ -4,7 +4,7 @@
  * Unit tests for AnonymizationService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
  *
@@ -20,26 +20,26 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymisedPdfOutputService;
-use OCA\DocuDesk\Service\AnonymizationPersistenceService;
-use OCA\DocuDesk\Service\AnonymizationResultParser;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\DocumentAnonymizeRunner;
-use OCA\DocuDesk\Service\EmlAnonymizationService;
-use OCA\DocuDesk\Service\EmlPdfAssemblyService;
-use OCA\DocuDesk\Service\EntityDetectionService;
-use OCA\DocuDesk\Service\GrondslagenSummaryAttacher;
-use OCA\DocuDesk\Service\LegalBasesSummaryService;
-use OCA\DocuDesk\Service\OpenRegisterServiceLocator;
-use OCA\DocuDesk\Service\PdfConversionService;
-use OCA\DocuDesk\Service\PolicyMatchService;
-use OCA\DocuDesk\Service\ProhibitionGateService;
-use OCA\DocuDesk\Service\ProhibitionPolicyService;
-use OCA\DocuDesk\Service\ProhibitionSkipTier;
-use OCA\DocuDesk\Service\RelationSkipDecisionService;
-use OCA\DocuDesk\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\AnonymisedPdfOutputService;
+use OCA\Filinq\Service\AnonymizationPersistenceService;
+use OCA\Filinq\Service\AnonymizationResultParser;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\DocumentAnonymizeRunner;
+use OCA\Filinq\Service\EmlAnonymizationService;
+use OCA\Filinq\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Service\EntityDetectionService;
+use OCA\Filinq\Service\GrondslagenSummaryAttacher;
+use OCA\Filinq\Service\LegalBasesSummaryService;
+use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\ProhibitionGateService;
+use OCA\Filinq\Service\ProhibitionPolicyService;
+use OCA\Filinq\Service\ProhibitionSkipTier;
+use OCA\Filinq\Service\RelationSkipDecisionService;
+use OCA\Filinq\Service\ReplacementVerificationService;
 use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCP\App\IAppManager;
@@ -57,10 +57,10 @@ use Psr\Log\NullLogger;
  * Unit tests for AnonymizationService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -220,7 +220,7 @@ class AnonymizationServiceTest extends TestCase {
 	 * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
 	 */
 	public function testExtractAndDetectEntitiesIncludesRiskLevelInResponse(): void {
-		$stats = $this->createMock(\OCA\DocuDesk\Service\FileEntityStatsService::class);
+		$stats = $this->createMock(\OCA\Filinq\Service\FileEntityStatsService::class);
 		$stats->method('tryGetRiskLevelService')->willReturn(null);
 		$stats->method('getFileRiskLevel')->willReturn('high');
 
@@ -339,9 +339,9 @@ class AnonymizationServiceTest extends TestCase {
 
 		$cascade = $this->createMock(PdfConversionService::class);
 		$cascade->method('convertToPdf')
-			->willThrowException(new \OCA\DocuDesk\Exception\ConversionFailedException());
+			->willThrowException(new \OCA\Filinq\Exception\ConversionFailedException());
 
-		$this->expectException(\OCA\DocuDesk\Exception\ConversionFailedException::class);
+		$this->expectException(\OCA\Filinq\Exception\ConversionFailedException::class);
 		$this->pdfGate($cascade)->convertResultToPdf($native, 'pdf', 1);
 
 	}//end testServiceWiresPdfConversionAndRollback()
@@ -875,7 +875,7 @@ class AnonymizationServiceTest extends TestCase {
 		$mapper = $this->createMock(EntityRelationMapper::class);
 		$mapper->method('findEntitiesForFile')->willReturn([]);
 
-		$basis = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
+		$basis = $this->createMock(\OCA\Filinq\Service\LegalBasisProposalService::class);
 		$basis->method('getEntityTypeWhitelist')->willReturn($whitelist);
 		$basis->method('enrichEntitiesWithBases')->willReturnArgument(0);
 
@@ -885,7 +885,7 @@ class AnonymizationServiceTest extends TestCase {
 				return match ($class) {
 					'OCA\OpenRegister\Service\TextExtractionService' => $extractor,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
-					'OCA\DocuDesk\Service\LegalBasisProposalService' => $basis,
+					'OCA\Filinq\Service\LegalBasisProposalService' => $basis,
 					default => throw new \RuntimeException('Unknown service: ' . $class),
 				};
 			}
@@ -1053,8 +1053,8 @@ class AnonymizationServiceTest extends TestCase {
 			persistence: new AnonymizationPersistenceService(
 				logger: $logger,
 				locator: $locator,
-				consentCrud: $this->createMock(\OCA\DocuDesk\Service\ConsentCrudService::class),
-				consentService: $this->createMock(\OCA\DocuDesk\Service\ConsentService::class)
+				consentCrud: $this->createMock(\OCA\Filinq\Service\ConsentCrudService::class),
+				consentService: $this->createMock(\OCA\Filinq\Service\ConsentService::class)
 			),
 			summaryAttacher: new GrondslagenSummaryAttacher(
 				logger: $logger,
@@ -1193,7 +1193,7 @@ class AnonymizationServiceTest extends TestCase {
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($matcher, $mapper) {
 				return match ($id) {
-					'OCA\DocuDesk\Service\PolicyMatchService' => $matcher,
+					'OCA\Filinq\Service\PolicyMatchService' => $matcher,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
 					default => null,
 				};

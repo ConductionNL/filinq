@@ -31,6 +31,12 @@ function mountWidget(component, el, title) {
 	app.mount(el)
 }
 
+/* These ids stay on the OLD app id, and MUST match the strings returned by
+   the widgets' getId() in lib/Dashboard/ — Nextcloud pairs the registration
+   with the widget by exact id, so a mismatch renders an empty tile with no
+   error. They are frozen because the Dashboard app persists the chosen ids
+   in each user's own layout: renaming them silently drops the widget from
+   every dashboard that already has it. */
 OCA.Dashboard.register('docudesk-anonymization', (el, { widget }) =>
 	mountWidget(AnonymizationDashboardWidget, el, widget.title),
 )

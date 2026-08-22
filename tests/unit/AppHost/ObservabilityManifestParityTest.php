@@ -7,11 +7,11 @@
  * behaviour of the bespoke HealthController / MetricsController / MetricsCollector
  * that it replaced (deleted in build/adopt-apphost-2026-06-16). The generic
  * OpenRegister AppHost controllers consume this block to serve /api/health and
- * /api/metrics; this test guards the contract docudesk hands the engine so a
+ * /api/metrics; this test guards the contract filinq hands the engine so a
  * future manifest edit cannot silently drop a metric or health check.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\AppHost
+ * @package  OCA\Filinq\Tests\Unit\AppHost
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -19,7 +19,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/adopt-apphost/tasks.md
  *
@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\AppHost;
+namespace OCA\Filinq\Tests\Unit\AppHost;
 
 use PHPUnit\Framework\TestCase;
 
@@ -37,10 +37,10 @@ use PHPUnit\Framework\TestCase;
  * Parity guard for the manifest observability block.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\AppHost
+ * @package  OCA\Filinq\Tests\Unit\AppHost
  * @author   Conduction Development Team <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class ObservabilityManifestParityTest extends TestCase {
 	/**
@@ -115,7 +115,7 @@ class ObservabilityManifestParityTest extends TestCase {
 	/**
 	 * Metrics parity: the four declared metrics reproduce the bespoke
 	 * MetricsController output (engine prepends implicit info/up). Names are
-	 * unprefixed in the manifest; the engine renders them as docudesk_*.
+	 * unprefixed in the manifest; the engine renders them as filinq_*.
 	 *
 	 * @return void
 	 *

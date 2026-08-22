@@ -1,6 +1,6 @@
 ## Context
 
-`MainMenu.vue` (`NcAppNavigation`) lists the app's navigation entries; the router (`src/router/index.js`) defines the routes. The publication-policy features live at `StandingConsents` (`StandingConsentIndex.vue`) and `Prohibitions` (`ProhibitionIndex.vue` + `ProhibitionFormModal.vue`). Entity-type / consent labels are user-facing `t('docudesk', …)` strings backed by `l10n/`.
+`MainMenu.vue` (`NcAppNavigation`) lists the app's navigation entries; the router (`src/router/index.js`) defines the routes. The publication-policy features live at `StandingConsents` (`StandingConsentIndex.vue`) and `Prohibitions` (`ProhibitionIndex.vue` + `ProhibitionFormModal.vue`). Entity-type / consent labels are user-facing `t('filinq', …)` strings backed by `l10n/`.
 
 ## Goals / Non-Goals
 

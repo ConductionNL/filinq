@@ -2,25 +2,25 @@
 
 ## Context
 
-Verified at HEAD (DocuDesk `development`, branch
+Verified at HEAD (Filinq `development`, branch
 `spec/market-gap-wave3-2026-07`):
 
-- **Redaction is OR's engine, DocuDesk is the leaf.** `AnonymizationService`
+- **Redaction is OR's engine, Filinq is the leaf.** `AnonymizationService`
   (2237 LOC) drives OR's `TextExtractionService` + `DocumentProcessingHandler`
   (`replaceWords()` → `PdfTextReplacer` for PDF). ADR-022 and R4 D are explicit:
-  the anonymisation/redaction engine is OpenRegister's; DocuDesk owns detection
+  the anonymisation/redaction engine is OpenRegister's; Filinq owns detection
   heuristics + orchestration + UI, not the PDF-rewriting engine.
 - **Every run is recorded as `anonymizationLink`.** Verified in
-  `lib/Settings/docudesk_register.json` (schema `anonymizationLink`, register
+  `lib/Settings/filinq_register.json` (schema `anonymizationLink`, register
   v7.3.0): it pairs `sourceFileId ↔ anonymizedFileId` with run metadata and
   real replacement counts (closed GH #286). It is the natural home for a
   per-run accessibility outcome.
 - **The engine half is a parallel OR change.** OpenRegister's
   `tag-preserving-redaction` change (openregister repo, drafted in parallel)
   makes the redaction engine preserve the PDF tag tree and emit a
-  `structurePreservation` block on the processing result. **This DocuDesk
+  `structurePreservation` block on the processing result. **This Filinq
   change assumes that contract** and does not implement tag rewriting.
-- **`verapdf-validation` is an active DocuDesk change** that wires veraPDF as an
+- **`verapdf-validation` is an active Filinq change** that wires veraPDF as an
   optional local validator (verified: `openspec/changes/verapdf-validation/`).
   It is the right home for "is this output genuinely tagged/valid?"; this change
   consumes it when present, never re-integrates veraPDF.
@@ -29,12 +29,12 @@ Verified at HEAD (DocuDesk `development`, branch
 
 ## Assumed contract (from OR `tag-preserving-redaction`)
 
-DocuDesk consumes this block on OR's processing result — the interface DocuDesk
+Filinq consumes this block on OR's processing result — the interface Filinq
 codes against:
 
 ```jsonc
 "structurePreservation": {
-  "requested": true,            // DocuDesk asked for tag preservation
+  "requested": true,            // Filinq asked for tag preservation
   "preserved": true,            // engine kept the tag structure
   "tagCountBefore": 128,        // structural tags in the source
   "tagCountAfter": 128,         // structural tags in the redacted output
@@ -43,7 +43,7 @@ codes against:
 ```
 
 **Fail-safe consumption**: if the block or a field is absent (older OR, engine
-without the change), DocuDesk treats preservation as **unknown** and applies the
+without the change), Filinq treats preservation as **unknown** and applies the
 degraded path (warn + flag), never a crash and never a false "preserved".
 
 ## Goals / Non-Goals
@@ -62,15 +62,15 @@ degraded path (warn + flag), never a crash and never a false "preserved".
 
 **Non-Goals:**
 
-- No DocuDesk-local PDF tag-rewriting engine — that is OR's
+- No Filinq-local PDF tag-rewriting engine — that is OR's
   `tag-preserving-redaction` (ADR-022; the second-engine anti-pattern R4 D
   flags).
-- No veraPDF integration of DocuDesk's own — that is `verapdf-validation`
+- No veraPDF integration of Filinq's own — that is `verapdf-validation`
   (consumed, presence-gated).
 - No tagging of *generated* documents — that is `pdfua-accessible-output`
   (Boundary below).
 - No image/raster redaction accessibility (raster output is inherently
-  untagged; DocuDesk reports it as a `lossReason`, does not try to fix it).
+  untagged; Filinq reports it as a `lossReason`, does not try to fix it).
 
 ## Decisions
 
@@ -78,7 +78,7 @@ degraded path (warn + flag), never a crash and never a false "preserved".
 
 `AnonymizationService` and the batch/folder services pass `preserveTags: true`
 to OR's processing call for PDF inputs (default on; admin can default it off via
-`docudesk.redaction.preserve_tags_default`, but on is the shipped default
+`filinq.redaction.preserve_tags_default`, but on is the shipped default
 because the legal gate is on by default). Non-PDF formats that cannot carry PDF
 tags pass `preserveTags` through unchanged and rely on the engine to report an
 appropriate `lossReason` (e.g. format-unsupported). The option is additive to
@@ -122,14 +122,14 @@ validate the redacted output (tagged / PDF-UA-relevant checks). Result:
 - `verapdf-validation` absent → `veraPdfVerified` omitted; the engine's
   self-reported outcome stands (no duplication, no crash).
 
-This is a dependency, not duplication: DocuDesk never invokes veraPDF directly;
+This is a dependency, not duplication: Filinq never invokes veraPDF directly;
 it calls the `verapdf-validation` capability if that change has shipped.
 
 ### D5 — Clearance gate (default warn)
 
 Accessibility joins the existing publication/clearance checks (next to the
 prohibition/consent gates). Config
-`docudesk.redaction.accessibility_gate`:
+`filinq.redaction.accessibility_gate`:
 
 - `warn` (**default**) — clearance proceeds but the degraded state is surfaced
   as a prominent flag on the clearance decision and recorded.
@@ -146,11 +146,11 @@ publication flow; municipalities that treat WCAG as hard can escalate to
 | | `pdfua-accessible-output` (active) | `accessible-redaction-output` (this change) |
 |---|---|---|
 | Pipeline | document **generation** (template → PDF) | document **anonymisation/redaction** |
-| Engine | DocuDesk template renderer (mPDF / LibreOffice headless) | OpenRegister redaction engine (`tag-preserving-redaction`) |
+| Engine | Filinq template renderer (mPDF / LibreOffice headless) | OpenRegister redaction engine (`tag-preserving-redaction`) |
 | Failure fixed | output was **never tagged** | tags **destroyed by redaction** |
 | Artifact | a newly generated citizen/Woo document | a redacted copy of an existing document |
 
-The two are complementary halves of DocuDesk's accessible-output story and MUST
+The two are complementary halves of Filinq's accessible-output story and MUST
 NOT both claim the redaction path. This change owns redaction output only;
 `pdfua-accessible-output` owns generated output only.
 
@@ -203,7 +203,7 @@ report renders non-empty:
   `degraded` (warn), correctly telling operators accessibility is unverified —
   it never claims a preservation that did not happen.
 - [Default-on preservation may change redaction output/perf] → the engine owns
-  the cost; DocuDesk only requests it; admin can default it off.
+  the cost; Filinq only requests it; admin can default it off.
 - [Warn-by-default lets a degraded doc through] → accepted: a hard block by
   surprise is worse; the flag is prominent and recorded, and `block` is one
   setting away.
@@ -220,7 +220,7 @@ outcomes remain readable.
 
 ## Open Questions
 
-- Exact field names in OR's `structurePreservation` block — DocuDesk codes to
+- Exact field names in OR's `structurePreservation` block — Filinq codes to
   the assumed contract and tolerates absence (fail-safe); reconcile with the OR
   `tag-preserving-redaction` change before apply.
 - Whether `not-applicable` (source untagged) should count as a WCAG failure for

@@ -9,7 +9,7 @@ or_adoption_change: docudesk-adopt-or-abstractions
 
 ## Purpose
 
-Defines the data model for the `document` register used by DocuDesk to store correspondence audit logs and huisstijl configuration. The `report`, `template`, and `entity` schemas originally present in `document_register.json` have been migrated to their authoritative homes: report objects are now OR File Attachments enriched with `x-openregister-calculations` annotations; template management lives in the `templates` register. Three schemas remain active in the document register: `correspondence`, `huisstijl`, and `batchCorrespondenceJob`.
+Defines the data model for the `document` register used by Filinq to store correspondence audit logs and huisstijl configuration. The `report`, `template`, and `entity` schemas originally present in `document_register.json` have been migrated to their authoritative homes: report objects are now OR File Attachments enriched with `x-openregister-calculations` annotations; template management lives in the `templates` register. Three schemas remain active in the document register: `correspondence`, `huisstijl`, and `batchCorrespondenceJob`.
 
 ## OR Adoption decisions (from docudesk-adopt-or-abstractions)
 
@@ -125,7 +125,7 @@ The `huisstijl` schema stores organisation house-style configuration. Validation
 
 **Priority:** MUST
 
-The original `report` schema (previously in `document_register.json`) is replaced by OR File Attachment metadata. Calculated fields (anonymization-confidence, OCR-confidence, risk-score, entity-density, redaction-coverage) are declared via `x-openregister-calculations` on the file-attachment extension in `docudesk_register.json`.
+The original `report` schema (previously in `document_register.json`) is replaced by OR File Attachment metadata. Calculated fields (anonymization-confidence, OCR-confidence, risk-score, entity-density, redaction-coverage) are declared via `x-openregister-calculations` on the file-attachment extension in `filinq_register.json`.
 
 #### Scenario: Report data lives on OR file attachment
 
@@ -157,7 +157,7 @@ When the Phase 2 prerequisites ship, document-register reads SHALL be scoped to 
 #### Scenario: Tenant scope from composable
 
 - **GIVEN** nc-vue `multi-tenancy-context` composable is available
-- **WHEN** a docudesk frontend store needs the current tenant
+- **WHEN** a filinq frontend store needs the current tenant
 - **THEN** it SHALL read from `useTenantContext()`, not from user/route state
 - **AND** document-register reads SHALL be scoped to the current tenant
 
@@ -233,12 +233,12 @@ The `document` register SHALL include the `anonymizationLink` schema. The schema
 
 - **OpenRegister ObjectService**: CRUD on register objects
 - **OpenRegister LifecycleService**: Transition API for batchCorrespondenceJob
-- **docudesk_register.json**: Source of truth for register/schema structure
+- **filinq_register.json**: Source of truth for register/schema structure
 - **BatchCorrespondenceJob.php**: Lifecycle transitions replace IAppConfig writes (apply phase)
 - **CorrespondenceService.php**: Dispatch creates batchCorrespondenceJob OR object (apply phase)
 
 ## Migration path
 
-1. This change adds the `batchCorrespondenceJob` schema to `docudesk_register.json` and annotates `correspondence` with archival.
+1. This change adds the `batchCorrespondenceJob` schema to `filinq_register.json` and annotates `correspondence` with archival.
 2. The apply phase wires `BatchCorrespondenceJob.php` and `CorrespondenceService.php` to create/transition OR objects instead of reading/writing IAppConfig.
 3. The `document_register.json` file with its `properties: []` schemas is removed after the apply phase migrates report data to OR file attachments.

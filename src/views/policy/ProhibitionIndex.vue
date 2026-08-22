@@ -7,10 +7,10 @@ import { prohibitionStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Publish never')"
+			:title="t('filinq', 'Publish never')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.',
 				)
 			"
@@ -39,23 +39,23 @@ import { prohibitionStore } from '../../store/store.js'
 			<template #above-table>
 				<div class="policy-stats">
 					<CnStatsBlock
-						:title="t('docudesk', 'Total')"
+						:title="t('filinq', 'Total')"
 						:count="prohibitionStore.prohibitionStats.total"
-						:countLabel="t('docudesk', 'rules')"
+						:countLabel="t('filinq', 'rules')"
 						variant="default"
 						horizontal
 						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Active')"
+						:title="t('filinq', 'Active')"
 						:count="prohibitionStore.prohibitionStats.active"
-						:countLabel="t('docudesk', 'active')"
+						:countLabel="t('filinq', 'active')"
 						variant="error"
 						horizontal
 						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Inactive')"
+						:title="t('filinq', 'Inactive')"
 						:count="prohibitionStore.prohibitionStats.inactive"
-						:countLabel="t('docudesk', 'inactive')"
+						:countLabel="t('filinq', 'inactive')"
 						variant="default"
 						horizontal
 						showZeroCount />
@@ -64,7 +64,7 @@ import { prohibitionStore } from '../../store/store.js'
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
+					:label="row.entityType || t('filinq', 'Unknown')"
 					:colorMap="entityTypeColorMap" />
 			</template>
 
@@ -78,8 +78,8 @@ import { prohibitionStore } from '../../store/store.js'
 				<CnStatusBadge
 					:label="
 						row.active === false
-							? t('docudesk', 'Inactive')
-							: t('docudesk', 'Active')
+							? t('filinq', 'Inactive')
+							: t('filinq', 'Active')
 					"
 					:colorMap="activeColorMap" />
 			</template>
@@ -97,13 +97,13 @@ import { prohibitionStore } from '../../store/store.js'
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
-						{{ t('docudesk', 'Edit') }}
+						{{ t('filinq', 'Edit') }}
 					</NcActionButton>
 					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
-						{{ t('docudesk', 'Delete') }}
+						{{ t('filinq', 'Delete') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -130,7 +130,7 @@ import { prohibitionStore } from '../../store/store.js'
 		-->
 		<ConfirmActionDialog
 			v-if="deleteTarget"
-			:name="t('docudesk', 'Delete prohibition')"
+			:name="t('filinq', 'Delete prohibition')"
 			:message="deleteMessage"
 			:busy="deleting"
 			@confirm="executeDelete"
@@ -181,7 +181,7 @@ export default {
 			},
 
 			// Severity values must mirror the publicationProhibition schema
-			// enum (`high` / `medium` / `low`) in docudesk_register.json.
+			// enum (`high` / `medium` / `low`) in filinq_register.json.
 			severityColorMap: {
 				high: 'error',
 				medium: 'warning',
@@ -189,29 +189,35 @@ export default {
 			},
 
 			activeColorMap: {
-				[t('docudesk', 'Active')]: 'error',
-				[t('docudesk', 'Inactive')]: 'default',
+				[t('filinq', 'Active')]: 'error',
+				[t('filinq', 'Inactive')]: 'default',
 			},
 		}
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the Publication Prohibitions surface.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		tableColumns() {
 			return [
 				{
 					key: 'primaryName',
-					label: t('docudesk', 'Primary name'),
+					label: t('filinq', 'Primary name'),
 					sortable: true,
 				},
-				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'matchRules', label: t('docudesk', 'Match rules') },
+				{ key: 'entityType', label: t('filinq', 'Type'), sortable: true },
+				{ key: 'matchRules', label: t('filinq', 'Match rules') },
 				{
 					key: 'severity',
-					label: t('docudesk', 'Severity'),
+					label: t('filinq', 'Severity'),
 					sortable: true,
 				},
-				{ key: 'reason', label: t('docudesk', 'Reason') },
-				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
+				{ key: 'reason', label: t('filinq', 'Reason') },
+				{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 			]
 		},
 
@@ -221,11 +227,18 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state text for the Publication Prohibitions surface — the
+		 * store's error when loading failed, otherwise the no-rules message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		emptyText() {
 			if (prohibitionStore.error) {
 				return prohibitionStore.error
 			}
-			return t('docudesk', 'No publication prohibitions defined.')
+			return t('filinq', 'No publication prohibitions defined.')
 		},
 
 		/**
@@ -235,8 +248,8 @@ export default {
 		 */
 		deleteMessage() {
 			const name =
-				this.deleteTarget?.primaryName || t('docudesk', 'this prohibition')
-			return t('docudesk', 'Delete "{name}"? This cannot be undone.', { name })
+				this.deleteTarget?.primaryName || t('filinq', 'this prohibition')
+			return t('filinq', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
 
@@ -297,6 +310,14 @@ export default {
 			this.dialogOpen = true
 		},
 
+		/**
+		 * Create or update a `publicationProhibition` record from the modal
+		 * form; the write itself is RBAC-governed server-side.
+		 *
+		 * @param {object} formData Modal form payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
 		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''
@@ -311,7 +332,7 @@ export default {
 				this.formError =
 					err.response?.data?.error
 					|| err.message
-					|| t('docudesk', 'Save failed')
+					|| t('filinq', 'Save failed')
 			} finally {
 				this.saving = false
 			}

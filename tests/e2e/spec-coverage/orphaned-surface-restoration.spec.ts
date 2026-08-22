@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests —
@@ -61,7 +61,7 @@ test.describe('orphaned-surface-restoration — correspondence', () => {
 		const guard = attachConsoleGuard(page)
 		await go(page, '')
 		await navClick(page, 'Letters & correspondence')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/correspondence/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/correspondence/)
 		await expect(
 			page.getByRole('heading', { name: 'Letters & correspondence' }),
 		).toBeVisible()
@@ -74,7 +74,7 @@ test.describe('orphaned-surface-restoration — correspondence', () => {
 
 	test('Correspondence deep-links directly', async ({ page }) => {
 		await go(page, CorrespondenceIndex)
-		await expect(page).toHaveURL(/\/apps\/docudesk\/correspondence/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/correspondence/)
 		await expect(
 			page.getByRole('heading', { name: 'Letters & correspondence' }),
 		).toBeVisible()
@@ -107,7 +107,7 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		// so the wait bought nothing it does not already provide.
 		await page.waitForTimeout(800)
 
-		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/new/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/signing\/new/)
 		await expect(
 			page.getByRole('heading', { name: 'New Signing Request' }),
 		).toBeVisible()
@@ -139,7 +139,7 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#verify-page-renders-the-backend-verdict-verbatim
 		const guard = attachConsoleGuard(page)
 		await go(page, 'signing/verify/1')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/verify\/1/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/signing\/verify\/1/)
 		await expect(
 			page.getByRole('heading', { name: 'Signature Verification' }),
 		).toBeVisible()
@@ -156,7 +156,7 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		page,
 	}) => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#verify-page-renders-the-backend-verdict-verbatim
-		// KNOWN FAILURE — ConductionNL/docudesk#339: rows on the Signing Requests
+		// KNOWN FAILURE — ConductionNL/filinq#339: rows on the Signing Requests
 		// index are not clickable. Clicking one neither routes to /signing/{id}
 		// nor opens the configured sidebar (0px wide, checkVisibility() false),
 		// so no detail surface can be reached from the UI and the restored
@@ -205,7 +205,7 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 		// 0x0 collapsed `app-sidebar-header__mainname`). Assert what the
 		// scenario really guards — opening a row reaches a detail route and the
 		// surface renders without erroring.
-		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/.+/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/signing\/.+/)
 		await expect(page.locator('#content, .app-content').first()).toBeVisible()
 		// Same reasoning as above: poll, so "absent" means absent rather than
 		// "not painted yet". A short budget — absence here is legitimate and is
@@ -230,7 +230,7 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 		// been REMOVED, and the assertions below are untouched.
 		//
 		// #333 ("publicationProhibition schema is never imported") is still open,
-		// and correctly so: it is about DocuDesk's boot-time import path failing
+		// and correctly so: it is about Filinq's boot-time import path failing
 		// silently. But it is not true of the environment this suite runs in.
 		// `tests/e2e/ci-seed.sh` — the workflow's own `playwright-seed-command` —
 		// imports the register through OpenRegister's admin HTTP importer with
@@ -247,7 +247,7 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 		// regresses INTO this environment, this test goes red, which is the point.
 		const guard = attachConsoleGuard(page)
 		await go(page, 'policy/prohibitions')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/prohibitions/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/policy\/prohibitions/)
 		await expect(
 			page.getByRole('heading', { name: 'Publish never' }),
 		).toBeVisible()
@@ -268,7 +268,7 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#policy-pages-are-deep-link-reachable
 		const guard = attachConsoleGuard(page)
 		await go(page, 'policy/standing-consents')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/standing-consents/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/policy\/standing-consents/)
 		await expect(
 			page.getByRole('heading', { name: 'Publish always' }),
 		).toBeVisible()
@@ -378,10 +378,10 @@ test.describe('orphaned-surface-restoration — dead router removal is inert', (
 		// That is a real accessibility gap, tracked separately; asserting it here
 		// would conflate "the route works" with "the page has a heading".
 		for (const [route, urlPattern] of [
-			['', /\/apps\/docudesk\/?$/],
-			['anonymization', /\/apps\/docudesk\/anonymization/],
-			['templates', /\/apps\/docudesk\/templates/],
-			['signing', /\/apps\/docudesk\/signing/],
+			['', /\/apps\/filinq\/?$/],
+			['anonymization', /\/apps\/filinq\/anonymization/],
+			['templates', /\/apps\/filinq\/templates/],
+			['signing', /\/apps\/filinq\/signing/],
 		] as const) {
 			await go(page, route)
 			await expect(page).toHaveURL(urlPattern)

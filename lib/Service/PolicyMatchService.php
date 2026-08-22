@@ -24,13 +24,13 @@
  * (one per HTTP call) the cache is rebuilt on first use.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/specs/entity-publication-policies/spec.md
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
@@ -41,7 +41,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\App\IAppManager;
@@ -58,9 +58,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 class PolicyMatchService {
 
 	/**
-	 * The DocuDesk app id, used as the app-config namespace.
+	 * The Filinq app id, used as the app-config namespace.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * Match result kind — prohibition (force anonymise).
@@ -121,11 +121,13 @@ class PolicyMatchService {
 	 * threshold governs `highConfidence` in the extract response and the gate.
 	 *
 	 * @return float The configured threshold (default 0.85).
+	 *
+	 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md#requirement-overrides-must-only-release-low-confidence-prohibition-matches
 	 */
 	public function highConfidenceThreshold(): float {
 		return (float)$this->config->getValueString(
 			self::APP_ID,
-			'docudesk.prohibition.high_confidence_threshold',
+			'filinq.prohibition.high_confidence_threshold',
 			'0.85'
 		);
 

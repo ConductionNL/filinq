@@ -1,9 +1,9 @@
 # Confidentiality labels (files_confidential)
 
-DocuDesk reads existing **TSCP/BAILS confidentiality labels** — as applied by the
+Filinq reads existing **TSCP/BAILS confidentiality labels** — as applied by the
 [`files_confidential`](https://apps.nextcloud.com/apps/files_confidential) app — and
 surfaces them as a **read-only sensitivity signal** during anonymisation appraisal.
-The goal is simple: when an organisation has already classified a document, DocuDesk
+The goal is simple: when an organisation has already classified a document, Filinq
 should show that classification rather than silently re-deciding it.
 
 This is a signal, not a policy engine. A label never blocks, skips, redacts, or
@@ -16,7 +16,7 @@ relaxes anything.
 - If `files_confidential` is **not installed**, `getLabelForFile()` returns `null`
   and nothing is surfaced.
 - Labels are read through Nextcloud's public system-tag API
-  (`ISystemTagObjectMapper` / `ISystemTagManager`), so DocuDesk takes no hard
+  (`ISystemTagObjectMapper` / `ISystemTagManager`), so Filinq takes no hard
   dependency on the app's internals.
 - Any tag-API failure is caught and treated as "no label" (debug-logged). Failing
   open is correct here because the label only adds prominence — it can never relax
@@ -25,7 +25,7 @@ relaxes anything.
 ## Vocabulary
 
 Tag names are matched against an admin-configurable name → level map,
-`docudesk.confidentiality.label_vocabulary`, seeded with:
+`filinq.confidentiality.label_vocabulary`, seeded with:
 
 | Tag name       | Level |
 |----------------|-------|
@@ -47,7 +47,7 @@ the existing risk chip, using NL Design tokens, hidden when there is no label.
 
 ## Optional priority hint
 
-`docudesk.confidentiality.prioritise_analysis` (**default: off**) makes batch and
+`filinq.confidentiality.prioritise_analysis` (**default: off**) makes batch and
 folder analysis use the normalised level as a *secondary, tie-breaking* sort key
 (unlabelled = level 0). With the flag off, ordering is byte-for-byte identical to
 before. It only reorders work — it never skips or blocks a document.

@@ -14,12 +14,12 @@
  * the matcher.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/entity-publication-policies/spec.md
  *
@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use Exception;
@@ -38,10 +38,10 @@ use Exception;
  * Admission + normalisation of stored policy rows.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/entity-publication-policies/spec.md
  */
@@ -98,13 +98,13 @@ class PolicyRuleNormaliser {
 	 * Reduce a possibly language-keyed value to a single display string.
 	 *
 	 * `publicationProhibition.primaryName` is declared `translatable: true` in
-	 * `lib/Settings/docudesk_register.json`, and OpenRegister wraps a
+	 * `lib/Settings/filinq_register.json`, and OpenRegister wraps a
 	 * translatable scalar under its default language on save
 	 * (`SaveObject::…` — "Normalize translatable properties (wrap simple values
 	 * under default language)"). So the stored value is `{"en": "…"}`, not a
 	 * bare string.
 	 *
-	 * The HTTP read path never showed this, because DocuDesk registers OR's
+	 * The HTTP read path never showed this, because Filinq registers OR's
 	 * TranslationHandler and it resolves the map before the response is built.
 	 * PolicyMatchService does NOT go through that path — it calls
 	 * `searchObjectsBySlug()` directly — so the raw map reached a `(string)`

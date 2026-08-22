@@ -473,6 +473,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {string} folderName Folder name under /DocuDesk/.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async createDossierFolder(folderName) {
 			const url = `${davBaseUrl()}/DocuDesk/${encodePath(folderName)}/`
@@ -496,6 +497,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string} fileName Original file name.
 		 * @param {string} folderName Target dossier folder.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async moveToDossier(fileName, folderName) {
 			const base = davBaseUrl()
@@ -538,6 +540,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {object} entry Queue entry.
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
 		 */
 		async uploadAndExtract(entry) {
 			try {
@@ -546,7 +549,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				const formData = new FormData()
 				formData.append('file', entry._file)
 				const uploadResponse = await axios.post(
-					generateUrl('/apps/docudesk/api/anonymization/upload'),
+					generateUrl('/apps/filinq/api/anonymization/upload'),
 					formData,
 					{ headers: { 'Content-Type': 'multipart/form-data' } },
 				)
@@ -567,7 +570,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.status = 'extracting'
 				const extractResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
 				const entities = extractResponse.data.entities || []
@@ -618,6 +621,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string} [options.outputFormat] Output document format
 		 *   (e.g. `pdf`). Required alongside `appendBasisSummary`.
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
 		 */
 		async anonymiseEntry(entry, options = {}) {
 			if (entry.status !== 'extracted') {
@@ -662,7 +666,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 							relationIds.map((rid) =>
 								axios.patch(
 									generateUrl(
-										`/apps/docudesk/api/anonymization/relations/${rid}`,
+										`/apps/filinq/api/anonymization/relations/${rid}`,
 									),
 									{
 										bases: newBases,
@@ -720,7 +724,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				}
 				const anonymizeResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/anonymize/${entry.fileId}`,
 					),
 					anonymizePayload,
 				)
@@ -861,6 +865,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string} fileMeta.path Absolute path.
 		 * @param {string} [fileMeta.mimeType] MIME type (optional, unused server-side).
 		 * @return {Promise<object>} The queue entry.
+		 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
 		 */
 		async ensureExtracted(fileMeta) {
 			const existing = this.findByFileId(fileMeta.fileId)
@@ -874,7 +879,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			try {
 				const extractResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
 				const entities = extractResponse.data.entities || []
@@ -903,6 +908,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {number} fileId Nextcloud file id of a file already in the queue.
 		 * @return {Promise<object|null>} The refreshed entry, or null if unknown.
+		 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
 		 */
 		async reanalyseEntry(fileId) {
 			const entry = this.findByFileId(fileId)
@@ -912,9 +918,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			entry.status = 'extracting'
 			try {
 				const res = await axios.post(
-					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${fileId}`,
-					),
+					generateUrl(`/apps/filinq/api/anonymization/extract/${fileId}`),
 					{ force: true },
 				)
 				const entities = res.data.entities || []
@@ -953,6 +957,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {object} entry Queue entry of an already-anonymised file.
 		 * @return {Promise<object>} The same entry, transitioned to `extracted`.
+		 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
 		 */
 		async prepareReanonymize(entry) {
 			if (!entry || !entry.fileId) {
@@ -977,7 +982,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			try {
 				const extractResponse = await axios.post(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/extract/${entry.fileId}`,
+						`/apps/filinq/api/anonymization/extract/${entry.fileId}`,
 					),
 				)
 				const entities = decorateEntities(
@@ -1286,6 +1291,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string[]} [options.bases] Default grondslagen.
 		 * @return {Promise<object>} { folderName, folderId, uuid, name, bases }.
 		 * @throws {Error} If the PROPFIND or OR create call fails.
+		 * @spec openspec/specs/dossier-register/spec.md#requirement-dossier-objects-bind-to-a-nextcloud-folder-via-selffolder
 		 */
 		async bindDossier(folderName, options = {}) {
 			const cleanName = (folderName || '').trim()
@@ -1501,7 +1507,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		},
 
 		/**
-		 * Persist one relation's skip/include decision through DocuDesk's
+		 * Persist one relation's skip/include decision through Filinq's
 		 * guarded endpoint. Returns {ok, status, body}; a 422 body carries
 		 * {threshold, prohibitionMatch} so the caller can offer a force retry.
 		 *
@@ -1511,6 +1517,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {Array<string>} [bases] Legal grounds to send with the PATCH;
 		 * omitted leaves the stored grounds untouched.
 		 * @return {Promise<{ok: boolean, status: number, body: object}>}
+		 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md#requirement-overrides-must-only-release-low-confidence-prohibition-matches
 		 */
 		async setRelationSkip(relationId, skip, force = false, bases = undefined) {
 			try {
@@ -1520,7 +1527,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				}
 				const res = await axios.patch(
 					generateUrl(
-						`/apps/docudesk/api/anonymization/relations/${relationId}`,
+						`/apps/filinq/api/anonymization/relations/${relationId}`,
 					),
 					body,
 				)

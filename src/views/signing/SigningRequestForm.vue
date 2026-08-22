@@ -1,17 +1,17 @@
 <template>
 	<div class="signing-request-form">
-		<h2>{{ t('docudesk', 'New Signing Request') }}</h2>
+		<h2>{{ t('filinq', 'New Signing Request') }}</h2>
 		<NcNoteCard type="info" class="signing-request-form__notice">
 			{{
 				t(
-					'docudesk',
+					'filinq',
 					'This composes a draft signing request only. Sending for signature, provider binding and signer-identity assertion are not available yet — the signature level below records your intent but is not yet cryptographically enforced.',
 				)
 			}}
 		</NcNoteCard>
 		<div class="form-group">
 			<label for="signing-request-document-file-id">{{
-				t('docudesk', 'Document File ID')
+				t('filinq', 'Document File ID')
 			}}</label>
 			<input
 				id="signing-request-document-file-id"
@@ -20,7 +20,7 @@
 		</div>
 		<div class="form-group">
 			<label for="signing-request-document-name">{{
-				t('docudesk', 'Document Name')
+				t('filinq', 'Document Name')
 			}}</label>
 			<input
 				id="signing-request-document-name"
@@ -28,27 +28,27 @@
 				type="text" />
 		</div>
 		<div class="form-group">
-			<label>{{ t('docudesk', 'Signature Level') }}</label>
+			<label>{{ t('filinq', 'Signature Level') }}</label>
 			<select v-model="form.signatureLevel">
 				<option value="SES">
-					{{ t('docudesk', 'SES - Simple') }}
+					{{ t('filinq', 'SES - Simple') }}
 				</option>
 				<option value="AdES">
-					{{ t('docudesk', 'AdES - Advanced') }}
+					{{ t('filinq', 'AdES - Advanced') }}
 				</option>
 				<option value="QES">
-					{{ t('docudesk', 'QES - Qualified') }}
+					{{ t('filinq', 'QES - Qualified') }}
 				</option>
 			</select>
 		</div>
 		<div class="form-group">
-			<label>{{ t('docudesk', 'Signing Mode') }}</label>
+			<label>{{ t('filinq', 'Signing Mode') }}</label>
 			<select v-model="form.signingMode">
 				<option value="sequential">
-					{{ t('docudesk', 'Sequential') }}
+					{{ t('filinq', 'Sequential') }}
 				</option>
 				<option value="parallel">
-					{{ t('docudesk', 'Parallel') }}
+					{{ t('filinq', 'Parallel') }}
 				</option>
 			</select>
 		</div>
@@ -56,7 +56,7 @@
 			variant="primary"
 			:disabled="!form.documentFileId || !form.documentName"
 			@click="submit">
-			{{ t('docudesk', 'Create Signing Request') }}
+			{{ t('filinq', 'Create Signing Request') }}
 		</NcButton>
 	</div>
 </template>
@@ -97,10 +97,10 @@ export default {
 			const signingStore = useSigningStore()
 			const result = await signingStore.createSigningRequest(this.form)
 			if (result) {
-				showSuccess(t('docudesk', 'Signing request created'))
+				showSuccess(t('filinq', 'Signing request created'))
 				this.$router.push({ name: 'SigningRequests' })
 			} else {
-				showError(t('docudesk', 'Failed to create signing request'))
+				showError(t('filinq', 'Failed to create signing request'))
 			}
 		},
 	},

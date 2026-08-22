@@ -4,7 +4,7 @@
  * Unit tests for Pdfa3ConversionController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,11 +20,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\Pdfa3ConversionController;
-use OCA\DocuDesk\Exception\Pdfa3ConversionException;
-use OCA\DocuDesk\Service\Pdfa3ConversionService;
+use OCA\Filinq\Controller\Pdfa3ConversionController;
+use OCA\Filinq\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -42,10 +42,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for Pdfa3ConversionController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -101,7 +101,7 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new Pdfa3ConversionController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$mockLogger,
 			$this->mockService,

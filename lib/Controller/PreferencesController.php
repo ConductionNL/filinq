@@ -13,8 +13,8 @@
  *
  * ⚠️ DO NOT "simplify" this back into a subclass of the AppHost generic.
  * Nextcloud's router `ReflectionClass()`es every file in `lib/Controller/` while
- * MATCHING a route, so an unresolvable parent makes EVERY route in DocuDesk
- * return HTTP 500, not just this one. DocuDesk does not declare
+ * MATCHING a route, so an unresolvable parent makes EVERY route in Filinq
+ * return HTTP 500, not just this one. Filinq does not declare
  * `<app>openregister</app>`, so an admin can create exactly that configuration.
  * `extends` is resolved by the AUTOLOADER, not the DI container, so lazy DI
  * cannot rescue it. See decidesk#377 / #388.
@@ -25,7 +25,7 @@
  * `AppHost\Controller\GenericPreferences#getPreference` therefore does NOT
  * resolve to OpenRegister's class (nor to the container alias registered for
  * it in `Application::register()`); Nextcloud looked for
- * `OCA\DocuDesk\Controller\PreferencesController`, which did not exist, and
+ * `OCA\Filinq\Controller\PreferencesController`, which did not exist, and
  * every request to `/api/preferences/{key}` failed with
  * `QueryNotFoundException` → HTTP 500.
  *
@@ -38,13 +38,13 @@
  * consume, don't reimplement).
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -54,9 +54,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\AppInfo\Application;
+use OCA\Filinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -66,7 +66,7 @@ use OCP\IRequest;
 use OCP\IUserSession;
 
 /**
- * Serves `GET|PUT /api/preferences/{key}` for DocuDesk.
+ * Serves `GET|PUT /api/preferences/{key}` for Filinq.
  *
  * Behaviour (auth posture, key sanitisation, per-user scoping) is a
  * byte-for-byte reimplementation of OpenRegister's generic. `#[NoAdminRequired]`

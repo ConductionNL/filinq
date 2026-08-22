@@ -2,9 +2,9 @@
 
 /**
  * Unit tests for the `unified-search-provider` change: the searchable ⟺
- * deep-link invariant on `docudesk_register.json` + `src/manifest.json`.
+ * deep-link invariant on `filinq_register.json` + `src/manifest.json`.
  *
- * DocuDesk registers NO `OCP\Search\IProvider` of its own — it contributes to
+ * Filinq registers NO `OCP\Search\IProvider` of its own — it contributes to
  * OpenRegister's shared `openregister_objects` Unified Search provider (ADR-022)
  * purely by (a) marking a schema `searchable:true` and (b) declaring a manifest
  * `deepLinks[]` entry so a hit is navigable. A `searchable:true` schema without
@@ -18,19 +18,19 @@
  * Runs fully offline (no live Nextcloud): it only decodes JSON/XML on disk.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Settings
+ * @package  OCA\Filinq\Tests\Unit\Settings
  *
  * @author  Conduction Development Team <info@conduction.nl>
  * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/unified-search-provider/specs/unified-search-provider/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Settings;
+namespace OCA\Filinq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 
@@ -59,14 +59,14 @@ class UnifiedSearchConsistencyTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$registerRaw = file_get_contents(__DIR__ . '/../../../lib/Settings/docudesk_register.json');
+		$registerRaw = file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json');
 		$manifestRaw = file_get_contents(__DIR__ . '/../../../src/manifest.json');
-		$this->assertNotFalse($registerRaw, 'docudesk_register.json must be readable');
+		$this->assertNotFalse($registerRaw, 'filinq_register.json must be readable');
 		$this->assertNotFalse($manifestRaw, 'src/manifest.json must be readable');
 
 		$register = json_decode($registerRaw, true);
 		$manifest = json_decode($manifestRaw, true);
-		$this->assertIsArray($register, 'docudesk_register.json must be valid JSON');
+		$this->assertIsArray($register, 'filinq_register.json must be valid JSON');
 		$this->assertIsArray($manifest, 'src/manifest.json must be valid JSON');
 
 		$this->register = $register;
@@ -161,9 +161,9 @@ class UnifiedSearchConsistencyTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeepLinkUrlTemplatesMapToManifestRoutes(): void {
-		// Collect the concrete route prefixes DocuDesk pages own, dropping the
+		// Collect the concrete route prefixes Filinq pages own, dropping the
 		// Vue param segment (":id" etc.) so "/templates/:id" matches
-		// "/apps/docudesk/templates/{uuid}".
+		// "/apps/filinq/templates/{uuid}".
 		$routePrefixes = [];
 		foreach (($this->manifest['pages'] ?? []) as $page) {
 			$route = $page['route'] ?? ($page['path'] ?? null);
@@ -174,11 +174,11 @@ class UnifiedSearchConsistencyTest extends TestCase {
 
 		foreach (($this->manifest['deepLinks'] ?? []) as $link) {
 			$template = $link['urlTemplate'] ?? '';
-			$this->assertStringStartsWith('/apps/docudesk/', $template, 'deepLink must target the docudesk app');
+			$this->assertStringStartsWith('/apps/filinq/', $template, 'deepLink must target the filinq app');
 			$this->assertStringEndsWith('/{uuid}', $template, 'deepLink urlTemplate must end in the {uuid} placeholder');
 
-			// Strip "/apps/docudesk" and the trailing "/{uuid}" → in-app route prefix.
-			$inApp = substr($template, strlen('/apps/docudesk'));
+			// Strip "/apps/filinq" and the trailing "/{uuid}" → in-app route prefix.
+			$inApp = substr($template, strlen('/apps/filinq'));
 			$inApp = substr($inApp, 0, (strlen($inApp) - strlen('/{uuid}')));
 			$this->assertContains(
 				$inApp,
@@ -190,7 +190,7 @@ class UnifiedSearchConsistencyTest extends TestCase {
 	}//end testDeepLinkUrlTemplatesMapToManifestRoutes()
 
 	/**
-	 * No bespoke OCP\Search\IProvider is registered by DocuDesk (ADR-022 —
+	 * No bespoke OCP\Search\IProvider is registered by Filinq (ADR-022 —
 	 * scoping is inherited from OpenRegister's openregister_objects provider).
 	 *
 	 * @return void
@@ -201,7 +201,7 @@ class UnifiedSearchConsistencyTest extends TestCase {
 		$this->assertStringNotContainsStringIgnoringCase(
 			'search-providers',
 			$infoXml,
-			'DocuDesk must not register a search provider in info.xml (consumes OpenRegister openregister_objects)'
+			'Filinq must not register a search provider in info.xml (consumes OpenRegister openregister_objects)'
 		);
 
 	}//end testNoBespokeSearchProviderRegistered()

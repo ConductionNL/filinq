@@ -4,7 +4,7 @@
  * Unit tests for PrintController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-5.5
  *
@@ -22,12 +22,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
-use OCA\DocuDesk\Controller\PrintController;
-use OCA\DocuDesk\Service\PdfService;
-use OCA\DocuDesk\Service\TemplateService;
+use OCA\Filinq\Controller\PrintController;
+use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\TemplateService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUser;
@@ -40,10 +40,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for PrintController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -93,7 +93,7 @@ class PrintControllerTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new PrintController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
 			pdfService: $this->mockPdfService,
@@ -114,7 +114,7 @@ class PrintControllerTest extends TestCase {
 		$mockSession->method('getUser')->willReturn(null);
 
 		$controller = new PrintController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $mockRequest,
 			logger: $this->mockLogger,
 			pdfService: $this->mockPdfService,
@@ -183,7 +183,7 @@ class PrintControllerTest extends TestCase {
 		$mockSession->method('getUser')->willReturn(null);
 
 		$controller = new PrintController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $mockRequest,
 			logger: $this->mockLogger,
 			pdfService: $this->mockPdfService,

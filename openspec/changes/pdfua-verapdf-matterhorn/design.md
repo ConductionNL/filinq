@@ -14,7 +14,7 @@ Robert's PR #314):
   `category` finding key it introduces (default `document`) is the extension
   point this change reuses.
 - `verapdf-validation` (spec'd, not yet applied) introduces `VeraPdfService`
-  — veraPDF as an optional, probed, local CLI binary (`docudesk.verapdf.*`
+  — veraPDF as an optional, probed, local CLI binary (`filinq.verapdf.*`
   config; admin-settings status row next to soffice/Tesseract), a validate
   contract that returns rule-level results, a `conformanceReport` OR object,
   and the `archival` check category with the validator-presence-gated,
@@ -63,8 +63,8 @@ Robert's PR #314):
 invokes the same probed binary with `--flavour ua1` and parses the same JSON
 result shape (flavour, `compliant`, failed checks with
 specification/clause/test references, validator version). It reuses the same
-`docudesk.verapdf.binary_path`, `docudesk.verapdf.max_seconds`,
-`docudesk.verapdf.enabled` config, the same availability probe, and the same
+`filinq.verapdf.binary_path`, `filinq.verapdf.max_seconds`,
+`filinq.verapdf.enabled` config, the same availability probe, and the same
 admin-settings status row. No new binary, no new config namespace, no second
 probe.
 
@@ -127,12 +127,12 @@ sibling, and it re-introduces the clobber problem for re-runs.
 Guidance strings (i18n EN/NL) keyed by failure class, attached to the report
 and the accessibility findings panel:
 
-- Structure/tagging failures on a document produced by DocuDesk's own
+- Structure/tagging failures on a document produced by Filinq's own
   accessible/tagged output path (`pdfua-accessible-output` REQ-DDPUA-001/002
-  LibreOffice `PDFUACompliance` route) → "regenerate through DocuDesk with the
+  LibreOffice `PDFUACompliance` route) → "regenerate through Filinq with the
   accessible output option" (its path emits tagged structure).
 - Failures on a document produced by the untagged mPDF path or on an
-  imported/uploaded PDF → "DocuDesk does not retag imported pages; re-author
+  imported/uploaded PDF → "Filinq does not retag imported pages; re-author
   from an accessible source (tagged DOCX/template) and regenerate" — honest
   limitation, the accessibility analogue of the PDF/A font-embedding trap.
 - Per-checkpoint failures → the Matterhorn clause/checkpoint reference plus
@@ -207,7 +207,7 @@ without alt) — the fixture that proves heuristics ≠ conformance.
   independently testable against a `VeraPdfService` fake pinned to the
   documented `ua1` result shape; verified against merged HEAD at apply time.
 - [JVM cost per validation] → per-profile opt-in checks (D2), on-demand
-  endpoint, the existing `docudesk.verapdf.max_seconds` budget, no default-on
+  endpoint, the existing `filinq.verapdf.max_seconds` budget, no default-on
   upload validation.
 - [Two conformance reports per file (PDF/A + PDF/UA)] → deliberate (D3);
   each is small, content-free, keyed independently; the document-detail view
@@ -227,7 +227,7 @@ without alt) — the fixture that proves heuristics ≠ conformance.
    document-detail card.
 4. Wire the validator verdict into the surfaced accessibility conformance
    state (D5), heuristics remaining the floor.
-5. Rollback: disable via `docudesk.verapdf.enabled` or leave the archival/
+5. Rollback: disable via `filinq.verapdf.enabled` or leave the archival/
    accessibility validator checks `off` — everything degrades to the wave-1
    heuristic behaviour; reports remain as inert evidence; no data migration.
 

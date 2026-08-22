@@ -18,7 +18,7 @@ OR-backed batches with progress; this change mirrors that shape rather than
 inventing a second batch idiom.
 
 Related: `template-management` (template refs for per-recipient generation),
-`docudesk-signing-events` (terminal-event contract — envelope roll-up listens
+`filinq-signing-events` (terminal-event contract — envelope roll-up listens
 to the same conclusions), `multi-tenant-hardening` (org scoping of the new
 objects arrives fleet-wide there).
 
@@ -105,7 +105,7 @@ document trails — the legal record is per document). Envelope behaviours:
   sequentially server-side — each document keeps its own audit entry and
   artifact (and its own assurance gate when identity rails land).
 - **Roll-up**: envelope status derives from member statuses (listener on the
-  same terminal transitions `docudesk-signing-events` hooks); COMPLETED only
+  same terminal transitions `filinq-signing-events` hooks); COMPLETED only
   when all members COMPLETED; any DECLINED → `partially_declined` (members
   already signed stay signed — per-document legal independence, LibreSign
   semantics).

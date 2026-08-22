@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# DocuDesk API-contract test runner (Newman / Postman).
+# Filinq API-contract test runner (Newman / Postman).
 #
-# Runs tests/integration/docudesk.postman_collection.json against a live
-# Nextcloud instance serving the docudesk app. The collection is self-contained
+# Runs tests/integration/filinq.postman_collection.json against a live
+# Nextcloud instance serving the filinq app. The collection is self-contained
 # and idempotent: setup seeds a template and a signing request and captures their
 # ids; teardown deletes everything it created.
 #
@@ -22,9 +22,9 @@
 set -euo pipefail
 
 # Re-exec under an exclusive flock so parallel agents serialise.
-LOCK_FILE="/tmp/uiaudit-docudesk.lock"
-if [ "${DOCUDESK_NEWMAN_LOCKED:-}" != "1" ] && command -v flock >/dev/null 2>&1; then
-  export DOCUDESK_NEWMAN_LOCKED=1
+LOCK_FILE="/tmp/uiaudit-filinq.lock"
+if [ "${FILINQ_NEWMAN_LOCKED:-}" != "1" ] && command -v flock >/dev/null 2>&1; then
+  export FILINQ_NEWMAN_LOCKED=1
   exec flock "${LOCK_FILE}" "$0" "$@"
 fi
 
@@ -73,12 +73,12 @@ FAILED=0
 for COLLECTION in "${COLLECTIONS[@]}"; do
   echo ""
   echo "=== Running: $(basename "${COLLECTION}") ==="
-  # `baseUrl` differs per collection: docudesk.postman_collection.json builds
-  # full /index.php/apps/docudesk/... paths from a bare origin, while the two
+  # `baseUrl` differs per collection: filinq.postman_collection.json builds
+  # full /index.php/apps/filinq/... paths from a bare origin, while the two
   # collections moved here from tests/newman carry their own baseUrl defaults.
   # An --env-var always overrides a collection variable, so only pass the ones
   # a collection actually declares.
-  if [ "$(basename "${COLLECTION}")" = "docudesk.postman_collection.json" ]; then
+  if [ "$(basename "${COLLECTION}")" = "filinq.postman_collection.json" ]; then
     "${NEWMAN[@]}" run "${COLLECTION}" \
       --env-var "baseUrl=${BASE_URL}" \
       --env-var "noAuthBase=${NOAUTH_BASE}" \

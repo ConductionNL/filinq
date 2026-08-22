@@ -89,13 +89,13 @@
 		{
 			"registerSlug": "templates",
 			"schemaSlug": "template",
-			"urlTemplate": "/apps/docudesk/templates/{uuid}",
+			"urlTemplate": "/apps/filinq/templates/{uuid}",
 			"displayName": "Template"
 		},
 		{
 			"registerSlug": "signing",
 			"schemaSlug": "signingRequest",
-			"urlTemplate": "/apps/docudesk/signing/{uuid}",
+			"urlTemplate": "/apps/filinq/signing/{uuid}",
 			"displayName": "Signing request"
 		}
 	],
@@ -117,7 +117,7 @@
 			"type": "custom",
 			"title": "Consent Management",
 			"component": "ConsentIndex",
-			"_note": "Consent objects are fetched from docudesk's own PHP controller (not a plain OR index endpoint) and rendered via CnIndexPage with custom column formatters; type:custom preserves the existing data path."
+			"_note": "Consent objects are fetched from filinq's own PHP controller (not a plain OR index endpoint) and rendered via CnIndexPage with custom column formatters; type:custom preserves the existing data path."
 		},
 		{
 			"id": "ConsentDetail",
@@ -133,7 +133,7 @@
 			"type": "custom",
 			"title": "Custom dictionaries",
 			"component": "CustomDictionaryIndex",
-			"_note": "Dictionaries are fetched from docudesk's own PHP controller (organisation-gated, term-count-enriched) not a plain OR index endpoint — same rationale as ConsentIndex; type:custom preserves that data path."
+			"_note": "Dictionaries are fetched from filinq's own PHP controller (organisation-gated, term-count-enriched) not a plain OR index endpoint — same rationale as ConsentIndex; type:custom preserves that data path."
 		},
 		{
 			"id": "CustomDictionaryDetail",
@@ -141,7 +141,7 @@
 			"type": "custom",
 			"title": "Custom Dictionary Detail",
 			"component": "CustomDictionaryDetail",
-			"_note": "Term management (add/remove/import) + metadata edit for one dictionary, fetched via customDictionaryStore. type:custom preserves the docudesk-controller data path."
+			"_note": "Term management (add/remove/import) + metadata edit for one dictionary, fetched via customDictionaryStore. type:custom preserves the filinq-controller data path."
 		},
 		{
 			"id": "Anonymization",
@@ -149,7 +149,7 @@
 			"type": "custom",
 			"title": "Anonymization",
 			"component": "AnonymizationIndex",
-			"_note": "Anonymization uses the anonymization store (docudesk API) not OpenRegister; type:custom preserves the existing data path."
+			"_note": "Anonymization uses the anonymization store (filinq API) not OpenRegister; type:custom preserves the existing data path."
 		},
 		{
 			"id": "FolderAnonymization",
@@ -157,7 +157,7 @@
 			"type": "custom",
 			"title": "Folder Analysis",
 			"component": "FolderAnonymizationView",
-			"_note": "Folder-level anonymization scan; fetches via folderAnonymizationStore (docudesk API); type:custom preserves the existing data path."
+			"_note": "Folder-level anonymization scan; fetches via folderAnonymizationStore (filinq API); type:custom preserves the existing data path."
 		},
 		{
 			"id": "Templates",
@@ -174,7 +174,7 @@
 				"addLabel": "New template",
 				"emptyText": "No templates found"
 			},
-			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered, so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail. `register` MUST be a register SLUG from lib/Settings/docudesk_register.json — it was `docudesk` from Phase 8 until 2026-08-03, a register DocuDesk has never shipped (the definition has declared `templates` since before Phase 8 landed), so this page listed a register that holds nothing while TemplatesController wrote to the `templates` register resolved from app config `template_register`."
+			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered, so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail. `register` MUST be a register SLUG from lib/Settings/filinq_register.json — it was `filinq` from Phase 8 until 2026-08-03, a register Filinq has never shipped (the definition has declared `templates` since before Phase 8 landed), so this page listed a register that holds nothing while TemplatesController wrote to the `templates` register resolved from app config `template_register`."
 		},
 		{
 			"id": "TemplateDetail",
@@ -213,7 +213,7 @@
 				"icon": "Plus",
 				"route": "SigningRequestForm"
 			},
-			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered in the `signing` register, so CnIndexPage lists the requests directly. (`register` was `docudesk` from Phase 8 until 2026-08-03 — a register DocuDesk has never shipped; see the Templates note.) Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
+			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered in the `signing` register, so CnIndexPage lists the requests directly. (`register` was `filinq` from Phase 8 until 2026-08-03 — a register Filinq has never shipped; see the Templates note.) Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
 		},
 		{
 			"id": "SigningRequestForm",
@@ -367,7 +367,7 @@
 		"completionConfigKey": "walkthrough_completed_version",
 		"tours": [
 			{
-				"id": "docudesk:getting-started",
+				"id": "filinq:getting-started",
 				"title": "Getting started",
 				"trigger": "first-visit",
 				"minAppVersion": "0.0.34-unstable.17",
@@ -376,7 +376,7 @@
 						"id": "welcome",
 						"sinceVersion": "0.0.34-unstable.17",
 						"placement": "center",
-						"title": "Welcome to DocuDesk",
+						"title": "Welcome to Filinq",
 						"body": "Let's take a quick spin through your document workspace — we'll set up a template and a signing request together so you can see how the pieces fit. You'll add each record yourself.",
 						"target": {
 							"kind": "page",

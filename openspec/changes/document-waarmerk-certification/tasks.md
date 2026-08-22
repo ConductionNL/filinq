@@ -5,7 +5,7 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/docudesk_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
+- [ ] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/filinq_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
   - Additive import on boot; `tests/validate-manifest.js` passes; NO key material fields anywhere (ADR-064)
 
 - [ ] 1.2 Seed data: demo `waarmerk` object (nil-UUID, Demostad, placeholder CMS/fingerprint per design.md Seed Data); test bootstrap generates a throwaway self-signed org certificate at runtime — no PEM/key fixture committed
@@ -36,7 +36,7 @@
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests ≥75% on new code (seal/verify round-trip with runtime-generated cert, tamper detection, revocation dominance, write-once invariant, oracle parity, key-never-logged assertion); run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 5.1 Unit tests ≥75% on new code (seal/verify round-trip with runtime-generated cert, tamper detection, revocation dominance, write-once invariant, oracle parity, key-never-logged assertion); run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/document-waarmerk-certification.spec.ts` (seal → QR page → verify valid / tampered / revoked); verify on Postgres (8080); test with nldesign theme enabled
 

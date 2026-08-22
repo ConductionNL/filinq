@@ -33,7 +33,7 @@
 import { NcLoadingIcon } from '@nextcloud/vue'
 
 /**
- * Responsive grid for tile/card view in DocuDesk index pages.
+ * Responsive grid for tile/card view in Filinq index pages.
  *
  * The card content is fully consumer-defined via the `card` scoped slot.
  *

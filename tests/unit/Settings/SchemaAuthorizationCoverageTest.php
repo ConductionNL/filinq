@@ -6,7 +6,7 @@
  * OpenRegister treats an UNCONFIGURED authorization cascade as OPEN:
  * `PermissionHandler::resolveAuthorization()` returns null and every caller is
  * admitted. `_rbac: true` means "apply the cascade"; it does not mean "a cascade
- * exists". Measured on the development instance 2026-08-16, 20 of DocuDesk's 21
+ * exists". Measured on the development instance 2026-08-16, 20 of Filinq's 21
  * schemas declared none, and the register rows carried none either — so an
  * ordinary authenticated user in no groups could read AND overwrite another
  * user's template.
@@ -25,19 +25,19 @@
  * Runs fully offline: it only reads files on disk.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Settings
+ * @package  OCA\Filinq\Tests\Unit\Settings
  *
  * @author  Conduction Development Team <info@conduction.nl>
  * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/consumer-schema-authorization-audit/specs/consumer-schema-authorization-audit/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Settings;
+namespace OCA\Filinq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 
@@ -62,7 +62,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	 * Principals that are not Nextcloud groups.
 	 *
 	 * `admin` and the object owner short-circuit before any group test and are
-	 * never listed in a block. `public` is anonymous; no DocuDesk schema grants
+	 * never listed in a block. `public` is anonymous; no Filinq schema grants
 	 * it, and testAnonymousReadIsNeverGranted() keeps it that way.
 	 *
 	 * @var array<int, string>
@@ -122,11 +122,11 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	protected function setUp(): void {
 		$this->root = realpath(__DIR__ . '/../../..');
 
-		$registerRaw = file_get_contents($this->root . '/lib/Settings/docudesk_register.json');
-		$this->assertNotFalse($registerRaw, 'docudesk_register.json must be readable');
+		$registerRaw = file_get_contents($this->root . '/lib/Settings/filinq_register.json');
+		$this->assertNotFalse($registerRaw, 'filinq_register.json must be readable');
 
 		$register = json_decode($registerRaw, true);
-		$this->assertIsArray($register, 'docudesk_register.json must be valid JSON');
+		$this->assertIsArray($register, 'filinq_register.json must be valid JSON');
 		$this->register = $register;
 
 		$decisionsRaw = file_get_contents($this->root . '/docs/authorization-decisions.md');
@@ -139,7 +139,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * The schemas DocuDesk owns, keyed by slug.
+	 * The schemas Filinq owns, keyed by slug.
 	 *
 	 * @return array<string, array<string, mixed>>
 	 */
@@ -179,7 +179,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 			"Schema(s) with no authorization cascade: " . implode(', ', $undecided)
 			. "\nOpenRegister treats an unconfigured cascade as OPEN — every authenticated user in the"
 			. " organisation may read, update and delete every object of that schema. Declare a cascade"
-			. " in lib/Settings/docudesk_register.json and record why in docs/authorization-decisions.md."
+			. " in lib/Settings/filinq_register.json and record why in docs/authorization-decisions.md."
 		);
 
 		$this->assertSame(
@@ -225,7 +225,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	/**
 	 * No schema grants anonymous read.
 	 *
-	 * DocuDesk holds consent records, signer identities and extracted invoice
+	 * Filinq holds consent records, signer identities and extracted invoice
 	 * content. `public` also disables multi-tenancy filtering in
 	 * ObjectService::searchObjectsPaginated(), so granting it widens two axes at
 	 * once — which is not obvious from reading the block.
@@ -404,7 +404,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	 *
 	 * An authorisation change that is not imported is a fix-shaped commit. The
 	 * importer does compare schema content, but the app-level configuration gate
-	 * is keyed on info.version, and every previous DocuDesk register change that
+	 * is keyed on info.version, and every previous Filinq register change that
 	 * forgot this was inert on every existing install with no error anywhere.
 	 *
 	 * @return void
