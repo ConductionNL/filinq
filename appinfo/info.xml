@@ -25,11 +25,11 @@ DocuDesk generates documents from templates bound to Open Register fields, anony
 
 Requirements can be found [here](https://docudesk.conduction.nl)
 
-The Roadmap is available [here](https://codeberg.org/Conduction/docudesk/milestones)
+The Roadmap is available [here](https://github.com/ConductionNL/filinq/milestones)
 
-Create a [bug report](https://codeberg.org/Conduction/docudesk/issues/new)
+Create a [bug report](https://github.com/ConductionNL/filinq/issues/new)
 
-Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
+Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
@@ -43,12 +43,12 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         <developer>https://docudesk.conduction.nl</developer>
     </documentation>
     <category>organization</category>
-    <website>https://codeberg.org/Conduction/docudesk</website>
-    <bugs>https://codeberg.org/Conduction/docudesk/issues</bugs>
-    <repository>https://codeberg.org/Conduction/docudesk</repository>
-    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-dashboard.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-consent.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-anonymization.png</screenshot>
+    <website>https://github.com/ConductionNL/filinq</website>
+    <bugs>https://github.com/ConductionNL/filinq/issues</bugs>
+    <repository>https://github.com/ConductionNL/filinq</repository>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/filinq/main/img/screenshot-dashboard.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/filinq/main/img/screenshot-consent.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/filinq/main/img/screenshot-anonymization.png</screenshot>
     <!--
         Processing-activity export (AVG Art. 30) consumes OpenRegister's
         per-access read-logging capability (x-openregister-processing dialect,
