@@ -23,7 +23,7 @@ const config = createConfig({
   tagline: 'Flexible document management for your organization',
   /* Still the OLD host on purpose: the docs subdomain moves with DNS on its
      own schedule, and docs/static/CNAME must keep matching this value. */
-  url: 'https://docudesk.conduction.nl',
+  url: 'https://filinq.conduction.nl',
   baseUrl: '/',
 
   organizationName: 'ConductionNL',

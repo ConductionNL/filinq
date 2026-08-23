@@ -31,7 +31,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.conduction.nl
+ * @link https://filinq.conduction.nl
  */
 
 declare(strict_types=1);

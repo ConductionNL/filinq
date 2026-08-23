@@ -23,7 +23,7 @@ Filinq generates documents from templates bound to Open Register fields, anonymi
 
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Requirements can be found [here](https://docudesk.conduction.nl)
+Requirements can be found [here](https://filinq.conduction.nl)
 
 The Roadmap is available [here](https://github.com/ConductionNL/filinq/milestones)
 
@@ -38,14 +38,15 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
     <!--
-        The docs subdomain deliberately stays `docudesk.conduction.nl`: DNS for
-        the fleet rename moves on its own schedule, and pointing these at a
-        hostname that does not resolve yet would ship three dead links.
+        `filinq.conduction.nl` resolves as of 2026-08-23: it was attached as a
+        second custom domain on the SAME `docudesk-docs` worker that serves
+        `docudesk.conduction.nl`, so both hosts answer and no link goes dead in
+        either direction. That is what unfroze these three URLs.
     -->
     <documentation>
-        <user>https://docudesk.conduction.nl</user>
-        <admin>https://docudesk.conduction.nl</admin>
-        <developer>https://docudesk.conduction.nl</developer>
+        <user>https://filinq.conduction.nl</user>
+        <admin>https://filinq.conduction.nl</admin>
+        <developer>https://filinq.conduction.nl</developer>
     </documentation>
     <category>organization</category>
     <website>https://github.com/ConductionNL/filinq</website>

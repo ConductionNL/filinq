@@ -5,7 +5,7 @@
 - [x] 2. `appinfo/info.xml`: rewrite `<description>` to name the full shipped
       feature set; fix "Word/Excel" template-format claim to PDF/ODF/HTML.
 - [x] 3. `appinfo/info.xml`: fix `<documentation>` URLs from dead gitbook.io to
-      live docudesk.conduction.nl.
+      live filinq.conduction.nl.
 - [x] 4. `appinfo/info.xml`: fix `<licence>` from `agpl` to `EUPL-1.2` to match
       actual SPDX headers and product-page claim.
 - [x] 5. `conduction-website/src/pages/apps/docudesk.mdx`: fix status

@@ -72,7 +72,7 @@
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "BookOpenVariantOutline",
-			"href": "https://docudesk.conduction.nl",
+			"href": "https://filinq.conduction.nl",
 			"section": "footer",
 			"order": 90
 		},
@@ -107,7 +107,7 @@
 			"title": "Dashboard",
 			"component": "DashboardIndex",
 			"config": {
-				"documentationUrl": "https://docudesk.conduction.nl"
+				"documentationUrl": "https://filinq.conduction.nl"
 			},
 			"_note": "DashboardIndex is a self-contained view that renders a single CnDashboardPage (KPI cards + recent-activity list + quick-anonymization panel). It is mounted via type:\"custom\" so only one CnDashboardPage renders — wrapping it as a body widget of a type:\"dashboard\" page nested CnDashboardPage-in-CnDashboardPage (hydra dashboard-antipattern)."
 		},
@@ -169,7 +169,7 @@
 				"schema": "template",
 				"columns": ["name", "category", "format", "namespace", "description"],
 				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://docudesk.conduction.nl",
+				"documentationUrl": "https://filinq.conduction.nl",
 				"showTitle": true,
 				"addLabel": "New template",
 				"emptyText": "No templates found"
@@ -202,7 +202,7 @@
 				"schema": "signingRequest",
 				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
 				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://docudesk.conduction.nl",
+				"documentationUrl": "https://filinq.conduction.nl",
 				"showTitle": true,
 				"emptyText": "No signing requests",
 				"actionToggles": { "showAdd": false }
@@ -301,7 +301,7 @@
 			"type": "roadmap",
 			"title": "Features & roadmap",
 			"config": {
-				"documentationUrl": "https://docudesk.conduction.nl"
+				"documentationUrl": "https://filinq.conduction.nl"
 			}
 		}
 	],
