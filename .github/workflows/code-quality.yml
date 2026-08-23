@@ -137,7 +137,12 @@ jobs:
       # frontend files in scope (phpmetrics/, docs/ and l10n/ excluded via
       # .prettierignore — phpmetrics/ is tracked despite being gitignored, so
       # the explicit entry is what keeps 15 generated report files out).
-      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n", "format"]'
+      # `check:schema-l10n` is a RATCHET, not a gate. Every string inside a form
+      # comes from the schema and is a key in THIS app's catalogue; an absent key
+      # renders the English source inside an otherwise translated form, silently.
+      # The fleet had 30,459 such strings, so this records the current count and
+      # fails only when it GROWS — burning it down stays an ordinary PR.
+      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n", "format", "check:schema-l10n"]'
       enable-phpunit: true
       # OpenRegister is a hard dependency: Filinq stores every template,
       # signing request and consent record as an OpenRegister object, and
