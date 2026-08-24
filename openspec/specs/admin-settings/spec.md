@@ -105,7 +105,7 @@ On application boot, Filinq automatically imports its register/schema definition
 - AND OpenRegister is installed and enabled (>= v0.2.10)
 - WHEN the app boots for the first time
 - THEN `Application::boot()` calls `SettingsService::initialize()`
-- AND the Consent Register and PublicationConsent schema are auto-created from `filinq_register.json`
+- AND the Filinq Register and PublicationConsent schema are auto-created from `filinq_register.json`
 - AND the `configuration_version` is updated to the version in the JSON file
 
 #### Scenario: Version-gated configuration import

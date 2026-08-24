@@ -5,15 +5,15 @@ or_adoption_change: docudesk-adopt-or-abstractions
 
 # Document Register
 
-@e2e exclude Backend data-model spec for the document register: schema strict-validation, archival retention (P7Y/P1Y), BatchCorrespondenceJob OR-object lifecycle + notifications, derived calculations (risk/error-count), OR file-attachment report storage, tenant-scope/i18n reads — no browser surface. Covered by PHPUnit (schema/lifecycle/calculation) and Newman (correspondence API).
+@e2e exclude Backend data-model spec for the document-domain schemas of the consolidated `filinq` register: schema strict-validation, archival retention (P7Y/P1Y), BatchCorrespondenceJob OR-object lifecycle + notifications, derived calculations (risk/error-count), OR file-attachment report storage, tenant-scope/i18n reads — no browser surface. Covered by PHPUnit (schema/lifecycle/calculation) and Newman (correspondence API).
 
 ## Purpose
 
-Defines the data model for the `document` register used by Filinq to store correspondence audit logs and huisstijl configuration. The `report`, `template`, and `entity` schemas originally present in `document_register.json` have been migrated to their authoritative homes: report objects are now OR File Attachments enriched with `x-openregister-calculations` annotations; template management lives in the `templates` register. Three schemas remain active in the document register: `correspondence`, `huisstijl`, and `batchCorrespondenceJob`.
+Defines the data model for the document-domain schemas that Filinq uses to store correspondence audit logs and huisstijl configuration. These schemas live in the consolidated `filinq` register — the former `document` register was folded into it, so `register=filinq` is the only correct binding. The `report`, `template`, and `entity` schemas originally present in `document_register.json` have been migrated to their authoritative homes: report objects are now OR File Attachments enriched with `x-openregister-calculations` annotations; the `template` schema is likewise carried by the `filinq` register. Three document-domain schemas remain active: `correspondence`, `huisstijl`, and `batchCorrespondenceJob`.
 
 ## OR Adoption decisions (from docudesk-adopt-or-abstractions)
 
-- **Decision 3**: Schema validation is now mandatory. All schemas in the document register declare full `required`, `properties`, and `hardValidation: true`. The previous `properties: []` / `hardValidation: false` shape is removed.
+- **Decision 3**: Schema validation is now mandatory. All document-domain schemas in the `filinq` register declare full `required`, `properties`, and `hardValidation: true`. The previous `properties: []` / `hardValidation: false` shape is removed.
 - **Decision 2**: Archival annotation per schema. `correspondence` carries `x-openregister-archival.retention: P7Y` (Archiefwet selectielijst cat. 3.2). `batchCorrespondenceJob` carries `P1Y` (operational log, cat. 1.2).
 - **Decision 1**: Lifecycle annotation backs all status fields. `batchCorrespondenceJob` declares `x-openregister-lifecycle` replacing the IAppConfig-backed status writes in `BatchCorrespondenceJob.php`. The wire status values (pending/processing/success/error/completed) are unchanged (Decision 5).
 
@@ -63,7 +63,7 @@ The `batchCorrespondenceJob` schema replaces IAppConfig-based batch-job tracking
 
 - **GIVEN** `CorrespondenceService::dispatchBatchJob()` is invoked with > 10 recipients
 - **WHEN** the job is queued
-- **THEN** a `batchCorrespondenceJob` object SHALL be created in the `document` register with status `pending`
+- **THEN** a `batchCorrespondenceJob` object SHALL be created in the `filinq` register with status `pending`
 - **AND** the OR object UUID SHALL replace the current `$jobId` IAppConfig key
 
 #### Scenario: Job lifecycle transitions replace inline status writes
@@ -96,7 +96,7 @@ The `batchCorrespondenceJob` schema replaces IAppConfig-based batch-job tracking
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DREG-010 | `batchCorrespondenceJob` schema exists in `document` register | MUST | Implementing |
+| DREG-010 | `batchCorrespondenceJob` schema exists in `filinq` register | MUST | Implementing |
 | DREG-011 | Schema declares `x-openregister-lifecycle` with states: pending/processing/success/error/completed | MUST | Implementing |
 | DREG-012 | All five lifecycle transition writes in `BatchCorrespondenceJob.php` (lines 113/162/168/186/199) route through lifecycle API | MUST | Apply-phase |
 | DREG-013 | Schema carries `x-openregister-archival.retention: P1Y` | MUST | Implementing |
@@ -174,13 +174,13 @@ When the Phase 2 prerequisites ship, document-register reads SHALL be scoped to 
 
 ### Requirement: AnonymizationLink Schema in Document Register (REQ-DREG-ALINK-01)
 
-The `document` register SHALL include the `anonymizationLink` schema. The schema SHALL declare full `required`, `properties`, and `hardValidation: true` per OR Adoption Decision 3. The schema SHALL carry `x-openregister-archival` with `retention: P7Y` aligned with the anonymisation audit-trail obligation under GDPR Art. 5(2) (accountability principle). The `x-openregister-archival.category` SHALL be shipped as an explicit placeholder (e.g. `"TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager"`) — the precise selectielijst classification is to be confirmed by the organisation's selectielijst manager before this change is archived.
+The `filinq` register SHALL include the `anonymizationLink` schema. The schema SHALL declare full `required`, `properties`, and `hardValidation: true` per OR Adoption Decision 3. The schema SHALL carry `x-openregister-archival` with `retention: P7Y` aligned with the anonymisation audit-trail obligation under GDPR Art. 5(2) (accountability principle). The `x-openregister-archival.category` SHALL be shipped as an explicit placeholder (e.g. `"TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager"`) — the precise selectielijst classification is to be confirmed by the organisation's selectielijst manager before this change is archived.
 
 #### Scenario: Schema present in document register after version bump
 
 - **WHEN** `SettingsInitializer::initialize()` runs against a fresh installation with `info.version "5.3.0"`
-- **THEN** the `document` register SHALL expose `anonymizationLink` in its `schemas` array
-- **AND** `objectService->getSchemas(register: 'document')` SHALL include `anonymizationLink`
+- **THEN** the `filinq` register SHALL expose `anonymizationLink` in its `schemas` array
+- **AND** `objectService->getSchemas(register: 'filinq')` SHALL include `anonymizationLink`
 
 #### Scenario: AnonymizationLink archival after 7 years
 

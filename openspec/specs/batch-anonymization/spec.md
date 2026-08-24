@@ -29,7 +29,7 @@ Provides batch anonymization of multiple files in a single operation. Per-file s
 
 **Priority:** MUST
 
-A `batchAnonymizationJob` schema MUST be declared with `x-openregister-lifecycle` (states: `pending → extracting → review → anonymizing → completed | error`). Each batch job is an OR object in the `dossier` register; per-file child objects carry their own lifecycle.
+A `batchAnonymizationJob` schema MUST be declared with `x-openregister-lifecycle` (states: `pending → extracting → review → anonymizing → completed | error`). Each batch job is an OR object in the `filinq` register; per-file child objects carry their own lifecycle.
 
 #### Scenario: Batch job creates an OR object on upload
 
