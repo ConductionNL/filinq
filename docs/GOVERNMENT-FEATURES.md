@@ -64,7 +64,7 @@
 | # | Eis | Status | Toelichting |
 |---|-----|--------|-------------|
 | T-01 | On-premise / self-hosted installatie | Beschikbaar | Nextcloud-app |
-| T-02 | Open source (broncode beschikbaar) | Beschikbaar | EUPL-1.2, Codeberg |
+| T-02 | Open source (broncode beschikbaar) | Beschikbaar | EUPL-1.2, GitHub |
 | T-03 | RESTful API | Via platform | OpenRegister REST API |
 | T-04 | Event-driven architectuur | Beschikbaar | Luistert op OpenRegister events |
 | T-05 | Database-onafhankelijkheid | Via platform | PostgreSQL, MySQL, SQLite |
