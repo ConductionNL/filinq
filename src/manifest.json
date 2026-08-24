@@ -460,11 +460,12 @@
 						"id": "done",
 						"sinceVersion": "0.0.34-unstable.17",
 						"placement": "center",
-						"title": "You're all set",
-						"body": "Nicely done — you have your first template and signing request. Head back to the Dashboard to watch your document workspace grow, and reopen this tour anytime from the … menu.",
+						"title": "Your first template is ready",
+						"body": "You have a template and a signing request. The Dashboard tracks them as your document workspace grows, and the documentation covers the rest.",
+						"task": "Open the documentation to keep going",
 						"target": {
-							"kind": "page",
-							"ref": "Dashboard"
+							"kind": "nav-item",
+							"ref": "Documentation"
 						},
 						"advanceOn": {
 							"type": "manual"
