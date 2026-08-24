@@ -6,6 +6,9 @@ status: done
 
 ## Purpose
 Records every signing action (CREATED, SIGNED, DECLINED, CANCELLED, EXPIRED, COMPLETED, VIEWED) as an OpenRegister audit-trail entry with a `filinq.signing.{ACTION}` action type, instead of a private app-local audit schema. Each entry is bound to the signing request's UUID, participates in OR's tamper-evident hash chain, carries signing context such as actor, IP, signature level, and provider, and is retrievable through the standard audit-trail API. This gives signing a single, queryable, integrity-protected audit record.
+
+@e2e exclude OpenRegister audit-trail write path, hash-chain integrity and retention contract, asserted below the HTTP surface — covered by PHPUnit (tests/unit/Service/SigningAuditServiceTest.php)
+
 ## Requirements
 ### Requirement: Signing Action Emits OR Audit Event
 
@@ -70,12 +73,12 @@ deploy-time setting in OR, not enforced in application code.
 
 - GIVEN a filinq installation with OR as the backend
 - WHEN an administrator consults the filinq deployment guide
-- THEN the guide SHALL specify setting OR retention for the signing register to ≥ 3650 days
+- THEN the guide SHALL specify setting OR retention for the `filinq` register to ≥ 3650 days
 - AND the guide SHALL reference Archiefwet 1995 as the regulatory basis
 
 #### Scenario: OR retains signing audit entries for at least 10 years
 
-- GIVEN OR retention for the signing register is configured to 3650 days
+- GIVEN OR retention for the `filinq` register is configured to 3650 days
 - WHEN a signing audit entry is 9 years old
 - THEN OR SHALL NOT purge the entry
 - AND OR SHALL NOT allow manual deletion of the entry via the API (HTTP 405)
@@ -148,10 +151,10 @@ migration.
 
 ### Requirement: Audit entries bind to the real signing-request object (REQ-DDSTR-006)
 
-`SigningAuditService::logEvent()` MUST resolve the actual signing-request object (register `signing`, schema `signingRequest`) via ObjectService and create the OR audit entry against that entity, so the entry carries real register/schema/object linkage and the tamper-evident hash chain anchors to a real row — not a uuid-only stub. When resolution fails (request deleted mid-flight), the service MUST still write the entry with the uuid fallback and log a warning: an unlinked audit entry is acceptable, a dropped one is not. Audit rows MUST never be mutated after their hash is sealed.
+`SigningAuditService::logEvent()` MUST resolve the actual signing-request object (register `filinq`, schema `signingRequest`) via ObjectService and create the OR audit entry against that entity, so the entry carries real register/schema/object linkage and the tamper-evident hash chain anchors to a real row — not a uuid-only stub. When resolution fails (request deleted mid-flight), the service MUST still write the entry with the uuid fallback and log a warning: an unlinked audit entry is acceptable, a dropped one is not. Audit rows MUST never be mutated after their hash is sealed.
 
 #### Scenario: Entry carries real object linkage
-- **GIVEN** a persisted signing request in the `signing` register
+- **GIVEN** a persisted signing request in the `filinq` register
 - **WHEN** `logEvent(<its uuid>, 'SIGNED', ...)` is called
 - **THEN** the created OR audit entry references the resolved signing-request entity (objectUuid AND its register/schema linkage)
 - **AND** the entry participates in the object's hash chain

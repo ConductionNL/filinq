@@ -24,7 +24,7 @@ and amount patterns, plus totals reconciliation) forms the testable confidence
 floor; an optional Nextcloud Assistant text-processing provider refines or fills
 low-confidence fields when available, degrading gracefully to heuristics-only
 when absent. Results are persisted on a `financialExtraction` object in the
-`document` register and — when requested — published on the Nextcloud event bus.
+`filinq` register and — when requested — published on the Nextcloud event bus.
 
 This capability is the **canonical home** of the
 `nl.conduction.filinq.extraction.completed` event contract (full payload in the
@@ -36,6 +36,9 @@ model-tuning / heuristic-calibration corpus.
 The full requirements land via the active change's spec delta at
 `openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md`
 and are folded into this file on archive.
+
+@e2e exclude backend extraction pipeline and JSON API contract, no browser surface — covered by PHPUnit (tests/unit/Service/FinancialExtractionServiceTest.php, tests/unit/Controller/ExtractionControllerTest.php)
+
 ## Requirements
 ### Requirement: Financial Extraction Endpoint (REQ-FIN-01)
 
@@ -45,7 +48,7 @@ The system SHALL expose `POST /api/extraction/financial` accepting a JSON body o
 `{fileId | documentUri, docType: 'receipt'|'supplier-invoice', callbackEvent: boolean}`. It SHALL
 resolve the file text via `ocr-document-scanning` (`OcrService`) — running OCR for image/scanned
 input and reusing embedded text for digital-born PDFs — run the extraction pipeline, persist the
-result on a `financialExtraction` object in the `document` register, and return the extracted
+result on a `financialExtraction` object in the `filinq` register, and return the extracted
 fields with per-field confidence. When `callbackEvent` is `true`, it SHALL also publish
 `nl.conduction.filinq.extraction.completed` (REQ-FIN-05).
 
@@ -54,7 +57,7 @@ fields with per-field confidence. When `callbackEvent` is `true`, it SHALL also 
 - **WHEN** `POST /api/extraction/financial` is called with `{documentUri, docType: "supplier-invoice", callbackEvent: true}`
 - **THEN** the referenced file text SHALL be obtained via `OcrService` (embedded text reused, OCR only if needed)
 - **AND** the extraction pipeline SHALL populate the `fields` object (REQ-FIN-03)
-- **AND** a `financialExtraction` object SHALL be persisted in the `document` register
+- **AND** a `financialExtraction` object SHALL be persisted in the `filinq` register
 - **AND** the response SHALL include `fields`, `fieldConfidence`, and `overallConfidence`
 
 #### Scenario: Extract a receipt photo
