@@ -146,10 +146,41 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <post-migration>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!--
+                THE THIRD STORE KEYED BY APP ID, AND THE TWO ABOVE DO NOT COVER
+                IT. `oc_appconfig` and `oc_preferences` are Nextcloud's; this
+                one is OpenRegister's `openregister_schemas.application`.
+
+                OpenRegister resolves the two halves of a configuration by
+                DIFFERENT keys: a REGISTER by slug alone, a SCHEMA by the PAIR
+                (application, slug) via findByApplicationAndSlug(). This app
+                now passes `appId: Application::APP_ID` = `filinq`, while every
+                schema it already owns still carries `application = docudesk` —
+                so the pair matches nothing, and ImportHandler's not-found
+                branch is not an error path, it is the "create a new one" path.
+                The import then builds a SECOND, EMPTY schema set while every
+                stored object stays bound to the old rows. Nothing errors; the
+                app renders empty collections. Measured before this step
+                existed: 231 schemas under `docudesk`, zero under `filinq`.
+
+                It must run BEFORE the register import, which this app triggers
+                from RegistrationBootstrap::boot() — i.e. on the first request
+                after the app is enabled, strictly after every repair step.
+
+                Refuses rather than merges where a slug already has a twin
+                under the new application id, never deletes a schema, and never
+                throws.
+            -->
+            <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!-- Same step, same reason; see the <post-migration> block. An
+                 app-id rename presents to Nextcloud as a FRESH INSTALL, so
+                 this block is the one that actually fires on the upgrade the
+                 step exists for. -->
+            <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
         </install>
     </repair-steps>
     <commands>
