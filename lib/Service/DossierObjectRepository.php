@@ -221,7 +221,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'dossier',
+				register: 'filinq',
 				schema: 'dossier',
 				_rbac: false,
 				_multitenancy: false
@@ -241,7 +241,7 @@ class DossierObjectRepository {
 					payload: $payload,
 					dossierUuid: $dossierUuid
 				),
-				register: 'dossier',
+				register: 'filinq',
 				schema: 'dossier',
 				uuid: $dossierUuid,
 				_rbac: false,
@@ -274,7 +274,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'dossier',
+				register: 'filinq',
 				schema: 'dossier',
 				_rbac: false,
 				_multitenancy: false

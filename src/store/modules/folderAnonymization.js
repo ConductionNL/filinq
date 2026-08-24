@@ -99,6 +99,8 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 * `renderDossierSummary` calls find the right files. Bases are
 		 * defaulted to ['art-5-1-2-e'] (J — persoonlijke levenssfeer) but the operator can multi-select
 		 * from the six canonical Woo Art. 5 grondslagen.
+		 *
+		 * @spec openspec/specs/dossier-register/spec.md
 		 */
 		async createDossier() {
 			if (!this.folderId) {
@@ -116,7 +118,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					'@self': { folder: String(this.folderId) },
 				}
 				const r = await axios.post(
-					generateUrl('/apps/openregister/api/objects/dossier/dossier'),
+					generateUrl('/apps/openregister/api/objects/filinq/dossier'),
 					payload,
 				)
 				const data = r.data

@@ -102,7 +102,7 @@ class PackagePartIo {
 	 * Read one entry from a ZIP package.
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part         The entry name.
+	 * @param string $part The entry name.
 	 *
 	 * @return string The entry contents.
 	 *
@@ -142,7 +142,7 @@ class PackagePartIo {
 	 * creating one — not an error to be reported to a user.
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part         The entry name.
+	 * @param string $part The entry name.
 	 *
 	 * @return bool True when the entry exists.
 	 *
@@ -170,8 +170,8 @@ class PackagePartIo {
 	 * Write one entry back into a ZIP package, leaving every other entry as-is.
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part         The entry name.
-	 * @param string $xml          The new entry contents.
+	 * @param string $part The entry name.
+	 * @param string $xml The new entry contents.
 	 *
 	 * @return string The rewritten package bytes.
 	 *

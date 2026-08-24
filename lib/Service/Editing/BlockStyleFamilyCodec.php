@@ -55,8 +55,8 @@ interface BlockStyleFamilyCodec {
 	 * needs no definition returns null for it — never an empty string, which a
 	 * caller could inject and produce malformed XML.
 	 *
-	 * @param string $markup    The block markup.
-	 * @param array  $style     The style properties.
+	 * @param string $markup The block markup.
+	 * @param array $style The style properties.
 	 * @param string $styleName A unique name the codec may mint a style under.
 	 *
 	 * @return array{markup: string, automaticStyle: string|null} The rewritten block and any style to inject.

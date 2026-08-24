@@ -62,7 +62,9 @@ final class FakeResult implements IResult {
 	/**
 	 * @param array<int, mixed> $rows Rows this result yields.
 	 */
-	public function __construct(private array $rows = []) {
+	public function __construct(
+		private array $rows = [],
+	) {
 	}//end __construct()
 
 	/**
@@ -131,7 +133,9 @@ final class FakeStatement implements IPreparedStatement {
 	/**
 	 * @param callable $rowsFor Given the bound values, return the rows to yield.
 	 */
-	public function __construct(private $rowsFor) {
+	public function __construct(
+		private $rowsFor,
+	) {
 	}//end __construct()
 
 	/**
@@ -179,7 +183,7 @@ final class FakeStatement implements IPreparedStatement {
 	/**
 	 * @param mixed $param Placeholder name.
 	 * @param mixed $value Bound value.
-	 * @param mixed $type  Ignored.
+	 * @param mixed $type Ignored.
 	 *
 	 * @return bool
 	 */
@@ -189,10 +193,10 @@ final class FakeStatement implements IPreparedStatement {
 	}//end bindValue()
 
 	/**
-	 * @param mixed $param    Placeholder name.
+	 * @param mixed $param Placeholder name.
 	 * @param mixed $variable Bound variable.
-	 * @param mixed $type     Ignored.
-	 * @param mixed $length   Ignored.
+	 * @param mixed $type Ignored.
+	 * @param mixed $length Ignored.
 	 *
 	 * @return bool
 	 */
@@ -237,12 +241,12 @@ class RenameDutchColumnsTest extends TestCase {
 	/**
 	 * Build the step over a described database.
 	 *
-	 * @param array<int, int>              $registerIds    Ids the register lookup returns.
-	 * @param array<int, string>           $tables         Table names information_schema reports.
-	 * @param array<string, array<string>> $columns        Column names per table.
-	 * @param string|null                  $failOn         Substring of a statement that should fail.
-	 * @param bool                         $registersThrow Whether the register lookup throws.
-	 * @param bool                         $tablesThrow    Whether the table listing throws.
+	 * @param array<int, int> $registerIds Ids the register lookup returns.
+	 * @param array<int, string> $tables Table names information_schema reports.
+	 * @param array<string, array<string>> $columns Column names per table.
+	 * @param string|null $failOn Substring of a statement that should fail.
+	 * @param bool $registersThrow Whether the register lookup throws.
+	 * @param bool $tablesThrow Whether the table listing throws.
 	 *
 	 * @return RenameDutchColumns
 	 */

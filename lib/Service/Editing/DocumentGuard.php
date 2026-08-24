@@ -55,9 +55,12 @@ class DocumentGuard {
 	/**
 	 * The OpenRegister register holding Filinq's document schemas.
 	 *
+	 * `filinq`, not `document`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
+	 *
 	 * @var string
 	 */
-	private const REGISTER = 'document';
+	private const REGISTER = 'filinq';
 
 	/**
 	 * Constructor.
@@ -124,7 +127,6 @@ class DocumentGuard {
 		}
 
 		return null;
-
 	}//end signatureRefusal()
 
 	/**
@@ -215,7 +217,6 @@ class DocumentGuard {
 		}
 
 		return null;
-
 	}//end field()
 
 	/**

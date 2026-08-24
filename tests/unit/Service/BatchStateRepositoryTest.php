@@ -114,7 +114,7 @@ class BatchStateRepositoryTest extends TestCase {
 		$this->assertCount(1, $this->store->saveCalls);
 		$call = $this->store->saveCalls[0];
 
-		$this->assertSame('document', $call['register']);
+		$this->assertSame('filinq', $call['register'], 'the five registers collapsed into one');
 		$this->assertSame('anonymizationBatch', $call['schema']);
 		$this->assertSame('batch-1', $call['uuid']);
 		$this->assertFalse($call['_rbac']);
@@ -471,7 +471,7 @@ class BatchStateRepositoryTest extends TestCase {
 	 * Build a repository against a caller-supplied store, with OpenRegister
 	 * reported as installed.
 	 *
-	 * @param ObjectService        $store  The OpenRegister handle to hand out.
+	 * @param ObjectService $store The OpenRegister handle to hand out.
 	 * @param RecordingLoggerFake|null $logger Logger to record into, or null for a mock.
 	 *
 	 * @return BatchStateRepository The repository.

@@ -133,9 +133,9 @@ directions via OpenRegister's search API without re-running analysis.
 
 ```
 # Forward — anonymised file for a given source
-GET /apps/openregister/api/objects/document/anonymizationLink?sourceFileId=<NC_FILE_ID>
+GET /apps/openregister/api/objects/filinq/anonymizationLink?sourceFileId=<NC_FILE_ID>
 # Reverse — source file for a given anonymised file
-GET /apps/openregister/api/objects/document/anonymizationLink?anonymizedFileId=<NC_FILE_ID>
+GET /apps/openregister/api/objects/filinq/anonymizationLink?anonymizedFileId=<NC_FILE_ID>
 ```
 
 The file-viewer sidebar consumes the **reverse** direction: when a file is
@@ -280,7 +280,7 @@ directions via OpenRegister's search API without re-running analysis.
 
 ```
 # Forward — anonymised file for a given source
-GET /apps/openregister/api/objects/document/anonymizationLink?sourceFileId=<NC_FILE_ID>
+GET /apps/openregister/api/objects/filinq/anonymizationLink?sourceFileId=<NC_FILE_ID>
 # Reverse — source file for a given anonymised file
-GET /apps/openregister/api/objects/document/anonymizationLink?anonymizedFileId=<NC_FILE_ID>
+GET /apps/openregister/api/objects/filinq/anonymizationLink?anonymizedFileId=<NC_FILE_ID>
 ```

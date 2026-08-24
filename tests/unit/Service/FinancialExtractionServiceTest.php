@@ -113,7 +113,7 @@ TEXT;
 		// unset, instead of defaulting to register '' / schema ''. An unstubbed
 		// mock returns null, which is precisely what the guard exists to catch.
 		$this->settingsService->method('resolveFinancialExtractionBinding')
-			->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+			->willReturn(['register' => 'filinq', 'schema' => 'financialExtraction']);
 
 		$this->config = $this->createMock(IAppConfig::class);
 		$this->config->method('getValueString')->willReturnCallback(
@@ -289,7 +289,7 @@ TEXT;
 		$this->objectService->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(function ($object, $register, $schema) {
-				$this->assertSame('document', $register);
+				$this->assertSame('filinq', $register);
 				$this->assertSame('financialExtraction', $schema);
 				$this->assertSame('supplier-invoice', $object['docType']);
 				$this->assertSame('annemarie', $object['requestedBy']);

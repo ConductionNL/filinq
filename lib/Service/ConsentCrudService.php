@@ -252,8 +252,8 @@ class ConsentCrudService {
 	 *                              record, including the `wasUpdated` discriminator
 	 *
 	 * @throws \OCA\Filinq\Exception\PolicyRejectedException Propagated unwrapped when a
-	 *                                                         publication-prohibition rule matches; the
-	 *                                                         controller maps it to HTTP 403.
+	 *                                                       publication-prohibition rule matches; the
+	 *                                                       controller maps it to HTTP 403.
 	 * @throws Exception If creation fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md

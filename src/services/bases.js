@@ -28,15 +28,21 @@ import { WOO_BASES } from '../constants/grondslagen.js'
 const FALLBACK_OPTIONS = WOO_BASES.map((slug) => ({ label: slug, value: slug }))
 
 /**
- * Fetch the grondslagen (base) options from the OpenRegister dossier register.
+ * Fetch the grondslagen (base) options from the consolidated `filinq` register.
+ *
+ * The register segment is `filinq`, not `dossier`: this app now declares one
+ * register holding all 23 schemas. `base` remains the SCHEMA slug — only the
+ * register moved.
  *
  * @return {Promise<Array<{label: string, value: string}>>} Options for NcSelect
  *   ({label: name, value: slug}); the slug fallback on any error.
+ *
+ * @spec openspec/specs/dossier-register/spec.md
  */
 export async function fetchBaseOptions() {
 	try {
 		const response = await axios.get(
-			generateUrl('/apps/openregister/api/objects/dossier/base'),
+			generateUrl('/apps/openregister/api/objects/filinq/base'),
 		)
 		const raw = Array.isArray(response.data)
 			? response.data

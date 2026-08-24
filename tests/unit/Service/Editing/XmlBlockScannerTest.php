@@ -53,7 +53,7 @@ class XmlBlockScannerTest extends TestCase {
 	/**
 	 * The substring a span points at.
 	 *
-	 * @param string             $xml  The document.
+	 * @param string $xml The document.
 	 * @param array{0:int,1:int} $span The span.
 	 *
 	 * @return string The slice.

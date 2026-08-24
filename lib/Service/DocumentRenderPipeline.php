@@ -64,6 +64,8 @@ class DocumentRenderPipeline {
 	 * @param string|null $huisstijlId UUID of the huisstijl object, or null
 	 *
 	 * @return array|null The huisstijl configuration or null if not configured
+	 *
+	 * @spec openspec/specs/document-register/spec.md
 	 */
 	public function loadHuisstijl(?string $huisstijlId): ?array {
 		if (empty($huisstijlId) === true) {
@@ -74,7 +76,7 @@ class DocumentRenderPipeline {
 			$objectService = $this->objectResolver->resolve();
 			$result = $objectService->find(
 				id: $huisstijlId,
-				register: 'document',
+				register: 'filinq',
 				schema: 'huisstijl'
 			);
 

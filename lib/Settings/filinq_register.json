@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Filinq Register",
-        "description": "Filinq register v7.11.0 — template-authoring-for-agents (rate card): adds the `product` schema to the `templates` register, exposing `filinq.product.search` + `.get` as DERIVED read tools via `configuration.x-openregister-mcp`. No PHP: the quotation flow composes from tools that already exist (`template.get` for the body, `client`/`lead` from pipelinq, `editDocument` to write into the file the user has open), so the only thing missing was priced data. ⚠️ THE POINT: measured 2026-08-17 across all 160 distinct tools on this instance, NOTHING resolved a product or a rate. Asked to quote \"5 hours of dev work\" a model has three options — ask, refuse, or invent — and an hourly rate is exactly the plausible-sounding fact it supplies unprompted. On a quotation that is the failure that costs money. The `search` description therefore instructs the agent to return ALL candidates and to ASK when there is no match, never to estimate: \"dev work\" matches several roles at different rates and picking one silently is how a quote goes out at the wrong price. Writes stay with `docudesk-template-editors` — a rate card is a commercial artefact, consistent with v7.8.0's decision that no Filinq schema exposes a derived create/update/delete verb. ALSO IN v7.11.0 — batch-state-persistence: adds the `anonymizationBatch` schema to the `document` register. Batch anonymisation state used to live ONLY in Nextcloud's distributed cache. `ICacheFactory::createDistributed()` degrades to the local cache class, and that defaults to `OC\\Memcache\\NullCache` whenever `memcache.local` is unset — which is every Nextcloud that has not been explicitly pointed at APCu/Redis/Memcached, including a stock `occ maintenance:install`. NullCache discards every write and returns null for every read, so the batch record vanished the instant the creating request ended: `POST /api/anonymization/batch/folder` answered 200 with a batchId and fileCount 2, and the very next call `POST /api/anonymization/batch/{id}/extract` answered 404 `Batch not found or expired` (CI run 31963162253). That is the entire multi-file anonymisation flow, broken on every install without a distributed cache. Per ADR-022/ADR-083 the record is now persisted through OpenRegister's object abstraction (BatchStateRepository), with the cache demoted to a read fast path, so the flow is correct with no cache configured at all. `hardValidation:false` because the per-document progress entries evolve with the extraction pipeline and a validation refusal here would re-break the very flow this schema exists to keep working; the batch is app-private transient state, not a record anyone else reads. No `x-openregister-archival` annotation: batches are working state and MUST stay deletable, and an archival annotation makes user-driven deletes throw ArchivalImmutableException. The `authorization` cascade follows v7.9.0's shape rather than being omitted — an omitted cascade is OPEN in OpenRegister, so shipping this schema without one would have re-opened exactly the hole v7.9.0 closed, on a record that lists a user's private filenames. Filinq's own reads and writes go through `_rbac: false` (ownership is enforced in BatchStateService::getBatch), so the cascade governs only direct OpenRegister API access. ⚠️ THE VERSION BUMP IS THE POINT — SettingsInitializer gates the import on `info.version` against the stored `configuration_version`, so a new schema shipped WITHOUT a bump never reaches an existing install and every batch there keeps 404-ing. Previous v7.9.0 — consumer-schema-authorization-audit: declares an `authorization` cascade on ALL 21 schemas. Before this, 20 of 21 declared none, and OpenRegister treats an unconfigured cascade as OPEN — `PermissionHandler::resolveAuthorization()` returns null and every caller is admitted. The Filinq registers carry no register-level cascade either (measured live: all three rows NULL), so nothing filled the gap. MEASURED ON THE DEV INSTANCE BEFORE THE CHANGE, with two ordinary users in no groups and the same organisation: ddauth-bob read ddauth-alice's private template (HTTP 200, full `content`), OVERWROTE its content via PUT (HTTP 200), and duplicated it. This is a WRITE exposure, not only disclosure. The bound is authenticated users within one organisation — multitenancy is a separate axis and stays enforced; it is not anonymous and not cross-tenant. Shape of the fix: `update`/`delete` are restricted on EVERY schema, because that is where the proven harm was; OpenRegister's unconditional owner bypass means a creator keeps full control of their own objects, so this closes cross-user writes without an outage. `read` is additionally restricted only where the data justifies it — financialExtraction + glAccountBooking (supplier IBAN/KvK/BTW), publicationConsent + prohibitionOverrideAudit (GDPR records about identified people), and the four signing schemas (the signer portal resolves signerRecord with `_rbac: false` behind its own token binding in PortalSigningReceiverController, so restricting the cascade does NOT break the signer flow). Everything else keeps `read: authenticated` as a recorded decision, not an omission — reference data (base, customDictionary, glAccountMappingRule) and shared assets (template, huisstijl) must be readable to be applied. ⚠️ `prohibitionOverrideAudit.create` is deliberately `authenticated`, NOT policy-admins: v7.7.0 below records that restricting it re-breaks the fail-closed override path for the ordinary operator who performs the anonymise, raising 500 on every acknowledged override. Four groups are named — docudesk-template-editors, docudesk-policy-admins (already existed), docudesk-financial-admins, docudesk-signing-admins — and OpenRegister provisions declared groups create-only on import, ahead of the content-hash skip. They ship EMPTY on purpose: an empty group denies everyone except admins and object owners, which is the correct default and is immediately visible, rather than back-filling grants nobody chose. Previous v7.8.0 — filinq-mcp-adoption + document-editing-tools: declares `configuration.x-openregister-mcp` on 8 of 21 schemas (template, huisstijl, correspondence, generatedDocument, batchCorrespondenceJob, signingRequest, dossier, base) with `search` + `get` ONLY, `scope: read`, `readOnlyHint: true`. No Filinq schema exposes a derived create/update/delete verb: templates and huisstijl are governance artefacts, correspondence/generatedDocument/batch rows are audit records, and signingRequest is the legal spine of a signature process. The remaining 13 schemas stay off entirely (signature material, citizen contact data, re-identification links, extracted invoice content). Every declared `search.filters` entry was cross-checked against that schema's own `properties` map — an unknown filter fails the whole register import. `generatedDocument.format` additionally gains `docx`, which an agent document edit produces and which the enum predated. ⚠️ THE VERSION BUMP IS THE POINT: SettingsInitializer gates the import on `info.version` against the stored `configuration_version` app-config value, so a dialect change shipped WITHOUT a bump is inert on every existing install — the schemas keep their old configuration and not one derived tool appears, with no error anywhere. Measured on the dev instance before the bump: the four curated #[McpTool] tools were live while all 16 derived tools were absent. Previous v7.7.0 — prohibition-override-audit-schema: adds the `prohibitionOverrideAudit` schema to the `consent` register. `ProhibitionOverrideCommitter::writeAudit()` has always written to `register: consent, schema: prohibitionOverrideAudit`, and that schema was declared NOWHERE — `GET /apps/openregister/api/objects/consent/prohibitionOverrideAudit` answered 404 `Schema not found` while its sibling `publicationProhibition` answered 200 on the same freshly-seeded instance. The write is explicitly fail-closed ('If the audit write fails we MUST NOT proceed to the OR PATCH'), so every acknowledged override raised RuntimeException 500 and NO override could ever be committed. openspec/specs/anonymisation-prohibition-gate/spec.md mandates the schema by name: 'Implementations MUST use a `prohibitionOverrideAudit` schema in `filinq_register.json` for this entry'. Properties are exactly the six the committer writes {ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}; retention P10Y because an override audit must outlive the P10Y prohibition it released. `authorization: null` matches publicationConsent/anonymizationLink — restricting `create` to policy admins would re-break the same fail-closed path for the ordinary operator who performs the anonymise. See ConductionNL/filinq#428. Previous v7.6.4 — standing-consent-documentid-not-required: `publicationConsent` listed `documentId` in the schema-level `required` array, so OpenRegister created the backing column NOT NULL. Every scope=entity (standing consent) record is document-less by definition, so all 12 seeded standing consents failed to insert with 'null value in column \"document_id\" violates not-null constraint', and the same constraint blocks PolicyController::createStandingConsent at runtime — the entire \"Publish always\" surface. The condition is PER RECORD, not per schema, and openspec/specs/consent-management/spec.md already states it: 'documentId MUST be required only for scope=document records'. It is enforced where it can be — ConsentScopeValidator::assertValid(), which rejects a scope=document record without a documentId AND a scope=entity record WITH one. Removing it from the schema's `required` array restores what the spec mandates; nothing is left unvalidated. Previous v7.6.3 — archival-retention-object-shape: fixes six schemas that OpenRegister REJECTED on import, so they never existed on any fresh install. Five (correspondence, signingRequest, signerRecord, signingAuditEntry, batchCorrespondenceJob) declared `x-openregister-archival.retention` as a bare ISO-8601 STRING; OpenRegister's ArchivalAnnotationValidator requires an object `{ default: <duration>, rules?: [] }` and threw 'retention is required and must be an object'. The sixth (publicationProhibition) declared an authorization action `write`, which is not in OpenRegister's CRUD vocabulary (create, read, update, delete) — expanded to create/update/delete, preserving the intent that docudesk-policy-admins may write. ImportHandler catches a per-schema exception, logs it and continues, so the import still answered HTTP 200 'Import successful' while writing only 14 of 20 schemas — which left signing entirely non-functional (signingRequest/signerRecord/signingAuditEntry absent). anonymizationLink and financialExtraction already used the object form; this aligns the rest. No property, slug or retention DURATION changed. Previous v7.6.2 — schema-level-titles-en: re-authored the remaining Dutch schema-level `title` values to English — base 'Grondslag' -> 'Legal Basis', huisstijl 'Huisstijl Configuration' -> 'Branding Configuration' (schema slugs, property keys/titles, enums, descriptions unchanged). Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.1 — schema-titles-en: re-authored all Dutch schema property `title` values to English (property names/keys unchanged); Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.0 — document-output-destinations-and-bulk-retention: generatedDocument gains additive, nullable fileId/filePath properties, populated when a generation is stored to Files via the new DocumentStorageService (options.output.mode 'files'/'both' on generate, or the now-persisted async bulk job). hardValidation:false, so existing rows remain valid unchanged. See openspec/changes/document-output-destinations-and-bulk-retention/. Previous v7.5.0 — unified-search-provider: corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable and every other schema is searchable:false, keeping Filinq's contribution to OpenRegister's shared Unified Search provider free of dead/unnavigable results. Deep-link routing for template + signingRequest lives in src/manifest.json deepLinks[]. No bespoke OCP\\Search\\IProvider — org scoping inherited from openregister_objects. See openspec/changes/unified-search-provider/. Previous v7.4.0 — adds customDictionary + customDictionaryTerm to the document register per custom-dictionary-recognition: organisation-scoped, register-i18n-tagged term lists (label, description, colour, matchMode exact/caseInsensitive/wordBoundary, deferred fuzzy flag, active, calculated termCount) matched by CustomDictionaryMatchService and written into OpenRegister's shared entity catalogue as CUSTOM_DICTIONARY occurrences alongside Presidio/regex detections. Seeds one demo dictionary (\"Projectnamen\") with two demo terms. See openspec/changes/custom-dictionary-recognition/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — Filinq ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend filinq.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "7.11.0"
+        "description": "Filinq register v8.0.0 — ALL REGISTERS INTO ONE. The five registers this file used to declare (`consent`, `signing`, `templates`, `document`, `dossier`) are replaced by a single register `filinq` carrying all 23 schemas, matching `x-openregister.app`. A SIXTH source was added after the first pass: `docudesk`, the register named for this app's OLD APP ID, which holds 200 objects of this app's own data. It was initially left out as \"not one of the five\" — true, and beside the point: leaving it standing meant \"five into one\" quietly shipped an app that owned two registers. It is migrated LAST, so a partial failure that stops before it still leaves the coherent five together. THIS IS NOT A RENAME AND IT DOES NOT MIGRATE ITSELF: an object is bound to its register by NUMERIC id and lives in a per-pair shard table `<prefix>openregister_table_<registerId>_<schemaId>`, so the existing objects sit in tables the new register does not own. The repair step `OCA\\Filinq\\Repair\\ConsolidateRegisters` physically moves them (insert into the target shard table, count the uuids back out, only then delete the source rows), refuses rather than overwrites on a uuid collision, and skips any pair whose target table the import has not created yet. The MAJOR bump is deliberate — the version gate in SettingsInitializer is strictly-greater, so without it nothing reaches an existing install. PREVIOUSLY, v7.11.0 — template-authoring-for-agents (rate card): adds the `product` schema to the `templates` register, exposing `filinq.product.search` + `.get` as DERIVED read tools via `configuration.x-openregister-mcp`. No PHP: the quotation flow composes from tools that already exist (`template.get` for the body, `client`/`lead` from pipelinq, `editDocument` to write into the file the user has open), so the only thing missing was priced data. ⚠️ THE POINT: measured 2026-08-17 across all 160 distinct tools on this instance, NOTHING resolved a product or a rate. Asked to quote \"5 hours of dev work\" a model has three options — ask, refuse, or invent — and an hourly rate is exactly the plausible-sounding fact it supplies unprompted. On a quotation that is the failure that costs money. The `search` description therefore instructs the agent to return ALL candidates and to ASK when there is no match, never to estimate: \"dev work\" matches several roles at different rates and picking one silently is how a quote goes out at the wrong price. Writes stay with `docudesk-template-editors` — a rate card is a commercial artefact, consistent with v7.8.0's decision that no Filinq schema exposes a derived create/update/delete verb. ALSO IN v7.11.0 — batch-state-persistence: adds the `anonymizationBatch` schema to the `document` register. Batch anonymisation state used to live ONLY in Nextcloud's distributed cache. `ICacheFactory::createDistributed()` degrades to the local cache class, and that defaults to `OC\\Memcache\\NullCache` whenever `memcache.local` is unset — which is every Nextcloud that has not been explicitly pointed at APCu/Redis/Memcached, including a stock `occ maintenance:install`. NullCache discards every write and returns null for every read, so the batch record vanished the instant the creating request ended: `POST /api/anonymization/batch/folder` answered 200 with a batchId and fileCount 2, and the very next call `POST /api/anonymization/batch/{id}/extract` answered 404 `Batch not found or expired` (CI run 31963162253). That is the entire multi-file anonymisation flow, broken on every install without a distributed cache. Per ADR-022/ADR-083 the record is now persisted through OpenRegister's object abstraction (BatchStateRepository), with the cache demoted to a read fast path, so the flow is correct with no cache configured at all. `hardValidation:false` because the per-document progress entries evolve with the extraction pipeline and a validation refusal here would re-break the very flow this schema exists to keep working; the batch is app-private transient state, not a record anyone else reads. No `x-openregister-archival` annotation: batches are working state and MUST stay deletable, and an archival annotation makes user-driven deletes throw ArchivalImmutableException. The `authorization` cascade follows v7.9.0's shape rather than being omitted — an omitted cascade is OPEN in OpenRegister, so shipping this schema without one would have re-opened exactly the hole v7.9.0 closed, on a record that lists a user's private filenames. Filinq's own reads and writes go through `_rbac: false` (ownership is enforced in BatchStateService::getBatch), so the cascade governs only direct OpenRegister API access. ⚠️ THE VERSION BUMP IS THE POINT — SettingsInitializer gates the import on `info.version` against the stored `configuration_version`, so a new schema shipped WITHOUT a bump never reaches an existing install and every batch there keeps 404-ing. Previous v7.9.0 — consumer-schema-authorization-audit: declares an `authorization` cascade on ALL 21 schemas. Before this, 20 of 21 declared none, and OpenRegister treats an unconfigured cascade as OPEN — `PermissionHandler::resolveAuthorization()` returns null and every caller is admitted. The Filinq registers carry no register-level cascade either (measured live: all three rows NULL), so nothing filled the gap. MEASURED ON THE DEV INSTANCE BEFORE THE CHANGE, with two ordinary users in no groups and the same organisation: ddauth-bob read ddauth-alice's private template (HTTP 200, full `content`), OVERWROTE its content via PUT (HTTP 200), and duplicated it. This is a WRITE exposure, not only disclosure. The bound is authenticated users within one organisation — multitenancy is a separate axis and stays enforced; it is not anonymous and not cross-tenant. Shape of the fix: `update`/`delete` are restricted on EVERY schema, because that is where the proven harm was; OpenRegister's unconditional owner bypass means a creator keeps full control of their own objects, so this closes cross-user writes without an outage. `read` is additionally restricted only where the data justifies it — financialExtraction + glAccountBooking (supplier IBAN/KvK/BTW), publicationConsent + prohibitionOverrideAudit (GDPR records about identified people), and the four signing schemas (the signer portal resolves signerRecord with `_rbac: false` behind its own token binding in PortalSigningReceiverController, so restricting the cascade does NOT break the signer flow). Everything else keeps `read: authenticated` as a recorded decision, not an omission — reference data (base, customDictionary, glAccountMappingRule) and shared assets (template, huisstijl) must be readable to be applied. ⚠️ `prohibitionOverrideAudit.create` is deliberately `authenticated`, NOT policy-admins: v7.7.0 below records that restricting it re-breaks the fail-closed override path for the ordinary operator who performs the anonymise, raising 500 on every acknowledged override. Four groups are named — docudesk-template-editors, docudesk-policy-admins (already existed), docudesk-financial-admins, docudesk-signing-admins — and OpenRegister provisions declared groups create-only on import, ahead of the content-hash skip. They ship EMPTY on purpose: an empty group denies everyone except admins and object owners, which is the correct default and is immediately visible, rather than back-filling grants nobody chose. Previous v7.8.0 — filinq-mcp-adoption + document-editing-tools: declares `configuration.x-openregister-mcp` on 8 of 21 schemas (template, huisstijl, correspondence, generatedDocument, batchCorrespondenceJob, signingRequest, dossier, base) with `search` + `get` ONLY, `scope: read`, `readOnlyHint: true`. No Filinq schema exposes a derived create/update/delete verb: templates and huisstijl are governance artefacts, correspondence/generatedDocument/batch rows are audit records, and signingRequest is the legal spine of a signature process. The remaining 13 schemas stay off entirely (signature material, citizen contact data, re-identification links, extracted invoice content). Every declared `search.filters` entry was cross-checked against that schema's own `properties` map — an unknown filter fails the whole register import. `generatedDocument.format` additionally gains `docx`, which an agent document edit produces and which the enum predated. ⚠️ THE VERSION BUMP IS THE POINT: SettingsInitializer gates the import on `info.version` against the stored `configuration_version` app-config value, so a dialect change shipped WITHOUT a bump is inert on every existing install — the schemas keep their old configuration and not one derived tool appears, with no error anywhere. Measured on the dev instance before the bump: the four curated #[McpTool] tools were live while all 16 derived tools were absent. Previous v7.7.0 — prohibition-override-audit-schema: adds the `prohibitionOverrideAudit` schema to the `consent` register. `ProhibitionOverrideCommitter::writeAudit()` has always written to `register: consent, schema: prohibitionOverrideAudit`, and that schema was declared NOWHERE — `GET /apps/openregister/api/objects/consent/prohibitionOverrideAudit` answered 404 `Schema not found` while its sibling `publicationProhibition` answered 200 on the same freshly-seeded instance. The write is explicitly fail-closed ('If the audit write fails we MUST NOT proceed to the OR PATCH'), so every acknowledged override raised RuntimeException 500 and NO override could ever be committed. openspec/specs/anonymisation-prohibition-gate/spec.md mandates the schema by name: 'Implementations MUST use a `prohibitionOverrideAudit` schema in `filinq_register.json` for this entry'. Properties are exactly the six the committer writes {ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}; retention P10Y because an override audit must outlive the P10Y prohibition it released. `authorization: null` matches publicationConsent/anonymizationLink — restricting `create` to policy admins would re-break the same fail-closed path for the ordinary operator who performs the anonymise. See ConductionNL/filinq#428. Previous v7.6.4 — standing-consent-documentid-not-required: `publicationConsent` listed `documentId` in the schema-level `required` array, so OpenRegister created the backing column NOT NULL. Every scope=entity (standing consent) record is document-less by definition, so all 12 seeded standing consents failed to insert with 'null value in column \"document_id\" violates not-null constraint', and the same constraint blocks PolicyController::createStandingConsent at runtime — the entire \"Publish always\" surface. The condition is PER RECORD, not per schema, and openspec/specs/consent-management/spec.md already states it: 'documentId MUST be required only for scope=document records'. It is enforced where it can be — ConsentScopeValidator::assertValid(), which rejects a scope=document record without a documentId AND a scope=entity record WITH one. Removing it from the schema's `required` array restores what the spec mandates; nothing is left unvalidated. Previous v7.6.3 — archival-retention-object-shape: fixes six schemas that OpenRegister REJECTED on import, so they never existed on any fresh install. Five (correspondence, signingRequest, signerRecord, signingAuditEntry, batchCorrespondenceJob) declared `x-openregister-archival.retention` as a bare ISO-8601 STRING; OpenRegister's ArchivalAnnotationValidator requires an object `{ default: <duration>, rules?: [] }` and threw 'retention is required and must be an object'. The sixth (publicationProhibition) declared an authorization action `write`, which is not in OpenRegister's CRUD vocabulary (create, read, update, delete) — expanded to create/update/delete, preserving the intent that docudesk-policy-admins may write. ImportHandler catches a per-schema exception, logs it and continues, so the import still answered HTTP 200 'Import successful' while writing only 14 of 20 schemas — which left signing entirely non-functional (signingRequest/signerRecord/signingAuditEntry absent). anonymizationLink and financialExtraction already used the object form; this aligns the rest. No property, slug or retention DURATION changed. Previous v7.6.2 — schema-level-titles-en: re-authored the remaining Dutch schema-level `title` values to English — base 'Grondslag' -> 'Legal Basis', huisstijl 'Huisstijl Configuration' -> 'Branding Configuration' (schema slugs, property keys/titles, enums, descriptions unchanged). Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.1 — schema-titles-en: re-authored all Dutch schema property `title` values to English (property names/keys unchanged); Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.0 — document-output-destinations-and-bulk-retention: generatedDocument gains additive, nullable fileId/filePath properties, populated when a generation is stored to Files via the new DocumentStorageService (options.output.mode 'files'/'both' on generate, or the now-persisted async bulk job). hardValidation:false, so existing rows remain valid unchanged. See openspec/changes/document-output-destinations-and-bulk-retention/. Previous v7.5.0 — unified-search-provider: corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable and every other schema is searchable:false, keeping Filinq's contribution to OpenRegister's shared Unified Search provider free of dead/unnavigable results. Deep-link routing for template + signingRequest lives in src/manifest.json deepLinks[]. No bespoke OCP\\Search\\IProvider — org scoping inherited from openregister_objects. See openspec/changes/unified-search-provider/. Previous v7.4.0 — adds customDictionary + customDictionaryTerm to the document register per custom-dictionary-recognition: organisation-scoped, register-i18n-tagged term lists (label, description, colour, matchMode exact/caseInsensitive/wordBoundary, deferred fuzzy flag, active, calculated termCount) matched by CustomDictionaryMatchService and written into OpenRegister's shared entity catalogue as CUSTOM_DICTIONARY occurrences alongside Presidio/regex detections. Seeds one demo dictionary (\"Projectnamen\") with two demo terms. See openspec/changes/custom-dictionary-recognition/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — Filinq ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend filinq.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "8.0.0"
     },
     "x-openregister": {
         "type": "application",
@@ -19,46 +19,22 @@
     },
     "components": {
         "registers": {
-            "consent": {
-                "slug": "consent",
-                "title": "Consent Register",
-                "version": "2.1.0",
-                "description": "Register voor GDPR publicatie toestemmingen",
+            "filinq": {
+                "slug": "filinq",
+                "title": "Filinq Register",
+                "version": "1.0.0",
+                "description": "Eén register voor alle Filinq-objecten: GDPR/Woo publicatie-instemmingen en -verboden, digitale ondertekeningsverzoeken en -sessies, herbruikbare document templates met versiebeheer en rate card, correspondentie- en documentlogging, huisstijl, financiële veldextractie en grootboekrekening-suggesties, organisatie-woordenlijsten, anonimiseringsbatches, en dossiers met hun Woo Art. 5 grondslagen. VERVANGT de vijf registers `consent`, `signing`, `templates`, `document` en `dossier`; de bestaande objecten worden door de repair step OCA\\Filinq\\Repair\\ConsolidateRegisters fysiek naar dit register verplaatst (insert-verify-delete per shard-tabel). De slug MOET gelijk blijven aan `x-openregister.app`: voor een `type: application` configuratie leest ImportHandler `$slug = $xOpenregister['app'] ?? $appId` en dat veld IS een register-slug, geen attributielabel.",
                 "schemas": [
                     "publicationConsent",
                     "publicationProhibition",
-                    "prohibitionOverrideAudit"
-                ]
-            },
-            "signing": {
-                "slug": "signing",
-                "title": "Signing Register",
-                "version": "1.1.0",
-                "description": "Register voor digitale ondertekeningsverzoeken, ondertekeningsrecords, auditlogs en native signing-sessies",
-                "schemas": [
+                    "prohibitionOverrideAudit",
                     "signingRequest",
                     "signerRecord",
                     "signingAuditEntry",
-                    "signingSession"
-                ]
-            },
-            "templates": {
-                "slug": "templates",
-                "title": "Template Register",
-                "version": "2.1.0",
-                "description": "Register voor herbruikbare PDF/document templates met versiebeheer, en de rate card waaruit een offerte wordt opgebouwd",
-                "schemas": [
+                    "signingSession",
                     "template",
                     "templateVersion",
-                    "product"
-                ]
-            },
-            "document": {
-                "slug": "document",
-                "title": "Document Register",
-                "version": "2.5.0",
-                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie, financiële veldextractie, grootboekrekening-suggesties, organisatie-woordenlijsten voor aangepaste entiteitherkenning en de status van meervoudige anonimiseringsbatches",
-                "schemas": [
+                    "product",
                     "correspondence",
                     "huisstijl",
                     "batchCorrespondenceJob",
@@ -69,15 +45,7 @@
                     "glAccountMappingRule",
                     "customDictionary",
                     "customDictionaryTerm",
-                    "anonymizationBatch"
-                ]
-            },
-            "dossier": {
-                "slug": "dossier",
-                "title": "Dossier Register",
-                "version": "1.0.0",
-                "description": "Register voor dossiers en de Woo Art. 5 grondslagen op basis waarvan een dossier geëanonimiseerd wordt. Een dossier verwijst naar een Nextcloud-map via @self.folder en koppelt grondslagen aan de anonimisering van die map.",
-                "schemas": [
+                    "anonymizationBatch",
                     "dossier",
                     "base"
                 ]
@@ -4114,7 +4082,7 @@
         "objects": [
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-1-a"
                 },
@@ -4123,7 +4091,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-1-b"
                 },
@@ -4132,7 +4100,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-1-c"
                 },
@@ -4141,7 +4109,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-1-d"
                 },
@@ -4150,7 +4118,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-1-e"
                 },
@@ -4159,7 +4127,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-a"
                 },
@@ -4168,7 +4136,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-b"
                 },
@@ -4177,7 +4145,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-c"
                 },
@@ -4186,7 +4154,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-d"
                 },
@@ -4195,7 +4163,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-e"
                 },
@@ -4204,7 +4172,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-f"
                 },
@@ -4213,7 +4181,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-g"
                 },
@@ -4222,7 +4190,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-h"
                 },
@@ -4231,7 +4199,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-2-i"
                 },
@@ -4240,7 +4208,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-4"
                 },
@@ -4249,7 +4217,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-5"
                 },
@@ -4258,7 +4226,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-1-6"
                 },
@@ -4267,7 +4235,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-2-1"
                 },
@@ -4276,7 +4244,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "base",
                     "slug": "art-5-2-2"
                 },
@@ -4285,7 +4253,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "dossier",
                     "slug": "demostad-woo-2025-017",
                     "folder": "seed-folder-demostad-woo-2025-017"
@@ -4300,7 +4268,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "dossier",
                     "slug": "demostad-wmo-2024",
                     "folder": "seed-folder-demostad-wmo-2024"
@@ -4315,7 +4283,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "dossier",
                     "slug": "conduction-demo",
                     "folder": "seed-folder-conduction-demo"
@@ -4329,7 +4297,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "dossier",
                     "slug": "zonnestraal-klachten-2025",
                     "folder": "seed-folder-zonnestraal-klachten-2025"
@@ -4344,7 +4312,7 @@
             },
             {
                 "@self": {
-                    "register": "dossier",
+                    "register": "filinq",
                     "schema": "dossier",
                     "slug": "zonnestraal-incident-2026-03",
                     "folder": "seed-folder-zonnestraal-incident-2026-03"
@@ -4356,7 +4324,7 @@
             },
             {
                 "@self": {
-                    "register": "templates",
+                    "register": "filinq",
                     "schema": "template",
                     "slug": "beschikking-standaard"
                 },
@@ -4375,7 +4343,7 @@
             },
             {
                 "@self": {
-                    "register": "templates",
+                    "register": "filinq",
                     "schema": "template",
                     "slug": "brief-algemeen"
                 },
@@ -4394,7 +4362,7 @@
             },
             {
                 "@self": {
-                    "register": "templates",
+                    "register": "filinq",
                     "schema": "template",
                     "slug": "rapportage-kwartaal"
                 },
@@ -4413,7 +4381,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-verbal-bakker"
                 },
@@ -4441,7 +4409,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-aanspreekvorm"
                 },
@@ -4471,7 +4439,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-betrokkene"
                 },
@@ -4497,7 +4465,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-verzoeker"
                 },
@@ -4523,7 +4491,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-aanvrager"
                 },
@@ -4549,7 +4517,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-belanghebbende"
                 },
@@ -4575,7 +4543,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-gemachtigde"
                 },
@@ -4601,7 +4569,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-klager"
                 },
@@ -4627,7 +4595,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-melder"
                 },
@@ -4653,7 +4621,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-indiener"
                 },
@@ -4679,7 +4647,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-wederpartij"
                 },
@@ -4705,7 +4673,7 @@
             },
             {
                 "@self": {
-                    "register": "consent",
+                    "register": "filinq",
                     "schema": "publicationConsent",
                     "slug": "standing-consent-generic-woonplaats"
                 },
@@ -4731,7 +4699,7 @@
             },
             {
                 "@self": {
-                    "register": "document",
+                    "register": "filinq",
                     "schema": "anonymizationLink",
                     "slug": "alink-demostad-beschikking-2024-0042"
                 },
@@ -4750,7 +4718,7 @@
             },
             {
                 "@self": {
-                    "register": "document",
+                    "register": "filinq",
                     "schema": "anonymizationLink",
                     "slug": "alink-demostad-bezwaar-wmo-2024-0118"
                 },
@@ -4769,7 +4737,7 @@
             },
             {
                 "@self": {
-                    "register": "document",
+                    "register": "filinq",
                     "schema": "anonymizationLink",
                     "slug": "alink-conduction-demo-adviesrapport-2026"
                 },
@@ -4788,7 +4756,7 @@
             },
             {
                 "@self": {
-                    "register": "document",
+                    "register": "filinq",
                     "schema": "anonymizationLink",
                     "slug": "alink-zonnestraal-klacht-2025-0033"
                 },
@@ -4807,7 +4775,7 @@
             },
             {
                 "@self": {
-                    "register": "document",
+                    "register": "filinq",
                     "schema": "customDictionary",
                     "slug": "seed-custom-dictionary-projectnamen"
                 },
@@ -4820,7 +4788,7 @@
             },
             {
                 "@self": {
-                    "register": "document",
+                    "register": "filinq",
                     "schema": "customDictionaryTerm",
                     "slug": "seed-custom-dictionary-term-operatie-zilverreiger"
                 },
@@ -4830,7 +4798,7 @@
             },
             {
                 "@self": {
-                    "register": "document",
+                    "register": "filinq",
                     "schema": "customDictionaryTerm",
                     "slug": "seed-custom-dictionary-term-dossier-karekiet"
                 },

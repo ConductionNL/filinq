@@ -77,18 +77,18 @@ class OfficeProbeCommand extends Command {
 	 */
 	private const SUITES = [
 		'onlyoffice' => [
-			'app'   => 'onlyoffice',
-			'key'   => 'DocumentServerInternalUrl',
+			'app' => 'onlyoffice',
+			'key' => 'DocumentServerInternalUrl',
 			'paths' => ['/hosting/discovery', '/hosting/capabilities'],
 		],
 		'eurooffice' => [
-			'app'   => 'eurooffice',
-			'key'   => 'DocumentServerInternalUrl',
+			'app' => 'eurooffice',
+			'key' => 'DocumentServerInternalUrl',
 			'paths' => ['/hosting/discovery', '/hosting/capabilities'],
 		],
-		'collabora'  => [
-			'app'   => 'richdocuments',
-			'key'   => 'wopi_url',
+		'collabora' => [
+			'app' => 'richdocuments',
+			'key' => 'wopi_url',
 			'paths' => ['/hosting/discovery'],
 		],
 	];
@@ -97,7 +97,7 @@ class OfficeProbeCommand extends Command {
 	 * Constructor.
 	 *
 	 * @param OfficeSuiteCapabilityService $capability The WOPI capability probe.
-	 * @param IAppConfig                   $appConfig  App configuration.
+	 * @param IAppConfig $appConfig App configuration.
 	 *
 	 * @return void
 	 */
@@ -134,7 +134,7 @@ class OfficeProbeCommand extends Command {
 	 * requirement below records, where an ONLYOFFICE measurement was reported under
 	 * a Euro-Office heading.
 	 *
-	 * @param InputInterface  $input  The console input.
+	 * @param InputInterface $input The console input.
 	 * @param OutputInterface $output The console output.
 	 *
 	 * @return int The exit code.
@@ -165,8 +165,8 @@ class OfficeProbeCommand extends Command {
 	 * Report one suite.
 	 *
 	 * @param OutputInterface $output The console output.
-	 * @param string          $name   The suite name.
-	 * @param array           $suite  The suite mapping.
+	 * @param string $name The suite name.
+	 * @param array $suite The suite mapping.
 	 *
 	 * @return void
 	 */
@@ -179,7 +179,7 @@ class OfficeProbeCommand extends Command {
 		}
 
 		foreach ($suite['paths'] as $path) {
-			$verdict = $this->capability->probeDiscovery(discoveryUrl: rtrim($base, "/") . $path);
+			$verdict = $this->capability->probeDiscovery(discoveryUrl: rtrim($base, '/') . $path);
 			if ($verdict['available'] === true) {
 				$output->writeln(sprintf('%-12s <info>available</info> at %s', $name, $path));
 				return;

@@ -132,9 +132,9 @@ class SigningServiceTest extends TestCase {
 		// stubs are what keep the suite exercising the configured path — and
 		// their absence is what the fail-closed guard is there to catch.
 		$this->settingsService->method('resolveSigningRequestBinding')
-			->willReturn(['register' => 'signing', 'schema' => 'signingRequest']);
+			->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
 		$this->settingsService->method('resolveSignerRecordBinding')
-			->willReturn(['register' => 'signing', 'schema' => 'signerRecord']);
+			->willReturn(['register' => 'filinq', 'schema' => 'signerRecord']);
 		$this->settingsService->method('getFeatureToggles')->willReturn(
 			[
 				'signing_request_expiry_days' => 30,

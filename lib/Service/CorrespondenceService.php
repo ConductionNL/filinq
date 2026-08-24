@@ -546,7 +546,7 @@ class CorrespondenceService {
 			$objectService = $this->getObjectService();
 			$result = $objectService->find(
 				id: $huisstijlId,
-				register: 'document',
+				register: 'filinq',
 				schema: 'huisstijl'
 			);
 
@@ -827,7 +827,7 @@ class CorrespondenceService {
 
 			$result = $objectService->saveObject(
 				object: $entry,
-				register: 'document',
+				register: 'filinq',
 				schema: 'correspondence'
 			);
 

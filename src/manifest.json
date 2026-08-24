@@ -87,13 +87,13 @@
 	],
 	"deepLinks": [
 		{
-			"registerSlug": "templates",
+			"registerSlug": "filinq",
 			"schemaSlug": "template",
 			"urlTemplate": "/apps/filinq/templates/{uuid}",
 			"displayName": "Template"
 		},
 		{
-			"registerSlug": "signing",
+			"registerSlug": "filinq",
 			"schemaSlug": "signingRequest",
 			"urlTemplate": "/apps/filinq/signing/{uuid}",
 			"displayName": "Signing request"
@@ -165,7 +165,7 @@
 			"type": "index",
 			"title": "Templates",
 			"config": {
-				"register": "templates",
+				"register": "filinq",
 				"schema": "template",
 				"columns": ["name", "category", "format", "namespace", "description"],
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -198,7 +198,7 @@
 			"type": "index",
 			"title": "Signing Requests",
 			"config": {
-				"register": "signing",
+				"register": "filinq",
 				"schema": "signingRequest",
 				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
 				"sidebar": { "enabled": true, "showMetadata": true },
@@ -414,7 +414,7 @@
 						},
 						"advanceOn": {
 							"type": "object-created",
-							"register": "templates",
+							"register": "filinq",
 							"schema": "template",
 							"capture": {
 								"templateId": ":id"
@@ -449,7 +449,7 @@
 						},
 						"advanceOn": {
 							"type": "object-created",
-							"register": "signing",
+							"register": "filinq",
 							"schema": "signingRequest",
 							"capture": {
 								"signingRequestId": ":id"

@@ -91,16 +91,25 @@ class PortalContributionProvider {
 	/**
 	 * The OpenRegister register slug holding the consent surfaces.
 	 *
+	 * `filinq`, not `consent`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
+	 *
 	 * @var string
 	 */
-	private const REGISTER_CONSENT = 'consent';
+	private const REGISTER_CONSENT = 'filinq';
 
 	/**
 	 * The OpenRegister register slug holding the signing surfaces.
 	 *
+	 * `filinq`, not `signing`, for the same reason. The two constants now hold
+	 * the same value and are deliberately NOT collapsed into one: they name two
+	 * different portal surfaces, and folding them together would lose the
+	 * record of which surface each call site is addressing the moment anything
+	 * ever moves again.
+	 *
 	 * @var string
 	 */
-	private const REGISTER_SIGNING = 'signing';
+	private const REGISTER_SIGNING = 'filinq';
 
 	/**
 	 * The human label portaliq renders for this app's portal section.

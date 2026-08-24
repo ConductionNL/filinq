@@ -216,7 +216,7 @@ final class MigrateAppConfigKeysTest extends TestCase {
 				string $key,
 				string $value,
 				bool $lazy = false,
-				bool $sensitive = false
+				bool $sensitive = false,
 			): bool => $store->set($app, $key, $value)
 		);
 

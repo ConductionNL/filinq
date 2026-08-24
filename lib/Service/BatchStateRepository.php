@@ -60,9 +60,12 @@ class BatchStateRepository {
 	/**
 	 * Register slug the batch schema lives in.
 	 *
+	 * `filinq`, not `document`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
+	 *
 	 * @var string
 	 */
-	public const REGISTER = 'document';
+	public const REGISTER = 'filinq';
 
 	/**
 	 * Schema slug for a batch record.
@@ -94,7 +97,7 @@ class BatchStateRepository {
 	 * @param OpenRegisterAvailabilityService $openRegister Owns the OpenRegister
 	 *                                                      installed/version probe
 	 *                                                      and the ObjectService handle.
-	 * @param LoggerInterface                 $logger       Structured logger.
+	 * @param LoggerInterface $logger Structured logger.
 	 *
 	 * @return void
 	 */
@@ -168,8 +171,8 @@ class BatchStateRepository {
 	 * write is an upsert keyed by the identifier the rest of the app already
 	 * hands around; no secondary lookup is needed to update.
 	 *
-	 * @param string               $batchId Batch identifier (used as the object UUID).
-	 * @param array<string, mixed> $batch   The full batch record.
+	 * @param string $batchId Batch identifier (used as the object UUID).
+	 * @param array<string, mixed> $batch The full batch record.
 	 *
 	 * @return void
 	 *

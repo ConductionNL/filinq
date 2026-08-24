@@ -126,7 +126,6 @@ class DocumentAgentService {
 	 */
 	public function readDocument(int $fileId): array {
 		return $this->editSession->openForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readDocument()
 
 	#[McpTool(
@@ -200,7 +199,6 @@ class DocumentAgentService {
 		);
 
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
-
 	}//end editDocument()
 
 	#[McpTool(
@@ -228,7 +226,6 @@ class DocumentAgentService {
 	 */
 	public function readSpreadsheet(int $fileId): array {
 		return $this->editSession->openSpreadsheetForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readSpreadsheet()
 
 	#[McpTool(
@@ -247,8 +244,8 @@ class DocumentAgentService {
 	/**
 	 * Write literal values into a spreadsheet's cells.
 	 *
-	 * @param int    $fileId  The Nextcloud file id of the spreadsheet.
-	 * @param array  $edits   Each `{cell, value, replaceFormula?}`.
+	 * @param int $fileId The Nextcloud file id of the spreadsheet.
+	 * @param array $edits Each `{cell, value, replaceFormula?}`.
 	 * @param string $version The `version` from the read that produced these addresses.
 	 *
 	 * @return array<string, mixed> The outcome, including cells whose cached values went stale.
@@ -276,7 +273,6 @@ class DocumentAgentService {
 		);
 
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
-
 	}//end editSpreadsheet()
 
 	#[McpTool(
@@ -304,7 +300,6 @@ class DocumentAgentService {
 	 */
 	public function readPresentation(int $fileId): array {
 		return $this->editSession->openPresentationForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readPresentation()
 
 	#[McpTool(
@@ -323,8 +318,8 @@ class DocumentAgentService {
 	/**
 	 * Replace the text of addressed presentation shapes.
 	 *
-	 * @param int    $fileId  The Nextcloud file id of the presentation.
-	 * @param array  $edits   Each `{slide, shape, text, region?}`.
+	 * @param int $fileId The Nextcloud file id of the presentation.
+	 * @param array $edits Each `{slide, shape, text, region?}`.
 	 * @param string $version The `version` from the read that produced these ids.
 	 *
 	 * @return array<string, mixed> The outcome.
@@ -352,7 +347,6 @@ class DocumentAgentService {
 		);
 
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
-
 	}//end editPresentation()
 
 	#[McpTool(
@@ -399,7 +393,7 @@ class DocumentAgentService {
 		array $chart,
 		string $version,
 		string $afterAnchor = '',
-		string $outputMode = ''
+		string $outputMode = '',
 	): array {
 		$anchor = null;
 		if ($afterAnchor !== '') {
@@ -452,7 +446,6 @@ class DocumentAgentService {
 	 */
 	public function readDocumentMetadata(int $fileId): array {
 		return $this->editSession->readMetadataForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readDocumentMetadata()
 
 	#[McpTool(
@@ -496,7 +489,7 @@ class DocumentAgentService {
 		int $fileId,
 		array $metadata,
 		string $version,
-		string $outputMode = ''
+		string $outputMode = '',
 	): array {
 		$mode = null;
 		if ($outputMode !== '') {
@@ -654,7 +647,6 @@ class DocumentAgentService {
 		}
 
 		return $node;
-
 	}//end resolveReadableFile()
 
 	/**
@@ -691,6 +683,5 @@ class DocumentAgentService {
 		}
 
 		return $user->getUID();
-
 	}//end requireUid()
 }//end class

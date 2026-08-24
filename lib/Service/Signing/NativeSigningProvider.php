@@ -556,10 +556,16 @@ class NativeSigningProvider implements SigningProviderInterface {
 	/**
 	 * Resolve the OR register/schema pair used to persist sessions
 	 *
+	 * The fallback is `filinq`, not `signing`. It is reached whenever the
+	 * app-config key is absent — a fresh install before the import has run, or
+	 * an install where it was never written — and a default is exactly where a
+	 * stale register slug survives a sweep: it never appears in a call, it just
+	 * quietly sends the write to a register nothing reads.
+	 *
 	 * @return array{0:string,1:string} [register, schema]
 	 */
 	private function resolveSessionRegisterSchema(): array {
-		$register = $this->config->getValueString('filinq', 'signingSession_register', 'signing');
+		$register = $this->config->getValueString('filinq', 'signingSession_register', 'filinq');
 		$schema = $this->config->getValueString('filinq', 'signingSession_schema', 'signingSession');
 
 		return [$register, $schema];

@@ -27,8 +27,8 @@ namespace OCA\Filinq\AppInfo;
 
 use OCA\Filinq\Dashboard\AnonymizationWidget;
 use OCA\Filinq\Dashboard\FileEntitiesWidget;
-use OCA\Filinq\EventListener\FilinqEventListener;
 use OCA\Filinq\EventListener\DossierCheckedOnListener;
+use OCA\Filinq\EventListener\FilinqEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;

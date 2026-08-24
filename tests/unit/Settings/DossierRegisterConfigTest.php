@@ -46,14 +46,100 @@ class DossierRegisterConfigTest extends TestCase {
 		$this->config = $decoded;
 	}
 
-	public function testDossierRegisterExistsWithBothSchemas(): void {
+	/**
+	 * The two dossier schemas now live in the consolidated `filinq` register.
+	 *
+	 * This assertion used to demand a register named `dossier`. It was rewritten
+	 * rather than deleted: the CONTRACT it protects is "the dossier and base
+	 * schemas are reachable through a register this app addresses", and that
+	 * contract survived the five-into-one consolidation — only the register did
+	 * not. Deleting the test would have removed the check along with the stale
+	 * name.
+	 *
+	 * The negative assertion matters as much as the positive one. A leftover
+	 * `dossier` entry in `components.registers` would make the import create a
+	 * SECOND register beside `filinq`, and every object written through it would
+	 * be invisible to an app that now addresses `filinq` — no error, just an
+	 * empty collection.
+	 *
+	 * @return void
+	 */
+	public function testDossierSchemasLiveInTheConsolidatedRegister(): void {
 		$registers = $this->config['components']['registers'] ?? [];
-		$this->assertArrayHasKey('dossier', $registers, 'dossier register MUST be declared');
 
-		$dossier = $registers['dossier'];
-		$this->assertSame('dossier', $dossier['slug']);
-		$this->assertContains('dossier', $dossier['schemas']);
-		$this->assertContains('base', $dossier['schemas']);
+		$this->assertArrayHasKey('filinq', $registers, 'the consolidated filinq register MUST be declared');
+		$this->assertSame(
+			['filinq'],
+			array_keys($registers),
+			'exactly ONE register may be declared; a second one silently forks the objects'
+		);
+
+		$filinq = $registers['filinq'];
+		$this->assertSame('filinq', $filinq['slug']);
+		$this->assertContains('dossier', $filinq['schemas']);
+		$this->assertContains('base', $filinq['schemas']);
+	}
+
+	/**
+	 * The declared register slug must equal `x-openregister.app`.
+	 *
+	 * For a `type: application` configuration ImportHandler resolves the
+	 * auto-created register as `$slug = $xOpenregister['app'] ?? $appId`. If
+	 * that field and the declared register slug disagree, the import creates
+	 * BOTH — the declared one and the app one — and the app addresses whichever
+	 * its call sites happen to name. That is the failure mode this whole change
+	 * exists to remove, so it is pinned here.
+	 *
+	 * @return void
+	 */
+	public function testTheDeclaredRegisterSlugMatchesXOpenregisterApp(): void {
+		$this->assertSame(
+			$this->config['x-openregister']['app'] ?? null,
+			$this->config['components']['registers']['filinq']['slug'] ?? null
+		);
+	}
+
+	/**
+	 * Every declared schema is bound to the one register.
+	 *
+	 * The consolidation is only complete if the single register lists ALL the
+	 * schemas the five used to carry between them. A schema left out is not an
+	 * error at import time — it simply never becomes reachable, and its objects
+	 * have nowhere to be moved to.
+	 *
+	 * @return void
+	 */
+	public function testEverySchemaIsBoundToTheConsolidatedRegister(): void {
+		$declared = array_keys($this->config['components']['schemas'] ?? []);
+		$bound = $this->config['components']['registers']['filinq']['schemas'] ?? [];
+
+		sort($declared);
+		sort($bound);
+
+		$this->assertSame($declared, $bound, 'every declared schema MUST be bound to the filinq register');
+	}
+
+	/**
+	 * No seed object may still name one of the five retired registers.
+	 *
+	 * A seed object carrying `@self.register: "dossier"` would be imported into
+	 * a register the app no longer addresses — the exact silent-fork this change
+	 * removes, reintroduced through the seed data.
+	 *
+	 * @return void
+	 */
+	public function testNoSeedObjectNamesARetiredRegister(): void {
+		$retired = ['consent', 'signing', 'templates', 'document', 'dossier'];
+
+		foreach (($this->config['components']['objects'] ?? []) as $index => $object) {
+			$register = $object['@self']['register'] ?? null;
+			$this->assertNotContains(
+				$register,
+				$retired,
+				sprintf('seed object #%d still names the retired register `%s`', $index, (string)$register)
+			);
+			$this->assertSame('filinq', $register, sprintf('seed object #%d must target `filinq`', $index));
+		}
 	}
 
 	public function testDossierSchemaHasRequiredNameAndOptionalBasesCheckedOn(): void {

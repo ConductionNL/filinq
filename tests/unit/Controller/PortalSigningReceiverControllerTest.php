@@ -48,9 +48,9 @@ use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\Security\Bruteforce\IThrottler;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use OCP\Security\Bruteforce\IThrottler;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -138,7 +138,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		// passing '' through as two of the four filters that scope the lookup.
 		// An unstubbed mock returns null, so the deny path fires.
 		$this->mockSettingsService->method('resolveSignerRecordBinding')
-			->willReturn(['register' => 'signing', 'schema' => 'signerRecord']);
+			->willReturn(['register' => 'filinq', 'schema' => 'signerRecord']);
 		$this->mockConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => $default
 		);

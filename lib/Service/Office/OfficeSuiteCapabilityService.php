@@ -94,8 +94,8 @@ class OfficeSuiteCapabilityService {
 	/**
 	 * Constructor.
 	 *
-	 * @param IClientService  $clientService The HTTP client factory.
-	 * @param LoggerInterface $logger        The logger.
+	 * @param IClientService $clientService The HTTP client factory.
+	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @return void
 	 */
@@ -140,10 +140,10 @@ class OfficeSuiteCapabilityService {
 			$response = $this->clientService->newClient()->get(
 				$discoveryUrl,
 				[
-					'timeout'         => self::TIMEOUT_SECONDS,
+					'timeout' => self::TIMEOUT_SECONDS,
 					'connect_timeout' => self::TIMEOUT_SECONDS,
 					'allow_redirects' => false,
-					'http_errors'     => false,
+					'http_errors' => false,
 				]
 			);
 		} catch (Throwable $e) {
@@ -170,8 +170,8 @@ class OfficeSuiteCapabilityService {
 
 		return [
 			'available' => true,
-			'reason'    => 'WOPI discovery served',
-			'suite'     => $this->identifyFromDiscovery(body: $body),
+			'reason' => 'WOPI discovery served',
+			'suite' => $this->identifyFromDiscovery(body: $body),
 		];
 	}//end probeDiscovery()
 
@@ -215,13 +215,13 @@ class OfficeSuiteCapabilityService {
 			$response = $this->clientService->newClient()->get(
 				$checkFileInfoUrl,
 				[
-					'timeout'         => self::TIMEOUT_SECONDS,
+					'timeout' => self::TIMEOUT_SECONDS,
 					'connect_timeout' => self::TIMEOUT_SECONDS,
 					// A redirect to a login page is not a CheckFileInfo response.
 					'allow_redirects' => false,
 					// Handle the status ourselves so a 404 is a verdict, not an
 					// exception indistinguishable from a network failure.
-					'http_errors'     => false,
+					'http_errors' => false,
 				]
 			);
 		} catch (Throwable $e) {
@@ -251,8 +251,8 @@ class OfficeSuiteCapabilityService {
 
 		return [
 			'available' => true,
-			'reason'    => 'CheckFileInfo succeeded',
-			'suite'     => $this->identifySuite(payload: $decoded),
+			'reason' => 'CheckFileInfo succeeded',
+			'suite' => $this->identifySuite(payload: $decoded),
 		];
 	}//end probe()
 
@@ -275,8 +275,8 @@ class OfficeSuiteCapabilityService {
 
 		return [
 			'available' => false,
-			'reason'    => $reason,
-			'suite'     => null,
+			'reason' => $reason,
+			'suite' => null,
 		];
 	}//end absent()
 

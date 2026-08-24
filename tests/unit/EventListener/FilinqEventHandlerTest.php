@@ -169,12 +169,12 @@ class FilinqEventHandlerTest extends TestCase {
 	 * @return void
 	 */
 	private function installContainer(string $class, object $service): void {
-		\OC::$server = new class ($class, $service) {
+		\OC::$server = new class($class, $service) {
 
 			/**
 			 * Constructor.
 			 *
-			 * @param string $class   The resolvable class name.
+			 * @param string $class The resolvable class name.
 			 * @param object $service The instance to hand back.
 			 */
 			public function __construct(

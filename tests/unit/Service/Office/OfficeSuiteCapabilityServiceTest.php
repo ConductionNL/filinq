@@ -44,8 +44,8 @@ class OfficeSuiteCapabilityServiceTest extends TestCase {
 	/**
 	 * Build a service whose client returns the given response.
 	 *
-	 * @param int    $status The HTTP status.
-	 * @param string $body   The response body.
+	 * @param int $status The HTTP status.
+	 * @param string $body The response body.
 	 *
 	 * @return OfficeSuiteCapabilityService The service.
 	 */

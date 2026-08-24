@@ -190,7 +190,7 @@ class SuiteIndependenceTest extends TestCase {
 		);
 
 		$flagged = $this->scan(file: new SplFileInfo($withoutMarker));
-		$exempt  = $this->scan(file: new SplFileInfo($withMarker));
+		$exempt = $this->scan(file: new SplFileInfo($withMarker));
 
 		unlink($withoutMarker);
 		unlink($withMarker);
@@ -212,7 +212,7 @@ class SuiteIndependenceTest extends TestCase {
 	 */
 	private function scan(SplFileInfo $file): array {
 		$contents = (string)file_get_contents($file->getPathname());
-		$path     = $file->getPathname();
+		$path = $file->getPathname();
 
 		// A file may declare itself a SUITE REGISTRY: something whose job is to
 		// enumerate suites, such as the per-suite probe command. Naming suites is
@@ -240,7 +240,7 @@ class SuiteIndependenceTest extends TestCase {
 	 * Scan PHP source using the tokeniser.
 	 *
 	 * @param string $contents The file contents.
-	 * @param string $path     The file path.
+	 * @param string $path The file path.
 	 *
 	 * @return string[] Offending "path:line" entries.
 	 */
@@ -329,14 +329,14 @@ class SuiteIndependenceTest extends TestCase {
 	 * Scan a non-PHP source file, stripping comments first.
 	 *
 	 * @param string $contents The file contents.
-	 * @param string $path     The file path.
+	 * @param string $path The file path.
 	 *
 	 * @return string[] Offending "path:line" entries.
 	 */
 	private function scanPlain(string $contents, string $path): array {
 		$offenders = [];
-		$lines     = explode("\n", $contents);
-		$inBlock   = false;
+		$lines = explode("\n", $contents);
+		$inBlock = false;
 
 		foreach ($lines as $index => $line) {
 			$stripped = $line;
@@ -348,13 +348,13 @@ class SuiteIndependenceTest extends TestCase {
 				}
 
 				$stripped = substr($stripped, ($end + 2));
-				$inBlock  = false;
+				$inBlock = false;
 			}
 
 			$blockStart = strpos($stripped, '/*');
 			if ($blockStart !== false) {
 				$stripped = substr($stripped, 0, $blockStart);
-				$inBlock  = true;
+				$inBlock = true;
 			}
 
 			$lineComment = strpos($stripped, '//');
@@ -402,7 +402,7 @@ class SuiteIndependenceTest extends TestCase {
 		}
 
 		$wanted = ['php', 'vue', 'js', 'ts'];
-		$files  = [];
+		$files = [];
 
 		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root));
 		foreach ($iterator as $file) {

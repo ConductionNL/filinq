@@ -71,31 +71,31 @@ class PackageMetadataCodec {
 	 */
 	private const PACKAGES = [
 		'docx' => [
-			'part'   => 'docProps/core.xml',
-			'root'   => 'cp:coreProperties',
-			'ns'     => 'xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
+			'part' => 'docProps/core.xml',
+			'root' => 'cp:coreProperties',
+			'ns' => 'xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
 				. 'xmlns:dc="http://purl.org/dc/elements/1.1/" '
 				. 'xmlns:dcterms="http://purl.org/dc/terms/" '
 				. 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
 			'fields' => [
-				'title'       => 'dc:title',
-				'subject'     => 'dc:subject',
-				'creator'     => 'dc:creator',
-				'keywords'    => 'cp:keywords',
+				'title' => 'dc:title',
+				'subject' => 'dc:subject',
+				'creator' => 'dc:creator',
+				'keywords' => 'cp:keywords',
 				'description' => 'dc:description',
 			],
 		],
-		'odt'  => [
-			'part'   => 'meta.xml',
-			'root'   => 'office:document-meta',
-			'ns'     => 'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+		'odt' => [
+			'part' => 'meta.xml',
+			'root' => 'office:document-meta',
+			'ns' => 'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
 				. 'xmlns:dc="http://purl.org/dc/elements/1.1/" '
 				. 'xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0"',
 			'fields' => [
-				'title'       => 'dc:title',
-				'subject'     => 'dc:subject',
-				'creator'     => 'dc:creator',
-				'keywords'    => 'meta:keyword',
+				'title' => 'dc:title',
+				'subject' => 'dc:subject',
+				'creator' => 'dc:creator',
+				'keywords' => 'meta:keyword',
 				'description' => 'dc:description',
 			],
 		],
@@ -145,7 +145,7 @@ class PackageMetadataCodec {
 	 * "I forgot to ask for the subject".
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param string $extension    The file extension.
+	 * @param string $extension The file extension.
 	 *
 	 * @return array<string, string> Field name => value.
 	 *
@@ -172,9 +172,9 @@ class PackageMetadataCodec {
 	/**
 	 * Write metadata fields, leaving unnamed fields and every other part untouched.
 	 *
-	 * @param string                $packageBytes The raw package bytes.
-	 * @param string                $extension    The file extension.
-	 * @param array<string, string> $values       Field name => new value.
+	 * @param string $packageBytes The raw package bytes.
+	 * @param string $extension The file extension.
+	 * @param array<string, string> $values Field name => new value.
 	 *
 	 * @return array{bytes: string, written: array<int, string>}
 	 *
@@ -205,7 +205,7 @@ class PackageMetadataCodec {
 
 		$written = [];
 		foreach ($values as $field => $value) {
-			$xml       = $this->writeElement(
+			$xml = $this->writeElement(
 				xml: $xml,
 				element: $package['fields'][$field],
 				value: (string)$value
@@ -214,7 +214,7 @@ class PackageMetadataCodec {
 		}
 
 		return [
-			'bytes'   => $this->io->writePart(
+			'bytes' => $this->io->writePart(
 				packageBytes: $packageBytes,
 				part: $package['part'],
 				xml: $xml
@@ -232,7 +232,7 @@ class PackageMetadataCodec {
 	 * nothing and the suite silently ignores them.
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param array  $package      The package mapping.
+	 * @param array $package The package mapping.
 	 *
 	 * @return string The metadata XML.
 	 */
@@ -252,7 +252,7 @@ class PackageMetadataCodec {
 	/**
 	 * Read one element's text.
 	 *
-	 * @param string $xml     The metadata XML.
+	 * @param string $xml The metadata XML.
 	 * @param string $element The element name.
 	 *
 	 * @return string The text, or an empty string.
@@ -269,9 +269,9 @@ class PackageMetadataCodec {
 	/**
 	 * Set one element's text, adding the element when it is absent.
 	 *
-	 * @param string $xml     The metadata XML.
+	 * @param string $xml The metadata XML.
 	 * @param string $element The element name.
-	 * @param string $value   The new text.
+	 * @param string $value The new text.
 	 *
 	 * @return string The rewritten XML.
 	 *
@@ -279,7 +279,7 @@ class PackageMetadataCodec {
 	 */
 	private function writeElement(string $xml, string $element, string $value): string {
 		$escaped = htmlspecialchars($value, (ENT_QUOTES | ENT_XML1), 'UTF-8');
-		$quoted  = preg_quote($element, '#');
+		$quoted = preg_quote($element, '#');
 
 		$existing = sprintf('#<%s(?:\s[^>]*)?>.*?</%s>#s', $quoted, $quoted);
 		if (preg_match($existing, $xml) === 1) {

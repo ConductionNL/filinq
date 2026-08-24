@@ -423,7 +423,9 @@ class FixedResultObjectServiceFake extends ObjectService {
 	 *
 	 * @param mixed $result The value every `find()` answers with.
 	 */
-	public function __construct(private readonly mixed $result) {
+	public function __construct(
+		private readonly mixed $result,
+	) {
 
 	}//end __construct()
 

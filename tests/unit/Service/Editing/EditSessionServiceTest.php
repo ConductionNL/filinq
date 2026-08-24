@@ -18,9 +18,9 @@
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\DocumentCodecs;
 use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCA\Filinq\Service\Editing\EditSessionService;
-use OCA\Filinq\Service\Editing\DocumentCodecs;
 use OCA\Filinq\Service\Editing\GuardedWriter;
 use OCA\Filinq\Service\Editing\PackageCodec;
 use OCA\Filinq\Service\Editing\PackagePartIo;
@@ -195,7 +195,6 @@ class EditSessionServiceTest extends TestCase {
 		$zip->close();
 
 		return (string)file_get_contents($path);
-
 	}//end docx()
 
 	/**
@@ -225,7 +224,6 @@ class EditSessionServiceTest extends TestCase {
 		);
 
 		return $file;
-
 	}//end file()
 
 	/**
@@ -282,7 +280,6 @@ class EditSessionServiceTest extends TestCase {
 	 */
 	private function firstAnchor(): string {
 		return (new PackageCodec())->readBlocks($this->docx(), 'docx')['blocks'][0]['anchor'];
-
 	}//end firstAnchor()
 
 	/**
@@ -292,7 +289,6 @@ class EditSessionServiceTest extends TestCase {
 	 */
 	private function edit(): array {
 		return [['anchor' => $this->firstAnchor(), 'action' => 'replace', 'text' => 'Revised heading']];
-
 	}//end edit()
 
 	/**

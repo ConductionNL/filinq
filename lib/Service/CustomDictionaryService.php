@@ -52,9 +52,12 @@ class CustomDictionaryService {
 	/**
 	 * Register slug both schemas live in.
 	 *
+	 * `filinq`, not `document`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
+	 *
 	 * @var string
 	 */
-	public const REGISTER = 'document';
+	public const REGISTER = 'filinq';
 
 	/**
 	 * Dictionary schema slug.

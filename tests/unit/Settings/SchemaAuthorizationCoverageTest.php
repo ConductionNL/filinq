@@ -81,16 +81,16 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	 */
 	private const RECORDED_BYPASSES = [
 		'lib/Controller/PortalSigningReceiverController.php' => 1,
-		'lib/Service/BaseLabelResolver.php'                  => 1,
-		'lib/Service/BasesResolverService.php'               => 1,
-		'lib/Service/BatchStateRepository.php'               => 3,
-		'lib/Service/ConsentPolicyReferentValidator.php'     => 2,
-		'lib/Service/CustomDictionaryRepository.php'         => 4,
-		'lib/Service/DossierObjectRepository.php'            => 3,
-		'lib/Service/LegalBasisCatalog.php'                  => 1,
-		'lib/Service/PolicyCrudService.php'                  => 5,
-		'lib/Service/PolicyMatchService.php'                 => 2,
-		'lib/Service/PolicyRetroactiveService.php'           => 2,
+		'lib/Service/BaseLabelResolver.php' => 1,
+		'lib/Service/BasesResolverService.php' => 1,
+		'lib/Service/BatchStateRepository.php' => 3,
+		'lib/Service/ConsentPolicyReferentValidator.php' => 2,
+		'lib/Service/CustomDictionaryRepository.php' => 4,
+		'lib/Service/DossierObjectRepository.php' => 3,
+		'lib/Service/LegalBasisCatalog.php' => 1,
+		'lib/Service/PolicyCrudService.php' => 5,
+		'lib/Service/PolicyMatchService.php' => 2,
+		'lib/Service/PolicyRetroactiveService.php' => 2,
 	];
 
 	/**
@@ -176,19 +176,19 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		$this->assertSame(
 			[],
 			$undecided,
-			"Schema(s) with no authorization cascade: " . implode(', ', $undecided)
+			'Schema(s) with no authorization cascade: ' . implode(', ', $undecided)
 			. "\nOpenRegister treats an unconfigured cascade as OPEN — every authenticated user in the"
-			. " organisation may read, update and delete every object of that schema. Declare a cascade"
-			. " in lib/Settings/filinq_register.json and record why in docs/authorization-decisions.md."
+			. ' organisation may read, update and delete every object of that schema. Declare a cascade'
+			. ' in lib/Settings/filinq_register.json and record why in docs/authorization-decisions.md.'
 		);
 
 		$this->assertSame(
 			[],
 			$incomplete,
-			"Cascade(s) missing an action: " . implode(', ', $incomplete)
+			'Cascade(s) missing an action: ' . implode(', ', $incomplete)
 			. "\nOnce a block is non-empty OpenRegister fails closed per action, so an omitted action"
-			. " denies everyone except admins and object owners. That may well be what you want — but"
-			. " state it explicitly rather than leaving it to be read out of an absence."
+			. ' denies everyone except admins and object owners. That may well be what you want — but'
+			. ' state it explicitly rather than leaving it to be read out of an absence.'
 		);
 
 	}//end testEverySchemaDeclaresACascade()
@@ -214,10 +214,10 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		$this->assertSame(
 			[],
 			$unrecorded,
-			"Schema(s) absent from docs/authorization-decisions.md: " . implode(', ', $unrecorded)
+			'Schema(s) absent from docs/authorization-decisions.md: ' . implode(', ', $unrecorded)
 			. "\nA cascade without a recorded reason is deleted by the next person who reasons that the"
-			. " data layer covers it. ConsentCrudService carries a comment written by someone defending a"
-			. " real control from exactly that fate."
+			. ' data layer covers it. ConsentCrudService carries a comment written by someone defending a'
+			. ' real control from exactly that fate.'
 		);
 
 	}//end testEverySchemaHasARecordedJustification()
@@ -245,9 +245,9 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		$this->assertSame(
 			[],
 			$anonymous,
-			"Schema(s) granting anonymous read: " . implode(', ', $anonymous)
+			'Schema(s) granting anonymous read: ' . implode(', ', $anonymous)
 			. "\n`public` in a read rule also bypasses multi-tenancy filtering, so it widens both the"
-			. " authentication and the organisation axis in one word."
+			. ' authentication and the organisation axis in one word.'
 		);
 
 	}//end testAnonymousReadIsNeverGranted()
@@ -292,9 +292,9 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		$this->assertSame(
 			[],
 			$unknown,
-			"Principal(s) not named in docs/authorization-decisions.md: " . implode(', ', $unknown)
+			'Principal(s) not named in docs/authorization-decisions.md: ' . implode(', ', $unknown)
 			. "\nA misspelt group denies everyone and logs nothing, so it is indistinguishable from a"
-			. " working access control. Every group must be listed in the decisions record."
+			. ' working access control. Every group must be listed in the decisions record.'
 		);
 
 	}//end testEveryNamedGroupIsRecorded()
@@ -340,11 +340,11 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 			$expected,
 			$found,
 			"The set of `_rbac: false` call sites has changed.\n"
-			. "A cascade only guards callers that go through it, so each bypass is a hole in the control"
-			. " installed by consumer-schema-authorization-audit. Add the new site to"
-			. " docs/authorization-decisions.md with the compensating control that makes it safe, then"
-			. " update RECORDED_BYPASSES. If a bypass was REMOVED, delete its row from the doc too —"
-			. " a justification outliving its call site describes a control that no longer exists."
+			. 'A cascade only guards callers that go through it, so each bypass is a hole in the control'
+			. ' installed by consumer-schema-authorization-audit. Add the new site to'
+			. ' docs/authorization-decisions.md with the compensating control that makes it safe, then'
+			. ' update RECORDED_BYPASSES. If a bypass was REMOVED, delete its row from the doc too —'
+			. ' a justification outliving its call site describes a control that no longer exists.'
 		);
 
 	}//end testRbacBypassesAreRecorded()
@@ -415,7 +415,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		$this->assertTrue(
 			version_compare($version, '7.9.0', '>='),
 			"Register info.version is {$version}; the authorisation cascade landed in 7.9.0."
-			. " A lower version means an existing install keeps its old, open schemas."
+			. ' A lower version means an existing install keeps its old, open schemas.'
 		);
 
 	}//end testRegisterVersionCoversTheCascade()

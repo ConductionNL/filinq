@@ -183,7 +183,6 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$zip->close();
 
 		return (string)file_get_contents($path);
-
 	}//end package()
 
 	/**
@@ -256,7 +255,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	 * Read one part back out of package bytes.
 	 *
 	 * @param string $package The package bytes.
-	 * @param string $part    The part name.
+	 * @param string $part The part name.
 	 *
 	 * @return string The part's contents.
 	 */
@@ -273,13 +272,12 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->assertNotFalse($contents, sprintf('the package must still carry "%s"', $part));
 
 		return (string)$contents;
-
 	}//end partOf()
 
 	/**
 	 * Put a file of the given name and bytes behind Alice's folder.
 	 *
-	 * @param string $name  The file name, whose extension selects the codec.
+	 * @param string $name The file name, whose extension selects the codec.
 	 * @param string $bytes The package bytes.
 	 *
 	 * @return MockObject&File The file mock.
@@ -308,7 +306,6 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->rootFolder->method('getUserFolder')->willReturn($userFolder);
 
 		return $file;
-
 	}//end attach()
 
 	/**

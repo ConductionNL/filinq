@@ -47,7 +47,9 @@ class PptxPresentationCodecTest extends TestCase {
 			/**
 			 * @param array<string, string> $parts Path => XML.
 			 */
-			public function __construct(public array $parts) {
+			public function __construct(
+				public array $parts,
+			) {
 			}
 
 			/**
@@ -65,7 +67,7 @@ class PptxPresentationCodecTest extends TestCase {
 			 * Read one part.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         The path.
+			 * @param string $part The path.
 			 *
 			 * @return string The XML.
 			 */
@@ -77,8 +79,8 @@ class PptxPresentationCodecTest extends TestCase {
 			 * Replace one part in memory.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         The path.
-			 * @param string $xml          The new XML.
+			 * @param string $part The path.
+			 * @param string $xml The new XML.
 			 *
 			 * @return string A stand-in for the new package bytes.
 			 */

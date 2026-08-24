@@ -100,7 +100,7 @@ class GeneratedDocumentLogger {
 
 			$result = $objectService->saveObject(
 				object: $entry,
-				register: 'document',
+				register: 'filinq',
 				schema: 'generatedDocument'
 			);
 

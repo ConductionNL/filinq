@@ -55,10 +55,10 @@ interface PresentationFamilyCodec {
 	 * Replace one shape's text.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $slide        The slide id.
-	 * @param string $shape        The shape id.
-	 * @param string $region       Either `slide` or `notes`.
-	 * @param string $text         The replacement text.
+	 * @param string $slide The slide id.
+	 * @param string $shape The shape id.
+	 * @param string $region Either `slide` or `notes`.
+	 * @param string $text The replacement text.
 	 *
 	 * @return string The rewritten package.
 	 *

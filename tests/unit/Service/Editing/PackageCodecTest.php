@@ -161,7 +161,6 @@ class PackageCodecTest extends TestCase {
 		$zip->close();
 
 		return (string)file_get_contents($path);
-
 	}//end zip()
 
 	/**
@@ -183,9 +182,7 @@ class PackageCodecTest extends TestCase {
 		$zip->close();
 
 		return $body;
-
 	}//end entry()
-
 
 	/**
 	 * A .docx as COLLABORA ACTUALLY WRITES ONE, base64-encoded.
@@ -286,7 +283,6 @@ class PackageCodecTest extends TestCase {
 	 */
 	private function collaboraDocx(): string {
 		return (string)base64_decode(implode('', self::COLLABORA_DOCX_B64));
-
 	}//end collaboraDocx()
 
 	/**
@@ -530,7 +526,6 @@ class PackageCodecTest extends TestCase {
 	 */
 	private function collaboraOdt(): string {
 		return (string)base64_decode(implode('', self::COLLABORA_ODT_B64));
-
 	}//end collaboraOdt()
 
 	/**
