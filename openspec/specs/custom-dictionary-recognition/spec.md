@@ -6,7 +6,7 @@ TBD - created by archiving change custom-dictionary-recognition. Update Purpose 
 ### Requirement: Organisation-managed dictionaries and terms (REQ-DDCDR-001)
 
 The app MUST provide organisation-scoped `customDictionary` and
-`customDictionaryTerm` register objects (in the `document` register) storing,
+`customDictionaryTerm` register objects (in the `filinq` register) storing,
 per dictionary, a label, description, colour, match mode
 (`exact`|`caseInsensitive`|`wordBoundary`, default `caseInsensitive`), a
 deferred `fuzzy` flag, an `active` flag and a calculated term count; and per

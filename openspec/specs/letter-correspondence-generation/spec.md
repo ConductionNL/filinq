@@ -97,7 +97,7 @@ The system SHALL support multiple output formats for correspondence: PDF (defaul
 
 ### Requirement: Huisstijl default configuration
 
-The system SHALL support a huisstijl configuration object stored in OpenRegister (schema: `huisstijl`, register: `document`) containing `logo` (base64 or file reference), `primaryColor` (CSS color), `headerHtml` (Twig template for page header), `footerHtml` (Twig template for page footer), and `defaultMargins` (object with top/right/bottom/left in mm). When generating correspondence, if the template references a huisstijl ID or a default huisstijl is configured, these settings SHALL be applied automatically to the output.
+The system SHALL support a huisstijl configuration object stored in OpenRegister (schema: `huisstijl`, register: `filinq`) containing `logo` (base64 or file reference), `primaryColor` (CSS color), `headerHtml` (Twig template for page header), `footerHtml` (Twig template for page footer), and `defaultMargins` (object with top/right/bottom/left in mm). When generating correspondence, if the template references a huisstijl ID or a default huisstijl is configured, these settings SHALL be applied automatically to the output.
 
 #### Scenario: Huisstijl applied to letter
 - **WHEN** a correspondence is generated and a huisstijl configuration exists
@@ -112,17 +112,17 @@ The system SHALL support a huisstijl configuration object stored in OpenRegister
 
 ### Requirement: Correspondence register logging
 
-The system SHALL log every generated correspondence as an object in the document register (schema: `correspondence`, register: `document`). Each entry SHALL contain: `templateId` (UUID of template used), `templateName` (human-readable), `recipientId` (UUID of recipient object), `recipientType` (e.g., PERSON, ORGANIZATION), `caseReference` (optional UUID linking to source zaak/case), `generatedAt` (ISO 8601 datetime), `format` (pdf/docx/html), `status` (generated/failed), and `generatedBy` (Nextcloud user ID). The schema SHALL be added to `filinq_register.json`.
+The system SHALL log every generated correspondence as an object in the `filinq` register (schema: `correspondence`, register: `filinq`). Each entry SHALL contain: `templateId` (UUID of template used), `templateName` (human-readable), `recipientId` (UUID of recipient object), `recipientType` (e.g., PERSON, ORGANIZATION), `caseReference` (optional UUID linking to source zaak/case), `generatedAt` (ISO 8601 datetime), `format` (pdf/docx/html), `status` (generated/failed), and `generatedBy` (Nextcloud user ID). The schema SHALL be added to `filinq_register.json`.
 
 #### Scenario: Successful generation creates register entry
 - **WHEN** a letter is successfully generated
-- **THEN** a correspondence object is created in the document register
+- **THEN** a correspondence object is created in the `filinq` register
 - **AND** the object contains all required metadata fields
 - **AND** `status` is set to "generated"
 
 #### Scenario: Failed generation creates register entry with error
 - **WHEN** a letter generation fails
-- **THEN** a correspondence object is still created in the document register
+- **THEN** a correspondence object is still created in the `filinq` register
 - **AND** `status` is set to "failed"
 - **AND** an `errorMessage` field contains the failure reason
 
