@@ -2,9 +2,9 @@ name: Documentation
 
 on:
   push:
-    branches: [documentation]
+    branches: [development]
   pull_request:
-    branches: [documentation]
+    branches: [development]
 
 jobs:
   deploy:
@@ -12,4 +12,10 @@ jobs:
     with:
       cname: filinq.conduction.nl
 
+      # PINNED, not derived. The callee defaults worker-name to the first label
+      # of `cname` + "-docs" — which since the app-id rename would be
+      # `filinq-docs`, a worker that does not exist. wrangler would CREATE it
+      # and deploy there, while both custom domains keep routing to
+      # `docudesk-docs`. Green every time, reaching nobody.
+      worker-name: docudesk-docs
       docs-hosts: docudesk.conduction.nl,filinq.conduction.nl
