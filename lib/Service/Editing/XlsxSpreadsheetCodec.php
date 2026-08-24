@@ -42,7 +42,9 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 *
 	 * @param PackagePartIo $io Package reader, for the shared string table.
 	 */
-	public function __construct(private readonly PackagePartIo $io) {
+	public function __construct(
+		private readonly PackagePartIo $io,
+	) {
 	}//end __construct()
 
 	/**
@@ -72,7 +74,7 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	/**
 	 * Read XLSX cells.
 	 *
-	 * @param string $xml          The worksheet XML.
+	 * @param string $xml The worksheet XML.
 	 * @param string $packageBytes The package, for the shared string table.
 	 *
 	 * @return array<int, array{cell: string, value: string, formula: string|null}> The cells.
@@ -120,9 +122,9 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * the text. Reporting the index would hand a caller a number where the
 	 * sheet plainly shows a word.
 	 *
-	 * @param string             $attributes The cell's attributes.
-	 * @param string             $body       The cell's inner markup.
-	 * @param array<int, string> $shared     The shared string table.
+	 * @param string $attributes The cell's attributes.
+	 * @param string $body The cell's inner markup.
+	 * @param array<int, string> $shared The shared string table.
 	 *
 	 * @return string The value.
 	 */
@@ -150,8 +152,8 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * nothing but grows a structure every other sheet also indexes into, and an
 	 * inline string is valid OOXML that no other cell can be affected by.
 	 *
-	 * @param string $xml   The worksheet XML.
-	 * @param string $cell  The address.
+	 * @param string $xml The worksheet XML.
+	 * @param string $cell The address.
 	 * @param string $value The literal.
 	 *
 	 * @return string The rewritten XML.

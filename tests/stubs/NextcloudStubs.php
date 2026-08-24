@@ -1989,8 +1989,8 @@ interface IPreparedStatement {
 	 *
 	 * @param mixed $param Placeholder name or position.
 	 * @param mixed $value Value to bind.
-	 * @param mixed $type  Parameter type; untyped here so the stub never reaches
-	 *                     for Doctrine's ParameterType, which this app does not ship.
+	 * @param mixed $type Parameter type; untyped here so the stub never reaches
+	 *                    for Doctrine's ParameterType, which this app does not ship.
 	 *
 	 * @return bool
 	 */
@@ -2066,8 +2066,8 @@ interface IClient {
 	/**
 	 * Issue a GET request.
 	 *
-	 * @param string $uri     The URI.
-	 * @param array  $options Request options.
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
 	 *
 	 * @return IResponse
 	 */

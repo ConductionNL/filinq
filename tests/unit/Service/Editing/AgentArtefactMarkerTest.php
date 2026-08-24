@@ -50,7 +50,6 @@ class AgentArtefactMarkerTest extends TestCase {
 		$tag->method('getId')->willReturn($id);
 
 		return $tag;
-
 	}//end tag()
 
 	/**

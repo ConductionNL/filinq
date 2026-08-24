@@ -39,9 +39,9 @@ class DocumentCodecs {
 	/**
 	 * Constructor.
 	 *
-	 * @param PackageCodec      $text          The anchored-block text codec.
-	 * @param SpreadsheetCodec  $spreadsheet   The cell-addressed spreadsheet codec.
-	 * @param PresentationCodec $presentation  The id-addressed presentation codec.
+	 * @param PackageCodec $text The anchored-block text codec.
+	 * @param SpreadsheetCodec $spreadsheet The cell-addressed spreadsheet codec.
+	 * @param PresentationCodec $presentation The id-addressed presentation codec.
 	 */
 	public function __construct(
 		public readonly PackageCodec $text,

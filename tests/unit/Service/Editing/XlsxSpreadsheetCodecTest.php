@@ -49,14 +49,16 @@ class XlsxSpreadsheetCodecTest extends TestCase {
 			/**
 			 * @param string|null $sharedXml The part's content, or null when absent.
 			 */
-			public function __construct(private readonly ?string $sharedXml) {
+			public function __construct(
+				private readonly ?string $sharedXml,
+			) {
 			}
 
 			/**
 			 * Serve the shared string table, or refuse like a missing part.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         The requested part.
+			 * @param string $part The requested part.
 			 *
 			 * @return string The part's content.
 			 *

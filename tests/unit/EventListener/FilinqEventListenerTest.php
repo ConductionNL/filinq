@@ -156,14 +156,16 @@ class FilinqEventListenerTest extends TestCase {
 			PolicyRetroactiveService::class => $this->retroactive,
 		];
 
-		\OC::$server = new class ($services) {
+		\OC::$server = new class($services) {
 
 			/**
 			 * Constructor.
 			 *
 			 * @param array<string, object> $services The resolvable services.
 			 */
-			public function __construct(private readonly array $services) {
+			public function __construct(
+				private readonly array $services,
+			) {
 			}
 
 			/**
@@ -388,14 +390,16 @@ class FilinqEventListenerTest extends TestCase {
 	 */
 	public function testHandleLogsAnErrorWhenAServiceCannotBeResolved(): void {
 		$logger = $this->logger;
-		\OC::$server = new class ($logger) {
+		\OC::$server = new class($logger) {
 
 			/**
 			 * Constructor.
 			 *
 			 * @param LoggerInterface $logger The only resolvable service.
 			 */
-			public function __construct(private readonly LoggerInterface $logger) {
+			public function __construct(
+				private readonly LoggerInterface $logger,
+			) {
 			}
 
 			/**

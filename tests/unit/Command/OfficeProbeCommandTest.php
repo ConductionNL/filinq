@@ -43,8 +43,8 @@ class OfficeProbeCommandTest extends TestCase {
 	/**
 	 * Build a tester over a command wired to the given config and verdicts.
 	 *
-	 * @param array<string, string>                              $configured Suite app id => configured server URL.
-	 * @param array<string, array{available:bool, reason?:string, suite?:string|null}> $verdicts   Discovery URL => verdict.
+	 * @param array<string, string> $configured Suite app id => configured server URL.
+	 * @param array<string, array{available:bool, reason?:string, suite?:string|null}> $verdicts Discovery URL => verdict.
 	 *
 	 * @return CommandTester The tester.
 	 */
@@ -61,8 +61,8 @@ class OfficeProbeCommandTest extends TestCase {
 			static function (string $discoveryUrl) use ($verdicts): array {
 				return ($verdicts[$discoveryUrl] ?? [
 					'available' => false,
-					'reason'    => 'no path answered',
-					'suite'     => null,
+					'reason' => 'no path answered',
+					'suite' => null,
 				]);
 			}
 		);
@@ -128,8 +128,8 @@ class OfficeProbeCommandTest extends TestCase {
 			verdicts: [
 				'http://oo:80/hosting/discovery' => [
 					'available' => true,
-					'reason'    => 'WOPI discovery served',
-					'suite'     => 'Word',
+					'reason' => 'WOPI discovery served',
+					'suite' => 'Word',
 				],
 			]
 		);
@@ -160,8 +160,8 @@ class OfficeProbeCommandTest extends TestCase {
 			verdicts: [
 				'http://oo:80/hosting/discovery' => [
 					'available' => true,
-					'reason'    => 'WOPI discovery served',
-					'suite'     => 'Word',
+					'reason' => 'WOPI discovery served',
+					'suite' => 'Word',
 				],
 			]
 		);
@@ -190,8 +190,8 @@ class OfficeProbeCommandTest extends TestCase {
 			verdicts: [
 				'http://collabora:9980/hosting/discovery' => [
 					'available' => false,
-					'reason'    => 'discovery returned 404',
-					'suite'     => null,
+					'reason' => 'discovery returned 404',
+					'suite' => null,
 				],
 			]
 		);
@@ -218,15 +218,15 @@ class OfficeProbeCommandTest extends TestCase {
 		$tester = $this->tester(
 			configured: ['onlyoffice' => 'http://oo:80'],
 			verdicts: [
-				'http://oo:80/hosting/discovery'    => [
+				'http://oo:80/hosting/discovery' => [
 					'available' => false,
-					'reason'    => 'discovery returned 404',
-					'suite'     => null,
+					'reason' => 'discovery returned 404',
+					'suite' => null,
 				],
 				'http://oo:80/hosting/capabilities' => [
 					'available' => true,
-					'reason'    => 'WOPI discovery served',
-					'suite'     => null,
+					'reason' => 'WOPI discovery served',
+					'suite' => null,
 				],
 			]
 		);

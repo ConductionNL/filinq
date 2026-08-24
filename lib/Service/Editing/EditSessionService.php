@@ -52,13 +52,7 @@ namespace OCA\Filinq\Service\Editing;
 use OCA\Filinq\AppInfo\Application;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
-use OCP\Files\Lock\ILock;
-use OCP\Files\Lock\ILockManager;
-use OCP\Files\Lock\LockContext;
-use OCP\Files\Lock\NoLockProviderException;
-use OCP\Files\Lock\OwnerLockedException;
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
@@ -182,12 +176,12 @@ class EditSessionService {
 	 * — and differ only in what they call the items. Writing that out three
 	 * times is how the truncation rule ends up applied in two of them.
 	 *
-	 * @param string             $uid       The acting user id.
-	 * @param File               $file      The resolved file.
-	 * @param array<int, mixed>  $items     Everything the codec read.
-	 * @param string             $countKey  The envelope key for the total count.
-	 * @param string             $itemsKey  The envelope key for the items.
-	 * @param array<string, mixed> $extra   Format-specific additions.
+	 * @param string $uid The acting user id.
+	 * @param File $file The resolved file.
+	 * @param array<int, mixed> $items Everything the codec read.
+	 * @param string $countKey The envelope key for the total count.
+	 * @param string $itemsKey The envelope key for the items.
+	 * @param array<string, mixed> $extra Format-specific additions.
 	 *
 	 * @return array<string, mixed> The envelope.
 	 */
@@ -262,12 +256,11 @@ class EditSessionService {
 
 	}//end editForAgent()
 
-
 	/**
 	 * Read a spreadsheet's cells for an agent.
 	 *
-	 * @param string $uid    The acting user id.
-	 * @param int    $fileId The Nextcloud file id.
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
 	 *
 	 * @return array<string, mixed> The sheet's cells and the version an edit requires.
 	 *
@@ -302,9 +295,9 @@ class EditSessionService {
 	 * marking as text editing. None of that is type-specific, and a per-type
 	 * write path would eventually re-implement one of them wrongly.
 	 *
-	 * @param string $uid     The acting user id.
-	 * @param int    $fileId  The Nextcloud file id.
-	 * @param array  $edits   Each `{cell, value, replaceFormula?}`.
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 * @param array $edits Each `{cell, value, replaceFormula?}`.
 	 * @param string $version The `version` from the read that produced these addresses.
 	 *
 	 * @return array<string, mixed> The outcome, including cells whose cached values went stale.
@@ -354,8 +347,8 @@ class EditSessionService {
 	/**
 	 * Read a presentation's shapes for an agent.
 	 *
-	 * @param string $uid    The acting user id.
-	 * @param int    $fileId The Nextcloud file id.
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
 	 *
 	 * @return array<string, mixed> The deck's shapes and the version an edit requires.
 	 *
@@ -386,9 +379,9 @@ class EditSessionService {
 	/**
 	 * Replace the text of addressed presentation shapes.
 	 *
-	 * @param string $uid     The acting user id.
-	 * @param int    $fileId  The Nextcloud file id.
-	 * @param array  $edits   Each `{slide, shape, text, region?}`.
+	 * @param string $uid The acting user id.
+	 * @param int $fileId The Nextcloud file id.
+	 * @param array $edits Each `{slide, shape, text, region?}`.
 	 * @param string $version The `version` from the read that produced these ids.
 	 *
 	 * @return array<string, mixed> The outcome.
@@ -597,13 +590,7 @@ class EditSessionService {
 		}
 
 		return [$file, $mode];
-
 	}//end prepareWrite()
-
-
-
-
-
 
 	/**
 	 * Resolve the output mode: configuration sets the ceiling, the argument may only narrow it.
@@ -642,7 +629,6 @@ class EditSessionService {
 		}
 
 		return $requested;
-
 	}//end resolveMode()
 
 	/**
@@ -729,7 +715,6 @@ class EditSessionService {
 		}
 
 		return $node;
-
 	}//end resolveFile()
 
 	/**
@@ -754,7 +739,6 @@ class EditSessionService {
 		}
 
 		return $bytes;
-
 	}//end readBytes()
 
 	/**

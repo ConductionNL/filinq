@@ -68,7 +68,7 @@ class XmlBlockScanner {
 	 * result is sorted by offset so callers keep the descending-rewrite
 	 * guarantee that stops one edit moving another's offsets.
 	 *
-	 * @param string             $xml  The part XML.
+	 * @param string $xml The part XML.
 	 * @param array<int, string> $tags The element names that count as a block.
 	 *
 	 * @return array<int, array{0: int, 1: int}> Offset/length pairs, in document order.
@@ -143,7 +143,6 @@ class XmlBlockScanner {
 		}//end while
 
 		return $spans;
-
 	}//end spans()
 
 	/**
@@ -187,7 +186,6 @@ class XmlBlockScanner {
 		}//end while
 
 		return $cursor;
-
 	}//end matchingClose()
 
 	/**
@@ -207,7 +205,6 @@ class XmlBlockScanner {
 		}
 
 		return ($xml[($tagEnd - 1)] !== '/');
-
 	}//end opensAnotherLevel()
 
 	/**
@@ -220,6 +217,5 @@ class XmlBlockScanner {
 	 */
 	private function isElementStart(string $xml, int $position): bool {
 		return in_array(($xml[$position] ?? ''), self::NAME_DELIMITERS, true);
-
 	}//end isElementStart()
 }//end class

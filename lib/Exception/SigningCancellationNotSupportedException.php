@@ -65,7 +65,7 @@ class SigningCancellationNotSupportedException extends RuntimeException {
 	 * Constructor.
 	 *
 	 * @param string $provider The provider that cannot cancel.
-	 * @param string $reason   Why, in terms a user can act on.
+	 * @param string $reason Why, in terms a user can act on.
 	 *
 	 * @return void
 	 *

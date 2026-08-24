@@ -83,16 +83,16 @@ class SupportedTypeProbe {
 		'docm' => 'macro-bearing format — editing it is a code-execution vector',
 		'xlsm' => 'macro-bearing format — editing it is a code-execution vector',
 		'pptm' => 'macro-bearing format — editing it is a code-execution vector',
-		'odb'  => 'a database, with no document block or cell to edit',
+		'odb' => 'a database, with no document block or cell to edit',
 	];
 
 	/**
 	 * Build the support declaration from a WOPI discovery document.
 	 *
-	 * @param string      $discoveryXml The suite's WOPI discovery document.
-	 * @param string|null $suite        The identified suite name, when known.
-	 * @param string      $probedAt     ISO-8601 timestamp of this measurement.
-	 * @param string      $endpoint     The endpoint measured, for provenance.
+	 * @param string $discoveryXml The suite's WOPI discovery document.
+	 * @param string|null $suite The identified suite name, when known.
+	 * @param string $probedAt ISO-8601 timestamp of this measurement.
+	 * @param string $endpoint The endpoint measured, for provenance.
 	 *
 	 * @return array<string, mixed> The declaration.
 	 *
@@ -153,7 +153,7 @@ class SupportedTypeProbe {
 	 * not ask" as "probably yes" is the exact failure this class exists to
 	 * prevent.
 	 *
-	 * @param string $reason   Why the probe could not run.
+	 * @param string $reason Why the probe could not run.
 	 * @param string $probedAt ISO-8601 timestamp of the attempt.
 	 *
 	 * @return array<string, mixed> The declaration.
@@ -192,7 +192,7 @@ class SupportedTypeProbe {
 	 * The extensions the discovery document declares for one action.
 	 *
 	 * @param string $discoveryXml The discovery document.
-	 * @param string $action       The WOPI action name (`edit`, `view`).
+	 * @param string $action The WOPI action name (`edit`, `view`).
 	 *
 	 * @return array<string, true> Extension set, as a lookup.
 	 */
@@ -242,9 +242,9 @@ class SupportedTypeProbe {
 	/**
 	 * Say why a type is or is not editable.
 	 *
-	 * @param string $type       The candidate type.
-	 * @param bool   $refused    Whether this app refuses it outright.
-	 * @param bool   $advertised Whether the suite advertises editing it.
+	 * @param string $type The candidate type.
+	 * @param bool $refused Whether this app refuses it outright.
+	 * @param bool $advertised Whether the suite advertises editing it.
 	 *
 	 * @return string The reason.
 	 */

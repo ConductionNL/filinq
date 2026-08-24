@@ -45,7 +45,7 @@ class DocumentGuardFormatTest extends TestCase {
 	/**
 	 * A file stub with the given mime and package contents.
 	 *
-	 * @param string             $mime    The mime type.
+	 * @param string $mime The mime type.
 	 * @param array<int, string> $entries Zip entry names, empty for a non-zip.
 	 *
 	 * @return File The stub.

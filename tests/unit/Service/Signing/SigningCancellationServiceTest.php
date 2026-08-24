@@ -41,8 +41,8 @@ class SigningCancellationServiceTest extends TestCase {
 	/**
 	 * Build the service over doubles.
 	 *
-	 * @param array|null $request  What getRequest() returns, or null.
-	 * @param object     $provider The provider double.
+	 * @param array|null $request What getRequest() returns, or null.
+	 * @param object $provider The provider double.
 	 *
 	 * @return SigningCancellationService The service.
 	 */
@@ -81,17 +81,17 @@ class SigningCancellationServiceTest extends TestCase {
 	 * A signing request fixture.
 	 *
 	 * @param string $creator The initiating user id.
-	 * @param string $status  The request status.
+	 * @param string $status The request status.
 	 *
 	 * @return array The request.
 	 */
 	private function request(string $creator = 'alice', string $status = 'pending'): array {
 		return [
-			'id'              => 'req-1',
+			'id' => 'req-1',
 			'initiatorUserId' => $creator,
-			'externalId'      => 'ext-1',
-			'status'          => $status,
-			'signerIds'       => ['bob'],
+			'externalId' => 'ext-1',
+			'status' => $status,
+			'signerIds' => ['bob'],
 		];
 	}//end request()
 

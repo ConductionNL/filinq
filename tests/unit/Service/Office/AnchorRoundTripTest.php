@@ -99,7 +99,7 @@ class AnchorRoundTripTest extends TestCase {
 		// docx -> odt -> docx. A same-format conversion is a PASSTHROUGH on at
 		// least one shipping suite; a format change forces the engine to parse and
 		// re-serialise, which is what a save does to the document body.
-		$odt   = $this->convert(bytes: $original, from: 'docx', to: 'odt');
+		$odt = $this->convert(bytes: $original, from: 'docx', to: 'odt');
 		$after = $this->convert(bytes: $odt, from: 'odt', to: 'docx');
 
 		$this->assertNotSame(
@@ -108,7 +108,7 @@ class AnchorRoundTripTest extends TestCase {
 			'the suite did not rewrite word/document.xml, so this measurement would be vacuous'
 		);
 
-		$codec  = new PackageCodec(new XmlBlockScanner());
+		$codec = new PackageCodec(new XmlBlockScanner());
 		$before = $codec->readBlocks($original, 'docx');
 		$result = $codec->readBlocks($after, 'docx');
 
@@ -149,7 +149,7 @@ class AnchorRoundTripTest extends TestCase {
 	 * @return string The package bytes.
 	 */
 	private function fixtureBytes(): string {
-		$word    = new \PhpOffice\PhpWord\PhpWord();
+		$word = new \PhpOffice\PhpWord\PhpWord();
 		$section = $word->addSection();
 		$section->addTitle('Subsidiebesluit 2026', 1);
 		$section->addText('The assessment period is eight weeks.');
@@ -174,8 +174,8 @@ class AnchorRoundTripTest extends TestCase {
 	 * Convert bytes through the suite.
 	 *
 	 * @param string $bytes The input package.
-	 * @param string $from  The input extension.
-	 * @param string $to    The output extension.
+	 * @param string $from The input extension.
+	 * @param string $to The output extension.
 	 *
 	 * @return string The converted package bytes.
 	 */
@@ -184,22 +184,22 @@ class AnchorRoundTripTest extends TestCase {
 
 		$payload = json_encode(
 			[
-				'async'      => false,
-				'filetype'   => $from,
-				'key'        => substr(sha1($bytes . $to), 0, 16),
+				'async' => false,
+				'filetype' => $from,
+				'key' => substr(sha1($bytes . $to), 0, 16),
 				'outputtype' => $to,
-				'title'      => 'roundtrip.' . $from,
-				'url'        => $hosted,
+				'title' => 'roundtrip.' . $from,
+				'url' => $hosted,
 			]
 		);
 
 		$context = stream_context_create(
 			[
 				'http' => [
-					'method'        => 'POST',
-					'header'        => "Content-Type: application/json\r\nAccept: application/json\r\n",
-					'content'       => $payload,
-					'timeout'       => 90,
+					'method' => 'POST',
+					'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
+					'content' => $payload,
+					'timeout' => 90,
 					'ignore_errors' => true,
 				],
 			]
@@ -225,7 +225,7 @@ class AnchorRoundTripTest extends TestCase {
 	/**
 	 * Publish bytes at a URL the suite can fetch.
 	 *
-	 * @param string $bytes     The package bytes.
+	 * @param string $bytes The package bytes.
 	 * @param string $extension The file extension.
 	 *
 	 * @return string The URL.

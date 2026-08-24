@@ -57,7 +57,7 @@ interface SpreadsheetFamilyCodec {
 	/**
 	 * Read every populated cell.
 	 *
-	 * @param string $xml          The value part.
+	 * @param string $xml The value part.
 	 * @param string $packageBytes The whole package, for families that indirect.
 	 *
 	 * @return array<int, array{cell: string, value: string, formula: string|null}> The cells.
@@ -69,8 +69,8 @@ interface SpreadsheetFamilyCodec {
 	/**
 	 * Write a literal into one cell.
 	 *
-	 * @param string $xml   The value part.
-	 * @param string $cell  The normalised `Sheet!Cell` address.
+	 * @param string $xml The value part.
+	 * @param string $cell The normalised `Sheet!Cell` address.
 	 * @param string $value The literal.
 	 *
 	 * @return string The rewritten part.

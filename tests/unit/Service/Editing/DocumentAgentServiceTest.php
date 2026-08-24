@@ -165,7 +165,6 @@ class DocumentAgentServiceTest extends TestCase {
 		}
 
 		return $attributes[0]->newInstance();
-
 	}//end toolAttribute()
 
 	/**

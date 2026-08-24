@@ -68,10 +68,9 @@
  *     MARKER rather than a guessed `oc_` prefix, and (c) shape-checked against
  *     the exact (register, schema) pair immediately before it reaches SQL.
  *
- * WHAT IT DELIBERATELY DOES NOT DO. It does not delete the five emptied
- * register rows, so a rollback still finds them; it does not touch the
- * `docudesk` application register, which is not one of the five; and it does
- * not merge conflicting objects.
+ * WHAT IT DELIBERATELY DOES NOT DO. It does not delete the emptied register
+ * rows, so a rollback still finds them; and it does not merge conflicting
+ * objects.
  *
  * @category  Repair
  * @package   OCA\Filinq\Repair
@@ -110,13 +109,26 @@ use Psr\Log\LoggerInterface;
 class ConsolidateRegisters implements IRepairStep {
 
 	/**
-	 * The five registers this app used to declare.
+	 * Every register this app used to declare.
 	 *
-	 * All five, or none: `templateVersion` objects sit in `templates` while the
-	 * `template` objects that own them sit there too, and `signerRecord` rows
-	 * point at `signingRequest` rows in the same register. Consolidating four of
-	 * five would leave references crossing a register boundary that the app no
-	 * longer addresses — the half-migrated state is worse than either end.
+	 * ALL OF THEM, OR NONE. `templateVersion` objects sit in `templates` while
+	 * the `template` objects that own them sit there too, and `signerRecord`
+	 * rows point at `signingRequest` rows in the same register. Consolidating
+	 * some and not others would leave references crossing a register boundary
+	 * the app no longer addresses — the half-migrated state is worse than
+	 * either end.
+	 *
+	 * `docudesk` was added after the first five. It is the register named for
+	 * this app's OLD APP ID, and it was initially left out on the grounds that
+	 * it was "not one of the five" — which was true and beside the point: it
+	 * holds 200 objects of this app's own data, so leaving it standing meant
+	 * "five registers into one" quietly shipped an app that owned two. Measured
+	 * on the reference instance: consent 20, signing 12, templates 11,
+	 * document 162, dossier 57, docudesk 200 — 462 objects in total.
+	 *
+	 * It is listed LAST on purpose. The first five are this app's own declared
+	 * registers and move as a set; `docudesk` is the legacy one, so a partial
+	 * failure that stops before it leaves the coherent five already together.
 	 *
 	 * @var array<int, string>
 	 */
@@ -126,6 +138,7 @@ class ConsolidateRegisters implements IRepairStep {
 		'templates',
 		'document',
 		'dossier',
+		'docudesk',
 	];
 
 	/**

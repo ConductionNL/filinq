@@ -85,9 +85,9 @@ class ChartCodec {
 	 * @var array<string, string>
 	 */
 	private const TYPES = [
-		'bar'  => 'c:barChart',
+		'bar' => 'c:barChart',
 		'line' => 'c:lineChart',
-		'pie'  => 'c:pieChart',
+		'pie' => 'c:pieChart',
 	];
 
 	/**
@@ -131,7 +131,7 @@ class ChartCodec {
 	/**
 	 * Constructor.
 	 *
-	 * @param PackagePartIo   $io      The package part reader/writer.
+	 * @param PackagePartIo $io The package part reader/writer.
 	 * @param XmlBlockScanner $scanner The element-span scanner.
 	 *
 	 * @return void
@@ -169,10 +169,10 @@ class ChartCodec {
 	/**
 	 * Embed a chart, placing it after an anchored paragraph or at the end.
 	 *
-	 * @param string      $packageBytes The raw package bytes.
-	 * @param string      $extension    The file extension.
-	 * @param array       $chart        The chart definition.
-	 * @param string|null $afterAnchor  The anchor to place it after, or null for the end.
+	 * @param string $packageBytes The raw package bytes.
+	 * @param string $extension The file extension.
+	 * @param array $chart The chart definition.
+	 * @param string|null $afterAnchor The anchor to place it after, or null for the end.
 	 *
 	 * @return array{bytes: string, chartPart: string, relationshipId: string}
 	 *
@@ -199,11 +199,11 @@ class ChartCodec {
 		$chart = $this->validate(chart: $chart);
 
 		$documentXml = $this->io->readPart(packageBytes: $packageBytes, part: 'word/document.xml');
-		$relsXml     = $this->relationships(packageBytes: $packageBytes);
+		$relsXml = $this->relationships(packageBytes: $packageBytes);
 
-		$index     = $this->nextChartIndex(packageBytes: $packageBytes);
+		$index = $this->nextChartIndex(packageBytes: $packageBytes);
 		$chartPart = sprintf('word/charts/chart%d.xml', $index);
-		$relId     = $this->nextRelationshipId(relsXml: $relsXml);
+		$relId = $this->nextRelationshipId(relsXml: $relsXml);
 
 		// Order matters only in that every write must land; each writePart returns
 		// new bytes, so they are threaded rather than applied to the original.
@@ -244,8 +244,8 @@ class ChartCodec {
 		);
 
 		return [
-			'bytes'          => $bytes,
-			'chartPart'      => $chartPart,
+			'bytes' => $bytes,
+			'chartPart' => $chartPart,
 			'relationshipId' => $relId,
 		];
 	}//end embedChart()
@@ -302,16 +302,16 @@ class ChartCodec {
 			}
 
 			$series[] = [
-				'name'   => (string)(((array)$entry)['name'] ?? sprintf('Series %d', ((int)$position + 1))),
+				'name' => (string)(((array)$entry)['name'] ?? sprintf('Series %d', ((int)$position + 1))),
 				'values' => array_map(static fn ($value): float => (float)$value, $values),
 			];
 		}
 
 		return [
-			'type'       => $type,
-			'title'      => (string)($chart['title'] ?? ''),
+			'type' => $type,
+			'title' => (string)($chart['title'] ?? ''),
 			'categories' => array_map(static fn ($category): string => (string)$category, $categories),
-			'series'     => $series,
+			'series' => $series,
 		];
 	}//end validate()
 
@@ -344,7 +344,7 @@ class ChartCodec {
 		$axes = '';
 		if (in_array($chart['type'], self::AXIAL_TYPES, true) === true) {
 			$body .= sprintf('<c:axId val="%d"/><c:axId val="%d"/>', self::CAT_AXIS_ID, self::VAL_AXIS_ID);
-			$axes  = $this->buildAxes();
+			$axes = $this->buildAxes();
 		}
 
 		$body .= sprintf('</%s>', $element);
@@ -369,8 +369,8 @@ class ChartCodec {
 	/**
 	 * Build one series element.
 	 *
-	 * @param int   $index      The series index.
-	 * @param array $entry      The series definition.
+	 * @param int $index The series index.
+	 * @param array $entry The series definition.
 	 * @param array $categories The category labels.
 	 *
 	 * @return string The series XML.
@@ -479,7 +479,7 @@ class ChartCodec {
 	 * @return int The next index.
 	 */
 	private function nextChartIndex(string $packageBytes): int {
-		$index  = 1;
+		$index = 1;
 		$exists = $this->io->hasPart(
 			packageBytes: $packageBytes,
 			part: sprintf('word/charts/chart%d.xml', $index)
@@ -502,7 +502,7 @@ class ChartCodec {
 	 * Without this the suite does not know what the part is and refuses the whole
 	 * document — a missing Override is not a degraded chart, it is a corrupt file.
 	 *
-	 * @param string $xml      The content types XML.
+	 * @param string $xml The content types XML.
 	 * @param string $partName The part name, with a leading slash.
 	 *
 	 * @return string The rewritten XML.
@@ -522,8 +522,8 @@ class ChartCodec {
 	/**
 	 * Add the chart relationship.
 	 *
-	 * @param string $xml    The relationships XML.
-	 * @param string $relId  The relationship id.
+	 * @param string $xml The relationships XML.
+	 * @param string $relId The relationship id.
 	 * @param string $target The relationship target, relative to `word/`.
 	 *
 	 * @return string The rewritten XML.
@@ -548,9 +548,9 @@ class ChartCodec {
 	/**
 	 * Insert the drawing paragraph into the body.
 	 *
-	 * @param string      $xml         The document XML.
-	 * @param string      $relId       The chart relationship id.
-	 * @param string      $title       The chart title, used as the drawing's name.
+	 * @param string $xml The document XML.
+	 * @param string $relId The chart relationship id.
+	 * @param string $title The chart title, used as the drawing's name.
 	 * @param string|null $afterAnchor The anchor to place it after, or null for the end.
 	 *
 	 * @return string The rewritten XML.

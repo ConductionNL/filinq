@@ -83,7 +83,6 @@ class PdfConversionService {
 	 */
 	public function convertToPdf(File $source): File {
 		return $this->convertToPdfReporting(source: $source)['file'];
-
 	}//end convertToPdf()
 
 	/**

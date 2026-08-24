@@ -18,8 +18,8 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\PolicyMatchService;
-use OCP\App\IAppManager;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;

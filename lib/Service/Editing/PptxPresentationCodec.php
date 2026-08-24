@@ -42,7 +42,9 @@ class PptxPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @param PackagePartIo $io Package reader/writer.
 	 */
-	public function __construct(private readonly PackagePartIo $io) {
+	public function __construct(
+		private readonly PackagePartIo $io,
+	) {
 	}//end __construct()
 
 	/**
@@ -89,10 +91,10 @@ class PptxPresentationCodec implements PresentationFamilyCodec {
 	 * Replace one shape's text.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $slide        The slide id.
-	 * @param string $shape        The shape id.
-	 * @param string $region       Either `slide` or `notes`.
-	 * @param string $text         The replacement text.
+	 * @param string $slide The slide id.
+	 * @param string $shape The shape id.
+	 * @param string $region Either `slide` or `notes`.
+	 * @param string $text The replacement text.
 	 *
 	 * @return string The rewritten package.
 	 *
@@ -138,7 +140,7 @@ class PptxPresentationCodec implements PresentationFamilyCodec {
 	 * would preserve nothing reliably while appearing to.
 	 *
 	 * @param string $markup The shape markup.
-	 * @param string $text   The replacement text.
+	 * @param string $text The replacement text.
 	 *
 	 * @return string The rewritten shape.
 	 */
@@ -213,8 +215,8 @@ class PptxPresentationCodec implements PresentationFamilyCodec {
 	 * The part path for a slide's region.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $slide        The slide id.
-	 * @param string $region       Either `slide` or `notes`.
+	 * @param string $slide The slide id.
+	 * @param string $region Either `slide` or `notes`.
 	 *
 	 * @return string The part path.
 	 *

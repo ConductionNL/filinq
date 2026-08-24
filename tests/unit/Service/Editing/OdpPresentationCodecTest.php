@@ -57,14 +57,16 @@ class OdpPresentationCodecTest extends TestCase {
 			/**
 			 * @param string $contentXml The served part.
 			 */
-			public function __construct(private string $contentXml) {
+			public function __construct(
+				private string $contentXml,
+			) {
 			}
 
 			/**
 			 * Serve the content part.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         Ignored — this double holds one part.
+			 * @param string $part Ignored — this double holds one part.
 			 *
 			 * @return string The part.
 			 */
@@ -76,8 +78,8 @@ class OdpPresentationCodecTest extends TestCase {
 			 * Capture the rewritten part instead of repacking a ZIP.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         Ignored.
-			 * @param string $xml          The rewritten part.
+			 * @param string $part Ignored.
+			 * @param string $xml The rewritten part.
 			 *
 			 * @return string A stand-in for the new package bytes.
 			 */

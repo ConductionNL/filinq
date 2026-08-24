@@ -75,8 +75,8 @@ class SigningCancellationService {
 	 * Constructor.
 	 *
 	 * @param SigningProviderFactory $providers Resolves the configured provider.
-	 * @param SigningService         $requests  Signing request lookup.
-	 * @param LoggerInterface        $logger    The logger.
+	 * @param SigningService $requests Signing request lookup.
+	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @return void
 	 */
@@ -90,7 +90,7 @@ class SigningCancellationService {
 	/**
 	 * Withdraw a signing request.
 	 *
-	 * @param string $uid       The acting user id.
+	 * @param string $uid The acting user id.
 	 * @param string $requestId The signing request id.
 	 *
 	 * @return array{requestId: string, status: string, alreadyCancelled: bool}
@@ -177,8 +177,8 @@ class SigningCancellationService {
 		$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'cancelled', detail: '');
 
 		return [
-			'requestId'        => $requestId,
-			'status'           => NativeSigningProvider::STATUS_CANCELLED,
+			'requestId' => $requestId,
+			'status' => NativeSigningProvider::STATUS_CANCELLED,
 			'alreadyCancelled' => $already,
 		];
 	}//end cancel()
@@ -190,8 +190,8 @@ class SigningCancellationService {
 	 * cannot introduce a second, laxer rule — and so that widening it is a visible
 	 * edit to a named thing rather than a condition drifting at a call site.
 	 *
-	 * @param string $uid     The acting user id.
-	 * @param array  $request The signing request.
+	 * @param string $uid The acting user id.
+	 * @param array $request The signing request.
 	 *
 	 * @return bool True when the actor is the creator.
 	 */
@@ -236,10 +236,10 @@ class SigningCancellationService {
 	 * Every attempt, not only the successes. A withdrawn signing process is exactly
 	 * the event someone will later need to reconstruct.
 	 *
-	 * @param string $uid       The acting user id.
+	 * @param string $uid The acting user id.
 	 * @param string $requestId The signing request id.
-	 * @param string $outcome   What happened.
-	 * @param string $detail    Why, when it failed.
+	 * @param string $outcome What happened.
+	 * @param string $detail Why, when it failed.
 	 *
 	 * @return void
 	 */
@@ -247,11 +247,11 @@ class SigningCancellationService {
 		$this->logger->warning(
 			sprintf('[Filinq] signing cancellation %s', $outcome),
 			[
-				'app'       => 'filinq',
-				'actor'     => $uid,
+				'app' => 'filinq',
+				'actor' => $uid,
 				'requestId' => $requestId,
-				'outcome'   => $outcome,
-				'detail'    => $detail,
+				'outcome' => $outcome,
+				'detail' => $detail,
 			]
 		);
 	}//end recordAttempt()

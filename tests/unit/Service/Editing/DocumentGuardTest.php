@@ -48,7 +48,6 @@ class DocumentGuardTest extends TestCase {
 		$file->method('getId')->willReturn(4711);
 
 		return $file;
-
 	}//end file()
 
 	/**
@@ -76,7 +75,6 @@ class DocumentGuardTest extends TestCase {
 		$resolver->method('resolve')->willReturn($objectService);
 
 		return new DocumentGuard($resolver, $this->createMock(LoggerInterface::class));
-
 	}//end guard()
 
 	/**

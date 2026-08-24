@@ -23,9 +23,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Signing;
 
+use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
 use OCA\Filinq\Service\Signing\ValidSignProvider;
 use OCP\IAppConfig;
-use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

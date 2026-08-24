@@ -21,8 +21,8 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\PolicyMatchService;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Filinq\Service\PolicyRetroactiveService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;

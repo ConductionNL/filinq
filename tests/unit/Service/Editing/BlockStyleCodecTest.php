@@ -61,7 +61,7 @@ class BlockStyleCodecTest extends TestCase {
 	/**
 	 * Apply style to the standard paragraph.
 	 *
-	 * @param array  $style  The style properties.
+	 * @param array $style The style properties.
 	 * @param string $markup Optional markup override.
 	 *
 	 * @return string The rewritten markup.
@@ -117,7 +117,7 @@ class BlockStyleCodecTest extends TestCase {
 		$this->assertStringContainsString('<w:pStyle w:val="Heading2"/>', $this->apply(['heading' => 2]));
 
 		$heading = $this->apply(['heading' => 1]);
-		$body    = $this->apply(['heading' => 0], $heading);
+		$body = $this->apply(['heading' => 0], $heading);
 
 		$this->assertStringNotContainsString('w:pStyle', $body, 'level 0 must remove the heading style');
 		$this->assertStringNotContainsString('Heading0', $body, 'no suite defines a "Heading0" style');
@@ -179,7 +179,7 @@ class BlockStyleCodecTest extends TestCase {
 	 * @spec openspec/specs/document-rich-editing/spec.md
 	 */
 	public function testResettingAPropertyReplacesIt(): void {
-		$once  = $this->apply(['alignment' => 'left']);
+		$once = $this->apply(['alignment' => 'left']);
 		$twice = $this->apply(['alignment' => 'right'], $once);
 
 		$this->assertSame(1, substr_count($twice, '<w:jc'), 'a second alignment must replace the first');

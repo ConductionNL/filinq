@@ -65,7 +65,7 @@ class PresentationCodec {
 	/**
 	 * Constructor.
 	 *
-	 * @param PackagePartIo                            $io       Package reader/writer.
+	 * @param PackagePartIo $io Package reader/writer.
 	 * @param array<int, PresentationFamilyCodec>|null $families Optional override, for tests.
 	 */
 	public function __construct(PackagePartIo $io, ?array $families = null) {
@@ -89,7 +89,7 @@ class PresentationCodec {
 	 * Read every text-bearing shape.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $extension    The file extension.
+	 * @param string $extension The file extension.
 	 *
 	 * @return array<int, array{slide: string, shape: string, region: string, text: string}> The shapes.
 	 *
@@ -105,8 +105,8 @@ class PresentationCodec {
 	 * Replace the text of addressed shapes.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $extension    The file extension.
-	 * @param array  $edits        Each `{slide, shape, text, region?}`.
+	 * @param string $extension The file extension.
+	 * @param array $edits Each `{slide, shape, text, region?}`.
 	 *
 	 * @return array{bytes: string, applied: array<int, string>} The result.
 	 *

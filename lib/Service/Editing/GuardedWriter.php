@@ -71,10 +71,10 @@ class GuardedWriter {
 	/**
 	 * Constructor.
 	 *
-	 * @param ILockManager        $lockManager The file lock manager.
-	 * @param AgentArtefactMarker $marker      The ADR-088 artefact marker.
-	 * @param LoggerInterface     $logger      Logger for diagnostics.
-	 * @param IRootFolder         $rootFolder  The Nextcloud root folder.
+	 * @param ILockManager $lockManager The file lock manager.
+	 * @param AgentArtefactMarker $marker The ADR-088 artefact marker.
+	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param IRootFolder $rootFolder The Nextcloud root folder.
 	 */
 	public function __construct(
 		private readonly ILockManager $lockManager,
@@ -83,7 +83,6 @@ class GuardedWriter {
 		private readonly IRootFolder $rootFolder,
 	) {
 	}//end __construct()
-
 
 	/**
 	 * Hold the lock across the whole read-modify-write, and release it on every exit path.
@@ -306,7 +305,6 @@ class GuardedWriter {
 		}
 
 		return $bytes;
-
 	}//end readBytes()
 
 	/**

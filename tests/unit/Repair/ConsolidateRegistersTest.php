@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Tests for the five-into-one register consolidation.
+ * Tests for the six-into-one register consolidation.
  *
  * WHY THIS EXISTS, AND WHY IT IS NOT A SET OF EXPECTED CALLS. This step
  * physically MOVES object rows between database tables. Asserting "executeQuery
@@ -54,6 +54,7 @@ class ConsolidateRegistersTest extends TestCase {
 		'templates' => 5,
 		'document' => 6,
 		'dossier' => 66,
+		'docudesk' => 7,
 		'filinq' => 517,
 	];
 
@@ -366,11 +367,6 @@ class ConsolidateRegistersTest extends TestCase {
 	public function testTablesThatAreNotOursAreNeverTouched(): void {
 		$database = $this->oneDossierPair();
 		$database->addTable(
-			name: 'nc_openregister_table_7_227',
-			columns: ['_id', '_uuid', '_register', '_schema', 'name'],
-			rows: $this->rowsFor(uuids: ['docudesk-1'], register: '7')
-		);
-		$database->addTable(
 			name: 'nc_openregister_table_66_227_backup',
 			columns: ['_id', '_uuid', '_register', '_schema', 'name'],
 			rows: $this->rowsFor(uuids: ['backup-1'], register: '66')
@@ -378,11 +374,6 @@ class ConsolidateRegistersTest extends TestCase {
 
 		$this->runStep(database: $database);
 
-		$this->assertSame(
-			['docudesk-1'],
-			$database->uuidsIn(table: 'nc_openregister_table_7_227'),
-			'the docudesk register is not one of the five and must be untouched'
-		);
 		$this->assertSame(
 			['backup-1'],
 			$database->uuidsIn(table: 'nc_openregister_table_66_227_backup'),
@@ -461,19 +452,24 @@ class ConsolidateRegistersTest extends TestCase {
 	}//end testAWiderSourceTableRefusesThePair()
 
 	/**
-	 * All five source registers are visited, not just the first one.
+	 * Every source register is visited, not just the first one.
 	 *
-	 * Consolidating four of five is worse than either end: `templateVersion`
-	 * objects reference `template` objects, `signerRecord` rows reference
-	 * `signingRequest` rows, and a half-migrated install has those references
-	 * crossing a register boundary the app no longer addresses.
+	 * Consolidating some and not others is worse than either end:
+	 * `templateVersion` objects reference `template` objects, `signerRecord`
+	 * rows reference `signingRequest` rows, and a half-migrated install has
+	 * those references crossing a register boundary the app no longer
+	 * addresses.
+	 *
+	 * `docudesk` is in the set: it is the register named for this app's OLD APP
+	 * ID and it holds 200 objects of this app's own data, so leaving it out
+	 * meant shipping an app that owned two registers while claiming one.
 	 *
 	 * @return void
 	 */
-	public function testEveryOneOfTheFiveRegistersIsVisited(): void {
+	public function testEveryOneOfTheSourceRegistersIsVisited(): void {
 		$columns = ['_id', '_uuid', '_register', '_schema', 'name'];
 		$tables = [];
-		$pairs = [3 => 11, 4 => 15, 5 => 12, 6 => 5023, 66 => 227];
+		$pairs = [3 => 11, 4 => 15, 5 => 12, 6 => 5023, 66 => 227, 7 => 9001];
 
 		foreach ($pairs as $registerId => $schemaId) {
 			$tables['oc_openregister_table_' . $registerId . '_' . $schemaId] = [
@@ -499,8 +495,8 @@ class ConsolidateRegistersTest extends TestCase {
 			);
 		}
 
-		$this->assertStringContainsString('5 object(s) moved into filinq', implode(' ', $result['output']));
-	}//end testEveryOneOfTheFiveRegistersIsVisited()
+		$this->assertStringContainsString('6 object(s) moved into filinq', implode(' ', $result['output']));
+	}//end testEveryOneOfTheSourceRegistersIsVisited()
 }//end class
 
 /**
