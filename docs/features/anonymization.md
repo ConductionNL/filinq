@@ -142,7 +142,7 @@ The file-viewer sidebar consumes the **reverse** direction: when a file is
 opened it first resolves its `anonymizationLink` by `anonymizedFileId`. A hit
 means the file is an anonymised output, so the sidebar shows the read-only
 'removed items' review instead of restarting the un-anonymised detection flow.
-The header subtitle names the source ('Anonymised version of <source>').
+The header subtitle names the source ('Anonymised version of `<source>`').
 
 The per-entity list is resolved from the `[<TYPE>: <id>]` placeholders baked
 into the file's text (each id is looked up read-only via
