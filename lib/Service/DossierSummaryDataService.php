@@ -174,6 +174,8 @@ class DossierSummaryDataService {
 	 * @return void
 	 *
 	 * @throws RuntimeException 403 when the dossier cannot be resolved at all.
+	 *
+	 * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
 	 */
 	public function assertDossierReadable(string $dossierId): void {
 		$objectService = $this->repository->objectService();
@@ -183,7 +185,7 @@ class DossierSummaryDataService {
 
 		$dossier = $objectService->find(
 			id: $dossierId,
-			register: 'dossier',
+			register: 'filinq',
 			schema: 'dossier'
 		);
 

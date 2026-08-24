@@ -51,8 +51,11 @@ class PolicyCrudService {
 
 	/**
 	 * Register slug shared by both policy surfaces.
+	 *
+	 * `filinq`, not `consent`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
 	 */
-	public const REGISTER = 'consent';
+	public const REGISTER = 'filinq';
 
 	/**
 	 * Schema slug for the deny-list surface.

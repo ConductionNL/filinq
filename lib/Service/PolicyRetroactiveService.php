@@ -44,8 +44,8 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use Exception;
-use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Retroactive rule-mutation handler.
@@ -287,7 +287,7 @@ class PolicyRetroactiveService {
 			$result = $this->objectService->findAll(
 				config: [
 					'filters' => [
-						'register' => 'consent',
+						'register' => 'filinq',
 						'schema' => 'publicationConsent',
 						'scope' => 'document',
 					],
@@ -369,7 +369,7 @@ class PolicyRetroactiveService {
 
 			$this->objectService->saveObject(
 				object: $newData,
-				register: 'consent',
+				register: 'filinq',
 				schema: 'publicationConsent',
 				uuid: $uuid,
 				_rbac: false,

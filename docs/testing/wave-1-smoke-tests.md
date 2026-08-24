@@ -37,23 +37,23 @@ Any reference to `admin` / `admin` in this document below refers to the **local 
 
 ### Seeds present
 
-- [ ] `GET /apps/openregister/api/objects/dossier/base` returns **6** records with slugs:
+- [ ] `GET /apps/openregister/api/objects/filinq/base` returns **6** records with slugs:
   `persoonsgegevens`, `bijzondere-persoonsgegevens`, `strafrechtelijk`,
   `bedrijfs-fabricagegegevens`, `onevenredige-benadeling`, `nationale-veiligheid`
-- [ ] `GET /apps/openregister/api/objects/dossier/dossier` returns 3–5 seed dossiers (one with `bases: []`, one with `checkedOn: null`)
+- [ ] `GET /apps/openregister/api/objects/filinq/dossier` returns 3–5 seed dossiers (one with `bases: []`, one with `checkedOn: null`)
 
 ### Create flow
 
 - [ ] In Files: create a folder, copy its node ID
-- [ ] `POST /apps/openregister/api/objects/dossier/dossier` with `name`, `bases: ["persoonsgegevens"]`, and `@self.folder: "<node-id>"` → 201, returns a uuid
-- [ ] `GET /apps/openregister/api/objects/dossier/dossier/<uuid>` returns the same data; stored `folder` matches the supplied node ID; **no new folder was created**
+- [ ] `POST /apps/openregister/api/objects/filinq/dossier` with `name`, `bases: ["persoonsgegevens"]`, and `@self.folder: "<node-id>"` → 201, returns a uuid
+- [ ] `GET /apps/openregister/api/objects/filinq/dossier/<uuid>` returns the same data; stored `folder` matches the supplied node ID; **no new folder was created**
 - [ ] Posting without `name` → validation error
 - [ ] Posting with only `name` + `@self.folder` → 201, `bases` is `[]` (or absent), `checkedOn` is `null`
 
 ### Referential integrity (v1 slug-string model)
 
 - [ ] Posting a dossier with `bases: ["does-not-exist"]` → write succeeds (v1 trade-off: no FK enforcement). Note in test log that this is **known and documented** in `design.md` §D1.
-- [ ] Adding a custom base via `POST /apps/openregister/api/objects/dossier/base` works and the new slug is usable in `dossier.bases`
+- [ ] Adding a custom base via `POST /apps/openregister/api/objects/filinq/base` works and the new slug is usable in `dossier.bases`
 
 ### Audit trail (`checkedOn`)
 

@@ -345,7 +345,7 @@ class CorrespondenceServiceTest extends TestCase {
 						&& $entry['status'] === 'generated'
 						&& $entry['format'] === 'pdf';
 				}),
-				$this->equalTo('document'),
+				$this->equalTo('filinq'),
 				$this->equalTo('correspondence')
 			)
 			->willReturn($logEntity);

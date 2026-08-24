@@ -1039,6 +1039,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {number} anonymizedFileId Nextcloud file id of the opened file.
 		 * @return {Promise<object|null>} The link object, or null when none / on error.
+		 *
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		async findAnonymizationLink(anonymizedFileId) {
 			if (anonymizedFileId === null || anonymizedFileId === undefined) {
@@ -1047,7 +1049,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			try {
 				const r = await axios.get(
 					generateUrl(
-						'/apps/openregister/api/objects/document/anonymizationLink',
+						'/apps/openregister/api/objects/filinq/anonymizationLink',
 					),
 					{ params: { anonymizedFileId } },
 				)
@@ -1276,7 +1278,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * does, but scoped to this widget's single-file queue.
 		 *
 		 * 1. PROPFIND the new folder to read its Nextcloud node id.
-		 * 2. POST to `/apps/openregister/api/objects/dossier/dossier`
+		 * 2. POST to `/apps/openregister/api/objects/filinq/dossier`
 		 *    with `{ name, description, bases, @self: { folder } }`.
 		 * 3. Record the result in `state.dossiers` so the sidebar /
 		 *    summary actions can look it up by folderName.
@@ -1335,7 +1337,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 			}
 
 			const createResponse = await axios.post(
-				generateUrl('/apps/openregister/api/objects/dossier/dossier'),
+				generateUrl('/apps/openregister/api/objects/filinq/dossier'),
 				payload,
 			)
 			const uuid =

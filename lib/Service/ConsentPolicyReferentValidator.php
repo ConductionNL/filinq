@@ -165,7 +165,7 @@ class ConsentPolicyReferentValidator {
 			$prohibitionHits = $objectService->findAll(
 				config: [
 					'filters' => [
-						'register' => 'consent',
+						'register' => 'filinq',
 						'schema' => 'publicationProhibition',
 						'uuid' => $uuid,
 					],
@@ -180,7 +180,7 @@ class ConsentPolicyReferentValidator {
 			$consentHits = $objectService->findAll(
 				config: [
 					'filters' => [
-						'register' => 'consent',
+						'register' => 'filinq',
 						'schema' => 'publicationConsent',
 						'uuid' => $uuid,
 					],

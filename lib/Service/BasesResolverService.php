@@ -55,11 +55,19 @@ class BasesResolverService {
 
 	/**
 	 * OpenRegister register slug that holds dossier objects.
+	 *
+	 * `filinq`, not `dossier`: this app declares ONE register holding all 23
+	 * schemas. Note that the SCHEMA below is still called `dossier` — the two
+	 * used to share a name, and only the register moved.
 	 */
-	private const REGISTER_SLUG = 'dossier';
+	private const REGISTER_SLUG = 'filinq';
 
 	/**
 	 * OpenRegister schema slug for the dossier type.
+	 *
+	 * Unchanged by the register consolidation: a schema slug is resolved by the
+	 * (application, slug) pair and has nothing to do with which register holds
+	 * it.
 	 */
 	private const SCHEMA_SLUG = 'dossier';
 

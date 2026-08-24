@@ -142,14 +142,47 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         `docudesk` installed, and a rollback to the old app id still finds its
         data intact.
     -->
+    <!--
+        FIVE REGISTERS INTO ONE — ConsolidateRegisters (applies to BOTH blocks
+        below). This app used to declare five registers (consent, signing,
+        templates, document, dossier) over 23 schemas; it now declares one,
+        `filinq`, holding all 23. Unlike every sibling step here, that one MOVES
+        OBJECT ROWS BETWEEN TABLES.
+
+        WHY IT IS LISTED LAST, WHICH IS THE OPPOSITE OF A SLUG RENAME. An object
+        is bound to its register by NUMERIC id, and the shard tables are named
+        `<prefix>openregister_table_<registerId>_<schemaId>`. So the target
+        register `filinq` and its 23 schemas must ALREADY EXIST — and their shard
+        tables with them — before a single row can be inserted into one. A
+        register-SLUG migration is the mirror image: it has to run BEFORE the
+        import so the import matches the existing row instead of forking a second
+        one. Getting the two orderings the same way round breaks one of them.
+
+        WHAT THAT MEANS IN PRACTICE ON THIS APP. The register import runs from
+        RegistrationBootstrap::boot(), i.e. on the first request after the app is
+        enabled — strictly AFTER every repair step. So on the very first pass
+        this step finds no target register (or no target shard tables), SKIPS,
+        and says so; the import then creates them, and the next repair pass
+        (`occ maintenance:repair`, or the next upgrade) performs the move. That
+        is by design: it is idempotent, it never creates a table itself, and
+        "not yet" is reported as "nothing moved", never as "done".
+
+        It never throws, never overwrites a uuid that already exists in the
+        target, and deletes source rows only after counting them back out of the
+        target. See the class docblock for the full property list.
+    -->
     <repair-steps>
         <post-migration>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!-- Same step, same reason, same position: LAST. See the comment
+                 above the <repair-steps> block. -->
+            <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
         </install>
     </repair-steps>
     <commands>

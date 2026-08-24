@@ -15,7 +15,7 @@ Two schemas land via `filinq_register.json` (added by the `add-dossier-schema` c
 | `bases` | `string[]` | no | Array of slug strings referencing `base` objects (the legal grondslagen). Consumer-side resolution against the `dossier/base` register — OR doesn't validate that slugs resolve, doesn't block deletion of a referenced base. v1 trade-off, see design D1. |
 | `checkedOn` | date-time | no | When the dossier was last reviewed by an operator. `null` until first review. |
 
-Folder binding: `@self.folder` is the Nextcloud folder node ID. CRUD inherits OpenRegister's existing validation + audit-trail; no Filinq-side controller is required. Operators interact via `POST /api/objects/dossier`, `GET /api/objects/dossier/{uuid}`, `PUT /api/objects/dossier/{uuid}`.
+Folder binding: `@self.folder` is the Nextcloud folder node ID. CRUD inherits OpenRegister's existing validation + audit-trail; no Filinq-side controller is required. Operators interact via `POST /api/objects/filinq/dossier`, `GET /api/objects/filinq/dossier/{uuid}`, `PUT /api/objects/filinq/dossier/{uuid}` — the register segment is `filinq` (the five registers were consolidated into one) and `dossier` is the schema.
 
 ### `base` schema
 

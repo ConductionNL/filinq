@@ -106,7 +106,7 @@ class AnonymizationPersistenceService {
 
 			$saved = $objectService->saveObject(
 				object: $object,
-				register: 'document',
+				register: 'filinq',
 				schema: 'anonymizationLink'
 			);
 			$linkId = $this->extractSavedObjectId(saved: $saved);
@@ -245,7 +245,7 @@ class AnonymizationPersistenceService {
 		$results = $objectService->searchObjects(
 			query: [
 				'@self' => [
-					'register' => 'document',
+					'register' => 'filinq',
 					'schema' => 'anonymizationLink',
 				],
 				'sourceFileId' => $fileId,
@@ -259,7 +259,7 @@ class AnonymizationPersistenceService {
 
 		$object = [
 			'@self' => [
-				'register' => 'document',
+				'register' => 'filinq',
 				'schema' => 'anonymizationLink',
 			],
 			'sourceFileId' => $fileId,

@@ -166,7 +166,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame(['subjectConsents'], $this->sortedKeys($collections));
 
 		$consent = $collections['subjectConsents'];
-		$this->assertSame('consent', $consent['register']);
+		$this->assertSame('filinq', $consent['register'], 'the five registers collapsed into one');
 		$this->assertSame('publicationConsent', $consent['schema']);
 		$this->assertSame('contactRef', $consent['scopeField'], 'Scope by the contact-record reference, never PII-in-clear email');
 		$this->assertSame('contactId', $consent['scopeClaim']);
@@ -230,7 +230,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame('Filinq', $manifest['label']);
 
 		$record = $this->indexById($manifest['collections'])['signerRecords'];
-		$this->assertSame('signing', $record['register']);
+		$this->assertSame('filinq', $record['register'], 'the five registers collapsed into one');
 		$this->assertSame('signerRecord', $record['schema']);
 		$this->assertSame('email', $record['scopeField']);
 		$this->assertSame('signerEmail', $record['scopeClaim']);
@@ -268,7 +268,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame(['signerRecords', 'signerSigningRequests'], $this->sortedKeys($collections));
 
 		$request = $collections['signerSigningRequests'];
-		$this->assertSame('signing', $request['register']);
+		$this->assertSame('filinq', $request['register'], 'the five registers collapsed into one');
 		$this->assertSame('signingRequest', $request['schema']);
 		$this->assertSame('', $request['scopeField'], 'Via collections carry no direct scopeField');
 		$this->assertSame('signerEmail', $request['scopeClaim']);
@@ -278,7 +278,7 @@ final class PortalContributionProviderTest extends TestCase {
 		// Contract-v2.1 one-hop via join: {register, schema, scopeField, targetField}.
 		$this->assertSame(
 			[
-				'register' => 'signing',
+				'register' => 'filinq',
 				'schema' => 'signerRecord',
 				'scopeField' => 'email',
 				'targetField' => 'signingRequestId',

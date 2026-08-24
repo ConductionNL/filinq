@@ -529,12 +529,14 @@ export const useMyDocumentsStore = defineStore('myDocuments', {
 		 * reverse lookup used by the anonymization store.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/anonymization-link/spec.md
 		 */
 		async fetchAnonymizationLinks() {
 			try {
 				const r = await axios.get(
 					generateUrl(
-						'/apps/openregister/api/objects/document/anonymizationLink',
+						'/apps/openregister/api/objects/filinq/anonymizationLink',
 					),
 					// High limit: one link per anonymised source file per user.
 					{ params: { _limit: 10000 } },

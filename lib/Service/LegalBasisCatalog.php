@@ -122,7 +122,7 @@ class LegalBasisCatalog {
 
 		try {
 			$result = $objectService->searchObjectsBySlug(
-				registerSlug: 'dossier',
+				registerSlug: 'filinq',
 				schemaSlug: 'base',
 				filters: [],
 				_rbac: false,

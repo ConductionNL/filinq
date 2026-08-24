@@ -50,9 +50,13 @@ class ProhibitionOverrideCommitter {
 	/**
 	 * Register slug for the prohibition override audit schema.
 	 *
+	 * `filinq`, not `consent`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired, and the objects were
+	 * moved across by OCA\Filinq\Repair\ConsolidateRegisters.
+	 *
 	 * @var string
 	 */
-	private const OVERRIDE_AUDIT_REGISTER = 'consent';
+	private const OVERRIDE_AUDIT_REGISTER = 'filinq';
 
 	/**
 	 * Schema slug for the prohibition override audit entries.

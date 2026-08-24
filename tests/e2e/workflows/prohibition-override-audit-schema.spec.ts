@@ -36,7 +36,8 @@
 import { test, expect } from '@playwright/test'
 import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures'
 
-const OR = '/index.php/apps/openregister/api/objects/consent'
+// `filinq`, not `consent`: the five registers were consolidated into one.
+const OR = '/index.php/apps/openregister/api/objects/filinq'
 
 test("the prohibition-override audit schema resolves and accepts the committer's payload", async ({
 	page,
@@ -44,7 +45,7 @@ test("the prohibition-override audit schema resolves and accepts the committer's
 }) => {
 	const token = await harvestToken(page)
 
-	// POSITIVE CONTROL FIRST. If the consent register itself were missing or
+	// POSITIVE CONTROL FIRST. If the filinq register itself were missing or
 	// the seed had not run, the assertion below would fail for a reason that
 	// has nothing to do with #428 — and a bare 404 cannot tell the two apart.
 	const sibling = await request.get(`${OR}/publicationProhibition`, {
