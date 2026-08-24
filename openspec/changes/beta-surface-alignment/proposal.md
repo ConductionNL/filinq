@@ -3,7 +3,7 @@
 ## Why
 
 Filinq is Technical Core, already on `/connext`, but its four public/code
-surfaces (info.xml, manifest nav, conduction.nl product page, docudesk.conduction.nl
+surfaces (info.xml, manifest nav, conduction.nl product page, filinq.conduction.nl
 docs) disagreed with each other and, in several cases, with what `lib/` actually
 implements. Per the fleet beta-readiness pass, an unverified marketing/compliance
 claim is a beta blocker. This change reconciles vocabulary across all four
@@ -54,7 +54,7 @@ HEAD.
 - Corrected `<description>` template claim from "Word/PDF/Excel" to
   "Twig/HTML templates output as PDF/ODF/HTML" (verified — see Claims below).
 - Changed `<documentation>` from the dead `conduction.gitbook.io/docudesk-nextcloud/`
-  to the live `docudesk.conduction.nl` (verified live via WebFetch).
+  to the live `filinq.conduction.nl` (verified live via WebFetch).
 - Changed `<licence>` from `agpl` to `EUPL-1.2` to match the actual
   `SPDX-License-Identifier: EUPL-1.2` headers in every `lib/` file and the
   product page's "Released under EUPL-1.2" claim. `agpl` was simply wrong.
@@ -91,7 +91,7 @@ real routes/components and were used as the canonical vocabulary source.
   AppCrossLinks present on EN) was **not** rebuilt — flagged as a remaining
   gap below, out of scope for a vocabulary-alignment pass.
 
-### 4. Docs — `filinq/docs/` (Docusaurus, served at docudesk.conduction.nl)
+### 4. Docs — `filinq/docs/` (Docusaurus, served at filinq.conduction.nl)
 - `docs/intro.md`: removed SharePoint/Office 365/WCAG claims, fixed
   Word/Excel → PDF/ODF/HTML, fixed install category ("Office & Text" → the
   actual `organization` category), fixed Presidio framing to "configurable
@@ -139,7 +139,7 @@ convention. No change needed.
 | WCAG 2.1 AAA / PDF-UA document compliance checking + auto-fix | **Removed, replaced with honest "not implemented"** | Zero matches for "wcag" anywhere in `lib/`. |
 | GDPR/WOO objection period "minimum 4-week" | **Verified, kept** | `SettingsService::loadFeatureToggles()` defaults `publication_objection_period_days` to `28`. |
 | "Released under EUPL-1.2" (product page) vs `<licence>agpl</licence>` (info.xml) | **info.xml corrected to EUPL-1.2** | Every `lib/` file's SPDX header says `EUPL-1.2`; product page already said EUPL-1.2; info.xml was the outlier. |
-| Docs served at docudesk.conduction.nl | **Verified live** | WebFetch confirmed a real Docusaurus site with EN/NL toggle; info.xml `<documentation>` was pointing at a dead gitbook.io URL and has been corrected. |
+| Docs served at filinq.conduction.nl | **Verified live** | WebFetch confirmed a real Docusaurus site with EN/NL toggle; info.xml `<documentation>` was pointing at a dead gitbook.io URL and has been corrected. |
 
 ## Remaining / needs a decision
 

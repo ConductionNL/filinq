@@ -6,8 +6,8 @@ Filinq is an open-source document-processing app for the Nextcloud workspace. It
 
 ## Docs
 
-- [Documentation](https://docudesk.conduction.nl/docs/intro): main entry, including tutorials, user guide, and admin guide.
-- [API reference](https://docudesk.conduction.nl/api): OpenAPI documentation.
+- [Documentation](https://filinq.conduction.nl/docs/intro): main entry, including tutorials, user guide, and admin guide.
+- [API reference](https://filinq.conduction.nl/api): OpenAPI documentation.
 
 ## Optional
 

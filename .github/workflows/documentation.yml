@@ -10,4 +10,6 @@ jobs:
   deploy:
     uses: ConductionNL/.github/.github/workflows/documentation.yml@main
     with:
-      cname: docudesk.conduction.nl
+      cname: filinq.conduction.nl
+
+      docs-hosts: docudesk.conduction.nl,filinq.conduction.nl
