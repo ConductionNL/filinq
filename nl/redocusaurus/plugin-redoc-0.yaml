@@ -1,18 +1,18 @@
 openapi: 3.0.3
 info:
-  title: DocuDesk API
+  title: Filinq API
   description: >-
-    API documentation for DocuDesk, a document management application for
+    API documentation for Filinq, a document management application for
     Nextcloud
   version: 1.0.0
   contact:
-    name: DocuDesk Team
-    url: https://github.com/yourusername/docudesk
+    name: Filinq Team
+    url: https://github.com/yourusername/filinq
   license:
-    name: AGPL-3.0
-    url: https://www.gnu.org/licenses/agpl-3.0.en.html
+    name: EUPL-1.2
+    url: https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
 servers:
-  - url: /apps/docudesk/api/v1
+  - url: /apps/filinq/api/v1
     description: Nextcloud instance API endpoint
 tags:
   - name: documents

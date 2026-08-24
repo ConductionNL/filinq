@@ -85,4 +85,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://docudesk.conduction.nl/sitemap.xml
+Sitemap: https://filinq.conduction.nl/sitemap.xml
