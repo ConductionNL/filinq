@@ -86,7 +86,13 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { harvestToken, jsonHeaders, API, TEST_PREFIX } from './_fixtures'
 
-test.describe.configure({ mode: 'serial' })
+// Deliberately NOT `test.describe.configure({ mode: 'serial' })`, unlike most
+// files in this directory. The two tests below share no state — each seeds its
+// own run-stamped entity and document id — and the config already pins
+// `workers: 1` / `fullyParallel: false`, so serial mode would buy no isolation
+// here. What it WOULD buy is a failure in the first test silently skipping the
+// second, which is how a single broken fixture turns into "one failure" in the
+// tally while a second, independent regression goes unreported.
 
 /**
  * Read back the `scope: "document"` consent record for one document id.

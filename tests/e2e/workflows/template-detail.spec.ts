@@ -66,7 +66,11 @@ import {
 	TEST_FAMILY,
 } from './_fixtures'
 
-test.describe.configure({ mode: 'serial' })
+// Deliberately NOT `test.describe.configure({ mode: 'serial' })`. The two
+// tests seed and delete their own run-stamped templates and share no state,
+// and the config already pins `workers: 1` / `fullyParallel: false`. Serial
+// mode would only add "a failure in the first silently skips the second",
+// which turns two independent results into one.
 
 test.afterAll(async ({ request }) => {
 	const res = await request.get(`${API}/templates`)
