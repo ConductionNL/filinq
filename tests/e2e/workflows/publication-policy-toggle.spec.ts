@@ -221,7 +221,10 @@ test('A standing consent short-circuits detection: the per-document record is co
 			.catch(() => '')})`,
 	).toBe(201)
 	const standingId = (await standing.json()).id as string
-	expect(standingId, 'the standing consent must carry a persisted uuid').toBeTruthy()
+	expect(
+		standingId,
+		'the standing consent must carry a persisted uuid',
+	).toBeTruthy()
 
 	const created = await createDocumentConsent(req, token, entity, documentId)
 	// A prohibition match would have thrown PolicyRejectedException → 403. The
