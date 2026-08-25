@@ -28,6 +28,7 @@ namespace OCA\Filinq\AppInfo;
 use OCA\Filinq\Dashboard\AnonymizationWidget;
 use OCA\Filinq\Dashboard\FileEntitiesWidget;
 use OCA\Filinq\EventListener\DossierCheckedOnListener;
+use OCA\Filinq\EventListener\EntityRelationDecisionListener;
 use OCA\Filinq\EventListener\FilinqEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -72,6 +73,23 @@ class ObjectEventRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, FilinqEventListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, FilinqEventListener::class);
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);
+
+		// REGISTERED BY STRING, NOT BY `::class`. `EntityRelationDecisionUpdatedEvent`
+		// belongs to OpenRegister, which is an OPTIONAL peer — a `use` plus
+		// `::class` would resolve the class at registration time and make this
+		// app unbootable wherever OpenRegister is absent. The listener itself
+		// checks the type by name for the same reason.
+		//
+		// OpenRegister has dispatched this event from EntityRelationMapper for
+		// some time and nothing here subscribed to it, so every operator
+		// decision to publish an entity unredacted was dropped and its consent
+		// record never created (ConductionNL/filinq#805). A missing subscriber
+		// produces no error anywhere: the dispatch succeeds, there is simply
+		// nobody on the other end.
+		$context->registerEventListener(
+			'OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent',
+			EntityRelationDecisionListener::class
+		);
 
 	}//end register()
 
