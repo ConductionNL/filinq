@@ -602,6 +602,8 @@ when no contact is linked. The Twig merge engine, batch logic, and PDF output SH
 
 The schema MUST add a new property `scope` with enum values `document` and `entity`, default `document`. All existing records (which are implicitly per-document) MUST be valid under the new schema with `scope` defaulted to `document`. The discriminator gates which other fields are required and which are not used.
 
+@e2e exclude Stored-record shape (default-valued scope on pre-change records, field requiredness per discriminator) is a persistence claim with no rendered surface; asserted by PHPUnit tests/unit/Service/ConsentScopeValidatorTest.php — testDocumentScopeAcceptsValidPayload, testEntityScopeAcceptsValidPayload, testUnknownScopeIsRejected
+
 #### Scenario: Schema accepts existing records as scope=document by default
 
 - **GIVEN** a `publicationConsent` record stored before this change landed (no `scope` field present)
@@ -628,6 +630,8 @@ The schema MUST add a new property `scope` with enum values `document` and `enti
 ### Requirement: `documentId` MUST be required only for scope=document records
 
 The existing canonical requirement (CONS-002: "Each consent record links to a document via documentId") is refined: this requirement MUST continue to hold for `scope: "document"` records. For `scope: "entity"` records, `documentId` MUST NOT be required, and the consent service MUST reject writes that include a `documentId` on a `scope: "entity"` record (sanity check — entity-wide standing consent does not belong to a single document).
+
+@e2e exclude Server-side write validation on a field no Vue form exposes (neither src/dialogs/StandingConsentFormModal.vue nor src/modals/CreateStandingConsentModal.vue carries a documentId input, and there is no consent-creation UI per REQ-CONS-07); asserted by PHPUnit tests/unit/Service/ConsentScopeValidatorTest.php — testDocumentScopeRejectsMissingDocumentId, testEntityScopeRejectsDocumentId — and by Newman tests/integration/filinq-api.postman_collection.json "POST /api/policy/standing-consents (scope validation: documentId not allowed)"
 
 #### Scenario: scope=document write missing documentId is rejected
 
@@ -671,6 +675,8 @@ The schema MUST add the following properties, populated only when `scope: "entit
 
 The schema MUST add a new optional property `policyMatch`, valid only on `scope: "document"` records. This property MUST be a polymorphic reference constrained to point ONLY to a `publicationProhibition` record OR a `publicationConsent` record (with the latter expected to be `scope: "entity"`). Any UUID pointing to a different schema MUST be rejected by OpenRegister's `ValidateObject` pipeline at save time. The consent service MUST additionally enforce that a `publicationConsent` referent is in fact `scope: "entity"`.
 
+@e2e exclude Schema-definition shape and save-time referent validation; policyMatch is set by the detector and exposed on no create/edit form, so a browser cannot produce any of these writes. Asserted by PHPUnit tests/unit/Service/ConsentScopeValidatorTest.php (testEntityScopeRejectsPolicyMatch), tests/unit/Service/ConsentServiceTest.php (testValidateRejectsPolicyMatchOnScopeEntity) and tests/unit/Service/ConsentUpdateHandlerTest.php (testUnmatchedRecordRejectsPolicyMatchInjection, testProhibitionPolicyMatchUuidSwapRejected)
+
 #### Scenario: Schema definition uses items.oneOf for constraint
 
 - **GIVEN** the updated `publicationConsent` schema in `lib/Settings/filinq_register.json`
@@ -711,6 +717,8 @@ The schema MUST add a new optional property `policyMatch`, valid only on `scope:
 ### Requirement: `consentStatus` enum MUST remain unchanged
 
 This change MUST NOT add new values to the `consentStatus` enum. The discriminator for "this record was pre-empted by a policy" is the combination of `policyMatch` (non-null + which schema it references) and `notificationStatus: "skipped"`. The existing values (`pending`, `consent_given`, `objection_received`, `no_response`, `anonymized`) cover all outcomes — pre-empted records use the same terminal values as workflow-resolved records, with `policyMatch` and `notificationStatus` carrying the path-of-arrival information.
+
+@e2e exclude Field values written by the detector on a record no UI creates (consentStatus, notificationStatus, notificationSentAt, objectionDeadline, publicationDecision, policyMatch, and the absence of a dispatch); asserted by Newman tests/integration/filinq-api.postman_collection.json — "prohibition: POST /api/consent → prohibition rejects the request (403 + rule identity)", "standing-consent: POST /api/consent → consent_given + publish_with_consent", "both-match: POST /api/consent → prohibition wins over standing consent" — and by PHPUnit tests/unit/Service/ConsentServiceTest.php
 
 #### Scenario: Prohibition match resolves to existing 'anonymized' status
 

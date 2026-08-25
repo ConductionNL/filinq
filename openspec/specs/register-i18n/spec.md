@@ -153,7 +153,7 @@ Filinq MUST have a small, well-defined translation surface limited to template m
 - THEN only template title, description, field label, and helpText are translatable
 - AND template content (HTML/Twig) is NOT translatable via this mechanism
 - AND consent records are NOT translatable
-- AND document register report data is NOT translatable
+- AND `filinq` register report data is NOT translatable
 
 #### Scenario: Template content language variants
 - GIVEN a template needs to generate documents in Dutch and English
