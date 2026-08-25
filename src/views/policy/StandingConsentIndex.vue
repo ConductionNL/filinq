@@ -36,7 +36,10 @@ import { standingConsentStore } from '../../store/store.js'
 			@pageChanged="onPageChanged"
 			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateDialog">
-			<template #above-table>
+			<!-- `below-header`, not `above-table` — CnIndexPage defines no
+			     `above-table` slot and Vue drops an unmatched named slot
+			     silently, so these stats rendered nothing at all. -->
+			<template #below-header>
 				<div class="policy-stats">
 					<CnStatsBlock
 						:title="t('filinq', 'Total')"

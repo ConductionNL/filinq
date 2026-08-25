@@ -35,8 +35,12 @@ import { consentStore } from '../../store/store.js'
 		@pageChanged="onPageChanged"
 		@pageSizeChanged="onPageSizeChanged"
 		@rowClick="viewConsent">
-		<!-- Stats above the table -->
-		<template #above-table>
+		<!-- Stats between the page header and the actions bar.
+		     The slot is `below-header`, NOT `above-table`: CnIndexPage
+		     defines no `above-table` slot, and Vue drops an unmatched named
+		     slot silently, so these four CnStatsBlocks rendered NOTHING at
+		     all. See CnIndexPage.vue: `v-if="$slots['below-header']"`. -->
+		<template #below-header>
 			<div class="consent-stats">
 				<CnStatsBlock
 					:title="t('filinq', 'Total')"
