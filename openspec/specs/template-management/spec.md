@@ -13,7 +13,7 @@ retrofit_extensions:
 **Status**: in-progress
 **OpenSpec changes**:
 - [office-template-authoring](../../changes/office-template-authoring/) _(active)_ — office-file-native templates: `templateType`/source-file data-model extension (REQ-DDOTA-006) and versioning/lock/preview/duplicate parity for office templates (REQ-DDOTA-007) (kind: code)
-- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — adds the `wizardDefinition` schema to the templates register (guided-interview definitions fronting a template by `templateId`; the `template`/`templateVersion` data model is unchanged) — full requirements live in the `guided-document-wizard` capability (REQ-DDGDW-*) (kind: code)
+- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — adds the `wizardDefinition` schema to the `filinq` register (guided-interview definitions fronting a template by `templateId`; the `template`/`templateVersion` data model is unchanged) — full requirements live in the `guided-document-wizard` capability (REQ-DDGDW-*) (kind: code)
 
 ## Purpose
 
@@ -210,10 +210,12 @@ TemplateService is injectable via DI, enabling other Nextcloud apps to manage te
 
 TemplateService resolves register and schema configuration via OpenRegisterResolver and uses ObjectService for all data operations.
 
+@e2e exclude Internal service wiring (resolver lookup, RuntimeException when OpenRegister is absent, namespace-validation delegation) with no rendered surface; asserted by PHPUnit tests/unit/Service/OpenRegisterResolverTest.php and tests/unit/Service/TemplateServiceTest.php
+
 #### Scenario: Register/schema resolution
 - GIVEN TemplateService needs to perform a CRUD operation
 - WHEN `OpenRegisterResolver::getRegisterAndSchema()` is called
-- THEN the configured template register and schema IDs are returned
+- THEN the configured `filinq` register and schema IDs are returned
 - AND these are used for all ObjectService calls
 
 #### Scenario: OpenRegister unavailable
@@ -268,6 +270,8 @@ Template listing supports search, filtering, and pagination via OpenRegister's q
 
 Template objects from OpenRegister are consistently serialized for API responses.
 
+@e2e exclude PHP serialization internals (jsonSerialize() dispatch, array cast of non-object results, results/total envelope) invisible above the API boundary; asserted by PHPUnit tests/unit/Service/TemplateServiceTest.php
+
 #### Scenario: JSON serialization of OpenRegister objects
 - GIVEN an OpenRegister object is returned from a query
 - WHEN the object has a jsonSerialize() method
@@ -306,7 +310,7 @@ Template objects from OpenRegister are consistently serialized for API responses
 
 ### Templates Register Schemas
 
-The `templates` register (`lib/Settings/filinq_register.json`) is the single
+The `filinq` register (`lib/Settings/filinq_register.json`) is the single
 source of truth for template-related schemas. It contains:
 
 | Schema | Owning capability | Purpose |
@@ -397,6 +401,8 @@ Snapshots are stored as OpenRegister objects in the version register/schema retu
 Filinq SHALL return both source and target version objects for client-side diff rendering, leaving the actual diff computation to the consumer.
 
 The diff endpoint is intentionally thin: the server fetches both versions and returns them under `from` / `to` keys; clients (e.g. the Filinq template editor UI) compute the visual diff against the two `content` blobs.
+
+@e2e exclude GET /api/templates/{id}/versions/diff has no frontend caller today (the only diff view, src/views/comparison/ComparisonView.vue, calls /api/comparison/compare instead); the response shape and its 400/404 paths are asserted by PHPUnit tests/unit/Controller/TemplateVersionsControllerTest.php and tests/unit/Service/TemplateVersionServiceTest.php
 
 #### Scenario: Diff requires both endpoints
 
@@ -502,6 +508,8 @@ A lock is represented by two fields on the template object: `lockedBy` (user id)
 Filinq SHALL centralise list-parameter parsing, body-parameter parsing, and exception-to-JSON conversion for template controllers in a single `TemplateRequestHandler` so every endpoint exposes consistent paging, filtering, and error semantics.
 
 `parseListParams(IRequest)` reads `namespace`, `_search`, `_limit` (default 20), `_offset` (default 0) and returns `{filters: {namespace?, _search?}, limit: int, offset: int}` — only non-empty filters are included. `parseBodyParams(IRequest, stripKeys?)` returns the request param bag with the framework's `_route` key always removed and any caller-listed keys also stripped (e.g. `id` on update). `buildErrorResponse(Exception, prefix)` logs the exception with the given prefix and returns a `JSONResponse` whose status code is the exception's code when it falls in `[400, 600)` and `500` otherwise; the body is `{"error":"<exception message>"}`.
+
+@e2e exclude PHP helper internals on TemplateRequestHandler (parseListParams, parseBodyParams, buildErrorResponse) with no rendered surface; asserted by PHPUnit tests/unit/Controller/TemplateRequestHandlerTest.php
 
 #### Scenario: List-params parser keeps only non-empty filters
 

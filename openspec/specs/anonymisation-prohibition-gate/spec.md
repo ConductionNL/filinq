@@ -14,7 +14,7 @@ When the anonymise endpoint is called, the controller / service MUST resolve eve
 #### Scenario: No prohibitions configured — gate is a no-op
 
 - **GIVEN** an anonymise request with a payload of detected entities
-- **AND** zero active `publicationProhibition` records exist in the consent register
+- **AND** zero active `publicationProhibition` records exist in the `filinq` register
 - **WHEN** the endpoint processes the request
 - **THEN** the gate runs but matches nothing
 - **AND** the request is forwarded to OpenRegister unchanged
@@ -170,7 +170,7 @@ When an override validates, the corresponding prohibition match is treated as "r
 
 ### Requirement: The gate MUST NOT create `publicationConsent` records
 
-This change is read-only with respect to the consent register. The gate consults `publicationProhibition` records but MUST NOT create, modify, or query `publicationConsent` records. Generic anonymisation flows continue to be outside the publication-clearance workflow.
+This change is read-only with respect to the `filinq` register. The gate consults `publicationProhibition` records but MUST NOT create, modify, or query `publicationConsent` records. Generic anonymisation flows continue to be outside the publication-clearance workflow.
 
 #### Scenario: Successful anonymise creates no publicationConsent
 
