@@ -22,17 +22,20 @@
  * a different store and a different fixture. Putting it in the entity-review
  * file would have filed it under a spec it does not belong to.
  *
- * ⚠️ THE TWO TOGGLE SCENARIOS ARE UNREACHABLE AND ARE DELIBERATELY UNTAGGED
- * -------------------------------------------------------------------------
+ * ⚠️ THE TWO TOGGLE SCENARIOS ARE STILL DELIBERATELY UNTAGGED
+ * -----------------------------------------------------------
  * Neither `#toggle-is-locked-when-policymatch-references-a-prohibition` nor
  * `#toggle-is-overridable-when-policymatch-references-a-standing-consent` is
- * anchored anywhere in this suite, because the toggle they describe cannot
- * render. Measured on a freshly `ci-seed.sh`-provisioned instance, 2026-08-25.
- * Two independent blockers, either of which alone is sufficient:
+ * anchored anywhere in this suite. The REASON has changed, so the record is
+ * corrected here rather than left to rot.
  *
- *   1. `ConsentDetail.vue` puts the whole anonymisation section — toggle,
- *      locked note, standing-consent note — in `CnDetailPage`'s DEFAULT slot,
- *      while also supplying a `#stats-rows` slot. `CnDetailPage` renders those
+ * WHAT THIS FILE ORIGINALLY RECORDED (measured 2026-08-25, both now FIXED in
+ * `src/views/consent/ConsentDetail.vue`; kept because the failure modes are
+ * the interesting part):
+ *
+ *   1. The whole anonymisation section — toggle, locked note, standing-consent
+ *      note — sat in `CnDetailPage`'s DEFAULT slot while the page ALSO
+ *      supplied `statsColumns` + `#stats-rows`. `CnDetailPage` renders those
  *      two branches as `v-if` / `v-else`:
  *
  *          <div v-if="hasStats" class="cn-detail-page__stats"> … </div>
@@ -41,21 +44,33 @@
  *          hasStats() { return this.statsColumns.length > 0
  *              && (this.statsRows.length > 0 || !!this.$slots['stats-rows']) }
  *
- *      `statsColumns` and `#stats-rows` are both present whenever
- *      `consentItem` is set — and `consentItem` must be set for the toggle to
- *      exist at all. So the stats table always wins and the default slot NEVER
- *      renders. The rendered page stops after the Entity Information table:
- *      no toggle, no consent-status form, no Save Changes button.
+ *      Both were non-empty exactly when `consentItem` was set — which is
+ *      exactly when the toggle was supposed to exist — so the stats table
+ *      always won and the default slot NEVER rendered. The page stopped after
+ *      the Entity Information table: no toggle, no consent-status form, no
+ *      Save Changes button, and no error of any kind. FIXED by rendering
+ *      Entity Information as an ordinary default-slot section, which keeps
+ *      `hasStats` false.
  *
- *   2. `/consent/:id` does not deep-link. The manifest route declares the
- *      param as `:id`, `ConsentDetail` declares the prop as `consentId`, and
- *      its `created()` hook fetches only `if (this.consentId)`. The names
- *      never meet, so a direct navigation renders the error state
- *      "No consent record selected." The only hydrating path is a row click
- *      on `/consent` (`ConsentIndex::viewConsent` → `setConsentItem`).
+ *   2. `/consent/:id` did not deep-link. The manifest route declares the param
+ *      as `:id`; `ConsentDetail` declared the prop as `consentId` with
+ *      `default: ''`, and its `created()` hook fetched only
+ *      `if (this.consentId)`. The names never met, so the guard never fired
+ *      and a direct navigation rendered "No consent record selected." The only
+ *      hydrating path was a row click on `/consent`
+ *      (`ConsentIndex::viewConsent` → `setConsentItem`). FIXED by renaming the
+ *      prop to `id` — the same defect and the same fix as
+ *      `SigningRequestDetail`'s `requestId` → `id`.
  *
- * A test tagged against either scenario would be green over a UI that does
- * not exist — the `.github#345` defect. So the UI halves are left UNCOVERED.
+ * WHY THEY REMAIN UNTAGGED. The render path works now — `consent-workflow.spec.ts`
+ * drives the Notification Status select and the Save Changes button on a
+ * deep-linked `/consent/:id`, which is the executable proof. But the two
+ * scenarios above are claims about the TOGGLE's locked/overridable behaviour
+ * specifically, and no test in this suite asserts that yet. Tagging them on
+ * the strength of "the page renders again" would be the `.github#345` defect
+ * in its purest form: a gate reporting a scenario proven by assertions that
+ * cannot fail for the reason the scenario exists. They stay UNCOVERED until a
+ * test actually exercises the toggle.
  *
  * WHAT IS COVERED HERE INSTEAD
  * ----------------------------

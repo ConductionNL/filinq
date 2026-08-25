@@ -11,18 +11,34 @@ import { consentStore } from '../../store/store.js'
 		:loading="consentStore.loading"
 		:loadingLabel="t('filinq', 'Loading consent record...')"
 		:error="!consentStore.consentItem"
-		:errorMessage="t('filinq', 'No consent record selected.')"
-		:statsTitle="
-			consentStore.consentItem ? t('filinq', 'Entity Information') : ''
-		"
-		:statsColumns="
-			consentStore.consentItem
-				? [
-						{ key: 'field', label: t('filinq', 'Field') },
-						{ key: 'value', label: t('filinq', 'Value') },
-					]
-				: []
-		">
+		:errorMessage="t('filinq', 'No consent record selected.')">
+		<!--
+			ENTITY INFORMATION IS A DEFAULT-SLOT SECTION, NOT A STATS TABLE, AND
+			THAT IS LOAD-BEARING.
+
+			CnDetailPage renders the stats table and the default slot as
+			`v-if="hasStats"` / `v-else` — they are mutually exclusive:
+
+			    <div v-if="hasStats" class="cn-detail-page__stats"> … </div>
+			    <div v-else class="cn-detail-page__content"><slot /></div>
+
+			    hasStats() { return this.statsColumns.length > 0
+			        && (this.statsRows.length > 0 || !!this.$slots['stats-rows']) }
+
+			This page used to pass BOTH `statsColumns` + `#stats-rows` AND put
+			the anonymisation toggle, the consent-status form and the Save
+			Changes button in the default slot. `statsColumns` and `#stats-rows`
+			are non-empty exactly when `consentItem` is set — which is exactly
+			when the form is supposed to exist — so the stats branch always won
+			and the entire operator UI below it rendered nothing at all. Vue
+			reports no error for a slot that is never evaluated, so the page
+			looked complete: it simply stopped after the Entity Information
+			table.
+
+			Rendering these rows as an ordinary section keeps `hasStats` false,
+			which lets the default slot through. The visible information and its
+			order are unchanged.
+		-->
 		<!-- Back button in header -->
 		<template #header-actions>
 			<NcButton variant="tertiary" @click="goBack">
@@ -40,36 +56,55 @@ import { consentStore } from '../../store/store.js'
 			</NcButton>
 		</template>
 
-		<!-- Entity info stats rows -->
-		<template v-if="consentStore.consentItem" #stats-rows>
-			<tr>
-				<td>{{ t('filinq', 'Entity Text') }}</td>
-				<td>{{ consentStore.consentItem.entityText }}</td>
-			</tr>
-			<tr>
-				<td>{{ t('filinq', 'Entity Type') }}</td>
-				<td>
-					<CnStatusBadge
-						:label="
-							consentStore.consentItem.entityType
-							|| t('filinq', 'Unknown')
-						"
-						:colorMap="entityTypeColorMap" />
-				</td>
-			</tr>
-			<tr v-if="consentStore.consentItem.entityKey">
-				<td>{{ t('filinq', 'Entity Key') }}</td>
-				<td>{{ consentStore.consentItem.entityKey }}</td>
-			</tr>
-			<tr v-if="consentStore.consentItem.contactEmail">
-				<td>{{ t('filinq', 'Contact Email') }}</td>
-				<td>{{ consentStore.consentItem.contactEmail }}</td>
-			</tr>
-			<tr v-if="consentStore.consentItem.contactAddress">
-				<td>{{ t('filinq', 'Contact Address') }}</td>
-				<td>{{ consentStore.consentItem.contactAddress }}</td>
-			</tr>
-		</template>
+		<!-- Entity information -->
+		<div v-if="consentStore.consentItem" class="detail-section">
+			<h3>{{ t('filinq', 'Entity Information') }}</h3>
+			<!--
+				A name/value grid: every row's first cell IS the name of that
+				row, so it is a row header. `<th scope="row">` states what the
+				markup already means (WCAG 1.3.1), matching the Consent Status
+				table below.
+			-->
+			<table class="detail-table">
+				<tr>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Entity Text') }}
+					</th>
+					<td>{{ consentStore.consentItem.entityText }}</td>
+				</tr>
+				<tr>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Entity Type') }}
+					</th>
+					<td>
+						<CnStatusBadge
+							:label="
+								consentStore.consentItem.entityType
+								|| t('filinq', 'Unknown')
+							"
+							:colorMap="entityTypeColorMap" />
+					</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.entityKey">
+					<th scope="row" class="label">
+						{{ t('filinq', 'Entity Key') }}
+					</th>
+					<td>{{ consentStore.consentItem.entityKey }}</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.contactEmail">
+					<th scope="row" class="label">
+						{{ t('filinq', 'Contact Email') }}
+					</th>
+					<td>{{ consentStore.consentItem.contactEmail }}</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.contactAddress">
+					<th scope="row" class="label">
+						{{ t('filinq', 'Contact Address') }}
+					</th>
+					<td>{{ consentStore.consentItem.contactAddress }}</td>
+				</tr>
+			</table>
+		</div>
 
 		<!-- Policy-driven anonymisation toggle (§6.1, §6.2) -->
 		<div v-if="consentStore.consentItem" class="detail-section">
@@ -250,9 +285,26 @@ export default {
 	},
 
 	props: {
-		consentId: {
+		/**
+		 * The consent record to show.
+		 *
+		 * MUST be named `id`, because that is the name of the route
+		 * parameter. src/main.js builds this route with `props: true` for
+		 * any path containing a `:`, and vue-router's `props: true` passes
+		 * `route.params` through BY NAME. The manifest route is
+		 * `/consent/:id`, so a prop called anything else is simply never
+		 * supplied — this was declared `consentId` with `default: ''`, so
+		 * the falsy guard in `created()` never fired, `fetchConsent()` was
+		 * never called, and every deep link or page refresh on
+		 * `/consent/<uuid>` rendered the "No consent record selected."
+		 * error state instead of the record. The page only ever appeared to
+		 * work when reached by clicking a row, because ConsentIndex calls
+		 * `setConsentItem()` before routing. Same defect, same fix as
+		 * SigningRequestDetail's `requestId` → `id`.
+		 */
+		id: {
 			type: String,
-			default: '',
+			required: true,
 		},
 	},
 
@@ -341,9 +393,20 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the consent record named by the route parameter.
+	 *
+	 * The guard compares the id rather than testing for "any item at all":
+	 * `consentStore.consentItem` is module-level state that survives
+	 * navigation, so a bare truthiness check would keep the PREVIOUS
+	 * record on screen when the operator moves straight from one consent
+	 * to another.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+	 */
 	created() {
-		if (this.consentId && !consentStore.consentItem) {
-			consentStore.fetchConsent(this.consentId)
+		if (this.id && consentStore.consentItem?.id !== this.id) {
+			consentStore.fetchConsent(this.id)
 		}
 	},
 
