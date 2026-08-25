@@ -10,18 +10,37 @@
  * lifecycle PERSISTS, and that the persisted state surfaces in the
  * read-only Templates list UI.
  *
- * Why the create/edit/delete legs are API-driven: the Filinq Templates
- * UI is read-only. `TemplateIndex.vue` renders a non-interactive table;
- * its "New template" button routes to `TemplateDetail.vue`, which is a
- * STUB ("Template editor" heading + descriptive paragraph) with no name/
- * content fields and no save button. There is no edit or delete control
- * on a row. So the writes go through the documented REST endpoints
- * (`TemplatesController` / `templateStore`) and persistence is asserted
- * BOTH through follow-up API reads AND through the real UI list — which
- * is exactly the OpenRegister-backed data path the UI itself consumes.
+ * Why the create/edit/delete legs are API-driven: the live Templates list
+ * is read-only. The `Templates` manifest page is `type:"index"`, so it is
+ * rendered by CnIndexPage, and its manifest entry declares no `actions`
+ * or `headerActions` — there is no create, edit or delete control on the
+ * page or on a row. So the writes go through the documented REST
+ * endpoints (`TemplatesController` / `templateStore`) and persistence is
+ * asserted BOTH through follow-up API reads AND through the real UI list
+ * — which is exactly the OpenRegister-backed data path the UI consumes.
  *
- * The missing create/edit/delete UI is flagged as a product gap in the
- * run report; a `test.fixme` below documents it as an executable TODO.
+ * ⚠️ CORRECTED 2026-08-25. This header used to say the "New template"
+ * button routes to `TemplateDetail.vue`, "which is a STUB ('Template
+ * editor' heading + descriptive paragraph) with no name/content fields
+ * and no save button". Both halves were wrong, and that description is
+ * what steered every later pass away from the detail surface:
+ *
+ *   - `TemplateDetail.vue` is an 806-line registered editor with Name /
+ *     Namespace / Category / Tags / Description / Change-note fields, a
+ *     WYSIWYG content surface with a raw-HTML toggle, a Save button, a
+ *     preview tab, a versions tab, a restore-confirmation dialog and a
+ *     "Locked by {user}" banner. `tests/e2e/workflows/template-detail.spec.ts`
+ *     asserts the fields and the Save button so this cannot go stale again.
+ *   - The button that routes to it lives on `TemplateIndex.vue`, which is
+ *     no longer registered in `src/registry.js` and therefore renders
+ *     nowhere. It is not the page a user sees.
+ *
+ * The real gap is narrower and is documented in `template-detail.spec.ts`:
+ * `TemplateDetail` hydrates only from `templateStore.templateItem`, never
+ * from `$route.params`, so on any reachable navigation it mounts in
+ * new-template mode and its Versions tab and lock banner cannot render.
+ * A `test.fixme` below documents the missing list-level CRUD controls as
+ * an executable TODO.
  *
  * @spec openspec/specs/template-management/spec.md#create-a-template
  * @spec openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
