@@ -377,7 +377,7 @@
 						"sinceVersion": "0.0.34-unstable.17",
 						"placement": "center",
 						"title": "Welcome to Filinq",
-						"body": "Let's take a quick spin through your document workspace — we'll set up a template and a signing request together so you can see how the pieces fit. You'll add each record yourself.",
+						"body": "Let's take a quick spin through your document workspace. We'll set up a template and a signing request together so you can see how the pieces fit. You'll add each record yourself.",
 						"target": {
 							"kind": "page",
 							"ref": "Dashboard"
@@ -406,7 +406,7 @@
 						"sinceVersion": "0.0.34-unstable.17",
 						"placement": "bottom",
 						"allowManualNext": true,
-						"body": "Add your first template — give it a name and save. You can edit its content and reuse it for documents and signing requests later.",
+						"body": "Add your first template: give it a name and save. You can edit its content and reuse it for documents and signing requests later.",
 						"task": "Click New and save a template",
 						"target": {
 							"kind": "element",
@@ -441,7 +441,7 @@
 						"sinceVersion": "0.0.34-unstable.17",
 						"placement": "bottom",
 						"allowManualNext": true,
-						"body": "Create your first signing request — name it and save. From here you can attach a document and track its signatures.",
+						"body": "Create your first signing request: name it and save. From here you can attach a document and track its signatures.",
 						"task": "Click New and save a signing request",
 						"target": {
 							"kind": "element",
