@@ -28,7 +28,6 @@ namespace OCA\Filinq\AppInfo;
 use OCA\Filinq\Dashboard\AnonymizationWidget;
 use OCA\Filinq\Dashboard\FileEntitiesWidget;
 use OCA\Filinq\EventListener\DossierCheckedOnListener;
-use OCA\Filinq\EventListener\EntityRelationDecisionListener;
 use OCA\Filinq\EventListener\FilinqEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -86,9 +85,15 @@ class ObjectEventRegistrar {
 		// record never created (ConductionNL/filinq#805). A missing subscriber
 		// produces no error anywhere: the dispatch succeeds, there is simply
 		// nobody on the other end.
+		// BOTH ARGUMENTS ARE STRINGS, and the second one for a different reason
+		// from the first. `registerEventListener` takes a SERVICE NAME and
+		// resolves it from the container, so a `use` import here buys nothing at
+		// runtime and costs a class dependency: importing it pushed this class
+		// to a CouplingBetweenObjects of 13, which phpmd rejects. Naming it
+		// inline keeps the registrar's coupling where it was.
 		$context->registerEventListener(
 			'OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent',
-			EntityRelationDecisionListener::class
+			'OCA\Filinq\EventListener\EntityRelationDecisionListener'
 		);
 
 	}//end register()
