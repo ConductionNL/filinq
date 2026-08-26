@@ -189,7 +189,7 @@ class PolicyController extends Controller {
 	 * `lib/Settings/filinq_register.json` (retention P10Y — prohibitions are
 	 * court-order-backed and must survive for audit and appeal). OpenRegister
 	 * therefore refuses EVERY user-driven delete on this schema: rows expire
-	 * only through `OCA\OpenRegister\Cron\ArchivalRetentionTask`. The endpoint
+	 * only through `OCA\OpenRegister\BackgroundJob\ArchivalRetentionTask`. The endpoint
 	 * is consequently impossible to satisfy — never merely "currently failing"
 	 * — and previously leaked that as an opaque HTTP 500.
 	 *
