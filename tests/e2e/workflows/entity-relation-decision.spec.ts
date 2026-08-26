@@ -42,7 +42,8 @@ const TERM = `Beslissing Roerdomp ${TEST_PREFIX}`
 
 interface Fixture {
 	token: string
-	batchId: string
+	fileId: number
+	extracted: Record<string, unknown>
 }
 
 let fixture: Fixture | null = null
@@ -61,12 +62,18 @@ async function provision(page: Page, req: APIRequestContext): Promise<Fixture> {
 	const token = await harvestToken(page)
 
 	await createDavFolder(req, token, FOLDER)
-	await createDavFile(
+	const created = await createDavFile(
 		req,
 		token,
 		`${FOLDER}/besluit.txt`,
 		`Dit besluit betreft ${TERM} en is genomen op 1 mei.`,
 	)
+	const fileId = Number(created.fileId)
+	expect(
+		Number.isFinite(fileId) && fileId > 0,
+		'the fixture document must come back with a usable fileId — without one '
+			+ 'there is nothing to extract and every assertion below would be vacuous',
+	).toBe(true)
 
 	// A custom-dictionary term guarantees a deterministic detection without
 	// depending on which NER backend this instance runs.
@@ -89,24 +96,27 @@ async function provision(page: Page, req: APIRequestContext): Promise<Fixture> {
 		data: { value: TERM, label: TERM, active: true },
 	})
 
-	const batch = await req.post(`${API}/anonymization/batch/folder`, {
-		headers: jsonHeaders(token),
-		data: { folderPath: FOLDER },
-	})
-	expect(batch.status(), 'starting the folder batch must answer 200').toBe(200)
-	const batchId = (await batch.json()).batchId
-
-	const extract = await req.post(`${API}/anonymization/batch/${batchId}/extract`, {
+	// PER-FILE EXTRACT, NOT THE BATCH ONE, and the difference is the whole
+	// fixture. `/anonymization/batch/{id}/entities` returns CONSOLIDATED rows —
+	// type, value, highestConfidence, fileCount, included — and deliberately
+	// drops the relation ids, because one displayed entity can span several
+	// relations. `/anonymization/extract/{fileId}` returns the raw detections,
+	// each carrying its own `relationId`, which is what the review UI aggregates
+	// into `relationIds` client-side.
+	//
+	// The first version of this fixture used the batch endpoint and found no
+	// relation ids at all. It did not quietly pass: `firstRelationId()` threw,
+	// which is why this comment exists rather than a green run over nothing.
+	const extract = await req.post(`${API}/anonymization/extract/${fileId}`, {
 		headers: jsonHeaders(token),
 		data: {},
 	})
 	expect(
 		extract.status(),
-		'the extract step must answer 200 — a 404 here means the batch record did not '
-			+ 'survive the request, which is a cache-backend problem rather than a listener one',
+		`POST ${API}/anonymization/extract/${fileId} must answer 200`,
 	).toBe(200)
 
-	fixture = { token, batchId }
+	fixture = { token, fileId, extracted: await extract.json() }
 	return fixture
 }
 
@@ -122,10 +132,10 @@ async function entities(
 	req: APIRequestContext,
 	f: Fixture,
 ): Promise<Record<string, unknown>> {
-	const url = `${API}/anonymization/batch/${f.batchId}/entities`
-	const res = await req.get(url, { headers: jsonHeaders(f.token) })
-	expect(res.status(), `GET ${url} must answer 200`).toBe(200)
-	return await res.json()
+	// The extract response IS the entity list; provisioning already made the
+	// call and kept it, so re-extracting here would create a second set of
+	// relations for the same file and make "exactly one record" meaningless.
+	return f.extracted
 }
 
 /**
@@ -136,16 +146,28 @@ async function entities(
  * @return The relation id.
  */
 function firstRelationId(payload: Record<string, unknown>): number {
-	const list = (payload.entities ?? payload.results ?? []) as Array<
-		Record<string, unknown>
-	>
+	const list = (payload.entities
+		?? payload.results
+		?? payload.detectedEntities
+		?? []) as Array<Record<string, unknown>>
+
 	for (const e of list) {
-		const ids = e.relationIds as number[] | undefined
-		if (Array.isArray(ids) === true && ids.length > 0) return ids[0]
+		// `relationId` singular is what the API emits per detection; the review
+		// store is what aggregates several of them into `relationIds`. Accept
+		// both, because reading only the plural form is precisely the mistake
+		// the first version of this fixture made.
+		const one = e.relationId
+		if (typeof one === 'number' && one > 0) return one
+		const many = e.relationIds as number[] | undefined
+		if (Array.isArray(many) === true && many.length > 0) return many[0]
 	}
+
+	// THROWS RATHER THAN SKIPS, DELIBERATELY. A skip here would report "nothing
+	// to test" as a pass — and on a listener whose failure mode is firing no
+	// events at all, that is the one answer that must never look like success.
 	throw new Error(
-		'no entity in the batch carries a relationId — the fixture failed to produce '
-			+ 'relations, so nothing below would be testing the listener',
+		'no detected entity carries a relationId — the fixture produced no relations, '
+			+ `so nothing below would be testing the listener. Payload keys: ${Object.keys(payload).join(', ')}`,
 	)
 }
 
