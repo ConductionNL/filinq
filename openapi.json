@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "DocuDesk",
-        "version": "0.0.38-unstable.20260820125103",
+        "version": "0.0.39-beta.20260820202811",
         "description": "DocuDesk",
         "license": {
             "name": "EUPL-1.2"
