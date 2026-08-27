@@ -949,7 +949,9 @@
         "Click New and save a signing request": "Klik op Nieuw en sla een ondertekenverzoek op",
         "Your first template is ready": "Je eerste sjabloon staat klaar",
         "You have a template and a signing request. The Dashboard tracks them as your document workspace grows, and the documentation covers the rest.": "Je hebt een sjabloon en een ondertekenverzoek. Het dashboard houdt ze bij naarmate je documentwerkomgeving groeit, en de documentatie behandelt de rest.",
-        "Open the documentation to keep going": "Open de documentatie om verder te gaan"
+        "Open the documentation to keep going": "Open de documentatie om verder te gaan",
+        "Flows": "Flows",
+        "Flow": "Flow"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
