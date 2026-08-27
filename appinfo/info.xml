@@ -202,6 +202,15 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
             -->
             <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+            <!-- Written but never registered, so it had never run once: a
+                 class that exists is not a class that runs. It moves filinq
+                 data out of the Dutch columns into the English ones, so any
+                 instance predating the column rename still holds its data
+                 where nothing reads it.
+
+                 post-migration only: a fresh install has no Dutch columns to
+                 move, and the step is idempotent either way. -->
+            <step>OCA\Filinq\Repair\RenameDutchColumns</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
