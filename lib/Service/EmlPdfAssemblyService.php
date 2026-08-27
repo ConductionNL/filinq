@@ -22,19 +22,19 @@
  * See openspec/changes/eml-pdf-assembly/design.md (D1–D11).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\ConversionFailedException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -43,30 +43,30 @@ use Throwable;
  * Builds a PDF/A-3b from a redacted EML structure.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class EmlPdfAssemblyService {
 
 	/**
 	 * App identifier used for IAppConfig reads.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * Config key: when false, only the redacted envelope renders; renderable
 	 * attachments are not appended as pages. Default true.
 	 */
-	private const KEY_APPEND_PAGES = 'docudesk.conversion.eml.append_attachment_pages';
+	private const KEY_APPEND_PAGES = 'filinq.conversion.eml.append_attachment_pages';
 
 	/**
 	 * Config key: redacted attachments larger than this (bytes) get a
 	 * placeholder page. Default 26214400 (25 MB).
 	 */
-	private const KEY_MAX_SIZE = 'docudesk.conversion.eml.max_attachment_render_size_bytes';
+	private const KEY_MAX_SIZE = 'filinq.conversion.eml.max_attachment_render_size_bytes';
 
 	/**
 	 * Default value for the max-render-size config key (25 MB).

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk PackagePartIo
+ * Filinq PackagePartIo
  *
  * Reads and writes a single entry of an ODF/OOXML ZIP package while leaving every
  * other entry byte-identical.
@@ -10,7 +10,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -18,12 +18,12 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 use ZipArchive;
@@ -42,7 +42,7 @@ use ZipArchive;
  * uncompressed leading `mimetype` entry — intact.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -50,7 +50,7 @@ use ZipArchive;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md
  */
@@ -102,7 +102,7 @@ class PackagePartIo {
 	 * Read one entry from a ZIP package.
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part         The entry name.
+	 * @param string $part The entry name.
 	 *
 	 * @return string The entry contents.
 	 *
@@ -142,7 +142,7 @@ class PackagePartIo {
 	 * creating one — not an error to be reported to a user.
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part         The entry name.
+	 * @param string $part The entry name.
 	 *
 	 * @return bool True when the entry exists.
 	 *
@@ -170,8 +170,8 @@ class PackagePartIo {
 	 * Write one entry back into a ZIP package, leaving every other entry as-is.
 	 *
 	 * @param string $packageBytes The raw package bytes.
-	 * @param string $part         The entry name.
-	 * @param string $xml          The new entry contents.
+	 * @param string $part The entry name.
+	 * @param string $xml The new entry contents.
 	 *
 	 * @return string The rewritten package bytes.
 	 *
@@ -216,7 +216,7 @@ class PackagePartIo {
 	 * @throws RuntimeException When no temporary file can be created.
 	 */
 	private function spill(string $bytes): string {
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-pkg-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-pkg-');
 		if ($path === false) {
 			throw new RuntimeException('Could not create a temporary file for the document package.');
 		}

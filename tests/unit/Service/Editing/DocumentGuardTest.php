@@ -4,7 +4,7 @@
  * Unit tests for DocumentGuard
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,13 +12,13 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\DocumentObjectServiceResolver;
-use OCA\DocuDesk\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
@@ -29,10 +29,10 @@ use RuntimeException;
  * Unit tests for the standing document refusals.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -48,7 +48,6 @@ class DocumentGuardTest extends TestCase {
 		$file->method('getId')->willReturn(4711);
 
 		return $file;
-
 	}//end file()
 
 	/**
@@ -76,7 +75,6 @@ class DocumentGuardTest extends TestCase {
 		$resolver->method('resolve')->willReturn($objectService);
 
 		return new DocumentGuard($resolver, $this->createMock(LoggerInterface::class));
-
 	}//end guard()
 
 	/**

@@ -4,7 +4,7 @@
  * Unit tests for EntityConsolidationService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/enhanced-anonymization/specs/anonymization-entity-review/spec.md
  * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-4.4
@@ -23,12 +23,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\BasesResolverService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\PolicyMatchService;
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Service\BasesResolverService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -40,10 +40,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for EntityConsolidationService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

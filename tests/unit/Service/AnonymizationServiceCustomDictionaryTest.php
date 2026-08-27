@@ -5,7 +5,7 @@
  * (custom-dictionary-recognition, design.md §D3/§D4).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -13,22 +13,22 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
-use OCA\DocuDesk\Service\AnonymizationResultParser;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\CustomDictionaryDetectionRunner;
-use OCA\DocuDesk\Service\CustomDictionaryMatchService;
-use OCA\DocuDesk\Service\CustomDictionaryService;
-use OCA\DocuDesk\Service\EntityDetectionService;
-use OCA\DocuDesk\Service\LegalBasisProposalService;
+use OCA\Filinq\Service\AnonymizationResultParser;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\CustomDictionaryDetectionRunner;
+use OCA\Filinq\Service\CustomDictionaryMatchService;
+use OCA\Filinq\Service\CustomDictionaryService;
+use OCA\Filinq\Service\EntityDetectionService;
+use OCA\Filinq\Service\LegalBasisProposalService;
 use OCA\OpenRegister\Db\Chunk;
 use OCA\OpenRegister\Db\ChunkMapper;
 use OCA\OpenRegister\Db\EntityRelation;
@@ -119,7 +119,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 					return $this->mockRelationMapper;
 				}
 
-				if ($class === 'OCA\DocuDesk\Service\LegalBasisProposalService') {
+				if ($class === 'OCA\Filinq\Service\LegalBasisProposalService') {
 					return $this->mockBasis;
 				}
 
@@ -131,7 +131,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase {
 					return $gdprEntityMapper;
 				}
 
-				if ($class === 'OCA\DocuDesk\Service\PolicyMatchService') {
+				if ($class === 'OCA\Filinq\Service\PolicyMatchService') {
 					throw new Exception('PolicyMatchService not registered');
 				}
 

@@ -28,7 +28,7 @@ metadata at object creation. The `archive` key MUST survive
 `ConfigurationService::importFromApp()` — a unit test MUST pin that the
 imported schema exposes the configured `archive` block, and if the import
 path drops the key an OpenRegister issue MUST be filed (the degradation
-path is manual configuration through OR's schema UI, never a DocuDesk-side
+path is manual configuration through OR's schema UI, never a Filinq-side
 retention implementation).
 
 #### Scenario: Imported record schemas expose archive configuration

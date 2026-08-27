@@ -14,7 +14,7 @@ jobs:
   triage:
     uses: ConductionNL/.github/.github/workflows/issue-triage.yml@main
     with:
-      app-name: docudesk
+      app-name: filinq
       backlog-existing: ${{ github.event_name == 'workflow_dispatch' && inputs.backlog-existing || false }}
     secrets:
       PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}

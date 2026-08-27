@@ -5,11 +5,11 @@ status: done
 # register-i18n Specification
 
 ## Purpose
-Enables multi-language content for DocuDesk-specific register fields using OpenRegister's `translatable` flag, so template titles, descriptions, field labels, and help text can be stored and displayed in the viewing user's language. Generated documents are explicitly single-language artifacts, not translatable register objects. This lets DocuDesk present its templates and forms in Dutch or English while keeping each produced document in one language.
+Enables multi-language content for Filinq-specific register fields using OpenRegister's `translatable` flag, so template titles, descriptions, field labels, and help text can be stored and displayed in the viewing user's language. Generated documents are explicitly single-language artifacts, not translatable register objects. This lets Filinq present its templates and forms in Dutch or English while keeping each produced document in one language.
 ## Requirements
 ### Requirement: REQ-I18N-01 Language-Tagged Fields (Priority: Must)
 
-DocuDesk-specific fields MUST support multi-language content via OpenRegister's `translatable` flag.
+Filinq-specific fields MUST support multi-language content via OpenRegister's `translatable` flag.
 
 #### Scenario: Template title in Dutch and English
 - GIVEN a template with title "Beschikking omgevingsvergunning"
@@ -145,15 +145,15 @@ API responses MUST respect language preferences via headers and query parameters
 
 ### Requirement: REQ-I18N-05 Translation Surface Definition (Priority: Must)
 
-DocuDesk MUST have a small, well-defined translation surface limited to template metadata and field labels.
+Filinq MUST have a small, well-defined translation surface limited to template metadata and field labels.
 
 #### Scenario: Identify translatable fields
-- GIVEN the DocuDesk data model
+- GIVEN the Filinq data model
 - WHEN the translatable surface is defined
 - THEN only template title, description, field label, and helpText are translatable
 - AND template content (HTML/Twig) is NOT translatable via this mechanism
 - AND consent records are NOT translatable
-- AND document register report data is NOT translatable
+- AND `filinq` register report data is NOT translatable
 
 #### Scenario: Template content language variants
 - GIVEN a template needs to generate documents in Dutch and English
@@ -173,19 +173,19 @@ DocuDesk MUST have a small, well-defined translation surface limited to template
 All apps MUST support Dutch and English as minimum languages.
 
 #### Scenario: Dutch as primary language
-- GIVEN DocuDesk is deployed in a Dutch municipality
+- GIVEN Filinq is deployed in a Dutch municipality
 - WHEN all templates are created
 - THEN Dutch is the primary language for all content
 - AND all UI strings are available in Dutch via Nextcloud l10n
 
 #### Scenario: English as secondary language
-- GIVEN an English-speaking user accesses DocuDesk
+- GIVEN an English-speaking user accesses Filinq
 - WHEN template metadata is displayed
 - THEN English translations are available for template titles and descriptions
 - AND UI strings are available in English via Nextcloud l10n
 
 #### Scenario: Distinction between register-i18n and l10n
-- GIVEN DocuDesk uses both Nextcloud l10n and register-i18n
+- GIVEN Filinq uses both Nextcloud l10n and register-i18n
 - WHEN the systems are compared
 - THEN l10n handles UI strings (buttons, labels, error messages) via gettext
 - AND register-i18n handles register object content (template titles, descriptions) via OpenRegister

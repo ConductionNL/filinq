@@ -1,12 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-26 visual-coverage — per-page-component rendering tests.
  *
  * WHAT THIS FILE IS FOR
  * ---------------------
- * Every DocuDesk page component under `src/views/` needs a visual proof:
+ * Every Filinq page component under `src/views/` needs a visual proof:
  * either a pixel baseline under `tests/e2e/visual/**` or an e2e test that
  * drives the component in a browser (hydra gate-26). Pixel baselines are not
  * an option here — `tests/e2e/playwright.config.ts` deliberately excludes
@@ -37,7 +37,7 @@ import { test, expect } from '@playwright/test'
 import { go, waitForNcContentReady, dismissOverlays } from './_helpers'
 
 /**
- * A syntactically valid UUID that no DocuDesk object can have.
+ * A syntactically valid UUID that no Filinq object can have.
  *
  * Used by the two detail-page tests. Both detail components catch their own
  * fetch failure (`customDictionaryStore.fetchDictionary` / the consent store
@@ -143,7 +143,7 @@ test.describe('page components — dashboard', () => {
 		page,
 	}) => {
 		await go(page, '')
-		const widget = page.locator('.docudesk-anon-widget')
+		const widget = page.locator('.filinq-anon-widget')
 		await expect(widget).toBeVisible()
 		// The dashboard widget's supported-format line omits ODT; the in-app
 		// AnonymizationWidget's includes it. Asserting the exact string keeps
@@ -181,28 +181,35 @@ test.describe('page components — consent', () => {
 			'the consent list must render rows or its empty state',
 		).toBeVisible()
 
-		// TWO THINGS THIS PAGE DECLARES AND DOES NOT RENDER — measured from the
+		// TWO THINGS THIS PAGE DECLARED AND DID NOT RENDER — measured from the
 		// accessibility snapshot of run 31335736716, where `<main>` was exactly:
 		//     heading "Consent Management" [level=1]
 		//     paragraph: Per-document consent records produced by the …
 		//     button "Refresh" / note "No consent records found" / button "Actions"
 		//
-		// 1. `<template #above-table>` (`.consent-stats`, four CnStatsBlocks)
-		//    is dropped on the floor: CnIndexPage has no `above-table` slot —
-		//    the slot between the page header and the actions bar is
-		//    `below-header`. Three sibling views carry the same dead slot name
-		//    (views/policy/ProhibitionIndex, views/policy/StandingConsentIndex,
-		//    views/consent/StandingConsentIndex).
-		// 2. The h1 reads "Consent Management" (the manifest page title), not
-		//    the "Consent Workflow" this component binds to CnIndexPage's
-		//    `title`: CnPageRenderer forwards the manifest's top-level `title`
-		//    to the page component, ConsentIndex declares no `title` prop, so
-		//    it falls through onto CnIndexPage and wins over the explicit
-		//    binding.
+		// 1. FIXED. `<template #above-table>` (`.consent-stats`, four
+		//    CnStatsBlocks) was dropped on the floor: CnIndexPage has no
+		//    `above-table` slot — the slot between the page header and the
+		//    actions bar is `below-header`, and Vue drops an unmatched named
+		//    slot silently. Renamed in views/consent/ConsentIndex,
+		//    views/policy/ProhibitionIndex and views/policy/StandingConsentIndex;
+		//    all three verified rendering. The cards are now asserted by
+		//    `consent statistics render four colour-coded cards matching the
+		//    API payload` in ./consent-management.spec.ts, which is what
+		//    carries the `#view-consent-statistics` tag.
 		//
-		// Both are real defects, both are visible UI changes to fix, and both
-		// belong in a consent/policy change with its own review rather than in
-		// a coverage PR — so they are recorded here and not asserted.
+		//    A FOURTH view, views/consent/StandingConsentIndex, still carries
+		//    the dead `#above-table` name and was deliberately left alone: it
+		//    is an orphaned legacy duplicate that no registry entry mounts (see
+		//    the `orphaned-view` record for it in tests/unit/reachability.spec.js),
+		//    so there is no route on which the rename could be verified.
+		//
+		// 2. STILL OPEN. The h1 reads "Consent Management" (the manifest page
+		//    title), not the "Consent Workflow" this component binds to
+		//    CnIndexPage's `title`: CnPageRenderer forwards the manifest's
+		//    top-level `title` to the page component, ConsentIndex declares no
+		//    `title` prop, so it falls through onto CnIndexPage and wins over
+		//    the explicit binding. Recorded here and not asserted.
 	})
 
 	test('ConsentDetail paints its no-record state at /consent/<absent-id>', async ({
@@ -276,7 +283,7 @@ test.describe('page components — standalone pages', () => {
 		const gallery = page.locator('.dd-gallery')
 		await expect(
 			gallery.getByRole('heading', {
-				name: 'DocuDesk component gallery',
+				name: 'Filinq component gallery',
 				level: 1,
 			}),
 		).toBeVisible()
@@ -306,10 +313,10 @@ test.describe('page components — standalone pages', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — admin settings', () => {
-	test('EntityTypeSelector paints its detection hint on the DocuDesk admin settings page', async ({
+	test('EntityTypeSelector paints its detection hint on the Filinq admin settings page', async ({
 		page,
 	}) => {
-		await page.goto('/index.php/settings/admin/docudesk', {
+		await page.goto('/index.php/settings/admin/filinq', {
 			waitUntil: 'domcontentloaded',
 		})
 		await waitForNcContentReady(page)

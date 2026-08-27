@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage — the "Admin Warning When No Anonymiser Backend
@@ -35,8 +35,8 @@
 import { test, expect, type Page, type APIRequestContext } from '@playwright/test'
 import { waitForNcContentReady, dismissOverlays, go } from './_helpers'
 
-const SETTINGS = '/index.php/settings/admin/docudesk'
-const API_SETTINGS = '/index.php/apps/docudesk/api/settings'
+const SETTINGS = '/index.php/settings/admin/filinq'
+const API_SETTINGS = '/index.php/apps/filinq/api/settings'
 
 interface BackendState {
 	method: string
@@ -84,7 +84,7 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 		page,
 		request,
 	}) => {
-		// @e2e openspec/specs/anonymization/spec.md#admin-opens-docudesk-admin-settings-with-no-backend-configured
+		// @e2e openspec/specs/anonymization/spec.md#admin-opens-filinq-admin-settings-with-no-backend-configured
 		const state = await readBackendState(request)
 		expect(
 			state.warningDismissed,
@@ -116,10 +116,10 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 		).toBeVisible()
 	})
 
-	test('the banner renders at the top of the DocuDesk dashboard', async ({
+	test('the banner renders at the top of the Filinq dashboard', async ({
 		page,
 	}) => {
-		// @e2e openspec/specs/anonymization/spec.md#admin-opens-docudesk-dashboard-with-no-backend-configured
+		// @e2e openspec/specs/anonymization/spec.md#admin-opens-filinq-dashboard-with-no-backend-configured
 		await go(page, '')
 		await expect(banner(page)).toBeVisible()
 

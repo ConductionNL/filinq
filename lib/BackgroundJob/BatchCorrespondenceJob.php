@@ -8,12 +8,12 @@
  * synchronous limit (>10 recipients).
  *
  * @category  BackgroundJob
- * @package   OCA\DocuDesk\BackgroundJob
+ * @package   OCA\Filinq\BackgroundJob
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
  *
@@ -23,10 +23,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\BackgroundJob;
+namespace OCA\Filinq\BackgroundJob;
 
 use Exception;
-use OCA\DocuDesk\Service\CorrespondenceService;
+use OCA\Filinq\Service\CorrespondenceService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -35,10 +35,10 @@ use Psr\Log\LoggerInterface;
  * Queued job for batch correspondence generation
  *
  * @category BackgroundJob
- * @package  OCA\DocuDesk\BackgroundJob
+ * @package  OCA\Filinq\BackgroundJob
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-2
  */

@@ -4,7 +4,7 @@ kind: code
 
 ## Why
 
-**20 of DocuDesk's 21 schemas declare no `authorization` cascade, and OpenRegister
+**20 of Filinq's 21 schemas declare no `authorization` cascade, and OpenRegister
 treats an unconfigured cascade as OPEN.**
 
 This is not inferred. `ConsentCrudService::getConsent()` documents it in the code,
@@ -12,7 +12,7 @@ from a measured security finding (#283):
 
 > ⚠️ But this is NOT what stops one user reading another's consent record… The
 > `publicationConsent` schema declares `"authorization": null` in
-> `lib/Settings/docudesk_register.json`, and OpenRegister treats an unconfigured
+> `lib/Settings/filinq_register.json`, and OpenRegister treats an unconfigured
 > authorization cascade as **OPEN** — so the per-object RBAC half permits the read
 > for any authenticated caller in the org.
 >
@@ -21,7 +21,7 @@ from a measured security finding (#283):
 > redundant.
 
 So for 20 of 21 schemas, **OpenRegister's RBAC is not the guard.** Anything that
-protects those objects has to be an explicit check in DocuDesk's own code.
+protects those objects has to be an explicit check in Filinq's own code.
 
 Gate-7 reports **9 controller methods with no authorisation guard in the body**:
 
@@ -68,7 +68,7 @@ cross-tenant.
 ## What Changes
 
 - **An authorisation decision per schema.** For each of the 20, either declare an
-  `authorization` cascade in `lib/Settings/docudesk_register.json`, or record why the
+  `authorization` cascade in `lib/Settings/filinq_register.json`, or record why the
   data is legitimately org-readable (reference data, catalogues, shared templates).
 - **An explicit guard on each of the 9 endpoints**, or a recorded finding that the
   endpoint's data is legitimately org-wide.
@@ -95,7 +95,7 @@ data layer, and only the endpoints it cannot cover need a controller guard.
 
 ## Impact
 
-- **Data**: `lib/Settings/docudesk_register.json` — an `authorization` block per
+- **Data**: `lib/Settings/filinq_register.json` — an `authorization` block per
   schema is a schema change and therefore needs an `info.version` bump, or the import
   is skipped and the change never deploys.
 - **Code**: guards on up to 9 controller methods.
@@ -107,5 +107,5 @@ data layer, and only the endpoints it cannot cover need a controller guard.
 
 - Found while triaging gate-7 for [ConductionNL/.github#475](https://github.com/ConductionNL/.github/pull/475).
 - ⚠️ **This finding is fleet-shaped.** Every consumer app that assumed OR's RBAC was
-  guarding it has the same question to answer. DocuDesk is where it was measured, not
+  guarding it has the same question to answer. Filinq is where it was measured, not
   necessarily where it is worst.

@@ -34,12 +34,12 @@ generic anonymisation.
 
 | Config key | Default | Description |
 |---|---|---|
-| `docudesk.prohibition.high_confidence_threshold` | `0.85` | Inclusive threshold above which a prohibition match is treated as high-confidence and must be present in `entities[]`. Reads happen at request time; no restart required. |
+| `filinq.prohibition.high_confidence_threshold` | `0.85` | Inclusive threshold above which a prohibition match is treated as high-confidence and must be present in `entities[]`. Reads happen at request time; no restart required. |
 
 Set the threshold via Nextcloud's app config:
 
 ```bash
-occ config:app:set docudesk prohibition.high_confidence_threshold --value 0.90
+occ config:app:set filinq prohibition.high_confidence_threshold --value 0.90
 ```
 
 ## HTTP 422 Response Body
@@ -108,13 +108,13 @@ on the **first** request — no special retry flag is needed.
 
 For every released override:
 
-1. A **DocuDesk-side audit entry** is written to the
+1. A **Filinq-side audit entry** is written to the
    `prohibitionOverrideAudit` schema in the consent register, capturing
    `{ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}`.
 2. OpenRegister's matching `EntityRelation` row is **PATCHed** with
    `{skipAnonymization: true}` so OR's anonymise flow honours the skip flag.
 
-Both steps happen synchronously in the same request. The DocuDesk audit entry
+Both steps happen synchronously in the same request. The Filinq audit entry
 is always written **before** the OR PATCH. If the OR PATCH fails, the request
 responds with HTTP 500; already-committed audit entries are not rolled back.
 
@@ -136,7 +136,7 @@ behaviour change**. The gate matches nothing and the request proceeds as before.
 
 ### Behavior changes
 
-- The anonymise endpoint (`POST /apps/docudesk/api/anonymize/{fileId}`) may now
+- The anonymise endpoint (`POST /apps/filinq/api/anonymize/{fileId}`) may now
   respond HTTP 422 when prohibition-listed entities are missing from the
   submitted `entities[]` set. **Existing callers with no prohibition records
   configured are unaffected.**

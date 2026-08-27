@@ -2,7 +2,7 @@
   SPDX-License-Identifier: EUPL-1.2
   SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-  DocuDesk app shell. Mounts CnAppRoot with the bundled manifest and
+  Filinq app shell. Mounts CnAppRoot with the bundled manifest and
   the customComponents registry derived from registry.js.
 
   The existing sidebar/modal/dialog overlays are preserved as slot
@@ -16,7 +16,7 @@
 		:customComponents="customComponents"
 		:pageTypes="pageTypes"
 		:registry="registry"
-		appId="docudesk"
+		appId="filinq"
 		:translate="translateForApp"
 		:permissions="permissions">
 		<!--
@@ -84,7 +84,7 @@ export default {
 		/**
 		 * 5-kind component registry for v2 manifests (hydra ADR-036).
 		 * Map of registry key → `{ kind, component, ...metadata }`.
-		 * See src/registry.js for the docudesk entries.
+		 * See src/registry.js for the filinq entries.
 		 */
 		registry: {
 			type: Object,
@@ -115,7 +115,7 @@ export default {
 		 * @spec exclude Thin i18n wrapper around @nextcloud/l10n translate; no domain behavior.
 		 */
 		translateForApp(key) {
-			return ncT('docudesk', key)
+			return ncT('filinq', key)
 		},
 	},
 }

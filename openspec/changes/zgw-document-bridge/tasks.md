@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `bridge` register with `bridgeSource` and `externalDocument` schemas to `lib/Settings/docudesk_register.json` (REQ-DDZGW-001)
+- [ ] 1.1 Add the `bridge` register with `bridgeSource` and `externalDocument` schemas to `lib/Settings/filinq_register.json` (REQ-DDZGW-001)
   - All properties from design.md D1 with titles, descriptions, enums; `hardValidation: true`; register description documents the bridge contract and bumps the register version.
   - `x-openregister-lifecycle` on `externalDocument` uses the canonical `initial: staged` key and exactly the REQ-DDZGW-004 transition list.
 
@@ -28,7 +28,7 @@
   - Every method carries an explicit auth attribute and a per-object/admin guard; listing scoped by OR RBAC; routes registered in `appinfo/routes.php` before the catch-all.
 
 - [ ] 2.5 File an OpenConnector issue if the push mapping cannot express "create new informatieobject + relate to zaak" during verification (design.md D2 uncertainty)
-  - Outbound leg degrades to visibly-waiting `ready_for_writeback` objects; never DocuDesk-side HTTP.
+  - Outbound leg degrades to visibly-waiting `ready_for_writeback` objects; never Filinq-side HTTP.
 
 ## 3. Frontend
 
@@ -41,7 +41,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests for BridgeService, controller and lifecycle transitions — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: health clock cases, PUT-semantics survival of a non-changed field, invalid-transition rejection, staged-original hash unchanged after processing.
 
 - [ ] 4.2 Playwright e2e specs `tests/e2e/spec-coverage/zgw-bridge.spec.ts` + `tests/e2e/workflows/zgw-bridge-workflow.spec.ts` covering the `@e2e`-referenced scenarios

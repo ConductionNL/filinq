@@ -1,10 +1,10 @@
 # Tasks — grondslagen-woo-art5
 
-> DocuDesk-only. Mixed change (ADR-032): register seed (config) + frontend fetch (code), kept together because the fetch consumes the reshaped seed. No new dependency, no DB migration.
+> Filinq-only. Mixed change (ADR-032): register seed (config) + frontend fetch (code), kept together because the fetch consumes the reshaped seed. No new dependency, no DB migration.
 
 ## 1. Seed the Woo Art. 5 grounds (A–S)
 
-- [x] 1.1 Replace the 6 `base` objects in `lib/Settings/docudesk_register.json` with the 19 Woo Art. 5 grounds (A–S): article slugs `art-5-1-1-a` … `art-5-2-2`, legend-prefixed `name`, Woo-text `description`. Update the `base` schema description.
+- [x] 1.1 Replace the 6 `base` objects in `lib/Settings/filinq_register.json` with the 19 Woo Art. 5 grounds (A–S): article slugs `art-5-1-1-a` … `art-5-2-2`, legend-prefixed `name`, Woo-text `description`. Update the `base` schema description.
 - [x] 1.2 Remap the demo `dossier` seed `bases[]` references to the new slugs.
 
 ## 2. Fetch grondslagen from the register

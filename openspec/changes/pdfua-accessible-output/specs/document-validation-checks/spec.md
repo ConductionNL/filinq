@@ -33,7 +33,7 @@ findings default to category `document`; the aggregation of
 The checks MUST be heuristic byte-level scans in the style of the existing
 `pdf-encrypted`/`text-layer-missing` checks (no new parsing dependency),
 MUST apply only to PDF content, MUST ride the existing
-`docudesk.validation.profiles` per-check severity mechanism
+`filinq.validation.profiles` per-check severity mechanism
 (`off|warning|blocking`), MUST default to `warning` in every shipped
 profile, and — like all findings — MUST never embed document content. The
 service and its documentation MUST describe these as accessibility presence

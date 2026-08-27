@@ -4,7 +4,7 @@
  * Unit tests for AnonymizationController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
  * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
@@ -21,11 +21,11 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\AnonymizationController;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\FileListingService;
+use OCA\Filinq\Controller\AnonymizationController;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -42,10 +42,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for AnonymizationController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
@@ -141,7 +141,7 @@ class AnonymizationControllerTest extends TestCase {
 		$this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
 		$this->controller = new AnonymizationController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
 			anonymizationService: $this->mockAnonService,
@@ -301,7 +301,7 @@ class AnonymizationControllerTest extends TestCase {
 		$content = file_get_contents(__DIR__ . '/../../../lib/Controller/AnonymizationController.php');
 
 		$this->assertStringContainsString(
-			'docudesk.anonymisation.default_output_format',
+			'filinq.anonymisation.default_output_format',
 			$content,
 			'Controller must read tenant default via the documented IAppConfig key'
 		);
@@ -322,7 +322,7 @@ class AnonymizationControllerTest extends TestCase {
 		$emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
 
 		$controller = new AnonymizationController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
 			anonymizationService: $this->mockAnonService,
@@ -413,7 +413,7 @@ class AnonymizationControllerTest extends TestCase {
 		$emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
 
 		$controller = new AnonymizationController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->mockLogger,
 			anonymizationService: $this->mockAnonService,
@@ -434,7 +434,7 @@ class AnonymizationControllerTest extends TestCase {
 	/**
 	 * Stray non-array `bases` field on a payload entry is silently ignored — succeeds.
 	 *
-	 * Per spec.md (post-explore-mode rework 2026-05-12): DocuDesk MUST ignore any
+	 * Per spec.md (post-explore-mode rework 2026-05-12): Filinq MUST ignore any
 	 * `bases` field that erroneously appears on incoming payload entries (do NOT 400).
 	 * Bases are set per-relation via OR's own PATCH endpoint, not validated here.
 	 *

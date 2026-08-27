@@ -48,7 +48,7 @@ no persistence.
 
 ## API
 
-`POST /apps/docudesk/api/comparison/compare`
+`POST /apps/filinq/api/comparison/compare`
 
 Request body:
 
@@ -84,7 +84,7 @@ Response (200):
 | 400  | —                     | Missing `left`/`right` subject or `fileId`. |
 | 401  | —                     | Not authenticated. |
 | 404  | `not-found`           | A subject (or requested version) is not resolvable for this user. No existence disclosure. |
-| 413  | `too-large`           | A subject's extracted text exceeds `docudesk.comparison.max_text_bytes` (default 5 MB). |
+| 413  | `too-large`           | A subject's extracted text exceeds `filinq.comparison.max_text_bytes` (default 5 MB). |
 | 415  | `unsupported-format`  | A subject's mime type is not text-extractable. The body names the offending subject. |
 | 422  | `versions-unavailable`| A version was requested but `files_versions` is disabled. |
 
@@ -115,7 +115,7 @@ beyond the two subjects' file IDs and version timestamps.
 
 | Key | Default | Meaning |
 |-----|---------|---------|
-| `docudesk.comparison.max_text_bytes` | `5242880` | Maximum extracted text per subject (bytes). |
+| `filinq.comparison.max_text_bytes` | `5242880` | Maximum extracted text per subject (bytes). |
 
 ## Use Cases
 - Original vs anonymised verification (prove nothing flagged was missed)

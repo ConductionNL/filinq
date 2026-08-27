@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at DocuDesk HEAD:
+Verified at Filinq HEAD:
 
 - `publicationConsent` (register `consent`) carries `consentStatus`
   (`pending` | `consent_given` | `objection_received` | `no_response` |
@@ -40,8 +40,8 @@ Verified at OpenCatalogi HEAD
   binding for informatiecategorie/publisher (WOO-TOOI-001/002) resolved by
   `TooiVocabularyService` from bundled `tooi_waardelijsten.json`.
 
-Boundary (shared brief): DocuDesk prepares + hands off + tracks state;
-OpenCatalogi/OpenWoo is the publication endpoint; DocuDesk builds no portal.
+Boundary (shared brief): Filinq prepares + hands off + tracks state;
+OpenCatalogi/OpenWoo is the publication endpoint; Filinq builds no portal.
 
 ## Goals / Non-Goals
 
@@ -49,7 +49,7 @@ OpenCatalogi/OpenWoo is the publication endpoint; DocuDesk builds no portal.
 
 - One auditable pipeline object per publication with a readiness gate that
   cannot be bypassed.
-- DiWoo metadata assembled once, on the DocuDesk side, from operator input +
+- DiWoo metadata assembled once, on the Filinq side, from operator input +
   document metadata, in the vocabulary OpenCatalogi validates.
 - Handoff, de-publication and destruction-date propagation as first-class,
   logged operations against the OpenCatalogi `publication` object.
@@ -162,7 +162,7 @@ it rather than duplicated.
 
 ### D5 — De-publication and destruction-date propagation reuse endpoint semantics
 
-- **Withdraw**: operator supplies a mandatory reason; DocuDesk sets
+- **Withdraw**: operator supplies a mandatory reason; Filinq sets
   `depublicatiedatum = now` on the endpoint publication object (past date ⇒
   withdrawn from all public surfaces per OpenCatalogi's published-predicate),
   transitions the record `depublication_requested → depublished` once the
@@ -170,12 +170,12 @@ it rather than duplicated.
   never deleted — Woo accountability requires the trace.
 - **Destruction date**: when the source system supplies a destruction date
   (Archiefwet/selectielijst — e.g. via the zgw-document-bridge metadata or
-  operator entry), DocuDesk records it on `publicationRecord.destructionDate`
+  operator entry), Filinq records it on `publicationRecord.destructionDate`
   and propagates it to the endpoint publication as a manual
   `retentionExpiresAt` override **with** a `retentionNote` naming the source
   ("Vernietigingsdatum uit zaaksysteem, Archiefwet 1995/selectielijst"), as
   OpenCatalogi RET-003 requires for overrides. Actual disposal is
-  OpenCatalogi's retention job (RET-005/006) — DocuDesk propagates, never
+  OpenCatalogi's retention job (RET-005/006) — Filinq propagates, never
   destroys.
 
 ### D6 — Consent-clearance signal (the publication-consent modification)
@@ -235,7 +235,7 @@ re-declared).
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (demo-municipality flavour,
+Shipped in `filinq_register.json` `objects[]` (demo-municipality flavour,
 placeholder identifiers only):
 
 ```json
@@ -302,5 +302,5 @@ already handed off live in OpenCatalogi and are unaffected by rollback.
   dossier published as a bundle); per-document fan-out inside a dossier is a
   follow-up once volume demands it.
 - Whether `published`/`depublished` confirmation should be event-driven
-  (OpenCatalogi → DocuDesk notification) instead of checked-on-read — deferred
+  (OpenCatalogi → Filinq notification) instead of checked-on-read — deferred
   until OpenCatalogi emits such events.

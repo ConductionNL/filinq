@@ -1,15 +1,15 @@
 ---
-title: DocuDesk Documentation
-description: Get started with DocuDesk, document generation, anonymisation, and signing on Nextcloud. Render PDF, ODF and HTML from templates with OCR and anonymisation.
+title: Filinq Documentation
+description: Get started with Filinq, document generation, anonymisation, and signing on Nextcloud. Render PDF, ODF and HTML from templates with OCR and anonymisation.
 ---
 
-# DocuDesk Documentation
+# Filinq Documentation
 
-DocuDesk generates, anonymizes, and signs PDF, ODF (.odt), or HTML documents in a GDPR-compliant manner, all while keeping your data secure within your local Nextcloud instance.
+Filinq generates, anonymizes, and signs PDF, ODF (.odt), or HTML documents in a GDPR-compliant manner, all while keeping your data secure within your local Nextcloud instance.
 
 ## The Power of Local Processing
 
-Imagine a world where your sensitive documents never have to leave your premises, yet you still have all the power of modern cloud collaboration. That's DocuDesk. Running on your local Nextcloud instance, it's like having a secure document fortress with a sophisticated diplomatic corps.
+Imagine a world where your sensitive documents never have to leave your premises, yet you still have all the power of modern cloud collaboration. That's Filinq. Running on your local Nextcloud instance, it's like having a secure document fortress with a sophisticated diplomatic corps.
 
 When your organization needs to process sensitive documents - whether it's generating decisions, anonymizing personal data, or signing outbound correspondence - everything happens within your walls. Your data stays your data.
 
@@ -31,26 +31,26 @@ When your organization needs to process sensitive documents - whether it's gener
 We chose Nextcloud as our platform for several compelling reasons:
 
 ### Enterprise-Grade Security
-By leveraging Nextcloud's secure infrastructure, DocuDesk ensures all document processing happens within your controlled environment. This means sensitive data never leaves your premises while still enabling collaborative features and integrations with external systems.
+By leveraging Nextcloud's secure infrastructure, Filinq ensures all document processing happens within your controlled environment. This means sensitive data never leaves your premises while still enabling collaborative features and integrations with external systems.
 
 ### Easy Installation and Updates
-DocuDesk is available directly through the Nextcloud App Store, making installation as simple as a few clicks:
+Filinq is available directly through the Nextcloud App Store, making installation as simple as a few clicks:
 
 1. Log in to your Nextcloud instance as an administrator
 2. Navigate to the Apps section
-3. Find DocuDesk in the Organization category
+3. Find Filinq in the Organization category
 4. Click "Install"
 
-Note: DocuDesk requires [OpenRegister](https://apps.nextcloud.com/apps/openregister) to be installed. Anonymization runs through a configurable entity-detection backend — the regex backend works out of the box, while OpenAnonymiser, Microsoft Presidio, or an LLM require the corresponding companion service to be deployed and configured in Open Register.
+Note: Filinq requires [OpenRegister](https://apps.nextcloud.com/apps/openregister) to be installed. Anonymization runs through a configurable entity-detection backend — the regex backend works out of the box, while OpenAnonymiser, Microsoft Presidio, or an LLM require the corresponding companion service to be deployed and configured in Open Register.
 
 The app will automatically stay up-to-date with your Nextcloud instance, ensuring you always have the latest features and security updates.
 
 ### Scalability and Performance
-Nextcloud's architecture allows DocuDesk to handle everything from individual document processing to large-scale batch operations, all while maintaining optimal performance within your local environment.
+Nextcloud's architecture allows Filinq to handle everything from individual document processing to large-scale batch operations, all while maintaining optimal performance within your local environment.
 
 ## Contributing
 
-We welcome contributions to improve the documentation! If you'd like to contribute, please visit our [Codeberg repository](https://codeberg.org/Conduction/docudesk). There you can:
+We welcome contributions to improve the documentation! If you'd like to contribute, please visit our [GitHub repository](https://github.com/ConductionNL/filinq). There you can:
 
 - Report issues or suggest improvements by opening an issue
 - Submit pull requests with documentation changes

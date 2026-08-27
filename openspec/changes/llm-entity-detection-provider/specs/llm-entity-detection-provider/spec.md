@@ -17,7 +17,7 @@ MUST fall back to the default provider **with an explicit warning surfaced in
 the report** — never a silent downgrade. Verified at HEAD: OR's `detectWithLLM`
 is a stub that silently returns regex, OR's method is a global setting, and
 hermiq's `POST /api/graph/run` is admin-only + object-centric — so this change
-formalises a DocuDesk-side provider seam and depends on (does not modify) OR's
+formalises a Filinq-side provider seam and depends on (does not modify) OR's
 engine and a hermiq text→entities agentflow endpoint.
 
 ## ADDED Requirements
@@ -49,7 +49,7 @@ OpenRegister's own detection engine.
 ### Requirement: Per-organisation provider selection (REQ-DDLED-002)
 
 The app MUST resolve the detection provider per organisation from
-`docudesk.detection.provider` (default `default`), through a single resolver
+`filinq.detection.provider` (default `default`), through a single resolver
 that is the only place the provider is chosen. Selecting a provider for one
 organisation MUST NOT change another organisation's provider, and MUST NOT
 modify OpenRegister's global detection-method setting. The provider-selection
@@ -72,9 +72,9 @@ configuration routes MUST be admin-gated and fail closed.
 ### Requirement: Local hermiq LLM provider with no cloud calls (REQ-DDLED-003)
 
 The `LlmDetectionProvider` MUST detect entities by calling a configured hermiq
-agentflow at `docudesk.detection.hermiq_endpoint`, sending the document's
+agentflow at `filinq.detection.hermiq_endpoint`, sending the document's
 extracted text and enabled entity types and reading detected entities from the
-returned agent state. With `docudesk.detection.require_local` enabled (default
+returned agent state. With `filinq.detection.require_local` enabled (default
 true) the provider MUST refuse any endpoint that is not a loopback or
 private-network host, so document text never leaves the organisation's
 perimeter. The provider MUST report itself unavailable when it is unconfigured,

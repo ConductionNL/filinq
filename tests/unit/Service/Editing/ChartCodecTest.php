@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,14 +17,14 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\ChartCodec;
+use OCA\Filinq\Service\Editing\ChartCodec;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use ZipArchive;
@@ -51,10 +51,10 @@ class ChartCodecTest extends TestCase {
 	 * @var array
 	 */
 	private const CHART = [
-		'type'       => 'bar',
-		'title'      => 'Toekenning per programma',
+		'type' => 'bar',
+		'title' => 'Toekenning per programma',
 		'categories' => ['Zorg', 'Onderwijs', 'Wonen'],
-		'series'     => [['name' => 'Bedrag', 'values' => [120, 90, 45]]],
+		'series' => [['name' => 'Bedrag', 'values' => [120, 90, 45]]],
 	];
 
 	/**
@@ -99,7 +99,7 @@ class ChartCodecTest extends TestCase {
 		];
 
 		$path = tempnam(sys_get_temp_dir(), 'chart') . '.docx';
-		$zip  = new ZipArchive();
+		$zip = new ZipArchive();
 		$zip->open($path, ZipArchive::CREATE);
 		foreach ($entries as $name => $contents) {
 			$zip->addFromString($name, $contents);
@@ -117,7 +117,7 @@ class ChartCodecTest extends TestCase {
 	 * Read one entry from a package.
 	 *
 	 * @param string $bytes The package bytes.
-	 * @param string $name  The entry name.
+	 * @param string $name The entry name.
 	 *
 	 * @return string The entry contents.
 	 */
@@ -217,7 +217,7 @@ class ChartCodecTest extends TestCase {
 	 */
 	public function testValuesAndLabelsAreCached(): void {
 		$result = $this->codec->embedChart($this->docx(), 'docx', self::CHART);
-		$chart  = $this->entry($result['bytes'], 'word/charts/chart1.xml');
+		$chart = $this->entry($result['bytes'], 'word/charts/chart1.xml');
 
 		foreach (['Zorg', 'Onderwijs', 'Wonen'] as $label) {
 			$this->assertStringContainsString(sprintf('<c:v>%s</c:v>', $label), $chart);
@@ -241,7 +241,7 @@ class ChartCodecTest extends TestCase {
 	 * @spec openspec/specs/document-chart-embedding/spec.md
 	 */
 	public function testTheDrawingIsPlacedBeforeTheSectionProperties(): void {
-		$result   = $this->codec->embedChart($this->docx(), 'docx', self::CHART);
+		$result = $this->codec->embedChart($this->docx(), 'docx', self::CHART);
 		$document = $this->entry($result['bytes'], 'word/document.xml');
 
 		$this->assertLessThan(
@@ -261,7 +261,7 @@ class ChartCodecTest extends TestCase {
 	public function testAChartCanBePlacedAfterAnAnchoredParagraph(): void {
 		$anchor = sprintf('b%s-1', substr(sha1('Intro paragraph'), 0, 8));
 
-		$result   = $this->codec->embedChart($this->docx(), 'docx', self::CHART, $anchor);
+		$result = $this->codec->embedChart($this->docx(), 'docx', self::CHART, $anchor);
 		$document = $this->entry($result['bytes'], 'word/document.xml');
 
 		$this->assertLessThan(
@@ -301,7 +301,7 @@ class ChartCodecTest extends TestCase {
 	 * @spec openspec/specs/document-chart-embedding/spec.md
 	 */
 	public function testAMismatchedSeriesLengthIsRefused(): void {
-		$chart             = self::CHART;
+		$chart = self::CHART;
 		$chart['series'][0]['values'] = [1, 2];
 
 		$this->expectException(RuntimeException::class);
@@ -318,8 +318,8 @@ class ChartCodecTest extends TestCase {
 	 * @spec openspec/specs/document-chart-embedding/spec.md
 	 */
 	public function testAPieChartRefusesASecondSeries(): void {
-		$chart            = self::CHART;
-		$chart['type']    = 'pie';
+		$chart = self::CHART;
+		$chart['type'] = 'pie';
 		$chart['series'][] = ['name' => 'Second', 'values' => [1, 2, 3]];
 
 		$this->expectException(RuntimeException::class);
@@ -339,11 +339,11 @@ class ChartCodecTest extends TestCase {
 	 * @spec openspec/specs/document-chart-embedding/spec.md
 	 */
 	public function testAPieChartCarriesNoAxes(): void {
-		$chart         = self::CHART;
+		$chart = self::CHART;
 		$chart['type'] = 'pie';
 
 		$result = $this->codec->embedChart($this->docx(), 'docx', $chart);
-		$xml    = $this->entry($result['bytes'], 'word/charts/chart1.xml');
+		$xml = $this->entry($result['bytes'], 'word/charts/chart1.xml');
 
 		$this->assertStringContainsString('<c:pieChart>', $xml);
 		$this->assertStringNotContainsString('<c:catAx>', $xml);
@@ -359,7 +359,7 @@ class ChartCodecTest extends TestCase {
 	 */
 	public function testInvalidDefinitionsAreRefusedByName(): void {
 		try {
-			$chart         = self::CHART;
+			$chart = self::CHART;
 			$chart['type'] = 'donut';
 			$this->codec->embedChart($this->docx(), 'docx', $chart);
 			$this->fail('an unknown chart type must be refused');
@@ -370,7 +370,7 @@ class ChartCodecTest extends TestCase {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessageMatches('/at least one series/');
 
-		$chart           = self::CHART;
+		$chart = self::CHART;
 		$chart['series'] = [];
 		$this->codec->embedChart($this->docx(), 'docx', $chart);
 	}//end testInvalidDefinitionsAreRefusedByName()
@@ -399,7 +399,7 @@ class ChartCodecTest extends TestCase {
 	 * @spec openspec/specs/document-chart-embedding/spec.md
 	 */
 	public function testASecondChartDoesNotCollideWithTheFirst(): void {
-		$first  = $this->codec->embedChart($this->docx(), 'docx', self::CHART);
+		$first = $this->codec->embedChart($this->docx(), 'docx', self::CHART);
 		$second = $this->codec->embedChart($first['bytes'], 'docx', self::CHART);
 
 		$this->assertSame('word/charts/chart1.xml', $first['chartPart']);

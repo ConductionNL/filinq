@@ -3,7 +3,7 @@
 /**
  * Document Agent Service
  *
- * DocuDesk's curated, agent-reachable document operations: read a document's
+ * Filinq's curated, agent-reachable document operations: read a document's
  * anchored blocks, apply anchored edits to it, and convert it to PDF.
  *
  * These are the only document-editing tools an agent sees. Everything the
@@ -13,12 +13,12 @@
  * without passing through the guards.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Editing
+ * @package   OCA\Filinq\Service\Editing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-editing-tools/tasks.md#task-2-5
  *
@@ -28,10 +28,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
-use OCA\DocuDesk\Service\GeneratedDocumentLogger;
-use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\Filinq\Service\GeneratedDocumentLogger;
+use OCA\Filinq\Service\PdfConversionService;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -44,10 +44,10 @@ use Throwable;
  * The agent-facing document operations.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-no-document-attachment-or-signature-bytes-leave-through-this-capability
  *
@@ -126,7 +126,6 @@ class DocumentAgentService {
 	 */
 	public function readDocument(int $fileId): array {
 		return $this->editSession->openForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readDocument()
 
 	#[McpTool(
@@ -200,7 +199,6 @@ class DocumentAgentService {
 		);
 
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
-
 	}//end editDocument()
 
 	#[McpTool(
@@ -228,7 +226,6 @@ class DocumentAgentService {
 	 */
 	public function readSpreadsheet(int $fileId): array {
 		return $this->editSession->openSpreadsheetForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readSpreadsheet()
 
 	#[McpTool(
@@ -247,8 +244,8 @@ class DocumentAgentService {
 	/**
 	 * Write literal values into a spreadsheet's cells.
 	 *
-	 * @param int    $fileId  The Nextcloud file id of the spreadsheet.
-	 * @param array  $edits   Each `{cell, value, replaceFormula?}`.
+	 * @param int $fileId The Nextcloud file id of the spreadsheet.
+	 * @param array $edits Each `{cell, value, replaceFormula?}`.
 	 * @param string $version The `version` from the read that produced these addresses.
 	 *
 	 * @return array<string, mixed> The outcome, including cells whose cached values went stale.
@@ -276,7 +273,6 @@ class DocumentAgentService {
 		);
 
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
-
 	}//end editSpreadsheet()
 
 	#[McpTool(
@@ -304,7 +300,6 @@ class DocumentAgentService {
 	 */
 	public function readPresentation(int $fileId): array {
 		return $this->editSession->openPresentationForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readPresentation()
 
 	#[McpTool(
@@ -323,8 +318,8 @@ class DocumentAgentService {
 	/**
 	 * Replace the text of addressed presentation shapes.
 	 *
-	 * @param int    $fileId  The Nextcloud file id of the presentation.
-	 * @param array  $edits   Each `{slide, shape, text, region?}`.
+	 * @param int $fileId The Nextcloud file id of the presentation.
+	 * @param array $edits Each `{slide, shape, text, region?}`.
 	 * @param string $version The `version` from the read that produced these ids.
 	 *
 	 * @return array<string, mixed> The outcome.
@@ -352,7 +347,6 @@ class DocumentAgentService {
 		);
 
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
-
 	}//end editPresentation()
 
 	#[McpTool(
@@ -399,7 +393,7 @@ class DocumentAgentService {
 		array $chart,
 		string $version,
 		string $afterAnchor = '',
-		string $outputMode = ''
+		string $outputMode = '',
 	): array {
 		$anchor = null;
 		if ($afterAnchor !== '') {
@@ -452,7 +446,6 @@ class DocumentAgentService {
 	 */
 	public function readDocumentMetadata(int $fileId): array {
 		return $this->editSession->readMetadataForAgent(uid: $this->requireUid(), fileId: $fileId);
-
 	}//end readDocumentMetadata()
 
 	#[McpTool(
@@ -496,7 +489,7 @@ class DocumentAgentService {
 		int $fileId,
 		array $metadata,
 		string $version,
-		string $outputMode = ''
+		string $outputMode = '',
 	): array {
 		$mode = null;
 		if ($outputMode !== '') {
@@ -532,7 +525,7 @@ class DocumentAgentService {
 	/**
 	 * Convert a document to PDF, leaving the source untouched.
 	 *
-	 * The conversion backend is chosen by DocuDesk's cascade, not by the caller
+	 * The conversion backend is chosen by Filinq's cascade, not by the caller
 	 * -- so the tool cannot be steered onto a particular process -- but the
 	 * backend that claimed the conversion IS reported, because an office-app
 	 * conversion and the built-in fallback differ visibly in fidelity.
@@ -590,7 +583,7 @@ class DocumentAgentService {
 	 *
 	 * There is no template behind an agent edit or a conversion, so `templateId`
 	 * is genuinely empty rather than filled with a plausible-looking id. The row
-	 * exists so the artefact is findable from DocuDesk's own register; the
+	 * exists so the artefact is findable from Filinq's own register; the
 	 * authoritative account of who asked for it is Hermiq's invocation record,
 	 * which the returned `artefact` descriptor feeds.
 	 *
@@ -627,7 +620,7 @@ class DocumentAgentService {
 				userId: $uid
 			);
 		} catch (Throwable $e) {
-			$this->logger->warning('DocuDesk could not record an agent document artefact: ' . $e->getMessage());
+			$this->logger->warning('Filinq could not record an agent document artefact: ' . $e->getMessage());
 		}
 
 	}//end record()
@@ -654,7 +647,6 @@ class DocumentAgentService {
 		}
 
 		return $node;
-
 	}//end resolveReadableFile()
 
 	/**
@@ -691,6 +683,5 @@ class DocumentAgentService {
 		}
 
 		return $user->getUID();
-
 	}//end requireUid()
 }//end class

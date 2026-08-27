@@ -10,7 +10,7 @@ import { generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 
-const baseUrl = '/apps/docudesk/api/policy/standing-consents'
+const baseUrl = '/apps/filinq/api/policy/standing-consents'
 
 export const useStandingConsentStore = defineStore('standingConsent', {
 	state: () => ({

@@ -2,7 +2,7 @@
 
 `SigningProviderInterface::cancelSigning(string $externalId): bool` is declared,
 implemented twice, and called nowhere. Gate-57 found it on 2026-08-16 as one of
-three genuine orphaned write capabilities in docudesk (the gate's other twelve
+three genuine orphaned write capabilities in filinq (the gate's other twelve
 findings were routed controllers it could not see callers for — fixed separately in
 `.github#475`).
 

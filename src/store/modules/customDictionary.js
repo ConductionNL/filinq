@@ -14,7 +14,7 @@ import { generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 
-const baseUrl = '/apps/docudesk/api/custom-dictionaries'
+const baseUrl = '/apps/filinq/api/custom-dictionaries'
 
 /**
  * Resolve a record's identifier — OpenRegister rows carry the UUID as

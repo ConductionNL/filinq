@@ -8,7 +8,7 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<NcModal
 		:show="show"
-		:title="t('docudesk', 'Document validation')"
+		:title="t('filinq', 'Document validation')"
 		@close="$emit('close')">
 		<div class="validation-result-modal">
 			<NcLoadingIcon v-if="loading" :size="32" />

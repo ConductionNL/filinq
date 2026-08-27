@@ -8,11 +8,11 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<div class="versions-view">
 		<div class="versions-view__header">
-			<h2>{{ t('docudesk', 'Versions') }}</h2>
+			<h2>{{ t('filinq', 'Versions') }}</h2>
 			<p class="versions-view__subtitle">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'File versions of this document, read from Nextcloud. Open, download, restore, or compare a version.',
 					)
 				}}
@@ -23,7 +23,7 @@ SPDX-License-Identifier: EUPL-1.2
 			v-if="unavailable"
 			type="info"
 			data-testid="versions-unavailable">
-			{{ t('docudesk', 'File versions are not available on this instance') }}
+			{{ t('filinq', 'File versions are not available on this instance') }}
 		</NcNoteCard>
 
 		<NcNoteCard v-else-if="error" type="error">
@@ -36,25 +36,25 @@ SPDX-License-Identifier: EUPL-1.2
 			v-else-if="!unavailable"
 			:columns="columns"
 			:rows="rows"
-			:tableLabel="t('docudesk', 'Versions')"
+			:tableLabel="t('filinq', 'Versions')"
 			data-testid="versions-table">
 			<template #actions="{ row }">
 				<NcButton variant="tertiary" @click="download(row)">
-					{{ t('docudesk', 'Download') }}
+					{{ t('filinq', 'Download') }}
 				</NcButton>
 				<NcButton
 					v-if="!row.isCurrent"
 					variant="tertiary"
 					data-testid="version-restore"
 					@click="promptRestore(row)">
-					{{ t('docudesk', 'Restore') }}
+					{{ t('filinq', 'Restore') }}
 				</NcButton>
 				<NcButton
 					v-if="canCompare(row)"
 					variant="tertiary"
 					data-testid="version-compare"
 					@click="compare(row)">
-					{{ t('docudesk', 'Compare with current') }}
+					{{ t('filinq', 'Compare with current') }}
 				</NcButton>
 			</template>
 		</CnDataTable>
@@ -122,10 +122,10 @@ export default {
 		 */
 		columns() {
 			return [
-				{ key: 'when', label: t('docudesk', 'When') },
-				{ key: 'author', label: t('docudesk', 'Author') },
-				{ key: 'size', label: t('docudesk', 'Size') },
-				{ key: 'current', label: t('docudesk', 'Current') },
+				{ key: 'when', label: t('filinq', 'When') },
+				{ key: 'author', label: t('filinq', 'Author') },
+				{ key: 'size', label: t('filinq', 'Size') },
+				{ key: 'current', label: t('filinq', 'Current') },
 			]
 		},
 
@@ -139,7 +139,7 @@ export default {
 			return this.versions.map((v) => ({
 				...v,
 				when: this.formatTimestamp(v.timestamp),
-				current: v.isCurrent ? t('docudesk', 'Current version') : '',
+				current: v.isCurrent ? t('filinq', 'Current version') : '',
 				size: this.formatBytes(v.size),
 			}))
 		},
@@ -174,7 +174,7 @@ export default {
 				} else {
 					this.error =
 						(e && e.response && e.response.data && e.response.data.error)
-						|| t('docudesk', 'Could not list versions')
+						|| t('filinq', 'Could not list versions')
 				}
 			} finally {
 				this.loading = false
@@ -231,7 +231,7 @@ export default {
 			} catch (e) {
 				this.error =
 					(e && e.response && e.response.data && e.response.data.error)
-					|| t('docudesk', 'Could not restore version')
+					|| t('filinq', 'Could not restore version')
 			}
 		},
 

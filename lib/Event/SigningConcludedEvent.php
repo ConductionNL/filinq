@@ -1,24 +1,24 @@
 <?php
 
 /**
- * DocuDesk SigningConcludedEvent
+ * Filinq SigningConcludedEvent
  *
- * Public cross-app event DocuDesk dispatches when a delegated (provenance-
+ * Public cross-app event Filinq dispatches when a delegated (provenance-
  * carrying) signing request reaches a terminal outcome. Consumer fleet apps
  * (e.g. shillinq) listen for it to perform their own downstream side effects —
- * DocuDesk owns the signing request only, never the consumer's side effect.
+ * Filinq owns the signing request only, never the consumer's side effect.
  * Carries the subject/provenance reference plus the outcome envelope built from
  * the persisted signing-request fields.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -26,26 +26,26 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCP\EventDispatcher\Event;
 
 /**
- * Cross-app conclusion event: DocuDesk reports a concluded delegated signing request.
+ * Cross-app conclusion event: Filinq reports a concluded delegated signing request.
  *
- * Fully immutable — DocuDesk constructs it from the persisted signing-request
+ * Fully immutable — Filinq constructs it from the persisted signing-request
  * array and the normalised terminal status; consumers only read. The
  * array-to-event mapping (including the eIDAS assurance-level resolution)
  * lives in the injectable {@see SigningConcludedEventFactory}, not in a static
  * named constructor on this value object.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  */
 class SigningConcludedEvent extends Event {
 	/**
@@ -86,7 +86,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string The signing-request id.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSigningRequestId(): string {
 		return $this->signingRequestId;
@@ -97,7 +97,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string The status.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getStatus(): string {
 		return $this->status;
@@ -108,7 +108,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string|null The signed document reference, or null.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSignedDocumentRef(): ?string {
 		return $this->signedDocumentRef;
@@ -119,7 +119,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return array<int, mixed> The signers.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSigners(): array {
 		return $this->signers;
@@ -130,7 +130,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string|null The signed-at timestamp, or null.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSignedAt(): ?string {
 		return $this->signedAt;
@@ -141,7 +141,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string The source app id.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSourceApp(): string {
 		return $this->provenance->getSourceApp();
@@ -152,7 +152,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string|null The subject register, or null.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSubjectRegister(): ?string {
 		return $this->provenance->getSubjectRegister();
@@ -163,7 +163,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string|null The subject schema, or null.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSubjectSchema(): ?string {
 		return $this->provenance->getSubjectSchema();
@@ -174,7 +174,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string|null The subject id, or null.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getSubjectId(): ?string {
 		return $this->provenance->getSubjectId();
@@ -185,7 +185,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string The external reference.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getExternalReference(): string {
 		return $this->provenance->getExternalReference();
@@ -196,7 +196,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return string The correlation id.
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 */
 	public function getCorrelationId(): string {
 		return $this->provenance->getCorrelationId();

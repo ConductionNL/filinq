@@ -7,7 +7,7 @@
  * CSV/newline import dedupe (REQ-DDCDR-005).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -15,19 +15,19 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\CustomDictionaryAccessGate;
-use OCA\DocuDesk\Service\CustomDictionaryPayloadNormaliser;
-use OCA\DocuDesk\Service\CustomDictionaryRepository;
-use OCA\DocuDesk\Service\CustomDictionaryService;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Service\CustomDictionaryAccessGate;
+use OCA\Filinq\Service\CustomDictionaryPayloadNormaliser;
+use OCA\Filinq\Service\CustomDictionaryRepository;
+use OCA\Filinq\Service\CustomDictionaryService;
+use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;

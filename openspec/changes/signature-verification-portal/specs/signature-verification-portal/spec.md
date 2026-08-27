@@ -7,7 +7,7 @@ status: proposed
 ## Purpose
 
 A public, account-free verification page — reached by scanning a QR stamped on
-a signed or waarmerked DocuDesk PDF — that states what a document's signature
+a signed or waarmerked Filinq PDF — that states what a document's signature
 actually guarantees. Because the native signing MAC covers only the content
 hash and **excludes the signer-identity assertion fields** (verified at HEAD in
 `NativeSigningProvider::produceSignedArtifact()`; the forgeable-signer defect
@@ -39,7 +39,7 @@ whether a token exists.
 
 #### Scenario: Anonymous visitor verifies a signed document via its QR
 
-- GIVEN a signed DocuDesk PDF whose QR encodes `verify/{token}`
+- GIVEN a signed Filinq PDF whose QR encodes `verify/{token}`
 - AND a visitor with no Nextcloud session
 - WHEN they open `verify/{token}`
 - THEN the page renders the verification outcome including signature level and an audit summary
@@ -63,8 +63,8 @@ cover. While the native signing MAC excludes the assertion fields (`signer`,
 MUST be false and the page MUST show the signer as *asserted, not
 cryptographically bound*, never as an unqualified "signed by X". Per-signature
 status MUST be tri-state: `verified` (content integrity cryptographically
-confirmed), `unverifiable` (an external `/Type /Sig` signature DocuDesk cannot
-yet validate — reported as such, never as tamper), or `invalid` (a DocuDesk
+confirmed), `unverifiable` (an external `/Type /Sig` signature Filinq cannot
+yet validate — reported as such, never as tamper), or `invalid` (a Filinq
 marker whose MAC does not match). When `signing-trust-rebuild` ships the
 identity-bound MAC and the mint step records `identityBound: true`, the same
 signer field MUST reflect the bound verdict without further portal changes.
@@ -86,7 +86,7 @@ signer field MUST reflect the bound verdict without further portal changes.
 
 #### Scenario: External CMS signature reports unverifiable, not invalid
 
-- GIVEN a document carrying a genuine `/Type /Sig` CMS signature with no DocuDesk marker
+- GIVEN a document carrying a genuine `/Type /Sig` CMS signature with no Filinq marker
 - WHEN the portal verifies it
 - THEN the signature status is `unverifiable`, not `invalid`
 - @e2e exclude external-signature classification is backend logic — covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php)

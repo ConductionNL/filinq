@@ -9,7 +9,7 @@
  * failure this class exists to prevent.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Office
+ * @package  OCA\Filinq\Tests\Unit\Service\Office
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,9 +22,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Office;
+namespace OCA\Filinq\Tests\Unit\Service\Office;
 
-use OCA\DocuDesk\Service\Office\SupportedTypeProbe;
+use OCA\Filinq\Service\Office\SupportedTypeProbe;
 use PHPUnit\Framework\TestCase;
 
 /**

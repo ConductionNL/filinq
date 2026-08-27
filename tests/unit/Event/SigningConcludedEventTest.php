@@ -6,18 +6,18 @@
  * Pins the decidesk delegation seam (signing-trust-rebuild REQ-DDSTR-010): the
  * completion payload built by SigningConcludedEventFactory::create() carries a resolved eIDAS
  * `assuranceLevel` alongside the pre-existing response-shape fields —
- * additive only, so `EIDASSignatureService::composeDocudeskSigningRequest()`'s
+ * additive only, so `EIDASSignatureService::composeFilinqSigningRequest()`'s
  * existing expectations keep passing. The native provider only ever produces
  * SES artifacts, so it always resolves `low` — never over-claiming an
  * assurance the artifact cannot actually evidence.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Event
+ * @package  OCA\Filinq\Tests\Unit\Event
  *
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,9 +29,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Event;
+namespace OCA\Filinq\Tests\Unit\Event;
 
-use OCA\DocuDesk\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Event\SigningConcludedEventFactory;
 use PHPUnit\Framework\TestCase;
 
 /**

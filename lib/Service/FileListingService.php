@@ -3,17 +3,17 @@
 /**
  * File Listing Service
  *
- * Service for listing processed files in the user's DocuDesk folder.
+ * Service for listing processed files in the user's Filinq folder.
  * Delegates entity stats to FileEntityStatsService and upload logic
  * to FileUploadService.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/specs/anonymization/spec.md
@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -34,10 +34,10 @@ use Psr\Log\LoggerInterface;
  * Service for listing processed files with entity and risk data
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.5
  */
@@ -110,7 +110,7 @@ class FileListingService {
 	}//end buildFileInfo()
 
 	/**
-	 * List all processed files in the user's DocuDesk folder
+	 * List all processed files in the user's Filinq folder
 	 *
 	 * @return array<int, array<string, mixed>> Array of file info
 	 *
@@ -120,9 +120,9 @@ class FileListingService {
 		try {
 			// Ensures the user is authenticated (throws otherwise).
 			$this->fileUploadService->getCurrentUserId();
-			$docuDeskFolder = $this->fileUploadService->getDocuDeskFolder();
+			$filinqFolder = $this->fileUploadService->getFilinqFolder();
 
-			$files = $docuDeskFolder->getDirectoryListing();
+			$files = $filinqFolder->getDirectoryListing();
 			$entityRelationMapper = $this->entityStatsService->tryGetEntityRelationMapper();
 			$riskLevelService = $this->entityStatsService->tryGetRiskLevelService();
 
@@ -162,7 +162,7 @@ class FileListingService {
 	}//end listProcessedFiles()
 
 	/**
-	 * Upload a file to the user's DocuDesk folder
+	 * Upload a file to the user's Filinq folder
 	 *
 	 * @param string $fileName The name of the file to upload
 	 * @param string $fileContent The raw file content

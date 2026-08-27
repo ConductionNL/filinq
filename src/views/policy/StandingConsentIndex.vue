@@ -7,10 +7,10 @@ import { standingConsentStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Publish always')"
+			:title="t('filinq', 'Publish always')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.',
 				)
 			"
@@ -36,26 +36,29 @@ import { standingConsentStore } from '../../store/store.js'
 			@pageChanged="onPageChanged"
 			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateDialog">
-			<template #above-table>
+			<!-- `below-header`, not `above-table` — CnIndexPage defines no
+			     `above-table` slot and Vue drops an unmatched named slot
+			     silently, so these stats rendered nothing at all. -->
+			<template #below-header>
 				<div class="policy-stats">
 					<CnStatsBlock
-						:title="t('docudesk', 'Total')"
+						:title="t('filinq', 'Total')"
 						:count="standingConsentStore.standingConsentStats.total"
-						:countLabel="t('docudesk', 'rules')"
+						:countLabel="t('filinq', 'rules')"
 						variant="default"
 						horizontal
 						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Active')"
+						:title="t('filinq', 'Active')"
 						:count="standingConsentStore.standingConsentStats.active"
-						:countLabel="t('docudesk', 'active')"
+						:countLabel="t('filinq', 'active')"
 						variant="success"
 						horizontal
 						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Inactive')"
+						:title="t('filinq', 'Inactive')"
 						:count="standingConsentStore.standingConsentStats.inactive"
-						:countLabel="t('docudesk', 'inactive')"
+						:countLabel="t('filinq', 'inactive')"
 						variant="default"
 						horizontal
 						showZeroCount />
@@ -64,7 +67,7 @@ import { standingConsentStore } from '../../store/store.js'
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
+					:label="row.entityType || t('filinq', 'Unknown')"
 					:colorMap="entityTypeColorMap" />
 			</template>
 
@@ -78,8 +81,8 @@ import { standingConsentStore } from '../../store/store.js'
 				<CnStatusBadge
 					:label="
 						row.active === false
-							? t('docudesk', 'Inactive')
-							: t('docudesk', 'Active')
+							? t('filinq', 'Inactive')
+							: t('filinq', 'Active')
 					"
 					:colorMap="activeColorMap" />
 			</template>
@@ -97,13 +100,13 @@ import { standingConsentStore } from '../../store/store.js'
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
-						{{ t('docudesk', 'Edit') }}
+						{{ t('filinq', 'Edit') }}
 					</NcActionButton>
 					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
-						{{ t('docudesk', 'Delete') }}
+						{{ t('filinq', 'Delete') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -132,7 +135,7 @@ import { standingConsentStore } from '../../store/store.js'
 		-->
 		<ConfirmActionDialog
 			v-if="deleteTarget"
-			:name="t('docudesk', 'Delete standing consent')"
+			:name="t('filinq', 'Delete standing consent')"
 			:message="deleteMessage"
 			:busy="deleting"
 			@confirm="executeDelete"
@@ -190,33 +193,39 @@ export default {
 			},
 
 			activeColorMap: {
-				[t('docudesk', 'Active')]: 'success',
-				[t('docudesk', 'Inactive')]: 'default',
+				[t('filinq', 'Active')]: 'success',
+				[t('filinq', 'Inactive')]: 'default',
 			},
 		}
 	},
 
 	computed: {
+		/**
+		 * CnDataTable column set for the Standing Publication Consents surface.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		tableColumns() {
 			return [
 				{
 					key: 'entityText',
-					label: t('docudesk', 'Entity'),
+					label: t('filinq', 'Entity'),
 					sortable: true,
 				},
-				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'matchRules', label: t('docudesk', 'Match rules') },
+				{ key: 'entityType', label: t('filinq', 'Type'), sortable: true },
+				{ key: 'matchRules', label: t('filinq', 'Match rules') },
 				{
 					key: 'consentMethod',
-					label: t('docudesk', 'Method'),
+					label: t('filinq', 'Method'),
 					sortable: true,
 				},
 				{
 					key: 'validUntil',
-					label: t('docudesk', 'Valid until'),
+					label: t('filinq', 'Valid until'),
 					sortable: true,
 				},
-				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
+				{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 			]
 		},
 
@@ -226,11 +235,18 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * Empty-state text for the Standing Publication Consents surface — the
+		 * store's error when loading failed, otherwise the no-records message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		emptyText() {
 			if (standingConsentStore.error) {
 				return standingConsentStore.error
 			}
-			return t('docudesk', 'No standing publication consents defined.')
+			return t('filinq', 'No standing publication consents defined.')
 		},
 
 		/**
@@ -240,9 +256,8 @@ export default {
 		 */
 		deleteMessage() {
 			const name =
-				this.deleteTarget?.entityText
-				|| t('docudesk', 'this standing consent')
-			return t('docudesk', 'Delete "{name}"? This cannot be undone.', { name })
+				this.deleteTarget?.entityText || t('filinq', 'this standing consent')
+			return t('filinq', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
 
@@ -343,7 +358,7 @@ export default {
 				this.formError =
 					err.response?.data?.error
 					|| err.message
-					|| t('docudesk', 'Save failed')
+					|| t('filinq', 'Save failed')
 			} finally {
 				this.saving = false
 			}

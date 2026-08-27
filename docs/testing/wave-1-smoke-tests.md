@@ -21,14 +21,14 @@ Any reference to `admin` / `admin` in this document below refers to the **local 
 
 ## 0. Pre-flight
 
-- [ ] All four feature branches checked out and apps enabled (`occ app:list | grep -E "openregister|docudesk"`)
-- [ ] DocuDesk register imported at version 7.0.0 (`occ config:app:get openregister imported_config_docudesk_version` → `7.0.0`)
+- [ ] All four feature branches checked out and apps enabled (`occ app:list | grep -E "openregister|filinq"`)
+- [ ] Filinq register imported at version 7.0.0 (`occ config:app:get openregister imported_config_docudesk_version` → `7.0.0`)
 - [ ] OR migrations applied (`occ migrations:execute openregister Version1Date20260512120000` ran cleanly on first enable)
-- [ ] Nextcloud UI loads at `http://localhost:8080`; DocuDesk app icon visible in the top bar
+- [ ] Nextcloud UI loads at `http://localhost:8080`; Filinq app icon visible in the top bar
 
 ---
 
-## Wave 1.1 — DocuDesk Dossier Register
+## Wave 1.1 — Filinq Dossier Register
 
 ### Register + schemas installed
 
@@ -37,23 +37,23 @@ Any reference to `admin` / `admin` in this document below refers to the **local 
 
 ### Seeds present
 
-- [ ] `GET /apps/openregister/api/objects/dossier/base` returns **6** records with slugs:
+- [ ] `GET /apps/openregister/api/objects/filinq/base` returns **6** records with slugs:
   `persoonsgegevens`, `bijzondere-persoonsgegevens`, `strafrechtelijk`,
   `bedrijfs-fabricagegegevens`, `onevenredige-benadeling`, `nationale-veiligheid`
-- [ ] `GET /apps/openregister/api/objects/dossier/dossier` returns 3–5 seed dossiers (one with `bases: []`, one with `checkedOn: null`)
+- [ ] `GET /apps/openregister/api/objects/filinq/dossier` returns 3–5 seed dossiers (one with `bases: []`, one with `checkedOn: null`)
 
 ### Create flow
 
 - [ ] In Files: create a folder, copy its node ID
-- [ ] `POST /apps/openregister/api/objects/dossier/dossier` with `name`, `bases: ["persoonsgegevens"]`, and `@self.folder: "<node-id>"` → 201, returns a uuid
-- [ ] `GET /apps/openregister/api/objects/dossier/dossier/<uuid>` returns the same data; stored `folder` matches the supplied node ID; **no new folder was created**
+- [ ] `POST /apps/openregister/api/objects/filinq/dossier` with `name`, `bases: ["persoonsgegevens"]`, and `@self.folder: "<node-id>"` → 201, returns a uuid
+- [ ] `GET /apps/openregister/api/objects/filinq/dossier/<uuid>` returns the same data; stored `folder` matches the supplied node ID; **no new folder was created**
 - [ ] Posting without `name` → validation error
 - [ ] Posting with only `name` + `@self.folder` → 201, `bases` is `[]` (or absent), `checkedOn` is `null`
 
 ### Referential integrity (v1 slug-string model)
 
 - [ ] Posting a dossier with `bases: ["does-not-exist"]` → write succeeds (v1 trade-off: no FK enforcement). Note in test log that this is **known and documented** in `design.md` §D1.
-- [ ] Adding a custom base via `POST /apps/openregister/api/objects/dossier/base` works and the new slug is usable in `dossier.bases`
+- [ ] Adding a custom base via `POST /apps/openregister/api/objects/filinq/base` works and the new slug is usable in `dossier.bases`
 
 ### Audit trail (`checkedOn`)
 
@@ -62,13 +62,13 @@ Any reference to `admin` / `admin` in this document below refers to the **local 
 
 ---
 
-## Wave 1.2 — DocuDesk Entity Publication Policies
+## Wave 1.2 — Filinq Entity Publication Policies
 
 ### Schemas + seeds
 
 - [ ] `GET /apps/openregister/api/schemas/<id>` for the consent register lists schemas `publicationConsent` AND `publicationProhibition`
-- [ ] `GET /apps/docudesk/api/policy/prohibitions` returns **4** seed prohibitions
-- [ ] `GET /apps/docudesk/api/policy/standing-consents` returns **4** seed standing consents (all with `scope: "entity"`)
+- [ ] `GET /apps/filinq/api/policy/prohibitions` returns **4** seed prohibitions
+- [ ] `GET /apps/filinq/api/policy/standing-consents` returns **4** seed standing consents (all with `scope: "entity"`)
 
 ### Admin UI — three pages exist and filter correctly
 
@@ -95,15 +95,15 @@ Any reference to `admin` / `admin` in this document below refers to the **local 
 
 ### Scope validation (also exercised by Newman)
 
-- [ ] `POST /apps/docudesk/api/policy/standing-consents` with `documentId` set → 400 (`scope=entity must not include documentId`)
-- [ ] `POST /apps/docudesk/api/policy/standing-consents` without `matchRules` → 400
-- [ ] `POST /apps/docudesk/api/policy/standing-consents` with `policyMatch` set → 400
+- [ ] `POST /apps/filinq/api/policy/standing-consents` with `documentId` set → 400 (`scope=entity must not include documentId`)
+- [ ] `POST /apps/filinq/api/policy/standing-consents` without `matchRules` → 400
+- [ ] `POST /apps/filinq/api/policy/standing-consents` with `policyMatch` set → 400
 
 ### Detection-time outcomes (4 scenarios via the consent endpoint)
 
 Pre-seed the policy layer first (create one prohibition matching "Jan Janssen" exact, one standing consent matching "Mark Mark" exact).
 
-- [ ] **No match** — `POST /apps/docudesk/api/consents` with entityText "Anna Anders" → record has `consentStatus: "pending"`, `notificationStatus: "pending"`, `policyMatch: null`
+- [ ] **No match** — `POST /apps/filinq/api/consents` with entityText "Anna Anders" → record has `consentStatus: "pending"`, `notificationStatus: "pending"`, `policyMatch: null`
 - [ ] **Prohibition match** — `POST .../api/consents` with entityText "Jan Janssen" → record has `consentStatus: "anonymized"`, `notificationStatus: "skipped"`, `publicationDecision: "anonymize"`, `objectionDeadline: null`, `policyMatch` references the prohibition UUID
 - [ ] **Standing consent match** — `POST .../api/consents` with entityText "Mark Mark" → record has `consentStatus: "consent_given"`, `notificationStatus: "skipped"`, `publicationDecision: "publish_with_consent"`, `policyMatch` references the standing-consent UUID
 - [ ] **Both match (prohibition wins)** — temporarily widen the standing consent to also match "Jan Janssen", repeat the prohibition test → `consentStatus: "anonymized"`, `policyMatch` references the **prohibition** (not the standing consent)
@@ -131,7 +131,7 @@ Open a consent record on the **Consent Workflow** page:
 
 ### Policy-pre-empted transition guard
 
-- [ ] `PUT /apps/docudesk/api/consents/<id>` attempting to change `consentStatus` from `"anonymized"` to `"pending"` on a record whose `policyMatch` is non-null → 400 with the "policy-pre-empted record" error message
+- [ ] `PUT /apps/filinq/api/consents/<id>` attempting to change `consentStatus` from `"anonymized"` to `"pending"` on a record whose `policyMatch` is non-null → 400 with the "policy-pre-empted record" error message
 
 ---
 
@@ -214,12 +214,12 @@ Open a consent record on the **Consent Workflow** page:
 
 - [ ] No new entries in `data/nextcloud.log` at ERROR or WARNING level that originate from any of the new services (`PolicyMatchService`, `PolicyRetroactiveService`, `PolicyCrudService`, `EmlParser`, `EntityRelationsController`)
 - [ ] Browser console is clean (no unhandled promise rejections) while clicking through all three new admin pages
-- [ ] Run `composer check:strict` in DocuDesk and OR — both green
-- [ ] Run `npm run build` in DocuDesk — green
+- [ ] Run `composer check:strict` in Filinq and OR — both green
+- [ ] Run `npm run build` in Filinq — green
 
 ### If everything passes
 
-- [ ] Open PRs for the two DocuDesk impl branches against `development`
+- [ ] Open PRs for the two Filinq impl branches against `development`
 - [ ] Move to Wave 2 (openanonymiser install + warning flow)
 
 ### If something fails

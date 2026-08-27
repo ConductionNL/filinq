@@ -9,12 +9,12 @@
  * Delegates text extraction and date normalization to DocumentTextExtractor.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  * @spec openspec/specs/metadata-enrichment/spec.md
@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -38,10 +38,10 @@ use RuntimeException;
  * Service for enhancing document metadata via text analysis
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/metadata-enrichment/spec.md
  */
@@ -248,11 +248,17 @@ class MetadataService {
 				metadata: $metadata
 			);
 
-			if (method_exists($objectService, 'runAsSystem') === true) {
-				return $objectService->runAsSystem($direct);
-			}
-
-			return $direct();
+			// No method_exists() probe: getObjectService() returns
+			// ObjectServiceInterface, which DECLARES runAsSystem() (verified
+			// against openregister's real lib/Contract/ObjectServiceInterface.php,
+			// not just this repo's stub). The probe was therefore always true and
+			// the fallback below it unreachable.
+			//
+			// Worth removing rather than leaving: the fallback ran $direct()
+			// WITHOUT system context, inside a method called
+			// saveEnrichedMetadataAsSystem(). Had it ever been reachable it would
+			// have been a silent privilege downgrade, not a graceful degradation.
+			return $objectService->runAsSystem($direct);
 		};
 
 		return $this->runEnrichedMetadataPersist(
@@ -277,7 +283,7 @@ class MetadataService {
 	 *  - The per-object RBAC half currently enforces NOTHING for this app.
 	 *    OpenRegister resolves authorization through a register/schema cascade
 	 *    and treats "configured nowhere" as OPEN. Every schema in
-	 *    `lib/Settings/docudesk_register.json` declares `"authorization": null`
+	 *    `lib/Settings/filinq_register.json` declares `"authorization": null`
 	 *    except `publicationProhibition`, and no register declares the key at
 	 *    all — so for the schemas this method writes, OR permits the read and
 	 *    the write regardless of who is asking.

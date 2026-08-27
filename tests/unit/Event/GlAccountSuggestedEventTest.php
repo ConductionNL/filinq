@@ -4,14 +4,14 @@
  * Unit tests for GlAccountSuggestedEvent
  *
  * Covers REQ-GLS-06: the sibling event's payload shape, distinct from and
- * unaffected by `nl.conduction.docudesk.extraction.completed`.
+ * unaffected by `nl.conduction.filinq.extraction.completed`.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Event
+ * @package   OCA\Filinq\Tests\Unit\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,9 +21,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Event;
+namespace OCA\Filinq\Tests\Unit\Event;
 
-use OCA\DocuDesk\Event\GlAccountSuggestedEvent;
+use OCA\Filinq\Event\GlAccountSuggestedEvent;
 use PHPUnit\Framework\TestCase;
 
 /**

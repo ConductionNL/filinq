@@ -1,24 +1,24 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/232
+tracking_issue: https://github.com/ConductionNL/filinq/issues/232
 ---
 
 # Proposal: contract-lifecycle-management
 
 ## Why
 
-DocuDesk competes for the broader gemeente DMS budget, and that budget is
+Filinq competes for the broader gemeente DMS budget, and that budget is
 increasingly claimed by suites that bundle contract management: the
 intelligence DB carries **eight CLM competitors** (DocuSign CLM, Agiloft CLM,
 ContractPodAi, Concord CLM, OpenCLM, Pactum Contractbeheer, TOPdesk
 Contractbeheer, Medius Contract Management) next to the Odoo suite, and the
 canonical feature cluster `contract-document-processing-and-key-term-
 extraction` records the AI-assisted contract-processing theme. When a
-municipality buys DocuSign or Odoo "because it also does contracts", DocuDesk
+municipality buys DocuSign or Odoo "because it also does contracts", Filinq
 loses the document-generation and signing seats it already serves. GH #232
 (verified open) tracks the concept.
 
-This is a **could-have** and is deliberately lean: DocuDesk already owns
+This is a **could-have** and is deliberately lean: Filinq already owns
 every hard capability a municipal contract needs — template-based document
 generation (`template-management`, sibling `office-template-authoring`),
 eIDAS-levelled digital signing (`document-signing`, provider plugins),
@@ -70,7 +70,7 @@ clause libraries.
 
 ## Impact
 
-- `lib/Settings/docudesk_register.json`: `contract` schema in the `dossier`
+- `lib/Settings/filinq_register.json`: `contract` schema in the `dossier`
   register with lifecycle + notification blocks, seed data, additive
   register version bump.
 - New lean backend: `lib/Service/ContractService.php` (notice-deadline
@@ -83,7 +83,7 @@ clause libraries.
   `signing-via-or-approval-with-provider-plugins` (send-for-signature),
   `template-management` / `office-template-authoring` (generate from
   template), `metadata-enrichment` (enrichment toggle pattern),
-  `docudesk-notifications` (dialect precedent).
+  `filinq-notifications` (dialect precedent).
 - Multi-tenancy: contracts are OR objects, so they inherit organisation
   scoping from the sibling `multi-tenant-hardening` change automatically; no
   dependency in either direction.
@@ -111,7 +111,7 @@ clause libraries.
   guards enforced declaratively.
 - A contract whose notice deadline approaches produces a Nextcloud
   notification to the configured recipients without any imperative dispatch
-  code in DocuDesk (notification-dialect gate stays green).
+  code in Filinq (notification-dialect gate stays green).
 - An attached contract document yields key-term suggestions that change
   nothing until a user accepts them field-by-field.
 - The renewal pipeline view buckets seeded contracts correctly by urgency.

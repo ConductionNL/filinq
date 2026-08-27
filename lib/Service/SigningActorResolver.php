@@ -14,12 +14,12 @@
  * comparison is carried over as-is; this is a pure move.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -40,10 +40,10 @@ use RuntimeException;
  * Resolves the acting identity and authorises it against a signer record.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */
@@ -101,8 +101,8 @@ class SigningActorResolver {
 		string $action,
 	): array {
 		$objectService = $this->settingsService->getObjectService();
-		$signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-		$signerSchema = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
+		$signerRegister = $this->config->getValueString('filinq', 'signerRecord_register', '');
+		$signerSchema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
 		$signerObject = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
 
 		if ($signerObject === null) {
@@ -193,8 +193,8 @@ class SigningActorResolver {
 	 */
 	public function findSignerForUser(array $signerIds, string $userId): ?string {
 		$objectService = $this->settingsService->getObjectService();
-		$signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-		$signerSchema = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
+		$signerRegister = $this->config->getValueString('filinq', 'signerRecord_register', '');
+		$signerSchema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
 
 		foreach ($signerIds as $signerId) {
 			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);

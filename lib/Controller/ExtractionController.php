@@ -8,12 +8,12 @@
  * correction-feedback endpoint.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
@@ -23,11 +23,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\FinancialExtractionService;
-use OCA\DocuDesk\Service\GlAccountSuggestionService;
+use OCA\Filinq\Service\FinancialExtractionService;
+use OCA\Filinq\Service\GlAccountSuggestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -40,10 +40,10 @@ use Psr\Log\LoggerInterface;
  * Controller for financial-document field extraction endpoints.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  */
@@ -79,7 +79,7 @@ class ExtractionController extends Controller {
 	 *
 	 * Accepts `{fileId|documentUri, docType, callbackEvent}`, runs the
 	 * extraction pipeline, persists the result, and optionally publishes
-	 * `nl.conduction.docudesk.extraction.completed`.
+	 * `nl.conduction.filinq.extraction.completed`.
 	 *
 	 * @return JSONResponse The extracted fields with per-field/overall confidence.
 	 *
@@ -190,7 +190,7 @@ class ExtractionController extends Controller {
 			);
 		} catch (Exception $e) {
 			$this->logger->warning(
-				'DocuDesk: correction stored but GL-account booking-history recording failed: ' . $e->getMessage()
+				'Filinq: correction stored but GL-account booking-history recording failed: ' . $e->getMessage()
 			);
 		}
 

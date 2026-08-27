@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * DEEP, data-dependent workflow test — the Nextcloud Dashboard widget.
@@ -22,7 +22,17 @@
 import { test, expect } from '@playwright/test'
 import { harvestToken } from './_fixtures'
 
-/** Widget id — `FileEntitiesWidget::getId()` in lib/Dashboard/. */
+/**
+ * Widget id — `FileEntitiesWidget::getId()` in lib/Dashboard/.
+ *
+ * FROZEN at the old app id, deliberately: the Dashboard app persists this
+ * string in each user's own layout, so renaming it with the app would
+ * silently drop the widget from every dashboard that already has it. Three
+ * places must agree on it — the PHP getId(), the OCA.Dashboard.register()
+ * call in src/dashboard.js, and this constant — because Nextcloud pairs the
+ * registration to the widget by exact id and a mismatch renders an empty
+ * tile with no error.
+ */
 const WIDGET_ID = 'docudesk-file-entities'
 
 test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added to the layout', async ({
@@ -70,5 +80,5 @@ test('FileEntitiesDashboardWidget renders on the Nextcloud Dashboard once added 
 	).toHaveCount(0)
 
 	// The widget's own footer link back into the app.
-	await expect(widget.getByRole('link', { name: 'Open DocuDesk' })).toBeVisible()
+	await expect(widget.getByRole('link', { name: 'Open Filinq' })).toBeVisible()
 })

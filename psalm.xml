@@ -96,7 +96,7 @@
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
                 <!--
-                  ADR-063 chain 3/3. DocudeskScannableServices implements this
+                  ADR-063 chain 3/3. FilinqScannableServices implements this
                   interface in production and the stub in tests/stubs; the app
                   has no composer dependency on openregister, and must still be
                   loadable when openregister is absent.
@@ -159,7 +159,7 @@
                 <!-- GuzzleHttp (loaded via composer at runtime) -->
                 <referencedClass name="GuzzleHttp\Client"/>
                 <referencedClass name="GuzzleHttp\Exception\GuzzleException"/>
-                <!-- DocuDesk-specific runtime dependencies -->
+                <!-- Filinq-specific runtime dependencies -->
                 <referencedClass name="thiagoalessio\TesseractOCR\TesseractOCR"/>
                 <!--
                   PhpOffice\PhpWord — declared in composer.json as a

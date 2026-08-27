@@ -4,8 +4,8 @@
 
 Verified at HEAD `9cc14407`:
 
-- Enrichment path: `DocuDeskEventListener` (ObjectCreated/Updated/Deleted)
-  → `DocuDeskEventHandler` → `EnrichmentRunner` →
+- Enrichment path: `FilinqEventListener` (ObjectCreated/Updated/Deleted)
+  → `FilinqEventHandler` → `EnrichmentRunner` →
   `MetadataService::enhanceMetadata(array $objectData)` →
   `saveEnrichedMetadata(...)`; on-demand via
   `POST /api/metadata/enrich` (`MetadataController`). Text is taken from
@@ -54,7 +54,7 @@ Verified at HEAD `9cc14407`:
 - No auto-filing, no auto-tagging, no metadata writes without a human
   confirm — explicitly out, this is the change's safety posture.
 - No department/role routing ("route to the responsible department" —
-  requires an org model DocuDesk does not have; recorded as follow-up).
+  requires an org model Filinq does not have; recorded as follow-up).
 - No new NER; correspondent extraction reads entities the anonymisation
   pipeline already detected.
 - No changes to the existing direct-write enrichment fields (language,
@@ -88,7 +88,7 @@ position (first-page/letterhead zone first), frequency and an
 organisation-suffix heuristic (B.V., N.V., Gemeente, Stichting). The top
 candidate becomes `suggestedCorrespondent {name, entityType, source:
 "ner"}`; no candidate ⇒ no correspondent suggestion (never fabricate).
-Rejected: running a second NER pass in DocuDesk (duplicate engine,
+Rejected: running a second NER pass in Filinq (duplicate engine,
 ADR-022) and regex-only extraction (strictly worse than the NER already
 paid for). When a document has no entity detection yet (classification
 can run before anonymisation intake), the correspondent leg is skipped
@@ -123,7 +123,7 @@ correspondent on the document's metadata, and (c) — only when a
 via the dossier's existing folder binding (`@self.folder`), i.e. the file
 moves into the dossier folder. Rejecting closes the suggestion with no
 effect. AI Act posture: this is machine-assisted *preparation* of a human
-decision (Art. 14-style oversight); DocuDesk never files, types or
+decision (Art. 14-style oversight); Filinq never files, types or
 routes a document autonomously — the same suggest-then-approve stance the
 review workbench takes for entities. There is deliberately NO
 "auto-confirm above confidence X" admin option in v1 (it would be a

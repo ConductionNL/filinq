@@ -5,8 +5,8 @@
  *
  * Cascade slot for EML (`message/rfc822`) inputs. EML is anonymised by
  * OpenRegister (which redacts headers, body, attachment bytes and inline
- * images) and assembled into a PDF/A-3b by DocuDesk's
- * `EmlPdfAssemblyService` — DocuDesk performs NO redaction itself and embeds
+ * images) and assembled into a PDF/A-3b by Filinq's
+ * `EmlPdfAssemblyService` — Filinq performs NO redaction itself and embeds
  * NO original or redacted bytes as PDF/A-3 file attachments.
  *
  * Wiring note (see DEFERRED_QUESTIONS in the change): the PRIMARY EML path is
@@ -26,12 +26,12 @@
  * See openspec/changes/eml-pdf-assembly/design.md (D-step-3, D9).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,10 +39,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Conversion;
+namespace OCA\Filinq\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\EmlPdfAssemblyService;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use OCP\IAppConfig;
@@ -51,29 +51,29 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Available when OR's anonymise-EML API AND DocuDesk's EmlPdfAssemblyService
+ * Available when OR's anonymise-EML API AND Filinq's EmlPdfAssemblyService
  * are both present. `convert()` calls OR's anonymise-EML API and delegates the
  * assembly to EmlPdfAssemblyService; OR exceptions surface as
  * ConversionFailedException with NO raw-parse fallback.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class EmlBackend implements ConversionBackendInterface {
 
 	/**
 	 * App config key for the tenant observability flag.
 	 */
-	private const ENABLED_KEY = 'docudesk.conversion.backends.eml_enabled';
+	private const ENABLED_KEY = 'filinq.conversion.backends.eml_enabled';
 
 	/**
 	 * App identifier used for IAppConfig reads/writes.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().

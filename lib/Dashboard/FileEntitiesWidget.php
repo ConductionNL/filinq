@@ -7,11 +7,11 @@
  * with entity counts and anonymization status.
  *
  * @category  Dashboard
- * @package   OCA\DocuDesk\Dashboard
+ * @package   OCA\Filinq\Dashboard
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/dashboard/spec.md
  * @spec openspec/specs/dashboard/spec.md
@@ -22,9 +22,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Dashboard;
+namespace OCA\Filinq\Dashboard;
 
-use OCA\DocuDesk\AppInfo\Application;
+use OCA\Filinq\AppInfo\Application;
 use OCP\Dashboard\IIconWidget;
 use OCP\Dashboard\IWidget;
 use OCP\IURLGenerator;
@@ -34,10 +34,10 @@ use OCP\Util;
  * Dashboard widget for file entities overview
  *
  * @category Dashboard
- * @package  OCA\DocuDesk\Dashboard
+ * @package  OCA\Filinq\Dashboard
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class FileEntitiesWidget implements IWidget, IIconWidget {
 	/**
@@ -59,6 +59,13 @@ class FileEntitiesWidget implements IWidget, IIconWidget {
 	 * @spec openspec/specs/dashboard/spec.md
 	 */
 	public function getId(): string {
+		/* FROZEN at the old app id. This string is not ours once a user has
+		   arranged their dashboard: Nextcloud's Dashboard app persists the
+		   chosen widget ids in each user's own layout. Renaming it does not
+		   move that layout - the widget simply stops matching and silently
+		   disappears from the dashboard of every user who had added it.
+		   Same rule as the register slug: an identifier stored in data we do
+		   not own does not move with the rename. */
 		return 'docudesk-file-entities';
 	}//end getId()
 
@@ -92,7 +99,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget {
 	 * @spec openspec/specs/dashboard/spec.md
 	 */
 	public function getIconClass(): string {
-		return 'icon-docudesk';
+		return 'icon-filinq';
 	}//end getIconClass()
 
 	/**
@@ -117,7 +124,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget {
 	 * @spec openspec/specs/dashboard/spec.md
 	 */
 	public function getUrl(): ?string {
-		return $this->urlGenerator->linkToRouteAbsolute('docudesk.dashboard.page');
+		return $this->urlGenerator->linkToRouteAbsolute('filinq.dashboard.page');
 	}//end getUrl()
 
 	/**
@@ -133,7 +140,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget {
 		// Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
 		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-vendor');
 		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-nc-vue');
-		Util::addScript(Application::APP_ID, 'docudesk-dashboard');
+		Util::addScript(Application::APP_ID, 'filinq-dashboard');
 
 	}//end load()
 }//end class

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk BlockStyleFamilyCodec
+ * Filinq BlockStyleFamilyCodec
  *
  * One package family's answer to "apply this style to this block".
  *
@@ -13,7 +13,7 @@
  * two implementations wearing one name.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,14 +22,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 /**
  * Applies block style for one package family.
@@ -55,8 +55,8 @@ interface BlockStyleFamilyCodec {
 	 * needs no definition returns null for it — never an empty string, which a
 	 * caller could inject and produce malformed XML.
 	 *
-	 * @param string $markup    The block markup.
-	 * @param array  $style     The style properties.
+	 * @param string $markup The block markup.
+	 * @param array $style The style properties.
 	 * @param string $styleName A unique name the codec may mint a style under.
 	 *
 	 * @return array{markup: string, automaticStyle: string|null} The rewritten block and any style to inject.

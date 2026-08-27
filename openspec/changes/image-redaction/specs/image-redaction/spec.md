@@ -11,7 +11,7 @@ embedded in PDFs — through OpenRegister's anonymisation backend chain, review
 the detected regions in the wave-1 review workbench, and redact by
 irreversibly burning pixels. Adds `SIGNATURE` (handwritten signature) to the
 entity taxonomy as a reviewable, maskable entity type. The engine (detection
-and per-image burn) lives OpenRegister-side; DocuDesk owns image acquisition,
+and per-image burn) lives OpenRegister-side; Filinq owns image acquisition,
 container reassembly, review surfacing and honest degradation.
 
 ## ADDED Requirements
@@ -22,14 +22,14 @@ Image content MUST be submitted for entity detection through an OpenRegister
 image-detection seam on the anonymisation backend chain (Presidio image mode
 as the first supported backend), returning detected entities typed by the
 shared taxonomy (PERSON, ORGANIZATION, EMAIL, IBAN, …, SIGNATURE) with
-per-page bounding boxes normalised to [0..1]. DocuDesk MUST submit: (a) files
+per-page bounding boxes normalised to [0..1]. Filinq MUST submit: (a) files
 with an image MIME type, (b) page rasters of scanned PDFs (rasterised via
 the existing Imagick path at the configured OCR DPI, one shared raster per
 page for detection and burn), and (c) images extracted from the image
 XObjects of born-digital PDFs (in v1 — decision D1). When a specific embedded
 XObject cannot be decoded, that file MUST flag `imageDetectionSkipped` reason
 `embedded_images_unsupported` (per-file honest degradation), never a silent
-skip of the whole document. DocuDesk MUST NOT implement or embed its own
+skip of the whole document. Filinq MUST NOT implement or embed its own
 image-detection engine (ADR-017/ADR-022) and MUST NOT send image content to
 any endpoint other than the OpenRegister seam (processing stays local,
 AVG/EDPB posture).
@@ -101,7 +101,7 @@ ORGANIZATION), detected by an image-capable backend that declares
 `supportsSignatures`, and surfaced in review exactly like other entities
 (a signature is personal data — AVG Art. 4(1); masking it is standard in all
 nine Dutch algoritmeregister anonymisation entries). The detection engine is
-OpenRegister-side and configurable; DocuDesk MUST NOT implement signature
+OpenRegister-side and configurable; Filinq MUST NOT implement signature
 detection itself. When the configured backend does not declare
 `supportsSignatures`, the review UI MUST state that signature detection is
 unavailable on this instance — an empty result MUST NOT imply "no
@@ -137,7 +137,7 @@ success, the output MUST be verified to contain neither the original image
 stream nor overlay-style redaction constructs; a failed verification MUST
 fail the run with a structured error — never return the unverified artifact.
 The per-image burn is executed by the OpenRegister seam's redact operation;
-DocuDesk performs container reassembly only.
+Filinq performs container reassembly only.
 
 #### Scenario: Burned region is unrecoverable in the output
 

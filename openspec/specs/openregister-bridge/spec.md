@@ -9,15 +9,15 @@ retrofit: true
 
 @e2e exclude pure backend resolver service — no UI surface; all behavior covered by PHPUnit service tests
 
-Provides a single resolver service that translates DocuDesk `IAppConfig` keys into OpenRegister register/schema slug pairs and validates namespace identifiers used by per-app data partitions. Services that need to read or write OpenRegister objects depend on the resolver instead of reading config keys directly — this keeps the config-translation seam in one place, isolates the IAppConfig naming convention from consumer code, and gives controllers a typed exception to render setup-state UIs.
+Provides a single resolver service that translates Filinq `IAppConfig` keys into OpenRegister register/schema slug pairs and validates namespace identifiers used by per-app data partitions. Services that need to read or write OpenRegister objects depend on the resolver instead of reading config keys directly — this keeps the config-translation seam in one place, isolates the IAppConfig naming convention from consumer code, and gives controllers a typed exception to render setup-state UIs.
 
-The resolver is consumed by `TemplateService` and `TemplateVersionService` today; future register-backed features (signing requests, document register, dossier register, consent log) are expected to consume the same translator pattern.
+The resolver is consumed by `TemplateService` and `TemplateVersionService` today; future register-backed features (signing requests, document schemas, dossier schemas, consent log — all now schemas of the single `filinq` register) are expected to consume the same translator pattern.
 
 ## Requirements
 
 ### REQ-001: OpenRegister Configuration and Namespace Resolver
 
-DocuDesk SHALL expose a single resolver service that translates DocuDesk IAppConfig keys into OpenRegister register/schema slug pairs and validates namespace identifiers used by per-app data partitions. The resolver SHALL be the only consumer of the underlying config keys within DocuDesk — services that need to talk to OpenRegister SHALL depend on the resolver, not directly on `SettingsService` or `IAppConfig`.
+Filinq SHALL expose a single resolver service that translates Filinq IAppConfig keys into OpenRegister register/schema slug pairs and validates namespace identifiers used by per-app data partitions. The resolver SHALL be the only consumer of the underlying config keys within Filinq — services that need to talk to OpenRegister SHALL depend on the resolver, not directly on `SettingsService` or `IAppConfig`.
 
 The class owns three observable behaviors:
 
@@ -67,7 +67,7 @@ Both lookups read `SettingsService::getAllSettings()['configuration']` and surfa
 - The resolver does NOT discover register/schema slugs at runtime — it reads what `SettingsService` has cached. If admin settings change at runtime, callers must re-resolve.
 - Both lookups raise `RegisterNotConfiguredException` with the same exception class. Callers cannot distinguish "template register missing" from "template schema missing" without parsing the message; that's acceptable because both are admin-side setup gaps with the same remediation (open admin settings, fill in the field). The dedicated exception class lets controllers render an empty-state response instead of a 500.
 - The namespace regex matches REQ-TMPL-03 verbatim — if either spec ever loosens the constraint (e.g. to allow hyphens), both must move together. TODO: extract the regex to a shared constant if a second consumer needs it.
-- The resolver currently only knows template + template-version registers. New register-backed features (signing requests, document register, dossier register, consent log) will need to either extend this class with new lookups or follow the same pattern in sibling resolvers. The decision is deferred until the second feature lands; this REQ documents the existing contract without prescribing the expansion model.
+- The resolver currently only knows template + template-version registers. New register-backed features (signing requests, document schemas, dossier schemas, consent log — all now schemas of the single `filinq` register) will need to either extend this class with new lookups or follow the same pattern in sibling resolvers. The decision is deferred until the second feature lands; this REQ documents the existing contract without prescribing the expansion model.
 
 ## Configuration
 
@@ -81,7 +81,7 @@ Both lookups read `SettingsService::getAllSettings()['configuration']` and surfa
 ## Dependencies
 
 - **SettingsService** — provides the cached configuration via `getAllSettings()['configuration']`
-- **OCA\DocuDesk\Exception\RegisterNotConfiguredException** — domain exception thrown when register/schema config is missing
+- **OCA\Filinq\Exception\RegisterNotConfiguredException** — domain exception thrown when register/schema config is missing
 
 ### Current Implementation Status
 

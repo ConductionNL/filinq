@@ -19,7 +19,7 @@ only ADDs requirements. Introduced by the `multi-tenant-hardening` change.
 
 Per-organisation setting overrides MUST be stored via OpenRegister as
 `organisationSettings` objects (new schema in the `document` register of
-`lib/Settings/docudesk_register.json`, additive register version bump): at
+`lib/Settings/filinq_register.json`, additive register version bump): at
 most one object per organisation, keyed by the object's OR envelope
 organisation stamp (no organisation property in the schema, per
 REQ-DDMTH-001). The schema MUST carry `name` (string), `consentPeriodDays`
@@ -37,7 +37,7 @@ change.
 
 #### Scenario: Organisation admin sets a per-organisation objection period
 
-- GIVEN an organisation admin of organisation A opens the DocuDesk settings surface
+- GIVEN an organisation admin of organisation A opens the Filinq settings surface
 - WHEN they set the organisation objection period to 42 days and save
 - THEN an `organisationSettings` object for organisation A stores `consentPeriodDays: 42`
 - AND the instance IAppConfig `publication_objection_period_days` is unchanged
@@ -53,7 +53,7 @@ change.
 
 ### Requirement: Effective settings resolve organisation override, then instance default (REQ-DDMTH-008)
 
-DocuDesk MUST resolve every per-organisation-capable setting through a single
+Filinq MUST resolve every per-organisation-capable setting through a single
 resolution order: the caller's active organisation's `organisationSettings`
 value (when the object exists and the property is non-null) → the instance
 IAppConfig default → the code default. `SettingsService` MUST expose one

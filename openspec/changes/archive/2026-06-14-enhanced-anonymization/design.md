@@ -1,6 +1,6 @@
 ---
 status: pr-created
-pr: https://codeberg.org/Conduction/docudesk/pulls/68
+pr: Codeberg PR docudesk#68 (pre-migration, not migrated to GitHub)
 ---
 
 ## Context

@@ -7,7 +7,7 @@ status: proposed
 ## Purpose
 
 Accept real DOCX/ODT office files with `${field}` merge tags as first-class
-DocuDesk templates alongside the existing Twig/HTML type: upload with tag
+Filinq templates alongside the existing Twig/HTML type: upload with tag
 extraction and validation against a bound register schema, rendering through
 the existing PDF conversion cascade, reusable text fragments (bouwstenen),
 and bulk import/migration tooling for existing house-style template estates.
@@ -66,12 +66,12 @@ classify each extracted tag as `known` (matches a property or dotted
 sub-path of the bound schema), `fragment` (`fragment:` prefix), or `unknown`,
 and MUST persist the structured result as `tagReport` on the template.
 Unknown tags on a bound template MUST be reported at the severity configured
-in `docudesk.templates.unknown_tag_severity` (`warning` default, `blocking`
+in `filinq.templates.unknown_tag_severity` (`warning` default, `blocking`
 optional); at `blocking` the upload MUST be refused with HTTP 422 listing the
 unknown tags. A template without a schema binding MUST never be blocked on
 tag validation and its report MUST state that no schema validation was
 performed. The schema properties MUST be read from OpenRegister (no property
-list duplicated in DocuDesk).
+list duplicated in Filinq).
 
 #### Scenario: Unknown tag is reported on upload
 
@@ -84,7 +84,7 @@ list duplicated in DocuDesk).
 
 #### Scenario: Blocking severity refuses the upload
 
-- GIVEN `docudesk.templates.unknown_tag_severity` set to `blocking`
+- GIVEN `filinq.templates.unknown_tag_severity` set to `blocking`
 - AND an upload for a bound template containing an unknown tag
 - WHEN the upload is processed
 - THEN the response is HTTP 422 listing each unknown tag

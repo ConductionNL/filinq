@@ -14,17 +14,17 @@
  * already-redacted bytes are rendered, as pages.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -35,24 +35,24 @@ use Throwable;
  * Renders redacted EML attachments as pages of the shared mPDF document.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class EmlAttachmentRenderer {
 
 	/**
 	 * App identifier used for IAppConfig reads.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * Config key: optional override for the divider/placeholder template.
 	 * Default `eml/divider.twig`.
 	 */
-	private const KEY_DIVIDER_TEMPLATE = 'docudesk.conversion.eml.divider_template';
+	private const KEY_DIVIDER_TEMPLATE = 'filinq.conversion.eml.divider_template';
 
 	/**
 	 * Renderable image MIME types — rendered inline as a single `<img>` page.

@@ -6,9 +6,9 @@ status: proposed
 
 ## Purpose
 
-A LibreSign-backed provider plugin in DocuDesk's existing signing provider
+A LibreSign-backed provider plugin in Filinq's existing signing provider
 registry (`SigningProviderInterface` / `SigningProviderFactory`, verified at
-HEAD), giving DocuDesk real X.509/OpenSSL certificate-based (AES-class)
+HEAD), giving Filinq real X.509/OpenSSL certificate-based (AES-class)
 signatures without building crypto — absorbing the strongest OSS signing rival
 (R4 opportunity #1) that procest already trusts for besluit signing. The
 provider is offered only when the LibreSign app is enabled, maps its capability
@@ -28,7 +28,7 @@ The `SigningProviderFactory` MUST register a `libresign` provider only when the
 LibreSign app is installed and enabled (checked via `OCP\App\IAppManager`).
 When LibreSign is absent the provider MUST NOT appear in
 `getAvailableProviders()` and MUST NOT be selectable in admin settings, and
-`getProvider('libresign')` MUST throw. When `docudesk.signing_provider` is set
+`getProvider('libresign')` MUST throw. When `filinq.signing_provider` is set
 to `libresign` but LibreSign is not available, provider resolution MUST fail
 closed with an explanatory error and MUST NOT silently fall back to the native
 provider.
@@ -43,7 +43,7 @@ provider.
 
 #### Scenario: Configured-but-absent fails closed, never native
 
-- GIVEN `docudesk.signing_provider` is `libresign` and the LibreSign app is not installed
+- GIVEN `filinq.signing_provider` is `libresign` and the LibreSign app is not installed
 - WHEN a signing request resolves the active provider
 - THEN resolution fails with an explanatory error
 - AND the request is NOT silently served by the native provider
@@ -54,7 +54,7 @@ provider.
 `LibreSignProvider::supportsLevel()` MUST return only the signature levels the
 configured LibreSign certificate genuinely provides: SES and AdES for a real
 X.509 certificate, and QES only when the certificate is qualified / QTSP-backed
-(admin-configured via `docudesk.libresign_qualified`, default off).
+(admin-configured via `filinq.libresign_qualified`, default off).
 `produceSignedArtifact()` and any delegation MUST re-check `supportsLevel()` and
 MUST throw on a level the provider does not support — it MUST NOT emit a
 lower-assurance artifact under a higher-level request. The provider MUST NOT
@@ -78,7 +78,7 @@ advertise QES on a non-qualified certificate.
 
 The provider MUST delegate the signing flow to LibreSign's signing API —
 create a signature request, drive the signer flow, retrieve the signed file,
-and validate — through a `LibreSignClient` seam resolved lazily so DocuDesk
+and validate — through a `LibreSignClient` seam resolved lazily so Filinq
 stays loadable without LibreSign. The provider MUST persist the LibreSign
 request identifier as the session `externalId` with `provider: libresign` on
 the existing `signingSession` object. The concrete LibreSign OCS endpoints MUST
@@ -103,9 +103,9 @@ no LibreSign installed).
 ### Requirement: Signed-artifact and audit round-trip into OpenRegister with an honest-completion gate (REQ-DDLSP-004)
 
 The signed PDF LibreSign produces MUST be stored as a new document version
-through DocuDesk's existing OpenRegister-backed completion path, and every
+through Filinq's existing OpenRegister-backed completion path, and every
 provider action MUST be recorded through `SigningAuditService` (OpenRegister
-hash-chained `AuditTrailMapper`) — DocuDesk MUST NOT keep a local audit store.
+hash-chained `AuditTrailMapper`) — Filinq MUST NOT keep a local audit store.
 `produceSignedArtifact()` and `downloadSignedDocument()` MUST throw when
 LibreSign has not produced a verifiable signed file (request incomplete,
 LibreSign unreachable, or validation failed) and MUST NOT return the unsigned

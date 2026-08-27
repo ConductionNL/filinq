@@ -1,9 +1,9 @@
 /**
- * DocuDesk landing page.
+ * Filinq landing page.
  *
  * Composes the brand <DetailHero> + <WidgetShelf> from
  * @conduction/docusaurus-preset/components, mirroring the connext page
- * at sites/www/src/pages/apps/docudesk.mdx.
+ * at sites/www/src/pages/apps/filinq.mdx.
  *
  * Written as .js (not .mdx) because the docs site has the docs plugin
  * pointed at `path: './'`, and an MDX file in src/pages/ trips the
@@ -19,7 +19,7 @@ import {
   AppMock,
 } from '@conduction/docusaurus-preset/components';
 
-const DOCUDESK_ICON = (
+const FILINQ_ICON = (
   <svg viewBox="0 0 24 24">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
@@ -161,7 +161,7 @@ function AuditPanel() {
 const WIDGETS = [
   {
     title: 'Anonymise dropzone',
-    desc: 'Drop an inbound email or file. DocuDesk strips PII before the document touches the register.',
+    desc: 'Drop an inbound email or file. Filinq strips PII before the document touches the register.',
     panel: <AnonymisePanel />,
   },
   {
@@ -179,37 +179,37 @@ const WIDGETS = [
 export default function Home() {
   return (
     <Layout
-      title="DocuDesk, document and contract generation for Nextcloud"
+      title="Filinq, document and contract generation for Nextcloud"
       description="Generate documents and contracts from Nextcloud. Template-driven Word, PDF, and email output. WOPI editing, anonymisation, OCR built in."
     >
       <main className="marketing-page">
         <DetailHero
-          appId="docudesk"
+          appId="filinq"
           background="cobalt"
           status={{ label: 'Stable', color: 'var(--c-mint-500)' }}
           version="v1.8"
           locales="NL · EN"
-          title="DocuDesk"
+          title="Filinq"
           tagline={TAGLINE}
           primaryCta={{
             label: 'Install from app store',
-            href: 'https://apps.nextcloud.com/apps/docudesk',
+            href: 'https://apps.nextcloud.com/apps/filinq',
             tone: 'orange',
           }}
           secondaryCta={{ label: 'Read the docs', href: '/docs/intro' }}
           tertiaryCta={{
             label: 'View on GitHub',
-            href: 'https://github.com/ConductionNL/docudesk',
+            href: 'https://github.com/ConductionNL/filinq',
           }}
           iconColor="var(--c-orange-knvb)"
-          icon={DOCUDESK_ICON}
-          illustration={<AppMock app="docudesk" />}
+          icon={FILINQ_ICON}
+          illustration={<AppMock app="filinq" />}
         />
 
         <WidgetShelf
           eyebrow="Widgets we ship"
           title="On every Nextcloud dashboard."
-          lede="Install DocuDesk and these widgets show up on the home screen of every team member who handles documents."
+          lede="Install Filinq and these widgets show up on the home screen of every team member who handles documents."
           widgets={WIDGETS}
         />
       </main>

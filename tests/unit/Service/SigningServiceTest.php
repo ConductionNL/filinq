@@ -7,11 +7,11 @@
  * cancel, bulk sign, and status transition validation per REQ-SIGN-01..05.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Service
+ * @package   OCA\Filinq\Tests\Unit\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,17 +21,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Event\SigningConcludedEventFactory;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\SignedArtifactProducer;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
-use OCA\DocuDesk\Service\SigningActorResolver;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningConclusionEmitter;
-use OCA\DocuDesk\Service\SigningRequestValidator;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\SignedArtifactProducer;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Service\SigningActorResolver;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningConclusionEmitter;
+use OCA\Filinq\Service\SigningRequestValidator;
+use OCA\Filinq\Service\SigningService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -47,10 +47,10 @@ use RuntimeException;
  * Tests for SigningService signing request lifecycle
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -132,9 +132,9 @@ class SigningServiceTest extends TestCase {
 		// stubs are what keep the suite exercising the configured path — and
 		// their absence is what the fail-closed guard is there to catch.
 		$this->settingsService->method('resolveSigningRequestBinding')
-			->willReturn(['register' => 'signing', 'schema' => 'signingRequest']);
+			->willReturn(['register' => 'filinq', 'schema' => 'signingRequest']);
 		$this->settingsService->method('resolveSignerRecordBinding')
-			->willReturn(['register' => 'signing', 'schema' => 'signerRecord']);
+			->willReturn(['register' => 'filinq', 'schema' => 'signerRecord']);
 		$this->settingsService->method('getFeatureToggles')->willReturn(
 			[
 				'signing_request_expiry_days' => 30,
@@ -249,7 +249,7 @@ class SigningServiceTest extends TestCase {
 	/**
 	 * createRequest() persists consumer provenance fields onto the request.
 	 *
-	 * Cross-app delegated-signing contract (docudesk-signing-events): a request
+	 * Cross-app delegated-signing contract (filinq-signing-events): a request
 	 * raised via DocumentSigningRequestedEvent carries provenance that must be
 	 * stored so the terminal SigningConcludedEvent can correlate back.
 	 *
@@ -756,7 +756,7 @@ class SigningServiceTest extends TestCase {
 		);
 
 		// Provider produces signed bytes.
-		$provider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
 		$provider->method('produceSignedArtifact')->willReturn('SIGNED-BYTES');
 		$this->providerFactory->method('getProvider')->willReturn($provider);
 
@@ -820,7 +820,7 @@ class SigningServiceTest extends TestCase {
 			}
 		);
 
-		$provider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
 		$provider->method('produceSignedArtifact')->willThrowException(
 			new RuntimeException('signing_verification_secret is unset')
 		);
@@ -990,10 +990,10 @@ class SigningServiceTest extends TestCase {
 	/**
 	 * Build a permissive SigningProviderInterface double (supportsLevel: true).
 	 *
-	 * @return \OCA\DocuDesk\Service\Signing\SigningProviderInterface&MockObject
+	 * @return \OCA\Filinq\Service\Signing\SigningProviderInterface&MockObject
 	 */
-	private function makeSupportingProvider(): \OCA\DocuDesk\Service\Signing\SigningProviderInterface {
-		$provider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+	private function makeSupportingProvider(): \OCA\Filinq\Service\Signing\SigningProviderInterface {
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
 		$provider->method('supportsLevel')->willReturn(true);
 
 		return $provider;
@@ -1007,7 +1007,7 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateRequestRejectsUnsupportedProviderLevelPair(): void {
-		$refusingProvider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+		$refusingProvider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
 		$refusingProvider->method('supportsLevel')->willReturn(false);
 		$this->providerFactory->method('getProvider')->willReturn($refusingProvider);
 

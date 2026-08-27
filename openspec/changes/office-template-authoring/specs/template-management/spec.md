@@ -17,7 +17,7 @@ requirements.
 
 ### Requirement: Template data model carries the office-template extension (REQ-DDOTA-006)
 
-The `template` schema in `lib/Settings/docudesk_register.json` MUST be
+The `template` schema in `lib/Settings/filinq_register.json` MUST be
 extended (templates register version `2.0.0` → `2.1.0`, additive only) with:
 `templateType` (enum `twig` | `office`, default `twig`), `sourceFileId`
 (integer, NC file id of the office source), `contentHash` (string, sha256 of

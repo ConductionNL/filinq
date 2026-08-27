@@ -8,7 +8,7 @@ kind: code
 
 A Dutch municipal document rarely lives in one format: the citizen gets a
 PDF, the collaborating buurgemeente or ODR asks for an **editable DOCX**, and
-the zaaksysteem archives HTML or PDF. Today DocuDesk forces one format per
+the zaaksysteem archives HTML or PDF. Today Filinq forces one format per
 render (verified at HEAD):
 
 - `DocumentService::generateDocument()` — `VALID_FORMATS = ['pdf', 'odf',
@@ -130,7 +130,7 @@ local (LibreOffice headless, mPDF — no external API calls).
 ## Out of Scope
 
 - XLSX/PPTX/ODS output (Carbone parity beyond document formats) — no
-  spreadsheet/presentation templates exist in DocuDesk.
+  spreadsheet/presentation templates exist in Filinq.
 - Editable-DOCX round-trip *import* (re-ingesting an edited DOCX as a new
   version) — exchange is outbound this wave.
 - Changing the email format or correspondence batch semantics.

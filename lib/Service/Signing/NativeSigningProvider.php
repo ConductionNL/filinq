@@ -6,12 +6,12 @@
  * Implements Simple Electronic Signature (SES) signing locally.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Signing
+ * @package   OCA\Filinq\Service\Signing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -19,11 +19,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Signing;
+namespace OCA\Filinq\Service\Signing;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Service\SettingsService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -40,10 +40,10 @@ use Throwable;
  * could never see (issue #287).
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
  */
@@ -331,11 +331,11 @@ class NativeSigningProvider implements SigningProviderInterface {
 			);
 		}
 
-		$secret = $this->config->getValueString('docudesk', 'signing_verification_secret', '');
+		$secret = $this->config->getValueString('filinq', 'signing_verification_secret', '');
 		if ($secret === '') {
 			throw new RuntimeException(
 				'Cannot produce a native SES artifact: signing_verification_secret is unset. '
-				. 'Configure the signing secret in DocuDesk admin settings before enabling signing.'
+				. 'Configure the signing secret in Filinq admin settings before enabling signing.'
 			);
 		}
 
@@ -388,6 +388,15 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 * @return string The assembled bytes.
 	 */
 	private function assembleSignedBytes(string $documentContent, string $payload): string {
+		// ⚠️ `/DocuDesk.SES` AND `/DocuDesk-Signature` STAY ON THE PRE-RENAME
+		// SPELLING. These are on-disk PDF tokens, not source text:
+		// SigningVerificationService greps for exactly this marker to recover
+		// and re-MAC a signature. Renaming the writer alone makes every newly
+		// signed document unverifiable; renaming writer and reader together
+		// does the same to every document already signed. Both directions
+		// destroy signature evidence silently — a verify just reports
+		// `unverifiable`. Migrating the marker means teaching the READER both
+		// spellings first, then changing the writer.
 		return $documentContent
 			. "\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(" . $payload . ")\nendobj\n";
 
@@ -547,11 +556,17 @@ class NativeSigningProvider implements SigningProviderInterface {
 	/**
 	 * Resolve the OR register/schema pair used to persist sessions
 	 *
+	 * The fallback is `filinq`, not `signing`. It is reached whenever the
+	 * app-config key is absent — a fresh install before the import has run, or
+	 * an install where it was never written — and a default is exactly where a
+	 * stale register slug survives a sweep: it never appears in a call, it just
+	 * quietly sends the write to a register nothing reads.
+	 *
 	 * @return array{0:string,1:string} [register, schema]
 	 */
 	private function resolveSessionRegisterSchema(): array {
-		$register = $this->config->getValueString('docudesk', 'signingSession_register', 'signing');
-		$schema = $this->config->getValueString('docudesk', 'signingSession_schema', 'signingSession');
+		$register = $this->config->getValueString('filinq', 'signingSession_register', 'filinq');
+		$schema = $this->config->getValueString('filinq', 'signingSession_schema', 'signingSession');
 
 		return [$register, $schema];
 	}//end resolveSessionRegisterSchema()

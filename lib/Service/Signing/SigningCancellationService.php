@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk SigningCancellationService
+ * Filinq SigningCancellationService
  *
  * Withdraws a signing request: authorise, call the provider, record the outcome.
  *
@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,15 +17,15 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Signing;
+namespace OCA\Filinq\Service\Signing;
 
-use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Service\SigningService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -57,7 +57,7 @@ use Throwable;
  * error text.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -65,7 +65,7 @@ use Throwable;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
  */
@@ -75,8 +75,8 @@ class SigningCancellationService {
 	 * Constructor.
 	 *
 	 * @param SigningProviderFactory $providers Resolves the configured provider.
-	 * @param SigningService         $requests  Signing request lookup.
-	 * @param LoggerInterface        $logger    The logger.
+	 * @param SigningService $requests Signing request lookup.
+	 * @param LoggerInterface $logger The logger.
 	 *
 	 * @return void
 	 */
@@ -90,7 +90,7 @@ class SigningCancellationService {
 	/**
 	 * Withdraw a signing request.
 	 *
-	 * @param string $uid       The acting user id.
+	 * @param string $uid The acting user id.
 	 * @param string $requestId The signing request id.
 	 *
 	 * @return array{requestId: string, status: string, alreadyCancelled: bool}
@@ -106,7 +106,7 @@ class SigningCancellationService {
 	 * mechanical and is deliberately not done here: this service refuses
 	 * every non-creator, while the controller currently lets an ADMIN cancel
 	 * any request, so swapping them silently removes an admin capability.
-	 * Tracked in docudesk#628.
+	 * Tracked in filinq#628.
 	 */
 	public function cancel(string $uid, string $requestId): array {
 		// Scoped lookup: getRequest() already collapses access-denied to null and
@@ -177,8 +177,8 @@ class SigningCancellationService {
 		$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'cancelled', detail: '');
 
 		return [
-			'requestId'        => $requestId,
-			'status'           => NativeSigningProvider::STATUS_CANCELLED,
+			'requestId' => $requestId,
+			'status' => NativeSigningProvider::STATUS_CANCELLED,
 			'alreadyCancelled' => $already,
 		];
 	}//end cancel()
@@ -190,8 +190,8 @@ class SigningCancellationService {
 	 * cannot introduce a second, laxer rule — and so that widening it is a visible
 	 * edit to a named thing rather than a condition drifting at a call site.
 	 *
-	 * @param string $uid     The acting user id.
-	 * @param array  $request The signing request.
+	 * @param string $uid The acting user id.
+	 * @param array $request The signing request.
 	 *
 	 * @return bool True when the actor is the creator.
 	 */
@@ -236,22 +236,22 @@ class SigningCancellationService {
 	 * Every attempt, not only the successes. A withdrawn signing process is exactly
 	 * the event someone will later need to reconstruct.
 	 *
-	 * @param string $uid       The acting user id.
+	 * @param string $uid The acting user id.
 	 * @param string $requestId The signing request id.
-	 * @param string $outcome   What happened.
-	 * @param string $detail    Why, when it failed.
+	 * @param string $outcome What happened.
+	 * @param string $detail Why, when it failed.
 	 *
 	 * @return void
 	 */
 	private function recordAttempt(string $uid, string $requestId, string $outcome, string $detail): void {
 		$this->logger->warning(
-			sprintf('[DocuDesk] signing cancellation %s', $outcome),
+			sprintf('[Filinq] signing cancellation %s', $outcome),
 			[
-				'app'       => 'docudesk',
-				'actor'     => $uid,
+				'app' => 'filinq',
+				'actor' => $uid,
 				'requestId' => $requestId,
-				'outcome'   => $outcome,
-				'detail'    => $detail,
+				'outcome' => $outcome,
+				'detail' => $detail,
 			]
 		);
 	}//end recordAttempt()

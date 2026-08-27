@@ -7,11 +7,11 @@
  * either ID or path.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
@@ -25,11 +25,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
-use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\BackgroundJob\FolderExtractionJob;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\BackgroundJob\IJobList;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -45,10 +45,10 @@ use Psr\Log\LoggerInterface;
  * background extraction.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
@@ -80,7 +80,7 @@ class FolderBatchService {
 	 *                                     and exclude them from source discovery).
 	 * @param ConfidentialityLabelService $confidentialityLabel Read-only files_confidential signal,
 	 *                                                          used (only when
-	 *                                                          `docudesk.confidentiality.prioritise_analysis`
+	 *                                                          `filinq.confidentiality.prioritise_analysis`
 	 *                                                          is on) as a secondary, tie-breaking
 	 *                                                          sort key so higher-confidentiality
 	 *                                                          files are analysed sooner

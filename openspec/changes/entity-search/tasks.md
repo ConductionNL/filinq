@@ -5,8 +5,8 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `entitySearchLog` schema to the `document` register in `lib/Settings/docudesk_register.json` (REQ-DDESR-004)
-  - Properties per design.md D4 (`action`, `queryDigest`, `typeFilter`, `categoryFilter`, `resultCount`, `entityRef`, `occurrenceCount`, `collectedInto`, `performedBy`, `performedAt`); `x-openregister-processing` annotation `docudesk-entity-search` (rechtsgrond `public-task`, `logReads: true`); register-i18n tags on user-facing string fields; register version bump with changelog entry; one seed log object (nil-digest placeholder, design.md Seed Data).
+- [ ] 1.1 Add the `entitySearchLog` schema to the `document` register in `lib/Settings/filinq_register.json` (REQ-DDESR-004)
+  - Properties per design.md D4 (`action`, `queryDigest`, `typeFilter`, `categoryFilter`, `resultCount`, `entityRef`, `occurrenceCount`, `collectedInto`, `performedBy`, `performedAt`); `x-openregister-processing` annotation `filinq-entity-search` (rechtsgrond `public-task`, `logReads: true`); register-i18n tags on user-facing string fields; register version bump with changelog entry; one seed log object (nil-digest placeholder, design.md Seed Data).
 
 ## 2. Backend
 
@@ -17,7 +17,7 @@
   - Group relations per fileId; resolve file name/path via `IRootFolder` honouring caller ACLs (opaque no-access aggregate); dossier membership via `@self.folder` search; anonymisation state via faceted `anonymizationLink` lookups both directions; risk level via OR `RiskLevelService`; object/email relations in an "other occurrences" group.
 
 - [ ] 2.3 Implement the permission gate + `lib/Controller/EntitySearchController.php` with `api/entity-search/*` routes (REQ-DDESR-003)
-  - `docudesk.entity_search.allowed_groups` (default admins-only, fail-closed incl. config read failure); explicit auth attributes on every method; in-method gate (semantic-auth); routes registered before any catch-all; ADR-022 justification (gate + log + enrichment) documented in the controller docblock.
+  - `filinq.entity_search.allowed_groups` (default admins-only, fail-closed incl. config read failure); explicit auth attributes on every method; in-method gate (semantic-auth); routes registered before any catch-all; ADR-022 justification (gate + log + enrichment) documented in the controller docblock.
 
 - [ ] 2.4 Implement the fail-closed processing log (REQ-DDESR-004)
   - One log object per search/detail before the response; sha256 digest of lower-cased trimmed query, never the raw value; append-only (no update/delete endpoint); log-write failure refuses the lookup; `collectedInto` recorded on handoff.
@@ -36,7 +36,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests for EntitySearchService (org scoping fail-closed, opaque unreadable files, log-write-failure refusal, digest-not-raw-value, presence gates) and EntitySearchController authz matrix — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
 
 - [ ] 4.2 Playwright e2e spec `tests/e2e/spec-coverage/entity-search.spec.ts` covering the `@e2e`-referenced scenarios end-to-end with OpenRegister on the Postgres dev instance
   - Seeds the catalogue by extracting fixture documents through the UI; includes the 403 non-member check and the nldesign-theme accessibility pass; test through the UI.

@@ -1,6 +1,6 @@
 # Authorisation decisions
 
-Every schema DocuDesk declares in `lib/Settings/docudesk_register.json` carries an
+Every schema Filinq declares in `lib/Settings/filinq_register.json` carries an
 explicit authorisation decision. This file is the record of *why*, and
 `tests/unit/Settings/SchemaAuthorizationCoverageTest.php` fails if a schema exists
 without an entry here.
@@ -10,12 +10,28 @@ without an entry here.
 > not mean "a cascade exists". With `authorization: null`, applying the cascade
 > permits everything. Absence of an opt-out is not the presence of a guard.
 
+> ⚠️ **The group ids below still say `docudesk-`, and that is deliberate.** The app
+> id was renamed `docudesk` → `filinq`; these Nextcloud GROUP ids were not, and must
+> not be renamed as part of a rebrand. OpenRegister provisions a declared group
+> **create-only**, so renaming `docudesk-template-editors` to `filinq-template-editors`
+> does not rename anything — it creates a **new, empty** group while the existing one
+> keeps every member and nothing reads it any more. An empty group denies everyone
+> except admins and object owners, so the symptom is writes starting to 403 for
+> exactly the people who were granted them, with no error at provisioning time and
+> nothing in the log. Same failure shape as renaming an OpenRegister register slug.
+> Renaming these groups requires its own membership migration, and that migration has
+> not been written. The same reasoning pins the AVG Art. 30 processing-activity codes
+> (`docudesk-anonymisation`, `docudesk-ocr`, `docudesk-signing`,
+> `docudesk-metadata-enrichment`) in the register and in `src/views/settings/Settings.vue`:
+> they are already recorded on written read-log rows, and renaming them would detach
+> that history from the catalogue entry describing it.
+
 ## What was measured
 
 Development instance, 2026-08-16, before the change:
 
 - **20 of 21** schemas declared no `authorization` cascade.
-- All three `docudesk` register rows carried `authorization = NULL`, so the
+- All three `filinq` register rows carried `authorization = NULL`, so the
   register-level cascade did not fill the gap either.
 - Two ordinary users in **no groups** and the **same organisation**:
   `ddauth-bob` read `ddauth-alice`'s private template (HTTP 200, full `content`),
@@ -51,7 +67,7 @@ cascade is a visible outage, and a read restriction I cannot verify is a guess. 
 
 `admin` and the object owner bypass every rule — they are not listed anywhere.
 `authenticated` is any logged-in user; combined with multitenancy that means
-"anyone in this organisation". `public` is anonymous and **is used by no DocuDesk
+"anyone in this organisation". `public` is anonymous and **is used by no Filinq
 schema**.
 
 ## Groups
@@ -89,7 +105,7 @@ deliberately.
 | `base` | authenticated | policy-admins | policy-admins | Woo Article 5 grounds are public-law reference data, and must be readable to explain **why** something was redacted. |
 | `dossier` | authenticated | authenticated | policy-admins | A dossier points at a Nextcloud folder; Nextcloud's own share permissions govern the contents. |
 | `anonymizationLink` | authenticated | authenticated | policy-admins | Written by the anonymiser running as the acting user. |
-| `anonymizationBatch` | **policy-admins** | authenticated | policy-admins | Working state of one multi-file anonymisation run. `read` is restricted because the record lists the filenames of a user's private documents, and the batch owner reaches their own batch through the owner bypass. DocuDesk's own reads and writes go through `BatchStateRepository` with `_rbac: false` (recorded below) and are ownership-checked in `BatchStateService::getBatch()` instead, so this cascade governs only direct OpenRegister API access. Added with the schema in register v7.10.0 rather than omitted — an omitted cascade is OPEN, so shipping a new schema without one re-opens exactly the hole v7.9.0 closed. |
+| `anonymizationBatch` | **policy-admins** | authenticated | policy-admins | Working state of one multi-file anonymisation run. `read` is restricted because the record lists the filenames of a user's private documents, and the batch owner reaches their own batch through the owner bypass. Filinq's own reads and writes go through `BatchStateRepository` with `_rbac: false` (recorded below) and are ownership-checked in `BatchStateService::getBatch()` instead, so this cascade governs only direct OpenRegister API access. Added with the schema in register v7.10.0 rather than omitted — an omitted cascade is OPEN, so shipping a new schema without one re-opens exactly the hole v7.9.0 closed. |
 | `publicationConsent` | **policy-admins** | authenticated | policy-admins | GDPR consent records about identified people. `create` stays open because a data subject records their own consent and then owns it. |
 | `publicationProhibition` | `consent` group | policy-admins | policy-admins | **Unchanged** — decided before this change. |
 | `prohibitionOverrideAudit` | **policy-admins** | **authenticated** | policy-admins | ⚠️ `create` is deliberately open. Register v7.7.0 records that restricting it re-breaks the fail-closed override path for the ordinary operator who performs the anonymise: the write is explicitly "if the audit write fails we MUST NOT proceed", so a denied create raises 500 on every acknowledged override and no override can ever be committed. |
@@ -101,7 +117,7 @@ deliberately.
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
-`findAll()` accept `_rbac: false`, and DocuDesk passes it at **25 call sites in 10
+`findAll()` accept `_rbac: false`, and Filinq passes it at **25 call sites in 10
 files**. Each is paired with a compensating control rather than being an oversight,
 and the coverage test pins the set: **a new bypass fails the test until it is added
 here with a reason.**
@@ -111,7 +127,7 @@ here with a reason.**
 | `Service/PolicyCrudService.php` | 5 | `requirePolicyPermission()` asserts membership in `docudesk-policy-admins` / `docudesk-standing-consent-admins` for **every** action including `read`, before the lookup runs. |
 | `Service/CustomDictionaryRepository.php` | 4 | Recogniser lists are read during anonymisation, which runs on behalf of a user who may not hold the maintainer group. Read-only; no caller-supplied id reaches it. |
 | `Service/DossierObjectRepository.php` | 3 | Dossier contents are governed by Nextcloud folder permissions, which are checked before the repository is reached. |
-| `Service/BatchStateRepository.php` | 3 | Batch state is DocuDesk's own working state, written and read only by `BatchStateService` — no OpenRegister API caller reaches this class. Ownership is enforced one layer up in `BatchStateService::getBatch()`, which returns `null` (not a distinct error) for a batch belonging to another non-admin user, so a guessed batch id is indistinguishable from an absent one. The bypass is required, not convenient: the cascade restricts `update`/`delete` to `docudesk-policy-admins`, which ships **empty**, so an ordinary user's own extraction run would fail closed at its first status write. |
+| `Service/BatchStateRepository.php` | 3 | Batch state is Filinq's own working state, written and read only by `BatchStateService` — no OpenRegister API caller reaches this class. Ownership is enforced one layer up in `BatchStateService::getBatch()`, which returns `null` (not a distinct error) for a batch belonging to another non-admin user, so a guessed batch id is indistinguishable from an absent one. The bypass is required, not convenient: the cascade restricts `update`/`delete` to `docudesk-policy-admins`, which ships **empty**, so an ordinary user's own extraction run would fail closed at its first status write. |
 | `Service/PolicyMatchService.php` | 2 | Matching must see every prohibition regardless of the acting user, or an anonymisation silently under-redacts. Fail-closed by design. |
 | `Service/ConsentPolicyReferentValidator.php` | 2 | Validation-only; returns a boolean, never record content. |
 | `Service/PolicyRetroactiveService.php` | 2 | Background re-application over records the triggering user may not own. |

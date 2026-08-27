@@ -4,7 +4,7 @@
  * Unit tests for BatchAnonymizationController folder-related features
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-4
  *
@@ -20,18 +20,18 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
-use OCA\DocuDesk\Controller\BatchAnonymizationController;
-use OCA\DocuDesk\Service\BatchAnonymizeService;
-use OCA\DocuDesk\Service\BatchExtractionService;
-use OCA\DocuDesk\Service\BatchReportService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\BatchUploadService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\FolderBatchService;
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchExtractionService;
+use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\BatchUploadService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\FolderBatchService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -45,10 +45,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for folder batch endpoint and modified entity endpoint
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @phpstan-extends                                TestCase
@@ -122,7 +122,7 @@ class BatchAnonymizationControllerFolderTest extends TestCase {
 		$mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new BatchAnonymizationController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$this->createMock(LoggerInterface::class),
 			$this->mockStateService,

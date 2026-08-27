@@ -3,7 +3,7 @@
 /**
  * Health Controller — AppHost adopter by COMPOSITION, not inheritance.
  *
- * The `health#index` route resolves to this concrete DocuDesk class carrying
+ * The `health#index` route resolves to this concrete Filinq class carrying
  * the ADR-006 auth posture (#[PublicPage]). The declarative
  * `observability.health` checks from src/manifest.json are still executed by
  * OpenRegister's AppHost engine — but the engine collaborators are pulled out
@@ -15,19 +15,19 @@
  * ⚠️ DO NOT "simplify" this back into a subclass of the AppHost generic, and do
  * not `use`-import an OpenRegister class here. Nextcloud's router
  * `ReflectionClass()`es every file in `lib/Controller/` while MATCHING a route,
- * so an unresolvable parent makes EVERY route in DocuDesk return HTTP 500, not
- * just this one. DocuDesk does not declare `<app>openregister</app>`, so an
+ * so an unresolvable parent makes EVERY route in Filinq return HTTP 500, not
+ * just this one. Filinq does not declare `<app>openregister</app>`, so an
  * admin can create exactly that configuration. `extends` is resolved by the
  * AUTOLOADER, not the container, so lazy DI cannot rescue it.
  * See decidesk#377 / #388.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
  *
@@ -37,9 +37,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\AppInfo\Application;
+use OCA\Filinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -54,10 +54,10 @@ use Psr\Container\ContainerInterface;
  * Public, declarative health endpoint backed by the AppHost engine.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class HealthController extends Controller {
 
@@ -66,7 +66,7 @@ class HealthController extends Controller {
 	 *
 	 * Referenced as a string, never imported: the class only exists when
 	 * openregister is installed, and an import in a resolved position would
-	 * 500 every DocuDesk route when it is not.
+	 * 500 every Filinq route when it is not.
 	 *
 	 * @var string
 	 */

@@ -45,7 +45,7 @@ The `generatedDocument` and `dossier` schemas SHALL declare
 their detail surfaces and the pipeline's outputs (the `fileId`/`filePath` a generation
 produced; a dossier's source and produced files) are reachable through the leaf rather
 than through bespoke file widgets. The leaf SHALL be a linking/visibility surface: it
-SHALL NOT become a second write path for `fileId`/`filePath`, and DocuDesk's in-app
+SHALL NOT become a second write path for `fileId`/`filePath`, and Filinq's in-app
 generation, anonymisation, and signing pipeline surfaces SHALL remain untouched.
 
 #### Scenario: A generated document's file is reachable from its record
@@ -78,14 +78,14 @@ instead of an app-local task system. Card state SHALL NOT drive any dossier fiel
 ### Requirement: Leaf Declarations Are Configuration-Only And Import Cleanly
 
 This delta SHALL change only `configuration` blocks (`linkedTypes`,
-`mailObjectTemplate`) on the named schemas in `lib/Settings/docudesk_register.json`
+`mailObjectTemplate`) on the named schemas in `lib/Settings/filinq_register.json`
 (with an `info.version` bump so existing installs re-import). No schema property, no
 `required` list, and no other schema SHALL be touched, and the register SHALL import
 into OpenRegister with zero configuration-validation errors.
 
 #### Scenario: Register imports cleanly with the leaf declarations
 
-- GIVEN the updated `docudesk_register.json`
+- GIVEN the updated `filinq_register.json`
 - WHEN it is imported into OpenRegister
 - THEN `linkedTypes` and `mailObjectTemplate` validation SHALL pass with zero errors
 - AND every schema not named by this delta SHALL be byte-identical to before

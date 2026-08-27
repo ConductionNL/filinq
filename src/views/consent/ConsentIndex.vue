@@ -6,10 +6,10 @@ import { consentStore } from '../../store/store.js'
 <template>
 	<CnIndexPage
 		ref="indexPage"
-		:title="t('docudesk', 'Consent Workflow')"
+		:title="t('filinq', 'Consent Workflow')"
 		:description="
 			t(
-				'docudesk',
+				'filinq',
 				'Per-document consent records produced by the publication-clearance workflow.',
 			)
 		"
@@ -35,34 +35,38 @@ import { consentStore } from '../../store/store.js'
 		@pageChanged="onPageChanged"
 		@pageSizeChanged="onPageSizeChanged"
 		@rowClick="viewConsent">
-		<!-- Stats above the table -->
-		<template #above-table>
+		<!-- Stats between the page header and the actions bar.
+		     The slot is `below-header`, NOT `above-table`: CnIndexPage
+		     defines no `above-table` slot, and Vue drops an unmatched named
+		     slot silently, so these four CnStatsBlocks rendered NOTHING at
+		     all. See CnIndexPage.vue: `v-if="$slots['below-header']"`. -->
+		<template #below-header>
 			<div class="consent-stats">
 				<CnStatsBlock
-					:title="t('docudesk', 'Total')"
+					:title="t('filinq', 'Total')"
 					:count="consentStore.consentStats.total"
-					:countLabel="t('docudesk', 'records')"
+					:countLabel="t('filinq', 'records')"
 					variant="default"
 					horizontal
 					showZeroCount />
 				<CnStatsBlock
-					:title="t('docudesk', 'Pending')"
+					:title="t('filinq', 'Pending')"
 					:count="consentStore.consentStats.pending"
-					:countLabel="t('docudesk', 'pending')"
+					:countLabel="t('filinq', 'pending')"
 					variant="warning"
 					horizontal
 					showZeroCount />
 				<CnStatsBlock
-					:title="t('docudesk', 'Approved')"
+					:title="t('filinq', 'Approved')"
 					:count="consentStore.consentStats.approved"
-					:countLabel="t('docudesk', 'approved')"
+					:countLabel="t('filinq', 'approved')"
 					variant="success"
 					horizontal
 					showZeroCount />
 				<CnStatsBlock
-					:title="t('docudesk', 'Objected')"
+					:title="t('filinq', 'Objected')"
 					:count="consentStore.consentStats.objected"
-					:countLabel="t('docudesk', 'objected')"
+					:countLabel="t('filinq', 'objected')"
 					variant="error"
 					horizontal
 					showZeroCount />
@@ -75,14 +79,14 @@ import { consentStore } from '../../store/store.js'
 			<CnStatusBadge
 				v-if="row.policyMatch"
 				class="policy-preempted-badge"
-				:label="t('docudesk', 'policy')"
-				:colorMap="{ [t('docudesk', 'policy')]: 'primary' }" />
+				:label="t('filinq', 'policy')"
+				:colorMap="{ [t('filinq', 'policy')]: 'primary' }" />
 		</template>
 
 		<!-- Entity type badge -->
 		<template #column-entityType="{ row }">
 			<CnStatusBadge
-				:label="row.entityType || t('docudesk', 'Unknown')"
+				:label="row.entityType || t('filinq', 'Unknown')"
 				:colorMap="entityTypeColorMap" />
 		</template>
 
@@ -122,7 +126,7 @@ import { consentStore } from '../../store/store.js'
 					<template #icon>
 						<Eye :size="20" />
 					</template>
-					{{ t('docudesk', 'View Details') }}
+					{{ t('filinq', 'View Details') }}
 				</NcActionButton>
 			</NcActions>
 		</template>
@@ -158,27 +162,27 @@ export default {
 			},
 
 			consentStatusColorMap: {
-				[t('docudesk', 'Pending')]: 'default',
-				[t('docudesk', 'Approved')]: 'success',
-				[t('docudesk', 'Objected')]: 'error',
-				[t('docudesk', 'No Response')]: 'warning',
-				[t('docudesk', 'Anonymized')]: 'primary',
+				[t('filinq', 'Pending')]: 'default',
+				[t('filinq', 'Approved')]: 'success',
+				[t('filinq', 'Objected')]: 'error',
+				[t('filinq', 'No Response')]: 'warning',
+				[t('filinq', 'Anonymized')]: 'primary',
 			},
 
 			notificationStatusColorMap: {
-				[t('docudesk', 'Pending')]: 'default',
-				[t('docudesk', 'Sent')]: 'primary',
-				[t('docudesk', 'Delivered')]: 'success',
-				[t('docudesk', 'Failed')]: 'error',
-				[t('docudesk', 'Skipped')]: 'warning',
+				[t('filinq', 'Pending')]: 'default',
+				[t('filinq', 'Sent')]: 'primary',
+				[t('filinq', 'Delivered')]: 'success',
+				[t('filinq', 'Failed')]: 'error',
+				[t('filinq', 'Skipped')]: 'warning',
 			},
 
 			decisionColorMap: {
-				[t('docudesk', 'Pending')]: 'default',
-				[t('docudesk', 'Publish')]: 'success',
-				[t('docudesk', 'Publish Anonymized')]: 'primary',
-				[t('docudesk', 'Anonymize')]: 'warning',
-				[t('docudesk', 'Rejected')]: 'error',
+				[t('filinq', 'Pending')]: 'default',
+				[t('filinq', 'Publish')]: 'success',
+				[t('filinq', 'Publish Anonymized')]: 'primary',
+				[t('filinq', 'Anonymize')]: 'warning',
+				[t('filinq', 'Rejected')]: 'error',
 			},
 		}
 	},
@@ -193,28 +197,28 @@ export default {
 			return [
 				{
 					key: 'entityText',
-					label: t('docudesk', 'Entity'),
+					label: t('filinq', 'Entity'),
 					sortable: true,
 				},
-				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
+				{ key: 'entityType', label: t('filinq', 'Type'), sortable: true },
 				{
 					key: 'consentStatus',
-					label: t('docudesk', 'Consent Status'),
+					label: t('filinq', 'Consent Status'),
 					sortable: true,
 				},
 				{
 					key: 'notificationStatus',
-					label: t('docudesk', 'Notification'),
+					label: t('filinq', 'Notification'),
 					sortable: true,
 				},
 				{
 					key: 'objectionDeadline',
-					label: t('docudesk', 'Deadline'),
+					label: t('filinq', 'Deadline'),
 					sortable: true,
 				},
 				{
 					key: 'publicationDecision',
-					label: t('docudesk', 'Decision'),
+					label: t('filinq', 'Decision'),
 					sortable: true,
 				},
 			]
@@ -233,11 +237,18 @@ export default {
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
 
+		/**
+		 * NcEmptyContent heading for the Consent Workflow list — the store's
+		 * error when loading failed, otherwise the empty-list message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+		 */
 		emptyContentName() {
 			if (consentStore.error) {
 				return consentStore.error
 			}
-			return t('docudesk', 'No consent records found')
+			return t('filinq', 'No consent records found')
 		},
 	},
 
@@ -298,17 +309,17 @@ export default {
 		 */
 		formatStatus(status) {
 			const map = {
-				pending: t('docudesk', 'Pending'),
-				consent_given: t('docudesk', 'Approved'),
-				objection_received: t('docudesk', 'Objected'),
-				no_response: t('docudesk', 'No Response'),
-				anonymized: t('docudesk', 'Anonymized'),
-				sent: t('docudesk', 'Sent'),
-				delivered: t('docudesk', 'Delivered'),
-				failed: t('docudesk', 'Failed'),
-				skipped: t('docudesk', 'Skipped'),
+				pending: t('filinq', 'Pending'),
+				consent_given: t('filinq', 'Approved'),
+				objection_received: t('filinq', 'Objected'),
+				no_response: t('filinq', 'No Response'),
+				anonymized: t('filinq', 'Anonymized'),
+				sent: t('filinq', 'Sent'),
+				delivered: t('filinq', 'Delivered'),
+				failed: t('filinq', 'Failed'),
+				skipped: t('filinq', 'Skipped'),
 			}
-			return map[status] || status || t('docudesk', 'Unknown')
+			return map[status] || status || t('filinq', 'Unknown')
 		},
 
 		/**
@@ -319,13 +330,13 @@ export default {
 		 */
 		formatDecision(decision) {
 			const map = {
-				pending: t('docudesk', 'Pending'),
-				anonymize: t('docudesk', 'Anonymize'),
-				publish_with_consent: t('docudesk', 'Publish'),
-				publish_anonymized: t('docudesk', 'Publish Anonymized'),
-				reject: t('docudesk', 'Rejected'),
+				pending: t('filinq', 'Pending'),
+				anonymize: t('filinq', 'Anonymize'),
+				publish_with_consent: t('filinq', 'Publish'),
+				publish_anonymized: t('filinq', 'Publish Anonymized'),
+				reject: t('filinq', 'Rejected'),
 			}
-			return map[decision] || decision || t('docudesk', 'Pending')
+			return map[decision] || decision || t('filinq', 'Pending')
 		},
 
 		/**

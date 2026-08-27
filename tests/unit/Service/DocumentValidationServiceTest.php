@@ -4,12 +4,12 @@
  * Document Validation Service Test
  *
  * @category  Test
- * @package   OCA\DocuDesk\Tests\Unit\Service
+ * @package   OCA\Filinq\Tests\Unit\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
  *
@@ -19,9 +19,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\DocumentValidationService;
+use OCA\Filinq\Service\DocumentValidationService;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -32,10 +32,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for DocumentValidationService.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class DocumentValidationServiceTest extends TestCase {
 	/**

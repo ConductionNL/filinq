@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * DEEP, data-dependent workflow tests — Anonymization / Folder Analysis.
@@ -79,7 +79,7 @@ test.afterAll(async ({ request }) => {
 
 /**
  * Navigate to a manifest route root-first (a cold deep-link load resets to
- * the Dashboard, so we always pass through /apps/docudesk first).
+ * the Dashboard, so we always pass through /apps/filinq first).
  *
  * @param page  The Playwright page.
  * @param route The in-app route segment (e.g. "folder-anonymization").
@@ -93,13 +93,13 @@ async function goRoute(page, route: string): Promise<void> {
 	// to be `waitForLoadState('networkidle').catch(() => {})`, i.e. two full
 	// timeouts burned per navigation, each swallowed into a pass, after which
 	// the specs asserted against a possibly-unmounted app. `waitForAppReady`
-	// waits for the DocuDesk mount point and its painted content region
+	// waits for the Filinq mount point and its painted content region
 	// instead, and throws if they never arrive. ADR-074 rule 4 / gate-58.
 	await page.goto(APP, { waitUntil: 'domcontentloaded' })
 	await waitForAppReady(page)
 	await dismissOverlays(page)
 	// `appUrl`, not `${APP}/${route}`. The SPA router's base is
-	// `generateUrl('/apps/docudesk')`, which includes the `index.php` segment
+	// `generateUrl('/apps/filinq')`, which includes the `index.php` segment
 	// only when `OC.config.modRewriteWorking` is false — true on CI's `php -S`,
 	// FALSE on any Apache with mod_rewrite. On a rewriting server the hardcoded
 	// form addressed a path the router does not recognise, so it fell back to

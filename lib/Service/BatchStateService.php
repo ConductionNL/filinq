@@ -19,12 +19,12 @@
  * abstraction, which makes the flow correct with no cache configured at all.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
@@ -35,7 +35,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -50,17 +50,17 @@ use RuntimeException;
  * fronted by the distributed cache.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  */
 class BatchStateService {
 	private const CACHE_TTL = 7200;
 	private const DEFAULT_MAX_FILES = 100;
-	private const CACHE_PREFIX = 'docudesk_batch_';
+	private const CACHE_PREFIX = 'filinq_batch_';
 
 	/**
 	 * Distributed cache instance used to persist batch records.
@@ -93,7 +93,7 @@ class BatchStateService {
 		private readonly IGroupManager $groupManager,
 		private readonly BatchStateRepository $repository,
 	) {
-		$this->cache = $cacheFactory->createDistributed('docudesk');
+		$this->cache = $cacheFactory->createDistributed('filinq');
 
 	}//end __construct()
 
@@ -106,9 +106,9 @@ class BatchStateService {
 	 */
 	public function getMaxFiles(): int {
 		// Canonical manifest-declared key (docudesk-adopt-or-abstractions task 11);
-		// legacy 'docudesk_batch_max_files' kept as a one-release fallback.
+		// legacy 'filinq_batch_max_files' kept as a one-release fallback.
 		$value = $this->appConfig->getValueString(
-			'docudesk',
+			'filinq',
 			'batch.max_files_per_run',
 			''
 		);
@@ -117,8 +117,8 @@ class BatchStateService {
 		}
 
 		return (int)$this->appConfig->getValueString(
-			'docudesk',
-			'docudesk_batch_max_files',
+			'filinq',
+			'filinq_batch_max_files',
 			(string)self::DEFAULT_MAX_FILES
 		);
 
@@ -127,7 +127,7 @@ class BatchStateService {
 	/**
 	 * Get the cache TTL in seconds for batch records.
 	 *
-	 * Reads `docudesk.batch.cache_ttl_seconds` from app-config (canonical key
+	 * Reads `filinq.batch.cache_ttl_seconds` from app-config (canonical key
 	 * declared in manifest.yaml under docudesk-adopt-or-abstractions task 11).
 	 * Returns the in-class constant when unset so existing deployments behave
 	 * identically until an admin overrides it.
@@ -136,7 +136,7 @@ class BatchStateService {
 	 */
 	private function getCacheTtl(): int {
 		$value = $this->appConfig->getValueString(
-			'docudesk',
+			'filinq',
 			'batch.cache_ttl_seconds',
 			''
 		);

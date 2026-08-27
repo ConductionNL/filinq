@@ -1,25 +1,25 @@
 <?php
 
 /**
- * DocuDesk DocumentSigningRequestedEvent
+ * Filinq DocumentSigningRequestedEvent
  *
- * Public cross-app event a consumer fleet app dispatches to ask DocuDesk to
+ * Public cross-app event a consumer fleet app dispatches to ask Filinq to
  * raise a document signing request for one of its objects. The in-process,
  * autoloaded replacement for the broken
- * `$registry->call('docudesk','createSigningRequest',…)` delegation path:
+ * `$registry->call('filinq','createSigningRequest',…)` delegation path:
  * dispatched via Nextcloud's IEventDispatcher and handled synchronously by
  * DocumentSigningRequestedListener, so the dispatching producer can read the
  * resolved signingRequestId back off the same instance.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,37 +27,37 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCP\EventDispatcher\Event;
 
 /**
- * Cross-app request event: a consumer app asks DocuDesk to raise a signing request.
+ * Cross-app request event: a consumer app asks Filinq to raise a signing request.
  *
  * All request fields are immutable (constructor-injected getters). Nextcloud
  * typed dispatch is synchronous, so the single result slot (signingRequestId +
- * handled) is written by DocuDesk's listener and read by the producer right
+ * handled) is written by Filinq's listener and read by the producer right
  * after dispatch — the standard NC request/response-over-the-bus pattern.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  */
 class DocumentSigningRequestedEvent extends Event {
 
 	/**
-	 * The id of the signing request DocuDesk created (result slot).
+	 * The id of the signing request Filinq created (result slot).
 	 *
 	 * @var string|null
 	 */
 	private ?string $signingRequestId = null;
 
 	/**
-	 * Whether DocuDesk's listener handled this request (result slot).
+	 * Whether Filinq's listener handled this request (result slot).
 	 *
 	 * @var boolean
 	 */
@@ -206,16 +206,16 @@ class DocumentSigningRequestedEvent extends Event {
 	}//end getCorrelationId()
 
 	/**
-	 * Get the id of the signing request DocuDesk created (result slot).
+	 * Get the id of the signing request Filinq created (result slot).
 	 *
-	 * @return string|null Null until DocuDesk's listener has handled the event.
+	 * @return string|null Null until Filinq's listener has handled the event.
 	 */
 	public function getSigningRequestId(): ?string {
 		return $this->signingRequestId;
 	}//end getSigningRequestId()
 
 	/**
-	 * Set the resolved signing-request id (written by DocuDesk's listener).
+	 * Set the resolved signing-request id (written by Filinq's listener).
 	 *
 	 * @param string $signingRequestId The created signing-request id.
 	 *
@@ -227,18 +227,18 @@ class DocumentSigningRequestedEvent extends Event {
 	}//end setSigningRequestId()
 
 	/**
-	 * Whether DocuDesk's listener handled this request.
+	 * Whether Filinq's listener handled this request.
 	 *
-	 * @return bool True when DocuDesk created a signing request.
+	 * @return bool True when Filinq created a signing request.
 	 */
 	public function isHandled(): bool {
 		return $this->handled;
 	}//end isHandled()
 
 	/**
-	 * Mark whether DocuDesk's listener handled this request.
+	 * Mark whether Filinq's listener handled this request.
 	 *
-	 * @param bool $handled True when DocuDesk created a signing request.
+	 * @param bool $handled True when Filinq created a signing request.
 	 *
 	 * @return void
 	 */

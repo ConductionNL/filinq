@@ -1,9 +1,9 @@
 # document-editing
 
-DocuDesk's suite-independent handling of documents that already exist: format
+Filinq's suite-independent handling of documents that already exist: format
 conversion through Nextcloud's conversion broker, and content editing through a
 WOPI session that always writes a new version. Governed by ADR-087
-(office-suite divergence is brokered, not driven) and ADR-075 (DocuDesk owns
+(office-suite divergence is brokered, not driven) and ADR-075 (Filinq owns
 document generation, one channel).
 
 ## ADDED Requirements

@@ -5,7 +5,7 @@
 		@mouseup="captureSelection">
 		<div v-if="loading" class="word-viewer__loading">
 			<NcLoadingIcon :size="48" />
-			<span>{{ t('docudesk', 'Loading document…') }}</span>
+			<span>{{ t('filinq', 'Loading document…') }}</span>
 		</div>
 		<div v-else-if="error" class="word-viewer__error">
 			{{ error }}
@@ -124,6 +124,7 @@ export default {
 		 * Fetch the docx as ArrayBuffer and convert it to HTML via mammoth.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/document-preview/spec.md#requirement-format-specific-in-app-document-preview-req-ddprv-001
 		 */
 		async load() {
 			this.loading = true
@@ -138,7 +139,7 @@ export default {
 				this.html = result.value
 			} catch (err) {
 				console.error('[WordViewer] failed to load docx:', err)
-				this.error = err.message || t('docudesk', 'Failed to load document')
+				this.error = err.message || t('filinq', 'Failed to load document')
 			} finally {
 				this.loading = false
 			}

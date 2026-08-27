@@ -6,7 +6,7 @@ TBD - created by archiving change custom-dictionary-recognition. Update Purpose 
 ### Requirement: Organisation-managed dictionaries and terms (REQ-DDCDR-001)
 
 The app MUST provide organisation-scoped `customDictionary` and
-`customDictionaryTerm` register objects (in the `document` register) storing,
+`customDictionaryTerm` register objects (in the `filinq` register) storing,
 per dictionary, a label, description, colour, match mode
 (`exact`|`caseInsensitive`|`wordBoundary`, default `caseInsensitive`), a
 deferred `fuzzy` flag, an `active` flag and a calculated term count; and per
@@ -27,7 +27,7 @@ it (fail-closed).
 - GIVEN a new dictionary created without an explicit match mode
 - WHEN it is persisted and read back
 - THEN its match mode is `caseInsensitive`
-- @e2e exclude not observable in a browser — both rendering paths substitute the default themselves, so the DOM is identical whether or not the value was persisted. `matchModeLabel()` is byte-identical in CustomDictionaryIndex.vue and CustomDictionaryDetail.vue and both end `|| t('docudesk', 'Case-insensitive')`, so a NULL match mode renders exactly like a persisted `caseInsensitive` one. Asserted where the value IS visible: tests/unit/Service/CustomDictionaryServiceTest.php::testCreateDictionaryDefaultsMatchMode, which asserts `saveObject()` received `matchMode === 'caseInsensitive'`.
+- @e2e exclude not observable in a browser — both rendering paths substitute the default themselves, so the DOM is identical whether or not the value was persisted. `matchModeLabel()` is byte-identical in CustomDictionaryIndex.vue and CustomDictionaryDetail.vue and both end `|| t('filinq', 'Case-insensitive')`, so a NULL match mode renders exactly like a persisted `caseInsensitive` one. Asserted where the value IS visible: tests/unit/Service/CustomDictionaryServiceTest.php::testCreateDictionaryDefaultsMatchMode, which asserts `saveObject()` received `matchMode === 'caseInsensitive'`.
 
 ### Requirement: Deterministic term matching engine (REQ-DDCDR-002)
 
@@ -64,13 +64,13 @@ via `EntityRelationMapper` as entities of type `CUSTOM_DICTIONARY`
 positions and the owning dictionary's label — so the occurrences appear in
 detection results, the review workbench, the grondslagen summary and
 OpenRegister's redaction identically to any other entity. The matching pass
-MUST run inside DocuDesk's existing detection entry point after OpenRegister
+MUST run inside Filinq's existing detection entry point after OpenRegister
 extraction, MUST be skipped when the `CUSTOM_DICTIONARY` type is disabled in
 the operator's enabled-type selection, MUST clear its prior
 `custom_dictionary` relations for a file before re-matching (no duplicates),
 and MUST be best-effort: a matcher failure MUST be logged and surfaced as a
-warning without blocking OpenRegister-side detection. DocuDesk MUST NOT add a
-DocuDesk-local entity store and MUST NOT modify OpenRegister's detection
+warning without blocking OpenRegister-side detection. Filinq MUST NOT add a
+Filinq-local entity store and MUST NOT modify OpenRegister's detection
 engine or redaction placeholder format.
 
 #### Scenario: A dictionary hit is detected, reviewable and redacted

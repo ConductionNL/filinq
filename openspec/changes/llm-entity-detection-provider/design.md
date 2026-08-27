@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at HEAD (DocuDesk `spec/market-gap-wave3-2026-07`, OpenRegister and
+Verified at HEAD (Filinq `spec/market-gap-wave3-2026-07`, OpenRegister and
 hermiq HEAD):
 
 - **OR models `llm` but has not built it.** `EntityRecognitionHandler`
@@ -20,14 +20,14 @@ hermiq HEAD):
   `{subjectUuid, state, trace}`. It is not a text→entities API; there is no
   raw-text detection endpoint at HEAD. hermiq's model runs locally
   (Ollama/Qwen per project setup) — the sovereignty guarantee.
-- **DocuDesk owns the detection entry point.**
+- **Filinq owns the detection entry point.**
   `AnonymizationService::extractAndDetectEntities()` drives OR extraction,
-  reads back entities and returns them to every DocuDesk flow; it also reads
+  reads back entities and returns them to every Filinq flow; it also reads
   document text directly via `readNodeTextSafely()`. Entities are written to
   OR's catalogue through `EntityRelationMapper`.
 
-The consequence for design: DocuDesk must NOT implement OR's `detectWithLLM`
-(OR-owned) and must NOT modify hermiq's engine. It formalises a DocuDesk-side
+The consequence for design: Filinq must NOT implement OR's `detectWithLLM`
+(OR-owned) and must NOT modify hermiq's engine. It formalises a Filinq-side
 provider seam whose default just delegates to OR, and an LLM provider that
 integrates with hermiq via an agentflow — failing closed to the default with a
 visible warning whenever the LLM path cannot honestly run.
@@ -80,15 +80,15 @@ fellBack: bool, warning: ?string }`.
 ### D2 — Per-organisation selection + resolver
 
 `DetectionProviderResolver::forOrganisation(?string $orgUuid): DetectionProviderInterface`
-reads `docudesk.detection.provider` as a per-organisation overlay
+reads `filinq.detection.provider` as a per-organisation overlay
 (default `default`). The resolver is the single place the provider is chosen
 and the single place fallback happens (D5). OR's global method setting is left
-untouched — DocuDesk's overlay decides which DocuDesk provider drives the run;
+untouched — Filinq's overlay decides which Filinq provider drives the run;
 `DefaultDetectionProvider` still honours OR's global method (regex/presidio/…).
 
 ### D3 — LLM provider ↔ hermiq contract (local only)
 
-`LlmDetectionProvider` POSTs to `docudesk.detection.hermiq_endpoint` with the
+`LlmDetectionProvider` POSTs to `filinq.detection.hermiq_endpoint` with the
 configured `hermiq_agentflow` reference and the document text as the graph
 input, expecting a response whose `state` contains an `entities` array. The
 integration contract this change targets:
@@ -101,12 +101,12 @@ HEAD reality (documented, not assumed away): hermiq's current
 `POST /api/graph/run` is admin-only and object-centric (`subjectUuid` over an
 OR object), so it cannot be called as-is with raw text by a non-admin request
 path. This change therefore **depends on** a hermiq agentflow-run endpoint
-that (a) accepts document text (or an OR chunk/object reference DocuDesk
-already has) and (b) is callable by DocuDesk's service context. Until that
+that (a) accepts document text (or an OR chunk/object reference Filinq
+already has) and (b) is callable by Filinq's service context. Until that
 endpoint exists the LLM provider reports itself unavailable
 (`isAvailable() === false`) and the resolver uses the default provider with a
 warning — i.e. the feature ships fail-closed and lights up when the hermiq
-endpoint lands. `docudesk.detection.require_local` (default true) makes the
+endpoint lands. `filinq.detection.require_local` (default true) makes the
 provider **refuse** any endpoint that is not a loopback/private-network host —
 no document text may leave the perimeter.
 
@@ -124,7 +124,7 @@ The mapper converts each `state.entities[]` item into an OR
 | — | relation `detectionMethod` | constant `llm` |
 | — | entity `category` | derived from the mapped type (OR's category map), else `contextual_data` |
 
-Confidence is preserved end-to-end so DocuDesk's existing
+Confidence is preserved end-to-end so Filinq's existing
 confidence-threshold filters (`minConfidence`, the high-confidence prohibition
 tier) behave identically whether the entity came from Presidio or the LLM.
 
@@ -163,7 +163,7 @@ scope here — this change stores no token).
 |---|---|
 | Default detection | OR path via `DefaultDetectionProvider` (unchanged) |
 | Catalogue writes | OR `EntityRelationMapper` (both providers), `detectionMethod` = `llm`/existing |
-| Document text | DocuDesk `readNodeTextSafely()` (already reads the node) |
+| Document text | Filinq `readNodeTextSafely()` (already reads the node) |
 | LLM inference | hermiq agentflow via configured local endpoint (dependency) |
 
 ADR-011: no crypto in this change (no token stored). All processing is local;
@@ -202,8 +202,8 @@ byte-identical to today.
 - [LLM output shape drift] → the mapper is defensive (unknown types kept,
   missing positions/score handled) and malformed output triggers fallback, not
   a crash.
-- [Per-org overlay vs OR's global method] → documented: DocuDesk's overlay
-  chooses the DocuDesk provider; `default` still honours OR's global method, so
+- [Per-org overlay vs OR's global method] → documented: Filinq's overlay
+  chooses the Filinq provider; `default` still honours OR's global method, so
   there is one clear precedence.
 
 ## Migration Plan
@@ -218,11 +218,11 @@ config; no data migration.
 - **hermiq text→entities agentflow / app-callable run endpoint** — the primary
   dependency. Current `/api/graph/run` is admin-only + object-centric; a
   variant accepting document text (or an OR chunk/object reference) and
-  callable from DocuDesk's service context is required for the LLM provider to
+  callable from Filinq's service context is required for the LLM provider to
   activate. Filed as a hermiq dependency.
 - **OR's `detectWithLLM` stub** — could alternatively be implemented OR-side so
   `method=llm` works globally; this change deliberately keeps the choice
-  per-organisation in DocuDesk and leaves OR's stub as an OR follow-up.
+  per-organisation in Filinq and leaves OR's stub as an OR follow-up.
 - **hermiq auth for a service-context call** — if a token is needed, store it
   via OR's `_render:false` secret boundary (parallel to
   reversible-pseudonymization's mapping store); not built here.

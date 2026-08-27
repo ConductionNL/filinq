@@ -4,7 +4,7 @@
  * Unit tests for DocumentStorageService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,15 +12,15 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-output-destinations-and-bulk-retention/tasks.md#task-3
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
-use OCA\DocuDesk\Service\DocumentStorageService;
+use OCA\Filinq\Service\DocumentStorageService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -33,10 +33,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for DocumentStorageService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  * @phpstan-extends TestCase
@@ -165,7 +165,7 @@ class DocumentStorageServiceTest extends TestCase {
 	 */
 	public function testStoreCreatesMissingFolderSegments(): void {
 		$userFolder = $this->createMock(Folder::class);
-		$docuDesk = $this->createMock(Folder::class);
+		$filinq = $this->createMock(Folder::class);
 		$namespace = $this->createMock(Folder::class);
 		$file = $this->createMock(File::class);
 
@@ -173,15 +173,18 @@ class DocumentStorageServiceTest extends TestCase {
 			->with('alice')
 			->willReturn($userFolder);
 
-		// 'DocuDesk' does not exist yet -> created.
+		// 'DocuDesk' does not exist yet -> created. The folder name keeps its
+		// pre-rename spelling on purpose (see DocumentService::DEFAULT_OUTPUT_FOLDER_PREFIX):
+		// it is a real directory in the user's Files tree holding every document
+		// already generated, so renaming it would orphan them.
 		$userFolder->method('nodeExists')->with('DocuDesk')->willReturn(false);
 		$userFolder->expects($this->once())->method('newFolder')->with('DocuDesk');
-		$userFolder->method('get')->with('DocuDesk')->willReturn($docuDesk);
+		$userFolder->method('get')->with('DocuDesk')->willReturn($filinq);
 
 		// 'procest' already exists -> reused, not recreated.
-		$docuDesk->method('nodeExists')->with('procest')->willReturn(true);
-		$docuDesk->expects($this->never())->method('newFolder');
-		$docuDesk->method('get')->with('procest')->willReturn($namespace);
+		$filinq->method('nodeExists')->with('procest')->willReturn(true);
+		$filinq->expects($this->never())->method('newFolder');
+		$filinq->method('get')->with('procest')->willReturn($namespace);
 
 		$namespace->method('getNonExistingName')->with('beschikking.pdf')->willReturn('beschikking.pdf');
 		$namespace->method('newFile')->with('beschikking.pdf', '%PDF%')->willReturn($file);
@@ -231,7 +234,7 @@ class DocumentStorageServiceTest extends TestCase {
 
 		$result = $this->service->store(
 			userId: 'alice',
-			targetPath: 'DocuDesk',
+			targetPath: 'Filinq',
 			filename: 'beschikking.pdf',
 			content: '%PDF%'
 		);
@@ -282,7 +285,7 @@ class DocumentStorageServiceTest extends TestCase {
 
 		$this->service->store(
 			userId: 'alice',
-			targetPath: 'DocuDesk',
+			targetPath: 'Filinq',
 			filename: 'x.pdf',
 			content: 'x'
 		);

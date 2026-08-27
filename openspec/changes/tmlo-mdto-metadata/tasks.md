@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `mdtoSupplement` schema to the document register in `lib/Settings/docudesk_register.json` (REQ-DDTMM-002, REQ-DDTMM-020)
+- [ ] 1.1 Add the `mdtoSupplement` schema to the document register in `lib/Settings/filinq_register.json` (REQ-DDTMM-002, REQ-DDTMM-020)
   - All properties/enums per design.md D1; `hardValidation: true`; no retention-owned attribute duplicated; no `x-openregister-archival`; register version bump.
 
 - [ ] 1.2 Seed one demo supplement (design.md Seed Data)
@@ -23,7 +23,7 @@
   - Core elements fixture-pinned against OR's generator output for identical input; reuse `TmloService::MDTO_NAMESPACE`; bestand section with sha256; deterministic output; dossier aggregation reads through the dossier capability's surface (no dossier-register schema change — sibling ownership).
 
 - [ ] 2.4 Implement the overbrenging handoff via OR's `EdepotTransferService` (REQ-DDTMM-006)
-  - Gate → sidecar → SIP transfer with configured transport/profile; on confirm: `archiefstatus = overgebracht` + sidecar attached as OR file attachment; degradation to explicit manual-export download when no transport is configured; zero transport/HTTP code in DocuDesk (architecture test).
+  - Gate → sidecar → SIP transfer with configured transport/profile; on confirm: `archiefstatus = overgebracht` + sidecar attached as OR file attachment; degradation to explicit manual-export download when no transport is configured; zero transport/HTTP code in Filinq (architecture test).
 
 - [ ] 2.5 File the OpenRegister issues surfaced by this change (design.md)
   - (a) `tmlo` vs `retention` duplication — the two MDTO generators read different fields; (b) extension-element support in `MdtoXmlGenerator` so app supplements need no app-side XML assembly. Link both on tracking issue #237.
@@ -39,7 +39,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: prefill matrix (consent/prohibition/anonymisation states), gate-implies-generator pin, sidecar determinism (byte-identical rerun), dossier aggregation fixture, fake-TransportInterface transfer, register-lint (no retention duplication, no archival annotation), architecture tests (no retention/tmlo writes, no transport code).
 
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/tmlo-mdto-metadata.spec.ts` covering the `@e2e`-referenced scenarios

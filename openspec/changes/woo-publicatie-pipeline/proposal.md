@@ -1,6 +1,6 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/238
+tracking_issue: https://github.com/ConductionNL/filinq/issues/238
 ---
 
 # Proposal: woo-publicatie-pipeline
@@ -17,7 +17,7 @@ first five Woo categories and more categories are coming (structural volume
 growth), while GPP-Woo (16 gemeenten, EUPL) is building the rival open-source
 publication stack.
 
-DocuDesk already owns the two upstream steps — anonymisation (single, batch,
+Filinq already owns the two upstream steps — anonymisation (single, batch,
 folder) and publication consent (WOO objection lifecycle, 28-day window,
 prohibitions/standing consents) — and the sibling apps own the endpoint:
 OpenCatalogi publishes OR `publication` objects with DiWoo/TOOI-validated
@@ -45,11 +45,11 @@ tenders score on.
   publication-consent rules) and no active publication prohibition matches.
 - **DiWoo metadata assembly** on the publication record (TOOI-bound Woo
   category, documentsoort, publisher, creatiedatum) — OpenCatalogi validates
-  TOOI binding at sitemap render; DocuDesk assembles and passes.
+  TOOI binding at sitemap render; Filinq assembles and passes.
 - **Handoff to OpenCatalogi** as the publication endpoint: create an OR
   `publication` object (register slug `publication`, schema `publication` —
   verified at OpenCatalogi HEAD) with the redacted derivative attached;
-  DocuDesk does NOT build its own portal.
+  Filinq does NOT build its own portal.
 - **De-publication flow**: withdraw with a mandatory reason; propagated to the
   endpoint by setting `depublicatiedatum` on the publication object; logged.
 - **Destruction-date propagation**: a destruction date from the source
@@ -78,7 +78,7 @@ tenders score on.
 
 ## Impact
 
-- `lib/Settings/docudesk_register.json`: `publicationRecord` +
+- `lib/Settings/filinq_register.json`: `publicationRecord` +
   `publicationLogEntry` schemas in the `document` register, seed data,
   register version bump.
 - New `lib/Service/PublicationPipelineService.php` (readiness evaluation,

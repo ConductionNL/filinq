@@ -28,7 +28,7 @@ stated purpose (bulk *document generation*, not bulk document generation
 
 ## What Changes
 
-- **`options.output` on `POST /apps/docudesk/api/documents/generate`**:
+- **`options.output` on `POST /apps/filinq/api/documents/generate`**:
   `{mode: 'return' | 'files' | 'both', targetPath?: string}`. `mode`
   defaults to `'return'`, which is byte-for-byte today's behaviour (hard
   backward-compatibility requirement — see design.md D1).
@@ -39,7 +39,7 @@ stated purpose (bulk *document generation*, not bulk document generation
   - `both`: store AND return the binary download; the stored file's id/path
     are exposed via `X-Docudesk-File-Id` / `X-Docudesk-File-Path` response
     headers.
-  - Default `targetPath`: `DocuDesk/<template namespace>/`, created
+  - Default `targetPath`: `Filinq/<template namespace>/`, created
     recursively and idempotently. Filename collisions are resolved via
     `Folder::getNonExistingName()` — the same platform helper Nextcloud's
     own file list uses for its `name (2).ext` convention (D2).
@@ -58,7 +58,7 @@ stated purpose (bulk *document generation*, not bulk document generation
   it is not eligible for fail-open.
 - **Audit trail**: `generatedDocument` (`DocumentService::logGeneratedDocument()`)
   gains two additive, nullable fields — `fileId`, `filePath` — populated
-  whenever the document was actually stored. `docudesk_register.json`'s
+  whenever the document was actually stored. `filinq_register.json`'s
   `generatedDocument` schema gains matching optional properties
   (`hardValidation: false`, so this is non-breaking for existing rows).
 - **Async bulk requires `output.mode: 'files'`** (D5): a
@@ -82,7 +82,7 @@ stated purpose (bulk *document generation*, not bulk document generation
   keeps today's inline `content`; `files` stores each object's output and
   returns `{fileId, path, name, size}` inline instead of `content`; `both`
   returns both. Reuses the single-generate default-`targetPath` convention
-  (`DocuDesk/<namespace>/`) per object — not the per-job subfolder
+  (`Filinq/<namespace>/`) per object — not the per-job subfolder
   convention, which only applies to the async path.
 - **Correspondence is explicitly out of scope** (D7): `CorrespondenceService`
   is a fully independent implementation of the same generate/bulk pattern —
@@ -117,7 +117,7 @@ stated purpose (bulk *document generation*, not bulk document generation
     branches on `output.mode`; `parseGenerateParams()` threads `filename`
     into `options` so the service layer can compute a storage filename
     without a new parameter)
-  - `lib/Settings/docudesk_register.json` (`generatedDocument` schema:
+  - `lib/Settings/filinq_register.json` (`generatedDocument` schema:
     additive `fileId`/`filePath` properties; register/schema version bumps)
   - Tests: `tests/unit/Service/DocumentStorageServiceTest.php` (new),
     `tests/unit/Service/DocumentServiceTest.php`,

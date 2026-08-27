@@ -15,7 +15,7 @@
 import DdIcon from './DdIcon.vue'
 
 /**
- * Pill button for DocuDesk.
+ * Pill button for Filinq.
  *
  * A fully-round button in one of three design-system variants:
  *   - `primary`   — blue fill, inset highlight, white text (main CTA).
@@ -31,8 +31,8 @@ import DdIcon from './DdIcon.vue'
  * old companion `v-on="$listeners"` would be a no-op.
  *
  * Usage:
- *   <DdButton variant="primary" :label="t('docudesk', 'Anonymize')" @click="run" />
- *   <DdButton icon="add" :label="t('docudesk', 'Select files')" @click="pick" />
+ *   <DdButton variant="primary" :label="t('filinq', 'Anonymize')" @click="run" />
+ *   <DdButton icon="add" :label="t('filinq', 'Select files')" @click="pick" />
  *   <DdButton><CustomMarkup /></DdButton>
  */
 export default {

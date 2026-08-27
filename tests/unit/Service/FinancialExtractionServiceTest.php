@@ -9,11 +9,11 @@
  * checksum-lock guarantees (REQ-FIN-06).
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Service
+ * @package   OCA\Filinq\Tests\Unit\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,18 +23,18 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\Extraction\AmountExtractor;
-use OCA\DocuDesk\Service\Extraction\DateExtractor;
-use OCA\DocuDesk\Service\Extraction\IbanExtractor;
-use OCA\DocuDesk\Service\Extraction\KvkExtractor;
-use OCA\DocuDesk\Service\Extraction\TotalsReconciler;
-use OCA\DocuDesk\Service\Extraction\VatIdExtractor;
-use OCA\DocuDesk\Service\FinancialExtractionService;
-use OCA\DocuDesk\Service\OcrService;
-use OCA\DocuDesk\Service\OpenRegisterResolver;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\Filinq\Service\Extraction\AmountExtractor;
+use OCA\Filinq\Service\Extraction\DateExtractor;
+use OCA\Filinq\Service\Extraction\IbanExtractor;
+use OCA\Filinq\Service\Extraction\KvkExtractor;
+use OCA\Filinq\Service\Extraction\TotalsReconciler;
+use OCA\Filinq\Service\Extraction\VatIdExtractor;
+use OCA\Filinq\Service\FinancialExtractionService;
+use OCA\Filinq\Service\OcrService;
+use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
@@ -113,7 +113,7 @@ TEXT;
 		// unset, instead of defaulting to register '' / schema ''. An unstubbed
 		// mock returns null, which is precisely what the guard exists to catch.
 		$this->settingsService->method('resolveFinancialExtractionBinding')
-			->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+			->willReturn(['register' => 'filinq', 'schema' => 'financialExtraction']);
 
 		$this->config = $this->createMock(IAppConfig::class);
 		$this->config->method('getValueString')->willReturnCallback(
@@ -289,7 +289,7 @@ TEXT;
 		$this->objectService->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(function ($object, $register, $schema) {
-				$this->assertSame('document', $register);
+				$this->assertSame('filinq', $register);
 				$this->assertSame('financialExtraction', $schema);
 				$this->assertSame('supplier-invoice', $object['docType']);
 				$this->assertSame('annemarie', $object['requestedBy']);
@@ -346,7 +346,7 @@ TEXT;
 
 		$this->eventDispatcher->expects($this->once())
 			->method('dispatchTyped')
-			->with($this->isInstanceOf(\OCA\DocuDesk\Event\FinancialExtractionCompletedEvent::class));
+			->with($this->isInstanceOf(\OCA\Filinq\Event\FinancialExtractionCompletedEvent::class));
 
 		$this->service->extractFinancial(
 			data: ['fileId' => 7, 'docType' => 'supplier-invoice', 'sourceApp' => 'shillinq', 'callbackEvent' => true],

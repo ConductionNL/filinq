@@ -1,7 +1,7 @@
 ---
 kind: code
 depends_on:
-  - docudesk-mcp-adoption
+  - filinq-mcp-adoption
   - mcp-generation-tools
 ---
 
@@ -19,8 +19,8 @@ audit trail on every invocation. Even before anyone automates anything, chat bec
 command surface for the app: "generate the contract from the template and send it for
 signing" should be one governed conversation, not five UI screens.
 
-DocuDesk's current surface stops half-way through that sentence. The adoption baseline
-(`docudesk-mcp-adoption`, complete) ships 16 derived read tools plus curated
+Filinq's current surface stops half-way through that sentence. The adoption baseline
+(`filinq-mcp-adoption`, complete) ships 16 derived read tools plus curated
 `generateCorrespondence`, and `mcp-generation-tools` (in flight) adds `getDocumentStatus`
 and `anonymizeDocument`. An agent can therefore *generate* the contract and *ask* whether
 it was signed — but the workflow's spine, actually starting the signing request, and its
@@ -40,22 +40,22 @@ anything is dispatched.
 
 ## What Changes
 
-- **Add curated write tool `docudesk.startSigningRequest`**: `#[McpTool]` on
+- **Add curated write tool `filinq.startSigningRequest`**: `#[McpTool]` on
   `SigningService::createRequest()` (`scope: 'create'`, `readOnlyHint: false`,
   `destructiveHint: false`, `idempotentHint: false`). Declared **approval-required**: the
   tool MUST only execute after Hermiq's human-approval gate has shown the resolved
   request (document name, signers, signature level, deadline, provider) to a human and
   received an explicit approval. No signer notification leaves the building on an
   agent's own authority.
-- **Add curated write tool `docudesk.recordConsentDecision`**: `#[McpTool]` on the
+- **Add curated write tool `filinq.recordConsentDecision`**: `#[McpTool]` on the
   consent status-update path (`ConsentUpdateHandler::updateConsentStatus()`), taking a
   consent-record id the *user* supplies plus the new `consentStatus`. Approval-gated the
   same way. The tool returns status fields only; it MUST NOT return `contactEmail`,
   `contactAddress`, `entityText`, or `objectionReason`, and the `publicationConsent`
   schema itself stays OFF the derived surface — this tool is a keyhole, not a window.
-- **Extend `lib/Mcp/DocudeskScannableServices.php`** with `SigningService::class` and the
+- **Extend `lib/Mcp/FilinqScannableServices.php`** with `SigningService::class` and the
   consent service class (the existing extension point; no new provider mechanism).
-- **Modify the standing refusal** in the `docudesk-mcp-surface` spec: "Signing is never
+- **Modify the standing refusal** in the `filinq-mcp-surface` spec: "Signing is never
   agent-writable" is narrowed to "the signing act is never agent-performable" —
   `sign()`, `decline()`, `bulkSign()`, `cancelRequest()`, verification, and the
   signature-material schemas remain permanently refused; `createRequest()` alone is
@@ -73,7 +73,7 @@ anything is dispatched.
 
 ### Modified Capabilities
 
-- `docudesk-mcp-surface` — two approval-gated curated write tools are added through the
+- `filinq-mcp-surface` — two approval-gated curated write tools are added through the
   scannable-services extension path; the signing refusal is narrowed to the signing act;
   all other standing refusals (no batch, no signature material, no consent/prohibition
   enumeration, no derived write verbs) are restated and remain binding.
@@ -87,11 +87,11 @@ _None — this extends the surface the adoption change created, under its rules.
 - **Code:** `lib/Service/SigningService.php` (one attribute + import on
   `createRequest()`; `sign`/`decline`/`bulkSign`/`cancelRequest` untouched and asserted
   attribute-free), the consent status-update service (one attribute),
-  `lib/Mcp/DocudeskScannableServices.php` (two entries appended).
+  `lib/Mcp/FilinqScannableServices.php` (two entries appended).
 - **Config:** none — no `x-openregister-mcp` block changes; no derived verb is enabled.
 - **Governance dependency:** the approval gate is enforced in Hermiq
   (`human-approval-gate` spec) keyed on the tools' declared write scope; OR's tool-grant
-  whitelist stays default-deny. DocuDesk declares honest hints and refuses to implement
+  whitelist stays default-deny. Filinq declares honest hints and refuses to implement
   a parallel grant system (same posture as `mcp-generation-tools` REQ-DDMGT-005).
 - **Audit:** signing requests already persist initiator and audit entries via the signing
   flow; agent-initiated ones MUST be attributable as `mcp` with the invoking principal,

@@ -6,7 +6,7 @@ kind: code
 
 ## Why
 
-The dossier is DocuDesk's unit of municipal work — folder-batch anonymisation
+The dossier is Filinq's unit of municipal work — folder-batch anonymisation
 operates on it, the grondslagen summary reports on it, the Woo-verzoek
 collects into it, the publication pipeline publishes it — yet **there is no
 dossier UI**. Verified at HEAD: the `dossier` register (schema `dossier`:
@@ -90,7 +90,7 @@ depends on that fix and wires the action into the dossier detail.
 
 ## Impact
 
-- `lib/Settings/docudesk_register.json`: `status` + lifecycle annotation and
+- `lib/Settings/filinq_register.json`: `status` + lifecycle annotation and
   the optional `documents[]` membership relation on the `dossier` schema;
   register version bump. No new schemas.
 - New `lib/Service/DossierManagementService.php` (membership operations,

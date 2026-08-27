@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Runs under jsdom: the anonymisation store transitively imports

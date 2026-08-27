@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk SigningProvenance
+ * Filinq SigningProvenance
  *
  * Immutable provenance envelope carried by the cross-app signing events: which
  * consumer app asked for the signature, which OpenRegister object it originated
@@ -9,14 +9,14 @@
  * single value object so the event constructors stay legible.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,18 +24,18 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 /**
  * Provenance reference for a delegated signing request.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  */
 final class SigningProvenance {
 	/**

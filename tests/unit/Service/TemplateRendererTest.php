@@ -4,17 +4,17 @@
  * Unit tests for TemplateRenderer conditional section conversion.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\Charts\ChartSvgRenderer;
-use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
-use OCA\DocuDesk\Service\TemplateRenderer;
+use OCA\Filinq\Service\Charts\ChartSvgRenderer;
+use OCA\Filinq\Service\Charts\TableHtmlRenderer;
+use OCA\Filinq\Service\TemplateRenderer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -22,10 +22,10 @@ use Psr\Log\LoggerInterface;
  * Tests conditional section conversion and rendering.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

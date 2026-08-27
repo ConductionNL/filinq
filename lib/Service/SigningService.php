@@ -6,12 +6,12 @@
  * Orchestrates the signing request lifecycle.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -19,22 +19,22 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use RuntimeException;
 
 /**
  * Service for managing signing request lifecycle
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SignedArtifactProducer and SigningRequestValidator were extracted earlier;
  * SigningActorResolver (who is acting, and may they act as this signer) and
@@ -155,7 +155,7 @@ class SigningService {
 			level: (string)$request['signatureLevel']
 		);
 
-		// Cross-app delegated-signing contract (docudesk-signing-events): when a
+		// Cross-app delegated-signing contract (filinq-signing-events): when a
 		// consumer raised this request through DocumentSigningRequestedEvent it
 		// carries provenance fields. Persist any present provenance onto the
 		// signing-request object (additive/optional) so the terminal
@@ -237,7 +237,7 @@ class SigningService {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
 	 *
-	 * Wilco #6 blocker fix (docudesk#100, 2026-06-06): the access-denied path
+	 * Wilco #6 blocker fix (filinq#100, 2026-06-06): the access-denied path
 	 * still returns null (indistinguishable from the controller's not-found
 	 * 404 for a scoped caller), so an unrelated user cannot probe request-ID
 	 * existence. Not-found now throws a fixed, ID-free message ('Signing
@@ -372,7 +372,7 @@ class SigningService {
 		$request = $this->getRequest(requestId: $requestId);
 		if ($request === null) {
 			// The getRequest() call returns null on not-found and access-denied
-			// (Wilco #6 fix, docudesk#100). Internal sign() doesn't pass a
+			// (Wilco #6 fix, filinq#100). Internal sign() doesn't pass a
 			// callerUserId so access-denied is impossible from here — null
 			// means truly not-found. Throw to keep callers' existing
 			// exception contract.
@@ -521,7 +521,7 @@ class SigningService {
 	 * @return array<string, mixed>|null The cancelled request, or null
 	 *                                   when the request is not found (or
 	 *                                   not accessible to a non-admin
-	 *                                   caller). Wilco #6 fix (docudesk#100,
+	 *                                   caller). Wilco #6 fix (filinq#100,
 	 *                                   2026-06-06): callers must collapse
 	 *                                   null to a single 404 — never split
 	 *                                   into 404-vs-403, which would be an
@@ -739,7 +739,7 @@ class SigningService {
 	 *
 	 * @param array<string, mixed> $request The persisted (EXPIRED) signing-request array
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 *
 	 * @return void
 	 */

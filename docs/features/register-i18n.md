@@ -2,7 +2,7 @@
 
 ## Overview
 
-Multi-language support for DocuDesk's register objects, allowing users to view and manage document templates in their preferred language. Built on OpenRegister's register-i18n foundation.
+Multi-language support for Filinq's register objects, allowing users to view and manage document templates in their preferred language. Built on OpenRegister's register-i18n foundation.
 
 ## Status: Proposed
 

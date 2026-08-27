@@ -10,10 +10,10 @@
  *   WF3 — getBatch returns null (not 500) for non-owner (existence probing)
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,16 +21,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit;
+namespace OCA\Filinq\Tests\Unit;
 
-use OCA\DocuDesk\Controller\CorrespondenceController;
-use OCA\DocuDesk\Controller\SigningController;
-use OCA\DocuDesk\Service\BatchStateRepository;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\CorrespondenceService;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningService;
-use OCA\DocuDesk\Service\SigningVerificationService;
+use OCA\Filinq\Controller\CorrespondenceController;
+use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Service\BatchStateRepository;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\CorrespondenceService;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\SigningVerificationService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -50,10 +50,10 @@ use RuntimeException;
  * Wave-12 regression tests for security findings SB1, WF1, WF2, WF3
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -135,7 +135,7 @@ class Wave12SecurityRegressionTest extends TestCase {
 		IUserSession $userSession,
 	): CorrespondenceController {
 		return new CorrespondenceController(
-			'docudesk',
+			'filinq',
 			$this->createMock(IRequest::class),
 			$corrSvc,
 			$userSession,
@@ -160,7 +160,7 @@ class Wave12SecurityRegressionTest extends TestCase {
 		IGroupManager $groupManager,
 	): SigningController {
 		return new SigningController(
-			'docudesk',
+			'filinq',
 			$this->createMock(IRequest::class),
 			$signingService,
 			$this->createMock(SigningAuditService::class),

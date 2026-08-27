@@ -3,7 +3,7 @@
 Two independently-reported gaps turned out to share one root cause and one
 fix:
 
-1. `POST /apps/docudesk/api/documents/generate` only ever returns bytes —
+1. `POST /apps/filinq/api/documents/generate` only ever returns bytes —
    nothing lands in Nextcloud Files.
 2. `BatchDocumentJob` (the >10-object async path of `generate/bulk`)
    generates every document and discards the content; only per-object
@@ -179,7 +179,7 @@ not attempt to resolve).
 
 ## Migration Plan
 
-Purely additive — no data migration. `docudesk_register.json`'s
+Purely additive — no data migration. `filinq_register.json`'s
 `generatedDocument` schema gains two nullable properties; existing rows
 are valid as-is (`hardValidation: false`). No route changes. Rollback is
 "stop passing `options.output`" — every existing caller already does that.

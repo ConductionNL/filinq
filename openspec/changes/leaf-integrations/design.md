@@ -1,8 +1,8 @@
 # Design — leaf-integrations
 
-Context: the fleet leaf wave (ADR-019 registry, ADR-022 consume-don't-build). DocuDesk at
+Context: the fleet leaf wave (ADR-019 registry, ADR-022 consume-don't-build). Filinq at
 HEAD declares no `linkedTypes` and no `mailObjectTemplate` on any of its 23 schemas
-(verified by grep over `lib/Settings/docudesk_register.json`) — this change is the app's
+(verified by grep over `lib/Settings/filinq_register.json`) — this change is the app's
 first leaf adoption. Sibling changes already cover adjacent ground:
 `document-detail-leaf-widgets` (contacts/activity/shares on the generic document detail
 page) and `signer-consent-notifications-to-email-leaf` (outbound comms through the email
@@ -22,10 +22,10 @@ signer contacts, pipeline files, and follow-up cards.
   map (`Schema.php` §configuration docs); every key must be a real property name and
   every value scalar, or the register import fails — the same fail-the-import discipline
   as the MCP dialect's `search.filters`.
-- All declarations land directly in `docudesk_register.json` (this repo keeps a single
+- All declarations land directly in `filinq_register.json` (this repo keeps a single
   monolith register; there is no `register.d/` fragment mechanism here), with an
   `info.version` bump so `SettingsInitializer` re-imports on existing installs — the
-  lesson recorded in `docudesk-mcp-adoption` task 1.5: without the bump the change is
+  lesson recorded in `filinq-mcp-adoption` task 1.5: without the bump the change is
   inert on every installed instance.
 
 ## Adoption table
@@ -44,13 +44,13 @@ need), `batchCorrespondenceJob` (progress record, no per-object leaf value),
 `publicationProhibition` / `anonymizationLink` / signing-material schemas (their detail
 exposure is intentionally minimal; adding leaves would invite exactly the linkage those
 records exist to prevent), the GL side-domain, and Talk/Polls/Forms/Maps leaves (no
-DocuDesk workflow maps onto them — bias to fewer, ADR-063's rule 3 applied to leaves).
+Filinq workflow maps onto them — bias to fewer, ADR-063's rule 3 applied to leaves).
 
 ## Privacy boundary
 
-The leaves are authenticated UI surfaces under DocuDesk's normal access control. They do
+The leaves are authenticated UI surfaces under Filinq's normal access control. They do
 not move any schema across the agent boundary: `signerRecord` and `publicationConsent`
-remain excluded from the MCP surface exactly as `docudesk-mcp-adoption` declares (both
+remain excluded from the MCP surface exactly as `filinq-mcp-adoption` declares (both
 delta specs restate this as a requirement so the two surfaces cannot drift apart
 silently). The contacts leaf on `signerRecord` shows identity fields a caseworker already
 sees on the signer surface; it must never render `signatureData` or `ipAddress`.

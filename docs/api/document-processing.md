@@ -5,11 +5,11 @@ title: Document Processing
 
 # Document Processing
 
-DocuDesk provides powerful document processing capabilities that allow you to transform, analyze, and manage documents in various formats. This page explains how document processing works in DocuDesk.
+Filinq provides powerful document processing capabilities that allow you to transform, analyze, and manage documents in various formats. This page explains how document processing works in Filinq.
 
 ## Overview
 
-The Document Processing system in DocuDesk enables you to:
+The Document Processing system in Filinq enables you to:
 
 - Generate documents from templates
 - Convert documents between formats
@@ -20,7 +20,7 @@ The Document Processing system in DocuDesk enables you to:
 
 ## Processing Workflow
 
-A typical document processing workflow in DocuDesk consists of the following steps:
+A typical document processing workflow in Filinq consists of the following steps:
 
 1. **Initiation**: A user or system initiates a processing operation
 2. **Queuing**: The operation is queued for processing
@@ -32,7 +32,7 @@ A typical document processing workflow in DocuDesk consists of the following ste
 
 ## Integration with Other Systems
 
-Document processing in DocuDesk is tightly integrated with several other systems:
+Document processing in Filinq is tightly integrated with several other systems:
 
 - **[Document Reports](./document-reports.md)**: Stores analysis results for documents
 - **[Anonymization Logs](./anonymization-logs.md)**: Tracks anonymization operations and replacements
@@ -61,7 +61,7 @@ Metadata extraction allows you to extract metadata from documents, such as:
 
 ### Anonymization
 
-Anonymization allows you to remove or mask personal data in documents. DocuDesk uses Microsoft Presidio for powerful entity recognition and anonymization:
+Anonymization allows you to remove or mask personal data in documents. Filinq uses Microsoft Presidio for powerful entity recognition and anonymization:
 
 - Named entity recognition to identify personal data (PERSON, LOCATION, etc.)
 - Redaction of personal data with customizable replacement text
@@ -78,7 +78,7 @@ The results of anonymization operations are stored in the [Anonymization Log](./
 
 For more information on anonymization, see:
 - [Anonymization Logs](./anonymization-logs.md) for details on the anonymization log object
-- [Presidio Integration](./presidio-integration.md) for details on how DocuDesk processes Presidio's output
+- [Presidio Integration](./presidio-integration.md) for details on how Filinq processes Presidio's output
 
 #### Example Presidio Response
 
@@ -105,7 +105,7 @@ For more information on anonymization, see:
 }
 ```
 
-DocuDesk transforms this response into a comprehensive AnonymizationLog object that tracks all aspects of the anonymization process.
+Filinq transforms this response into a comprehensive AnonymizationLog object that tracks all aspects of the anonymization process.
 
 ### Format Conversion
 
@@ -150,7 +150,7 @@ Validation allows you to verify that documents conform to templates or schemas:
 
 ## API Integration
 
-Document processing operations can be initiated through the DocuDesk API. The typical flow is:
+Document processing operations can be initiated through the Filinq API. The typical flow is:
 
 1. Create a parsing log entry with the desired operation type
 2. Monitor the parsing log for status updates
@@ -360,6 +360,6 @@ public function analyzeAccessibility(string $fileId, string $fileName): array
 
 ## Conclusion
 
-Document processing is a core feature of DocuDesk that enables powerful document transformation and analysis capabilities. By integrating with privacy tracking, parsing logs, document reports, and anonymization logs, DocuDesk ensures that all document operations are properly tracked and comply with privacy and accessibility regulations.
+Document processing is a core feature of Filinq that enables powerful document transformation and analysis capabilities. By integrating with privacy tracking, parsing logs, document reports, and anonymization logs, Filinq ensures that all document operations are properly tracked and comply with privacy and accessibility regulations.
 
 For more detailed information on specific aspects of document processing, refer to the following documentation:

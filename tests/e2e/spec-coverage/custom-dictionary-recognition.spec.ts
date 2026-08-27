@@ -35,7 +35,7 @@ import { appUrl, go, waitForAppReady } from './_helpers'
 import { harvestToken, jsonHeaders, API } from '../workflows/_fixtures'
 
 const P = `g19cdr-${Date.now()}`
-const SEEDED_LABEL = 'Projectnamen' // shipped by lib/Settings/docudesk_register.json
+const SEEDED_LABEL = 'Projectnamen' // shipped by lib/Settings/filinq_register.json
 const FIXTURE_LABEL = `${P}-Straatnamen`
 
 let fixtureId = ''
@@ -116,7 +116,7 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
 	}) => {
 		// @e2e openspec/specs/custom-dictionary-recognition/spec.md#the-dictionaries-page-lists-dictionaries-with-their-term-counts
 		await go(page, 'custom-dictionaries')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/custom-dictionaries/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/custom-dictionaries/)
 
 		const table = page.locator('#content table, .app-content table').first()
 		await expect(
@@ -329,7 +329,7 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
  *   EXCLUDED in the spec. A browser genuinely cannot observe this: BOTH
  *   rendering paths substitute the default themselves. `matchModeLabel()` in
  *   CustomDictionaryIndex.vue:204 and in CustomDictionaryDetail.vue:222 are
- *   identical and both end `|| t('docudesk', 'Case-insensitive')`. So a
+ *   identical and both end `|| t('filinq', 'Case-insensitive')`. So a
  *   dictionary persisted with a NULL match mode renders exactly the same string
  *   as one persisted with `caseInsensitive`, and any browser assertion here
  *   would pass whether or not the backend defaulted anything. The persisted

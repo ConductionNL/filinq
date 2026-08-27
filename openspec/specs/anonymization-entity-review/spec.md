@@ -3,7 +3,7 @@ status: in-progress
 ---
 
 **Status**: in-progress
-**Scope**: docudesk
+**Scope**: filinq
 **OpenSpec changes**:
 - [anonymization-review-workbench](../../changes/anonymization-review-workbench/) _(active)_ — consolidated-entities response gains `standingConsentMatch` (sibling of `prohibitionMatch`, pre-excluding matched entities) and the batch anonymize commit gains the per-document checked-gate precondition (kind: code)
 
@@ -18,7 +18,7 @@ status: in-progress
   The removed reason read:
 
     "entity review UI for batch anonymization is not yet shipped in the current
-     DocuDesk release (v0.0.34) — batch entity consolidation endpoint and review
+     Filinq release (v0.0.34) — batch entity consolidation endpoint and review
      table are unbuilt; covered by PHPUnit and API contract tests when
      implemented"
 
@@ -63,7 +63,7 @@ status: in-progress
   exclusion naming that environment state would be a fresh instance of the exact
   defect this comment records.
 
-  See ConductionNL/docudesk#431.
+  See ConductionNL/filinq#431.
 -->
 
 ## ADDED Requirements

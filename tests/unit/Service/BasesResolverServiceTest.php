@@ -10,7 +10,7 @@
  *   - Empty-dossier-bases  → []
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -26,9 +26,9 @@
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-5
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\BasesResolverService;
+use OCA\Filinq\Service\BasesResolverService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
@@ -45,7 +45,7 @@ use Psr\Log\LoggerInterface;
  * can be exercised without hitting a real OpenRegister instance.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl

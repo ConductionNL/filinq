@@ -15,7 +15,7 @@ keywords:
 
 # Letter & Correspondence Generation
 
-DocuDesk provides an API for generating personalized correspondence — letters, notifications,
+Filinq provides an API for generating personalized correspondence — letters, notifications,
 decisions — by combining a stored Twig template with data resolved from one or more
 OpenRegister objects. Output formats include PDF, DOCX, HTML, and email.
 
@@ -37,7 +37,7 @@ Nextcloud background job so the HTTP request returns immediately with a job ID.
 ### Generate Single Correspondence
 
 ```
-POST /apps/docudesk/api/correspondence/generate
+POST /apps/filinq/api/correspondence/generate
 ```
 
 Generates a single correspondence document for one or more data references and returns the
@@ -77,7 +77,7 @@ rendered output inline.
 ### Generate Batch Correspondence
 
 ```
-POST /apps/docudesk/api/correspondence/generate/batch
+POST /apps/filinq/api/correspondence/generate/batch
 ```
 
 Generates correspondence for multiple recipients. Batches of more than 10 recipients are
@@ -116,7 +116,7 @@ processed asynchronously and a job ID is returned immediately.
 ### Get Job Status
 
 ```
-GET /apps/docudesk/api/correspondence/jobs/{jobId}
+GET /apps/filinq/api/correspondence/jobs/{jobId}
 ```
 
 Returns the current status of a batch background job.

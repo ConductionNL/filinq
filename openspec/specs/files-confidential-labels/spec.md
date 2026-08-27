@@ -13,9 +13,9 @@ service MUST guard on `files_confidential` presence via
 `IAppManager::getInstalledApps()` before reading, MUST read labels through
 Nextcloud's public system-tag API (`ISystemTagObjectMapper` /
 `ISystemTagManager`) rather than any `files_confidential` internal, MUST match tag
-names against the admin-configured `docudesk.confidentiality.label_vocabulary`
+names against the admin-configured `filinq.confidentiality.label_vocabulary`
 returning the highest-level match, and MUST NOT throw — any tag-API failure MUST
-be treated as "no label" (`null`). DocuDesk MUST load and function normally when
+be treated as "no label" (`null`). Filinq MUST load and function normally when
 `files_confidential` is absent.
 
 #### Scenario: Labelled file returns its label and level
@@ -29,7 +29,7 @@ be treated as "no label" (`null`). DocuDesk MUST load and function normally when
 
 - GIVEN `files_confidential` is not installed
 - WHEN `getLabelForFile(fileId)` is called
-- THEN it returns null and DocuDesk's anonymisation flow proceeds unchanged
+- THEN it returns null and Filinq's anonymisation flow proceeds unchanged
 - @e2e exclude availability guard — covered by PHPUnit (tests/unit/Service/ConfidentialityLabelServiceTest.php::testAbsentAppReturnsNull)
 
 #### Scenario: Tag-API failure degrades to no label
@@ -67,7 +67,7 @@ any block, redaction, gate or enforcement.
 ### Requirement: Optionally suggest batch/folder analysis priority (REQ-DDFCL-003)
 
 The app MUST expose an admin flag
-`docudesk.confidentiality.prioritise_analysis` defaulting to off. When off,
+`filinq.confidentiality.prioritise_analysis` defaulting to off. When off,
 batch/folder analysis ordering MUST be identical to current behaviour. When on,
 the analysis enumerator MUST use the normalised confidentiality level (unlabelled
 = 0) as a secondary, tie-breaking sort key so higher-confidentiality files are

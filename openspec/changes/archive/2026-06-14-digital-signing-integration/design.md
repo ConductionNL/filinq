@@ -1,6 +1,6 @@
 ---
 status: pr-created
-pr: https://codeberg.org/Conduction/docudesk/pulls
+pr: https://github.com/ConductionNL/filinq/pulls
 ---
 
 ## Context

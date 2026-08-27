@@ -5,7 +5,7 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add the optional `status` property + `x-openregister-lifecycle` annotation AND the optional `documents[]` membership relation to the `dossier` schema in `lib/Settings/docudesk_register.json` (dossier-register delta)
+- [ ] 1.1 Add the optional `status` property + `x-openregister-lifecycle` annotation AND the optional `documents[]` membership relation to the `dossier` schema in `lib/Settings/filinq_register.json` (dossier-register delta)
   - Canonical `initial: open` (the lifecycle dialect trap: only the canonical `initial` key is honoured); exactly the six declared transitions; `documents[]` = array of NC file node references (no `minItems`, optional — absent = membership from home folder alone); register-i18n tags on the new user-facing enum values; register version bump with changelog entry; existing seed dossiers untouched (absent status = open, absent documents = folder-only membership).
 
 ## 2. Backend
@@ -36,7 +36,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests for DossierManagementService/Controller (union membership resolver incl. dangling-reference marker, multi-dossier link/unlink semantics, rename-folder sync incl. ACL/collision warning path, aggregation presence gates, IDOR guard, lifecycle transitions incl. out-of-order rejection, rename field-survival) — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Explicit pins: a rename PUT preserves `bases`, `checkedOn`, `description`, `status`, `documents` (saveObject PUT-semantic trap); unlinking a referenced member does not delete the file; a deleted reference target does not break the detail view.
 
 - [ ] 4.2 Playwright e2e specs `tests/e2e/workflows/dossier-management.spec.ts` + `tests/e2e/spec-coverage/dossier-management.spec.ts` covering the `@e2e`-referenced scenarios end-to-end with OpenRegister on the Postgres dev instance

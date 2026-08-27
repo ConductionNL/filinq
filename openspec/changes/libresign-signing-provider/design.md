@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at HEAD (DocuDesk `development`, branch
+Verified at HEAD (Filinq `development`, branch
 `spec/market-gap-wave3-2026-07`):
 
 - **The provider registry is a real extension seam.**
@@ -11,7 +11,7 @@ Verified at HEAD (DocuDesk `development`, branch
   `supportsLevel()`, and `produceSignedArtifact()`.
   `SigningProviderFactory::__construct` wires
   `['native' => NativeSigningProvider, 'validsign' => ValidSignProvider]` and
-  `getActiveProvider()` reads `docudesk.signing_provider` (default `native`),
+  `getActiveProvider()` reads `filinq.signing_provider` (default `native`),
   **falling back to `native` on an unknown name**. `getAvailableProviders()`
   returns `array_keys($this->providers)`.
 - **`supportsLevel` honesty already varies by provider.**
@@ -45,11 +45,11 @@ Verified at HEAD (DocuDesk `development`, branch
 - Only present the provider when LibreSign is actually available; fail closed
   otherwise.
 - Round-trip the signed artifact and audit into OpenRegister via existing
-  DocuDesk paths (ADR-022: consume OR's store + audit, no local stores).
+  Filinq paths (ADR-022: consume OR's store + audit, no local stores).
 
 **Non-Goals:**
 
-- No new signing crypto in DocuDesk — LibreSign owns the certificate/key.
+- No new signing crypto in Filinq — LibreSign owns the certificate/key.
 - No change to `SigningProviderInterface`/`SigningProviderFactory` contracts
   beyond adding a provider and the availability gate.
 - No fix to the shared completion-path fallback — that is
@@ -70,7 +70,7 @@ enabled**, checked via `OCP\App\IAppManager` (`isEnabledForUser()` /
   admin picker does not offer it; `getProvider('libresign')` throws the existing
   `RuntimeException` ("Signing provider not available").
 - LibreSign present but the caller selected another provider → unaffected.
-- `docudesk.signing_provider = libresign` but LibreSign later removed →
+- `filinq.signing_provider = libresign` but LibreSign later removed →
   `getActiveProvider()` MUST fail closed with an explanatory error, **not**
   silently return native. (This tightens the current unknown-name→native
   fallback for the specific configured-but-absent case; the general
@@ -79,17 +79,17 @@ enabled**, checked via `OCP\App\IAppManager` (`isEnabledForUser()` /
 ### D2 — Honest capability mapping (`supportsLevel`)
 
 LibreSign signs with an X.509 certificate via OpenSSL, producing PAdES-class
-signatures. The mapping to DocuDesk's `SES|AdES|QES` levels is
+signatures. The mapping to Filinq's `SES|AdES|QES` levels is
 **certificate-dependent**, so it is config-driven, not hardcoded true:
 
-| DocuDesk level | LibreSign support | Default |
+| Filinq level | LibreSign support | Default |
 |---|---|---|
 | `SES` | always (any certificate) | on |
 | `AdES` | when signing with a real X.509 certificate (LibreSign's normal mode) | on |
 | `QES` | only when the configured certificate is qualified / backed by a QTSP | **off** (admin opt-in) |
 
 `supportsLevel($level)` reads the admin config
-(`docudesk.libresign_qualified` boolean, default false) and returns true for
+(`filinq.libresign_qualified` boolean, default false) and returns true for
 `SES`/`AdES` and for `QES` only when qualified. `produceSignedArtifact()` /
 delegation MUST re-check `supportsLevel()` and **throw** on an unsupported
 level — never emit a lower-assurance artifact under a higher-level request.
@@ -98,20 +98,20 @@ This is the anti-laundering core of the change.
 ### D3 — Delegation to LibreSign's API (endpoints = Open Question)
 
 LibreSign exposes an OCS/REST API under
-`/ocs/v2.php/apps/libresign/api/v1/...`. The delegation flow DocuDesk needs:
+`/ocs/v2.php/apps/libresign/api/v1/...`. The delegation flow Filinq needs:
 
 1. **Create a signature request** — register the file + signer(s) with
    LibreSign, receiving a request/file uuid. *Documented endpoint (verify):*
    `POST /api/v1/request-signature` (file + users).
 2. **Drive the signer flow** — LibreSign presents its own signing UI/link;
-   DocuDesk stores the returned uuid on the `signingSession`.
+   Filinq stores the returned uuid on the `signingSession`.
 3. **Retrieve the signed file** — after signers complete, fetch the signed
    PDF. *Documented endpoint (verify):* the file-download / signed-file
    retrieval by uuid.
 4. **Validate** — LibreSign's own validation. *Documented endpoint (verify):*
    `GET /api/v1/file/validate/uuid/{uuid}` (or `.../file_id/{fileId}`).
 5. **Completion signal** — whether LibreSign pushes a webhook/notification or
-   DocuDesk polls `checkStatus()` is unresolved without a live instance.
+   Filinq polls `checkStatus()` is unresolved without a live instance.
 
 **Open Question (must resolve before apply):** confirm the exact request/sign/
 retrieve/validate endpoint paths and payloads against the LibreSign version
@@ -119,13 +119,13 @@ targeted (its OCS API docs / an installed instance), and whether completion is
 push or poll. Until confirmed, `LibreSignProvider` is coded against an
 `interface`-level `LibreSignClient` seam so the concrete endpoints are swapped
 in one place. The client is resolved lazily (either an openconnector source or
-a thin `IClientService` HTTP client) so DocuDesk stays loadable without
+a thin `IClientService` HTTP client) so Filinq stays loadable without
 LibreSign.
 
 ### D4 — Artifact + audit round-trip into OR (ADR-022)
 
 - **Artifact**: the signed PDF LibreSign returns is stored as a new document
-  version through DocuDesk's existing OR-backed completion path
+  version through Filinq's existing OR-backed completion path
   (`produceAndStoreSignedArtifact` → new file version) — the same path native
   uses. `LibreSignProvider::produceSignedArtifact()` returns the LibreSign
   signed bytes (or throws per the honest-completion gate); it does not write
@@ -133,7 +133,7 @@ LibreSign.
 - **Audit**: every provider action (request created, signer completed, signed
   file retrieved, validation result) is recorded via the existing
   `SigningAuditService`, which routes to OR's hash-chained `AuditTrailMapper`
-  (`signing-audit-via-or`, status done). No DocuDesk-local audit store.
+  (`signing-audit-via-or`, status done). No Filinq-local audit store.
 - **Session**: reuse the `signingSession` schema; store `provider: libresign`
   and the LibreSign `externalId` (request uuid). No new schema for MVP.
 
@@ -176,8 +176,8 @@ tests use a fake `LibreSignClient` and a fake `IAppManager`.
   defect.
 - **Fail closed when configured-but-absent** (D1) — never fall through to
   native for `signing_provider = libresign`.
-- **No keys in DocuDesk** — LibreSign holds the certificate/private key;
-  DocuDesk never stores signing keys.
+- **No keys in Filinq** — LibreSign holds the certificate/private key;
+  Filinq never stores signing keys.
 - **Immutable audit** via OR's hash chain.
 - API calls to LibreSign stay in-cluster (local NC app); no third-party cloud.
 

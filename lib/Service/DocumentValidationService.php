@@ -18,12 +18,12 @@
  * field names only — never extracted document text or entity values.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  *
@@ -33,10 +33,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
-use OCA\DocuDesk\Service\Validation\DocumentFileInspector;
-use OCA\DocuDesk\Service\Validation\ValidationProfileResolver;
+use OCA\Filinq\Service\Validation\DocumentFileInspector;
+use OCA\Filinq\Service\Validation\ValidationProfileResolver;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -46,10 +46,10 @@ use Throwable;
  * Computes document validation verdicts (pure, no side effects).
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  */

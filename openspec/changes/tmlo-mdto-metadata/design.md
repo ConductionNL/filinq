@@ -37,7 +37,7 @@ informatieobject attributes an e-depot ingest profile typically requires.
 Both gaps are OR-side; this change files them as OR issues and designs
 around them without duplicating OR logic (see D3/D5).
 
-### DocuDesk side
+### Filinq side
 
 `archiefwet-retention-engine` (dependency) puts `retention` archival
 metadata on record objects and defines the overbrenging state. The
@@ -58,7 +58,7 @@ survive transfer as beperkingGebruik.
 **Goals:**
 
 - Complete MDTO informatieobject metadata per document/dossier: OR core
-  fields + a DocuDesk supplement, with context-derived prefill.
+  fields + a Filinq supplement, with context-derived prefill.
 - A hard completeness gate in front of overbrenging.
 - Deterministic MDTO XML/JSON sidecars per document/dossier, e-depot-ready
   (bestand + checksum), dossier-aggregating.
@@ -67,7 +67,7 @@ survive transfer as beperkingGebruik.
 
 - No second copy of retention-owned fields (waardering, termijn,
   actiedatum, classificatie live in `retention` only).
-- No transport/protocol code; no DocuDesk e-depot client (OR's
+- No transport/protocol code; no Filinq e-depot client (OR's
   EdepotTransferService owns delivery).
 - No arbitrary-register MDTO tooling; no fix for OR's internal
   `tmlo`/`retention` duplication (OR issue).
@@ -106,7 +106,7 @@ and belongs beside them.
 `MdtoMappingService::prefill()` derives, per record: `aggregatieniveau`
 from record type; `dekkingInTijd` from the document's creation/closure
 dates (dossier: min/max over members); `beperkingGebruik` proposals from
-DocuDesk state — an unresolved/objection consent → `avg-persoonsgegevens`
+Filinq state — an unresolved/objection consent → `avg-persoonsgegevens`
 with the consent grondslag; an active `publicationProhibition` match →
 `woo-uitzondering` with the prohibition's legalAuthority; an anonymised
 derivative existing → a note that the public rendition is the anonymised
@@ -143,13 +143,13 @@ outside declared fields). Dossier sidecar: an `informatieobject` at
 `aggregatieniveau: dossier` aggregating member documents as archiefstukken
 (identificatie references), exported as one XML document.
 
-**Uncertainty, stated**: assembling MDTO elements in DocuDesk duplicates
+**Uncertainty, stated**: assembling MDTO elements in Filinq duplicates
 element construction OR already half-owns. The alternatives were worse —
 patching OR's two generators from app side is impossible, and waiting on an
 upstream extension-hook makes this change undeliverable. An OR issue
 proposing supplement/extension-element support in `MdtoXmlGenerator` is
-filed at apply time; when OR ships it, DocuDesk's assembly shrinks to a
-data provider. The DocuDesk assembly reuses OR's constants
+filed at apply time; when OR ships it, Filinq's assembly shrinks to a
+data provider. The Filinq assembly reuses OR's constants
 (`TmloService::MDTO_NAMESPACE`) rather than re-declaring them.
 
 ### D5 — Transfer rides OR's e-depot stack
@@ -162,7 +162,7 @@ overgebracht` (record read-only per the retention engine; the sidecar is
 attached to the record as an OR file attachment for the municipal audit
 trail). If no e-depot transport is configured, the action degrades to
 "export sidecar for manual delivery" (download) — explicitly visible, never
-a silent no-op. DocuDesk contains no transport code (architecture test).
+a silent no-op. Filinq contains no transport code (architecture test).
 
 ### D6 — Frontend per ADR-012 / ADR-003
 
@@ -201,7 +201,7 @@ date/validation utilities; language codes passed opaquely.
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (nil-UUID/`seed-*`
+Shipped in `filinq_register.json` `objects[]` (nil-UUID/`seed-*`
 placeholders, demo-municipality flavour):
 
 ```json
@@ -228,10 +228,10 @@ placeholders, demo-municipality flavour):
 ## Risks / Trade-offs
 
 - [OR generator drift (element names, waardering map, namespace)] → fixture
-  tests pin DocuDesk's core-element output against OR's generator output for
+  tests pin Filinq's core-element output against OR's generator output for
   the same input; verified against OR HEAD at apply time, not this spec's
   snapshot.
-- [Two OR metadata fields (`tmlo` vs `retention`)] → DocuDesk writes
+- [Two OR metadata fields (`tmlo` vs `retention`)] → Filinq writes
   neither directly and reads `retention` only; `/api/tmlo/*` endpoints are
   NOT used while they read `tmlo` (they would 422 on retention-only
   objects); OR issue filed. If OR later unifies, only the read adapter
@@ -240,7 +240,7 @@ placeholders, demo-municipality flavour):
   operator-confirmed values only; PII never copied in clear into
   `betrokkene` (references only).
 - [SIP profile variance across e-depot suppliers] → profiles are OR
-  configuration; DocuDesk emits standard MDTO and leaves
+  configuration; Filinq emits standard MDTO and leaves
   profile shaping to OR's Edepot profiles; manual-export degradation path.
 - [Dossier aggregation touches sibling-owned dossier surface] → this change
   only *reads* dossier data and renders its panel through the dossier

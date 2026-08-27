@@ -14,20 +14,20 @@ distribution channel in its own right: the ecosystem research names
 apps whose entire value is "hang one document operation on a Flow event",
 and the app store carries a dedicated Flow/workflow discovery category
 where document-processing operations are found by admins who have never
-heard of DocuDesk. **Stirling-PDF**'s no-code "pipelines" theme shows the
+heard of Filinq. **Stirling-PDF**'s no-code "pipelines" theme shows the
 same demand outside Nextcloud: admins want *file arrives → processing
 happens* without writing code. (Intelligence DB competitor rows:
 `workflow-ocr`, `nextcloud-flow`, `stirling-pdf`.)
 
-DocuDesk today has zero Flow presence, verified at HEAD `9cc14407`: no
+Filinq today has zero Flow presence, verified at HEAD `9cc14407`: no
 `OCP\WorkflowEngine` reference anywhere in `lib/`, no
 `RegisterOperationsEvent` listener, and `appinfo/info.xml` carries only
-`<category>organization</category>`. Every DocuDesk capability is
+`<category>organization</category>`. Every Filinq capability is
 pull-only — a human must open the app and click. That leaves the most
 common municipal automation wishes unserved:
 
 - "every scan dropped in `/Inkomend` gets OCR" — the exact use case
-  workflow_ocr exists for, which DocuDesk can now serve natively because
+  workflow_ocr exists for, which Filinq can now serve natively because
   wave-1 `ocr-trigger-surface` gives `OcrService` an invocation surface;
 - "everything tagged `woo-verzoek` enters anonymisation intake";
 - "every outbound decision letter is converted to PDF/A for the archive"
@@ -39,7 +39,7 @@ All four engines exist and are reachable only imperatively. Flow is the
 cheapest possible automation surface: the engine owns triggers ("File
 created", "Tag assigned" — verified on the server's
 `OCA\WorkflowEngine\Entity\File::getEvents()`), rule matching and the
-admin/user configuration UI; DocuDesk only ships operations.
+admin/user configuration UI; Filinq only ships operations.
 
 ## What
 
@@ -68,16 +68,16 @@ admin/user configuration UI; DocuDesk only ships operations.
   OpenRegister object (operation, file, status, timings, result summary,
   error); failures are reported to the file owner via Nextcloud
   notifications declared in the verified `x-openregister-notifications`
-  dialect (per the `docudesk-notifications` capability conventions).
+  dialect (per the `filinq-notifications` capability conventions).
 - **Flow-category distribution**: `appinfo/info.xml` additionally
-  declares the app-store `workflow` category so DocuDesk is discoverable
+  declares the app-store `workflow` category so Filinq is discoverable
   where workflow_ocr and workflow_pdf_converter are found today.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `flow-operations`: DocuDesk's Nextcloud Flow integration — the four
+- `flow-operations`: Filinq's Nextcloud Flow integration — the four
   registered file operations, their asynchronous execution and loop
   guard, the `flowOperationRun` processing log with failure
   notifications, and the Flow app-store category declaration.

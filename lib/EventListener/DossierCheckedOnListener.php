@@ -12,7 +12,7 @@
  * regardless of whether the summary can be rendered.
  *
  * @category EventListener
- * @package  OCA\DocuDesk\EventListener
+ * @package  OCA\Filinq\EventListener
  *
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\EventListener;
+namespace OCA\Filinq\EventListener;
 
-use OCA\DocuDesk\Service\LegalBasesSummaryService;
+use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
  * Event listener that auto-regenerates the dossier grondslagen summary on checkedOn update
  *
  * @category EventListener
- * @package  OCA\DocuDesk\EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
@@ -52,11 +52,11 @@ use Psr\Log\LoggerInterface;
 class DossierCheckedOnListener implements IEventListener {
 
 	/**
-	 * DocuDesk register slug for dossier objects.
+	 * Filinq register slug for dossier objects.
 	 *
 	 * @var string
 	 */
-	private const REGISTER = 'docudesk';
+	private const REGISTER = 'filinq';
 
 	/**
 	 * Dossier schema slug.
@@ -86,7 +86,7 @@ class DossierCheckedOnListener implements IEventListener {
 	 * Handle an ObjectUpdatedEvent and trigger auto-regen when applicable.
 	 *
 	 * Regen fires iff:
-	 * 1. The updated object is a dossier (register=docudesk, schema=dossier)
+	 * 1. The updated object is a dossier (register=filinq, schema=dossier)
 	 * 2. `checkedOn` has changed between the old and new object data
 	 * 3. `configuration.grondslagen.autoRegenOnReview` is true (or absent, defaults to true)
 	 *
@@ -155,7 +155,7 @@ class DossierCheckedOnListener implements IEventListener {
 		// Run synchronously; catch any failure to preserve the review result.
 		try {
 			$this->logger->info(
-				message: 'DocuDesk: Auto-regenerating dossier grondslagen summary on checkedOn update',
+				message: 'Filinq: Auto-regenerating dossier grondslagen summary on checkedOn update',
 				context: ['dossierId' => $dossierId]
 			);
 
@@ -174,7 +174,7 @@ class DossierCheckedOnListener implements IEventListener {
 	/**
 	 * Determine whether the updated object is a dossier.
 	 *
-	 * Checks the object's register and schema slugs against DocuDesk constants.
+	 * Checks the object's register and schema slugs against Filinq constants.
 	 *
 	 * @param mixed $object The updated ObjectEntity
 	 *
@@ -281,7 +281,7 @@ class DossierCheckedOnListener implements IEventListener {
 	 */
 	private function logError(\Throwable $exception, string $context, array $extra = []): void {
 		$this->logger->error(
-			message: 'DocuDesk: ' . $context . ' failed: ' . $exception->getMessage(),
+			message: 'Filinq: ' . $context . ' failed: ' . $exception->getMessage(),
 			context: array_merge(
 				$extra,
 				[

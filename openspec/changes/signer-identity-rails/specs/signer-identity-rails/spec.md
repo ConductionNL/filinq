@@ -126,7 +126,7 @@ declared additively in the register JSON with a register version bump.
 #### Scenario: Evidence lands on record, audit and artifact together
 
 - GIVEN a signer who signed after DigiD-substantial step-up
-- WHEN the signer record, the `docudesk.signing.SIGNED` audit entry and the produced artifact assertion are inspected
+- WHEN the signer record, the `filinq.signing.SIGNED` audit entry and the produced artifact assertion are inspected
 - THEN all three carry provider `oidc-broker`, means `digid`, assurance `substantial`, the pairwise pseudonym and the auth timestamp
 - AND the artifact's identity fields are covered by the v2 MAC
 - @e2e tests/e2e/spec-coverage/signer-identity-rails.spec.ts
@@ -178,7 +178,7 @@ shipped wallet integration.
 
 - GIVEN a fixture provider declaring means `eudi-wallet` and assurance `high`
 - WHEN it is run through the abstract provider contract suite
-- THEN the suite exercises initiate/complete/fail-closed cases without any DocuDesk core change
+- THEN the suite exercises initiate/complete/fail-closed cases without any Filinq core change
 - @e2e exclude plugin-seam conformance — covered by PHPUnit (tests/unit/Service/SignerAuth/SignerAuthProviderContractTest.php)
 
 ### Requirement: Resolved assurance is surfaced to downstream consumers (REQ-DDSIR-007)
@@ -186,7 +186,7 @@ shipped wallet integration.
 A completed signing act's resolved eIDAS assurance level MUST be surfaced to
 downstream consumers (`low | substantial | high`) without ever exposing a
 BSN, other national identifier, or the raw ID token. Specifically: (a) the
-completion payload of the `docudesk-signing` delegation seam
+completion payload of the `filinq-signing` delegation seam
 (`signing-trust-rebuild` REQ-DDSTR-010) MUST carry the resolved assurance so
 decidesk's `QesGuard` can gate resolution adoption on it; and (b) the same
 assurance MUST be readable by the `portal-signing-actions` `minTrust` gate so an
@@ -202,4 +202,4 @@ may accompany it.
 - WHEN the delegation-seam completion payload and the `portal-signing-actions` `minTrust` gate read the assurance
 - THEN both observe `substantial` — the exact value from `identityEvidence`, not a re-derived or client-supplied one
 - AND neither receives a BSN nor the raw ID token
-- @e2e exclude cross-app assurance propagation — covered by PHPUnit (tests/unit/Service/SigningServiceTest.php) + the docudesk-signing seam Newman contract
+- @e2e exclude cross-app assurance propagation — covered by PHPUnit (tests/unit/Service/SigningServiceTest.php) + the filinq-signing seam Newman contract

@@ -1,4 +1,4 @@
-# Coverage Report — docudesk
+# Coverage Report — filinq
 
 Generated: 2026-05-24 08:30 UTC
 Branch: development
@@ -10,9 +10,9 @@ Scanner: opsx-coverage-scan v1
 |---|---|---|
 | annotated | 0 | — (no pre-existing `@spec` tags — clean retrofit target) |
 | plumbing | 99 | — (never tagged: DI constructors, error helpers, OR-resolution helpers, listener dispatch) |
-| 1 — REQ matched | 213 | `/opsx-annotate docudesk` |
-| 2a — existing capability, no REQ | 22 (2 clusters: `template-management`, `metadata-enrichment`) | `/opsx-reverse-spec docudesk --extend template-management` then `--extend metadata-enrichment` |
-| 2b — no capability owner | 44 (2 clusters: `digital-signing`, `openregister-bridge`) | `/opsx-reverse-spec docudesk --cluster digital-signing` then `--cluster openregister-bridge` |
+| 1 — REQ matched | 213 | `/opsx-annotate filinq` |
+| 2a — existing capability, no REQ | 22 (2 clusters: `template-management`, `metadata-enrichment`) | `/opsx-reverse-spec filinq --extend template-management` then `--extend metadata-enrichment` |
+| 2b — no capability owner | 44 (2 clusters: `digital-signing`, `openregister-bridge`) | `/opsx-reverse-spec filinq --cluster digital-signing` then `--cluster openregister-bridge` |
 | 3a — REQ broken (code removed) | 1 (low-confidence) | Spot-check; likely re-classify to 3b |
 | 3b — REQ never implemented (in PHP) | 40 | Mark deferred — most are Vue-side / schema-level / info.xml |
 | 4 — ADR conformance | 67 findings across 2 rules | Follow-up issue (66 × missing-`@spec`, 1 × missing-`@copyright`) |
@@ -52,7 +52,7 @@ Grouped by capability. Methods marked `NEEDS-REVIEW` (8 total, all confidence 0.
 | lib/Service/FileListingService.php | listProcessedFiles | REQ-ANON-04 | 0.96 | processed-file listing |
 | lib/Service/FileListingService.php | uploadFile | REQ-ANON-01 | 0.88 | file upload pathway |
 | lib/Service/FileListingService.php | buildFileInfo | REQ-ANON-04 | 0.78 | Pass-B ← listProcessedFiles |
-| lib/Service/FileUploadService.php | getDocuDeskFolder | REQ-ANON-01 | 0.95 | user-scoped folder access |
+| lib/Service/FileUploadService.php | getFilinqFolder | REQ-ANON-01 | 0.95 | user-scoped folder access |
 | lib/Service/FileUploadService.php | resolveUniqueFileName | REQ-ANON-01 | 0.78 | Pass-B (file name dedup) |
 | lib/Service/FileUploadService.php | uploadFile | REQ-ANON-01 | 0.95 | upload to user-scoped folder |
 
@@ -164,10 +164,10 @@ Grouped by capability. Methods marked `NEEDS-REVIEW` (8 total, all confidence 0.
 | File | Method | REQ | Confidence | Signal |
 |---|---|---|---|---|
 | lib/Controller/MetadataController.php | enrich | REQ-META-07 | 0.94 | API on-demand enrichment |
-| lib/EventListener/DocuDeskEventHandler.php | handleObjectCreated | REQ-META-06 | 0.93 | event-driven enrichment (create) |
-| lib/EventListener/DocuDeskEventHandler.php | handleObjectUpdated | REQ-META-06 | 0.93 | event-driven enrichment (update) |
-| lib/EventListener/DocuDeskEventHandler.php | handleObjectDeleted | REQ-META-06 | 0.85 | event-driven cleanup |
-| lib/EventListener/DocuDeskEventHandler.php | hasContentChanged | REQ-META-06 | 0.78 | Pass-B ← handleObjectUpdated |
+| lib/EventListener/FilinqEventHandler.php | handleObjectCreated | REQ-META-06 | 0.93 | event-driven enrichment (create) |
+| lib/EventListener/FilinqEventHandler.php | handleObjectUpdated | REQ-META-06 | 0.93 | event-driven enrichment (update) |
+| lib/EventListener/FilinqEventHandler.php | handleObjectDeleted | REQ-META-06 | 0.85 | event-driven cleanup |
+| lib/EventListener/FilinqEventHandler.php | hasContentChanged | REQ-META-06 | 0.78 | Pass-B ← handleObjectUpdated |
 | lib/EventListener/EnrichmentRunner.php | isEnrichmentEnabled | REQ-META-09 | 0.83 | event-listener service-resolution check |
 | lib/EventListener/EnrichmentRunner.php | enrichObject | REQ-META-06 | 0.90 | event-driven orchestrator |
 | lib/Service/DocumentTextExtractor.php | extractTextContent | REQ-META-10 | 0.95 | text-content extraction from object data |
@@ -234,13 +234,13 @@ Grouped by capability. Methods marked `NEEDS-REVIEW` (8 total, all confidence 0.
 
 | File | Method | REQ | Confidence | Signal |
 |---|---|---|---|---|
-| lib/Sections/DocuDeskAdmin.php | getIcon | REQ-SET-01 | 0.85 | admin panel section icon |
-| lib/Sections/DocuDeskAdmin.php | getID | REQ-SET-01 | 0.85 | admin panel section id |
-| lib/Sections/DocuDeskAdmin.php | getName | REQ-SET-01 | 0.85 | admin panel section name |
-| lib/Sections/DocuDeskAdmin.php | getPriority | REQ-SET-01 | 0.85 | admin panel section order |
-| lib/Settings/DocuDeskAdmin.php | getForm | REQ-SET-01 | 0.95 | admin panel form template |
-| lib/Settings/DocuDeskAdmin.php | getSection | REQ-SET-01 | 0.95 | admin panel section binding |
-| lib/Settings/DocuDeskAdmin.php | getPriority | REQ-SET-01 | 0.90 | settings order |
+| lib/Sections/FilinqAdmin.php | getIcon | REQ-SET-01 | 0.85 | admin panel section icon |
+| lib/Sections/FilinqAdmin.php | getID | REQ-SET-01 | 0.85 | admin panel section id |
+| lib/Sections/FilinqAdmin.php | getName | REQ-SET-01 | 0.85 | admin panel section name |
+| lib/Sections/FilinqAdmin.php | getPriority | REQ-SET-01 | 0.85 | admin panel section order |
+| lib/Settings/FilinqAdmin.php | getForm | REQ-SET-01 | 0.95 | admin panel form template |
+| lib/Settings/FilinqAdmin.php | getSection | REQ-SET-01 | 0.95 | admin panel section binding |
+| lib/Settings/FilinqAdmin.php | getPriority | REQ-SET-01 | 0.90 | settings order |
 | lib/Controller/SettingsController.php | index | REQ-SET-06 | 0.95 | settings REST API GET |
 | lib/Controller/SettingsController.php | create | REQ-SET-06 | 0.92 | settings REST API write |
 | lib/Controller/SettingsController.php | getObjectService | REQ-SET-11 | 0.86 | TypeError catch fallback for OR |
@@ -345,7 +345,7 @@ In-flight change `openspec/changes/advanced-template-management/` may already co
 
 ### cluster: digital-signing (41 methods, LARGE)
 
-A complete signing surface (controller + service + audit + verification + 3 providers) ships in the code, but no `openspec/specs/digital-signing/spec.md` exists. **Three in-flight changes** address parts of this gap: `document-signing/`, `migrate-signing-audit-to-or-audit/`, `migrate-signing-to-or-approval-workflow/`. Before running `/opsx-reverse-spec docudesk --cluster digital-signing`, check whether the in-flight changes' tasks should be archived first.
+A complete signing surface (controller + service + audit + verification + 3 providers) ships in the code, but no `openspec/specs/digital-signing/spec.md` exists. **Three in-flight changes** address parts of this gap: `document-signing/`, `migrate-signing-audit-to-or-audit/`, `migrate-signing-to-or-approval-workflow/`. Before running `/opsx-reverse-spec filinq --cluster digital-signing`, check whether the in-flight changes' tasks should be archived first.
 
 **Controller (9 methods)**:
 - `lib/Controller/SigningController.php::createRequest()` — POST /api/signing/requests
@@ -417,7 +417,7 @@ Most of these are *expected gaps* (Vue-side, JSON schema, info.xml, or below met
 
 ### missing `@spec` in file docblock (66 files)
 
-Every single `lib/**/*.php` file (66/66) lacks an `@spec openspec/changes/...` tag in its file header. This is expected — the app has never been annotated. The `/opsx-annotate docudesk` workflow will fix this in one ghost change.
+Every single `lib/**/*.php` file (66/66) lacks an `@spec openspec/changes/...` tag in its file header. This is expected — the app has never been annotated. The `/opsx-annotate filinq` workflow will fix this in one ghost change.
 
 ### missing `@copyright` in file docblock (1 file)
 
@@ -435,7 +435,7 @@ No `$this->db->query(` or `->prepare(` calls. All data access goes through OpenR
 
 1. **Clean retrofit target.** Zero `@spec` annotations exist anywhere in `lib/`, so the entire annotation surface is greenfield. There are no pre-existing tags to deconflict.
 
-2. **Large Bucket 1 (213 entries).** Once `/opsx-annotate docudesk --capability <cap>` lands, prefer per-capability annotation. Today the bucket ships whole; reviewer effort scales with that.
+2. **Large Bucket 1 (213 entries).** Once `/opsx-annotate filinq --capability <cap>` lands, prefer per-capability annotation. Today the bucket ships whole; reviewer effort scales with that.
 
 3. **Two reverse-spec clusters dominate**:
    - **`digital-signing`** (41 methods) — the largest unspecced surface. Three in-flight changes (`document-signing`, `migrate-signing-audit-to-or-audit`, `migrate-signing-to-or-approval-workflow`) may already cover most of this — *verify in-flight changes' state before reverse-spec, or you'll duplicate work.*

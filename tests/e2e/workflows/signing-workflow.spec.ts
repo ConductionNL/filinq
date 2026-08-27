@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * DEEP, data-dependent workflow tests — Document signing request flow.
@@ -90,7 +90,7 @@ test('Signing Requests list data-read path works (renders real rows or explicit 
 	page,
 }) => {
 	await go(page, SigningRequestForm)
-	await expect(page).toHaveURL(/\/apps\/docudesk\/signing/)
+	await expect(page).toHaveURL(/\/apps\/filinq\/signing/)
 	await expect(
 		page.getByRole('heading', { name: 'Signing Requests' }),
 	).toBeVisible()

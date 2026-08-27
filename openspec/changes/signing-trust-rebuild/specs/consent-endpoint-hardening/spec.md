@@ -6,13 +6,13 @@ status: proposed
 
 ## Purpose
 
-The DocuDesk-owned residual of GH #283 (verified open at HEAD): consent
+The Filinq-owned residual of GH #283 (verified open at HEAD): consent
 ownership guards, the mutable-field whitelist and CSRF-annotation removal have
 shipped, and tenant/organisation binding is owned by the sibling change
 `multi-tenant-hardening`. What remains here is the information-leak oracle:
 `ConsentController::errorResponse()` interpolates raw exception text into the
 500 body — the exact defect already fixed on `SigningController`
-(docudesk#100 / Wilco #6). This capability logically extends
+(filinq#100 / Wilco #6). This capability logically extends
 `consent-management` (whose canonical spec is not modified by this change; see
 design.md).
 

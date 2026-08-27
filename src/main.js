@@ -28,7 +28,7 @@ import { initializeStores } from './store/store.js'
 
 // Must stay first: sets __webpack_public_path__ / __webpack_nonce__ before
 // any CSS or asset/resource URL or lazy chunk URL is evaluated. See
-// setPublicPath.js — docudesk lives under apps-extra, not the baked-in /apps/.
+// setPublicPath.js — filinq lives under apps-extra, not the baked-in /apps/.
 import './setPublicPath.js'
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -57,10 +57,7 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn(
-		'[docudesk] registerTranslations failed; falling back to English',
-		e,
-	)
+	console.warn('[filinq] registerTranslations failed; falling back to English', e)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs only allow the
@@ -72,7 +69,7 @@ try {
  */
 function tryLoadTranslations() {
 	try {
-		const result = loadTranslations('docudesk', () => {})
+		const result = loadTranslations('filinq', () => {})
 		if (result && typeof result.then === 'function') {
 			result.then(
 				() => {},
@@ -297,13 +294,13 @@ function applySettingsSection(menu, settingsIds) {
 /**
  * Apply the canonical navigation layout (src/menu-layout.json) to the bundled
  * manifest's menu and return a shallow-cloned manifest carrying the rewritten
- * menu. DocuDesk ships a monolithic manifest (no manifest.d fragments), so the
+ * menu. Filinq ships a monolithic manifest (no manifest.d fragments), so the
  * four canonical passes run directly on a deep copy of `manifest.menu`:
  * relocations → sections → removals → settingsSection. The manifest stays the
  * source of WHAT exists (ADR-037); menu-layout.json is the single place deciding
  * WHERE entries live, including which config/admin entries fold into the
  * Nextcloud settings gear (applySettingsSection). Currently every map in
- * menu-layout.json is empty (DocuDesk's in-app menu is wholly operational and
+ * menu-layout.json is empty (Filinq's in-app menu is wholly operational and
  * its admin surface lives in NC's settings framework), so this is an identity
  * transform today — the wiring exists for fleet parity so any future in-menu
  * config entry folds in by listing its id in menu-layout.json alone.
@@ -347,7 +344,7 @@ function routesFromManifest(manifest) {
 }
 
 const router = createRouter({
-	history: createWebHistory(generateUrl('/apps/docudesk')),
+	history: createWebHistory(generateUrl('/apps/filinq')),
 	routes: routesFromManifest(manifest),
 })
 
@@ -372,13 +369,13 @@ const customComponentsProp = Object.fromEntries(
 		.map(([key, entry]) => [key, entry.component]),
 )
 
-// Phase 1 of the store migration (openspec/changes/docudesk-store-migration):
+// Phase 1 of the store migration (openspec/changes/filinq-store-migration):
 // pre-register the seven OR-backed object types against the lib's
 // useObjectStore so any consumer (manifest pages, sub-resource plugins,
 // future OR-backed code paths) binds to a known-shape store. Fire-and-
 // forget — registration is synchronous after the settings fetch resolves,
 // and the mount stays unblocked even if the boot path fails.
-// Called BEFORE mount per REQ-DSM-6 (spec: openspec/specs/docudesk-store-migration/spec.md).
+// Called BEFORE mount per REQ-DSM-6 (spec: openspec/specs/filinq-store-migration/spec.md).
 try {
 	const result = initializeStores()
 	if (result && typeof result.then === 'function') {
@@ -386,18 +383,18 @@ try {
 			() => {},
 			(e) => {
 				// eslint-disable-next-line no-console
-				console.warn('[docudesk] initializeStores failed', e)
+				console.warn('[filinq] initializeStores failed', e)
 			},
 		)
 	}
 } catch (e) {
 	// eslint-disable-next-line no-console
-	console.warn('[docudesk] initializeStores threw synchronously', e)
+	console.warn('[filinq] initializeStores threw synchronously', e)
 }
 
 // Create and mount the app immediately so the App renders.
 //
-// ⚠️ Mount target is `#docudesk-app`, NOT `#content`. Vue 2's `$mount()`
+// ⚠️ Mount target is `#filinq-app`, NOT `#content`. Vue 2's `$mount()`
 // REPLACED the matched element, so mounting on templates/index.php's
 // `<div id="content">` quietly replaced Nextcloud's own `#content` wrapper
 // from layout.user.php and the duplicate id never showed. Vue 3's `mount()`
@@ -417,4 +414,4 @@ const app = createApp({
 app.mixin({ methods: { t, n } })
 app.use(pinia)
 app.use(router)
-app.mount('#docudesk-app')
+app.mount('#filinq-app')

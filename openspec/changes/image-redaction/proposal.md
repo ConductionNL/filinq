@@ -12,7 +12,7 @@ baseline: it landed the `KENTEKEN` entity type (`src/services/entityTypes.js`,
 `LibreOfficeHeadlessBackend`/`PhpWordBackend`), the PDF entity-review viewer,
 grondslag/prohibition guards and eml assembly. This change therefore does NOT
 re-spec entity-type coverage or ODT/office anonymisation — those ship. It
-scopes to the gap Robert's branch did **not** close: DocuDesk can now *detect*
+scopes to the gap Robert's branch did **not** close: Filinq can now *detect*
 PII on scans (wave-1 `ocr-trigger-surface` feeds OCR-recovered text into
 OpenRegister entity detection) but it still cannot *remove* PII from pixels,
 detect **handwritten signatures**, or reach images **embedded** in born-digital
@@ -27,7 +27,7 @@ PDFs. Verified at HEAD:
   stays fully readable in the page image — the output reports success and
   still shows the BSN. This is the same silent-privacy-failure class as GH
   #285, one level deeper.
-- The entire detection backend chain is text-only: DocuDesk reaches backends
+- The entire detection backend chain is text-only: Filinq reaches backends
   via `AnonymiserBackendStateClient` → OR `AnonymisationBackendService`
   (methods `regex` / `presidio` / `openanonymiser` / `llm` / `hybrid`, all
   probed as text APIs). No backend is ever asked about image content.
@@ -52,7 +52,7 @@ redaction as a headline feature (spectr `image-redaction` canonical feature).
   standalone scans, images embedded in PDFs) and rasterised scanned-PDF pages
   are submitted to an OpenRegister image-detection seam that delegates to an
   image-capable backend (Presidio image mode first), returning detected
-  entities **with per-page normalised bounding boxes**. DocuDesk never runs
+  entities **with per-page normalised bounding boxes**. Filinq never runs
   its own detection engine (ADR-017/ADR-022).
 - **Handwritten-signature detection** modelled as a new entity type
   `SIGNATURE` in the shared taxonomy (sibling of `PERSON`, `ORGANIZATION`,
@@ -97,7 +97,7 @@ redaction as a headline feature (spectr `image-redaction` canonical feature).
   `ImageRedactionService` owns rasterisation reuse (existing Imagick path),
   page reassembly and irreversibility checks; `AnonymizationResultParser` /
   `FileListingService` carry the new flags.
-- **Register JSON** (`lib/Settings/docudesk_register.json`): additive fields
+- **Register JSON** (`lib/Settings/filinq_register.json`): additive fields
   on `anonymizationLink` (`burnedRegionCount`, `imageRedactionPending`);
   no new schema.
 - **Frontend**: region overlays + region rows in the review workbench;

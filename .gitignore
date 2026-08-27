@@ -42,7 +42,7 @@ bom-npm.cdx.json
 # App-root duplicates of the two above. They are NOT redundant: the root
 # `playwright.config.ts` (local runs) writes under `tests/e2e/`, while the
 # CI-only `tests/e2e/playwright.config.ts` writes to the APP ROOT, because the
-# shared workflow uploads `server/apps/docudesk/{playwright-report,test-results}/`.
+# shared workflow uploads `server/apps/filinq/{playwright-report,test-results}/`.
 /test-results/
 /playwright-report/
 # Nextcloud
@@ -56,3 +56,9 @@ Thumbs.db
 # macOS
 /js
 .phpunit.cache/
+
+# Agent/test scratch and tool caches — generated, never source.
+# Added by the 2026-08-25 fleet hygiene sweep (ADR-100 Decision 2).
+.stale/
+/.e2e-state/
+.phpunit.cache

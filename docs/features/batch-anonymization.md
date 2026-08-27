@@ -20,9 +20,9 @@ Batch anonymization extends the single-document anonymization pipeline to suppor
 
 ## Overview
 
-Users can upload up to 100 files (admin-configurable) in a single request. DocuDesk processes them sequentially, extracting text and entities from each file, then presenting a consolidated entity review before applying anonymization. A CSV audit report is available for download after completion.
+Users can upload up to 100 files (admin-configurable) in a single request. Filinq processes them sequentially, extracting text and entities from each file, then presenting a consolidated entity review before applying anonymization. A CSV audit report is available for download after completion.
 
-Batch state is persisted in Nextcloud `ICache` with a 2-hour TTL. No batch data is stored permanently; only the anonymized output files are saved to the user's DocuDesk folder.
+Batch state is persisted in Nextcloud `ICache` with a 2-hour TTL. No batch data is stored permanently; only the anonymized output files are saved to the user's Filinq folder.
 
 ## Workflow Steps
 
@@ -62,7 +62,7 @@ The CSV report includes: `fileName`, `originalFileId`, `anonymizedFileId`, `enti
 
 | Parameter | Default | Config Key |
 |-----------|---------|------------|
-| Max files per batch | 100 | `docudesk_batch_max_files` (IAppConfig) |
+| Max files per batch | 100 | `filinq_batch_max_files` (IAppConfig) |
 | Batch TTL | 2 hours | Hardcoded (ICache) |
 
 ## Related Features

@@ -18,12 +18,12 @@
  * response object, so the HTTP layer stays in the controller.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,10 +35,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\DocuDesk\Exception\ProhibitionGateException;
+use OCA\Filinq\Exception\ProhibitionGateException;
 use OCP\AppFramework\Http;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -50,10 +50,10 @@ use Psr\Log\LoggerInterface;
  * Drives the anonymize endpoint's authentication, validation and guards.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/anonymization/spec.md
  */
@@ -222,7 +222,7 @@ class AnonymizeRequestService {
 	 *
 	 * @return array{status: int, body: array<string, mixed>} The response payload.
 	 *
-	 * @throws \OCA\DocuDesk\Exception\ConversionFailedException When the PDF cascade is exhausted.
+	 * @throws \OCA\Filinq\Exception\ConversionFailedException When the PDF cascade is exhausted.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
@@ -290,8 +290,8 @@ class AnonymizeRequestService {
 	 *
 	 * @return array<string, mixed> The AnonymizationService result payload.
 	 *
-	 * @throws \OCA\DocuDesk\Exception\ProhibitionGateException When the prohibition gate fires.
-	 * @throws \OCA\DocuDesk\Exception\ConversionFailedException When the PDF cascade is exhausted.
+	 * @throws \OCA\Filinq\Exception\ProhibitionGateException When the prohibition gate fires.
+	 * @throws \OCA\Filinq\Exception\ConversionFailedException When the PDF cascade is exhausted.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1

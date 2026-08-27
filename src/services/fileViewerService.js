@@ -64,7 +64,7 @@ export async function fetchFileAsArrayBuffer(path) {
  * Fetch an arbitrary same-origin URL as an ArrayBuffer (for pdfjs).
  *
  * Used for content that isn't a plain WebDAV file — e.g. the server-rendered
- * EML preview PDF served by DocuDesk's `eml_preview#preview` endpoint.
+ * EML preview PDF served by Filinq's `eml_preview#preview` endpoint.
  *
  * @param {string} url Absolute or app-relative URL returning binary data.
  * @return {Promise<ArrayBuffer>}
@@ -79,9 +79,10 @@ export async function fetchUrlAsArrayBuffer(url) {
  *
  * @param {number} fileId Nextcloud file id of the source .eml.
  * @return {string} App-relative URL of the preview endpoint.
+ * @spec openspec/changes/eml-viewer-preview/specs/eml-preview/spec.md#requirement-the-file-viewer-must-render-eml-via-the-server-rendered-preview
  */
 export function emlPreviewUrl(fileId) {
-	return generateUrl('/apps/docudesk/api/anonymization/eml-preview/{fileId}', {
+	return generateUrl('/apps/filinq/api/anonymization/eml-preview/{fileId}', {
 		fileId,
 	})
 }

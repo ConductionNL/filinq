@@ -6,12 +6,12 @@
  * Implements digital signing via ValidSign external service.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Signing
+ * @package   OCA\Filinq\Service\Signing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -19,9 +19,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Signing;
+namespace OCA\Filinq\Service\Signing;
 
-use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
 use OCP\IAppConfig;
 use RuntimeException;
 
@@ -29,10 +29,10 @@ use RuntimeException;
  * ValidSign signing provider
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
  */
@@ -151,7 +151,7 @@ class ValidSignProvider implements SigningProviderInterface {
 	 * Nothing in this app invoked it, so the lie was dormant — but connected to a
 	 * cancel button it would have told a user their request was withdrawn while it
 	 * stayed live at ValidSign, with signatories still able to open it and produce a
-	 * legally valid signature. DocuDesk would have shown no trace of the
+	 * legally valid signature. Filinq would have shown no trace of the
 	 * discrepancy.
 	 *
 	 * It now throws. Throwing is not a regression from `return true`: it is the
@@ -174,7 +174,7 @@ class ValidSignProvider implements SigningProviderInterface {
 	public function cancelSigning(string $externalId): void {
 		throw new SigningCancellationNotSupportedException(
 			provider: 'ValidSign',
-			reason: 'DocuDesk does not integrate ValidSign\'s cancellation API.'
+			reason: 'Filinq does not integrate ValidSign\'s cancellation API.'
 		);
 	}//end cancelSigning()
 
@@ -233,7 +233,7 @@ class ValidSignProvider implements SigningProviderInterface {
 	 * @return array<string, mixed> The provider configuration
 	 */
 	private function getProviderConfig(): array {
-		$configJson = $this->config->getValueString('docudesk', 'signing_provider_config', '{}');
+		$configJson = $this->config->getValueString('filinq', 'signing_provider_config', '{}');
 		$decoded = json_decode($configJson, true);
 
 		if (is_array($decoded) === false) {

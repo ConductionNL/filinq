@@ -1,12 +1,12 @@
 <?php
 
 /**
- * DocuDesk PresentationFamilyCodec
+ * Filinq PresentationFamilyCodec
  *
  * One presentation family's answer to "read the shapes" and "write this one".
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -15,14 +15,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#2-presentation
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 /**
  * Reads and writes presentation shapes for one family.
@@ -55,10 +55,10 @@ interface PresentationFamilyCodec {
 	 * Replace one shape's text.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $slide        The slide id.
-	 * @param string $shape        The shape id.
-	 * @param string $region       Either `slide` or `notes`.
-	 * @param string $text         The replacement text.
+	 * @param string $slide The slide id.
+	 * @param string $shape The shape id.
+	 * @param string $region Either `slide` or `notes`.
+	 * @param string $text The replacement text.
 	 *
 	 * @return string The rewritten package.
 	 *

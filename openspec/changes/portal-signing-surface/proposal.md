@@ -7,7 +7,7 @@ depends_on: [portal-contribution, portal-signing-actions, signing-trust-rebuild]
 
 ## Why
 
-DocuDesk's `portal-contribution` gives an external **signer** (a person WITHOUT
+Filinq's `portal-contribution` gives an external **signer** (a person WITHOUT
 a Nextcloud account) a READ-ONLY window into their signing work through
 **portaliq**, the shared external portal (hydra ADR-046, contribution contract
 v2.2). Its `signer` manifest ships `actions: []` (`REQ-DDPORT-006`): it exposes
@@ -19,7 +19,7 @@ the portal" is the headline follow-up.
 Two sibling changes already land the plumbing this surface stands on, hence the
 `depends_on`:
 
-- `portal-signing-actions` (`REQ-DDPSA-*`) adds the bearer-guarded DocuDesk
+- `portal-signing-actions` (`REQ-DDPSA-*`) adds the bearer-guarded Filinq
   receiver, the `PortalAssertionVerifier`, the server-derived invited-signer
   IDOR guard, and the verified-actor entrypoint that drives the honest
   `SigningService::sign()` / `decline()` primitive from a `#[PublicPage]`
@@ -90,7 +90,7 @@ now-richer contract:
 
 ## Affected Projects
 
-- [x] Project: `docudesk` — extend `lib/Portal/PortalContributionProvider.php` (signer `rowActions`); extend the `portal-signing-actions` receiver + verified-actor `SigningService` entrypoint to record consent + optional drawn signature and to bind the portal subject claims into the signature evidence MAC; unit tests under `tests/unit/Portal/` + `tests/unit/Service/`; this OpenSpec change.
+- [x] Project: `filinq` — extend `lib/Portal/PortalContributionProvider.php` (signer `rowActions`); extend the `portal-signing-actions` receiver + verified-actor `SigningService` entrypoint to record consent + optional drawn signature and to bind the portal subject claims into the signature evidence MAC; unit tests under `tests/unit/Portal/` + `tests/unit/Service/`; this OpenSpec change.
 - Depends on: `portal-contribution` (signer manifest), `portal-signing-actions` (receiver, `PortalAssertionVerifier`, invited-signer IDOR guard, verified-actor entrypoint), `signing-trust-rebuild` (`v: 2` identity-bound MAC + honest verification).
 - Contract: `apps-extra/portaliq` — the contract-v2.2 `rowActions` + A6 endpoint-forward + frozen assertion requirements this surface is templated against; runtime consumer that renders the rowActions and forwards the acts.
 - Reference: `hydra` ADR-046 (portaliq external portal); portaliq#3 (forgeable-signer class of bug).
@@ -109,7 +109,7 @@ now-richer contract:
   external QTSP (eIDAS Article 3(12)), PAdES-LTV, and NL identity rails are out
   of scope; this surface delivers SES / AES only.
 - Any portal UI, session, auth edge or rendering — portaliq owns the entire
-  external surface (ADR-046); DocuDesk ships zero portal frontend.
+  external surface (ADR-046); Filinq ships zero portal frontend.
 - The `data-subject` objection-intake write path — still deferred
   (`portal-contribution` design.md); this change touches the `signer` audience
   only.

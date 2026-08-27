@@ -23,6 +23,8 @@ byte-identical. ADR-087 §2 prefers this over parse-and-re-serialise because
 re-serialisation silently drops comments, tracked changes and styles that no test
 asserts on.
 
+@e2e exclude MCP JSON-RPC tool surface with no Filinq UI of its own; asserted by PHPUnit under tests/unit/Service/Editing/ — EditSessionServiceTest, GuardedWriterTest, DocumentGuardTest, DocumentGuardFormatTest, AgentArtefactMarkerTest, PackageCodecTest, PackagePartIoTest, RoundTripFidelityTest, EditSessionAgentSurfacesTest. NOT evidenced by tests/e2e/workflows/agent-document-editing.spec.ts: that suite carries no @e2e anchor by design and harness-skips whenever no cache backend serves MCP sessions (all six skipped in CI run 32777433490, entries 89-94).
+
 ## Requirements
 
 ### Requirement: Edits address stable anchors, never positional indexes
@@ -232,7 +234,7 @@ refusal MAY fail open, because its artefacts are identifiable from the file itse
 
 #### Scenario: An unreachable signing register refuses the edit
 
-- **GIVEN** the signing register cannot be reached
+- **GIVEN** the `filinq` register cannot be reached
 - **WHEN** an edit is attempted
 - **THEN** the edit MUST be refused, because absence of evidence is not evidence of absence
 

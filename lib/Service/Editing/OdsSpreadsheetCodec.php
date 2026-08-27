@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk OdsSpreadsheetCodec
+ * Filinq OdsSpreadsheetCodec
  *
  * Cell access for ODF spreadsheets (`.ods`).
  *
@@ -12,7 +12,7 @@
  * rather than rewrite every column it stood for.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,14 +21,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -103,9 +103,9 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * cell after the first gap at the wrong address — silently, and for the
 	 * whole row.
 	 *
-	 * @param string $sheet     The sheet name.
-	 * @param int    $rowNumber The 1-based row number.
-	 * @param string $row       The row's inner markup.
+	 * @param string $sheet The sheet name.
+	 * @param int $rowNumber The 1-based row number.
+	 * @param string $row The row's inner markup.
 	 *
 	 * @return array<int, array{cell: string, value: string, formula: string|null}> The cells.
 	 */
@@ -185,8 +185,8 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	/**
 	 * Write a literal into an ODS cell.
 	 *
-	 * @param string $xml   The content.xml.
-	 * @param string $cell  The address.
+	 * @param string $xml The content.xml.
+	 * @param string $cell The address.
 	 * @param string $value The literal.
 	 *
 	 * @return string The rewritten XML.
@@ -271,9 +271,9 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * Replace one column of a repeated ODS cell, preserving the others.
 	 *
 	 * @param string $attributes The original cell attributes.
-	 * @param int    $repeat     How many columns the element stood for.
-	 * @param int    $offset     Which of them is being written.
-	 * @param string $value      The escaped literal.
+	 * @param int $repeat How many columns the element stood for.
+	 * @param int $offset Which of them is being written.
+	 * @param string $value The escaped literal.
 	 *
 	 * @return string The replacement markup.
 	 */
@@ -303,7 +303,7 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 	 * A run of untouched cells preserving the original attributes.
 	 *
 	 * @param string $attributes The cell attributes.
-	 * @param int    $count      How many columns.
+	 * @param int $count How many columns.
 	 *
 	 * @return string The markup.
 	 */

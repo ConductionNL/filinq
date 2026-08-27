@@ -1,6 +1,6 @@
 # PDF Conversion
 
-DocuDesk provides a reusable file-to-PDF conversion service (`PdfConversionService`) that converts any supported input file to PDF/A-3b using a cascade of configurable backends.
+Filinq provides a reusable file-to-PDF conversion service (`PdfConversionService`) that converts any supported input file to PDF/A-3b using a cascade of configurable backends.
 
 ## Architecture
 
@@ -43,18 +43,18 @@ Configuration is read at request time from `IAppConfig` (no restart required):
 
 | Key | Default | Description |
 |---|---|---|
-| `docudesk.conversion.backends.office_app_enabled` | `true` | Enable/disable Office app backend |
-| `docudesk.conversion.backends.libreoffice_enabled` | `true` | Enable/disable LibreOffice headless backend |
-| `docudesk.conversion.backends.phpword_enabled` | `true` | Enable/disable PhpWord backend |
-| `docudesk.conversion.backends.mpdf_enabled` | `true` | Enable/disable mPDF backend |
-| `docudesk.conversion.backends.eml_enabled` | `true` | Enable/disable EML backend (no-op until OR EML lands) |
-| `docudesk.conversion.libreoffice_binary_path` | `soffice` | Path to the `soffice` binary |
-| `docudesk.conversion.timeout_seconds` | `60` | Per-backend conversion timeout in seconds |
+| `filinq.conversion.backends.office_app_enabled` | `true` | Enable/disable Office app backend |
+| `filinq.conversion.backends.libreoffice_enabled` | `true` | Enable/disable LibreOffice headless backend |
+| `filinq.conversion.backends.phpword_enabled` | `true` | Enable/disable PhpWord backend |
+| `filinq.conversion.backends.mpdf_enabled` | `true` | Enable/disable mPDF backend |
+| `filinq.conversion.backends.eml_enabled` | `true` | Enable/disable EML backend (no-op until OR EML lands) |
+| `filinq.conversion.libreoffice_binary_path` | `soffice` | Path to the `soffice` binary |
+| `filinq.conversion.timeout_seconds` | `60` | Per-backend conversion timeout in seconds |
 
 To disable a backend and force the cascade to skip it:
 
 ```bash
-php occ config:app:set docudesk docudesk.conversion.backends.libreoffice_enabled --value=false
+php occ config:app:set filinq filinq.conversion.backends.libreoffice_enabled --value=false
 ```
 
 ## LibreOffice Headless Serialisation

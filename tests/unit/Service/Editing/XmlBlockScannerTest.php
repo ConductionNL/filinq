@@ -10,7 +10,7 @@
  * to attribute.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -23,9 +23,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\XmlBlockScanner;
+use OCA\Filinq\Service\Editing\XmlBlockScanner;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -53,7 +53,7 @@ class XmlBlockScannerTest extends TestCase {
 	/**
 	 * The substring a span points at.
 	 *
-	 * @param string             $xml  The document.
+	 * @param string $xml The document.
 	 * @param array{0:int,1:int} $span The span.
 	 *
 	 * @return string The slice.

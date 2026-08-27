@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk OoxmlBlockStyleCodec
+ * Filinq OoxmlBlockStyleCodec
  *
  * Block style for the OOXML family (`.docx`).
  *
@@ -11,7 +11,7 @@
  * the whole difference from ODF, and the reason the two are separate classes.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,14 +20,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/document-rich-editing/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 /**
  * Applies block style to OOXML packages.
@@ -40,9 +40,9 @@ class OoxmlBlockStyleCodec implements BlockStyleFamilyCodec {
 	 * @var array<string, string>
 	 */
 	private const ALIGNMENTS = [
-		'left'    => 'left',
-		'center'  => 'center',
-		'right'   => 'right',
+		'left' => 'left',
+		'center' => 'center',
+		'right' => 'right',
 		'justify' => 'both',
 	];
 
@@ -62,8 +62,8 @@ class OoxmlBlockStyleCodec implements BlockStyleFamilyCodec {
 	/**
 	 * Apply style properties to one paragraph's markup.
 	 *
-	 * @param string $markup    The paragraph markup.
-	 * @param array  $style     The style properties.
+	 * @param string $markup The paragraph markup.
+	 * @param array $style The style properties.
 	 * @param string $styleName Unused: OOXML style is inline, so nothing is minted.
 	 *
 	 * @return array{markup: string, automaticStyle: string|null} The rewritten block; never a definition.
@@ -80,13 +80,13 @@ class OoxmlBlockStyleCodec implements BlockStyleFamilyCodec {
 	 * Apply the paragraph-level properties.
 	 *
 	 * @param string $markup The paragraph markup.
-	 * @param array  $style  The style properties.
+	 * @param array $style The style properties.
 	 *
 	 * @return string The rewritten markup.
 	 */
 	private function applyParagraphProperties(string $markup, array $style): string {
 		$properties = $this->paragraphAdditions(style: $style);
-		$removals   = $this->paragraphRemovals(style: $style);
+		$removals = $this->paragraphRemovals(style: $style);
 
 		if ($properties === '' && $removals === []) {
 			return $markup;
@@ -167,9 +167,9 @@ class OoxmlBlockStyleCodec implements BlockStyleFamilyCodec {
 	 * and numbering the user set by hand — the class of loss ADR-087 §2 warns
 	 * about, and one no test would notice.
 	 *
-	 * @param string        $markup     The paragraph markup.
-	 * @param string        $properties The properties to merge.
-	 * @param array<string> $removals   Element names to remove outright.
+	 * @param string $markup The paragraph markup.
+	 * @param string $properties The properties to merge.
+	 * @param array<string> $removals Element names to remove outright.
 	 *
 	 * @return string The rewritten markup.
 	 */
@@ -218,14 +218,14 @@ class OoxmlBlockStyleCodec implements BlockStyleFamilyCodec {
 	/**
 	 * Remove named elements from a property block.
 	 *
-	 * @param string        $existing The existing property markup.
-	 * @param array<string> $names    The element names to remove.
+	 * @param string $existing The existing property markup.
+	 * @param array<string> $names The element names to remove.
 	 *
 	 * @return string The retained markup.
 	 */
 	private function dropNamed(string $existing, array $names): string {
 		foreach ($names as $name) {
-			$quoted   = preg_quote($name, '#');
+			$quoted = preg_quote($name, '#');
 			$existing = (string)preg_replace('#<' . $quoted . '(?:\s[^>]*)?/>#', '', $existing);
 			$existing = (string)preg_replace('#<' . $quoted . '(?:\s[^>]*)?>.*?</' . $quoted . '>#s', '', $existing);
 		}
@@ -237,7 +237,7 @@ class OoxmlBlockStyleCodec implements BlockStyleFamilyCodec {
 	 * Apply the run-level properties to every run in the paragraph.
 	 *
 	 * @param string $markup The paragraph markup.
-	 * @param array  $style  The style properties.
+	 * @param array $style The style properties.
 	 *
 	 * @return string The rewritten markup.
 	 */
@@ -282,7 +282,7 @@ class OoxmlBlockStyleCodec implements BlockStyleFamilyCodec {
 	/**
 	 * Merge run properties into one `<w:r>`, creating `<w:rPr>` when absent.
 	 *
-	 * @param string $run        The run markup.
+	 * @param string $run The run markup.
 	 * @param string $properties The properties to merge.
 	 *
 	 * @return string The rewritten run.

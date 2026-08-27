@@ -4,7 +4,7 @@
  * Unit tests for PolicyController's prohibition-delete status mapping.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,16 +12,16 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\PolicyController;
-use OCA\DocuDesk\Service\PolicyCrudService;
+use OCA\Filinq\Controller\PolicyController;
+use OCA\Filinq\Service\PolicyCrudService;
 use OCA\OpenRegister\Exception\ArchivalImmutableException;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * `DELETE /api/policy/prohibitions/{id}` can never succeed.
  *
  * `publicationProhibition` declares `x-openregister-archival` (retention P10Y)
- * in `lib/Settings/docudesk_register.json`, and OpenRegister refuses every
+ * in `lib/Settings/filinq_register.json`, and OpenRegister refuses every
  * user-driven delete on an archival schema — rows expire only via
  * `ArchivalRetentionTask`. The endpoint therefore answered HTTP 500 for a
  * condition that is permanent and fully known in advance, which is how the
@@ -48,10 +48,10 @@ use Psr\Log\LoggerInterface;
  * `PolicyController::deleteProhibition()`.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -96,7 +96,7 @@ class PolicyControllerDeleteTest extends TestCase {
 		$mockUserSession->method('getUser')->willReturn($user);
 
 		$this->controller = new PolicyController(
-			'docudesk',
+			'filinq',
 			$mockRequest,
 			$mockLogger,
 			$this->mockCrudService,

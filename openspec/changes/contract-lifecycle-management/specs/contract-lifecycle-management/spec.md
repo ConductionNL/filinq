@@ -6,7 +6,7 @@ status: proposed
 
 ## Purpose
 
-Contract lifecycle management as a thin domain layer over existing DocuDesk
+Contract lifecycle management as a thin domain layer over existing Filinq
 capabilities: a `contract` OR object (parties from NC Contacts, key dates,
 value, guarded status lifecycle), declarative key-date reminders, contract
 documents generated/attached/signed through the existing template and signing
@@ -18,8 +18,8 @@ competition (8 CLM competitors in the intelligence DB); tracked by GH #232.
 
 ### Requirement: Contract is a first-class OpenRegister object (REQ-DDCLM-001)
 
-DocuDesk MUST store contracts as objects of a new `contract` schema in the
-existing `dossier` register of `lib/Settings/docudesk_register.json`
+Filinq MUST store contracts as objects of a new `contract` schema in the
+existing `dossier` register of `lib/Settings/filinq_register.json`
 (additive register version bump). The schema MUST carry: `title` (string,
 required), `contractType` (string), `parties` (array of objects, each with
 `contactRef` — a string `format: uri` linkage pointer to a canonical NC
@@ -99,8 +99,8 @@ The `contract` schema MUST declare `x-openregister-notifications` entries for
 `noticeDeadline` and `endDate` using the shipped scheduled dialect (as on
 `publicationConsent.objectionDeadline`): scheduled trigger filtered to
 `status: active`, channel `nc-notification`, recipients the
-`docudesk-contract-managers` group plus `object-acl` `manage`, with `nl` and
-`en` subjects. DocuDesk MUST NOT ship any imperative notification dispatch,
+`filinq-contract-managers` group plus `object-acl` `manage`, with `nl` and
+`en` subjects. Filinq MUST NOT ship any imperative notification dispatch,
 listener, notifier or cron for contract reminders (ADR-031,
 notification-dialect gate).
 
@@ -108,7 +108,7 @@ notification-dialect gate).
 
 - GIVEN an `active` contract whose `noticeDeadline` is within the notification window
 - WHEN OpenRegister's scheduled notification pass runs
-- THEN members of `docudesk-contract-managers` receive a Nextcloud notification referencing the contract
+- THEN members of `filinq-contract-managers` receive a Nextcloud notification referencing the contract
 - AND a `terminated` contract with the same dates produces no notification
 - @e2e exclude scheduled OR-side dispatch cannot be deterministically triggered from the browser — covered by the register-declaration drift-pin PHPUnit test (tests/unit/Settings/ContractRegisterDeclarationTest.php) and gate-18 (notification-dialect) keeping the app free of imperative dispatch
 
@@ -142,7 +142,7 @@ external schema property (`signingRequest.status`, `deadline`,
 
 ### Requirement: Key-term extraction is suggestion-only (REQ-DDCLM-005)
 
-When a document is attached to a contract (and on demand), DocuDesk MUST run
+When a document is attached to a contract (and on demand), Filinq MUST run
 a local key-term extraction pass proposing values for `endDate`,
 `startDate`, `noticePeriodDays`, `value`/`currency` and party names, stored
 on `keyTermSuggestions` as records with `field`, `value`, `confidence`,
@@ -175,7 +175,7 @@ sibling `inbound-auto-classification` change.
 
 ### Requirement: Renewal pipeline view (REQ-DDCLM-006)
 
-DocuDesk MUST ship manifest-driven Contracts pages: an index
+Filinq MUST ship manifest-driven Contracts pages: an index
 (`CnIndexPage`/`CnDataTable` with status chips and facets), a contract detail
 (parties, dates, value, documents, signing status, suggestions, lifecycle
 actions), and a renewal pipeline view that buckets contracts by urgency:

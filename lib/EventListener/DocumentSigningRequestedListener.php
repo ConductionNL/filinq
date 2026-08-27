@@ -1,25 +1,25 @@
 <?php
 
 /**
- * DocuDesk DocumentSigningRequestedListener
+ * Filinq DocumentSigningRequestedListener
  *
  * Maps an inbound cross-app DocumentSigningRequestedEvent to the existing
  * SigningService::createRequest() create logic (provenance-persisting). The
  * in-process replacement for the broken
- * `$registry->call('docudesk','createSigningRequest',…)` delegation path: any
- * installed consumer app dispatches DocumentSigningRequestedEvent and DocuDesk
+ * `$registry->call('filinq','createSigningRequest',…)` delegation path: any
+ * installed consumer app dispatches DocumentSigningRequestedEvent and Filinq
  * raises the signing request here, writing the resolved signingRequestId back
  * onto the event for the synchronous producer.
  *
  * @category  EventListener
- * @package   OCA\DocuDesk\EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,10 +27,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\EventListener;
+namespace OCA\Filinq\EventListener;
 
-use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Event\DocumentSigningRequestedEvent;
+use OCA\Filinq\Service\SigningService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -46,14 +46,14 @@ use Psr\Log\LoggerInterface;
  * escapes into the dispatcher.
  *
  * @category EventListener
- * @package  OCA\DocuDesk\EventListener
+ * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @implements IEventListener<Event>
  *
- * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+ * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
  */
 class DocumentSigningRequestedListener implements IEventListener {
 	/**
@@ -76,7 +76,7 @@ class DocumentSigningRequestedListener implements IEventListener {
 	 *
 	 * @param Event $event The dispatched event
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 *
 	 * @return void
 	 */
@@ -94,7 +94,7 @@ class DocumentSigningRequestedListener implements IEventListener {
 				$event->setSigningRequestId($requestId);
 				$event->setHandled(true);
 				$this->logger->info(
-					'DocuDesk: handled DocumentSigningRequestedEvent',
+					'Filinq: handled DocumentSigningRequestedEvent',
 					[
 						'sourceApp' => $event->getSourceApp(),
 						'subjectId' => $event->getSubjectId(),
@@ -106,17 +106,17 @@ class DocumentSigningRequestedListener implements IEventListener {
 
 			// No id on the created request: leave the event unhandled and log.
 			$this->logger->warning(
-				'DocuDesk: DocumentSigningRequestedEvent not handled (no request id)',
+				'Filinq: DocumentSigningRequestedEvent not handled (no request id)',
 				[
 					'sourceApp' => $event->getSourceApp(),
 					'subjectId' => $event->getSubjectId(),
 				]
 			);
 		} catch (\Throwable $e) {
-			// The event bus must never surface a DocuDesk failure as an
+			// The event bus must never surface a Filinq failure as an
 			// exception to the dispatching consumer; log and leave unhandled.
 			$this->logger->error(
-				'DocuDesk: DocumentSigningRequestedListener failed',
+				'Filinq: DocumentSigningRequestedListener failed',
 				[
 					'sourceApp' => $event->getSourceApp(),
 					'subjectId' => $event->getSubjectId(),
@@ -136,7 +136,7 @@ class DocumentSigningRequestedListener implements IEventListener {
 	 *
 	 * @param DocumentSigningRequestedEvent $event The request event
 	 *
-	 * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
 	 *
 	 * @return array<string, mixed>
 	 */

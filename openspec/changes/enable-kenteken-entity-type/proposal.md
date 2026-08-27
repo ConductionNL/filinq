@@ -4,7 +4,7 @@ kind: code
 
 ## Why
 
-DocuDesk's automatic anonymisation detects a curated set of entity types, but `KENTEKEN` (Dutch vehicle registration / license plate) is not among them — so license plates are neither offered as a toggle in Settings nor carried in the entity-type whitelist sent to the OpenAnonymiser detector. OpenAnonymiser already recognises license plates; DocuDesk just needs to include `KENTEKEN` in its curated vocabulary so operators can enable/disable it and it is detected automatically.
+Filinq's automatic anonymisation detects a curated set of entity types, but `KENTEKEN` (Dutch vehicle registration / license plate) is not among them — so license plates are neither offered as a toggle in Settings nor carried in the entity-type whitelist sent to the OpenAnonymiser detector. OpenAnonymiser already recognises license plates; Filinq just needs to include `KENTEKEN` in its curated vocabulary so operators can enable/disable it and it is detected automatically.
 
 ## What Changes
 

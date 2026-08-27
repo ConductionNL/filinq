@@ -10,12 +10,12 @@
  * stored/queried against.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Suggestion
+ * @package   OCA\Filinq\Service\Suggestion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
@@ -25,17 +25,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Suggestion;
+namespace OCA\Filinq\Service\Suggestion;
 
 /**
  * Resolves a supplier identity (KvK > IBAN > normalised name) from
  * extraction fields.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Suggestion
+ * @package  OCA\Filinq\Service\Suggestion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */

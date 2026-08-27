@@ -6,12 +6,12 @@
  * Defines the contract for pluggable digital signing providers.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Signing
+ * @package   OCA\Filinq\Service\Signing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -19,19 +19,19 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Signing;
+namespace OCA\Filinq\Service\Signing;
 
-use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
 use RuntimeException;
 
 /**
  * Interface for signing providers
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Signing
+ * @package  OCA\Filinq\Service\Signing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 interface SigningProviderInterface {
 	/**

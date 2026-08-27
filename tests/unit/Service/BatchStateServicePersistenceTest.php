@@ -4,7 +4,7 @@
  * Regression tests for batch state surviving a request boundary
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,11 +20,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\BatchStateRepository;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\OpenRegisterAvailabilityService;
+use OCA\Filinq\Service\BatchStateRepository;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\OpenRegisterAvailabilityService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -54,10 +54,10 @@ use RuntimeException;
  * of turning the whole class into a tautology.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -288,7 +288,7 @@ class BatchStateServicePersistenceTest extends TestCase {
 		$cache = new InMemoryCacheFake();
 		$created = $this->serviceForRequest(cache: $cache)->createBatch(userId: 'alice', files: []);
 
-		$cache->set('docudesk_batch_' . $created['batchId'], '"not-a-batch-record"', 60);
+		$cache->set('filinq_batch_' . $created['batchId'], '"not-a-batch-record"', 60);
 
 		$loaded = $this->serviceForRequest(cache: $cache)->getBatch(batchId: $created['batchId']);
 

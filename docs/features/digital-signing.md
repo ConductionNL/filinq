@@ -15,7 +15,7 @@ keywords:
 
 # Digital Signing Integration
 
-DocuDesk provides a complete digital signing workflow — create signing requests, collect
+Filinq provides a complete digital signing workflow — create signing requests, collect
 signatures from multiple signers, verify document integrity, and maintain an immutable audit
 trail. Signing can be performed natively within Nextcloud or delegated to an external provider
 such as ValidSign.
@@ -36,7 +36,7 @@ The signing feature supports:
 ### Create Signing Request
 
 ```
-POST /apps/docudesk/api/signing/requests
+POST /apps/filinq/api/signing/requests
 ```
 
 **Request body (JSON):**
@@ -67,7 +67,7 @@ POST /apps/docudesk/api/signing/requests
 ### List Signing Requests
 
 ```
-GET /apps/docudesk/api/signing/requests
+GET /apps/filinq/api/signing/requests
 ```
 
 Returns all signing requests visible to the current user.
@@ -77,7 +77,7 @@ Returns all signing requests visible to the current user.
 ### Get Signing Request
 
 ```
-GET /apps/docudesk/api/signing/requests/{id}
+GET /apps/filinq/api/signing/requests/{id}
 ```
 
 ---
@@ -85,7 +85,7 @@ GET /apps/docudesk/api/signing/requests/{id}
 ### Cancel Signing Request
 
 ```
-DELETE /apps/docudesk/api/signing/requests/{id}
+DELETE /apps/filinq/api/signing/requests/{id}
 ```
 
 Cancels an open request. Any pending signers are notified.
@@ -95,7 +95,7 @@ Cancels an open request. Any pending signers are notified.
 ### Sign Document
 
 ```
-POST /apps/docudesk/api/signing/requests/{id}/sign
+POST /apps/filinq/api/signing/requests/{id}/sign
 ```
 
 Records a signature for the current user on the given request.
@@ -112,7 +112,7 @@ Records a signature for the current user on the given request.
 ### Decline Signing
 
 ```
-POST /apps/docudesk/api/signing/requests/{id}/decline
+POST /apps/filinq/api/signing/requests/{id}/decline
 ```
 
 **Request body:**
@@ -127,7 +127,7 @@ POST /apps/docudesk/api/signing/requests/{id}/decline
 ### Bulk Sign
 
 ```
-POST /apps/docudesk/api/signing/bulk
+POST /apps/filinq/api/signing/bulk
 ```
 
 Sign multiple requests in a single call.
@@ -143,7 +143,7 @@ Sign multiple requests in a single call.
 ### Verify Document
 
 ```
-GET /apps/docudesk/api/signing/verify/{fileId}
+GET /apps/filinq/api/signing/verify/{fileId}
 ```
 
 Verifies signature integrity of a signed document file.
@@ -165,7 +165,7 @@ Verifies signature integrity of a signed document file.
 ### Get Audit Trail
 
 ```
-GET /apps/docudesk/api/signing/requests/{id}/audit
+GET /apps/filinq/api/signing/requests/{id}/audit
 ```
 
 Returns the full audit trail for a signing request.
@@ -183,7 +183,7 @@ Returns the full audit trail for a signing request.
 
 ## Signing Providers
 
-DocuDesk uses a provider abstraction (`SigningProviderInterface`) to support multiple
+Filinq uses a provider abstraction (`SigningProviderInterface`) to support multiple
 backend signing implementations.
 
 ### Native Provider (`native`)
@@ -200,14 +200,14 @@ with legal weight under eIDAS.
 
 | Config key                         | Description                              |
 |-----------------------------------|------------------------------------------|
-| `docudesk_validsign_api_url`       | ValidSign API base URL                   |
-| `docudesk_validsign_api_key`       | ValidSign API key                        |
-| `docudesk_validsign_sender_email`  | Sender email for invitation notifications|
+| `filinq_validsign_api_url`       | ValidSign API base URL                   |
+| `filinq_validsign_api_key`       | ValidSign API key                        |
+| `filinq_validsign_sender_email`  | Sender email for invitation notifications|
 
-Set via DocuDesk admin settings or:
+Set via Filinq admin settings or:
 
 ```bash
-docker exec nextcloud php occ config:app:set docudesk docudesk_validsign_api_key --value="your-key"
+docker exec nextcloud php occ config:app:set filinq filinq_validsign_api_key --value="your-key"
 ```
 
 ---
@@ -241,7 +241,7 @@ pending → in-progress → completed
 `SigningAuditService` records every lifecycle event (created, signed, declined, cancelled,
 verified) as an immutable entry in OpenRegister's native audit trail
 (`openregister_audit_trails`). Events are stored with action types of the form
-`docudesk.signing.{ACTION}` (e.g. `docudesk.signing.SIGNED`). The audit trail is
+`filinq.signing.{ACTION}` (e.g. `filinq.signing.SIGNED`). The audit trail is
 hash-chained and natively immutable — update and delete operations are rejected by OR with
 HTTP 405.
 
@@ -255,14 +255,14 @@ GET /api/audit-trails?objectUuid={signRequestId}
 
 | Action type                      | Triggered when                    |
 |----------------------------------|-----------------------------------|
-| `docudesk.signing.CREATED`       | Signing request is created        |
-| `docudesk.signing.START`         | Signer starts a signing session   |
-| `docudesk.signing.SIGNED`        | Signer signs the document         |
-| `docudesk.signing.DECLINED`      | Signer declines to sign           |
-| `docudesk.signing.CANCELLED`     | Initiator cancels the request     |
-| `docudesk.signing.EXPIRED`       | Request expires before completion |
-| `docudesk.signing.COMPLETED`     | All signers have signed           |
-| `docudesk.signing.VIEWED`        | Signer views the document         |
+| `filinq.signing.CREATED`       | Signing request is created        |
+| `filinq.signing.START`         | Signer starts a signing session   |
+| `filinq.signing.SIGNED`        | Signer signs the document         |
+| `filinq.signing.DECLINED`      | Signer declines to sign           |
+| `filinq.signing.CANCELLED`     | Initiator cancels the request     |
+| `filinq.signing.EXPIRED`       | Request expires before completion |
+| `filinq.signing.COMPLETED`     | All signers have signed           |
+| `filinq.signing.VIEWED`        | Signer views the document         |
 
 Each entry's `changed` JSON field carries: `signRequestId`, `actorUserId`,
 `actorDisplayName`, `ipAddress`, `signatureLevel`, `provider`.
@@ -272,7 +272,7 @@ Each entry's `changed` JSON field carries: `signRequestId`, `actorUserId`,
 > **Administrators MUST configure OR's retention for the signing register to ≥ 3650 days
 > (10 years) to comply with Archiefwet 1995.**
 
-This is a **deploy-time configuration** in OpenRegister — not enforced by DocuDesk
+This is a **deploy-time configuration** in OpenRegister — not enforced by Filinq
 application code. Configure via:
 
 - **OR Admin UI**: Navigate to Settings → OpenRegister → Registers → signing register →

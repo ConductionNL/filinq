@@ -23,7 +23,7 @@ gap below remains:
 - OR `EntityRecognitionHandler` owns the entity taxonomy as constants
   (`PERSON`, `ORGANIZATION`, `EMAIL`, `IBAN`, …) and accepts an
   `entity_types` filter. No `SIGNATURE` type exists anywhere.
-- DocuDesk `OcrService` rasterises PDF pages with Imagick at
+- Filinq `OcrService` rasterises PDF pages with Imagick at
   `ocr.default_dpi` (default 300) for Tesseract; word-level geometry is
   discarded. Wave-1 `ocr-trigger-surface` (REQ-DDOCR-003/004) feeds recovered
   text into OR chunking + detection via the provided-text seam, so scans get
@@ -35,7 +35,7 @@ gap below remains:
   per-document checked gate, and that the entity table is the source of
   truth. This change adds a region overlay layer and region rows — it MUST
   NOT fork that model (its spec is referenced, not modified here).
-- `anonymizationLink` schema (docudesk register) records per-run evidence
+- `anonymizationLink` schema (filinq register) records per-run evidence
   (`replacementCount`, `runCount`, output references) — the natural additive
   home for burn counters and pending flags.
 
@@ -52,7 +52,7 @@ gap below remains:
 
 **Non-Goals:**
 
-- No detection/redaction engine inside DocuDesk (ADR-017/ADR-022: engines
+- No detection/redaction engine inside Filinq (ADR-017/ADR-022: engines
   live in OpenRegister's backend chain).
 - No face detection/blurring, no video redaction (CaseGuard territory) —
   regions here come from PII entities and signatures, not biometrics.
@@ -65,10 +65,10 @@ gap below remains:
 
 ## Decisions
 
-### D1 — Division of labour: OR detects and burns per image; DocuDesk owns containers
+### D1 — Division of labour: OR detects and burns per image; Filinq owns containers
 
 Engines belong to OpenRegister; container/file handling around them is
-DocuDesk's (same split as `ocr-trigger-surface` D1, where DocuDesk supplies
+Filinq's (same split as `ocr-trigger-surface` D1, where Filinq supplies
 acquisition and OR owns detection). **Decision:**
 
 - **OpenRegister** exposes an image seam on the backend chain (D2): given
@@ -77,17 +77,17 @@ acquisition and OR owns detection). **Decision:**
   image (`redact`). The seam delegates to the configured image-capable
   backend — Presidio's image-redactor endpoint first (it performs
   detect-and-burn natively; OR composes the two operations from it).
-- **DocuDesk** submits the right images: the file itself for image MIME
+- **Filinq** submits the right images: the file itself for image MIME
   types, page rasters (existing Imagick path, same DPI config as OCR) for
   scanned PDFs, extracted embedded images for born-digital PDFs with image
   XObjects; and reassembles the output container (replace page raster /
   embedded image, strip region text) after burn.
 
-Rejected: (a) DocuDesk calling Presidio image-redactor directly — bypasses
+Rejected: (a) Filinq calling Presidio image-redactor directly — bypasses
 the ADR-017 single backend-detection owner and forks backend configuration;
 (b) OR owning rasterisation/reassembly — OR deliberately has no
 Imagick/raster path (verified in wave 1) and container surgery is exactly
-the file-plumbing DocuDesk already owns (`OcrService`, conversion cascade).
+the file-plumbing Filinq already owns (`OcrService`, conversion cascade).
 
 ### D2 — Cross-app dependency: the OR image seam and the SIGNATURE type
 
@@ -99,11 +99,11 @@ issue + PR before the dependent tasks complete:
    (e.g. `detectImage(string $bytes, array $options): array{entities:
    list<array{type, confidence, boxes: list<array{page?, x, y, w, h}>}>}`
    and `redactImage(string $bytes, array $regions): string`), boxes
-   normalised to [0..1] so DPI stays a DocuDesk-side concern.
+   normalised to [0..1] so DPI stays a Filinq-side concern.
 2. `ENTITY_TYPE_SIGNATURE = 'SIGNATURE'` in `EntityRecognitionHandler`'s
    taxonomy plus backend capability flags (`supportsImages`,
    `supportsSignatures`) on the probe/state payload, so
-   `AnonymiserBackendStateClient::getState()` lets DocuDesk render honest
+   `AnonymiserBackendStateClient::getState()` lets Filinq render honest
    availability.
 
 **Degraded behaviour until the seam lands (fail-flagged, never
@@ -112,17 +112,17 @@ fail-silent):** extract marks image-bearing files `imageDetectionSkipped`
 content marks the run `imageRedactionPending`, and the review UI shows the
 warning — mirroring REQ-DDOCR-004's `ocrDetectionPending` contract.
 
-### D3 — Signature detection is a backend capability, not a DocuDesk model
+### D3 — Signature detection is a backend capability, not a Filinq model
 
 All 9 algoritmeregister entries mask handwritten signatures, but no shipped
 backend detects them today (Presidio image mode detects text-PII via OCR;
 signatures need a small vision model or heuristic). **Decision:** the seam's
 *contract* includes `SIGNATURE` with boxes; *which* backend provides it is
 configuration (Presidio custom recognizer, the OpenAnonymiser ExApp, or a
-future dedicated model — engine choice lives OR-side). DocuDesk consumes
+future dedicated model — engine choice lives OR-side). Filinq consumes
 `supportsSignatures` from the backend state: when false, the review UI shows
 "signature detection not available on this instance" instead of an empty,
-falsely-reassuring result. No signature heuristic is implemented in DocuDesk.
+falsely-reassuring result. No signature heuristic is implemented in Filinq.
 
 ### D4 — Burn semantics: re-encode, strip, verify
 
@@ -233,7 +233,7 @@ a clean install.
 
 1. Register JSON: additive `anonymizationLink` fields (union-merge).
 2. File the OR issue + PR (image seam, SIGNATURE type, capability flags).
-3. DocuDesk detection leg + flags + workbench overlays (works fail-flagged
+3. Filinq detection leg + flags + workbench overlays (works fail-flagged
    without the seam).
 4. Burn leg + irreversibility verification + reassembly; flip degradation
    off when the seam is live.

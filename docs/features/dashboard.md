@@ -2,7 +2,7 @@
 
 ## Overview
 
-The DocuDesk dashboard serves as the default landing page, providing a central overview of consent tracking statistics, recent consent activity, and quick access to document anonymization. Two Nextcloud Dashboard widgets are also available for the main Nextcloud Dashboard.
+The Filinq dashboard serves as the default landing page, providing a central overview of consent tracking statistics, recent consent activity, and quick access to document anonymization. Two Nextcloud Dashboard widgets are also available for the main Nextcloud Dashboard.
 
 ## Features
 
@@ -17,7 +17,7 @@ The DocuDesk dashboard serves as the default landing page, providing a central o
 
 ## Navigation
 
-The DocuDesk SPA provides three main sections:
+The Filinq SPA provides three main sections:
 1. **Dashboard** - Overview and quick actions
 2. **Anonymization** - Full anonymization pipeline
 3. **Consent Management** - Consent record management

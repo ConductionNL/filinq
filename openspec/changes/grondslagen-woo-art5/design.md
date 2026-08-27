@@ -1,6 +1,6 @@
 ## Context
 
-Grondslagen are seeded as `base` objects in the OpenRegister `dossier` register (`docudesk_register.json`) and referenced by slug from dossiers and entity-relations (`bases[]`). The frontend needs a list of grondslagen for its `NcSelect` pickers. Until now that list was hardcoded in three places (`constants/grondslagen.js` `WOO_BASES`, and a `BASES_OPTIONS` copy each in `EntityReviewTable.vue` and `FileViewerSidebar.vue`), with the code comments themselves flagging it as a temporary Wave 1.1 shortcut that should fetch from the register.
+Grondslagen are seeded as `base` objects in the OpenRegister `dossier` register (`filinq_register.json`) and referenced by slug from dossiers and entity-relations (`bases[]`). The frontend needs a list of grondslagen for its `NcSelect` pickers. Until now that list was hardcoded in three places (`constants/grondslagen.js` `WOO_BASES`, and a `BASES_OPTIONS` copy each in `EntityReviewTable.vue` and `FileViewerSidebar.vue`), with the code comments themselves flagging it as a temporary Wave 1.1 shortcut that should fetch from the register.
 
 The authoritative grondslagen are the Woo Art. 5 exception grounds, published with a legend A–S (the letter is stamped on redacted sections). The seed should carry all 19.
 

@@ -10,7 +10,7 @@
  *
  * Why a stub rather than a suppression: PHPStan refuses to let an
  * "extends unknown class" error be silenced through `ignoreErrors`, so the
- * `OCA\DocuDesk\Controller\PreferencesController` subclass had no way to
+ * `OCA\Filinq\Controller\PreferencesController` subclass had no way to
  * resolve its parent. Declaring the parent's real signature here is the
  * truthful fix — it also makes PHPStan verify that the named arguments
  * `Application::register()` passes to `new GenericPreferencesController(...)`
@@ -27,7 +27,7 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

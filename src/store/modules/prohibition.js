@@ -10,7 +10,7 @@ import { generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 
-const baseUrl = '/apps/docudesk/api/policy/prohibitions'
+const baseUrl = '/apps/filinq/api/policy/prohibitions'
 
 export const useProhibitionStore = defineStore('prohibition', {
 	state: () => ({

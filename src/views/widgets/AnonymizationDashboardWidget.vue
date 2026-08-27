@@ -4,21 +4,21 @@ import { anonymizationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<div class="docudesk-anon-widget">
+	<div class="filinq-anon-widget">
 		<!-- Results table: shown when files are in the queue -->
 		<div v-if="anonymizationStore.hasFiles" class="results-area">
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th scope="col">{{ t('docudesk', 'File') }}</th>
+						<th scope="col">{{ t('filinq', 'File') }}</th>
 						<th scope="col" class="col-number">
-							{{ t('docudesk', 'Entities') }}
+							{{ t('filinq', 'Entities') }}
 						</th>
 						<th scope="col" class="col-number">
-							{{ t('docudesk', 'Removed') }}
+							{{ t('filinq', 'Removed') }}
 						</th>
 						<th scope="col" class="col-action">
-							{{ t('docudesk', 'Result') }}
+							{{ t('filinq', 'Result') }}
 						</th>
 					</tr>
 				</thead>
@@ -69,7 +69,7 @@ import { anonymizationStore } from '../../store/store.js'
 								:href="downloadUrl(file.anonymizedFilePath)"
 								download
 								class="download-link">
-								{{ t('docudesk', 'Download') }}
+								{{ t('filinq', 'Download') }}
 							</a>
 							<span
 								v-else-if="
@@ -77,13 +77,13 @@ import { anonymizationStore } from '../../store/store.js'
 									&& !file.anonymizedFilePath
 								"
 								class="status-clean">
-								{{ t('docudesk', 'Clean') }}
+								{{ t('filinq', 'Clean') }}
 							</span>
 							<span
 								v-else-if="file.status === 'error'"
 								class="status-error"
 								:title="file.error">
-								{{ t('docudesk', 'Error') }}
+								{{ t('filinq', 'Error') }}
 							</span>
 							<span v-else class="status-label">
 								{{ statusLabel(file.status) }}
@@ -118,17 +118,14 @@ import { anonymizationStore } from '../../store/store.js'
 					<p class="drop-title">
 						{{
 							anonymizationStore.hasFiles
-								? t('docudesk', 'Drop more files to anonymize')
-								: t(
-										'docudesk',
-										'Drag and drop one or more documents',
-									)
+								? t('filinq', 'Drop more files to anonymize')
+								: t('filinq', 'Drag and drop one or more documents')
 						}}
 					</p>
 					<p v-if="!anonymizationStore.hasFiles" class="drop-subtitle">
 						{{
 							t(
-								'docudesk',
+								'filinq',
 								'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.',
 							)
 						}}
@@ -139,8 +136,8 @@ import { anonymizationStore } from '../../store/store.js'
 						@click="$refs.fileInput.click()">
 						{{
 							anonymizationStore.hasFiles
-								? t('docudesk', '+ Add more files')
-								: t('docudesk', '+ Select files')
+								? t('filinq', '+ Add more files')
+								: t('filinq', '+ Select files')
 						}}
 					</button>
 				</div>
@@ -148,7 +145,7 @@ import { anonymizationStore } from '../../store/store.js'
 					ref="fileInput"
 					type="file"
 					multiple
-					:aria-label="t('docudesk', 'Select files to anonymise')"
+					:aria-label="t('filinq', 'Select files to anonymise')"
 					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
 					class="file-input"
 					@change="handleFileSelect" />
@@ -157,7 +154,7 @@ import { anonymizationStore } from '../../store/store.js'
 
 		<!-- Footer: shown in the Nextcloud dashboard widget context, hidden in-app -->
 		<a v-if="!inApp" class="widget-footer" :href="appUrl">
-			{{ t('docudesk', 'Open DocuDesk') }}
+			{{ t('filinq', 'Open Filinq') }}
 		</a>
 
 		<!-- Dossier name dialog (multi-file upload) — src/dialogs/ per ADR-004 -->
@@ -218,7 +215,7 @@ export default {
 
 		/**
 		 * Set to true when embedded in the in-app dashboard to hide the
-		 * "Open DocuDesk" footer link (redundant when already in the app).
+		 * "Open Filinq" footer link (redundant when already in the app).
 		 */
 		inApp: {
 			type: Boolean,
@@ -243,7 +240,7 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		appUrl() {
-			return generateUrl('/apps/docudesk')
+			return generateUrl('/apps/filinq')
 		},
 	},
 
@@ -278,13 +275,21 @@ export default {
 			event.target.value = ''
 		},
 
+		/**
+		 * Drop files whose extension/MIME isn't in the supported set, naming
+		 * each rejected file in a toast.
+		 *
+		 * @param {FileList | File[]} files Incoming files from drop or input.
+		 * @return {File[]} Accepted subset.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		filterAllowed(files) {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
 				showError(
 					t(
-						'docudesk',
+						'filinq',
 						'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}',
 						{ names },
 					),
@@ -309,7 +314,7 @@ export default {
 		},
 
 		/**
-		 * Navigate to the file-viewer when inside the DocuDesk app.
+		 * Navigate to the file-viewer when inside the Filinq app.
 		 * Safe to call from the NC dashboard context — $router is absent there
 		 * and the optional chaining prevents any error.
 		 *
@@ -425,10 +430,10 @@ export default {
 		 */
 		statusLabel(status) {
 			const labels = {
-				queued: t('docudesk', 'Queued'),
-				uploading: t('docudesk', 'Uploading...'),
-				extracting: t('docudesk', 'Detecting...'),
-				anonymizing: t('docudesk', 'Anonymizing...'),
+				queued: t('filinq', 'Queued'),
+				uploading: t('filinq', 'Uploading...'),
+				extracting: t('filinq', 'Detecting...'),
+				anonymizing: t('filinq', 'Anonymizing...'),
 			}
 			return labels[status] || status
 		},
@@ -437,7 +442,7 @@ export default {
 </script>
 
 <style scoped>
-.docudesk-anon-widget {
+.filinq-anon-widget {
 	display: flex;
 	flex-direction: column;
 	padding: 20px;

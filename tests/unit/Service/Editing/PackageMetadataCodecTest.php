@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,14 +17,14 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\PackageMetadataCodec;
+use OCA\Filinq\Service\Editing\PackageMetadataCodec;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use ZipArchive;
@@ -79,7 +79,7 @@ class PackageMetadataCodecTest extends TestCase {
 	 * Read one entry from a package.
 	 *
 	 * @param string $bytes The package bytes.
-	 * @param string $name  The entry name.
+	 * @param string $name The entry name.
 	 *
 	 * @return string|false The entry contents.
 	 */
@@ -140,13 +140,13 @@ class PackageMetadataCodecTest extends TestCase {
 	public function testKeywordsResolveToTheFormatsOwnElement(): void {
 		$odt = $this->package(
 			[
-				'mimetype'    => 'application/vnd.oasis.opendocument.text',
+				'mimetype' => 'application/vnd.oasis.opendocument.text',
 				'content.xml' => '<office:document-content/>',
 			]
 		);
 
 		$written = $this->codec->writeMetadata($odt, 'odt', ['keywords' => 'zaak']);
-		$meta    = (string)$this->entry($written['bytes'], 'meta.xml');
+		$meta = (string)$this->entry($written['bytes'], 'meta.xml');
 
 		$this->assertStringContainsString('<meta:keyword>zaak</meta:keyword>', $meta);
 		$this->assertStringNotContainsString('cp:keywords', $meta);
@@ -161,7 +161,7 @@ class PackageMetadataCodecTest extends TestCase {
 	 * @spec openspec/specs/document-rich-editing/spec.md
 	 */
 	public function testWritingMetadataLeavesOtherPartsUntouched(): void {
-		$body  = '<w:document><w:body><w:p><w:r><w:t>Hello</w:t></w:r></w:p></w:body></w:document>';
+		$body = '<w:document><w:body><w:p><w:r><w:t>Hello</w:t></w:r></w:p></w:body></w:document>';
 		$bytes = $this->package(['word/document.xml' => $body, 'docProps/core.xml' => '<cp:coreProperties/>']);
 
 		$written = $this->codec->writeMetadata($bytes, 'docx', ['title' => 'New title']);
@@ -186,7 +186,7 @@ class PackageMetadataCodecTest extends TestCase {
 		$bytes = $this->package(['word/document.xml' => '<w:document/>']);
 
 		$written = $this->codec->writeMetadata($bytes, 'docx', ['title' => 'Fresh']);
-		$meta    = (string)$this->entry($written['bytes'], 'docProps/core.xml');
+		$meta = (string)$this->entry($written['bytes'], 'docProps/core.xml');
 
 		$this->assertStringContainsString('<dc:title>Fresh</dc:title>', $meta);
 		// Without the namespace declarations the elements resolve to nothing and
@@ -214,7 +214,7 @@ class PackageMetadataCodecTest extends TestCase {
 		);
 
 		$written = $this->codec->writeMetadata($bytes, 'docx', ['subject' => 'Subsidie']);
-		$meta    = $this->codec->readMetadata($written['bytes'], 'docx');
+		$meta = $this->codec->readMetadata($written['bytes'], 'docx');
 
 		$this->assertSame('Keep me', $meta['title']);
 		$this->assertSame('Ruben', $meta['creator']);

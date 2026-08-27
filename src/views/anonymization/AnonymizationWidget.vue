@@ -27,12 +27,12 @@ import {
 				<img :src="uploadIcon" alt="" class="upload-icon" />
 				<div class="drop-content">
 					<p class="drop-title">
-						{{ t('docudesk', 'Drag and drop one or more documents') }}
+						{{ t('filinq', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
 						{{
 							t(
-								'docudesk',
+								'filinq',
 								'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.',
 							)
 						}}
@@ -41,14 +41,14 @@ import {
 						type="button"
 						class="fake-button"
 						@click="$refs.fileInput.click()">
-						{{ t('docudesk', '+ Select files') }}
+						{{ t('filinq', '+ Select files') }}
 					</button>
 				</div>
 				<input
 					ref="fileInput"
 					type="file"
 					multiple
-					:aria-label="t('docudesk', 'Select files to anonymise')"
+					:aria-label="t('filinq', 'Select files to anonymise')"
 					accept=".docx,.odt,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,application/pdf,message/rfc822"
 					class="file-input"
 					@change="handleFileSelect" />
@@ -60,7 +60,7 @@ import {
 			v-if="recentLoading || recentItems.length > 0"
 			class="recent-section">
 			<h3 class="recent-section__title">
-				{{ t('docudesk', 'Recent documents') }}
+				{{ t('filinq', 'Recent documents') }}
 			</h3>
 			<div v-if="recentLoading" class="recent-section__loading">
 				<NcLoadingIcon :size="24" />
@@ -141,18 +141,19 @@ export default {
 		 * Morning: 05:00–11:59. Afternoon: 12:00–17:59. Evening: 18:00–04:59.
 		 *
 		 * @return {string} Localised greeting like 'Good morning Marco,'.
+		 * @spec exclude decorative time-of-day salutation above the upload zone; the widget's specified behaviour (drag-and-drop upload, progress, result display) is at openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08, which mandates no greeting
 		 */
 		greeting() {
 			const hour = new Date().getHours()
 			if (hour >= 5 && hour < 12) {
-				return t('docudesk', 'Good morning {name},', { name: this.userName })
+				return t('filinq', 'Good morning {name},', { name: this.userName })
 			}
 			if (hour >= 12 && hour < 18) {
-				return t('docudesk', 'Good afternoon {name},', {
+				return t('filinq', 'Good afternoon {name},', {
 					name: this.userName,
 				})
 			}
-			return t('docudesk', 'Good evening {name},', { name: this.userName })
+			return t('filinq', 'Good evening {name},', { name: this.userName })
 		},
 
 		/**
@@ -272,6 +273,7 @@ export default {
 		 *
 		 * @param {FileList | File[]} files Incoming files from drop or input.
 		 * @return {File[]} Accepted subset.
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		filterAllowed(files) {
 			const { accepted, rejected } = partitionFiles(files)
@@ -279,7 +281,7 @@ export default {
 				const names = rejected.map((f) => f.name).join(', ')
 				showError(
 					t(
-						'docudesk',
+						'filinq',
 						'Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}',
 						{ names },
 					),
@@ -344,6 +346,9 @@ export default {
 		 * no title each file is uploaded loose under /DocuDesk/, matching
 		 * the single-file flow. Keeps the dialog open on failure so the
 		 * user sees the error inline.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async confirmDossier() {
 			const name = this.dossierName.trim()

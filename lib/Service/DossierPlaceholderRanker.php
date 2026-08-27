@@ -9,26 +9,26 @@
  * (e.g. `[DATUM: 6]`) rather than the global entity id.
  *
  * Extracted from {@see LegalBasesSummaryService}. It is also the single seam
- * through which DocuDesk reaches OpenRegister's ranking helper: that helper is
+ * through which Filinq reaches OpenRegister's ranking helper: that helper is
  * a static API on an OPTIONAL app, so — like every other OR reference in this
  * codebase — it is named by string and probed with `class_exists()` before
  * use. Keeping that in one small class means the rest of the pipeline never
  * touches OR's static surface.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\Files\File;
@@ -39,10 +39,10 @@ use Psr\Log\LoggerInterface;
  * Ranks a dossier's entity ids by first appearance, mirroring OpenRegister.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class DossierPlaceholderRanker {
 

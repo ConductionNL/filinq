@@ -22,7 +22,7 @@ import { generateUrl } from '@nextcloud/router'
  * @spec openspec/specs/document-comparison/spec.md
  */
 export async function compareDocuments(left, right) {
-	const url = generateUrl('/apps/docudesk/api/comparison/compare')
+	const url = generateUrl('/apps/filinq/api/comparison/compare')
 	const { data } = await axios.post(url, { left, right })
 	return data
 }

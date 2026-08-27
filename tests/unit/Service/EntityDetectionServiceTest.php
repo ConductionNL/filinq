@@ -4,7 +4,7 @@
  * Unit tests for EntityDetectionService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,16 +12,16 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymizationResultParser;
-use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\Filinq\Service\AnonymizationResultParser;
+use OCA\Filinq\Service\EntityDetectionService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -29,10 +29,10 @@ use PHPUnit\Framework\TestCase;
  * Unit tests for EntityDetectionService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -124,10 +124,10 @@ class EntityDetectionServiceTest extends TestCase {
 	}//end testMapEntitiesForAnonymizationKeepsTypedPiiAndDropsNoise()
 
 	/**
-	 * DocuDesk holds no opinion on numeric-ness: a numeric value is mapped for
+	 * Filinq holds no opinion on numeric-ness: a numeric value is mapped for
 	 * redaction like any other, whatever type the recogniser assigned. Numbers
 	 * are frequently sensitive (a BSN, a phone number, a granted-benefit
-	 * amount), so the redaction decision is left to OpenRegister — DocuDesk
+	 * amount), so the redaction decision is left to OpenRegister — Filinq
 	 * only drops empty and too-short values.
 	 *
 	 * @return void

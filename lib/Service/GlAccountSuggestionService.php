@@ -11,17 +11,17 @@
  * re-ranks through the local Nextcloud Assistant provider (absent-safe),
  * and records booking corrections as history for future suggestions.
  *
- * DocuDesk never hardcodes a chart of accounts — every account code/label is
+ * Filinq never hardcodes a chart of accounts — every account code/label is
  * an opaque string supplied by the consumer (via a correction, a
  * `candidateAccounts` entry, or an admin-authored mapping rule).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
@@ -31,14 +31,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\DocuDesk\Event\GlAccountSuggestedEvent;
-use OCA\DocuDesk\Service\Suggestion\CategoryKeywordMapper;
-use OCA\DocuDesk\Service\Suggestion\HistoryRanker;
-use OCA\DocuDesk\Service\Suggestion\SupplierIdentityResolver;
+use OCA\Filinq\Event\GlAccountSuggestedEvent;
+use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
+use OCA\Filinq\Service\Suggestion\HistoryRanker;
+use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\TaskProcessing\Task as TaskProcessingTask;
 use OCP\TaskProcessing\TaskTypes\TextToText;
@@ -53,10 +53,10 @@ use Throwable;
  * Orchestrates GL-account suggestion for a financial extraction.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
@@ -92,7 +92,7 @@ class GlAccountSuggestionService {
 
 	/**
 	 * Compute a GL-account suggestion for a prior financial extraction and
-	 * dispatch the sibling `nl.conduction.docudesk.gl-account.suggested`
+	 * dispatch the sibling `nl.conduction.filinq.gl-account.suggested`
 	 * event (REQ-GLS-06).
 	 *
 	 * @param string $extractionId The `financialExtraction` object id.
@@ -381,7 +381,7 @@ class GlAccountSuggestionService {
 			return $this->reorderByAi(suggestions: $suggestions, order: $decoded['order']);
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'DocuDesk: GL-account AI re-rank failed, returning deterministic result: ' . $e->getMessage()
+				'Filinq: GL-account AI re-rank failed, returning deterministic result: ' . $e->getMessage()
 			);
 			return $suggestions;
 		}//end try
@@ -473,14 +473,14 @@ class GlAccountSuggestionService {
 		$prompt = $this->buildPrompt(suggestions: $suggestions, fields: $fields);
 
 		if ($manager['type'] === 'task') {
-			$task = new TaskProcessingTask(TextToText::ID, ['input' => $prompt], 'docudesk', null);
+			$task = new TaskProcessingTask(TextToText::ID, ['input' => $prompt], 'filinq', null);
 
 			$completed = $manager['manager']->runTask($task);
 			$output = $completed->getOutput();
 			return (string)($output['output'] ?? '');
 		}
 
-		$task = new TextProcessingTask(FreePromptTaskType::class, $prompt, 'docudesk', null);
+		$task = new TextProcessingTask(FreePromptTaskType::class, $prompt, 'filinq', null);
 
 		return (string)$manager['manager']->runTask($task);
 	}//end runAiTask()
@@ -532,7 +532,7 @@ class GlAccountSuggestionService {
 	}//end stripCodeFences()
 
 	/**
-	 * Dispatch the sibling `nl.conduction.docudesk.gl-account.suggested`
+	 * Dispatch the sibling `nl.conduction.filinq.gl-account.suggested`
 	 * event. Fail-soft: the already-computed result is still returned to the
 	 * caller even if event dispatch fails (mirrors
 	 * FinancialExtractionService::dispatchCompletionEvent()).
@@ -561,7 +561,7 @@ class GlAccountSuggestionService {
 			$this->eventDispatcher->dispatchTyped($event);
 		} catch (Throwable $e) {
 			$this->logger->error(
-				'DocuDesk: GL-account suggestion computed but event dispatch failed: ' . $e->getMessage(),
+				'Filinq: GL-account suggestion computed but event dispatch failed: ' . $e->getMessage(),
 				['exception' => $e]
 			);
 		}

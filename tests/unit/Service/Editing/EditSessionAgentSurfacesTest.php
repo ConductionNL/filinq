@@ -15,28 +15,28 @@
  * of those is a document changed without the accountability the text path has.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\AgentArtefactMarker;
-use OCA\DocuDesk\Service\Editing\DocumentCodecs;
-use OCA\DocuDesk\Service\Editing\DocumentGuard;
-use OCA\DocuDesk\Service\Editing\EditSessionService;
-use OCA\DocuDesk\Service\Editing\GuardedWriter;
-use OCA\DocuDesk\Service\Editing\PackageCodec;
-use OCA\DocuDesk\Service\Editing\PackagePartIo;
-use OCA\DocuDesk\Service\Editing\PresentationCodec;
-use OCA\DocuDesk\Service\Editing\SpreadsheetCodec;
+use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\DocumentCodecs;
+use OCA\Filinq\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\Editing\EditSessionService;
+use OCA\Filinq\Service\Editing\GuardedWriter;
+use OCA\Filinq\Service\Editing\PackageCodec;
+use OCA\Filinq\Service\Editing\PackagePartIo;
+use OCA\Filinq\Service\Editing\PresentationCodec;
+use OCA\Filinq\Service\Editing\SpreadsheetCodec;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -53,10 +53,10 @@ use ZipArchive;
  * The non-text agent surfaces of the edit session.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  *
@@ -170,7 +170,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	 * @return string The package bytes.
 	 */
 	private function package(array $parts): string {
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-surface-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-surface-');
 		$this->spilled[] = $path;
 		unlink($path);
 
@@ -183,7 +183,6 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$zip->close();
 
 		return (string)file_get_contents($path);
-
 	}//end package()
 
 	/**
@@ -256,12 +255,12 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	 * Read one part back out of package bytes.
 	 *
 	 * @param string $package The package bytes.
-	 * @param string $part    The part name.
+	 * @param string $part The part name.
 	 *
 	 * @return string The part's contents.
 	 */
 	private function partOf(string $package, string $part): string {
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-read-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-read-');
 		$this->spilled[] = $path;
 		file_put_contents($path, $package);
 
@@ -273,13 +272,12 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->assertNotFalse($contents, sprintf('the package must still carry "%s"', $part));
 
 		return (string)$contents;
-
 	}//end partOf()
 
 	/**
 	 * Put a file of the given name and bytes behind Alice's folder.
 	 *
-	 * @param string $name  The file name, whose extension selects the codec.
+	 * @param string $name The file name, whose extension selects the codec.
 	 * @param string $bytes The package bytes.
 	 *
 	 * @return MockObject&File The file mock.
@@ -308,7 +306,6 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$this->rootFolder->method('getUserFolder')->willReturn($userFolder);
 
 		return $file;
-
 	}//end attach()
 
 	/**

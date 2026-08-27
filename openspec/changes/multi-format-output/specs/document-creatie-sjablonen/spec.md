@@ -114,7 +114,7 @@ error?}` entry per requested format (including failed ones), with the scalar
 `format` property set to the first requested format for consumers of the
 existing field. The `generatedDocument` schema MUST gain `docx` in its
 `format` enum and the optional `outputs` property
-(`lib/Settings/docudesk_register.json`, additive document-register bump).
+(`lib/Settings/filinq_register.json`, additive document-register bump).
 Single-format generations MUST keep their existing audit shape with no
 `outputs` property.
 

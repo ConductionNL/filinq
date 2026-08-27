@@ -6,7 +6,7 @@
  * Renders the ORIGINAL (un-redacted) content of a `message/rfc822` file to a
  * previewable PDF/A-3b so the in-app file viewer can show an .eml the same way
  * it shows a PDF or Word document. The render is produced server-side — any
- * client (the DocuDesk viewer, a direct link, another app) consumes one
+ * client (the Filinq viewer, a direct link, another app) consumes one
  * endpoint rather than re-implementing EML parsing in the browser.
  *
  * Reuses the anonymise pipeline with an EMPTY entity set: OpenRegister parses
@@ -16,17 +16,17 @@
  * therefore no separate "original" render path to maintain.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\App\IAppManager;
 use OCP\Files\File;
@@ -39,11 +39,11 @@ use Throwable;
  * Produces a PDF/A-3b preview of an original EML message.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class EmlPreviewService {
 

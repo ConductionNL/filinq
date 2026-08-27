@@ -8,7 +8,7 @@
  * through the caller's own file tree before anything is rendered.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -19,10 +19,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\EmlPreviewController;
-use OCA\DocuDesk\Service\EmlPreviewService;
+use OCA\Filinq\Controller\EmlPreviewController;
+use OCA\Filinq\Service\EmlPreviewService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * Unit tests for EmlPreviewController.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
@@ -84,7 +84,7 @@ class EmlPreviewControllerTest extends TestCase {
 		$mockL10n->method('t')->willReturnArgument(0);
 
 		$this->controller = new EmlPreviewController(
-			'docudesk',
+			'filinq',
 			$this->createMock(IRequest::class),
 			$this->mockService,
 			$this->createMock(LoggerInterface::class),

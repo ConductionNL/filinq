@@ -8,12 +8,12 @@
  * (standing consents) lives in {@see StandingConsentController}.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,11 +21,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
-use OCA\DocuDesk\Service\PolicyCrudService;
+use OCA\Filinq\Service\PolicyCrudService;
 use OCA\OpenRegister\Exception\ArchivalImmutableException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -39,10 +39,10 @@ use Psr\Log\LoggerInterface;
  * Prohibition policy-surface CRUD endpoints.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class PolicyController extends Controller {
 	/**
@@ -186,10 +186,10 @@ class PolicyController extends Controller {
 	 * Delete a prohibition.
 	 *
 	 * `publicationProhibition` declares `x-openregister-archival` in
-	 * `lib/Settings/docudesk_register.json` (retention P10Y — prohibitions are
+	 * `lib/Settings/filinq_register.json` (retention P10Y — prohibitions are
 	 * court-order-backed and must survive for audit and appeal). OpenRegister
 	 * therefore refuses EVERY user-driven delete on this schema: rows expire
-	 * only through `OCA\OpenRegister\Cron\ArchivalRetentionTask`. The endpoint
+	 * only through `OCA\OpenRegister\BackgroundJob\ArchivalRetentionTask`. The endpoint
 	 * is consequently impossible to satisfy — never merely "currently failing"
 	 * — and previously leaked that as an opaque HTTP 500.
 	 *

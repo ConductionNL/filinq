@@ -1,16 +1,16 @@
 ---
 sidebar_position: 6
 title: Request publication consent
-description: Open a consent request on a document so DocuDesk tracks the WOO-compliant objection period before the document can be published.
+description: Open a consent request on a document so Filinq tracks the WOO-compliant objection period before the document can be published.
 ---
 
 # Request publication consent
 
-Under the Dutch *Wet Open Overheid* (WOO) every document containing personal data must observe a minimum **four-week objection period** before it is published. DocuDesk's consent flow makes that period explicit: you open a consent request on a document, the affected data subjects are notified, and the document is locked from publication until the period has expired or all objections have been resolved.
+Under the Dutch *Wet Open Overheid* (WOO) every document containing personal data must observe a minimum **four-week objection period** before it is published. Filinq's consent flow makes that period explicit: you open a consent request on a document, the affected data subjects are notified, and the document is locked from publication until the period has expired or all objections have been resolved.
 
 ## Goal
 
-By the end you will have opened a consent request on one document, picked the affected data subjects, set the objection period, and watched DocuDesk record the request with its earliest-publish date.
+By the end you will have opened a consent request on one document, picked the affected data subjects, set the objection period, and watched Filinq record the request with its earliest-publish date.
 
 ## Prerequisites
 
@@ -27,7 +27,7 @@ By the end you will have opened a consent request on one document, picked the af
 
    ![Consent request dialog](/screenshots/tutorials/user/06-request-consent-02.png)
 
-3. Submit. DocuDesk creates a Consent object linking the document, the data subjects, the channel and the objection period — and dispatches notifications to each data subject through the configured channel.
+3. Submit. Filinq creates a Consent object linking the document, the data subjects, the channel and the objection period — and dispatches notifications to each data subject through the configured channel.
 
    ![Consent created](/screenshots/tutorials/user/06-request-consent-03.png)
 
@@ -43,7 +43,7 @@ You are done when: a Consent object exists in **Consents**, its *Status* column 
 
 | Symptom | Fix |
 |---|---|
-| Submit fails with "no notification channel configured" | The publication channel doesn't have an email/post template attached — an admin sets this in **Settings → DocuDesk → Notifications**. |
+| Submit fails with "no notification channel configured" | The publication channel doesn't have an email/post template attached — an admin sets this in **Settings → Filinq → Notifications**. |
 | Data subject search returns nothing | The instance has no contact register configured — pick *Add manually* and key the name + email/post address directly. |
 | Earliest-publish date is shorter than 4 weeks | The WOO minimum is enforced server-side; if you see < 4 weeks the admin has explicitly overridden the default. Confirm this is intentional. |
 

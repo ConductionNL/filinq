@@ -1,16 +1,16 @@
 ---
 sidebar_position: 3
-title: Manage DocuDesk settings
-description: "Walk through the DocuDesk admin-settings panel: registers, services, retention policies, notifications."
+title: Manage Filinq settings
+description: "Walk through the Filinq admin-settings panel: registers, services, retention policies, notifications."
 ---
 
-# Manage DocuDesk settings
+# Manage Filinq settings
 
-The DocuDesk admin settings panel lives under **Nextcloud Settings → Administration → DocuDesk**. It is the single place where an instance admin wires DocuDesk up to the rest of the world: the OpenRegister registers it stores data in, the external services it depends on (Presidio for anonymisation, the signing provider), the retention policies users can pick from, and the notification channels used for consent and signing.
+The Filinq admin settings panel lives under **Nextcloud Settings → Administration → Filinq**. It is the single place where an instance admin wires Filinq up to the rest of the world: the OpenRegister registers it stores data in, the external services it depends on (Presidio for anonymisation, the signing provider), the retention policies users can pick from, and the notification channels used for consent and signing.
 
 ## Goal
 
-By the end you will have inspected each section of the admin panel, re-imported the DocuDesk register configuration, and verified all configured services are healthy.
+By the end you will have inspected each section of the admin panel, re-imported the Filinq register configuration, and verified all configured services are healthy.
 
 ## Prerequisites
 
@@ -19,11 +19,11 @@ By the end you will have inspected each section of the admin panel, re-imported 
 
 ## Steps
 
-1. From the avatar menu, click **Administration settings**, then **DocuDesk** in the sidebar. The settings panel opens at the *Registers* section.
+1. From the avatar menu, click **Administration settings**, then **Filinq** in the sidebar. The settings panel opens at the *Registers* section.
 
-   ![DocuDesk admin settings, Registers section](/screenshots/tutorials/admin/03-admin-settings-01.png)
+   ![Filinq admin settings, Registers section](/screenshots/tutorials/admin/03-admin-settings-01.png)
 
-2. Under *Registers*, confirm each DocuDesk register (Documents, Templates, Consents, SigningRequests, RetentionPolicies) is linked to the right OpenRegister register + schema. On a fresh install click **Re-import configuration** to load the canonical mapping shipped with the app.
+2. Under *Registers*, confirm each Filinq register (Documents, Templates, Consents, SigningRequests, RetentionPolicies) is linked to the right OpenRegister register + schema. On a fresh install click **Re-import configuration** to load the canonical mapping shipped with the app.
 
    ![Re-import configuration](/screenshots/tutorials/admin/03-admin-settings-02.png)
 
@@ -31,7 +31,7 @@ By the end you will have inspected each section of the admin panel, re-imported 
 
    ![Service status panel](/screenshots/tutorials/admin/03-admin-settings-03.png)
 
-4. Switch to *Retention policies*. Add or edit the policies that DocuDesk users can pick from (see [Apply a retention policy](../user/08-retention-policy.md) for the user-facing flow). Set duration, expiration action and description.
+4. Switch to *Retention policies*. Add or edit the policies that Filinq users can pick from (see [Apply a retention policy](../user/08-retention-policy.md) for the user-facing flow). Set duration, expiration action and description.
 
    ![Retention policies admin](/screenshots/tutorials/admin/03-admin-settings-04.png)
 
@@ -54,4 +54,4 @@ You are done when: every register row shows a green check, every service shows *
 ## Reference
 
 - [Admin settings feature](../../features/admin-settings.md) — full reference.
-- [Document register feature](../../features/document-register.md) — what each DocuDesk register stores.
+- [Document register feature](../../features/document-register.md) — what each Filinq register stores.

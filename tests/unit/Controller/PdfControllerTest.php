@@ -4,7 +4,7 @@
  * Unit tests for PdfController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,17 +12,17 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\PdfController;
-use OCA\DocuDesk\Service\Pdfa3ConversionService;
-use OCA\DocuDesk\Service\PdfService;
+use OCA\Filinq\Controller\PdfController;
+use OCA\Filinq\Service\Pdfa3ConversionService;
+use OCA\Filinq\Service\PdfService;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -36,10 +36,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for PdfController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -105,7 +105,7 @@ class PdfControllerTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new PdfController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$this->mockLogger,
 			$this->mockPdfService,
@@ -276,8 +276,8 @@ class PdfControllerTest extends TestCase {
 
 		$this->mockPdfService->method('renderTemplateToHtml')->willReturn('<h1>Test</h1>');
 		$this->mockPdfa3Service->method('convertHtml')->willThrowException(
-			new \OCA\DocuDesk\Exception\Pdfa3ConversionException(
-				reason: \OCA\DocuDesk\Exception\Pdfa3ConversionException::REASON_CONVERTER_UNAVAILABLE,
+			new \OCA\Filinq\Exception\Pdfa3ConversionException(
+				reason: \OCA\Filinq\Exception\Pdfa3ConversionException::REASON_CONVERTER_UNAVAILABLE,
 				message: 'PDF/A-3 conversion is disabled on this instance.',
 				adminHint: 'Enable it in app config.',
 				code: 503

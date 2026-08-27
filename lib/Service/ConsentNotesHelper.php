@@ -24,29 +24,29 @@
  * the DOTALL (`s`) flag.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-3
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 /**
  * Helper for sentinel-tagged additional-publication-bases region in consent notes.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction Development Team <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-3
  */
@@ -55,12 +55,25 @@ class ConsentNotesHelper {
 	/**
 	 * Opening sentinel comment.
 	 *
+	 * ⚠️ STILL `docudesk:`, DELIBERATELY, ACROSS THE FILINQ RENAME. These two
+	 * markers are not source text — they are WRITTEN INTO the `notes` field of
+	 * every publicationConsent object this app has ever created, and read back
+	 * out by `extract()`/`replace()` to find the managed region. Renaming them
+	 * makes the reader stop matching the marker pair in existing records, so
+	 * the managed region is no longer found: the previously written bases stop
+	 * being recognised as generated content and the next write appends a
+	 * SECOND region instead of replacing the first. Silent, cumulative
+	 * corruption of stored consent notes, with no error anywhere. Changing
+	 * these needs a data migration over the stored notes, not a rename.
+	 *
 	 * @var string
 	 */
 	public const SENTINEL_BEGIN = '<!-- docudesk:additional-publication-bases:begin -->';
 
 	/**
 	 * Closing sentinel comment.
+	 *
+	 * ⚠️ STILL `docudesk:` — see SENTINEL_BEGIN.
 	 *
 	 * @var string
 	 */

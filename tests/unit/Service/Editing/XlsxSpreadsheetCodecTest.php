@@ -10,7 +10,7 @@
  * number is real, which is what makes it convincing.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -23,10 +23,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\PackagePartIo;
-use OCA\DocuDesk\Service\Editing\XlsxSpreadsheetCodec;
+use OCA\Filinq\Service\Editing\PackagePartIo;
+use OCA\Filinq\Service\Editing\XlsxSpreadsheetCodec;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -49,14 +49,16 @@ class XlsxSpreadsheetCodecTest extends TestCase {
 			/**
 			 * @param string|null $sharedXml The part's content, or null when absent.
 			 */
-			public function __construct(private readonly ?string $sharedXml) {
+			public function __construct(
+				private readonly ?string $sharedXml,
+			) {
 			}
 
 			/**
 			 * Serve the shared string table, or refuse like a missing part.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         The requested part.
+			 * @param string $part The requested part.
 			 *
 			 * @return string The part's content.
 			 *

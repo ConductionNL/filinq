@@ -71,10 +71,17 @@ export default {
 			return this.editingRecord !== null
 		},
 
+		/**
+		 * Modal heading — "Edit" when an existing standing consent was handed
+		 * in, "Add" for a create on the Standing Publication Consents surface.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		dialogTitle() {
 			return this.editing
-				? t('docudesk', 'Edit standing consent')
-				: t('docudesk', 'Add standing consent')
+				? t('filinq', 'Edit standing consent')
+				: t('filinq', 'Add standing consent')
 		},
 
 		canSubmit() {
@@ -144,58 +151,58 @@ export default {
 		<div class="standing-consent-form">
 			<NcTextField
 				v-model="form.entityText"
-				:label="t('docudesk', 'Entity text (display name)')"
+				:label="t('filinq', 'Entity text (display name)')"
 				required />
 			<NcSelect
 				v-model="form.entityType"
 				:options="entityTypeOptions"
-				:inputLabel="t('docudesk', 'Entity type')"
-				:label="t('docudesk', 'Entity type')"
+				:inputLabel="t('filinq', 'Entity type')"
+				:label="t('filinq', 'Entity type')"
 				required />
 			<NcSelect
 				v-model="form.consentMethod"
 				:options="consentMethodOptions"
-				:inputLabel="t('docudesk', 'Consent method')"
-				:label="t('docudesk', 'Consent method')"
+				:inputLabel="t('filinq', 'Consent method')"
+				:label="t('filinq', 'Consent method')"
 				required />
 			<NcTextField
 				v-model="form.consentDocument"
-				:label="t('docudesk', 'Consent document (file id or URL)')" />
+				:label="t('filinq', 'Consent document (file id or URL)')" />
 			<NcTextField
 				v-model="form.consentScope"
 				:label="
 					t(
-						'docudesk',
+						'filinq',
 						'Consent scope (e.g. \'2024-2025 municipal decisions\')',
 					)
 				" />
 			<NcTextField
 				v-model="form.legalBasis"
-				:label="t('docudesk', 'Legal basis')" />
+				:label="t('filinq', 'Legal basis')" />
 			<NcTextField
 				v-model="form.validFrom"
-				:label="t('docudesk', 'Valid from (ISO 8601, optional)')" />
+				:label="t('filinq', 'Valid from (ISO 8601, optional)')" />
 			<NcTextField
 				v-model="form.validUntil"
-				:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
+				:label="t('filinq', 'Valid until (ISO 8601, optional)')" />
 			<NcCheckboxRadioSwitch v-model="form.active" type="switch">
-				{{ t('docudesk', 'Active') }}
+				{{ t('filinq', 'Active') }}
 			</NcCheckboxRadioSwitch>
 
 			<div v-if="!form.validUntil" class="form-warning">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'No expiry set — this standing consent will remain in force indefinitely. Consider setting a "Valid until" date.',
 					)
 				}}
 			</div>
 
-			<h4>{{ t('docudesk', 'Match rules') }}</h4>
+			<h4>{{ t('filinq', 'Match rules') }}</h4>
 			<div v-if="!form.matchRules?.length" class="form-warning">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.',
 					)
 				}}
@@ -207,11 +214,11 @@ export default {
 				<NcSelect
 					v-model="rule.type"
 					:options="matchTypeOptions"
-					:inputLabel="t('docudesk', 'Match type')"
-					:label="t('docudesk', 'Match type')" />
+					:inputLabel="t('filinq', 'Match type')"
+					:label="t('filinq', 'Match type')" />
 				<NcTextField
 					v-model="rule.value"
-					:label="t('docudesk', 'Match value')" />
+					:label="t('filinq', 'Match value')" />
 				<!--
 					Icon-only, so it needs its own name. The row index is part of
 					it: every row renders the same icon, and "Remove match rule"
@@ -221,7 +228,7 @@ export default {
 				<NcButton
 					variant="tertiary"
 					:aria-label="
-						t('docudesk', 'Remove match rule {number}', {
+						t('filinq', 'Remove match rule {number}', {
 							number: idx + 1,
 						})
 					"
@@ -232,7 +239,7 @@ export default {
 				</NcButton>
 			</div>
 			<NcButton variant="secondary" @click="addRule">
-				{{ t('docudesk', 'Add match rule') }}
+				{{ t('filinq', 'Add match rule') }}
 			</NcButton>
 
 			<div v-if="formError" class="form-error">
@@ -242,7 +249,7 @@ export default {
 
 		<template #actions>
 			<NcButton variant="tertiary" @click="onCancel">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
@@ -251,7 +258,7 @@ export default {
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ editing ? t('docudesk', 'Save') : t('docudesk', 'Create') }}
+				{{ editing ? t('filinq', 'Save') : t('filinq', 'Create') }}
 			</NcButton>
 		</template>
 	</NcDialog>

@@ -5,10 +5,10 @@ under per-agent, per-tool governance. Hermiq supplies the governance substrate �
 (`read/create/update/delete`) × reach (`self/user/instance/external`) grants
 (`agent-tool-governance`, `agent-capability-reach`), default-deny writes, the
 human-approval gate (`human-approval-gate`), audit — and the app supplies honest tools.
-DocuDesk at HEAD already has the plumbing: 16 derived read tools, four curated tools
+Filinq at HEAD already has the plumbing: 16 derived read tools, four curated tools
 (`generateCorrespondence`, `readDocument`, `editDocument`, `convertDocumentToPdf`), the
 `mcp-generation-tools` change adding `getDocumentStatus` + `anonymizeDocument`, and the
-`DocudeskScannableServices` extension point built for exactly this kind of sibling
+`FilinqScannableServices` extension point built for exactly this kind of sibling
 change. decidesk's `lib/Mcp/` (gated meeting/action-item write tools behind
 `McpMeetingGate`) is the fleet reference for writes that only make sense gated.
 
@@ -49,11 +49,11 @@ that it is `createRequest()`.
 
 ## Approval-gate mechanics
 
-DocuDesk does not build a gate. The tools declare honest write hints
+Filinq does not build a gate. The tools declare honest write hints
 (`scope: create`/`update`, `readOnlyHint: false`); Hermiq's classifier routes them
 through the human-approval gate (hint-driven classification is load-bearing — hermiq #57
 fail-open lesson), and OR's tool-grant whitelist keeps them invisible until an admin
-grants them per agent. What DocuDesk *does* own: transition/validation parity with the
+grants them per agent. What Filinq *does* own: transition/validation parity with the
 UI paths, `mcp` attribution on the persisted records, and result-shape guarantees (no
 citizen data, no signature material). Reach for both tools is `user` — they act on
 records the invoking principal can already reach through the app, never cross-tenant.

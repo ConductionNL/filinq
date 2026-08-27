@@ -4,7 +4,7 @@
  * Unit tests for FolderExtractionJob
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\BackgroundJob
+ * @package  OCA\Filinq\Tests\Unit\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-7
  *
@@ -20,13 +20,13 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\BackgroundJob;
+namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
 use Exception;
-use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\BackgroundJob\FolderExtractionJob;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -39,10 +39,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for FolderExtractionJob
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\BackgroundJob
+ * @package  OCA\Filinq\Tests\Unit\BackgroundJob
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @phpstan-extends                                TestCase

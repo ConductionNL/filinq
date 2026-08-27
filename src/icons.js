@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// Icon registry for docudesk (ADR-077 semantic icon vocabulary).
+// Icon registry for filinq (ADR-077 semantic icon vocabulary).
 //
 // CnAppNav, CnIcon, CnIndexPage / CnDetailPage headers and empty states resolve
 // an `icon` by PascalCase name through the registry that `registerIcons()`
@@ -41,6 +41,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
+import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
@@ -77,6 +78,7 @@ export default {
 	ShieldCheck,
 	ShieldLockOutline,
 	SignatureFreehand,
+	Sitemap,
 	TagMultiple,
 	ViewDashboardOutline,
 }

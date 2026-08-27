@@ -12,7 +12,7 @@ $ grep -rn '\->cancelSigning(' lib/ src/
 (no output)
 ```
 
-So a signing request, once sent, cannot be withdrawn through DocuDesk. The capability
+So a signing request, once sent, cannot be withdrawn through Filinq. The capability
 was built and never connected — gate-57 surfaced it on 2026-08-16 as one of exactly
 three genuine orphaned write capabilities in the app.
 
@@ -44,7 +44,7 @@ It makes no call to ValidSign. It returns `true` unconditionally.
 the capability disconnected.** A user cancels a ValidSign request, is told it
 succeeded, and the request stays live at the provider — signatories can still open
 and sign a document the user believes withdrawn, and the resulting signature is
-legally valid. The user has no way to discover this from DocuDesk.
+legally valid. The user has no way to discover this from Filinq.
 
 That is the "reports success, changes nothing" failure with a legal consequence
 attached.
@@ -73,7 +73,7 @@ The alternatives were considered and rejected:
 | Candidate | Why not |
 |---|---|
 | Creator + write access on the document | Write permission on a file is not authority to withdraw a legal process from every signatory. The two happen to coincide often, which is what makes the conflation easy and wrong. |
-| Creator + app admin | Admin is not a role in the signing domain. A DocuDesk administrator administers an application; they are not a party to an agreement between a requester and its signatories. |
+| Creator + app admin | Admin is not a role in the signing domain. A Filinq administrator administers an application; they are not a party to an agreement between a requester and its signatories. |
 
 ### The consequence, stated rather than discovered
 
@@ -111,7 +111,7 @@ paper over either:
 
 ## Related
 
-- Found by hydra gate-57. Twelve of that gate's fifteen docudesk findings were false
+- Found by hydra gate-57. Twelve of that gate's fifteen filinq findings were false
   positives — routed controller methods it could not see a caller for — fixed in
   [ConductionNL/.github#475](https://github.com/ConductionNL/.github/pull/475). These
   three are the real remainder.

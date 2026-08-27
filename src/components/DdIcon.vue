@@ -10,7 +10,7 @@
 
 <script>
 /**
- * Generic icon component for DocuDesk.
+ * Generic icon component for Filinq.
  *
  * Resolves icons by name from the project's custom SVG set in
  * `src/assets/icons/` and inlines them so they inherit color via

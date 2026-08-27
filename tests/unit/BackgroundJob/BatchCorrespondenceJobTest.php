@@ -4,7 +4,7 @@
  * Unit tests for BatchCorrespondenceJob
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\BackgroundJob
+ * @package  OCA\Filinq\Tests\Unit\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-6.1
  *
@@ -22,10 +22,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\BackgroundJob;
+namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
-use OCA\DocuDesk\BackgroundJob\BatchCorrespondenceJob;
-use OCA\DocuDesk\Service\CorrespondenceService;
+use OCA\Filinq\BackgroundJob\BatchCorrespondenceJob;
+use OCA\Filinq\Service\CorrespondenceService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -38,10 +38,10 @@ use Psr\Log\LoggerInterface;
  * and the run() method via a test double that exposes it.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\BackgroundJob
+ * @package  OCA\Filinq\Tests\Unit\BackgroundJob
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

@@ -17,7 +17,7 @@
  *   - **Orphan files / empty dossier bases** — gracefully returns `[]`.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * Resolves suggested dossier grondslagen bases for a batch of files.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
@@ -55,11 +55,19 @@ class BasesResolverService {
 
 	/**
 	 * OpenRegister register slug that holds dossier objects.
+	 *
+	 * `filinq`, not `dossier`: this app declares ONE register holding all 23
+	 * schemas. Note that the SCHEMA below is still called `dossier` — the two
+	 * used to share a name, and only the register moved.
 	 */
-	private const REGISTER_SLUG = 'dossier';
+	private const REGISTER_SLUG = 'filinq';
 
 	/**
 	 * OpenRegister schema slug for the dossier type.
+	 *
+	 * Unchanged by the register consolidation: a schema slug is resolved by the
+	 * (application, slug) pair and has nothing to do with which register holds
+	 * it.
 	 */
 	private const SCHEMA_SLUG = 'dossier';
 

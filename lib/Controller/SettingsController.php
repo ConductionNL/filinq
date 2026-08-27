@@ -3,16 +3,16 @@
 /**
  * Settings Controller
  *
- * Controller for handling settings-related operations in DocuDesk.
+ * Controller for handling settings-related operations in Filinq.
  * Provides functionality for managing consent and metadata enrichment settings.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/admin-settings/spec.md
  * @spec openspec/specs/admin-settings/spec.md
@@ -23,12 +23,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\AnonymiserBackendStateClient;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Settings\DocuDeskAdmin;
+use OCA\Filinq\Service\AnonymiserBackendStateClient;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -44,10 +44,10 @@ use Psr\Log\LoggerInterface;
  * Controller for handling settings-related operations
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
  */
@@ -102,8 +102,8 @@ class SettingsController extends Controller {
 			if ($user !== null) {
 				$dismissed = $this->config->getUserValue(
 					userId: $user->getUID(),
-					appName: 'docudesk',
-					key: \OCA\DocuDesk\Controller\AnonymiserWarningController::DISMISSED_KEY,
+					appName: 'filinq',
+					key: \OCA\Filinq\Controller\AnonymiserWarningController::DISMISSED_KEY,
 					default: ''
 				) === '1';
 			}
@@ -150,7 +150,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function create(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
@@ -189,7 +189,7 @@ class SettingsController extends Controller {
 	 * Update settings — the canonical ADR-066 write verb.
 	 *
 	 * `OCA\OpenRegister\AppHost\Routes::standard()` ships `settings#update`
-	 * (PUT /api/settings) for EVERY app, and DocuDesk's own SettingsController
+	 * (PUT /api/settings) for EVERY app, and Filinq's own SettingsController
 	 * had no `update()`: the route existed, resolved to this class, and blew up
 	 * on dispatch. Same write path (and the same admin guard) as
 	 * {@see create()}, which stays for the fleet's legacy POST dialect.
@@ -198,7 +198,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function update(): JSONResponse {
 		return $this->create();
 	}//end update()
@@ -214,7 +214,7 @@ class SettingsController extends Controller {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
-	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function load(): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();

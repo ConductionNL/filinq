@@ -10,13 +10,13 @@
  * headless use. If the lock cannot be acquired, the backend fails fast
  * and the cascade falls through to the next tier.
  *
- * Configuration keys (IAppConfig, app "docudesk"):
- *   - docudesk.conversion.backends.libreoffice_enabled  (default "true")
- *   - docudesk.conversion.libreoffice_binary_path       (default "soffice")
- *   - docudesk.conversion.timeout_seconds               (default "60")
+ * Configuration keys (IAppConfig, app "filinq"):
+ *   - filinq.conversion.backends.libreoffice_enabled  (default "true")
+ *   - filinq.conversion.libreoffice_binary_path       (default "soffice")
+ *   - filinq.conversion.timeout_seconds               (default "60")
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Conversion
+ * @package  OCA\Filinq\Service\Conversion
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -32,9 +32,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Conversion;
+namespace OCA\Filinq\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\ConversionFailedException;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use OCP\Lock\ILockingProvider;
@@ -51,11 +51,11 @@ use Throwable;
  * a `proc_open` + stream-select loop enforces the configured timeout.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Conversion
+ * @package   OCA\Filinq\Service\Conversion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/pdf-conversion-service/tasks.md#task-6
  */
@@ -64,17 +64,17 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	/**
 	 * App config key controlling whether this backend is attempted.
 	 */
-	private const ENABLED_KEY = 'docudesk.conversion.backends.libreoffice_enabled';
+	private const ENABLED_KEY = 'filinq.conversion.backends.libreoffice_enabled';
 
 	/**
 	 * App config key for the path to the soffice binary.
 	 */
-	private const BINARY_KEY = 'docudesk.conversion.libreoffice_binary_path';
+	private const BINARY_KEY = 'filinq.conversion.libreoffice_binary_path';
 
 	/**
 	 * App config key for conversion timeout in seconds.
 	 */
-	private const TIMEOUT_KEY = 'docudesk.conversion.timeout_seconds';
+	private const TIMEOUT_KEY = 'filinq.conversion.timeout_seconds';
 
 	/**
 	 * ILockingProvider lock key — one concurrent soffice process per NC host.
@@ -84,7 +84,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	/**
 	 * App identifier used for IAppConfig reads.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * MIME types LibreOffice can convert to PDF. Only common document
@@ -288,7 +288,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		$baseName = $this->stripExtension(name: $name);
 
 		// Write source bytes to a temp file for soffice.
-		$tmpDir = sys_get_temp_dir() . '/docudesk_libreoffice_' . bin2hex(random_bytes(8));
+		$tmpDir = sys_get_temp_dir() . '/filinq_libreoffice_' . bin2hex(random_bytes(8));
 		mkdir($tmpDir, 0700, true);
 
 		$extSuffix = '';

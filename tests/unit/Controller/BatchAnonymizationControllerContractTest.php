@@ -16,10 +16,10 @@
  * to be a CSV *download*, not a JSON envelope.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
@@ -33,17 +33,17 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\BatchAnonymizationController;
-use OCA\DocuDesk\Service\BatchAnonymizeService;
-use OCA\DocuDesk\Service\BatchExtractionService;
-use OCA\DocuDesk\Service\BatchReportService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\BatchUploadService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\FolderBatchService;
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchExtractionService;
+use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\BatchUploadService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\FolderBatchService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -61,10 +61,10 @@ use RuntimeException;
  * Tests for the five batch endpoints that had no contract test.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress                                 PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -162,7 +162,7 @@ class BatchAnonymizationControllerContractTest extends TestCase {
 	 */
 	private function buildController(IUserSession $session): BatchAnonymizationController {
 		return new BatchAnonymizationController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->createMock(LoggerInterface::class),
 			$this->stateService,

@@ -18,7 +18,7 @@ wave-1 changes):
   aggregation, on-demand non-persisting endpoint; wave-1 REQ-DDPUA-003 added
   the `category` finding key (`accessibility`, default `document`) and the
   UI groups findings by category. Config lives at
-  `docudesk.validation.profiles`.
+  `filinq.validation.profiles`.
 - Optional-binary precedent: `LibreOfficeHeadlessBackend::isAvailable()`
   (soffice) and `OcrService::isTesseractAvailable()` +
   `getTesseractVersion()` — probe, admin-settings status display, feature
@@ -34,7 +34,7 @@ wave-1 changes):
 - Real PDF/A-1b/2b/3b conformance verdicts, locally computed, stored per
   document, and reachable through the existing validation surface.
 - Font-embedding truth with actionable remediation guidance.
-- Output verification for `pdfa3-conversion` so DocuDesk stops shipping
+- Output verification for `pdfa3-conversion` so Filinq stops shipping
   unverified conformance claims when a validator is present.
 
 **Non-Goals:**
@@ -49,7 +49,7 @@ wave-1 changes):
   or the composer tree; no CI-corpus work (CB #182 mentions CI — that is
   repo tooling, not app behaviour, and stays out of an app spec).
 - No A-level (`-1a/-2a/-3a`) or PDF/A-4 targets in v1 — b-level matches
-  what DocuDesk generates and what e-depots demand at minimum.
+  what Filinq generates and what e-depots demand at minimum.
 
 ## Decisions
 
@@ -73,9 +73,9 @@ dated PDF/A profiling; a pure-PHP validator — none exists with credible ISO
 not validators, and self-certification is the problem being fixed.
 
 Consequence (accepted): a Java runtime on the server for instances that opt
-in. The binary path (`docudesk.verapdf.binary_path`, default `verapdf` on
-PATH), wall-clock budget (`docudesk.verapdf.max_seconds`, default 60) and an
-enable toggle (`docudesk.verapdf.enabled`, default on-when-found) are app
+in. The binary path (`filinq.verapdf.binary_path`, default `verapdf` on
+PATH), wall-clock budget (`filinq.verapdf.max_seconds`, default 60) and an
+enable toggle (`filinq.verapdf.enabled`, default on-when-found) are app
 config; the admin settings page shows probe status + version next to the
 existing soffice/Tesseract rows.
 
@@ -146,7 +146,7 @@ output after the existing marker guard:
   non-compliant verdict logs a warning but returns the bytes — matching
   the current behavioural envelope so conversion never breaks on validator
   adoption day.
-- **Strict (`docudesk.pdfa3.strict_verify`, default false):** a
+- **Strict (`filinq.pdfa3.strict_verify`, default false):** a
   non-compliant verdict raises the existing
   `Pdfa3ConversionException` reason `output_validation_failed` — the
   spec's no-silent-passthrough contract, now with real teeth.
@@ -163,10 +163,10 @@ Guidance strings (i18n EN/NL) keyed by failure class, attached to the
 report and the findings panel:
 
 - Font failures + document produced by `convertHtml()`/the LO cascade →
-  "regenerate through DocuDesk" (its paths embed fonts; a stale artifact
+  "regenerate through Filinq" (its paths embed fonts; a stale artifact
   predates font config).
 - Font failures + document produced by `convertExistingPdf()` or uploaded →
-  "DocuDesk cannot retroactively embed fonts in imported pages (CB #182);
+  "Filinq cannot retroactively embed fonts in imported pages (CB #182);
   re-convert from the original source file, or accept e-depot rejection
   risk" — honest limitation surfacing.
 - Non-font rule failures → the rule's specification/clause reference plus
@@ -248,7 +248,7 @@ but rule-failing file, and a non-embedded-font import wrapped by
 3. `archival` checks + conformance endpoint + document-detail card.
 4. `pdfa3-conversion` verification hook (report mode), then strict-mode
    config documentation.
-5. Rollback: disable via `docudesk.verapdf.enabled` or remove the binary —
+5. Rollback: disable via `filinq.verapdf.enabled` or remove the binary —
    everything degrades to today's heuristic behaviour; reports remain as
    inert evidence; no data migration.
 

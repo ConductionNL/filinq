@@ -1,7 +1,7 @@
 <template>
 	<div class="dd-gallery">
 		<header class="dd-gallery__masthead">
-			<h1 class="dd-gallery__title">DocuDesk component gallery</h1>
+			<h1 class="dd-gallery__title">Filinq component gallery</h1>
 			<p class="dd-gallery__lead">
 				Living overview of the reusable <code>Dd*</code> design-system
 				components, each shown with its main variants and states. Built with
@@ -28,20 +28,20 @@
 				</p>
 			</div>
 			<div class="dd-demo dd-demo--stack">
-				<DdPageHeader :title="t('docudesk', 'Documents')" />
+				<DdPageHeader :title="t('filinq', 'Documents')" />
 				<DdPageHeader
-					:title="t('docudesk', 'Anonymization')"
+					:title="t('filinq', 'Anonymization')"
 					icon="lock"
 					description="Review detected entities before removing them." />
 				<DdPageHeader
-					:title="t('docudesk', 'Templates')"
+					:title="t('filinq', 'Templates')"
 					icon="article"
 					description="With a right-aligned action.">
 					<template #actions>
 						<DdButton
 							variant="primary"
 							icon="add"
-							:label="t('docudesk', 'New template')" />
+							:label="t('filinq', 'New template')" />
 					</template>
 				</DdPageHeader>
 			</div>
@@ -357,7 +357,7 @@ import DdSkeleton from '../../components/DdSkeleton.vue'
 import DdViewToggle from '../../components/DdViewToggle.vue'
 
 /**
- * Component gallery for DocuDesk.
+ * Component gallery for Filinq.
  *
  * A self-contained, Storybook-style showcase that renders every reusable
  * `Dd*` design-system component with its main variants and states, using

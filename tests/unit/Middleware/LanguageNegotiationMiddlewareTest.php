@@ -4,7 +4,7 @@
  * Unit tests for LanguageNegotiationMiddleware
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Middleware
+ * @package  OCA\Filinq\Tests\Unit\Middleware
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,9 +17,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Middleware;
+namespace OCA\Filinq\Tests\Unit\Middleware;
 
-use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
+use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
 use OCA\OpenRegister\Service\LanguageService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -34,7 +34,7 @@ use Psr\Log\LoggerInterface;
  * and the response-side Content-Language emission.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Middleware
+ * @package  OCA\Filinq\Tests\Unit\Middleware
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
