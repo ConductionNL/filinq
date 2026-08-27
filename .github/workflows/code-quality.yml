@@ -160,7 +160,7 @@ jobs:
       # renders the English source inside an otherwise translated form, silently.
       # The fleet had 30,459 such strings, so this records the current count and
       # fails only when it GROWS — burning it down stays an ordinary PR.
-      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n", "format", "check:schema-l10n"]'
+      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n", "format", "check:schema-l10n", "check:l10n-js"]'
       enable-phpunit: true
       # OpenRegister is a hard dependency: Filinq stores every template,
       # signing request and consent record as an OpenRegister object, and
