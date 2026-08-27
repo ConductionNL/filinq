@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add `wooRequest` and `requestDocument` schemas to the `dossier` register in `lib/Settings/docudesk_register.json` (REQ-DDWRW-001, REQ-DDWRW-008)
+- [ ] 1.1 Add `wooRequest` and `requestDocument` schemas to the `dossier` register in `lib/Settings/filinq_register.json` (REQ-DDWRW-001, REQ-DDWRW-008)
   - All properties per design.md D1 (no requester name/email/address fields); `x-openregister-lifecycle` on `wooRequest` with canonical `initial: registered` and the REQ-DDWRW-008 transitions; register-i18n tags on new user-facing string fields; register version bump with changelog entry.
 
 - [ ] 1.2 Add seed data: demo `wooRequest` + unique/duplicate `requestDocument` rows, the additional Woo Art. 5.1/5.2 `base` ground objects, and `woo-inventarislijst` + `woo-besluit` template seeds (design.md Seed Data, REQ-DDWRW-005/006/007)
@@ -39,7 +39,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests for WooRequestService (deadlines, dedupe, guards, package refusal) and controller — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - PUT-semantic saves verified (a non-changed field survives a status transition).
 
 - [ ] 4.2 Playwright e2e specs `tests/e2e/workflows/woo-request-workflow.spec.ts` + `tests/e2e/spec-coverage/woo-requests.spec.ts` covering the `@e2e`-referenced scenarios end-to-end with OpenRegister on the Postgres dev instance

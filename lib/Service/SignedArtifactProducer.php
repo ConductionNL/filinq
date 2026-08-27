@@ -21,12 +21,12 @@
  *    assertion (portal-signing-surface REQ-DDPSS-004).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,11 +37,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IRequest;
@@ -52,10 +52,10 @@ use RuntimeException;
  * Produces and stores the signed artifact for a completing signing request.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
  */

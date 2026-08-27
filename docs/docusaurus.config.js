@@ -1,13 +1,13 @@
 // @ts-check
 
 /**
- * DocuDesk documentation site.
+ * Filinq documentation site.
  *
  * Built on @conduction/docusaurus-preset for brand defaults (tokens,
  * theme swizzles for Navbar / Footer, four-locale i18n scaffolding,
  * KvK / BTW copyright). Site-specific overrides — locales, sidebar
  * path, mermaid theme, redocusaurus preset for the OpenAPI spec, and
- * docudesk-only navbar items — are passed through createConfig() opts.
+ * filinq-only navbar items — are passed through createConfig() opts.
  */
 
 const { createConfig, baseFooterLinks } = require('@conduction/docusaurus-preset');
@@ -19,15 +19,17 @@ const { createConfig, baseFooterLinks } = require('@conduction/docusaurus-preset
 const BRAND_THEME = require.resolve('@conduction/docusaurus-preset/theme');
 
 const config = createConfig({
-  title: 'DocuDesk',
+  title: 'Filinq',
   tagline: 'Flexible document management for your organization',
-  url: 'https://docudesk.conduction.nl',
+  /* Still the OLD host on purpose: the docs subdomain moves with DNS on its
+     own schedule, and docs/static/CNAME must keep matching this value. */
+  url: 'https://filinq.conduction.nl',
   baseUrl: '/',
 
   organizationName: 'ConductionNL',
-  projectName: 'docudesk',
+  projectName: 'filinq',
 
-  /* DocuDesk ships en + nl markdown; the brand preset's default i18n
+  /* Filinq ships en + nl markdown; the brand preset's default i18n
      block (nl/en/de/fr) is replaced wholesale here so we don't pull
      in stub locales the docs don't translate yet. */
   i18n: {
@@ -39,10 +41,10 @@ const config = createConfig({
     },
   },
 
-  /* The docudesk docs source lives at the repo root of `docs/` rather
+  /* The filinq docs source lives at the repo root of `docs/` rather
      than under a `docs/` subfolder, so we override the preset's default
      `presets:` block to point `docs.path` at './' and disable the blog
-     plugin. customCss carries docudesk-specific CSS only — brand tokens
+     plugin. customCss carries filinq-specific CSS only — brand tokens
      and the theme swizzles are auto-loaded by the brand theme entry in
      `themes:` below. The redocusaurus preset is appended for the
      OpenAPI spec rendered at /api. */
@@ -67,7 +69,7 @@ const config = createConfig({
             'features/pdf-generation.md',
           ],
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://codeberg.org/Conduction/docudesk/src/branch/main/docs/',
+          editUrl: 'https://github.com/ConductionNL/filinq/edit/main/docs/',
         },
         blog: false,
         theme: {
@@ -80,7 +82,7 @@ const config = createConfig({
       {
         specs: [
           {
-            spec: 'static/oas/docudesk-api.yaml',
+            spec: 'static/oas/filinq-api.yaml',
             route: '/api',
           },
         ],
@@ -115,8 +117,8 @@ const config = createConfig({
   ],
 
   /* Brand navbar provides locale dropdown + GitHub by default; we
-     replace items[] with docudesk's own (Documentation sidebar link,
-     API link, docudesk GitHub, locale dropdown). Object.assign in
+     replace items[] with filinq's own (Documentation sidebar link,
+     API link, filinq GitHub, locale dropdown). Object.assign in
      createConfig is shallow, so items: replaces wholesale. */
   navbar: {
     items: [
@@ -132,8 +134,8 @@ const config = createConfig({
         position: 'right',
       },
       {
-        href: 'https://codeberg.org/Conduction/docudesk',
-        label: 'Codeberg',
+        href: 'https://github.com/ConductionNL/filinq',
+        label: 'GitHub',
         position: 'right',
       },
       { type: 'localeDropdown', position: 'right' },
@@ -159,7 +161,7 @@ const config = createConfig({
   /* themeConfig is shallow-merged into the preset's defaults
      (colorMode + navbar + footer). prism + mermaid land alongside. */
   themeConfig: {
-    image: 'img/og-docudesk.png',
+    image: 'img/og-filinq.png',
     prism: {
       theme: require('prism-react-renderer/themes/github'),
       darkTheme: require('prism-react-renderer/themes/dracula'),

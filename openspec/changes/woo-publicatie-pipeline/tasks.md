@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add `publicationRecord` and `publicationLogEntry` schemas to the `document` register in `lib/Settings/docudesk_register.json` (REQ-DDWPP-001, REQ-DDWPP-003)
+- [ ] 1.1 Add `publicationRecord` and `publicationLogEntry` schemas to the `document` register in `lib/Settings/filinq_register.json` (REQ-DDWPP-001, REQ-DDWPP-003)
   - All properties per design.md D1; `x-openregister-lifecycle` on `publicationRecord` with canonical `initial: draft` and the REQ-DDWPP-003 transitions guarded on the readiness booleans; log schema immutable; register version bump with changelog entry.
 
 - [ ] 1.2 Add seed data: one `published` record with full log trail, one `draft` record blocked on an open objection window (design.md Seed Data)
@@ -47,7 +47,7 @@
 ## 5. Quality
 
 - [ ] 5.1 PHPUnit unit tests for pipeline service, clearance query, controller and lifecycle guards — minimum 75% coverage on new code
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Consent transitions validated against the GDPR/WOO lifecycle; PUT-semantic saves verified (a non-changed field survives).
 
 - [ ] 5.2 Playwright e2e specs `tests/e2e/workflows/woo-publicatie-pipeline.spec.ts` + `tests/e2e/spec-coverage/woo-publications.spec.ts` covering the `@e2e`-referenced scenarios end-to-end with OpenRegister + OpenCatalogi on the Postgres dev instance

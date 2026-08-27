@@ -7,10 +7,10 @@ import { consentStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Standing Publication Consents')"
+			:title="t('filinq', 'Standing Publication Consents')"
 			:description="
 				t(
-					'docudesk',
+					'filinq',
 					'Manage entity-level standing publication consent records',
 				)
 			"
@@ -40,23 +40,23 @@ import { consentStore } from '../../store/store.js'
 			<template #above-table>
 				<div class="consent-stats">
 					<CnStatsBlock
-						:title="t('docudesk', 'Total')"
+						:title="t('filinq', 'Total')"
 						:count="entityConsents.length"
-						:countLabel="t('docudesk', 'records')"
+						:countLabel="t('filinq', 'records')"
 						variant="default"
 						horizontal
 						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Active')"
+						:title="t('filinq', 'Active')"
 						:count="activeCount"
-						:countLabel="t('docudesk', 'active')"
+						:countLabel="t('filinq', 'active')"
 						variant="success"
 						horizontal
 						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Inactive')"
+						:title="t('filinq', 'Inactive')"
 						:count="inactiveCount"
-						:countLabel="t('docudesk', 'inactive')"
+						:countLabel="t('filinq', 'inactive')"
 						variant="warning"
 						horizontal
 						showZeroCount />
@@ -66,7 +66,7 @@ import { consentStore } from '../../store/store.js'
 			<!-- Entity type badge -->
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
+					:label="row.entityType || t('filinq', 'Unknown')"
 					:colorMap="entityTypeColorMap" />
 			</template>
 
@@ -90,7 +90,7 @@ import { consentStore } from '../../store/store.js'
 			<!-- Active column -->
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="row.active ? t('docudesk', 'Yes') : t('docudesk', 'No')"
+					:label="row.active ? t('filinq', 'Yes') : t('filinq', 'No')"
 					:colorMap="activeColorMap" />
 			</template>
 
@@ -114,13 +114,13 @@ import { consentStore } from '../../store/store.js'
 						<template #icon>
 							<ClockRemove :size="20" />
 						</template>
-						{{ t('docudesk', 'Expire') }}
+						{{ t('filinq', 'Expire') }}
 					</NcActionButton>
 					<NcActionButton closeAfterClick @click="revokeConsent(row)">
 						<template #icon>
 							<Cancel :size="20" />
 						</template>
-						{{ t('docudesk', 'Revoke') }}
+						{{ t('filinq', 'Revoke') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -139,14 +139,14 @@ import { consentStore } from '../../store/store.js'
 		-->
 		<ConfirmActionDialog
 			v-if="revokeTarget"
-			:name="t('docudesk', 'Revoke standing consent')"
+			:name="t('filinq', 'Revoke standing consent')"
 			:message="
 				t(
-					'docudesk',
+					'filinq',
 					'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.',
 				)
 			"
-			:confirmLabel="t('docudesk', 'Revoke')"
+			:confirmLabel="t('filinq', 'Revoke')"
 			:busy="revoking"
 			@confirm="executeRevoke"
 			@cancel="cancelRevoke" />
@@ -191,23 +191,23 @@ export default {
 			},
 
 			consentMethodColorMap: {
-				[t('docudesk', 'Written')]: 'success',
-				[t('docudesk', 'Verbal')]: 'primary',
-				[t('docudesk', 'Digital')]: 'default',
-				[t('docudesk', 'Implicit')]: 'warning',
+				[t('filinq', 'Written')]: 'success',
+				[t('filinq', 'Verbal')]: 'primary',
+				[t('filinq', 'Digital')]: 'default',
+				[t('filinq', 'Implicit')]: 'warning',
 			},
 
 			activeColorMap: {
-				[t('docudesk', 'Yes')]: 'success',
-				[t('docudesk', 'No')]: 'error',
+				[t('filinq', 'Yes')]: 'success',
+				[t('filinq', 'No')]: 'error',
 			},
 
 			consentStatusColorMap: {
-				[t('docudesk', 'Pending')]: 'default',
-				[t('docudesk', 'Approved')]: 'success',
-				[t('docudesk', 'Objected')]: 'error',
-				[t('docudesk', 'No Response')]: 'warning',
-				[t('docudesk', 'Anonymized')]: 'primary',
+				[t('filinq', 'Pending')]: 'default',
+				[t('filinq', 'Approved')]: 'success',
+				[t('filinq', 'Objected')]: 'error',
+				[t('filinq', 'No Response')]: 'warning',
+				[t('filinq', 'Anonymized')]: 'primary',
 			},
 		}
 	},
@@ -249,29 +249,29 @@ export default {
 			return [
 				{
 					key: 'entityText',
-					label: t('docudesk', 'Entity'),
+					label: t('filinq', 'Entity'),
 					sortable: true,
 				},
-				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
+				{ key: 'entityType', label: t('filinq', 'Type'), sortable: true },
 				{
 					key: 'consentMethod',
-					label: t('docudesk', 'Consent Method'),
+					label: t('filinq', 'Consent Method'),
 					sortable: true,
 				},
 				{
 					key: 'validFrom',
-					label: t('docudesk', 'Valid From'),
+					label: t('filinq', 'Valid From'),
 					sortable: true,
 				},
 				{
 					key: 'validUntil',
-					label: t('docudesk', 'Valid Until'),
+					label: t('filinq', 'Valid Until'),
 					sortable: true,
 				},
-				{ key: 'active', label: t('docudesk', 'Active'), sortable: true },
+				{ key: 'active', label: t('filinq', 'Active'), sortable: true },
 				{
 					key: 'consentStatus',
-					label: t('docudesk', 'Status'),
+					label: t('filinq', 'Status'),
 					sortable: true,
 				},
 			]
@@ -297,7 +297,7 @@ export default {
 			if (consentStore.error) {
 				return consentStore.error
 			}
-			return t('docudesk', 'No standing consent records found')
+			return t('filinq', 'No standing consent records found')
 		},
 	},
 
@@ -447,12 +447,12 @@ export default {
 		 */
 		formatConsentMethod(method) {
 			const map = {
-				written: t('docudesk', 'Written'),
-				verbal: t('docudesk', 'Verbal'),
-				digital: t('docudesk', 'Digital'),
-				implicit: t('docudesk', 'Implicit'),
+				written: t('filinq', 'Written'),
+				verbal: t('filinq', 'Verbal'),
+				digital: t('filinq', 'Digital'),
+				implicit: t('filinq', 'Implicit'),
 			}
-			return map[method] || method || t('docudesk', 'Unknown')
+			return map[method] || method || t('filinq', 'Unknown')
 		},
 
 		/**
@@ -463,13 +463,13 @@ export default {
 		 */
 		formatStatus(status) {
 			const map = {
-				pending: t('docudesk', 'Pending'),
-				consent_given: t('docudesk', 'Approved'),
-				objection_received: t('docudesk', 'Objected'),
-				no_response: t('docudesk', 'No Response'),
-				anonymized: t('docudesk', 'Anonymized'),
+				pending: t('filinq', 'Pending'),
+				consent_given: t('filinq', 'Approved'),
+				objection_received: t('filinq', 'Objected'),
+				no_response: t('filinq', 'No Response'),
+				anonymized: t('filinq', 'Anonymized'),
 			}
-			return map[status] || status || t('docudesk', 'Unknown')
+			return map[status] || status || t('filinq', 'Unknown')
 		},
 
 		/**

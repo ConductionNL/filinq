@@ -1,18 +1,18 @@
 <?php
 
 /**
- * DocuDesk Observability Registrar
+ * Filinq Observability Registrar
  *
- * Wires the AppHost metrics engine into DocuDesk's container. Extracted from
+ * Wires the AppHost metrics engine into Filinq's container. Extracted from
  * `Application`.
  *
  * @category  AppInfo
- * @package   OCA\DocuDesk\AppInfo
+ * @package   OCA\Filinq\AppInfo
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
  *
@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\AppInfo;
+namespace OCA\Filinq\AppInfo;
 
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Container\ContainerInterface;
@@ -31,10 +31,10 @@ use Psr\Container\ContainerInterface;
  * Registers the AppHost MetricsEngine under its OpenRegister FQCN.
  *
  * @category AppInfo
- * @package  OCA\DocuDesk\AppInfo
+ * @package  OCA\Filinq\AppInfo
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
  */
@@ -42,7 +42,7 @@ class ObservabilityRegistrar {
 	/**
 	 * Wire the AppHost metrics engine.
 	 *
-	 * DocuDesk's HealthController / MetricsController do NOT subclass the
+	 * Filinq's HealthController / MetricsController do NOT subclass the
 	 * OpenRegister generics and do NOT take engine collaborators as constructor
 	 * parameters — they resolve them out of the container BY FQCN STRING at
 	 * dispatch time and degrade (health `degraded` / metrics 503) when the
@@ -54,10 +54,10 @@ class ObservabilityRegistrar {
 	 * collaborators, and do NOT turn those controllers back into subclasses of
 	 * the OpenRegister generics. Nextcloud's router `ReflectionClass()`es every
 	 * file in lib/Controller/ while MATCHING a route, so one unresolvable parent
-	 * returns HTTP 500 for EVERY docudesk route — and DocuDesk does not declare
+	 * returns HTTP 500 for EVERY filinq route — and Filinq does not declare
 	 * `<app>openregister</app>`, so an admin can create exactly that
 	 * configuration. `extends` is resolved by the AUTOLOADER, not this
-	 * container, so lazy registration cannot rescue it. See docudesk#369 /
+	 * container, so lazy registration cannot rescue it. See filinq#369 /
 	 * decidesk#377.
 	 *
 	 * MetricsEngine still needs an explicit factory: OpenRegister's own

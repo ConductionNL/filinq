@@ -5,11 +5,14 @@ status: done
 # anonymization-link Specification
 
 ## Purpose
-Records the mapping between a source Nextcloud file and its anonymised counterpart through an `anonymizationLink` schema in the document register. Each successful run persists the source and anonymised file IDs, names, paths, output format, replacement count, and operator, with both file IDs made facetable so links can be looked up in either direction via the OpenRegister search API. This provides a queryable, idempotent record of which documents have been anonymised and into what.
+
+@e2e exclude Backend data-model and OR-search-API contract spec: schema strict-validation and facetable flags, SettingsInitializer version-compare re-import, the best-effort UPSERT in AnonymizationService::recordAnonymizationLink, and the shape of OR search responses. No browser surface — the UI consuming these links is specified in document-register and my-documents. Covered by PHPUnit tests/unit/Service/AnonymizationLinkServiceTest.php (REQ-ALINK-02/04 found-update, not-found-create and best-effort-failure paths).
+
+Records the mapping between a source Nextcloud file and its anonymised counterpart through an `anonymizationLink` schema in the `filinq` register. Each successful run persists the source and anonymised file IDs, names, paths, output format, replacement count, and operator, with both file IDs made facetable so links can be looked up in either direction via the OpenRegister search API. This provides a queryable, idempotent record of which documents have been anonymised and into what.
 ## Requirements
 ### Requirement: AnonymizationLink Schema — Data Model (REQ-ALINK-01)
 
-The `document` register SHALL contain an `anonymizationLink` schema that records the mapping between a source NC file and its anonymised counterpart. The schema SHALL declare full `required`, `properties`, and `hardValidation: true` per OR Adoption Decision 3 (document-register spec). `sourceFileId` and `anonymizedFileId` are required fields and SHALL be declared `facetable: true` to enable OR search API faceted filtering in both directions.
+The `filinq` register SHALL contain an `anonymizationLink` schema that records the mapping between a source NC file and its anonymised counterpart. The schema SHALL declare full `required`, `properties`, and `hardValidation: true` per OR Adoption Decision 3 (document-register spec). `sourceFileId` and `anonymizedFileId` are required fields and SHALL be declared `facetable: true` to enable OR search API faceted filtering in both directions.
 
 | Field | Type | Required | Facetable | Description |
 |-------|------|----------|-----------|-------------|
@@ -44,7 +47,7 @@ The `document` register SHALL contain an `anonymizationLink` schema that records
 - **WHEN** `SettingsInitializer::initialize()` runs after the `anonymizationLink` schema is added
 - **THEN** it SHALL detect `info.version "5.3.0" > stored "5.2.0"` via `version_compare`
 - **AND** it SHALL call `ConfigurationService::importFromApp()` to persist the updated config
-- **AND** the `anonymizationLink` schema SHALL be available in the `document` register
+- **AND** the `anonymizationLink` schema SHALL be available in the `filinq` register
 
 ### Requirement: Idempotent UPSERT on Successful Anonymisation (REQ-ALINK-02)
 
@@ -104,26 +107,26 @@ The `anonymizationLink` schema SHALL support two query directions via OR's stand
 **Forward query** (source → anonymised): retrieve the anonymised file for a given source file.
 
 ```
-GET /api/objects?register=document&schema=anonymizationLink&sourceFileId=<NC_FILE_ID>
+GET /api/objects?register=filinq&schema=anonymizationLink&sourceFileId=<NC_FILE_ID>
 ```
 
 **Reverse query** (anonymised → source): retrieve the source file for a given anonymised file.
 
 ```
-GET /api/objects?register=document&schema=anonymizationLink&anonymizedFileId=<NC_FILE_ID>
+GET /api/objects?register=filinq&schema=anonymizationLink&anonymizedFileId=<NC_FILE_ID>
 ```
 
 #### Scenario: Forward lookup resolves anonymised file for a source
 
 - **GIVEN** an `anonymizationLink` record exists with `sourceFileId: 42` and `anonymizedFileId: 99`
-- **WHEN** the OR search API is queried with `register=document&schema=anonymizationLink&sourceFileId=42`
+- **WHEN** the OR search API is queried with `register=filinq&schema=anonymizationLink&sourceFileId=42`
 - **THEN** the response SHALL contain the link record
 - **AND** `anonymizedFileId` SHALL equal `99`
 
 #### Scenario: Reverse lookup resolves source for an anonymised file
 
 - **GIVEN** an `anonymizationLink` record exists with `sourceFileId: 42` and `anonymizedFileId: 99`
-- **WHEN** the OR search API is queried with `register=document&schema=anonymizationLink&anonymizedFileId=99`
+- **WHEN** the OR search API is queried with `register=filinq&schema=anonymizationLink&anonymizedFileId=99`
 - **THEN** the response SHALL contain the link record
 - **AND** `sourceFileId` SHALL equal `42`
 

@@ -7,9 +7,7 @@
 		<div class="dossier-dialog">
 			<!-- Single file: read-only filename, no dossier name -->
 			<div v-if="singleFile" class="single-file">
-				<span class="single-file__label">{{
-					t('docudesk', 'Document')
-				}}</span>
+				<span class="single-file__label">{{ t('filinq', 'Document') }}</span>
 				<span class="single-file__name">{{ fileName }}</span>
 				<NcNoteCard v-if="error" type="error">
 					{{ error }}
@@ -20,8 +18,8 @@
 				<NcTextField
 					ref="dossierInput"
 					:modelValue="dossierName"
-					:label="t('docudesk', 'Dossier name')"
-					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
+					:label="t('filinq', 'Dossier name')"
+					:placeholder="t('filinq', 'e.g. Buurtinitiatieven 2026')"
 					:disabled="submitting"
 					:error="!!error"
 					:helperText="error"
@@ -30,7 +28,7 @@
 				<NcNoteCard type="info">
 					{{
 						t(
-							'docudesk',
+							'filinq',
 							'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.',
 						)
 					}}
@@ -43,12 +41,12 @@
 				type="switch"
 				:disabled="submitting"
 				@update:modelValue="$emit('update:grondslagen', $event)">
-				{{ t('docudesk', 'Establish legal grounds (grondslagen)') }}
+				{{ t('filinq', 'Establish legal grounds (grondslagen)') }}
 			</NcCheckboxRadioSwitch>
 			<NcNoteCard type="info">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'When enabled, you can review and adjust the legal grounds for each detected entity before anonymizing. When disabled, default grounds are applied and you can anonymize right away.',
 					)
 				}}
@@ -59,7 +57,7 @@
 				variant="tertiary"
 				:disabled="submitting"
 				@click="$emit('cancel')">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
@@ -68,7 +66,7 @@
 				<template v-if="submitting" #icon>
 					<NcLoadingIcon :size="18" />
 				</template>
-				{{ t('docudesk', 'Continue to anonymization') }}
+				{{ t('filinq', 'Continue to anonymization') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -86,7 +84,7 @@ import {
 } from '@nextcloud/vue'
 
 /**
- * Upload-confirmation dialog for the DocuDesk anonymisation surface.
+ * Upload-confirmation dialog for the Filinq anonymisation surface.
  *
  * Two shapes behind one step: a single document shows its read-only name,
  * two or more offer a dossier title. Both always confirm the grondslagen
@@ -171,8 +169,8 @@ export default {
 		 */
 		dialogName() {
 			return this.singleFile
-				? t('docudesk', 'Anonymize document')
-				: t('docudesk', 'Create dossier')
+				? t('filinq', 'Anonymize document')
+				: t('filinq', 'Create dossier')
 		},
 	},
 

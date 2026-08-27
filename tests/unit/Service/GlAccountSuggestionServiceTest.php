@@ -9,11 +9,11 @@
  * candidate-set-only guarantee (REQ-GLS-04).
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Service
+ * @package   OCA\Filinq\Tests\Unit\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,15 +23,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
-use OCA\DocuDesk\Service\GlAccountSuggestionService;
-use OCA\DocuDesk\Service\OpenRegisterResolver;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\Suggestion\CategoryKeywordMapper;
-use OCA\DocuDesk\Service\Suggestion\HistoryRanker;
-use OCA\DocuDesk\Service\Suggestion\SupplierIdentityResolver;
+use OCA\Filinq\Service\GlAccountSuggestionService;
+use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
+use OCA\Filinq\Service\Suggestion\HistoryRanker;
+use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
@@ -81,11 +81,11 @@ class GlAccountSuggestionServiceTest extends TestCase {
 		// null — which is exactly what the guard exists to catch — so the
 		// configured path has to be stated for these tests to exercise it.
 		$settingsService->method('resolveFinancialExtractionBinding')
-			->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+			->willReturn(['register' => 'filinq', 'schema' => 'financialExtraction']);
 		$settingsService->method('resolveGlAccountBookingBinding')
-			->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+			->willReturn(['register' => 'filinq', 'schema' => 'glAccountBooking']);
 		$settingsService->method('resolveGlAccountMappingRuleBinding')
-			->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
+			->willReturn(['register' => 'filinq', 'schema' => 'glAccountMappingRule']);
 
 		$this->config = $this->createMock(IAppConfig::class);
 		$this->config->method('getValueString')->willReturnCallback(
@@ -300,7 +300,7 @@ class GlAccountSuggestionServiceTest extends TestCase {
 						&& $object['accountCode'] === '4300'
 						&& $object['source'] === 'correction';
 				}),
-				'document',
+				'filinq',
 				'glAccountBooking'
 			);
 
@@ -410,11 +410,11 @@ class GlAccountSuggestionServiceTest extends TestCase {
 		// null — which is exactly what the guard exists to catch — so the
 		// configured path has to be stated for these tests to exercise it.
 		$settingsService->method('resolveFinancialExtractionBinding')
-			->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+			->willReturn(['register' => 'filinq', 'schema' => 'financialExtraction']);
 		$settingsService->method('resolveGlAccountBookingBinding')
-			->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+			->willReturn(['register' => 'filinq', 'schema' => 'glAccountBooking']);
 		$settingsService->method('resolveGlAccountMappingRuleBinding')
-			->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
+			->willReturn(['register' => 'filinq', 'schema' => 'glAccountMappingRule']);
 
 		$service = new GlAccountSuggestionService(
 			settingsService: $settingsService,
@@ -468,11 +468,11 @@ class GlAccountSuggestionServiceTest extends TestCase {
 		// null — which is exactly what the guard exists to catch — so the
 		// configured path has to be stated for these tests to exercise it.
 		$settingsService->method('resolveFinancialExtractionBinding')
-			->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+			->willReturn(['register' => 'filinq', 'schema' => 'financialExtraction']);
 		$settingsService->method('resolveGlAccountBookingBinding')
-			->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+			->willReturn(['register' => 'filinq', 'schema' => 'glAccountBooking']);
 		$settingsService->method('resolveGlAccountMappingRuleBinding')
-			->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
+			->willReturn(['register' => 'filinq', 'schema' => 'glAccountMappingRule']);
 
 		$service = new GlAccountSuggestionService(
 			settingsService: $settingsService,

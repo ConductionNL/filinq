@@ -4,7 +4,7 @@
  * Unit tests for WooProfileService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-4.6
  *
@@ -22,9 +22,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -33,10 +33,10 @@ use PHPUnit\Framework\TestCase;
  * Unit tests for WooProfileService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -127,7 +127,7 @@ class WooProfileServiceTest extends TestCase {
 
 		$this->mockAppConfig->expects($this->once())
 			->method('setValueString')
-			->with('docudesk', 'docudesk_woo_entity_profiles', json_encode($profile));
+			->with('filinq', 'filinq_woo_entity_profiles', json_encode($profile));
 
 		$this->service->saveProfile($profile);
 

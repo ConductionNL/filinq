@@ -42,7 +42,7 @@ describe('compareDocuments', () => {
 
 		expect(postMock).toHaveBeenCalledTimes(1)
 		const [url, body] = postMock.mock.calls[0]
-		expect(url).toContain('/apps/docudesk/api/comparison/compare')
+		expect(url).toContain('/apps/filinq/api/comparison/compare')
 		expect(body).toEqual({
 			left: { fileId: 42 },
 			right: { fileId: 88, versionTimestamp: 123 },

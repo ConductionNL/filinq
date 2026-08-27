@@ -119,7 +119,7 @@ and MUST NOT delete the underlying file.
 ### Requirement: Auto-dossier on multi-upload (REQ-DDDMU-005)
 
 The app MUST show the auto-dossier modal (GH #47) when more than one document
-is uploaded in a single action on a DocuDesk upload surface: dossier
+is uploaded in a single action on a Filinq upload surface: dossier
 name (prefilled), optional description, and a "grondslagen allemaal
 geselecteerd" toggle that, when on, preselects all six canonical `base`
 grondslagen. Confirming MUST create the dossier bound to a new folder
@@ -128,7 +128,7 @@ dossier. Uploading a single document MUST NOT show the modal.
 
 #### Scenario: Multi-upload triggers the modal, single upload does not
 
-- GIVEN a DocuDesk upload surface
+- GIVEN a Filinq upload surface
 - WHEN the operator uploads three documents in one action, fills a name and confirms with the toggle on
 - THEN a dossier exists with the three documents in its folder and all six canonical grondslagen selected
 - AND a subsequent single-document upload shows no modal

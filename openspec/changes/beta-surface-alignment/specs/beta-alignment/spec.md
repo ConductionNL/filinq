@@ -6,9 +6,9 @@ status: proposed
 
 ## Purpose
 
-Guarantee that DocuDesk's four public surfaces — `appinfo/info.xml`,
+Guarantee that Filinq's four public surfaces — `appinfo/info.xml`,
 `src/manifest.json` nav, the conduction.nl product page (EN + NL), and the
-docudesk.conduction.nl docs site — describe the same feature vocabulary, the
+filinq.conduction.nl docs site — describe the same feature vocabulary, the
 same version/status, and only claims that are verifiable against `lib/` at
 HEAD. An app cannot be beta-released while any public surface asserts a
 feature, standard, or integration that does not exist in code.
@@ -90,6 +90,6 @@ location.
 - GIVEN `appinfo/info.xml` `<documentation>` links to
   `conduction.gitbook.io/docudesk-nextcloud/`
 - AND the app's `docs/` directory is a live Docusaurus site deployed at
-  `docudesk.conduction.nl`
+  `filinq.conduction.nl`
 - WHEN the beta-alignment audit is run
 - THEN the `<documentation>` links SHALL be updated to the live site

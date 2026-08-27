@@ -63,7 +63,7 @@
 import { NcButton, NcSelect } from '@nextcloud/vue'
 
 /**
- * Pagination control for DocuDesk index pages.
+ * Pagination control for Filinq index pages.
  *
  * Renders First/Previous/numbers/Next/Last navigation plus a page-size
  * selector. Hidden entirely when there is only one page and the total

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — folder-batch-analysis (UI surface).
@@ -34,7 +34,7 @@ test.describe('folder-batch-analysis — folder analysis UI', () => {
 		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-by-folder-path-existing-behavior
 		const guard = attachConsoleGuard(page)
 		await go(page, 'folder-anonymization')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/folder-anonymization/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/folder-anonymization/)
 
 		await expect(
 			page.getByRole('heading', { name: 'Folder Analysis & Anonymization' }),
@@ -89,7 +89,7 @@ test.describe('folder-batch-analysis — folder analysis UI', () => {
 		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-by-folder-path-existing-behavior
 		await go(page, '')
 		await navClick(page, 'Folder Analysis')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/folder-anonymization/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/folder-anonymization/)
 		await expect(
 			page.getByRole('heading', { name: 'Folder Analysis & Anonymization' }),
 		).toBeVisible()

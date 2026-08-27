@@ -6,8 +6,8 @@ status: proposed
 
 ## Purpose
 
-DocuDesk's assistant-facing document operations over the ADR-063 MCP
-surface established by `docudesk-mcp-adoption`: the operation map that
+Filinq's assistant-facing document operations over the ADR-063 MCP
+surface established by `filinq-mcp-adoption`: the operation map that
 binds `list_templates` and `generate_document` to the existing derived
 and curated tools instead of duplicating them, two new curated tools
 (`getDocumentStatus` — a read-only cross-service status aggregate;
@@ -22,9 +22,9 @@ logging). All standing refusals of the adoption baseline remain binding.
 ### Requirement: Assistant document operations map onto the existing surface without duplication (REQ-DDMGT-001)
 
 The system MUST serve `list_templates` via the derived
-`docudesk.template.search` / `docudesk.template.get` tools and
-`generate_document` via the curated `docudesk.generateCorrespondence`
-tool (both established by `docudesk-mcp-adoption`), and MUST NOT declare
+`filinq.template.search` / `filinq.template.get` tools and
+`generate_document` via the curated `filinq.generateCorrespondence`
+tool (both established by `filinq-mcp-adoption`), and MUST NOT declare
 a second hand-written tool for either operation (ADR-063: no hand-written
 tool for behaviour the platform derives; no shadow tools). This change
 MUST NOT enable any additional schema in `x-openregister-mcp` and MUST
@@ -33,8 +33,8 @@ NOT add any derived write verb.
 #### Scenario: Template listing uses the derived tool
 
 - GIVEN an agent asked which besluit templates exist
-- WHEN it enumerates the DocuDesk tool surface
-- THEN `docudesk.template.search` is the only template-listing tool
+- WHEN it enumerates the Filinq tool surface
+- THEN `filinq.template.search` is the only template-listing tool
 - AND no tool named like `listTemplates` exists
 - @e2e exclude registry-shape contract enforced by OR's scanner; covered by the MCP surface probe (tests/integration/Mcp/McpSurfaceTest.php)
 
@@ -42,13 +42,13 @@ NOT add any derived write verb.
 
 - GIVEN an agent generating a receipt-confirmation letter
 - WHEN it enumerates generation-capable tools
-- THEN `docudesk.generateCorrespondence` is the only generation tool
+- THEN `filinq.generateCorrespondence` is the only generation tool
 - AND the register JSON carries no new `x-openregister-mcp` block from this change
 - @e2e exclude registry-shape contract; covered by the MCP surface probe (tests/integration/Mcp/McpSurfaceTest.php)
 
 ### Requirement: A curated read-only document-status aggregate tool exists (REQ-DDMGT-002)
 
-The system MUST expose `docudesk.getDocumentStatus` as a curated
+The system MUST expose `filinq.getDocumentStatus` as a curated
 `#[McpTool]` on a real public method
 (`FileListingService::getFileStatus(int $fileId)`), annotated
 `scope: 'read'`, `readOnlyHint: true`, `destructiveHint: false`,
@@ -62,10 +62,10 @@ a not-found result indistinguishable from a nonexistent file.
 #### Scenario: Agent answers "is that document anonymised yet?"
 
 - GIVEN a document mid-pipeline with detection done and review pending
-- WHEN `docudesk.getDocumentStatus` is invoked with its fileId
+- WHEN `filinq.getDocumentStatus` is invoked with its fileId
 - THEN the result reports the pipeline status, entity counts per type, `reviewChecked: false` and OCR state
 - AND the tool reports `readOnlyHint: true`
-- @e2e exclude agent-runtime tool invocation (no DocuDesk UI surface); covered by PHPUnit + the MCP surface probe (tests/unit/Service/FileListingServiceTest.php, tests/integration/Mcp/McpSurfaceTest.php)
+- @e2e exclude agent-runtime tool invocation (no Filinq UI surface); covered by PHPUnit + the MCP surface probe (tests/unit/Service/FileListingServiceTest.php, tests/integration/Mcp/McpSurfaceTest.php)
 
 #### Scenario: Inaccessible file is not disclosed
 
@@ -76,7 +76,7 @@ a not-found result indistinguishable from a nonexistent file.
 
 ### Requirement: A curated gate-safe anonymisation intake tool exists (REQ-DDMGT-003)
 
-The system MUST expose `docudesk.anonymizeDocument` as a curated
+The system MUST expose `filinq.anonymizeDocument` as a curated
 `#[McpTool]` on a narrow method (`AnonymizationService::
 anonymizeViaAgent(int $fileId)`) whose signature accepts ONLY the fileId:
 no `acknowledgedOverrides`, no entity list, no output or steering
@@ -93,7 +93,7 @@ MUST never be modified or deleted by the tool.
 #### Scenario: Agent triggers intake, humans keep the decision
 
 - GIVEN a document with no detection yet
-- WHEN `docudesk.anonymizeDocument` is invoked with its fileId
+- WHEN `filinq.anonymizeDocument` is invoked with its fileId
 - THEN detection completes and the document appears in the review queue
 - AND no anonymised export exists and the document is not marked reviewed
 - @e2e exclude agent-runtime invocation; covered by PHPUnit + the MCP surface probe (tests/unit/Service/AnonymizationServiceTest.php, tests/integration/Mcp/McpSurfaceTest.php)
@@ -109,14 +109,14 @@ MUST never be modified or deleted by the tool.
 #### Scenario: Hints are complete and honest
 
 - GIVEN the registered tool surface
-- WHEN `docudesk.anonymizeDocument` is inspected
+- WHEN `filinq.anonymizeDocument` is inspected
 - THEN it declares scope create, readOnlyHint false, destructiveHint false, idempotentHint false
-- AND no curated DocuDesk tool is registered without a complete hint set
+- AND no curated Filinq tool is registered without a complete hint set
 - @e2e exclude registry-shape contract; covered by the MCP surface probe (tests/integration/Mcp/McpSurfaceTest.php)
 
 ### Requirement: No entity values ever cross the MCP boundary (REQ-DDMGT-004)
 
-No DocuDesk MCP tool result MUST ever contain detected entity values,
+No Filinq MCP tool result MUST ever contain detected entity values,
 anonymisation placeholder maps, document text, or file bytes.
 `anonymizeDocument` results MUST be limited to status, entity counts per
 type, `reviewRequired`, and gate-refusal reasons; `getDocumentStatus`
@@ -128,7 +128,7 @@ the authorised, audited review UI.
 #### Scenario: Anonymise result is counts-only
 
 - GIVEN a document whose detection found the entity "J. de Vries" (PERSON) and a BSN
-- WHEN `docudesk.anonymizeDocument` completes
+- WHEN `filinq.anonymizeDocument` completes
 - THEN the result reports `entityCounts` (e.g. PERSON: 1, BSN: 1) and `reviewRequired: true`
 - AND neither "J. de Vries" nor the BSN value appears anywhere in the result
 - @e2e exclude data-minimisation shape contract; covered by PHPUnit shape-pinning tests (tests/unit/Service/AnonymizationServiceTest.php)
@@ -136,14 +136,14 @@ the authorised, audited review UI.
 #### Scenario: Status result carries no entity text
 
 - GIVEN a reviewed document with entity decisions
-- WHEN `docudesk.getDocumentStatus` is invoked
+- WHEN `filinq.getDocumentStatus` is invoked
 - THEN entity information appears as counts per type only
 - @e2e exclude data-minimisation shape contract; covered by PHPUnit shape-pinning tests (tests/unit/Service/FileListingServiceTest.php)
 
 ### Requirement: Invocations are grant-gated and attributably logged (REQ-DDMGT-005)
 
 Tool availability MUST be governed by OpenRegister's tool-grant whitelist
-(default-deny per agent, administered in OpenRegister); DocuDesk MUST NOT
+(default-deny per agent, administered in OpenRegister); Filinq MUST NOT
 implement its own grant enforcement and MUST NOT weaken the model by
 registering tools outside the scannable-services path. Every invocation
 MUST leave an attributable record: generation persists its
@@ -151,11 +151,11 @@ MUST leave an attributable record: generation persists its
 anonymisation intake runs MUST be OR-audited and carry an `mcp`
 attribution distinguishing them from `manual` and `flow` triggers.
 
-#### Scenario: Ungranted agent sees no DocuDesk write tool
+#### Scenario: Ungranted agent sees no Filinq write tool
 
-- GIVEN an agent whose grants include no DocuDesk curated tool
+- GIVEN an agent whose grants include no Filinq curated tool
 - WHEN it lists available tools
-- THEN neither `docudesk.anonymizeDocument` nor `docudesk.generateCorrespondence` is offered
+- THEN neither `filinq.anonymizeDocument` nor `filinq.generateCorrespondence` is offered
 - @e2e exclude grant enforcement lives in OR/hermiq; covered by the OR tool-grant suite plus the MCP surface probe (tests/integration/Mcp/McpSurfaceTest.php)
 
 #### Scenario: Agent-triggered intake is attributable
@@ -174,11 +174,11 @@ MUST NOT expose `signerRecord`, `signingSession`, `signingAuditEntry`,
 `financialExtraction`, `templateVersion` or the GL schemas through any
 new tool's parameters or results; and MUST NOT enable any derived
 `create`/`update`/`delete` verb. Every refusal declared by
-`docudesk-mcp-adoption` MUST hold across the extended surface.
+`filinq-mcp-adoption` MUST hold across the extended surface.
 
 #### Scenario: The extended surface stays within the refusal lines
 
-- GIVEN the full DocuDesk tool surface after this change
+- GIVEN the full Filinq tool surface after this change
 - WHEN it is enumerated
 - THEN it is exactly the 16 derived read tools plus the 3 curated tools (generateCorrespondence, getDocumentStatus, anonymizeDocument)
 - AND no tool name ends in `.create`, `.update` or `.delete`
@@ -188,6 +188,6 @@ new tool's parameters or results; and MUST NOT enable any derived
 #### Scenario: Redaction still cannot be reversed through MCP
 
 - GIVEN an agent holding the id of an anonymised file
-- WHEN it invokes any DocuDesk tool with that id
+- WHEN it invokes any Filinq tool with that id
 - THEN no result reveals the un-anonymised source path or content
 - @e2e exclude re-identification guard; covered by PHPUnit shape-pinning tests (tests/unit/Service/FileListingServiceTest.php)

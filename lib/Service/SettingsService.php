@@ -3,18 +3,18 @@
 /**
  * Settings Service
  *
- * Service for handling settings-related operations in DocuDesk.
+ * Service for handling settings-related operations in Filinq.
  * Provides functionality for retrieving and saving settings.
  * Delegates initialization to SettingsInitializer and register
  * discovery to RegisterDiscoveryService.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/admin-settings/spec.md
  * @spec openspec/specs/admin-settings/spec.md
@@ -28,7 +28,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\IAppConfig;
@@ -36,13 +36,13 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Service for handling settings-related operations in DocuDesk
+ * Service for handling settings-related operations in Filinq
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
@@ -80,7 +80,7 @@ class SettingsService {
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
 	) {
-		$this->appName = 'docudesk';
+		$this->appName = 'filinq';
 
 	}//end __construct()
 
@@ -128,7 +128,7 @@ class SettingsService {
 	 * correct for a settings screen and catastrophic on a write path — the
 	 * register/schema discovery alone issued 1,471 `SchemaMapper::find()`
 	 * calls (one per schema on the instance) when it was reached from
-	 * {@see \OCA\DocuDesk\EventListener\EnrichmentRunner}, which runs inside
+	 * {@see \OCA\Filinq\EventListener\EnrichmentRunner}, which runs inside
 	 * an unrelated app's object save. Measured 2026-07-29: 96% of ALL schema
 	 * reads during an OpenRegister object create originated there, and the
 	 * create took 9-17s.
@@ -199,9 +199,9 @@ class SettingsService {
 			// native anonymised intermediate so only the PDF remains;
 			// 'pdf' converts but keeps the native intermediate too;
 			// 'preserve' returns it in the native input format.
-			'docudesk.anonymisation.default_output_format' => $this->config->getValueString(
+			'filinq.anonymisation.default_output_format' => $this->config->getValueString(
 				$this->appName,
-				'docudesk.anonymisation.default_output_format',
+				'filinq.anonymisation.default_output_format',
 				'pdf-only'
 			),
 			// OCR document scanning (ocr-document-scanning) — tenant-wide
@@ -225,24 +225,24 @@ class SettingsService {
 			// entity type → base slug(s), used to pre-fill a proposed
 			// grondslag onto freshly-detected entities. Decoded to an
 			// object so the settings UI can bind it directly.
-			'docudesk.grondslagen.entity_type_bases' => $this->legalBasisProposal->getMapping(),
+			'filinq.grondslagen.entity_type_bases' => $this->legalBasisProposal->getMapping(),
 			// Entity types left enabled for automatic detection. Returned as an
 			// explicit list (all curated types when unset) so the settings UI
 			// renders the selector all-on by default; an empty/complete
 			// selection is treated as "all types" at detection time.
-			'docudesk.anonymisation.enabled_entity_types' => $this->legalBasisProposal->getEnabledEntityTypes(),
+			'filinq.anonymisation.enabled_entity_types' => $this->legalBasisProposal->getEnabledEntityTypes(),
 			// Files-confidential-labels — read-only sensitivity signal
 			// ingested from files_confidential (TSCP/BAILS system tags).
 			// The vocabulary maps tag/label name to a normalised level;
 			// decoded to an object so the settings UI can bind it directly
 			// and falls back to the seeded TSCP/BAILS default names when
 			// unset (design.md Open Questions).
-			'docudesk.confidentiality.label_vocabulary' => $this->getConfidentialityVocabulary(),
+			'filinq.confidentiality.label_vocabulary' => $this->getConfidentialityVocabulary(),
 			// Off by default: purely a suggestion signal that reorders
 			// batch/folder analysis, never gates/blocks/redacts (design.md D3).
-			'docudesk.confidentiality.prioritise_analysis' => $this->config->getValueBool(
+			'filinq.confidentiality.prioritise_analysis' => $this->config->getValueBool(
 				$this->appName,
-				'docudesk.confidentiality.prioritise_analysis',
+				'filinq.confidentiality.prioritise_analysis',
 				false
 			),
 		];
@@ -388,8 +388,8 @@ class SettingsService {
 		'ocr_enabled',
 		'ocr_languages',
 		'ocr_dpi',
-		'docudesk.confidentiality.label_vocabulary',
-		'docudesk.confidentiality.prioritise_analysis',
+		'filinq.confidentiality.label_vocabulary',
+		'filinq.confidentiality.prioritise_analysis',
 	];
 
 	/**
@@ -460,8 +460,8 @@ class SettingsService {
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	public function resolveSigningRequestBinding(): ?array {
-		$register = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-		$schema = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+		$register = $this->config->getValueString('filinq', 'signingRequest_register', '');
+		$schema = $this->config->getValueString('filinq', 'signingRequest_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -481,8 +481,8 @@ class SettingsService {
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	public function resolveSignerRecordBinding(): ?array {
-		$register = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-		$schema = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
+		$register = $this->config->getValueString('filinq', 'signerRecord_register', '');
+		$schema = $this->config->getValueString('filinq', 'signerRecord_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -498,8 +498,8 @@ class SettingsService {
 	 * @spec openspec/specs/financial-document-field-extraction/spec.md
 	 */
 	public function resolveFinancialExtractionBinding(): ?array {
-		$register = $this->config->getValueString('docudesk', 'financialExtraction_register', '');
-		$schema = $this->config->getValueString('docudesk', 'financialExtraction_schema', '');
+		$register = $this->config->getValueString('filinq', 'financialExtraction_register', '');
+		$schema = $this->config->getValueString('filinq', 'financialExtraction_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -515,8 +515,8 @@ class SettingsService {
 	 * @spec openspec/specs/ai-gl-account-suggestion/spec.md
 	 */
 	public function resolveGlAccountBookingBinding(): ?array {
-		$register = $this->config->getValueString('docudesk', 'glAccountBooking_register', '');
-		$schema = $this->config->getValueString('docudesk', 'glAccountBooking_schema', '');
+		$register = $this->config->getValueString('filinq', 'glAccountBooking_register', '');
+		$schema = $this->config->getValueString('filinq', 'glAccountBooking_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}
@@ -532,8 +532,8 @@ class SettingsService {
 	 * @spec openspec/specs/ai-gl-account-suggestion/spec.md
 	 */
 	public function resolveGlAccountMappingRuleBinding(): ?array {
-		$register = $this->config->getValueString('docudesk', 'glAccountMappingRule_register', '');
-		$schema = $this->config->getValueString('docudesk', 'glAccountMappingRule_schema', '');
+		$register = $this->config->getValueString('filinq', 'glAccountMappingRule_register', '');
+		$schema = $this->config->getValueString('filinq', 'glAccountMappingRule_schema', '');
 		if ($register === '' || $schema === '') {
 			return null;
 		}

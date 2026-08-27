@@ -11,10 +11,10 @@
  * so monitoring sees them.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,13 +22,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\SigningController;
-use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningService;
-use OCA\DocuDesk\Service\SigningVerificationService;
+use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\SigningVerificationService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
@@ -45,10 +45,10 @@ use RuntimeException;
  * Tests for SigningController::listRequests() error handling
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -102,7 +102,7 @@ class SigningControllerTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$this->controller = new SigningController(
-			'docudesk',
+			'filinq',
 			$request,
 			$this->signingService,
 			$auditService,

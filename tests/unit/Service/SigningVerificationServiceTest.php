@@ -14,10 +14,10 @@
  *     preg_quote is the correct approach for safety and explicitness).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -25,9 +25,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\SigningVerificationService;
+use OCA\Filinq\Service\SigningVerificationService;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -38,10 +38,10 @@ use ReflectionClass;
  * Tests for SigningVerificationService correctness
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -206,7 +206,7 @@ class SigningVerificationServiceTest extends TestCase {
 
 		$canonical = $assemble($original, '');
 		$contentHash = hash('sha256', $canonical);
-		$payloadCore = (new \OCA\DocuDesk\Service\Signing\AssertionCanonicalizer())->canonicalJson(data: $assertion);
+		$payloadCore = (new \OCA\Filinq\Service\Signing\AssertionCanonicalizer())->canonicalJson(data: $assertion);
 
 		$mac = hash_hmac('sha256', $contentHash . "\n" . $payloadCore, $secret);
 		$assertion['mac'] = $mac;
@@ -345,8 +345,8 @@ class SigningVerificationServiceTest extends TestCase {
 	}//end testComputeVerdictDistinguishesStates()
 
 	/**
-	 * An embedded external `/Type /Sig` signature (no DocuDesk marker) is
-	 * honestly `unverifiable`, never `invalid` — DocuDesk cannot yet validate
+	 * An embedded external `/Type /Sig` signature (no Filinq marker) is
+	 * honestly `unverifiable`, never `invalid` — Filinq cannot yet validate
 	 * it, and that is not the same as tampering (signing-trust-rebuild
 	 * REQ-DDSTR-005).
 	 *

@@ -11,12 +11,12 @@
  * attempt records suitable for the documented HTTP 422 body.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,10 +24,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\Conversion\ConversionBackendInterface;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Conversion\ConversionBackendInterface;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -48,11 +48,11 @@ use Throwable;
  *   if no success → throw ConversionFailedException(attempts)
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
  */
@@ -83,7 +83,6 @@ class PdfConversionService {
 	 */
 	public function convertToPdf(File $source): File {
 		return $this->convertToPdfReporting(source: $source)['file'];
-
 	}//end convertToPdf()
 
 	/**

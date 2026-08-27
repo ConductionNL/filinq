@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — template-management (UI surface).
@@ -29,7 +29,7 @@ test.describe('template-management — templates list UI', () => {
 		// @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
 		const guard = attachConsoleGuard(page)
 		await go(page, TemplateIndex)
-		await expect(page).toHaveURL(/\/apps\/docudesk\/templates/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/templates/)
 
 		// Real heading from TemplateIndex.vue
 		await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible()
@@ -138,7 +138,7 @@ test.describe('template-management — templates list UI', () => {
 		// @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
 		await go(page, '')
 		await navClick(page, 'Templates')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/templates/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/templates/)
 		await expect(page.getByRole('heading', { name: 'Templates' })).toBeVisible()
 	})
 })

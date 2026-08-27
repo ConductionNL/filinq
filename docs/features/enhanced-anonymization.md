@@ -14,7 +14,7 @@ keywords:
 
 # Enhanced Anonymization
 
-DocuDesk extends its GDPR anonymization capabilities with a batch processing workflow that
+Filinq extends its GDPR anonymization capabilities with a batch processing workflow that
 allows users to upload, review, and anonymize multiple documents in a single guided session.
 The pipeline is designed as a stepwise state machine backed by a distributed cache.
 
@@ -33,7 +33,7 @@ The batch workflow proceeds through these stages:
 ### Upload Batch
 
 ```
-POST /apps/docudesk/api/anonymization/batch/upload
+POST /apps/filinq/api/anonymization/batch/upload
 ```
 
 Uploads multiple files and creates a batch in the cache. The batch is identified by a
@@ -60,7 +60,7 @@ server-generated UUID and expires after 2 hours of inactivity.
 ### Extract Next File
 
 ```
-POST /apps/docudesk/api/anonymization/batch/{batchId}/extract
+POST /apps/filinq/api/anonymization/batch/{batchId}/extract
 ```
 
 Extracts entities from the next unprocessed file in the batch. Call this endpoint repeatedly
@@ -86,7 +86,7 @@ When all files are extracted: `batchStatus` becomes `review`.
 ### Get Batch Status
 
 ```
-GET /apps/docudesk/api/anonymization/batch/{batchId}/status
+GET /apps/filinq/api/anonymization/batch/{batchId}/status
 ```
 
 Returns the current state of a batch including all file statuses.
@@ -96,7 +96,7 @@ Returns the current state of a batch including all file statuses.
 ### Get Detected Entities
 
 ```
-GET /apps/docudesk/api/anonymization/batch/{batchId}/entities
+GET /apps/filinq/api/anonymization/batch/{batchId}/entities
 ```
 
 Returns the aggregated entity types detected across all files in the batch, for use in the
@@ -107,7 +107,7 @@ review step before anonymization.
 ### Anonymize Batch
 
 ```
-POST /apps/docudesk/api/anonymization/batch/{batchId}/anonymize
+POST /apps/filinq/api/anonymization/batch/{batchId}/anonymize
 ```
 
 Applies anonymization to all extracted files using the selected entity types.
@@ -135,7 +135,7 @@ Applies anonymization to all extracted files using the selected entity types.
 ### Download Report
 
 ```
-GET /apps/docudesk/api/anonymization/batch/{batchId}/report
+GET /apps/filinq/api/anonymization/batch/{batchId}/report
 ```
 
 Returns a summary report of all replacements made per file.
@@ -145,8 +145,8 @@ Returns a summary report of all replacements made per file.
 ### Anonymization Profiles
 
 ```
-GET  /apps/docudesk/api/anonymization/profiles
-PUT  /apps/docudesk/api/anonymization/profiles
+GET  /apps/filinq/api/anonymization/profiles
+PUT  /apps/filinq/api/anonymization/profiles
 ```
 
 Manage named entity type profiles (preset selections of entity types for repeated use).
@@ -157,9 +157,9 @@ Manage named entity type profiles (preset selections of entity types for repeate
 
 | Config key                         | Default | Description                                     |
 |-----------------------------------|---------|-------------------------------------------------|
-| `docudesk_batch_max_files`         | `100`   | Maximum files per batch session                 |
+| `filinq_batch_max_files`         | `100`   | Maximum files per batch session                 |
 
-Set via the DocuDesk admin settings or `occ config:app:set docudesk docudesk_batch_max_files`.
+Set via the Filinq admin settings or `occ config:app:set filinq filinq_batch_max_files`.
 
 ## Batch State Machine
 

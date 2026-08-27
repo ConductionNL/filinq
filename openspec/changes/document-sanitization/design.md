@@ -14,15 +14,15 @@ wave-1 changes):
   `SanitizationReport` (8 count fields + sentinel). OR's own canonical spec
   `office-document-sanitization` covers the engine.
 - `DocumentProcessingHandler::getLastSanitizationReport(): ?SanitizationReport`
-  is the read seam. DocuDesk has **zero** callers — the report never reaches
-  a DocuDesk record, response, or UI.
+  is the read seam. Filinq has **zero** callers — the report never reaches
+  a Filinq record, response, or UI.
 - OR `PdfMetadataSanitizer` strips a fixed /Info field list and XMP identity
   namespaces, but only inside `replaceWordsInPdfDocument()` (the PDF
   anonymise run). It takes a SAPP `PDFDoc`, not a file — there is no
   standalone PDF sanitisation entry point, and no PDF coverage for
   annotations/comments, embedded files, JavaScript/OpenAction/AA, or
   prior-save incremental remnants.
-- DocuDesk `AnonymizationService::anonymizeDocument()` (~line 404): OR
+- Filinq `AnonymizationService::anonymizeDocument()` (~line 404): OR
   `FileService::anonymizeDocument()` → optional grondslagen-summary append →
   `outputFormat: "pdf"` gate through `PdfConversionService::convertToPdf()`
   (LibreOffice cascade). Conversion produces a FRESH PDF whose metadata the
@@ -61,26 +61,26 @@ wave-1 changes):
   `pdfua-accessible-output` D4 single-gating-mechanism decision; blocking
   stays with the wave-1 pipeline's readiness lifecycle.
 - No change to `document-waarmerk-certification` semantics — ordering is
-  enforced on the DocuDesk action surface, the seal spec stays untouched.
+  enforced on the Filinq action surface, the seal spec stays untouched.
 - No sanitisation of e-mail containers (EML) — `EmlPdfAssemblyService`
   output is generated PDF and rides the PDF pass.
 
 ## Decisions
 
-### D1 — Engines stay in OpenRegister; DocuDesk surfaces, persists, orders
+### D1 — Engines stay in OpenRegister; Filinq surfaces, persists, orders
 
 The office engine already lives OR-side; splitting PDF sanitisation into
-DocuDesk would fork the engine family. **Decision:** extend OR's `Sanitizer`
+Filinq would fork the engine family. **Decision:** extend OR's `Sanitizer`
 family with a standalone PDF sanitizer (SAPP-based, same stack as
 `PdfTextReplacer`/`PdfMetadataSanitizer`) exposed like
 `OfficeDocumentSanitizer::sanitize(int $fileId)`, and reuse the office seam
-as-is. DocuDesk ships a thin `DocumentSanitizationService` that routes by
+as-is. Filinq ships a thin `DocumentSanitizationService` that routes by
 MIME, persists the report, and owns ordering/warnings. Filed as an OR issue +
 PR (cross-app dependency). **Degraded behaviour until the PDF seam lands
 (fail-flagged, never fail-silent):** office files sanitise fully day one;
 a PDF sanitisation request returns/records `sanitizationSkipped` with reason
 `pdf_sanitizer_unavailable` — never a success claim from the metadata-only
-anonymise-internal path. Rejected: DocuDesk-side PDF surgery via its own
+anonymise-internal path. Rejected: Filinq-side PDF surgery via its own
 SAPP/FPDI code — duplicates OR's PDF byte stack and its encrypted-PDF
 handling (ADR-011/ADR-022).
 
@@ -109,7 +109,7 @@ The report needs to outlive the run (publication signal, audit, UI), for
 BOTH standalone runs and anonymise-embedded runs. `anonymizationLink` is the
 wrong home (standalone sanitisation has no anonymisation run).
 **Decision:** new `sanitizationRecord` schema in
-`lib/Settings/docudesk_register.json`: `fileId`, `sanitizedFileId`,
+`lib/Settings/filinq_register.json`: `fileId`, `sanitizedFileId`,
 `trigger` (`manual` | `anonymisation` | `publication`), `engine`,
 `report` (the category-count object, mirroring OR's `SanitizationReport`
 JSON shape plus the PDF categories), `sanitizedAt`, `sanitizedBy`. Counts
@@ -135,7 +135,7 @@ Two distinct legs:
    metadata the earlier sanitisation never saw. Default `false` preserves
    pre-change behaviour byte-for-byte (additive and non-breaking, same
    contract style as `outputFormat`/`appendBasisSummary`). Tenant default
-   via `docudesk.sanitization.default` app config, mirroring the
+   via `filinq.sanitization.default` app config, mirroring the
    `outputFormat` tenant-default mechanism.
 
 ### D5 — Publication readiness and seal ordering
@@ -145,7 +145,7 @@ Two distinct legs:
   being handed off. The wave-1 Woo hand-off UI consults the signal and
   warns on unsanitized hand-off; it does NOT hard-block (single gating
   mechanism stays the pipeline's readiness lifecycle, `pdfua` D4
-  precedent). The signal is computed DocuDesk-side; the
+  precedent). The signal is computed Filinq-side; the
   `woo-publicatie-pipeline` spec is not modified.
 - **Order with sealing:** sanitize → seal, never the reverse. Sealing
   (REQ-DDWMK-002) hashes and CMS-signs the artifact; any later byte change
@@ -218,7 +218,7 @@ shows non-zero counts on a clean install.
 ## Risks / Trade-offs
 
 - [OR PDF sanitizer seam may lag] → D1 office-first shipping with
-  fail-flagged PDF degradation; the DocuDesk surface (records, report panel,
+  fail-flagged PDF degradation; the Filinq surface (records, report panel,
   anonymise-report persistence, warnings) is independently shippable and
   live-testable with office files.
 - [Sanitisation can break intended behaviour (form fields, legitimate

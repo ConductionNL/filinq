@@ -3,7 +3,7 @@
 	"$id": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"title": "Conduction App Manifest v2",
 	"description": "v2 schema for the JSON-driven page and navigation manifest consumed by @conduction/nextcloud-vue. Introduces a uniform widgets[] array on every page type with a per-slot grid coordinate system, a typed actions[] discriminator, and the required $schema field for version detection. v1 manifests continue to validate against app-manifest.schema.json (unchanged).",
-	"version": "2.13.0",
+	"version": "2.25.0",
 	"type": "object",
 	"required": ["$schema", "version"],
 	"allOf": [
@@ -33,13 +33,27 @@
 		"openbuildEditable": {
 			"type": "boolean",
 			"default": true,
-			"description": "Whether the OpenBuild in-app edit button (ADR-041) is offered on this app's pages. Default true. Set false to suppress it — e.g. OpenBuild's own UI, which does not edit itself with itself. Read by CnAppRoot to gate `cnOpenBuildAvailable`."
+			"description": "Whether the Buildiq in-app edit button (ADR-041) is offered on this app's pages. Default true. Set false to suppress it — e.g. Buildiq's own UI, which does not edit itself with itself. Read by CnAppRoot to gate `cnOpenBuildAvailable`. The property name and the inject key keep their `openbuild` spelling: both are data/runtime contracts that shipped manifests and consumer apps already carry, so the 2026-08-21 OpenBuild → Buildiq rename deliberately left them untouched."
 		},
 		"dependencies": {
 			"type": "array",
 			"default": [],
-			"items": { "type": "string" },
-			"description": "Nextcloud app IDs that MUST be installed and enabled for this app to function. CnAppRoot checks each via useAppStatus(appId). Sentinels (@resolve:*) are NOT allowed here — resolved at build time against known app IDs."
+			"items": {
+				"oneOf": [
+					{ "type": "string" },
+					{
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id"],
+						"properties": {
+							"id": { "type": "string", "description": "Nextcloud app id." },
+							"required": { "type": "boolean", "default": true, "description": "true (default) = HARD: absence blocks the app shell behind CnDependencyMissing. false = SOFT: an optional integration whose absence surfaces a dismissible in-shell notice and never blocks." },
+							"name": { "type": "string", "description": "Human-readable display label; falls back to id." }
+						}
+					}
+				]
+			},
+			"description": "Nextcloud app dependencies. Each entry is either a string (a HARD dependency — the app cannot run without it, absence blocks the shell) or an object { id, required?, name? } where required:false marks a SOFT (optional) dependency (required defaults to true). CnAppRoot checks each via useAppStatus(id); unresolved HARD deps block behind CnDependencyMissing, unresolved SOFT deps show a dismissible NcNoteCard banner. Sentinels (@resolve:*) are NOT allowed here — resolved at build time against known app IDs."
 		},
 		"setup": {
 			"type": "object",
@@ -163,6 +177,45 @@
 				}
 			}
 		},
+		"support": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "First-open support and donation note. CnAppRoot mounts CnSupportDialog once per user on first open and reads this block; CnEditSupportModal edits it. Omitting the block keeps the default-on behaviour with the shell's own copy, so an app only declares what it wants to override. The block was read by CnAppRoot and written by CnEditSupportModal before it was declared here, which made `additionalProperties: false` reject every manifest that set it.",
+			"properties": {
+				"enabled": {
+					"type": "boolean",
+					"description": "Whether the note is shown on first open. Omit for the default (true); set false to suppress it for this app."
+				},
+				"title": {
+					"type": "string",
+					"description": "Dialog heading. Blank keeps the shell default."
+				},
+				"appName": {
+					"type": "string",
+					"description": "Display name interpolated into the body copy. Defaults to the host app's name."
+				},
+				"bodyParagraphs": {
+					"type": "array",
+					"description": "Body copy, one entry per paragraph, replacing the shell's default paragraphs.",
+					"items": { "type": "string" }
+				},
+				"founderName": { "type": "string", "description": "Signature name." },
+				"founderTitle": { "type": "string", "description": "Signature role, shown under the name." },
+				"founderAvatarUrl": { "type": "string", "description": "Signature avatar image URL." },
+				"founderProfileUrl": { "type": "string", "description": "Profile the signature avatar links to." },
+				"buttons": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Per-button overrides, keyed by the four built-in button ids. Each may be hidden, relabelled, restyled or re-pointed; omit a key to keep its default.",
+					"properties": {
+						"donate": { "$ref": "#/$defs/supportButton" },
+						"support": { "$ref": "#/$defs/supportButton" },
+						"feature-request": { "$ref": "#/$defs/supportButton" },
+						"app-store": { "$ref": "#/$defs/supportButton" }
+					}
+				}
+			}
+		},
 		"nav": {
 			"type": "object",
 			"additionalProperties": false,
@@ -188,12 +241,12 @@
 				"forge": {
 					"type": "object",
 					"additionalProperties": false,
-					"description": "Forge that the in-product feature-request deep-link targets. Switching the whole fleet's forge (back to GitHub, or onto a self-hosted Forgejo/Gitea) is just this one field. Defaults to Codeberg.",
+					"description": "Forge that the in-product feature-request deep-link targets. Switching the whole fleet's forge (onto a self-hosted Forgejo/Gitea, or back to Codeberg) is just this one field. Defaults to GitHub, the only host the fleet publishes to.",
 					"properties": {
 						"type": {
 							"type": "string",
 							"enum": ["codeberg", "forgejo", "gitea", "github"],
-							"default": "codeberg",
+							"default": "github",
 							"description": "Forge type. Selects how the 'new issue' form is pre-filled: `github` uses per-field Issue-Form query params; `codeberg`/`forgejo`/`gitea` assemble a Markdown body (only title + body are supported there)."
 						},
 						"baseUrl": {
@@ -213,6 +266,10 @@
 					"type": "object",
 					"description": "Per-user runtime context. Populated by the backend for authenticated requests. All fields are optional; the FE predicate evaluator treats missing fields as undefined.",
 					"additionalProperties": true
+				},
+				"theme": {
+					"$ref": "#/$defs/runtimeTheme",
+					"description": "NL Design System scoped theme selection (scoped-theme-applier). Consumed by CnAppRoot's useScopedTheme wiring, not by the backend."
 				}
 			}
 		},
@@ -226,6 +283,46 @@
 			"items": { "$ref": "#/$defs/page" },
 			"description": "Page definitions dispatched by CnPageRenderer. Each page's id is also its vue-router route name. Ids MUST be unique across the array; uniqueness is enforced by validateManifestV2 as a post-schema check."
 		},
+		"adminSettings": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/adminSettingsEntry" },
+			"description": "Admin-only settings sections rendered by CnAppRoot's generic admin NcAppSettingsDialog, gated on app-owner-group membership (not OC.isUserAdmin()). An absent key or an empty array yields no admin nav entry and no admin dialog. See the manifest-admin-settings and admin-settings-owner-gating capabilities."
+		},
+		"credentials": {
+			"type": "array",
+			"description": "External-provider credentials this app can use via the OpenRegister credential broker (github, gitlab, …). Each entry declares which provider, why, and at what scope; the app never receives the secret — the broker performs the outbound call on the user's behalf. See the credential-broker capability.",
+			"items": {
+				"type": "object",
+				"required": ["provider"],
+				"additionalProperties": false,
+				"properties": {
+					"provider": { "type": "string", "description": "Catalogue provider identifier (e.g. \"github\", \"gitlab\") — a key in OpenRegister's credential-providers catalogue." },
+					"reason": { "type": "string", "description": "Human-readable reason shown to the user in credential settings (why the app wants this provider)." },
+					"scopes": { "type": "array", "items": { "type": "string" }, "description": "Advisory scopes the app needs (e.g. [\"repo\"])." }
+				}
+			}
+		},
+		"schedules": {
+			"type": "array",
+			"description": "Declarative scheduled tasks (apphost-scheduling capability). Each entry declares a recurring task the OpenRegister AppHost schedule-reconciler turns into an Integriq job that runs on the existing background-job path — so a manifest-driven app (including a pure-virtual Buildiq app with no PHP on disk) can own its ingestion/maintenance cadence without shipping a TimedJob. The temporal peer of `credentials`/`observability`: consumed by the OpenRegister engine, NOT by the Vue renderer. Optional and additive.",
+			"items": {
+				"type": "object",
+				"required": ["id", "action"],
+				"additionalProperties": false,
+				"oneOf": [
+					{ "required": ["interval"], "not": { "required": ["cron"] } },
+					{ "required": ["cron"], "not": { "required": ["interval"] } }
+				],
+				"properties": {
+					"id": { "type": "string", "description": "Stable identifier for this schedule, unique within the manifest. The reconciled job is keyed on applicationId + this id, so renaming it creates a new job and orphans the old one (which is then garbage-collected)." },
+					"interval": { "type": "integer", "minimum": 1, "description": "Run cadence in seconds (e.g. 604800 = weekly). Exactly one of `interval` or `cron` must be set." },
+					"cron": { "type": "string", "description": "Standard 5-field cron expression (e.g. \"0 3 * * 1\"). The reconciler computes the job's nextRun from it. Exactly one of `interval` or `cron` must be set." },
+					"action": { "type": "string", "pattern": "^[a-z0-9]+:[a-z0-9-]+$", "description": "A server-allow-listed generic action type, NOT a PHP class name. Only vetted types are accepted (v1: \"openconnector:synchronization\"); the reconciler maps the type to a trusted jobClass — a manifest-supplied class name is never executed. A non-allow-listed action is rejected and logged." },
+					"arguments": { "type": "object", "description": "Free-form arguments passed to the action (e.g. the synchronization id/ref). Interpreted by the vetted action, not by the reconciler.", "additionalProperties": true },
+					"enabled": { "type": "boolean", "description": "Whether this schedule is active. Defaults to true. Setting false disables the reconciled job (preserving its run history) rather than deleting it." }
+				}
+			}
+		},
 		"observability": {
 			"$ref": "#/$defs/observability",
 			"description": "Declarative observability block (ADR-040). Consumed at request time by the OpenRegister AppHost observability engine (GenericHealthController + GenericMetricsController), NOT by the Vue renderer. Declares the app's health checks and Prometheus metric descriptors so adopting apps ship zero hand-written observability PHP while keeping their /api/health + /api/metrics URLs and the ADR-006 contract."
@@ -234,9 +331,278 @@
 			"type": "array",
 			"items": { "$ref": "#/$defs/deepLink" },
 			"description": "ADR-040: object deep-link descriptors consumed by the integration registry / cross-app linking, NOT by the Vue renderer. Optional and additive."
+		},
+		"pageTemplates": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/pageTemplate" },
+			"description": "Entity-scaffold page templates (manifest-entity-scaffold-templating). A template declares one reusable index/detail page shape ONCE, with `{{param}}` placeholders for the parts that vary per entity (register/schema binding, label, field/column subset) and a declared parameter list. The expander (utils/expandPageTemplates) materialises `pageInstances[]` into concrete `pages[]` at build/boot time, so CnPageRenderer only ever sees concrete pages and is unchanged by templating. Optional and additive: a manifest without pageTemplates is unaffected."
+		},
+		"pageInstances": {
+			"type": "array",
+			"items": { "$ref": "#/$defs/pageInstance" },
+			"description": "Per-entity template instantiations. Each entry references a `pageTemplates[]` template by `templateRef` and supplies only the values that vary. The expander substitutes them into the referenced template and appends the resulting concrete pages to `pages[]`. Expansion FAILS (named error) on an unknown templateRef or a missing required template parameter. Optional and additive."
+		},
+		"sets": {
+			"type": "object",
+			"description": "Named, reusable field/column/sidebar sets referenced from templates via a `{{set:NAME}}` placeholder, so a repeated field/column/sidebar block is declared ONCE and shared across templates and pages instead of being re-listed. Each value is arbitrary JSON (typically an array of field/column defs or a sidebar object). Optional and additive.",
+			"additionalProperties": true
+		},
+		"mcp": {
+			"type": "object",
+			"title": "MCP tool visibility hints",
+			"description": "OPTIONAL. Advisory visibility/UX hints for MCP tool surfaces (Hermiq agent tool picker, openbuild tool browser). Purely presentational: per ADR-063, OpenRegister's register (x-openregister-mcp dialect + #[McpTool] attributes) is the single source of CRUD-tool truth and OpenRegister RBAC is the authoritative invoke-time gate. This block grants no access and gates nothing; nothing in nextcloud-vue consumes it.",
+			"additionalProperties": false,
+			"properties": {
+				"expose": {
+					"type": "boolean",
+					"title": "App-level exposure hint",
+					"description": "Advisory app-wide default for whether this app's register-derived MCP tools should be shown in agent / tool-picker surfaces. Advisory only — the authoritative gate is OpenRegister RBAC plus per-agent whitelists. Defaults to false (opt-in), matching ADR-063's default-OFF exposure model.",
+					"default": false
+				},
+				"pageTools": {
+					"type": "object",
+					"title": "Per-page tool hints",
+					"description": "Maps a pages[].id to the ordered list of MCP tool ids that are contextually relevant on that page. Advisory grouping for UX surfaces only; it does not grant access. Keys are expected to match an existing pages[].id; the register remains authoritative for whether each listed tool actually exists.",
+					"additionalProperties": {
+						"type": "array",
+						"title": "Relevant tool ids for a page",
+						"description": "Ordered MCP tool ids relevant to the page keyed above. Advisory ordering only.",
+						"items": {
+							"type": "string",
+							"title": "MCP tool id",
+							"description": "A fully-qualified MCP tool id in the register's derived-CRUD shape {appId}.{schemaSlug}.{verb}, verb one of search|get|create|update|delete (ADR-063). Example only: \"pipelinq.lead.search\". The register is authoritative for existence; this is a hint.",
+							"pattern": "^[a-z0-9_-]+\\.[a-zA-Z0-9_-]+\\.(search|get|create|update|delete)$"
+						}
+					}
+				},
+				"agentHints": {
+					"type": "object",
+					"title": "Agent-facing hints",
+					"description": "Advisory metadata for agent surfaces (Hermiq). All values are non-authoritative UX hints. Additional properties are permitted so consuming surfaces can introduce new advisory hints without a schema release (forward compatibility).",
+					"additionalProperties": true,
+					"properties": {
+						"summary": {
+							"type": "string",
+							"title": "App tool summary",
+							"description": "One-line description of what this app's tools help an agent accomplish. Shown in agent / tool-picker surfaces."
+						},
+						"defaultTools": {
+							"type": "array",
+							"title": "Default tool ids",
+							"description": "MCP tool ids to surface first / preselect when an agent has no page context. Advisory ordering hint only; not a grant.",
+							"items": {
+								"type": "string",
+								"title": "MCP tool id",
+								"description": "Fully-qualified MCP tool id {appId}.{schemaSlug}.{verb}. Example only: \"pipelinq.lead.search\"."
+							}
+						},
+						"keywords": {
+							"type": "array",
+							"title": "Discovery keywords",
+							"description": "Keywords helping progressive-disclosure / tool-search surfaces (Hermiq) rank this app's tools. Advisory only.",
+							"items": {
+								"type": "string",
+								"title": "Keyword",
+								"description": "A single discovery keyword."
+							}
+						}
+					}
+				}
+			}
 		}
 	},
 	"$defs": {
+		"supportButton": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "Override for one of the four built-in support-note buttons (donate, support, feature-request, app-store). Every field is optional; omit the whole entry to keep the shell's default for that button.",
+			"properties": {
+				"enabled": {
+					"type": "boolean",
+					"description": "Show this button. Set false to hide it."
+				},
+				"label": {
+					"type": "string",
+					"description": "Button text. Blank keeps the default label."
+				},
+				"url": {
+					"type": "string",
+					"description": "Where the button goes. The feature-request and app-store buttons have no useful default, so an app that wants them must set this."
+				},
+				"variant": {
+					"type": "string",
+					"enum": ["primary", "secondary", "tertiary", "error", "warning", "success"],
+					"description": "NcButton variant."
+				},
+				"icon": {
+					"type": "string",
+					"description": "Material Design Icon component name, e.g. HeartOutline."
+				}
+			}
+		},
+		"runtimeTheme": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["source", "tokenSet"],
+			"description": "A leaf app's NL Design token-set selection, as returned by nldesign's GET /api/token-sets catalogue (app-token-set-selection). Applied by CnAppRoot via useScopedTheme — the ONLY consumer; the backend does not read this field.",
+			"properties": {
+				"source": {
+					"type": "string",
+					"enum": ["nldesign"],
+					"description": "Theme provider. Closed to 'nldesign' — the only scoped-theme source this schema (and useScopedTheme) currently supports."
+				},
+				"tokenSet": {
+					"type": "string",
+					"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+					"description": "The nldesign token-set id (a GET /api/token-sets entry's `id`), kebab-case. Resolves the token CSS at css/tokens/<tokenSet>.css."
+				},
+				"tokenSetName": {
+					"type": "string",
+					"description": "Optional human-readable name (the matching catalogue entry's `name`), cached at selection time so a picker can display it without a second catalogue fetch."
+				},
+				"preview": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Optional cached swatch preview (the matching catalogue entry's theming colors), for a picker to render a preview chip without re-fetching the catalogue.",
+					"properties": {
+						"primaryColor": { "type": "string", "description": "Cached theming.primary_color from the catalogue entry." },
+						"backgroundColor": { "type": "string", "description": "Cached theming.background_color from the catalogue entry." }
+					}
+				}
+			}
+		},
+		"pageTemplate": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "page"],
+			"description": "A reusable page shape declared once and instantiated per entity. `page` is an ordinary v2 page object whose string values may contain `{{param}}` placeholders (and `{{set:NAME}}` set references); `params` declares which placeholders exist and which are required. Fixed structure lives in `page`; only declared params vary per instantiation.",
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique template identifier — the `templateRef` target. Uniqueness across pageTemplates[] is enforced by validateManifestV2 as a post-schema check."
+				},
+				"_note": {
+					"type": "string",
+					"description": "Free-form maintainer note; ignored by the expander."
+				},
+				"params": {
+					"type": "array",
+					"description": "Declared parameters. A placeholder `{{name}}` in `page` is substituted with the instantiation's value for `name`. A `required` param absent from an instantiation is an expansion error; an optional param absent from an instantiation causes its exact-match placeholder key to be omitted from the expanded page.",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["name"],
+						"properties": {
+							"name": { "type": "string", "description": "Parameter name, referenced as `{{name}}` in the template `page`." },
+							"required": { "type": "boolean", "default": false, "description": "When true, an instantiation omitting this parameter is an expansion error." },
+							"description": { "type": "string", "description": "Human-readable description of the parameter." }
+						}
+					}
+				},
+				"page": {
+					"type": "object",
+					"description": "The parameterised page shape. An ordinary v2 page whose string leaves may embed `{{param}}` placeholders and `{{set:NAME}}` set references. After substitution the result MUST be a valid concrete page (it is validated as part of the expanded pages[])."
+				}
+			}
+		},
+		"pageInstance": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["templateRef"],
+			"description": "A per-entity instantiation of a pageTemplate. Supplies only the values that vary. `register`, `schema` and `label` are first-class shortcuts folded into the parameter map (equivalent to listing them under `params`); `params` may carry any additional declared parameters (e.g. a field/column subset).",
+			"properties": {
+				"templateRef": {
+					"type": "string",
+					"description": "Id of the `pageTemplates[]` entry to instantiate. An unknown templateRef is an expansion error."
+				},
+				"register": { "type": "string", "description": "Shortcut for the `register` parameter." },
+				"schema": { "type": "string", "description": "Shortcut for the `schema` parameter." },
+				"label": { "type": "string", "description": "Shortcut for the `label` parameter." },
+				"params": {
+					"type": "object",
+					"description": "Parameter values keyed by the template's declared parameter names. Values may be any JSON type (a field/column subset is an array value). Overrides the register/schema/label shortcuts on conflict.",
+					"additionalProperties": true
+				},
+				"override": {
+					"type": "object",
+					"description": "Optional structural delta applied over the substituted page via the SAME base+delta merge semantics as mergeManifestDelta (layered-versioned-app-deltas alignment). Lets an instantiation patch a single widget/field without re-listing the page, and is where a per-user/app override sits on top of the template base. No second merge model is introduced.",
+					"additionalProperties": true
+				}
+			}
+		},
+		"sentinelFilterToken": {
+			"type": "string",
+			"pattern": "^@(?:me|now|today|monthStart|quarterStart|yearStart)$|^@today[+-][0-9]+d$",
+			"description": "Filter-value context: relative fetch-time tokens resolved by resolveFilterTokens (@me, @now, @today, @today±Nd, @monthStart, @quarterStart, @yearStart). Mirrors SENTINEL_TOKEN_PATTERNS.filter in src/utils/sentinelTokens.js (byte-equality enforced by a unit test)."
+		},
+		"sentinelConfigToken": {
+			"type": "string",
+			"pattern": "^@resolve:[a-z][a-z0-9_-]*$|^@config\\.[A-Za-z][A-Za-z0-9_.]*\\??$",
+			"description": "Config context: IAppConfig-sourced values. @resolve:<key> resolved at manifest-load time; @config.<key> (trailing ? optional) at fetch time. Mirrors SENTINEL_TOKEN_PATTERNS.config."
+		},
+		"sentinelObjectToken": {
+			"type": "string",
+			"pattern": "^@objectId$|^@object\\.[A-Za-z][A-Za-z0-9_]*$",
+			"description": "Object context: detail-page object tokens (@objectId, @object.<field>) resolved only when a { objectId, object } ctx is supplied. Mirrors SENTINEL_TOKEN_PATTERNS.object."
+		},
+		"sentinelWorkspaceToken": {
+			"type": "string",
+			"pattern": "^@workspace\\.[A-Za-z][A-Za-z0-9_]*\\??$",
+			"description": "Workspace context: page-level workspace state (@workspace.<key>; trailing ? marks optional). Mirrors SENTINEL_TOKEN_PATTERNS.workspace."
+		},
+		"sentinelRouteToken": {
+			"type": "string",
+			"pattern": "^@route\\.[A-Za-z][A-Za-z0-9_-]*$",
+			"description": "Route context: vue-router param substitution (@route.<param>) resolved by resolveRouteSentinels. Mirrors SENTINEL_TOKEN_PATTERNS.route."
+		},
+		"sentinelDeclarativeToken": {
+			"type": "string",
+			"pattern": "^@self\\.[A-Za-z][A-Za-z0-9_]*$|^@ref:[A-Za-z][A-Za-z0-9_./-]*$|^@aggregate:.+$",
+			"description": "Declarative context (OpenRegister direction, resolved server-side): @self.<field> (the object's own field in a cross-object calc), @ref:<path>, @aggregate:<expr>. @ref/@aggregate are first-class members even though currently unused fleet-wide. Mirrors SENTINEL_TOKEN_PATTERNS.declarative."
+		},
+		"sentinelDeprecatedToken": {
+			"type": "string",
+			"pattern": "^@currentFiscalYear$|^@page\\.[A-Za-z][A-Za-z0-9_]*$|^@runtime(?:\\.[A-Za-z][A-Za-z0-9_]*)?$",
+			"description": "Deprecated single-app inventions kept in the union so deployed manifests still validate during the migration window. The hydra token-vocabulary gate downgrades these to a WARN (see SENTINEL_DEPRECATIONS): @currentFiscalYear → @config.fiscalYear, @page.<key> → @workspace.<key>, @runtime → removal. Mirrors SENTINEL_TOKEN_PATTERNS.deprecated."
+		},
+		"sentinelVisibleWhenToken": {
+			"type": "string",
+			"pattern": "^@total$",
+			"description": "manifest-form-logic: the shared visibleWhen predicate's source-mode collection-total marker, resolved client-side by evaluateVisibleWhen (utils/visibleWhen.js) — NOT one of the four IAppConfig/OpenRegister resolvers, but a pre-existing convention (already documented on $defs.visibleWhen and the banner widget) reachable through the sentinelGuardedValue-guarded pages[].config subtree for the first time via config.fields[].visibleWhen. Mirrors SENTINEL_TOKEN_PATTERNS.visibleWhen."
+		},
+		"sentinelTokenAny": {
+			"$comment": "Union of every canonical context plus the deprecated-during-window overlay. Single source the shared resolver + gate import.",
+			"anyOf": [
+				{ "$ref": "#/$defs/sentinelFilterToken" },
+				{ "$ref": "#/$defs/sentinelConfigToken" },
+				{ "$ref": "#/$defs/sentinelObjectToken" },
+				{ "$ref": "#/$defs/sentinelWorkspaceToken" },
+				{ "$ref": "#/$defs/sentinelRouteToken" },
+				{ "$ref": "#/$defs/sentinelDeclarativeToken" },
+				{ "$ref": "#/$defs/sentinelVisibleWhenToken" },
+				{ "$ref": "#/$defs/sentinelDeprecatedToken" }
+			]
+		},
+		"sentinelTokenLeaf": {
+			"$comment": "A string leaf: either NOT a sentinel (does not start with @) or a member of the closed vocabulary. An @-prefixed out-of-vocabulary string FAILS here instead of passing through additionalProperties:true.",
+			"anyOf": [
+				{ "not": { "pattern": "^@" } },
+				{ "$ref": "#/$defs/sentinelTokenAny" }
+			]
+		},
+		"sentinelGuardedValue": {
+			"$comment": "Recursive guard applied (via allOf) to pages[].config and widgetEntry so every string leaf anywhere beneath is checked against the closed vocabulary. Additive + backward-compatible: only @-prefixed out-of-vocabulary strings newly fail; all other shapes are untouched.",
+			"if": { "type": "string" },
+			"then": { "$ref": "#/$defs/sentinelTokenLeaf" },
+			"else": {
+				"if": { "type": "array" },
+				"then": { "items": { "$ref": "#/$defs/sentinelGuardedValue" } },
+				"else": {
+					"if": { "type": "object" },
+					"then": { "additionalProperties": { "$ref": "#/$defs/sentinelGuardedValue" } }
+				}
+			}
+		},
 		"observability": {
 			"type": "object",
 			"additionalProperties": false,
@@ -394,9 +760,9 @@
 				},
 				"section": {
 					"type": "string",
-					"enum": ["main", "footer", "settings"],
+					"enum": ["main", "footer", "settings", "integrations"],
 					"default": "main",
-					"description": "Where the entry renders inside CnAppNav. 'main' (default) places it in the top list. 'footer' pins the entry to the bottom as a flat item above the settings foldout. 'settings' places it inside the NcAppNavigationSettings gear-icon foldout."
+					"description": "Where the entry renders inside CnAppNav. 'main' (default) places it in the top list. 'footer' pins the entry to the bottom as a flat item above the settings foldout. 'settings' places it inside the NcAppNavigationSettings gear-icon foldout. 'integrations' renders the entry NOT in the navigation at all but in the Integrations section at the bottom of the per-user settings modal — the destination for links that leave this app for another (ADR-110). An 'integrations' entry MUST be clickable (href); a group with children is meaningless there."
 				},
 				"type": {
 					"type": "string",
@@ -427,8 +793,8 @@
 				},
 				"action": {
 					"type": "string",
-					"enum": ["user-settings", "replay-walkthrough"],
-					"description": "Built-in action to invoke when the entry is clicked. Closed enum. 'replay-walkthrough' re-runs the product walkthrough (ADR-043), optionally for a specific tourId."
+					"enum": ["user-settings", "admin-settings", "replay-walkthrough"],
+					"description": "Built-in action to invoke when the entry is clicked. Closed enum. 'admin-settings' opens the app-level admin-settings dialog (distinct from the per-user settings dialog). 'replay-walkthrough' re-runs the product walkthrough (ADR-043), optionally for a specific tourId."
 				},
 				"tourId": {
 					"type": "string",
@@ -468,7 +834,7 @@
 				"permission": { "type": "string" },
 				"section": {
 					"type": "string",
-					"enum": ["main", "footer", "settings"],
+					"enum": ["main", "footer", "settings", "integrations"],
 					"default": "main"
 				},
 				"type": {
@@ -486,7 +852,7 @@
 				"href": { "type": "string" },
 				"action": {
 					"type": "string",
-					"enum": ["user-settings", "replay-walkthrough"]
+					"enum": ["user-settings", "admin-settings", "replay-walkthrough"]
 				},
 				"tourId": {
 					"type": "string",
@@ -526,11 +892,68 @@
 				}
 			}
 		},
+		"navCardEntry": {
+			"type": "object",
+			"required": ["id", "label"],
+			"additionalProperties": false,
+			"description": "One card in a nav-card-grid built-in widget (ADR-044 §4 cards-collapse) — an arbitrary navigation link, not an OpenRegister object. Mirrors the menuItem/primaryAction vocabulary: id + label required, route/href are alternative navigation targets and mutually exclusive, count supports the same integer-or-\"auto\" shape as menuItem.count.",
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique identifier for this card within its widget's entries[] array."
+				},
+				"label": {
+					"type": "string",
+					"description": "i18n translation key / text rendered as the card's title."
+				},
+				"description": {
+					"type": "string",
+					"description": "Optional explanatory text rendered below the label, associated to the card via aria-describedby (never aria-label)."
+				},
+				"icon": {
+					"type": "string",
+					"description": "MDI icon name (e.g. 'ChartLine'), resolved the same way as menuItem.icon."
+				},
+				"route": {
+					"type": "string",
+					"description": "Vue-router route name (matches a pages[].id) this card navigates to. Mutually exclusive with href."
+				},
+				"href": {
+					"type": "string",
+					"description": "External URL opened per the rendering component's target handling. Mutually exclusive with route."
+				},
+				"count": {
+					"oneOf": [
+						{ "type": "integer", "minimum": 0 },
+						{ "type": "string", "enum": ["auto"] }
+					],
+					"description": "Count badge on the card. Positive integer renders as-is; 'auto' resolves from cnMenuCounts (populated by CnAppRoot) for the card's resolved route page (register + schema), the same mechanism menuItem.count:\"auto\" uses."
+				},
+				"order": {
+					"type": "integer",
+					"description": "Display order among sibling cards. Cards without an order render last."
+				},
+				"permission": {
+					"type": "string",
+					"description": "Permission string the user must hold for this card to render."
+				},
+				"visibleIf": {
+					"$ref": "#/$defs/visibleIfCondition",
+					"description": "Optional display condition evaluated at render time."
+				}
+			},
+			"allOf": [
+				{
+					"description": "route and href are mutually exclusive navigation targets — a card links either in-app or externally, never both.",
+					"not": { "required": ["route", "href"] }
+				}
+			]
+		},
 		"widgetEntry": {
 			"type": "object",
 			"required": ["widgetKey", "slot", "gridX", "gridY", "gridWidth", "gridHeight"],
 			"additionalProperties": false,
-			"description": "A uniform widget placement entry used on every page type in v2. Replaces the v1 widgetDef + layoutItem pair with a single shape. The cross-field constraint gridX + gridWidth <= 12 CANNOT be expressed in JSON Schema (arithmetic over sibling fields) — it is documented here and enforced at runtime by validateManifestV2() as a post-schema check. Failure message: \"Widget '{widgetKey}' in slot '{slot}': gridX ({gridX}) + gridWidth ({gridWidth}) exceeds 12\".",
+			"description": "A uniform widget placement entry used on every page type in v2. Replaces the v1 widgetDef + layoutItem pair with a single shape. Its props/dataSource/filter string leaves are guarded against the closed sentinel vocabulary via the sentinelGuardedValue allOf. The cross-field constraint gridX + gridWidth <= 12 CANNOT be expressed in JSON Schema (arithmetic over sibling fields) — it is documented here and enforced at runtime by validateManifestV2() as a post-schema check. Failure message: \"Widget '{widgetKey}' in slot '{slot}': gridX ({gridX}) + gridWidth ({gridWidth}) exceeds 12\".",
 			"properties": {
 				"id": {
 					"type": "string",
@@ -590,6 +1013,7 @@
 				}
 			},
 			"allOf": [
+				{ "$ref": "#/$defs/sentinelGuardedValue" },
 				{
 					"description": "sidebar slot: gridWidth MUST equal 1. The sidebar is a fixed-width panel; widgets always span the full width.",
 					"if": {
@@ -611,7 +1035,7 @@
 					}
 				},
 				{
-					"description": "object-table built-in widget: when props declares a `source` it must match the declarative self-fetch shape, and `actions` must be typed manifest actions (incl. type:'object-op'). Other props stay free-form (pass-through to CnDataTable).",
+					"description": "object-table built-in widget: when props declares a `source` it must match the declarative self-fetch shape, an `endpointSource` (Wave 2) must match the shared endpoint binding (exactly one of source | endpointSource — post-schema check), and `actions` must be typed manifest actions (incl. type:'object-op'). Other props stay free-form (pass-through to CnDataTable).",
 					"if": {
 						"properties": { "widgetKey": { "const": "object-table" } },
 						"required": ["widgetKey"]
@@ -622,10 +1046,60 @@
 								"type": "object",
 								"properties": {
 									"source": { "$ref": "#/$defs/objectTableSource" },
+									"endpointSource": {
+										"$ref": "#/$defs/endpointSource",
+										"description": "Wave 2 (#91): endpoint-bound rows — the payload at responsePath must be an array; columns / formatters / rowRoute / actions apply unchanged on top. Exactly one of source | endpointSource (post-schema check)."
+									},
 									"actions": {
 										"type": "array",
 										"items": { "$ref": "#/$defs/action" },
 										"description": "Declarative row/widget actions rendered by CnWidgetObjectTable. object-op patch/delete render per row; object-op create renders as a widget-scoped footer affordance."
+									},
+									"rowClass": {
+										"type": "array",
+										"description": "#91: declarative per-row CSS class rules compiled into CnDataTable's rowClass function. Each rule { when: { field, op?, value }, class } adds `class` to a row when the shared visibleWhen predicate holds against that row (field = dot-path into the row, op = eq|neq|gt|gte|lt|lte default eq, value = literal). Rules evaluate in order and every matching class is space-joined — so overdue / at-risk rows can be highlighted from the manifest. A host-supplied rowClass FUNCTION (runtime-only) still passes straight through.",
+										"items": {
+											"type": "object",
+											"additionalProperties": false,
+											"required": ["when", "class"],
+											"properties": {
+												"when": {
+													"type": "object",
+													"additionalProperties": false,
+													"required": ["field", "value"],
+													"description": "The predicate evaluated against the row (shared visibleWhen grammar, LOCAL form).",
+													"properties": {
+														"field": { "type": "string", "description": "Dot-path into the row." },
+														"op": { "type": "string", "enum": ["eq", "neq", "gt", "gte", "lt", "lte"], "default": "eq", "description": "Comparison operator (default eq)." },
+														"value": { "description": "Literal right-hand side of the comparison." }
+													}
+												},
+												"class": { "type": "string", "description": "CSS class added to the row when `when` holds." }
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"description": "nav-card-grid built-in widget (ADR-044 §4 cards-collapse): props.entries is REQUIRED and each entry must match the navCardEntry shape. Unlike stats-block's optional entries[], nav-card-grid has no dataSource alternative — it renders arbitrary navigation links, not fetched data.",
+					"if": {
+						"properties": { "widgetKey": { "const": "nav-card-grid" } },
+						"required": ["widgetKey"]
+					},
+					"then": {
+						"required": ["props"],
+						"properties": {
+							"props": {
+								"type": "object",
+								"required": ["entries"],
+								"properties": {
+									"entries": {
+										"type": "array",
+										"items": { "$ref": "#/$defs/navCardEntry" },
+										"description": "One card per array entry, rendered by CnNavCardGrid."
 									}
 								}
 							}
@@ -741,6 +1215,7 @@
 								"properties": {
 									"horizontal": { "type": "boolean", "description": "Render type:'bar' charts horizontally (row bars)." },
 									"legendPosition": { "type": "string", "enum": ["top", "bottom", "left", "right"], "description": "Legend placement override (empty/omitted keeps the automatic placement)." },
+								"valueAxisBaseline": { "type": "string", "enum": ["auto", "zero", "fit"], "description": "Value-axis baseline: 'auto' (the default — zero for bar/area, a bounded window for line/scatter), 'zero' (force a zero baseline), or 'fit' (let ApexCharts frame the data range, for a series living far from zero such as an SLA hovering 95–99%)." },
 									"valueFormat": {
 										"description": "Named value formatter applied to the value axis + tooltip: 'currency' | 'currency-compact' | 'percent', or the object form { name, currency?, decimals? }.",
 										"oneOf": [
@@ -762,7 +1237,11 @@
 										"additionalProperties": { "type": "string" },
 										"description": "Per-category colour map ({ categoryLabel: cssColor }) for pie/donut/radialBar slices and (distributed) bar categories."
 									},
-									"emptyLabel": { "type": "string", "description": "Empty-state message rendered instead of the chart when the resolved series contain no data points." }
+									"emptyLabel": { "type": "string", "description": "Empty-state message rendered instead of the chart when the resolved series contain no data points." },
+									"endpointSource": {
+										"$ref": "#/$defs/chartEndpointSource",
+										"description": "Wave 2 (#91): endpoint-bound series/labels — the shared endpoint transport plus the labelsPath / series[] {name, path} response mapping. Exactly one of dataSource | endpointSource (post-schema check)."
+									}
 								}
 							}
 						}
@@ -783,6 +1262,214 @@
 										"type": "object",
 										"additionalProperties": true,
 										"description": "The widget's content blob — header: { title, subtitle, backgroundImageUrl, overlayMode, height, cta, … }; text: { text, contentMode, fontSize, … }; divider: { style, lineColor, headingText, … }."
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"description": "stat / delta catalog widgets on the v2 grid (Wave 2, #91): the KPI tiles take a `props.content` blob (same shape as their dashboard `content`). The endpoint-binding keys are typed here; the rest of the blob stays free-form (label, icon, format, source, …). Exactly one of content.source | content.endpointSource — a cross-field rule enforced by validateManifestV2() as a post-schema check (stats-block precedent), which also covers the legacy pages[].config.widgets[] placement.",
+					"if": {
+						"properties": { "widgetKey": { "enum": ["stat", "delta"] } },
+						"required": ["widgetKey"]
+					},
+					"then": {
+						"properties": {
+							"props": {
+								"type": "object",
+								"properties": {
+									"content": {
+										"type": "object",
+										"additionalProperties": true,
+										"properties": {
+											"endpointSource": {
+												"$ref": "#/$defs/endpointSource",
+												"description": "Wave 2 (#91): endpoint-bound KPI value(s) — exactly one of source | endpointSource (post-schema check)."
+											},
+											"valueField": {
+												"type": "string",
+												"description": "Dot-path into the endpoint payload for the displayed (current) value. Omitted = the payload itself."
+											},
+											"previousField": {
+												"type": "string",
+												"description": "Dot-path into the endpoint payload for the previous-period value — renders the trend sublabel (arrow + percent-vs-previous; the pipelinq previousPeriod contract)."
+											},
+											"deltaField": {
+												"type": "string",
+												"description": "Dot-path into the endpoint payload for a SERVER-computed delta percent — wins over the client-side previousField computation."
+											},
+											"goodDirection": {
+												"type": "string",
+												"enum": ["up", "down"],
+												"default": "up",
+												"description": "Which trend direction tints green ('up' default; 'down' for cost-like KPIs). The delta widget's source.goodDirection still wins for the OpenRegister form."
+											},
+											"variantWhen": {
+												"type": "array",
+												"description": "First-match threshold styling rules for the stat tile — the matched rule's variant re-tints the value + icon circle, and its optional icon overrides content.icon.",
+												"items": {
+													"type": "object",
+													"required": ["op", "value", "variant"],
+													"additionalProperties": false,
+													"properties": {
+														"op": {
+															"type": "string",
+															"enum": ["eq", "neq", "gt", "gte", "lt", "lte"],
+															"description": "Comparison operator against the resolved display value (numeric when both sides coerce; eq/neq fall back to string equality)."
+														},
+														"value": {
+															"description": "Literal right-hand side of the comparison."
+														},
+														"variant": {
+															"type": "string",
+															"enum": ["default", "primary", "success", "warning", "error"],
+															"description": "Colour variant applied on match ('default' keeps the configured colours). The component also accepts 'danger' as an alias of 'error' for doriath-migrated content."
+														},
+														"icon": {
+															"type": "string",
+															"description": "Optional MDI icon name overriding content.icon while this rule matches."
+														}
+													}
+												}
+											},
+											"clickRoute": {
+												"description": "Whole-tile click-through: a vue-router route NAME (string) or full location object. Alias of content.route (route wins when both are set).",
+												"oneOf": [
+													{ "type": "string" },
+													{ "type": "object", "additionalProperties": true }
+												]
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				,
+				{
+					"description": "workspace-filter catalog widget (#91 Wave 3): a choice list whose selection writes into the page workspace context so sibling widgets refetch. The endpoint/OR-source binding keys of `props.content` are typed here; the rest stays free-form.",
+					"if": {
+						"properties": { "widgetKey": { "const": "workspace-filter" } },
+						"required": ["widgetKey"]
+					},
+					"then": {
+						"properties": {
+							"props": {
+								"type": "object",
+								"properties": {
+									"content": {
+										"type": "object",
+										"additionalProperties": true,
+										"properties": {
+											"writes": {
+												"type": "string",
+												"description": "The workspace context key the selection writes (`@workspace.<key>` or a bare `<key>`). Sibling widgets whose declarative source interpolates `@workspace.<key>` refetch on change."
+											},
+											"style": {
+												"type": "string",
+												"enum": ["radio", "select"],
+												"default": "radio",
+												"description": "Choice style: 'radio' (default) list or 'select' dropdown."
+											},
+											"allLabel": {
+												"type": "string",
+												"description": "Optional leading 'All' option — writes the empty string so an optional sibling token (`@workspace.<key>?`) drops (unfiltered set)."
+											},
+											"showCounts": {
+												"type": "boolean",
+												"default": true,
+												"description": "Render per-option counts."
+											},
+											"options": {
+												"type": "array",
+												"description": "Static options — each { value, label, count? } (or { id, name } / bare strings, normalised).",
+												"items": { "type": ["object", "string", "number"] }
+											},
+											"source": {
+												"type": "object",
+												"additionalProperties": true,
+												"description": "OpenRegister /grouped facet source { register, schema, groupBy, filter? } — each distinct value becomes an option with its object count.",
+												"properties": {
+													"register": { "type": "string" },
+													"schema": { "type": "string" },
+													"groupBy": { "type": "string" },
+													"filter": { "type": "object", "additionalProperties": true }
+												}
+											},
+											"endpointSource": {
+												"$ref": "#/$defs/endpointSource",
+												"description": "App endpoint returning an array of { value, label, count? } options at responsePath."
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				{
+					"description": "kb-search catalog widget (#91 Wave 3): summary-driven knowledge-base search through a PLUGGABLE PROVIDER. The provider seam keys of `props.content` are typed here; the rest stays free-form.",
+					"if": {
+						"properties": { "widgetKey": { "const": "kb-search" } },
+						"required": ["widgetKey"]
+					},
+					"then": {
+						"properties": {
+							"props": {
+								"type": "object",
+								"properties": {
+									"content": {
+										"type": "object",
+										"additionalProperties": true,
+										"properties": {
+											"provider": {
+												"type": "string",
+												"description": "Provider registry key (default 'default' — the built-in endpoint search). An app registers bespoke providers (the xwiki proxy) on CnAppRoot's kbSearchProviders; the xwiki client stays app-side."
+											},
+											"space": {
+												"type": "string",
+												"description": "Provider-specific KB space filter (passed to provider.search)."
+											},
+											"tags": {
+												"description": "Provider-specific tag filter — a single tag or an array.",
+												"oneOf": [
+													{ "type": "string" },
+													{ "type": "array", "items": { "type": "string" } }
+												]
+											},
+											"endpoint": {
+												"type": "string",
+												"description": "The default provider's search endpoint (OpenRegister xWiki leaf by default)."
+											},
+											"queryParam": {
+												"type": "string",
+												"description": "The default provider's query parameter name (default 'q')."
+											},
+											"bindTo": {
+												"type": "string",
+												"description": "Workspace context key to auto-search on (default 'activeSummary')."
+											},
+											"minChars": {
+												"type": "integer",
+												"minimum": 0,
+												"description": "Minimum characters before a search fires (default 3)."
+											},
+											"limit": {
+												"type": "integer",
+												"minimum": 1,
+												"description": "Result cap passed to the provider (default 8)."
+											},
+											"externalOpen": {
+												"type": "boolean",
+												"description": "Whether result links open in a new tab (defaults to the provider's own externalOpen flag)."
+											},
+											"unavailableFallback": {
+												"type": "string",
+												"description": "Text shown when the provider rejects / is unavailable (replaces the default 'Knowledge base unavailable')."
+											}
+										}
 									}
 								}
 							}
@@ -835,7 +1522,7 @@
 		},
 		"dataSource": {
 			"type": "object",
-			"description": "Declarative data binding for widgets. Two forms: (a) shorthand {register, schema, filter?, aggregate: 'count'} — the lib builds a count query and resolves to {count}. (b) raw {graphql: {query, variables?, selectors}} — the lib issues the query and runs selectors against the response. Carry-forward from v1.3.0 widgetDef.dataSource.",
+			"description": "Declarative data binding for widgets. Forms: (a) shorthand {register, schema, filter?, aggregate: 'count'} — the lib builds a count query and resolves to {count}. (b) raw {graphql: {query, variables?, selectors}} — the lib issues the query and runs selectors. (c) #91 Wave 3 chart aggregation — `aggregate` as an OBJECT {groupBy, metric?: count|sum, sumField?, topN?, otherBucket?, labelResolve?} grouped over the schema's objects via OpenRegister's /grouped facet (client-side collection fallback), plus an optional sibling `drilldown` {route, filterParam}. Carry-forward from v1.3.0 widgetDef.dataSource.",
 			"additionalProperties": true,
 			"properties": {
 				"register": {
@@ -852,9 +1539,45 @@
 					"additionalProperties": true
 				},
 				"aggregate": {
-					"type": "string",
-					"enum": ["count"],
-					"description": "Shorthand aggregation. Currently only count is supported."
+					"description": "Shorthand aggregation. The STRING 'count' builds a GraphQL count query resolving to {count}. The OBJECT form (#91 Wave 3) is a chart-only categorical group-by served by OpenRegister's /grouped facet.",
+					"oneOf": [
+						{ "type": "string", "enum": ["count"] },
+						{
+							"type": "object",
+							"required": ["groupBy"],
+							"additionalProperties": false,
+							"description": "#91 Wave 3 chart aggregation: group the schema's objects by `groupBy`, count (default) or sum `sumField`, keep the `topN` largest (sorted desc) and optionally fold the remainder into a translated 'Other' slice, resolving reference keys to labels/colours via `labelResolve`.",
+							"properties": {
+								"groupBy": { "type": "string", "description": "The categorical field grouped on." },
+								"metric": { "type": "string", "enum": ["count", "sum"], "default": "count", "description": "count (default) | sum. sum requires sumField." },
+								"sumField": { "type": "string", "description": "Numeric field summed when metric is 'sum' (required for sum)." },
+								"topN": { "type": "integer", "minimum": 1, "description": "Keep the N largest groups (sorted by value desc)." },
+								"otherBucket": { "type": "boolean", "description": "Fold the post-topN remainder into a single translated 'Other' slice (sum of the rest). The Other bucket never drilldown-navigates." },
+								"labelResolve": {
+									"type": "object",
+									"required": ["schema"],
+									"additionalProperties": false,
+									"description": "Resolve reference (uuid) group keys to the referenced objects' display labels (and optional per-category colours) through the shared object store — the fkResolve pattern.",
+									"properties": {
+										"register": { "type": "string", "description": "Register the reference points into (defaults to the dataSource register)." },
+										"schema": { "type": "string", "description": "Schema slug the reference points into." },
+										"labelField": { "type": "string", "description": "Property used as the display label (default 'name')." },
+										"colorField": { "type": "string", "description": "Optional property read as a per-category CSS colour (feeds the chart's colorMap path)." }
+									}
+								}
+							}
+						}
+					]
+				},
+				"drilldown": {
+					"type": "object",
+					"required": ["route", "filterParam"],
+					"additionalProperties": false,
+					"description": "#91 Wave 3 (chart only): a segment/bar click navigates to `route` with the clicked category's RAW key in the query ({ [filterParam]: rawKey }). A `/`-prefixed route is a path, otherwise a route name. Works with the OBJECT `aggregate` and the legacy `groupBy` forms; the folded 'Other' bucket never navigates.",
+					"properties": {
+						"route": { "type": "string", "description": "Destination route name, or a path when it starts with '/'." },
+						"filterParam": { "type": "string", "description": "Query-param name the clicked category's raw key is written to." }
+					}
 				},
 				"graphql": {
 					"type": "object",
@@ -884,7 +1607,7 @@
 			"type": "object",
 			"required": ["id", "label"],
 			"additionalProperties": false,
-			"description": "A typed page action with a discriminator field. The type field determines behaviour: handler (registry function), open-modal (modal by id), open-page (named route), navigate (URL), object-op (declarative OpenRegister mutation via useObjectStore), export (opens the shared CnMassExportDialog export launcher). When type is omitted, it defaults to 'handler' (back-compatibility with v1.3.0 action declarations). The Ajv instance is compiled with useDefaults: true so the default is applied during validation.",
+			"description": "A typed page action with a discriminator field. The type field determines behaviour: handler (registry function), open-modal (modal by id), open-page (named route), navigate (URL), object-op (declarative OpenRegister mutation via useObjectStore), export (opens the shared CnMassExportDialog export launcher), open-form (schema-driven create dialog — CnActionButtons), refresh (bumps the cn:page:refresh signal), api-call (POST/PUT an app endpoint + toast + refresh — CnActionButtons/dispatchAction), toggle (two-way state button — CnActionButtons only, NOT dispatchable). When type is omitted, it defaults to 'handler' (back-compatibility with v1.3.0 action declarations). The Ajv instance is compiled with useDefaults: true so the default is applied during validation.",
 			"properties": {
 				"id": {
 					"type": "string",
@@ -896,9 +1619,9 @@
 				},
 				"type": {
 					"type": "string",
-					"enum": ["handler", "open-modal", "open-page", "navigate", "object-op", "export"],
+					"enum": ["handler", "open-modal", "open-page", "navigate", "object-op", "export", "open-form", "refresh", "api-call", "agent", "toggle"],
 					"default": "handler",
-					"description": "Action behaviour discriminator. Defaults to 'handler' when omitted (back-compat with v1.3.0). handler: calls a registry function; open-modal: opens a modal by target id; open-page: navigates to a named route; navigate: navigates to a URL; object-op: dispatches a declarative mutation (patch | delete | create) of an OpenRegister object via the shared object store; export: opens the shared CnMassExportDialog export launcher configured via entities[]/formats[] — the confirm payload ({format, entity?}) routes to the action's `handler` in the manifest actions map (the app's export service does the download). object-op declares mutation INTENT only — authority is enforced server-side by OpenRegister RBAC (ADR-022/ADR-023); authorization-shaped fields have no client-side effect and are not accepted here."
+					"description": "Action behaviour discriminator. Defaults to 'handler' when omitted (back-compat with v1.3.0). handler: calls a registry function; open-modal: opens a modal by target id; open-page: navigates to a named route; navigate: navigates to a URL; object-op: dispatches a declarative mutation (patch | delete | create) of an OpenRegister object via the shared object store; export: opens the shared CnMassExportDialog export launcher configured via entities[]/formats[] — the confirm payload ({format, entity?}) routes to the action's `handler` in the manifest actions map (the app's export service does the download). open-form (#91 Wave 3): CnActionButtons opens a schema-driven create dialog (CnAdvancedFormDialog) for the action's register/schema, saves + toasts + refreshes + optionally navigates to onSuccessRoute. refresh (#91 Wave 3): bumps the page-level cn:page:refresh event-bus signal so every endpoint-bound widget refetches. api-call (#91 Wave 3): POST/PUT the token-interpolated url with payload/params (JSON body, payload resolves @-tokens recursively at any depth) + success/error toast + auto page-refresh (unless refresh:false); confirm gating is surface-consumed intent (object-op precedent); download:true requests a binary blob and triggers a browser file download instead (auto-refresh defaults to OFF in that mode). agent (hermiq#41): run a governed hermiq agent against the page object — POSTs { register, schema, objectId, resultField?, skill?, prompt? } to /apps/hermiq/api/agents/{agent}/run-on-object (object-RBAC-scoped; dispatches the governed AgentRunRequestedEvent). register/schema/objectId default to the page's @register/@schema/@objectId object context. A first-class companion to api-call (which remains the fallback for a bespoke body); hermiq is NOT hard-required — an app-level 404 surfaces a graceful 'agent runtime unavailable' toast. toggle (#91 Wave 3): a stateful two-way state button rendered by CnActionButtons (GET stateSource on mount, optimistic write on click) — NOT dispatchable through dispatchAction. object-op declares mutation INTENT only — authority is enforced server-side by OpenRegister RBAC (ADR-022/ADR-023); authorization-shaped fields have no client-side effect and are not accepted here."
 				},
 				"op": {
 					"type": "string",
@@ -913,7 +1636,7 @@
 				"confirm": {
 					"type": "boolean",
 					"default": false,
-					"description": "object-op only: when true, patch/create present a confirmation dialog (CnConfirmDialog) before dispatch. delete ALWAYS confirms regardless of this flag."
+					"description": "Confirm-gating (object-op + #91 Wave 3 api-call / open-form + agent): when true, the action presents a CnConfirmDialog before running (the dispatcher / CnActionButtons runs AFTER confirmation). object-op delete ALWAYS confirms regardless of this flag."
 				},
 				"target": {
 					"type": "string",
@@ -930,7 +1653,7 @@
 				},
 				"route": {
 					"type": "string",
-					"description": "Destination route name for handler: 'navigate'. The dispatcher (manifestActionDispatch) calls $router.push({ name: route, params }). For row-level actions params include { id: row[rowKey] }; page-level header actions navigate without row context (e.g. a 'New X' action to a detail route)."
+					"description": "Destination route name for handler: 'navigate'. The dispatcher (manifestActionDispatch) calls $router.push({ name: route, params }). For row-level actions params include { id: row[rowKey] } automatically — do NOT restate it as params: { id: \"{id}\" }, though that placeholder does resolve (see `params`). Page-level header actions navigate without row context (e.g. a 'New X' action to a detail route)."
 				},
 				"icon": {
 					"type": "string",
@@ -970,6 +1693,119 @@
 				"description": {
 					"type": "string",
 					"description": "export only: pre-translated description shown above the export launcher's pickers."
+				},
+				"url": {
+					"type": "string",
+					"description": "api-call / toggle only: the app endpoint (POST/PUT). App-relative (routed through generateUrl) or absolute (http/https). May interpolate @objectId / @object.<field> / @workspace.<key> / @config.<key> tokens inline, as well as the literal {objectId} brace placeholder (unresolved tokens collapse to empty)."
+				},
+				"method": {
+					"type": "string",
+					"enum": ["POST", "PUT"],
+					"description": "api-call: HTTP method (default POST). toggle writeUrl: default PUT."
+				},
+				"payload": {
+					"type": "object",
+					"additionalProperties": true,
+					"description": "api-call only: the JSON request body — PREFERRED over `params`, and used instead of it when both are set. Values run the SAME token grammar as `params` (@me, @now, @today±Nd, @monthStart/@quarterStart/@yearStart, @objectId, @object.<field>, @workspace.<key>/@config.<key> with a trailing `?` marking a value OPTIONAL — dropped when unresolved) but resolve RECURSIVELY at ANY nesting depth, including arrays of objects — e.g. a Filinq document-generation body: { \"dataRefs\": [{ \"register\": \"crm\", \"schema\": \"lead\", \"id\": \"@objectId\" }] }. A required (non-`?`) token left unresolved anywhere in the tree BLOCKS the call (error toast) instead of sending the literal token string to the server."
+				},
+				"params": {
+					"type": "object",
+					"additionalProperties": true,
+					"description": "Two distinct uses depending on the action's dispatch. (1) api-call / toggle: the JSON request body (legacy — prefer `payload` for anything with nested objects/arrays; ignored when `payload` is set). Values run the shared filter-token grammar ONE level deep (@me, @today±Nd, @workspace.<key>/@config.<key> with a trailing `?` for optional values dropped when unresolved; a required unresolved token skips the call). (2) handler: 'navigate' (index-page row actions, manifestActionDispatch): vue-router params merged OVER the default { id: row[rowKey] }. OMIT it for the ordinary 'open this row's detail page' action — the row id is already injected. String values run the `{field}` ROW-token grammar (NOT the @-token grammar): \"{id}\" resolves to row.id with its type preserved, \"run-{id}\" interpolates as text, and a brace-less \"new\" stays literal (that is what makes a 'New X' action navigate with { id: 'new' }). A token naming a field the row does not carry is dropped with a console.warn — so `id` falls back to the row id — instead of being pushed as a literal %7Bid%7D path segment."
+				},
+				"download": {
+					"type": "boolean",
+					"default": false,
+					"description": "api-call only: request the response as a binary blob (axios responseType 'blob') and trigger a browser file download instead of a JSON toast+refresh cycle. The filename is taken from the response's Content-Disposition header, else the token-resolved `filename`, else 'download.pdf'. The success toast still shows; unlike a normal api-call the page does NOT auto-refresh afterwards unless `refresh: true` is explicitly set."
+				},
+				"filename": {
+					"type": "string",
+					"description": "api-call `download: true` only: fallback filename used when the response carries no Content-Disposition header (falls back further to 'download.pdf'). Interpolates the same token grammar as `url` (@objectId, @object.<field>, @workspace.<key>, @config.<key>, {objectId})."
+				},
+				"successMessage": {
+					"type": "string",
+					"description": "api-call / open-form / agent / toggle: pre-translated success toast text (a library default applies when absent; agent default 'Run queued')."
+				},
+				"errorMessage": {
+					"type": "string",
+					"description": "api-call / agent / toggle: pre-translated error toast text (falls back to the server's error/message, then a library default; an agent 404 with no structured body toasts 'agent runtime unavailable' instead)."
+				},
+				"refresh": {
+					"type": "boolean",
+					"default": true,
+					"description": "api-call / agent / toggle: bump the page-level cn:page:refresh signal after a successful call (default true; set false to skip). EXCEPTION: for an api-call with download:true the default flips to false — a file download normally shouldn't also force-refetch every widget — set refresh:true explicitly to opt back in."
+				},
+				"agent": {
+					"type": "string",
+					"description": "agent only (REQUIRED): the hermiq agent uuid to run against the page object. POSTed to /apps/hermiq/api/agents/{agent}/run-on-object (hermiq#41) — object-RBAC-scoped, dispatches the governed AgentRunRequestedEvent. May interpolate the shared @-token grammar (@objectId, @object.<field>, @workspace.<key>, @config.<key>)."
+				},
+				"skill": {
+					"type": "string",
+					"description": "agent only: optional skill id folded into the governed run (interpolates the same @-token grammar as `agent`)."
+				},
+				"prompt": {
+					"type": "string",
+					"description": "agent only: optional prompt handed to the governed run. Interpolates the shared @-token grammar inline (@objectId, @object.<field>, @workspace.<key>, @config.<key>) so it can be grounded on the page object — e.g. 'Summarise @object.title'."
+				},
+				"resultField": {
+					"type": "string",
+					"description": "agent only: the object field the agent's result is written back to (falls back to hermiq's default result field when absent)."
+				},
+				"objectId": {
+					"type": "string",
+					"description": "agent only: the target object id. Defaults to the page object context's @objectId; an unresolved required @objectId BLOCKS the call (fail-closed) rather than sending a literal token. May be an explicit id or an @-token string."
+				},
+				"register": {
+					"type": "string",
+					"description": "open-form / agent: OpenRegister register slug. open-form: the create dialog's schema register. agent: the run-on-object register — both fall back to the page object context's @register."
+				},
+				"schema": {
+					"type": "string",
+					"description": "open-form / agent: OpenRegister schema slug. open-form: the create dialog fetches this schema and saves the new object against it. agent: the run-on-object schema — falls back to the page object context's @schema."
+				},
+				"onSuccessRoute": {
+					"description": "open-form only: optional post-save navigation target (#91). A bare route NAME (string) navigates with the saved object's id merged into the route params under `id` (harmless when the route has no `:id` segment — backward compatible). The object form { name, paramField?, objectParam? } names the id param (`paramField`, default `id`) and, when `objectParam` is set, also passes the whole saved object under that param key (for a props:true detail route to render without a refetch). The id is read from saved.id, then saved.uuid, then saved['@self'].id.",
+					"oneOf": [
+						{ "type": "string" },
+						{
+							"type": "object",
+							"additionalProperties": false,
+							"required": ["name"],
+							"properties": {
+								"name": { "type": "string", "description": "The vue-router route NAME pushed after a successful save." },
+								"paramField": { "type": "string", "default": "id", "description": "Route param name populated from the saved object's id (default `id`)." },
+								"objectParam": { "type": "string", "description": "When set, the whole saved object is passed under this route param (props:true detail routes render without a refetch)." }
+							}
+						}
+					]
+				},
+				"labelOn": {
+					"type": "string",
+					"description": "toggle only: button label rendered while the state is ON (true). Falls back to `label`."
+				},
+				"labelOff": {
+					"type": "string",
+					"description": "toggle only: button label rendered while the state is OFF (false). Falls back to `label`."
+				},
+				"stateSource": {
+					"$ref": "#/$defs/endpointSource",
+					"description": "toggle only: the endpoint the initial state is read from on mount (the shared endpointSource shape — url + token-resolved params + responsePath). The `field` dot-path picks the boolean off the payload."
+				},
+				"writeUrl": {
+					"type": "string",
+					"description": "toggle only: the endpoint the flipped state is written to on click (interpolates the same tokens as `url`)."
+				},
+				"field": {
+					"type": "string",
+					"description": "toggle only: the state field — read off the stateSource payload on mount AND sent (as the flipped boolean) in the write body under this key."
+				},
+				"variant": {
+					"type": "string",
+					"description": "CnActionButtons button variant (e.g. 'primary', 'secondary', 'error'). 'error' also styles the confirm dialog as destructive."
+				},
+				"visibleWhen": {
+					"$ref": "#/$defs/visibleWhen",
+					"description": "#91 Wave 3: an optional predicate gating whether the action renders — the shared banner shape ({ endpoint | source | field, op, value }). The `field`-only LOCAL form evaluates against the page object context (a detail action shown only in the right lifecycle state); endpoint / source forms fetch. Fail-safe: a broken predicate hides the action."
 				}
 			},
 			"allOf": [
@@ -980,8 +1816,101 @@
 						"required": ["type"]
 					},
 					"then": { "required": ["op"] }
+				},
+				{
+					"description": "api-call actions MUST declare their endpoint via `url`.",
+					"if": {
+						"properties": { "type": { "const": "api-call" } },
+						"required": ["type"]
+					},
+					"then": { "required": ["url"] }
+				},
+				{
+					"description": "open-form actions MUST declare the create schema via `schema`.",
+					"if": {
+						"properties": { "type": { "const": "open-form" } },
+						"required": ["type"]
+					},
+					"then": { "required": ["schema"] }
+				},
+				{
+					"description": "agent actions MUST declare the target agent uuid via `agent`.",
+					"if": {
+						"properties": { "type": { "const": "agent" } },
+						"required": ["type"]
+					},
+					"then": { "required": ["agent"] }
+				},
+				{
+					"description": "toggle actions MUST declare their write endpoint via `writeUrl`.",
+					"if": {
+						"properties": { "type": { "const": "toggle" } },
+						"required": ["type"]
+					},
+					"then": { "required": ["writeUrl"] }
 				}
 			]
+		},
+		"fieldValidation": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "manifest-form-logic: per-field validation rules for `type: 'form'` pages, enforced client-side by CnFormPage's validateFieldValue() before dispatch. Per-type semantics: string/password — required = non-empty after trim, min/max = string LENGTH, pattern tested against the value; number — required = finite number, min/max = numeric VALUE, pattern not applicable; boolean — required = value must be true (consent checkboxes), min/max/pattern not applicable; enum — required = a value is selected, min/max/pattern not applicable; json — required = non-null, min/max/pattern not applicable. Type-inapplicable rules are rejected by validateManifestV2() post-schema (pattern only on string/password; min/max only on string/password/number). `message` (i18n-able) overrides the built-in default message for whichever rule fails.",
+			"properties": {
+				"required": {
+					"type": "boolean",
+					"description": "Whether the field must be filled. Default false. Per-type pass condition — see the fieldValidation description."
+				},
+				"min": {
+					"type": "number",
+					"description": "Minimum bound. String length for string/password fields, numeric value for number fields. MUST be <= max when both are set (validateManifestV2 post-schema check)."
+				},
+				"max": {
+					"type": "number",
+					"description": "Maximum bound. String length for string/password fields, numeric value for number fields."
+				},
+				"pattern": {
+					"type": "string",
+					"description": "ECMAScript regex source tested against string/password values (implicit full-value test via new RegExp(pattern).test(value)). MUST compile — validateManifestV2() post-schema check runs `new RegExp(pattern)` in a try/catch."
+				},
+				"message": {
+					"type": "string",
+					"description": "i18n-able override message shown for ANY failing rule on this field, in place of the built-in translated default. Run through the page's `translate` prop, like `field.label`."
+				}
+			}
+		},
+		"visibleWhen": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "#91 Wave 3: the shared visibility predicate (the Wave-1 banner shape). THREE modes: `endpoint` (GET a JSON endpoint, `field` dot-paths into the body), `source` (an OpenRegister { register, schema, filter? } query — `field` into the first result, or omit / use @total for the collection total), or LOCAL (neither endpoint nor source — `field` dot-paths into the caller's object context, e.g. a detail-page record). `op` defaults to eq. Evaluation is FAIL-SAFE (any error → hidden).",
+			"properties": {
+				"endpoint": {
+					"type": "string",
+					"description": "A same-origin URL returning JSON; `field` is a dot-path into the body."
+				},
+				"source": {
+					"type": "object",
+					"additionalProperties": true,
+					"description": "An OpenRegister object query { register, schema, filter? } (filter supports the shared @-token grammar). `field` dot-paths into the first result; omit it (or use @total) to compare the collection total.",
+					"properties": {
+						"register": { "type": "string" },
+						"schema": { "type": "string" },
+						"filter": { "type": "object", "additionalProperties": true }
+					}
+				},
+				"field": {
+					"type": "string",
+					"description": "Dot-path to the compared value — into the endpoint body, the source's first result, or (LOCAL mode) the caller's object context."
+				},
+				"op": {
+					"type": "string",
+					"enum": ["eq", "neq", "gt", "gte", "lt", "lte"],
+					"default": "eq",
+					"description": "Comparison operator (default eq). eq/neq compare loosely-normalised primitives; ordering operators coerce both sides to Number."
+				},
+				"value": {
+					"description": "The literal right-hand side of the comparison."
+				}
+			}
 		},
 		"objectTableSource": {
 			"type": "object",
@@ -1011,6 +1940,88 @@
 					"type": "integer",
 					"minimum": 0,
 					"description": "Row cap. 0 (or omitted) shows all fetched rows; a positive value caps the rendered rows and enables the View-all footer when more rows exist."
+				},
+				"extend": {
+					"type": "array",
+					"items": { "type": "string" },
+					"description": "OpenRegister `_extend[]` values forwarded on the fetch (e.g. [\"calculations\"]) so read-time virtual/derived fields are hydrated and available as columns. Each entry is passed through verbatim."
+				}
+			}
+		},
+		"endpointSource": {
+			"type": "object",
+			"required": ["url"],
+			"additionalProperties": false,
+			"description": "Wave 2 (#91): ONE coherent endpoint data binding shared by the stat / delta / object-table widgets (the chart uses the extended $defs/chartEndpointSource). Reads an arbitrary app REST endpoint through the library's useEndpointSource engine: params pass the SAME @-token grammar widget filters use (@me, @today±Nd, @monthStart, @workspace.<key>/@config.<key> with a trailing `?` for optional values that drop when unresolved — a REQUIRED token that stays unresolved blocks the fetch), requests dedupe + short-TTL cache per (method, url, resolved params), and the widget refetches on cn:page:refresh / a matching cn:widget:refresh. Exactly ONE of the widget's OpenRegister source | endpointSource may be configured — a cross-field rule enforced by validateManifestV2() as a post-schema check (clear error message), matching the stats-block precedent.",
+			"properties": {
+				"url": {
+					"type": "string",
+					"description": "Endpoint URL — app-relative (routed through generateUrl, e.g. '/apps/pipelinq/api/analytics/overview') or absolute (http/https, left untouched). May interpolate @page.<key> / @workspace.<key> / @config.<key> / @objectId / @object.<field> tokens inline; unresolved URL tokens collapse to an empty string."
+				},
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST"],
+					"default": "GET",
+					"description": "HTTP method. GET (default) sends the resolved params as query parameters; POST sends them as the JSON body."
+				},
+				"params": {
+					"type": "object",
+					"additionalProperties": true,
+					"description": "Request parameters. Values pass the shared filter-token grammar (resolveFilterTokens): @me, @now, @today, @today±Nd, @monthStart/@quarterStart/@yearStart, @objectId/@object.<field> (detail context), @workspace.<key>/@config.<key> with a trailing `?` for optional values (dropped when unresolved; e.g. `{ \"period\": \"@workspace.datePreset?\" }` rides the dashboard date-range pills). A required token that stays unresolved blocks the fetch until the page context provides it."
+				},
+				"responsePath": {
+					"type": "string",
+					"description": "Dot-path pluck of the response payload (e.g. 'summary', 'data.series'). Omitted = the whole response body."
+				}
+			}
+		},
+		"chartEndpointSource": {
+			"type": "object",
+			"required": ["url"],
+			"additionalProperties": false,
+			"description": "The chart widget's endpoint binding: the $defs/endpointSource transport plus the labels/series response mapping. The mapping keys live INSIDE this block (not as sibling props) because the chart's flat `series` / `labels` props already carry the static data. When the plucked payload is an ARRAY of points (e.g. pipelinq /api/analytics/trends → responsePath 'series'), labelsPath / series[].path are PER-ITEM field paths (labelsPath 'date', series [{ name: 'Leads', path: 'value' }]); when it is an OBJECT they point at parallel arrays. Pie-family charts flatten the FIRST mapped series into the flat value array ApexCharts expects. Exactly ONE of dataSource | endpointSource per chart widget (post-schema check).",
+			"properties": {
+				"url": {
+					"type": "string",
+					"description": "Endpoint URL — app-relative (generateUrl) or absolute. Same token interpolation as $defs/endpointSource."
+				},
+				"method": {
+					"type": "string",
+					"enum": ["GET", "POST"],
+					"default": "GET",
+					"description": "HTTP method. GET (default) sends params as query parameters; POST as the JSON body."
+				},
+				"params": {
+					"type": "object",
+					"additionalProperties": true,
+					"description": "Request parameters — the shared filter-token grammar (see $defs/endpointSource.params). Params re-resolve and the chart refetches when the dashboard date range changes (the page publishes dateFrom / dateTo / datePreset into the workspace context)."
+				},
+				"responsePath": {
+					"type": "string",
+					"description": "Dot-path pluck of the response payload. Omitted = the whole response body."
+				},
+				"labelsPath": {
+					"type": "string",
+					"description": "Labels/categories mapping: a per-item field path for an ARRAY payload ('date'), or the path of a parallel label array for an OBJECT payload ('labels')."
+				},
+				"series": {
+					"type": "array",
+					"description": "Series mapping — one entry per rendered series.",
+					"items": {
+						"type": "object",
+						"required": ["path"],
+						"additionalProperties": false,
+						"properties": {
+							"name": {
+								"type": "string",
+								"description": "Series display name (legend / tooltip). Defaults to the path."
+							},
+							"path": {
+								"type": "string",
+								"description": "Value mapping: a per-item field path for an ARRAY payload ('value'), or the path of a parallel number array for an OBJECT payload ('totals')."
+							}
+						}
+					}
 				}
 			}
 		},
@@ -1086,8 +2097,8 @@
 				},
 				"type": {
 					"type": "string",
-					"enum": ["index", "detail", "dashboard", "logs", "settings", "chat", "files", "form", "map", "roadmap", "search", "wiki", "custom"],
-					"description": "Page type. Closed enum of 14 supported types. 'roadmap' mounts CnFeaturesAndRoadmapPage (features + GitHub-issue-backed roadmap). 'search' mounts CnSearchPage (cross-schema query + facet sidebar + results list; consumers wire the actual search via @search). 'wiki' mounts CnWikiPage (manifest-declared markdown article + optional sidebar tree; MUST declare config.register + config.schema). 'custom' requires a _note field explaining why a standard type was not feasible."
+					"enum": ["index", "detail", "dashboard", "logs", "settings", "chat", "files", "form", "map", "roadmap", "search", "wiki", "flows", "flow-detail", "custom"],
+					"description": "Page type. Closed enum of 16 supported types. 'roadmap' mounts CnFeaturesAndRoadmapPage (features + GitHub-issue-backed roadmap). 'search' mounts CnSearchPage (cross-schema query + facet sidebar + results list; consumers wire the actual search via @search). 'wiki' mounts CnWikiPage (manifest-declared markdown article + optional sidebar tree; MUST declare config.register + config.schema). 'flows' mounts CnFlowsPage (the app-scoped flow list) and 'flow-detail' mounts CnFlowEditorPage (the shared node/edge canvas); both take config.app to scope to the owning app, and neither can be expressed as 'index'/'detail' because a flow lives in OpenRegister's native flow store rather than a register/schema pair (ADR-110 Decision 4). 'custom' requires a _note field explaining why a standard type was not feasible."
 				},
 				"title": {
 					"type": "string",
@@ -1135,8 +2146,9 @@
 				},
 				"config": {
 					"type": "object",
-					"description": "Type-specific configuration. Shape varies by page type — see v1 schema for per-type config shapes (index, detail, dashboard, logs, settings, chat, files, form, map, custom). Config values under pages[].config may use two sentinel forms: `@resolve:<key>` (IAppConfig lookup, resolved by the loader at manifest-load time) and `@route.<param>` (vue-router param lookup, resolved by CnPageRenderer at render time). Carry-forward from v1: register, schema, columns, actions, sidebar, sidebarProps, fields, sections, tabs, content, layout, widgets (dashboard only), cardComponent, columnGroups, etc.",
+					"description": "Type-specific configuration. Shape varies by page type — see v1 schema for per-type config shapes (index, detail, dashboard, logs, settings, chat, files, form, map, custom). Config values under pages[].config may use the closed sentinel vocabulary (see $defs/sentinelTokenAny) — an out-of-vocabulary @-token FAILS validation via the sentinelGuardedValue allOf guard. Carry-forward from v1: register, schema, columns, actions, sidebar, sidebarProps, fields, sections, tabs, content, layout, widgets (dashboard only), cardComponent, columnGroups, etc.",
 					"additionalProperties": true,
+					"allOf": [{ "$ref": "#/$defs/sentinelGuardedValue" }],
 					"properties": {
 						"register": {
 							"type": "string",
@@ -1277,10 +2289,53 @@
 						},
 						"fields": {
 							"type": "array",
-							"description": "Form fields (for type='form'). Carry-forward from v1.3.0.",
+							"description": "Form fields (for type='form'). Carry-forward from v1.3.0. manifest-form-logic adds two OPTIONAL typed properties — `visibleWhen` (reuses `$defs/visibleWhen`; LOCAL mode resolves `field` as a dot-path into the live form data) and `validation` (`$defs/fieldValidation`) — while every other carry-forward field shape (`key`, `label`, `type`, `enum`, `widget`, `help`, etc.) stays untyped via `additionalProperties: true` on the item.",
 							"items": {
 								"type": "object",
-								"additionalProperties": true
+								"additionalProperties": true,
+								"properties": {
+									"visibleWhen": {
+										"$ref": "#/$defs/visibleWhen",
+										"description": "manifest-form-logic: optional conditional-visibility predicate. LOCAL mode (neither `endpoint` nor `source`) resolves `field` as a dot-path into the live form data — the first dot-segment MUST match a declared `config.fields[].key` (validateManifestV2 post-schema check). `endpoint` / `source` modes keep their existing fail-safe, evaluated-once-at-mount semantics."
+									},
+									"validation": {
+										"$ref": "#/$defs/fieldValidation",
+										"description": "manifest-form-logic: optional per-field validation rules, enforced client-side by CnFormPage before dispatch. See `$defs/fieldValidation` for the per-type semantics table."
+									}
+								}
+							}
+						},
+						"steps": {
+							"type": "array",
+							"minItems": 1,
+							"description": "manifest-form-logic: for type='form' pages, ordered multi-step wizard groups. Each entry is `{ id, title, description?, fields[] }` where `fields[]` is an ordered array of KEY REFERENCES into `config.fields[].key` — steps do not embed field objects (config.fields[] stays the single source of truth). Absent `steps` = single-step form, byte-for-byte the pre-change rendering. When present, validateManifestV2() post-schema requires: step ids unique within the page, every fields[] entry references a declared field key, and every declared field key appears in EXACTLY ONE step (complete partition — an unassigned field would silently never render; a doubly-assigned field would double-render).",
+							"items": {
+								"type": "object",
+								"required": ["id", "title", "fields"],
+								"additionalProperties": false,
+								"description": "One wizard step. `fields[]` order is the rendering order for that step's fields.",
+								"properties": {
+									"id": {
+										"type": "string",
+										"minLength": 1,
+										"description": "Unique step identifier within the page's `steps[]` array."
+									},
+									"title": {
+										"type": "string",
+										"minLength": 1,
+										"description": "i18n key (or literal) for the step's title, shown in the step indicator."
+									},
+									"description": {
+										"type": "string",
+										"description": "Optional i18n key (or literal) for a short step description/subtitle."
+									},
+									"fields": {
+										"type": "array",
+										"minItems": 1,
+										"items": { "type": "string", "minLength": 1 },
+										"description": "Ordered field KEYS (referencing `config.fields[].key`) rendered on this step."
+									}
+								}
 							}
 						},
 						"fieldWidgets": {
@@ -1495,6 +2550,48 @@
 				"displayName": {
 					"type": "string",
 					"description": "Human-readable label for the linked object type."
+				}
+			}
+		},
+		"adminSettingsEntry": {
+			"type": "object",
+			"required": ["id", "label"],
+			"additionalProperties": false,
+			"oneOf": [
+				{ "required": ["type"] },
+				{ "required": ["component"] }
+			],
+			"description": "One admin-only settings section rendered by CnAppRoot's generic admin NcAppSettingsDialog, sorted into the dialog by `order`. Exactly one of `type` (a built-in section) or `component` (a custom section resolved from the renderer registry) MUST be present.",
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique identifier for this admin-settings entry; also the rendered NcAppSettingsSection id."
+				},
+				"label": {
+					"type": "string",
+					"description": "i18n translation key (English source) resolved by the consuming app's t() function, shown as the section header."
+				},
+				"type": {
+					"type": "string",
+					"enum": ["organisation-credentials"],
+					"description": "Built-in admin-settings section. Closed enum. 'organisation-credentials' renders CnCredentials with scope=\"organisation\" (the OpenRegister credential broker's organisation-scope pane). Mutually exclusive with `component`."
+				},
+				"component": {
+					"type": "string",
+					"description": "Registry key of a custom admin-settings section component, resolved from the CnAppRoot custom-components registry at render time. Mutually exclusive with `type`."
+				},
+				"order": {
+					"type": "integer",
+					"description": "Sort order of this section within the admin dialog. Entries without an order render last, in array position."
+				},
+				"permission": {
+					"type": "string",
+					"description": "Optional permission string that further narrows visibility of this section WITHIN the already owner-gated admin dialog, reusing the existing per-item permission grammar. Narrow-only: it can never widen access to a caller who is not an owner of the app."
+				},
+				"props": {
+					"type": "object",
+					"additionalProperties": true,
+					"description": "Props forwarded to a custom `component` entry. Ignored for built-in `type` entries."
 				}
 			}
 		}

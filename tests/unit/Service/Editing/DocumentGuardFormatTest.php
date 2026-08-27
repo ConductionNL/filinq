@@ -4,23 +4,23 @@
  * Format refusals, decided from the BYTES rather than the file name.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#3-refusals
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\DocumentObjectServiceResolver;
-use OCA\DocuDesk\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -45,7 +45,7 @@ class DocumentGuardFormatTest extends TestCase {
 	/**
 	 * A file stub with the given mime and package contents.
 	 *
-	 * @param string             $mime    The mime type.
+	 * @param string $mime The mime type.
 	 * @param array<int, string> $entries Zip entry names, empty for a non-zip.
 	 *
 	 * @return File The stub.

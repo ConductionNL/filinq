@@ -4,7 +4,7 @@ status: draft
 
 # Anonymization — Delta for Prohibition Guard and Standing-Consent Auto-Skip
 
-Extends the `anonymization` capability so the generic anonymise flow enforces `publicationProhibition` rules and honours `standingPublicationConsent` rules, using a compute-at-guard design (no persisted DocuDesk flag on OpenRegister's `EntityRelation`). The matcher is the existing `PolicyMatchService`. The prohibition guard runs at the moment an operator records a skip decision — per occurrence — not deferred to anonymise time. This flow is read-only with respect to the consent register: it MUST NOT create or modify `publicationConsent` records and MUST NOT invoke the publication-clearance workflow.
+Extends the `anonymization` capability so the generic anonymise flow enforces `publicationProhibition` rules and honours `standingPublicationConsent` rules, using a compute-at-guard design (no persisted Filinq flag on OpenRegister's `EntityRelation`). The matcher is the existing `PolicyMatchService`. The prohibition guard runs at the moment an operator records a skip decision — per occurrence — not deferred to anonymise time. This flow is read-only with respect to the consent register: it MUST NOT create or modify `publicationConsent` records and MUST NOT invoke the publication-clearance workflow.
 
 ## ADDED Requirements
 
@@ -60,14 +60,14 @@ Each detected entity in the extract response MUST carry a `prohibitionMatch` fie
 
 ### Requirement: The skip decision for a prohibited entity MUST be guarded at decision time, per occurrence
 
-DocuDesk MUST expose a per-relation skip-decision endpoint (`PATCH /apps/docudesk/api/anonymization/relations/{id}`) that the review UI calls to record a skip/include decision, in place of PATCHing OpenRegister's `/api/entity-relations/{id}` directly. Setting `skipAnonymization = true` on a relation whose entity matches an active `publicationProhibition` rule is guarded:
+Filinq MUST expose a per-relation skip-decision endpoint (`PATCH /apps/filinq/api/anonymization/relations/{id}`) that the review UI calls to record a skip/include decision, in place of PATCHing OpenRegister's `/api/entity-relations/{id}` directly. Setting `skipAnonymization = true` on a relation whose entity matches an active `publicationProhibition` rule is guarded:
 
 - confidence ≥ threshold → the decision MUST be rejected with **HTTP 422** (absolute; `force` does NOT release it);
 - confidence < threshold → the decision MUST be rejected with **HTTP 422** unless the request sets `force = true`.
 
 Including an entity (setting `skipAnonymization = false`, or a non-skip decision such as setting `bases`) MUST always be allowed. When the decision is allowed, the endpoint MUST forward it to OpenRegister via `EntityRelationMapper::updateDecisionMetadata` (so OR's audit-trail records the flip and its actor). When rejected, no OpenRegister write MUST occur.
 
-The guard evaluates a single occurrence (one relation), so the operator gets the error at the moment they attempt the skip — not at anonymise time. The threshold is app config `docudesk.prohibition.high_confidence_threshold` (default `0.85`), read at request time; the same threshold governs `highConfidence` in the extract response.
+The guard evaluates a single occurrence (one relation), so the operator gets the error at the moment they attempt the skip — not at anonymise time. The threshold is app config `filinq.prohibition.high_confidence_threshold` (default `0.85`), read at request time; the same threshold governs `highConfidence` in the extract response.
 
 #### Scenario: Skipping a non-prohibited entity is allowed
 
@@ -106,7 +106,7 @@ The guard evaluates a single occurrence (one relation), so the operator gets the
 
 #### Scenario: Configurable threshold at 0.90 reclassifies a 0.87 match
 
-- **GIVEN** `docudesk.prohibition.high_confidence_threshold = 0.90`
+- **GIVEN** `filinq.prohibition.high_confidence_threshold = 0.90`
 - **AND** a relation whose entity matches a prohibition at confidence 0.87, with `force = true`
 - **WHEN** a skip decision is sent
 - **THEN** the match is treated as sub-threshold and released by `force` (skip forwarded, no 422)
@@ -140,12 +140,12 @@ The 422 body from the skip endpoint MUST be JSON of shape:
 
 ### Requirement: The anonymise flow MUST keep a defence-in-depth prohibition backstop
 
-OpenRegister's generic `/api/entity-relations/{id}` PATCH remains open, so a caller could bypass the DocuDesk skip endpoint and skip a prohibited relation directly. The DocuDesk anonymise flow therefore MUST re-check before redaction: if a relation left un-redacted matches a prohibition at confidence ≥ threshold, the anonymise request MUST fail with HTTP 422 (absolute), regardless of `force`. This is a backstop for the primary decision-time guard, not the main enforcement point, so it only enforces the non-releasable (≥ threshold) tier.
+OpenRegister's generic `/api/entity-relations/{id}` PATCH remains open, so a caller could bypass the Filinq skip endpoint and skip a prohibited relation directly. The Filinq anonymise flow therefore MUST re-check before redaction: if a relation left un-redacted matches a prohibition at confidence ≥ threshold, the anonymise request MUST fail with HTTP 422 (absolute), regardless of `force`. This is a backstop for the primary decision-time guard, not the main enforcement point, so it only enforces the non-releasable (≥ threshold) tier.
 
 #### Scenario: Direct-OR bypass is caught at anonymise
 
-- **GIVEN** a prohibited relation at confidence 0.97 was skipped by PATCHing OpenRegister directly (bypassing the DocuDesk skip endpoint)
-- **WHEN** a DocuDesk anonymise request for the file is processed
+- **GIVEN** a prohibited relation at confidence 0.97 was skipped by PATCHing OpenRegister directly (bypassing the Filinq skip endpoint)
+- **WHEN** a Filinq anonymise request for the file is processed
 - **THEN** the response is HTTP 422 and no redaction occurs
 
 ### Requirement: The guard MUST NOT create or modify `publicationConsent` records

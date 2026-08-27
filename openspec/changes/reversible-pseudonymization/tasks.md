@@ -5,7 +5,7 @@
 
 ## 1. Register + schema
 
-- [ ] 1.1 Add the `pseudonymMap` schema to the `document` register + additive `mappingRef` on `anonymizationLink` in `lib/Settings/docudesk_register.json` (REQ-DDRPS-001)
+- [ ] 1.1 Add the `pseudonymMap` schema to the `document` register + additive `mappingRef` on `anonymizationLink` in `lib/Settings/filinq_register.json` (REQ-DDRPS-001)
   - `pseudonymMap` (`anonymizationLink` ref, `sourceFileId` facetable, `mappings` as `writeOnly` + `_render:false`, `algorithm`, `entryCount`, `scope`); nullable `mappingRef` added to `anonymizationLink` with no other field change; register-i18n on user-facing labels; register version bump with changelog; no seed map (would fabricate PII). Schema refs in slug form.
 
 ## 2. Backend — store + reversible mode
@@ -22,7 +22,7 @@
   - Decrypt the map; reverse placeholders → originals longest-placeholder-first into a distinct restored copy (never mutate the anonymised file); return a re-identification report instead of a corrupted file when in-place text rewrite is unsafe.
 
 - [ ] 3.2 Implement `lib/Controller/PseudonymisationController.php` + `api/pseudonymisation/{link}/restore` fail-closed + audit (REQ-DDRPS-005)
-  - `docudesk.pseudonymisation.restore_allowed_groups` (default admins-only, fail-closed incl. config-read failure); explicit auth attributes + in-method gate (semantic-auth); audit-log every restore AND every denial via OR audit trail; a failed audit write refuses the restore.
+  - `filinq.pseudonymisation.restore_allowed_groups` (default admins-only, fail-closed incl. config-read failure); explicit auth attributes + in-method gate (semantic-auth); audit-log every restore AND every denial via OR audit trail; a failed audit write refuses the restore.
 
 ## 4. Frontend
 
@@ -35,7 +35,7 @@
 ## 5. Quality
 
 - [ ] 5.1 PHPUnit unit tests: `PseudonymMapService` encrypt/decrypt round-trip + `_render:false` payload never in a read, `PseudonymRestoreService` reversal (longest-first, copy-not-mutate, unsafe-format report), controller authz matrix + audit-on-deny + failed-audit-refuses — minimum 75% coverage on new code
-  - Run in the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run in the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/reversible-pseudonymization.spec.ts` covering the `@e2e` scenarios
   - Reversibly anonymise a fixture, confirm placeholders, restore as a permitted user and get the original back, and assert a non-member is refused with 403; nldesign accessibility pass; test through the UI.

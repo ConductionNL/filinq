@@ -5,14 +5,14 @@
 - [ ] 1.1 Add `configuration.linkedTypes` to `signingRequest` (`["mail","calendar"]`),
   `signerRecord` (`["contacts"]`), `publicationConsent` (`["mail","calendar","deck"]`),
   `correspondence` (`["mail"]`), `generatedDocument` (`["files"]`), and `dossier`
-  (`["files","deck"]`) in `lib/Settings/docudesk_register.json`. No other schema gets a
+  (`["files","deck"]`) in `lib/Settings/filinq_register.json`. No other schema gets a
   block; no property or `required` list changes.
 - [ ] 1.2 Add `configuration.mailObjectTemplate` to `publicationConsent` (sender →
   `contactEmail`, subject → `notes`) and `correspondence` (subject-derived
   `caseReference` context), cross-checking every template key against that schema's
   `properties` map (an unknown key fails the whole register import).
 - [ ] 1.3 Bump `info.version` so `SettingsInitializer` re-imports on existing installs
-  (the dialect-without-bump trap recorded in `docudesk-mcp-adoption` task 1.5).
+  (the dialect-without-bump trap recorded in `filinq-mcp-adoption` task 1.5).
 - [ ] 1.4 Validate: JSON parses with a duplicate-key-rejecting loader; schema count
   unchanged; every schema not named in 1.1/1.2 byte-identical.
 

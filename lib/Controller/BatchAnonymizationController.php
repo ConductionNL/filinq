@@ -10,12 +10,12 @@
  * used to decide which entity types get anonymized by default.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,18 +32,18 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\Service\BatchAnonymizeService;
-use OCA\DocuDesk\Service\BatchExtractionService;
-use OCA\DocuDesk\Service\BatchReportService;
-use OCA\DocuDesk\Service\BatchRequestService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\BatchUploadService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\FolderBatchService;
-use OCA\DocuDesk\Service\WooProfileService;
-use OCA\DocuDesk\Settings\DocuDeskAdmin;
+use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchExtractionService;
+use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchRequestService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\BatchUploadService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\FolderBatchService;
+use OCA\Filinq\Service\WooProfileService;
+use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -59,10 +59,10 @@ use Psr\Log\LoggerInterface;
  * Controller that wires the batch-anonymization routes to their service layer.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
@@ -97,7 +97,7 @@ class BatchAnonymizationController extends Controller {
 	 * @param FolderBatchService $folderBatchService Service that turns an existing folder into a batch.
 	 * @param IL10N $l10n Translator for user-facing error messages.
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
-	 *                              docudesk.anonymisation.default_output_format).
+	 *                              filinq.anonymisation.default_output_format).
 	 * @param IUserSession $userSession User session for authentication.
 	 *
 	 * @return void
@@ -129,7 +129,7 @@ class BatchAnonymizationController extends Controller {
 	 * used by AnonymizationController; defined here so both controllers
 	 * stay aligned on the lookup key.
 	 */
-	private const DEFAULT_OUTPUT_FORMAT_KEY = 'docudesk.anonymisation.default_output_format';
+	private const DEFAULT_OUTPUT_FORMAT_KEY = 'filinq.anonymisation.default_output_format';
 
 	/**
 	 * Supported values for the `outputFormat` request param.
@@ -496,7 +496,7 @@ class BatchAnonymizationController extends Controller {
 		}
 
 		$tenantDefault = $this->appConfig->getValueString(
-			'docudesk',
+			'filinq',
 			self::DEFAULT_OUTPUT_FORMAT_KEY,
 			'pdf-only'
 		);
@@ -564,7 +564,7 @@ class BatchAnonymizationController extends Controller {
 	 * Persist a new WOO anonymization profile from the request body.
 	 *
 	 * ADMIN-ONLY, DELIBERATELY. The profile this writes is INSTANCE-WIDE: it
-	 * lands in `IAppConfig` under `docudesk_woo_entity_profiles`
+	 * lands in `IAppConfig` under `filinq_woo_entity_profiles`
 	 * ({@see WooProfileService::saveProfile()}), and
 	 * {@see EntityConsolidationService} reads it to decide which entity types
 	 * are redacted for EVERY user. Moving `PERSON` / `BSN` / `EMAIL` out of the
@@ -591,7 +591,7 @@ class BatchAnonymizationController extends Controller {
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
 	 */
-	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function updateProfiles(): JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {

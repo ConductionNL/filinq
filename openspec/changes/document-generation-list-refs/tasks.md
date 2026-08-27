@@ -32,7 +32,7 @@
 
 - [x] 3.5 Full `tests/unit` suite run clean (987 tests; only pre-existing, unrelated `PhpWordBackendTest` failure from a missing `ZipArchive` extension in the generic test container — not introduced by this change)
 
-- [x] 3.6 Live verify: `POST /api/documents/generate/preview` with a `listRefs` entry against `spectr-live` / `v-app-competitors` / `filter: {app_id: 6}`, confirmed rendered in a throwaway template's Twig loop, on the docudesk instance actually served on localhost:8080 (if that checkout is this one — see report)
+- [x] 3.6 Live verify: `POST /api/documents/generate/preview` with a `listRefs` entry against `spectr-live` / `v-app-competitors` / `filter: {app_id: 6}`, confirmed rendered in a throwaway template's Twig loop, on the filinq instance actually served on localhost:8080 (if that checkout is this one — see report)
 
 ## Quality checklist
 

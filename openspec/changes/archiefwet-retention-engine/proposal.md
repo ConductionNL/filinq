@@ -1,6 +1,6 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/231
+tracking_issue: https://github.com/ConductionNL/filinq/issues/231
 depends_on: []
 ---
 
@@ -8,7 +8,7 @@ depends_on: []
 
 ## Why
 
-Every Dutch municipal document DocuDesk touches is a government record under
+Every Dutch municipal document Filinq touches is a government record under
 the Archiefwet 1995: it must carry a waardering from the **Selectielijst
 gemeenten en intergemeentelijke organen** (bewaren, or vernietigen after a
 term), destruction may only happen through a reviewed and approved
@@ -21,9 +21,9 @@ destruction-date propagation to coupled systems, and the NC ecosystem report
 shows `files_retention` (folder-tag-based auto-delete, no appraisal, no
 approval, no certificate) is structurally inadequate for Archiefwet
 compliance. Evidence row: intelligence DB
-`mg2026-archiefwet-retention`; tracking issue ConductionNL/docudesk#231.
+`mg2026-archiefwet-retention`; tracking issue ConductionNL/filinq#231.
 
-DocuDesk today has **no** retention surface at all: no selectielijst, no
+Filinq today has **no** retention surface at all: no selectielijst, no
 schedule computation, no disposal workflow, no transfer state. Wave-1 changes
 already reserved the propagation fields (`publicationRecord.destructionDate` /
 `destructionDateSource` in `woo-publicatie-pipeline`) but nothing computes or
@@ -37,9 +37,9 @@ selectielijst lookup and configurable afleidingswijzen, a
 `DestructionCheckJob` → destruction-list → approve/reject →
 `DestructionExecutionJob` → certificate pipeline behind
 `/api/archival/*`, and immutability guards (409 `OBJECT_DESTROYED` /
-`OBJECT_TRANSFERRED`). Per ADR-022 DocuDesk must **consume** this stack, not
-rebuild it. What is missing is everything municipality- and DocuDesk-side:
-the selectielijst master data, the archive configuration on DocuDesk's record
+`OBJECT_TRANSFERRED`). Per ADR-022 Filinq must **consume** this stack, not
+rebuild it. What is missing is everything municipality- and Filinq-side:
+the selectielijst master data, the archive configuration on Filinq's record
 schemas, the archivist UI, and the destruction-date propagation into the
 publication pipeline and the zaaksysteem bridge.
 
@@ -56,14 +56,14 @@ publication pipeline and the zaaksysteem bridge.
    same convention as REQ-DREG-ALINK-01).
 2. **Retention categories on record schemas**: `archive` configuration
    (enabled, classificatie, afleidingswijze, closureField) declared on
-   DocuDesk's record schemas so OR stamps `retention` metadata at creation
+   Filinq's record schemas so OR stamps `retention` metadata at creation
    and computes `archiefactiedatum` from trigger event + term. Dossier-side
    adoption is specified here as engine requirements; the dossier-register
    canonical spec itself is owned by a sibling change (see design.md).
 3. **Disposal workflow surface**: an Archiefbeheer UI where an archivist
    reviews vernietigingslijsten (proposal → review → approve full/partial or
    reject → destruction with verklaring van vernietiging), calling OR's
-   `/api/archival/*` endpoints directly — no DocuDesk pass-through
+   `/api/archival/*` endpoints directly — no Filinq pass-through
    controllers.
 4. **Transfer-to-archive state**: `bewaren` records that reach their
    archiefactiedatum enter the overbrenging flow and become read-only once
@@ -84,7 +84,7 @@ publication pipeline and the zaaksysteem bridge.
 
 ### Added Capabilities
 
-- `archiefwet-retention-engine`: Archiefwet 1995 retention for DocuDesk
+- `archiefwet-retention-engine`: Archiefwet 1995 retention for Filinq
   records — selectielijst master data, retention categories and schedule
   computation (delegated to OpenRegister), vernietigingslijst review/approval
   with verklaring van vernietiging, transfer-to-archive state, and
@@ -102,7 +102,7 @@ publication pipeline and the zaaksysteem bridge.
 
 ## Affected Projects
 
-- [x] Project: `docudesk` — new `archief` register + schemas + seeds, archive
+- [x] Project: `filinq` — new `archief` register + schemas + seeds, archive
   config on record schemas, `RetentionSurfaceService` (thin, read/propagate
   only), Archiefbeheer UI, this OpenSpec change.
 - Consumed: `openregister` — RetentionService / DestructionService /
@@ -116,7 +116,7 @@ publication pipeline and the zaaksysteem bridge.
 ## Out of Scope
 
 - Any retention arithmetic, destruction execution or certificate generation
-  in DocuDesk code — OR owns all of it (ADR-022).
+  in Filinq code — OR owns all of it (ADR-022).
 - TMLO/MDTO metadata and e-depot ingestion — `tmlo-mdto-metadata`
   (depends on this change).
 - Legal holds — `e-discovery-legal-hold` (depends on this change).
@@ -130,7 +130,7 @@ publication pipeline and the zaaksysteem bridge.
 - `openspec validate archiefwet-retention-engine --strict` exits 0.
 - On a fresh install, the `archief` register imports with seeded
   selectielijst entries and OR's archival settings can be wired to it from
-  the DocuDesk admin panel.
+  the Filinq admin panel.
 - A record created under a schema with `archive.enabled` carries
   `retention.archiefnominatie/classificatie/bewaartermijn/archiefactiedatum`
   computed by OR from the configured trigger event + term.

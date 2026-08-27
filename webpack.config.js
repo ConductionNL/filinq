@@ -45,7 +45,7 @@ webpackConfig.module.rules.push({
 	type: 'asset/resource',
 })
 
-const appId = 'docudesk'
+const appId = 'filinq'
 webpackConfig.entry = {
 	main: {
 		import: path.join(__dirname, 'src', 'main.js'),
@@ -107,7 +107,7 @@ if (useLocalLib) {
 	if (!satisfied) {
 		// eslint-disable-next-line no-console
 		console.warn(
-			`[docudesk] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
+			`[filinq] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
 				+ "it does not satisfy this app's declared range. Building against the npm dist.",
 		)
 		useLocalLib = false
@@ -175,7 +175,7 @@ webpackConfig.resolve.fallback = {
 // longer inlines its own ~3 MB framework copy. Stable filenames mean each
 // entry's `Util::addScript` PHP call can reference the chunk directly
 // without a manifest. The shared chunks are loaded once per page and
-// cached across navigations between docudesk's own pages. As docudesk
+// cached across navigations between filinq's own pages. As filinq
 // grows additional dashboard widgets, every new widget adds only its
 // per-widget delta on top of the shared baseline.
 webpackConfig.optimization = {

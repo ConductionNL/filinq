@@ -30,7 +30,7 @@ All facts verified at HEAD (`spec/market-gap-wave2-2026-07`, development @
   `setUuid($signingRequestId)` only; `getAuditTrail()` runs
   `findAll(filters: ['action' => <all 8 docudesk.signing.* types>])` and
   filters by objectUuid in PHP.
-- `Controller/SigningController.php` — auth + scoping fixed (docudesk#100);
+- `Controller/SigningController.php` — auth + scoping fixed (filinq#100);
   its `errorResponse()` is the oracle-free reference implementation.
 - `Controller/ConsentController.php` — ownership guards + whitelist shipped
   (#283 partial); `errorResponse()` (117–126) interpolates
@@ -49,12 +49,12 @@ All facts verified at HEAD (`spec/market-gap-wave2-2026-07`, development @
 
 **Goals**
 
-1. Make a DocuDesk-signed artifact's *identity claims* cryptographically
+1. Make a Filinq-signed artifact's *identity claims* cryptographically
    bound, not just its content (finish #284/#282 at the evidence layer).
 2. Make every completion/termination path honest: correct provider, supported
    level, valid transition, never the unsigned original (finish #304, #287).
 3. Make the audit trail provably immutable and object-bound (finish #289).
-4. Remove the last #283 info-leak DocuDesk still owns (consent error oracle).
+4. Remove the last #283 info-leak Filinq still owns (consent error oracle).
 
 **Non-Goals**
 
@@ -96,7 +96,7 @@ Per-signature `valid: bool` becomes `status: verified|invalid|unverifiable`
 Newman) don't break. Document-level: `isValid` keeps its strict meaning (all
 signatures `verified`, at least one present); a new `verdict` field reports
 `verified | tampered | unverifiable | mixed`. An embedded external `/Type /Sig`
-without a DocuDesk marker → `unverifiable` + `reason: external-signature-
+without a Filinq marker → `unverifiable` + `reason: external-signature-
 unsupported` (today it is reported as if tampered). A v2 marker whose MAC fails
 → `invalid` (that IS tamper evidence).
 
@@ -165,7 +165,7 @@ access-denied continue to collapse to a single 404 (already the case via
 No new registers or schemas. Touched OR surfaces: ObjectService
 `find`/`saveObject`/`findAll` (existing call shapes), AuditTrailMapper
 `createAuditTrailEntry`/`findAll`. `signedDocumentRef` on `signingRequest` is
-being added by the in-flight `docudesk-signing-events` change — this change
+being added by the in-flight `filinq-signing-events` change — this change
 reuses it, no duplicate schema edit. The assertion `v` field lives inside the
 PDF marker payload, not in any schema.
 
@@ -192,7 +192,7 @@ pattern (self-evidently fake, collision-free):
   config; it is never logged, never in a schema (ADR-064 posture), and the v2
   formula gives it identity-binding force.
 - Oracle parity: consent + signing error bodies are generic and identical
-  across failure classes; 404-vs-403 never split (docudesk#100 invariant kept).
+  across failure classes; 404-vs-403 never split (filinq#100 invariant kept).
 - Audit entries gain real object linkage — IP + identity data in the `changed`
   payload stays restricted by the existing initiator/signer/admin read gate on
   `SigningController::getAudit`.

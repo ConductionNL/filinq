@@ -8,12 +8,12 @@
  * Extracted from ConsentController to reduce class complexity.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -32,10 +32,10 @@ use Psr\Log\LoggerInterface;
  * Service for consent CRUD operations used by the controller
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/consent-management/spec.md
  */
@@ -149,7 +149,7 @@ class ConsentCrudService {
 		// ⚠️ But this is NOT what stops one user reading another's consent
 		// record, and this comment used to imply that it was. The
 		// `publicationConsent` schema declares `"authorization": null` in
-		// `lib/Settings/docudesk_register.json`, and OpenRegister treats an
+		// `lib/Settings/filinq_register.json`, and OpenRegister treats an
 		// unconfigured authorization cascade as OPEN — so the per-object RBAC
 		// half permits the read for any authenticated caller in the org.
 		//
@@ -251,9 +251,9 @@ class ConsentCrudService {
 	 * @return array<string, mixed> The created or idempotently-updated consent
 	 *                              record, including the `wasUpdated` discriminator
 	 *
-	 * @throws \OCA\DocuDesk\Exception\PolicyRejectedException Propagated unwrapped when a
-	 *                                                         publication-prohibition rule matches; the
-	 *                                                         controller maps it to HTTP 403.
+	 * @throws \OCA\Filinq\Exception\PolicyRejectedException Propagated unwrapped when a
+	 *                                                       publication-prohibition rule matches; the
+	 *                                                       controller maps it to HTTP 403.
 	 * @throws Exception If creation fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md

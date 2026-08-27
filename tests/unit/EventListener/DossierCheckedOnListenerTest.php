@@ -4,7 +4,7 @@
  * Unit tests for DossierCheckedOnListener
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\EventListener
+ * @package  OCA\Filinq\Tests\Unit\EventListener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-10
  *
@@ -20,10 +20,10 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\EventListener;
+namespace OCA\Filinq\Tests\Unit\EventListener;
 
-use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
-use OCA\DocuDesk\Service\LegalBasesSummaryService;
+use OCA\Filinq\EventListener\DossierCheckedOnListener;
+use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -33,10 +33,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for DossierCheckedOnListener
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\EventListener
+ * @package  OCA\Filinq\Tests\Unit\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

@@ -13,7 +13,7 @@ fail-flagged contract when the image path cannot run. Existing requirements
 (REQ-ANON-00..10 and the outputFormat/prohibition-gate requirements) are
 unchanged; this delta only ADDs requirements. Detection and per-image burning
 are delegated to OpenRegister's backend chain (`AnonymisationBackendService`
-image seam); DocuDesk orchestrates and reassembles.
+image seam); Filinq orchestrates and reassembles.
 
 ## ADDED Requirements
 

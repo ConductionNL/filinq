@@ -126,7 +126,7 @@ packages built in-process by the tests themselves.
 | Style/layout application | **Imperative** | XML rewriting inside a document package. |
 | Tool exposure | **Declarative** | Already so: `#[McpTool]` per ADR-063, no hand-written registry. |
 
-No behaviour matches a declarative category, so no `lib/Settings/docudesk_register.json`
+No behaviour matches a declarative category, so no `lib/Settings/filinq_register.json`
 patch is appropriate.
 
 ## Risks / Trade-offs

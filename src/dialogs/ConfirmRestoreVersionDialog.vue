@@ -1,10 +1,10 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Restore version')" @closing="$emit('cancel')">
+	<NcDialog :name="t('filinq', 'Restore version')" @closing="$emit('cancel')">
 		<template #default>
 			<p>
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Restore to version {n}? The current state will be saved as a new version first.',
 						{ n: versionNumber },
 					)
@@ -13,10 +13,10 @@
 		</template>
 		<template #actions>
 			<NcButton @click="$emit('cancel')">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="primary" @click="$emit('confirm')">
-				{{ t('docudesk', 'Restore') }}
+				{{ t('filinq', 'Restore') }}
 			</NcButton>
 		</template>
 	</NcDialog>

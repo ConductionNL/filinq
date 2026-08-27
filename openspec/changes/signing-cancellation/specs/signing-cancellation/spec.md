@@ -9,7 +9,7 @@ loudly. It MUST NOT return success without having contacted the provider.
 to a UI as it stands, a user would cancel a request, be told it succeeded, and the
 request would remain live at ValidSign — signatories could still open and sign a
 document the user believes withdrawn, producing a legally valid signature the user
-never expected. DocuDesk would show no trace of the discrepancy.
+never expected. Filinq would show no trace of the discrepancy.
 
 Cancellation MUST therefore be typed as void-or-throw rather than returning a
 boolean. A boolean return invites one call site to write `if ($ok)` and another to

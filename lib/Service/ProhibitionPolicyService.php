@@ -11,12 +11,12 @@
  * Extracted verbatim from AnonymizationService.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,10 +29,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\DocuDesk\Exception\ProhibitionGateException;
+use OCA\Filinq\Exception\ProhibitionGateException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -41,10 +41,10 @@ use Throwable;
  * Applies publication policy to detected entities and guards skip decisions.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
  */
@@ -171,7 +171,7 @@ class ProhibitionPolicyService {
 	 * Defence-in-depth backstop: absolute prohibition matches left un-redacted.
 	 *
 	 * OpenRegister's generic relation PATCH stays open, so a caller could skip a
-	 * prohibited relation directly, bypassing the DocuDesk skip endpoint. Before
+	 * prohibited relation directly, bypassing the Filinq skip endpoint. Before
 	 * redaction, this returns any prohibition-matched occurrence at confidence
 	 * >= threshold that is being left un-redacted (skipped). Only the absolute
 	 * tier is enforced here — the primary decision-time guard covers the rest.
@@ -187,7 +187,7 @@ class ProhibitionPolicyService {
 	 */
 	public function absoluteProhibitionViolations(int $fileId): array {
 		try {
-			$matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+			$matcher = $this->container->get('OCA\Filinq\Service\PolicyMatchService');
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'Policy matcher unavailable; prohibition backstop is a no-op',
@@ -299,7 +299,7 @@ class ProhibitionPolicyService {
 	 */
 	private function tryGetPolicyMatchService(): mixed {
 		try {
-			return $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+			return $this->container->get('OCA\Filinq\Service\PolicyMatchService');
 		} catch (Throwable) {
 			return null;
 		}
@@ -320,7 +320,7 @@ class ProhibitionPolicyService {
 	 */
 	private function resolvePolicyMatcher(): ?array {
 		try {
-			$matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+			$matcher = $this->container->get('OCA\Filinq\Service\PolicyMatchService');
 			return [
 				'matcher' => $matcher,
 				'threshold' => (float)$matcher->highConfidenceThreshold(),

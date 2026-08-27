@@ -25,14 +25,14 @@ Verified current state (HEAD of this worktree):
   follow-up.
 - `TemplatePreviewService::preview()` renders Twig→HTML for the template
   editor.
-- Publication hand-off: DocuDesk prepares documents; publication endpoints
+- Publication hand-off: Filinq prepares documents; publication endpoints
   live in OpenCatalogi/OpenWoo (research boundary). The in-flight
   `woo-publicatie-pipeline` change owns the pipeline itself; this change
   only supplies the per-document accessibility signal it (and any future
   publisher) consults.
 
 Statutory frame: Besluit digitale toegankelijkheid overheid → EN 301 549
-§10 (documents) → WCAG 2.1 AA; PDF/UA-1 = ISO 14289-1. DocuDesk targets
+§10 (documents) → WCAG 2.1 AA; PDF/UA-1 = ISO 14289-1. Filinq targets
 **PDF/UA-1 for generated documents** and honest reporting where a backend
 cannot reach it.
 
@@ -48,7 +48,7 @@ cannot reach it.
 - Template authors get lint feedback (alt text, heading order, language) in
   preview, where fixing is cheap.
 - Honesty over box-ticking: a path that cannot produce tagged output says
-  so; DocuDesk never labels an untagged PDF accessible.
+  so; Filinq never labels an untagged PDF accessible.
 
 **Non-Goals:**
 
@@ -134,7 +134,7 @@ UI can group — additive, existing findings default to `document`).
 validator integration), and DOM-level PDF parsing (a real PDF parser dep for
 marginal heuristic gain).
 
-### D4 — Publication-readiness is a signal DocuDesk computes, a gate the pipeline consults
+### D4 — Publication-readiness is a signal Filinq computes, a gate the pipeline consults
 
 This change adds a `publicationReadiness` helper on the validation surface:
 "has open `accessibility`-category findings" → the UI shows a warning on
@@ -171,7 +171,7 @@ checks extend `DocumentValidationService`, which is already the ADR-031
 **calculation** backend invoked by OR's calculation runtime / listener
 fallback — the accessibility findings flow into `validationStatus`/
 `validationFindings` exactly as existing checks do, with **no new storage
-mechanism and no schema change** (`docudesk_register.json` untouched; the
+mechanism and no schema change** (`filinq_register.json` untouched; the
 verdict fields are already spec'd by `document-validation-checks`). No
 lifecycle/notification annotations are added.
 

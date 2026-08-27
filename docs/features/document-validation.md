@@ -15,7 +15,7 @@ keywords:
 
 ## Overview
 
-Automatic quality control on documents entering DocuDesk: a fixed catalogue of
+Automatic quality control on documents entering Filinq: a fixed catalogue of
 file-level checks (format, integrity, encryption, text-layer presence) and a
 record-level check (metadata completeness), configured through per-document-type
 **validation profiles**, producing a `validationStatus` verdict and
@@ -40,7 +40,7 @@ mistake for "nothing to redact" and publish PII.
 | `extension-mime-mismatch` | The file extension contradicts the detected content type. |
 | `file-unreadable` | The file could not be read/parsed. |
 | `pdf-encrypted` | The PDF is encrypted/password-protected (cannot be anonymised). |
-| `text-layer-missing` | A page-bearing format yields fewer than `docudesk.validation.text_layer_min_chars_per_page` (default 32) extractable chars/page. Carries `suggestedAction: "ocr"`. |
+| `text-layer-missing` | A page-bearing format yields fewer than `filinq.validation.text_layer_min_chars_per_page` (default 32) extractable chars/page. Carries `suggestedAction: "ocr"`. |
 | `metadata-incomplete` | A required metadata field for the profile is absent/empty. Names the `field`. |
 
 A finding contains only `checkId`, `severity`, a localised `message` (+ params),
@@ -54,7 +54,7 @@ render as **not yet validated** (absent value); there is no backfill migration.
 
 ## Profiles
 
-Profiles live in app config `docudesk.validation.profiles` (JSON):
+Profiles live in app config `filinq.validation.profiles` (JSON):
 
 ```json
 {
@@ -79,7 +79,7 @@ without a restart.
 
 ## On-demand endpoint
 
-`POST /apps/docudesk/api/validation/validate`
+`POST /apps/filinq/api/validation/validate`
 
 ```json
 { "fileId": 42, "documentType": "factuur" }
@@ -104,9 +104,9 @@ endpoint computes findings **without persisting** anything.
 
 `validationStatus` and `validationFindings` are declared as
 `x-openregister-calculations` on the `generatedDocument` schema in
-`docudesk_register.json`, with `DocumentValidationService` (backend
-`docudesk.validation`) as the computation backend. Until OpenRegister's ADR-031
-calculation runtime invokes the service directly, the DocuDesk event-listener
+`filinq_register.json`, with `DocumentValidationService` (backend
+`filinq.validation`) as the computation backend. Until OpenRegister's ADR-031
+calculation runtime invokes the service directly, the Filinq event-listener
 fallback (`ValidationRunner`) computes and stores the verdict on object
 create/update. The listener contains no validation logic.
 
@@ -114,12 +114,12 @@ create/update. The listener contains no validation logic.
 
 | Key | Default | Meaning |
 |-----|---------|---------|
-| `docudesk.validation.profiles` | `{}` (defaults apply) | Per-type validation profiles. |
-| `docudesk.validation.text_layer_min_chars_per_page` | `32` | Text-layer threshold. |
+| `filinq.validation.profiles` | `{}` (defaults apply) | Per-type validation profiles. |
+| `filinq.validation.text_layer_min_chars_per_page` | `32` | Text-layer threshold. |
 
 ## Note: full-text search
 
 Full-text search across documents is **OpenRegister's domain** (ADR-022) and is
-surfaced through Nextcloud's unified search — DocuDesk does not ship a separate
+surfaced through Nextcloud's unified search — Filinq does not ship a separate
 search integration. (The previous Apache Solr document was removed; no Solr
 integration exists in the codebase.)

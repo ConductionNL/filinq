@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * CI regression config for the shared `E2E Tests (Playwright)` job.
@@ -34,8 +34,8 @@
  * point for local runs, `npm run test:e2e:docs`, and `--project visual`.
  *
  * The report/output paths differ from the root config on purpose: the workflow
- * uploads `server/apps/docudesk/playwright-report/` and
- * `server/apps/docudesk/test-results/`, so on CI the artifacts must land at the
+ * uploads `server/apps/filinq/playwright-report/` and
+ * `server/apps/filinq/test-results/`, so on CI the artifacts must land at the
  * APP ROOT, not under `tests/e2e/`. With the root config's paths the "Upload
  * Playwright report" step matches nothing and silently uploads an empty
  * artifact (`if-no-files-found: ignore`) — a failing run with no report to read.
@@ -51,7 +51,7 @@ const APP_ROOT = path.resolve(__dirname, '..', '..')
 export default defineConfig({
 	testDir: __dirname,
 	globalSetup: path.resolve(__dirname, 'global-setup.ts'),
-	// Same budget as the root config, and for the same reason: DocuDesk ships a
+	// Same budget as the root config, and for the same reason: Filinq ships a
 	// multi-megabyte bundle that Playwright loads with a cold cache, and the CI
 	// runner serves Nextcloud from `php -S`. A real hang still fails, just later.
 	timeout: Number(process.env.PW_TEST_TIMEOUT || 120_000),

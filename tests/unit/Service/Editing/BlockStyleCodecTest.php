@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,15 +17,15 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\BlockStyleCodec;
-use OCA\DocuDesk\Service\Editing\PackageCodec;
+use OCA\Filinq\Service\Editing\BlockStyleCodec;
+use OCA\Filinq\Service\Editing\PackageCodec;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -61,7 +61,7 @@ class BlockStyleCodecTest extends TestCase {
 	/**
 	 * Apply style to the standard paragraph.
 	 *
-	 * @param array  $style  The style properties.
+	 * @param array $style The style properties.
 	 * @param string $markup Optional markup override.
 	 *
 	 * @return string The rewritten markup.
@@ -117,7 +117,7 @@ class BlockStyleCodecTest extends TestCase {
 		$this->assertStringContainsString('<w:pStyle w:val="Heading2"/>', $this->apply(['heading' => 2]));
 
 		$heading = $this->apply(['heading' => 1]);
-		$body    = $this->apply(['heading' => 0], $heading);
+		$body = $this->apply(['heading' => 0], $heading);
 
 		$this->assertStringNotContainsString('w:pStyle', $body, 'level 0 must remove the heading style');
 		$this->assertStringNotContainsString('Heading0', $body, 'no suite defines a "Heading0" style');
@@ -179,7 +179,7 @@ class BlockStyleCodecTest extends TestCase {
 	 * @spec openspec/specs/document-rich-editing/spec.md
 	 */
 	public function testResettingAPropertyReplacesIt(): void {
-		$once  = $this->apply(['alignment' => 'left']);
+		$once = $this->apply(['alignment' => 'left']);
 		$twice = $this->apply(['alignment' => 'right'], $once);
 
 		$this->assertSame(1, substr_count($twice, '<w:jc'), 'a second alignment must replace the first');

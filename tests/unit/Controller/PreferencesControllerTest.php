@@ -7,13 +7,13 @@
  * `PUT /api/preferences/{key}` (preferences#setPreference): the documented
  * `{value: string|null}` success body, the 401 anonymous rejection, the 400
  * invalid-key rejection, the per-user storage scoping (`pref_<safeKey>` under
- * the docudesk app id) and the empty-value delete semantics.
+ * the filinq app id) and the empty-value delete semantics.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,9 +21,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\PreferencesController;
+use OCA\Filinq\Controller\PreferencesController;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
@@ -37,10 +37,10 @@ use PHPUnit\Framework\TestCase;
  * Tests for the per-user preference read/write endpoints.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -109,14 +109,14 @@ class PreferencesControllerTest extends TestCase {
 
 	/**
 	 * GET returns 200 with `{value: <stored>}` and reads the per-user,
-	 * `pref_`-prefixed key under the docudesk app id.
+	 * `pref_`-prefixed key under the filinq app id.
 	 *
 	 * @return void
 	 */
 	public function testGetPreferenceReturnsStoredValue(): void {
 		$this->config->expects($this->once())
 			->method('getUserValue')
-			->with('alice', 'docudesk', 'pref_support-dialog-seen', '')
+			->with('alice', 'filinq', 'pref_support-dialog-seen', '')
 			->willReturn('1');
 
 		$response = $this->controller->getPreference('support-dialog-seen');
@@ -153,7 +153,7 @@ class PreferencesControllerTest extends TestCase {
 	public function testGetPreferenceSanitisesKeyBeforeReading(): void {
 		$this->config->expects($this->once())
 			->method('getUserValue')
-			->with('alice', 'docudesk', 'pref_my-key12', '')
+			->with('alice', 'filinq', 'pref_my-key12', '')
 			->willReturn('x');
 
 		$response = $this->controller->getPreference('My-Key_1../2!');
@@ -202,7 +202,7 @@ class PreferencesControllerTest extends TestCase {
 	public function testSetPreferenceStoresValue(): void {
 		$this->config->expects($this->once())
 			->method('setUserValue')
-			->with('alice', 'docudesk', 'pref_theme', 'dark');
+			->with('alice', 'filinq', 'pref_theme', 'dark');
 		$this->config->expects($this->never())->method('deleteUserValue');
 
 		$response = $this->controller->setPreference('theme', 'dark');
@@ -222,7 +222,7 @@ class PreferencesControllerTest extends TestCase {
 	public function testSetPreferenceWithEmptyValueDeletesIt(): void {
 		$this->config->expects($this->once())
 			->method('deleteUserValue')
-			->with('alice', 'docudesk', 'pref_theme');
+			->with('alice', 'filinq', 'pref_theme');
 		$this->config->expects($this->never())->method('setUserValue');
 
 		$response = $this->controller->setPreference('theme', '');

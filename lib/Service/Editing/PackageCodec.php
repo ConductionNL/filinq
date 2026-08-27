@@ -16,12 +16,12 @@
  * made structurally impossible here rather than guarded by a test.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Editing
+ * @package   OCA\Filinq\Service\Editing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-editing-tools/tasks.md#task-2-4
  *
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -39,10 +39,10 @@ use RuntimeException;
  * Byte-surgical reader/editor for ODF and OOXML word-processing packages.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-untouched-parts-of-a-document-package-survive-an-edit-unchanged
  *
@@ -144,8 +144,8 @@ class PackageCodec {
 	 * Constructor.
 	 *
 	 * @param XmlBlockScanner $scanner The element-span scanner.
-	 * @param BlockStyleCodec $styles  The paragraph style/layout codec.
-	 * @param PackagePartIo   $io      The package part reader/writer.
+	 * @param BlockStyleCodec $styles The paragraph style/layout codec.
+	 * @param PackagePartIo $io The package part reader/writer.
 	 *
 	 * @return void
 	 */
@@ -168,7 +168,6 @@ class PackageCodec {
 	 */
 	public function supports(string $extension): bool {
 		return isset(self::PACKAGES[strtolower($extension)]);
-
 	}//end supports()
 
 	/**
@@ -180,7 +179,6 @@ class PackageCodec {
 	 */
 	public function supportedExtensions(): array {
 		return array_keys(self::PACKAGES);
-
 	}//end supportedExtensions()
 
 	/**
@@ -228,8 +226,8 @@ class PackageCodec {
 	 * @param string $packageBytes The raw package bytes.
 	 * @param string $extension The file extension, without a leading dot.
 	 * @param array<int, array<string, mixed>> $edits The edits to apply, each
-	 *        `{anchor, action?, text?}`. Loosely typed because they arrive as
-	 *        decoded JSON from a model; `resolveEdits()` validates them.
+	 *                                                `{anchor, action?, text?}`. Loosely typed because they arrive as
+	 *                                                decoded JSON from a model; `resolveEdits()` validates them.
 	 *
 	 * @return array{bytes: string, applied: array<int, string>}
 	 *
@@ -357,7 +355,6 @@ class PackageCodec {
 		}//end foreach
 
 		return $resolved;
-
 	}//end resolveEdits()
 
 	/**
@@ -378,11 +375,11 @@ class PackageCodec {
 	 * Returning the finished XML removes the property and the false reading at
 	 * once.
 	 *
-	 * @param string               $xml    The part XML.
-	 * @param array{0: int, 1: int} $span  The span offset and length.
-	 * @param string               $markup The block markup.
-	 * @param array                $edit   The edit.
-	 * @param string               $format The package family.
+	 * @param string $xml The part XML.
+	 * @param array{0: int, 1: int} $span The span offset and length.
+	 * @param string $markup The block markup.
+	 * @param array $edit The edit.
+	 * @param string $format The package family.
 	 *
 	 * @return string The rewritten part XML, style definition included.
 	 *
@@ -412,7 +409,7 @@ class PackageCodec {
 	/**
 	 * Insert an automatic style definition into `content.xml`.
 	 *
-	 * @param string $xml        The part XML.
+	 * @param string $xml The part XML.
 	 * @param string $definition The `<style:style>` element.
 	 *
 	 * @return string The part XML with the definition in place.
@@ -471,7 +468,6 @@ class PackageCodec {
 		};
 
 		return substr_replace($xml, $replacement, $span[0], $span[1]);
-
 	}//end rewriteSpan()
 
 	/**
@@ -496,7 +492,6 @@ class PackageCodec {
 		}
 
 		return self::PACKAGES[$key];
-
 	}//end packageFor()
 
 	/**
@@ -538,7 +533,6 @@ class PackageCodec {
 		}
 
 		return $this->decode(raw: strip_tags(substr($inner, 1)));
-
 	}//end extractText()
 
 	/**
@@ -593,7 +587,6 @@ class PackageCodec {
 		}
 
 		return $markup;
-
 	}//end setText()
 
 	/**
@@ -620,7 +613,6 @@ class PackageCodec {
 		}
 
 		return $openTag . $escaped . '</w:t>';
-
 	}//end rewriteTextRun()
 
 	/**
@@ -647,7 +639,6 @@ class PackageCodec {
 		}
 
 		return substr($markup, 0, $closeStart) . $run . substr($markup, $closeStart);
-
 	}//end injectRun()
 
 	/**
@@ -659,7 +650,6 @@ class PackageCodec {
 	 */
 	private function decode(string $raw): string {
 		return trim((string)preg_replace('/\s+/u', ' ', html_entity_decode($raw, (ENT_XML1 | ENT_QUOTES), 'UTF-8')));
-
 	}//end decode()
 
 	/**
@@ -687,6 +677,5 @@ class PackageCodec {
 		}
 
 		return $blocks;
-
 	}//end anchor()
 }//end class

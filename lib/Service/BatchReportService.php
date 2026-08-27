@@ -8,12 +8,12 @@
  * creation timestamp.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
  *
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 
@@ -31,10 +31,10 @@ use Exception;
  * Generates CSV reports summarizing the outcome of a batch.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class BatchReportService {
 	/**

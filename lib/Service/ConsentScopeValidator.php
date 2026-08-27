@@ -18,12 +18,12 @@
  * it requires an OR lookup.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use InvalidArgumentException;
 use OCP\IGroupManager;
@@ -47,10 +47,10 @@ use RuntimeException;
  * scope=document").
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @spec openspec/changes/revive-dead-capabilities/tasks.md#task-2
  */
@@ -59,6 +59,18 @@ class ConsentScopeValidator {
 	 * Group whose members may write scope=entity (standing-consent) records.
 	 *
 	 * Mirrored from PolicyCrudService to keep the validator self-contained.
+	 *
+	 * ⚠️ STILL `docudesk-`, DELIBERATELY, ACROSS THE FILINQ RENAME. This is a
+	 * Nextcloud GROUP ID, provisioned by OpenRegister from the declaration in
+	 * `lib/Settings/filinq_register.json` and populated by admins afterwards.
+	 * OpenRegister provisions a declared group CREATE-ONLY, so renaming the id
+	 * makes it create a NEW, EMPTY group; the existing one keeps every member
+	 * and nothing reads it any more. An empty group denies everyone except
+	 * admins and object owners, so the visible symptom is standing-consent
+	 * writes starting to 403 for exactly the people who were granted them —
+	 * with no error at provisioning time and nothing in the log. Same failure
+	 * shape as renaming an OpenRegister register slug. Renaming the group needs
+	 * its own membership migration, not a token substitution.
 	 */
 	private const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
 
@@ -316,8 +328,10 @@ class ConsentScopeValidator {
 	 * @return void
 	 */
 	private function assertEntityHasNoPolicyMatch(array $consent): void {
+		// No `!== null`: isset() is already false for a null value, so that arm
+		// can never be false (PHPStan 2: notIdentical.alwaysTrue). The `!== ''`
+		// check is NOT redundant and stays — isset() is true for an empty string.
 		if (isset($consent['policyMatch']) === true
-			&& $consent['policyMatch'] !== null
 			&& $consent['policyMatch'] !== ''
 		) {
 			throw new InvalidArgumentException(

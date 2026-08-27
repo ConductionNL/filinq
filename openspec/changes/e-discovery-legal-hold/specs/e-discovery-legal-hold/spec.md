@@ -53,7 +53,7 @@ The register version MUST be bumped for boot import.
 The app MUST, on case activation, place an OpenRegister legal hold (reason
 carrying the case reference) on every in-scope record object via OR's
 legal-hold API, so that OR's `DestructionCheckJob` excludes them from
-vernietigingslijsten at the platform layer — DocuDesk MUST NOT implement
+vernietigingslijsten at the platform layer — Filinq MUST NOT implement
 its own freeze check in the disposal UI as the enforcement mechanism. The
 case MUST expose per-object fan-out status and MUST NOT present itself as
 fully protective until every in-scope object is verifiably held; fan-out
@@ -83,7 +83,7 @@ the existing hold.
 The app MUST place a file-layer lock on the underlying Nextcloud file node of
 every in-scope document when a hold case is activated, using OCP
 `\OCP\Files\Lock\ILockManager` with an app-scoped lock (`ILock::TYPE_APP`,
-owner the DocuDesk app id), so that raw Nextcloud file operations — deletion,
+owner the Filinq app id), so that raw Nextcloud file operations — deletion,
 rename and overwrite via the Files UI, WebDAV or a sync client — are blocked
 at the storage layer while the hold is active. This file lock is IN ADDITION
 to the OpenRegister per-object record-destruction freeze (REQ-DDEDL-002),
@@ -236,7 +236,7 @@ references, which re-runs the fan-out for the additions.
 
 #### Scenario: No review-platform surface ships
 
-- GIVEN the DocuDesk codebase and manifest at this change's completion
+- GIVEN the Filinq codebase and manifest at this change's completion
 - WHEN the shipped pages, routes and services are inspected
 - THEN no review, tagging, analytics or production-export surface exists in this capability
 - @e2e exclude static scope property, enforced by review, not a browser flow

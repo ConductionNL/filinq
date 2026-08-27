@@ -14,7 +14,7 @@ effectively 100% of NL government signing** (evidence:
 validsign.eu/branches/overheid, zynyo.com, ROC tender 408784; intelligence
 rows: ValidSign "DigiD/eHerkenning/iDIN/BankID signer identity", Signhost
 "Remote qualified signing service — Entrust RSS; iDIN/DigiD/eHerkenning/
-biometrics/national eIDs"). DocuDesk today has only Native SES + a stubbed
+biometrics/national eIDs"). Filinq today has only Native SES + a stubbed
 ValidSign provider and **no identity-rail integration of any kind**: a signer
 is authenticated purely by their Nextcloud session, and there is no way to
 express "this signature requires DigiD at substantial" on a request.
@@ -34,7 +34,7 @@ duck-typed plugin philosophy as `SigningProviderInterface`) with eIDAS
 assurance-level mapping, identity evidence persisted on the signing request,
 ADR-064 credential custody, and the EUDI wallet declared as a provider-plugin
 target — so any broker (Signicat-style, municipal OIDC, or a future wallet
-verifier) can plug in without DocuDesk re-architecture.
+verifier) can plug in without Filinq re-architecture.
 
 Depends on `signing-trust-rebuild`: identity evidence is only worth recording
 once the artifact MAC binds identity fields (REQ-DDSTR-001) and the pipeline
@@ -87,7 +87,7 @@ is honest (REQ-DDSTR-002/003).
 ## Out of Scope
 
 - Any direct DigiD/eHerkenning/iDIN aansluiting (PKIoverheid certificates,
-  Logius onboarding) — that is the broker's job; DocuDesk speaks OIDC to a
+  Logius onboarding) — that is the broker's job; Filinq speaks OIDC to a
   broker. A concrete broker credential/config is deploy-time, not code.
 - Shipping an EUDI wallet verifier — declared plugin target only, with the
   conformance suite that a future `eudi-wallet` provider must pass.

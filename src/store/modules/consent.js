@@ -48,7 +48,7 @@ export const useConsentStore = defineStore('consent', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/docudesk/api/consents'),
+					generateUrl('/apps/filinq/api/consents'),
 				)
 				this.consents = response.data
 			} catch (err) {
@@ -69,7 +69,7 @@ export const useConsentStore = defineStore('consent', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl(`/apps/docudesk/api/consents/${id}`),
+					generateUrl(`/apps/filinq/api/consents/${id}`),
 				)
 				this.consentItem = response.data
 				return response.data
@@ -93,7 +93,7 @@ export const useConsentStore = defineStore('consent', {
 			this.error = null
 			try {
 				const response = await axios.put(
-					generateUrl(`/apps/docudesk/api/consents/${id}`),
+					generateUrl(`/apps/filinq/api/consents/${id}`),
 					data,
 				)
 				// Update in local list.
@@ -123,9 +123,7 @@ export const useConsentStore = defineStore('consent', {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl(
-						`/apps/docudesk/api/consents/document/${documentId}`,
-					),
+					generateUrl(`/apps/filinq/api/consents/document/${documentId}`),
 				)
 				return response.data
 			} catch (err) {
@@ -147,7 +145,7 @@ export const useConsentStore = defineStore('consent', {
 			this.error = null
 			try {
 				const response = await axios.post(
-					generateUrl('/apps/docudesk/api/consents'),
+					generateUrl('/apps/filinq/api/consents'),
 					data,
 				)
 				this.consents.push(response.data)

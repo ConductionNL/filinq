@@ -2,7 +2,7 @@
 
 ## Context
 
-Verified at HEAD (worktree `spec/market-gap-2026-07`, docudesk @
+Verified at HEAD (worktree `spec/market-gap-2026-07`, filinq @
 origin/development):
 
 - `src/views/anonymization/EntityReviewTable.vue` already implements search,
@@ -20,7 +20,7 @@ origin/development):
   delegates to OR `TextExtractionService::extractFile()` +
   `EntityRelationMapper::findEntitiesForFile()`, then calls
   `GrondslagProposalService::applyProposals()` (fill-only-when-empty per
-  entity type, admin config key `docudesk.grondslagen.entity_type_bases` —
+  entity type, admin config key `filinq.grondslagen.entity_type_bases` —
   CB #122 is therefore already implemented server-side) and
   `attachProhibitionMatches()` via `PolicyMatchService`.
 - `PolicyMatchService::match()` already evaluates BOTH rule kinds and returns
@@ -76,7 +76,7 @@ origin/development):
 ### D1 — The org rule lists ARE the existing policy objects, extended
 
 GH #62/#63 ask for org-level "always anonymise" / "never anonymise" lists.
-Verified at HEAD, DocuDesk already has exactly these semantics as OR objects:
+Verified at HEAD, Filinq already has exactly these semantics as OR objects:
 `publicationProhibition` (an entity that must never be published ⇒ always
 anonymise) and standing-consent `publicationConsent` with `scope: entity`
 (entity may stay visible ⇒ never anonymise). **Decision: do not introduce a
@@ -91,8 +91,8 @@ into two rule stores, and orphan the existing PolicyController surface.
 
 The gate needs durable, auditable, per-file state. ADR-001 forbids custom
 tables, batch state is ephemeral ICache, and `EntityRelation` rows live in
-OR's own store (not schema-extensible from DocuDesk). **Decision: new
-`documentReview` schema** in `lib/Settings/docudesk_register.json` keyed by
+OR's own store (not schema-extensible from Filinq). **Decision: new
+`documentReview` schema** in `lib/Settings/filinq_register.json` keyed by
 `fileId` (idempotency key, mirroring `anonymizationLink.sourceFileId`), with
 `checkedOn`, `checkedBy`, `entityCountAtCheck`, `manualEntityCount`, and
 `note`. Editing detections after checking MUST invalidate the check (the
@@ -108,7 +108,7 @@ Blocking only in the UI would be decorative. `POST
 /api/anonymization/batch/{batchId}/anonymize` MUST return HTTP 409 when the
 target file(s) lack a valid `documentReview` — same enforcement style as the
 existing prohibition gate (`AnonymizationService::runProhibitionGate`).
-Admin escape hatch: `IAppConfig` key `docudesk.review.checked_gate`
+Admin escape hatch: `IAppConfig` key `filinq.review.checked_gate`
 (`enforced` default | `advisory`) so pilots that only do spot-checks are not
 dead-ended; `advisory` still records the gate result in the response.
 
@@ -139,7 +139,7 @@ matching logic (ADR-022).
 ### D6 — Declarative vs imperative (ADR-031)
 
 - `documentReview`, `bases` on the two policy schemas: **declarative** schema
-  additions in `lib/Settings/docudesk_register.json`; `documentReview` gets
+  additions in `lib/Settings/filinq_register.json`; `documentReview` gets
   no lifecycle annotation (it is a single-state marker object, created and
   invalidated, not a workflow).
 - Gate enforcement, standing-consent match attachment, selection-to-entity:
@@ -231,7 +231,7 @@ demos rule pre-application on a clean install.
    boot — no data migration, existing rules simply have no `bases`).
 2. Backend: `standingConsentMatch` attachment, `DocumentReviewController`
    (+ routes), gate checks in both anonymize paths (behind
-   `docudesk.review.checked_gate`).
+   `filinq.review.checked_gate`).
 3. Frontend workbench + wiring; nav entry.
 4. Rollback: config `advisory` disables gate blocking; the workbench view is
    additive (existing widget flows keep working untouched).

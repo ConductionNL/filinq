@@ -8,12 +8,12 @@
  * and anonymizing documents.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,12 +28,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\AnonymizeRequestService;
-use OCA\DocuDesk\Service\FileListingService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeRequestService;
+use OCA\Filinq\Service\FileListingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\IRootFolder;
@@ -47,10 +47,10 @@ use Psr\Log\LoggerInterface;
  * Controller for anonymization pipeline endpoints
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
  */
@@ -75,7 +75,7 @@ class AnonymizationController extends Controller {
 	 * @param FileListingService $fileListingService Service for file listing operations
 	 * @param IL10N $l10n The localization service
 	 * @param IAppConfig $appConfig Tenant configuration provider (reads
-	 *                              docudesk.anonymisation.default_output_format)
+	 *                              filinq.anonymisation.default_output_format)
 	 * @param IUserSession $userSession User session for authentication
 	 * @param IRootFolder $rootFolder Root folder for file access checks
 	 *
@@ -108,7 +108,7 @@ class AnonymizationController extends Controller {
 	 * Default-output-format tenant config key. The per-call
 	 * `outputFormat` request param overrides this when supplied.
 	 */
-	private const DEFAULT_OUTPUT_FORMAT_KEY = 'docudesk.anonymisation.default_output_format';
+	private const DEFAULT_OUTPUT_FORMAT_KEY = 'filinq.anonymisation.default_output_format';
 
 	/**
 	 * Supported values for the `outputFormat` request param + tenant
@@ -124,7 +124,7 @@ class AnonymizationController extends Controller {
 	/**
 	 * List all processed files with entity counts and status
 	 *
-	 * Returns files from the user's DocuDesk folder with their
+	 * Returns files from the user's Filinq folder with their
 	 * entity detection counts and anonymization status.
 	 *
 	 * @return JSONResponse JSON response with array of file data
@@ -163,10 +163,10 @@ class AnonymizationController extends Controller {
 	}//end files()
 
 	/**
-	 * Upload a file to the user's DocuDesk folder
+	 * Upload a file to the user's Filinq folder
 	 *
 	 * Reads the uploaded file from the request and saves it
-	 * to the user's DocuDesk folder.
+	 * to the user's Filinq folder.
 	 *
 	 * @return JSONResponse JSON response with upload result
 	 *
@@ -455,7 +455,7 @@ class AnonymizationController extends Controller {
 		}
 
 		$tenantDefault = $this->appConfig->getValueString(
-			'docudesk',
+			'filinq',
 			self::DEFAULT_OUTPUT_FORMAT_KEY,
 			'pdf-only'
 		);

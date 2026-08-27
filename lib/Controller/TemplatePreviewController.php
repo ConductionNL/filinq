@@ -8,12 +8,12 @@
  * `TemplatesController`, which retains template CRUD, duplication and locking.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/advanced-template-management/tasks.md#task-5
  *
@@ -23,10 +23,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\TemplatePreviewService;
+use OCA\Filinq\Service\TemplatePreviewService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -37,10 +37,10 @@ use OCP\IUserSession;
  * Controller for template preview rendering
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class TemplatePreviewController extends Controller {
 	/**

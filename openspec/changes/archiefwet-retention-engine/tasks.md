@@ -5,7 +5,7 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `archief` register with `selectielijstEntry`, `destructionList` and `destructionCertificate` schemas to `lib/Settings/docudesk_register.json` (REQ-DDARE-001, REQ-DDARE-005)
+- [ ] 1.1 Add the `archief` register with `selectielijstEntry`, `destructionList` and `destructionCertificate` schemas to `lib/Settings/filinq_register.json` (REQ-DDARE-001, REQ-DDARE-005)
   - Field contracts exactly per design.md D2; `hardValidation: true`; `archive.defaultNominatie: bewaren` on the two workflow schemas; register version bump.
   - Unit drift-pin: every field OR's `lookupSelectielijstEntry()` reads exists on `selectielijstEntry`; verify against OR HEAD, not against this spec's snapshot.
 
@@ -16,7 +16,7 @@
   - Obtain the real category codes with matching `archiefnominatie` + `bewaartermijn` from the responsible selectielijst-manager (records-appraisal sign-off); this change MUST NOT be marked done while any `TODO-*` categorie remains. Add a PHPUnit seed-lint test that FAILS on any `TODO-` categorie so the gate enforces it (production-enablement gate, same posture as flow-operations E3 retention).
 
 - [ ] 1.3 Add `archive` configuration to the record schemas `correspondence`, `generatedDocument`, `publicationRecord` (REQ-DDARE-020) and remove `x-openregister-archival` from record classes; rewrite the `batchCorrespondenceJob` annotation to `{"retention": {"default": "P1Y"}}` (REQ-DDARE-008, REQ-DREG-01/02)
-  - Import-pin unit test proves the `archive` key survives `ConfigurationService::importFromApp()`; file an OpenRegister issue if it is dropped (degradation: OR schema UI configuration, never DocuDesk-side retention code).
+  - Import-pin unit test proves the `archive` key survives `ConfigurationService::importFromApp()`; file an OpenRegister issue if it is dropped (degradation: OR schema UI configuration, never Filinq-side retention code).
 
 ## 2. Backend
 
@@ -33,7 +33,7 @@
   - Reads/writes OR `GET/PUT /api/settings/archival` directly; shows current owner; never writes without the explicit admin action (no repair step, no boot hook).
 
 - [ ] 3.2 Vernietigingslijsten index + detail with approve/partial/reject (REQ-DDARE-004)
-  - `CnIndexPage`/`CnDataTable`/`CnFormDialog`; frontend calls OR `/api/archival/destruction-lists*` directly — zero DocuDesk pass-through controllers; mandatory reasons for exclusion and rejection; modals in `src/modals/`.
+  - `CnIndexPage`/`CnDataTable`/`CnFormDialog`; frontend calls OR `/api/archival/destruction-lists*` directly — zero Filinq pass-through controllers; mandatory reasons for exclusion and rejection; modals in `src/modals/`.
 
 - [ ] 3.3 Certificates view + overbrenging view + retention block on document detail (REQ-DDARE-005, REQ-DDARE-006)
   - Certificates from OR `/api/archival/certificates`; bewaren records past actiedatum listed for transfer; `overgebracht` records rendered read-only with a transfer indicator; NC CSS variables only (ADR-003).
@@ -41,7 +41,7 @@
 ## 4. Quality
 
 - [ ] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
-  - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: register/seed import pins, selectielijst drift-pin, archive-key import pin, propagation precedence matrix, register-lint for REQ-DDARE-008 (no annotation on record classes, object shape elsewhere), architecture test for "no retention arithmetic", and the REQ-DDARE-009 seed-lint that fails on any `TODO-` categorie.
 
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/archiefwet-retention.spec.ts` covering the `@e2e`-referenced scenarios

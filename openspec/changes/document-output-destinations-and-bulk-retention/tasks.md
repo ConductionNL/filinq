@@ -20,7 +20,7 @@
 
 - [x] 1.9 `DocumentController`: `parseGenerateParams()` threads `filename` into `options['filename']` (additive; not currently used by any options consumer) so the service layer can compute a storage filename; `buildDocumentResponse()` branches on `result['output']['mode'] ?? 'return'` — `files` → JSON refs, `both` → existing branch + `X-Docudesk-File-Id`/`X-Docudesk-File-Path` headers, `return` → byte-identical to before (REQ-DDOB-001, REQ-DDOB-003)
 
-- [x] 1.10 `lib/Settings/docudesk_register.json`: `generatedDocument` schema gains additive, non-required `fileId` (integer) / `filePath` (string) properties; schema + register + app description version bumps (REQ-DDOB-004)
+- [x] 1.10 `lib/Settings/filinq_register.json`: `generatedDocument` schema gains additive, non-required `fileId` (integer) / `filePath` (string) properties; schema + register + app description version bumps (REQ-DDOB-004)
 
 - [x] 1.11 Explicitly no changes to `CorrespondenceService`/`CorrespondenceController` (REQ-DDOB-008) — verified by `git diff` scope check before opening the PR
 

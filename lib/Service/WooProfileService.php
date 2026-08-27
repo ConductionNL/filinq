@@ -9,12 +9,12 @@
  * sensible default when no profile has been configured.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
  *
@@ -24,7 +24,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\IAppConfig;
 
@@ -32,10 +32,10 @@ use OCP\IAppConfig;
  * Persists and applies the WOO anonymization profile.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class WooProfileService {
 	private const DEFAULT_ANONYMIZE = ['PERSON', 'BSN', 'PHONE', 'EMAIL', 'IBAN', 'ADDRESS'];
@@ -62,7 +62,7 @@ class WooProfileService {
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
 	 */
 	public function getProfile(): array {
-		$stored = $this->appConfig->getValueString('docudesk', 'docudesk_woo_entity_profiles', '');
+		$stored = $this->appConfig->getValueString('filinq', 'filinq_woo_entity_profiles', '');
 		if ($stored !== '') {
 			$decoded = json_decode($stored, true);
 			if (is_array($decoded) === true
@@ -91,7 +91,7 @@ class WooProfileService {
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
 	 */
 	public function saveProfile(array $profile): void {
-		$this->appConfig->setValueString('docudesk', 'docudesk_woo_entity_profiles', json_encode($profile));
+		$this->appConfig->setValueString('filinq', 'filinq_woo_entity_profiles', json_encode($profile));
 
 	}//end saveProfile()
 

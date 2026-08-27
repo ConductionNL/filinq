@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk PresentationCodec
+ * Filinq PresentationCodec
  *
  * Reads and edits presentation shapes, dispatched to the package family.
  *
@@ -16,7 +16,7 @@
  * slide rather than to whatever was found first.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -25,14 +25,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#2-presentation
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -65,7 +65,7 @@ class PresentationCodec {
 	/**
 	 * Constructor.
 	 *
-	 * @param PackagePartIo                            $io       Package reader/writer.
+	 * @param PackagePartIo $io Package reader/writer.
 	 * @param array<int, PresentationFamilyCodec>|null $families Optional override, for tests.
 	 */
 	public function __construct(PackagePartIo $io, ?array $families = null) {
@@ -89,7 +89,7 @@ class PresentationCodec {
 	 * Read every text-bearing shape.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $extension    The file extension.
+	 * @param string $extension The file extension.
 	 *
 	 * @return array<int, array{slide: string, shape: string, region: string, text: string}> The shapes.
 	 *
@@ -105,8 +105,8 @@ class PresentationCodec {
 	 * Replace the text of addressed shapes.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $extension    The file extension.
-	 * @param array  $edits        Each `{slide, shape, text, region?}`.
+	 * @param string $extension The file extension.
+	 * @param array $edits Each `{slide, shape, text, region?}`.
 	 *
 	 * @return array{bytes: string, applied: array<int, string>} The result.
 	 *

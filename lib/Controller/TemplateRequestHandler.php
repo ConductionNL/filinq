@@ -8,12 +8,12 @@
  * to reduce class complexity.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCP\AppFramework\Http\JSONResponse;
@@ -32,10 +32,10 @@ use Psr\Log\LoggerInterface;
  * Handles request parameter parsing and error responses for templates
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class TemplateRequestHandler {
 	/**

@@ -8,12 +8,12 @@
  * agent that cannot tell WHY it was refused will retry the same call.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Editing
+ * @package   OCA\Filinq\Service\Editing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-editing-tools/tasks.md#task-2-6
  *
@@ -23,9 +23,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
-use OCA\DocuDesk\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -35,10 +35,10 @@ use ZipArchive;
  * Enforces the refusals that bound what an agent may do to a document.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-documents-under-signature-or-produced-by-anonymisation-are-not-editable
  */
@@ -53,11 +53,14 @@ class DocumentGuard {
 	private const CANCELLED = 'cancelled';
 
 	/**
-	 * The OpenRegister register holding DocuDesk's document schemas.
+	 * The OpenRegister register holding Filinq's document schemas.
+	 *
+	 * `filinq`, not `document`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
 	 *
 	 * @var string
 	 */
-	private const REGISTER = 'document';
+	private const REGISTER = 'filinq';
 
 	/**
 	 * Constructor.
@@ -124,7 +127,6 @@ class DocumentGuard {
 		}
 
 		return null;
-
 	}//end signatureRefusal()
 
 	/**
@@ -185,7 +187,7 @@ class DocumentGuard {
 			return $results;
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'DocuDesk document guard could not query ' . $schema . ': ' . $e->getMessage(),
+				'Filinq document guard could not query ' . $schema . ': ' . $e->getMessage(),
 				['schema' => $schema]
 			);
 
@@ -215,7 +217,6 @@ class DocumentGuard {
 		}
 
 		return null;
-
 	}//end field()
 
 	/**
@@ -245,7 +246,7 @@ class DocumentGuard {
 		$mime = strtolower((string)$file->getMimeType());
 
 		if (str_contains($mime, 'pdf') === true) {
-			return 'A PDF is a final-form artefact. DocuDesk annotates and fills PDF forms but never '
+			return 'A PDF is a final-form artefact. Filinq annotates and fills PDF forms but never '
 				. 'rewrites PDF content — a silently rewritten PDF is forgery-shaped.';
 		}
 

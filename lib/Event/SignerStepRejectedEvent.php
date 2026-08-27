@@ -3,17 +3,17 @@
 /**
  * SignerStepRejectedEvent
  *
- * Typed docudesk-side event fired when a `pending` OR approval step linked to
- * a docudesk signing-request is rejected (i.e. a signer declined). Bridges
+ * Typed filinq-side event fired when a `pending` OR approval step linked to
+ * a filinq signing-request is rejected (i.e. a signer declined). Bridges
  * OR's `ApprovalStepRejectedEvent`. A rejection terminates the chain.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,20 +23,20 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCA\OpenRegister\Db\ApprovalChain;
 use OCA\OpenRegister\Db\ApprovalStep;
 use OCP\EventDispatcher\Event;
 
 /**
- * Fired after an approval step linked to a docudesk sign-request is rejected.
+ * Fired after an approval step linked to a filinq sign-request is rejected.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SignerStepRejectedEvent extends Event {
 	/**
@@ -87,7 +87,7 @@ class SignerStepRejectedEvent extends Event {
 	}//end getUserId()
 
 	/**
-	 * Get the docudesk signing-request UUID this step relates to.
+	 * Get the filinq signing-request UUID this step relates to.
 	 *
 	 * @return string Signing-request UUID.
 	 */

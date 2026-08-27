@@ -1,10 +1,10 @@
-# DocuDesk Features
+# Filinq Features
 
-This directory contains documentation for all DocuDesk features: implemented, planned, and proposed. Each `.md` file maps to one functional area and is rendered by the Docusaurus site.
+This directory contains documentation for all Filinq features: implemented, planned, and proposed. Each `.md` file maps to one functional area and is rendered by the Docusaurus site.
 
 ## Standards References
 
-DocuDesk is designed against Dutch government standards and open European norms. The table below lists the applicable standards per functional layer.
+Filinq is designed against Dutch government standards and open European norms. The table below lists the applicable standards per functional layer.
 
 ### Dutch Government Standards (Forum Standaardisatie)
 
@@ -32,9 +32,9 @@ DocuDesk is designed against Dutch government standards and open European norms.
 
 ### GEMMA Architecture References
 
-DocuDesk implements capabilities from the following [GEMMA](https://gemmaonline.nl) reference components:
+Filinq implements capabilities from the following [GEMMA](https://gemmaonline.nl) reference components:
 
-| GEMMA Component | URL | DocuDesk Feature |
+| GEMMA Component | URL | Filinq Feature |
 |-----------------|-----|------------------|
 | Documentregistratiecomponent | [GEMMA](https://gemmaonline.nl/index.php/GEMMA/id-0e99ec6c-283a-4ec9-8efa-e11468e6b878) | Document register, metadata enrichment |
 | Outputmanagementcomponent | [GEMMA](https://gemmaonline.nl/index.php/GEMMA/id-15064617-043a-4b22-bc68-718d915bcfc1) | PDF generation, template management, correspondence generation |
@@ -45,9 +45,9 @@ DocuDesk implements capabilities from the following [GEMMA](https://gemmaonline.
 
 ### TEC Feature Framework (DMS)
 
-DocuDesk covers the following top-level TEC DMS feature categories:
+Filinq covers the following top-level TEC DMS feature categories:
 
-| TEC Code | Category | DocuDesk Feature |
+| TEC Code | Category | Filinq Feature |
 |----------|----------|------------------|
 | TEC-DMS-1 | Content Authoring | Template management, advanced template management |
 | TEC-DMS-2 | Content Acquisition | OCR scanning, text extraction |

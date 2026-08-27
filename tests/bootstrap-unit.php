@@ -4,7 +4,7 @@
  * Bootstrap file for standalone PHPUnit tests (no Nextcloud server required)
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://DocuDesk.app
+ * @link https://filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,6 +23,31 @@ declare(strict_types=1);
 define('PHPUNIT_RUN', 1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
+// THE OpenRegister CONTRACT INTERFACES, OPTED INTO RATHER THAN AUTOLOADED.
+//
+// conduction/hydra-gates claims `OCA\OpenRegister\Contract\` as a RUNTIME psr-4
+// prefix, so consumers get these interfaces implicitly. That prefix is LONGER
+// than openregister's own `OCA\OpenRegister\` -> `lib/`, and PSR-4 is
+// longest-prefix-wins, so whichever app's autoloader registers first defines
+// OpenRegister's contract for the whole process (ConductionNL/.github#531).
+//
+// Required before tests/stubs/OpenRegisterStubs.php, which references the
+// contract, so the interface has to exist by then or PHP fatals in the
+// bootstrap itself rather than failing a test.
+//
+// interface_exists() is order-independent — it asks whether the interface is
+// RESOLVABLE, not who registered first. Appending a fallback autoloader does
+// NOT work: spl_autoload_register appends relative to registration order, and
+// that order across independently loaded apps is what nobody controls.
+foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
+		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
+		if (file_exists($shipped) === true) {
+			require_once $shipped;
+		}
+	}
+}
 
 // Load global-namespace stubs first (\OC class, etc.).
 require_once __DIR__ . '/stubs/GlobalStubs.php';
@@ -134,11 +159,45 @@ if (is_dir($ocpLockDir) === true) {
 	}
 }
 
+// Load OCP's admin-settings contracts (Sections\FilinqAdmin implements
+// IIconSection; Settings\FilinqAdmin implements IDelegatedSettings, which
+// extends ISettings) plus the two collaborators those classes type-hint —
+// IInitialState and IURLGenerator. Same "real file, not classmapped"
+// situation as the EventDispatcher/SystemTag contracts above: without these,
+// merely autoloading either FilinqAdmin class fatals with
+// 'Interface "OCP\Settings\IIconSection" not found'.
+//
+// ISettings::getForm() returns OCP\AppFramework\Http\TemplateResponse, which
+// NextcloudStubs.php already declared above; the interface's return type
+// therefore resolves to the stub, so the implementing classes stay
+// signature-compatible. Requiring it after the stubs is load-bearing.
+$ocpSettingsDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Settings';
+if (is_dir($ocpSettingsDir) === true) {
+	foreach (['IIconSection.php', 'ISettings.php', 'IDelegatedSettings.php'] as $ocpSettingsFile) {
+		$ocpSettingsPath = $ocpSettingsDir . '/' . $ocpSettingsFile;
+		if (is_file($ocpSettingsPath) === true) {
+			require_once $ocpSettingsPath;
+		}
+	}
+}
+
+foreach (
+	[
+		'/../vendor/nextcloud/ocp/OCP/AppFramework/Services/IInitialState.php',
+		'/../vendor/nextcloud/ocp/OCP/IURLGenerator.php',
+	] as $ocpSettingsCollaborator
+) {
+	$ocpSettingsCollaboratorPath = __DIR__ . $ocpSettingsCollaborator;
+	if (is_file($ocpSettingsCollaboratorPath) === true) {
+		require_once $ocpSettingsCollaboratorPath;
+	}
+}
+
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
 
 // Shared test-only trait. The composer PSR-4 dev prefix maps
-// OCA\DocuDesk\Tests\ to tests/, which cannot resolve the lower-cased
+// OCA\Filinq\Tests\ to tests/, which cannot resolve the lower-cased
 // tests/unit/ directory segment, so non-test helper classes under tests/unit
 // are required explicitly (PHPUnit loads *Test.php files by path).
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';

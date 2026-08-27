@@ -17,7 +17,7 @@
       "task": "2",
       "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "Per spec.md: DocuDesk does NOT forward bases to OR. Service correctly ignores any bases field (mapEntitiesForAnonymization does not pass it through). No changes needed."
+      "note": "Per spec.md: Filinq does NOT forward bases to OR. Service correctly ignores any bases field (mapEntitiesForAnonymization does not pass it through). No changes needed."
     },
     {
       "task": "3",
@@ -53,7 +53,7 @@
       "task": "7",
       "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "Reads docudesk.prohibition.high_confidence_threshold (default 0.85) via IAppConfig::getValueFloat. Already implemented."
+      "note": "Reads filinq.prohibition.high_confidence_threshold (default 0.85) via IAppConfig::getValueFloat. Already implemented."
     },
     {
       "task": "8",

@@ -1,6 +1,6 @@
 # Tasks — odt-anonymisation-frontend
 
-> Frontend-only, DocuDesk-only. Backend ODT redaction is the paired `openregister:odt-anonymisation-writeback` change — do NOT duplicate it here.
+> Frontend-only, Filinq-only. Backend ODT redaction is the paired `openregister:odt-anonymisation-writeback` change — do NOT duplicate it here.
 > No OpenRegister schema/register/object, no DB migration, no API change.
 
 ## 1. Extract the upload allow-list into a testable module

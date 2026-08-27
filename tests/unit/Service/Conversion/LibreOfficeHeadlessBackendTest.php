@@ -10,7 +10,7 @@
  * class's internal logic with all I/O mocked.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -18,7 +18,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/pdf-conversion-service/tasks.md#task-11
  *
@@ -26,10 +26,10 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Conversion;
+namespace OCA\Filinq\Tests\Unit\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\Conversion\LibreOfficeHeadlessBackend;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\IAppConfig;
@@ -43,10 +43,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for LibreOfficeHeadlessBackend
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -128,7 +128,7 @@ class LibreOfficeHeadlessBackendTest extends TestCase {
 	 * @return void
 	 */
 	public function testIsUnavailableWhenFlagFalse(): void {
-		$backend = $this->makeBackend(configMap: ['docudesk.conversion.backends.libreoffice_enabled' => 'false']);
+		$backend = $this->makeBackend(configMap: ['filinq.conversion.backends.libreoffice_enabled' => 'false']);
 		$this->assertFalse(condition: $backend->isAvailable());
 
 	}//end testIsUnavailableWhenFlagFalse()
@@ -241,9 +241,9 @@ class LibreOfficeHeadlessBackendTest extends TestCase {
 	public function testConvertThrowsOnLockContention(): void {
 		$backend = $this->makeBackend(
 			configMap: [
-				'docudesk.conversion.backends.libreoffice_enabled' => 'true',
-				'docudesk.conversion.libreoffice_binary_path' => '/usr/bin/soffice',
-				'docudesk.conversion.timeout_seconds' => '60',
+				'filinq.conversion.backends.libreoffice_enabled' => 'true',
+				'filinq.conversion.libreoffice_binary_path' => '/usr/bin/soffice',
+				'filinq.conversion.timeout_seconds' => '60',
 			]
 		);
 
@@ -271,9 +271,9 @@ class LibreOfficeHeadlessBackendTest extends TestCase {
 	public function testConvertLockFailureAttemptRecord(): void {
 		$backend = $this->makeBackend(
 			configMap: [
-				'docudesk.conversion.backends.libreoffice_enabled' => 'true',
-				'docudesk.conversion.libreoffice_binary_path' => '/usr/bin/soffice',
-				'docudesk.conversion.timeout_seconds' => '60',
+				'filinq.conversion.backends.libreoffice_enabled' => 'true',
+				'filinq.conversion.libreoffice_binary_path' => '/usr/bin/soffice',
+				'filinq.conversion.timeout_seconds' => '60',
 			]
 		);
 

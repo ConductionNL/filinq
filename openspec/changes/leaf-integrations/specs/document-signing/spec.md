@@ -58,9 +58,9 @@ canonical store of the deadline; the leaf SHALL NOT introduce a second write pat
 The `signerRecord` schema SHALL declare `configuration.linkedTypes` containing
 `"contacts"`, so the contacts leaf renders on the signer surface and a signer can be
 linked to (or looked up as) an NC Contacts entry. This is an authenticated UI surface
-under DocuDesk's normal access control; it SHALL NOT expose `signatureData` or
+under Filinq's normal access control; it SHALL NOT expose `signatureData` or
 `ipAddress` through the leaf, and it SHALL NOT alter the MCP exclusion of `signerRecord`
-declared by `docudesk-mcp-adoption`.
+declared by `filinq-mcp-adoption`.
 
 #### Scenario: A signer is linked to a contact
 
@@ -72,5 +72,5 @@ declared by `docudesk-mcp-adoption`.
 #### Scenario: Contacts leaf does not widen the agent surface
 
 - GIVEN the contacts leaf enabled on `signerRecord`
-- WHEN an agent enumerates DocuDesk's MCP tool surface
-- THEN no tool exposes `signerRecord` (the `docudesk-mcp-adoption` exclusion still holds)
+- WHEN an agent enumerates Filinq's MCP tool surface
+- THEN no tool exposes `signerRecord` (the `filinq-mcp-adoption` exclusion still holds)

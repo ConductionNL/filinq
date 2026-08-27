@@ -4,7 +4,7 @@
  * Unit tests for FileListingService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,14 +12,14 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\FileEntityStatsService;
-use OCA\DocuDesk\Service\FileListingService;
-use OCA\DocuDesk\Service\FileUploadService;
+use OCA\Filinq\Service\FileEntityStatsService;
+use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Service\FileUploadService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -28,10 +28,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for FileListingService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -127,7 +127,7 @@ class FileListingServiceTest extends TestCase {
 		$mockFolder->method('getDirectoryListing')
 			->willReturn([]);
 
-		$this->mockFileUploadService->method('getDocuDeskFolder')
+		$this->mockFileUploadService->method('getFilinqFolder')
 			->willReturn($mockFolder);
 
 		$this->mockEntityStatsService->method('tryGetEntityRelationMapper')

@@ -1,10 +1,10 @@
-# DocuDesk office-suite sidecars — the two WOPI clients ADR-087 names.
+# Filinq office-suite sidecars — the two WOPI clients ADR-087 names.
 #
 # ⚠️ NEXTCLOUD IS THE WOPI **HOST**, NOT THE CLIENT. This is the distinction the
 # document-editing-tools spec originally got wrong and it changes what has to be
 # deployed. `richdocuments` implements the host endpoints
 # (`/apps/richdocuments/wopi/files/{fileId}`); the suites below are *clients*
-# that consume them. DocuDesk's own `editDocument` is likewise a CLIENT of
+# that consume them. Filinq's own `editDocument` is likewise a CLIENT of
 # Nextcloud's host — so the headless editing path needs `richdocuments`
 # installed, and needs NEITHER of these containers.
 #
@@ -30,9 +30,9 @@ services:
   # Collabora Online (LibreOffice lineage). Vendor-official image.
   # Strongest ODF and legacy .doc/.xls/.ppt fidelity; carries Draw (.odg).
   # ---------------------------------------------------------------------------
-  docudesk-collabora:
+  filinq-collabora:
     image: collabora/code:latest
-    container_name: docudesk-collabora
+    container_name: filinq-collabora
     restart: unless-stopped
     environment:
       # The Nextcloud origin allowed to embed this editor. Dots must be escaped —
@@ -60,9 +60,9 @@ services:
   # a real CheckFileInfo probe rather than "is the app installed" — this suite
   # can be fully present and still refuse every WOPI call.
   # ---------------------------------------------------------------------------
-  docudesk-onlyoffice:
+  filinq-onlyoffice:
     image: onlyoffice/documentserver:latest
-    container_name: docudesk-onlyoffice
+    container_name: filinq-onlyoffice
     restart: unless-stopped
     environment:
       - JWT_ENABLED=true

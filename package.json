@@ -1,5 +1,5 @@
 {
-  "name": "docudesk",
+  "name": "filinq",
   "version": "1.0.0",
   "license": "EUPL-1.2",
   "engines": {
@@ -13,13 +13,14 @@
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
     "lint": "eslint src",
-    "lint-fix": "npm run lint -- --fix",
+    "lint-fix": "npm run lint -- --fix && npm run format:fix",
     "test": "jest --silent",
     "test-coverage": "jest --silent --coverage",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage --coverage.provider=v8 --coverage.reporter=json-summary --coverage.reporter=text-summary --coverage.include=src/** --coverage.reportsDirectory=coverage-vitest",
     "test:coverage-ratchet": "npm run test:coverage && bash tests/coverage-ratchet.sh vitest coverage-vitest/coverage-summary.json",
+    "check:schema-l10n": "node scripts/check-schema-l10n.js",
     "check:manifest": "node tests/validate-manifest.js",
     "test:e2e": "playwright test",
     "test:e2e:docs": "playwright test --project docs-capture",
@@ -27,14 +28,16 @@
     "stylelint:fix": "stylelint \"{src,css}/**/*.{vue,scss,css}\" --fix",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config core.hooksPath .githooks || true",
+    "l10n:build": "node scripts/build-l10n-js.js",
+    "check:l10n-js": "node scripts/build-l10n-js.js --check"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
     "@babel/core": "^7.29.0",
-    "@conduction/nextcloud-vue": "^2.3.0",
+    "@conduction/nextcloud-vue": "^2.19.0",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",

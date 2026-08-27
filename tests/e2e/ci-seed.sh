@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+# SPDX-FileCopyrightText: 2026 Filinq Contributors
 # SPDX-License-Identifier: EUPL-1.2
 #
-# Provision DocuDesk's OpenRegister registers + schemas, and the app-config
+# Provision Filinq's OpenRegister registers + schemas, and the app-config
 # object-type bindings that depend on them, on a freshly installed Nextcloud
 # for the shared `E2E Tests (Playwright)` and `Integration Tests (Newman)` CI
 # jobs.
@@ -12,8 +12,8 @@
 # Both steps run AFTER `php -S` is up and with cwd set to the Nextcloud server
 # root, so this is invoked as:
 #
-#     playwright-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh'
-#     newman-seed-command:     'bash apps/docudesk/tests/e2e/ci-seed.sh api'
+#     playwright-seed-command: 'bash apps/filinq/tests/e2e/ci-seed.sh'
+#     newman-seed-command:     'bash apps/filinq/tests/e2e/ci-seed.sh api'
 #
 # The optional first argument selects the MODE — see "Mode" below. Everything
 # that provisions state is shared; the only difference is the SPA bundle gate,
@@ -22,7 +22,7 @@
 # WHY THIS IS NEEDED — TWO SEPARATE GAPS
 # --------------------------------------
 # 1. THE REGISTER IMPORT IS NOT A RELIABLE FRESH-INSTALL PATH.
-#    DocuDesk imports `lib/Settings/docudesk_register.json` from
+#    Filinq imports `lib/Settings/filinq_register.json` from
 #    `Application::boot()` → `SettingsService::initialize()` →
 #    `SettingsInitializer::initialize()`. That path fails silently two ways:
 #
@@ -33,7 +33,7 @@
 #         indistinguishable from a successful one. During `occ app:enable`
 #         there is NO user session, so OpenRegister's RBAC can deny it outright.
 #      b. It calls `importFromApp()` on the version-guarded path: if the
-#         recorded `docudesk/configuration_version` is already >= the file's
+#         recorded `filinq/configuration_version` is already >= the file's
 #         version, it returns "up to date" and applies nothing.
 #
 #    Either way the app enables cleanly, the SPA boots, and the registers
@@ -46,11 +46,11 @@
 #    defeat the version guard, and then VERIFIED.
 #
 # 2. THE OBJECT-TYPE BINDINGS ARE ADMIN-CONFIGURED, NOT AUTO-PROVISIONED.
-#    Importing the registers is NOT enough. DocuDesk resolves every write
+#    Importing the registers is NOT enough. Filinq resolves every write
 #    through app-config keys `<schemaSlug>_register` / `<schemaSlug>_schema`
 #    (see `OpenRegisterResolver::getRegisterAndSchema()`,
 #    `SigningService::createRequest()`, `SettingsService::WRITABLE_KEYS`).
-#    Those keys are populated by an administrator in DocuDesk's admin settings
+#    Those keys are populated by an administrator in Filinq's admin settings
 #    UI; the only one the app self-provisions is `templateVersion_*`
 #    (`SettingsInitializer::provisionTemplateVersionConfig()`). On a fresh
 #    install every other binding is empty, and e.g. `POST /api/templates`
@@ -71,7 +71,7 @@ set -euo pipefail
 
 # ── Mode ─────────────────────────────────────────────────────────────────────
 # `e2e` (default) — the Playwright job. Everything below runs, including the
-#                   final GATE that the DocuDesk frontend bundle serves as
+#                   final GATE that the Filinq frontend bundle serves as
 #                   JavaScript.
 # `api`           — the Newman job. Identical provisioning, but the SPA bundle
 #                   warm-up and its gate are skipped.
@@ -99,17 +99,17 @@ esac
 # caller's cwd (the workflow runs it from the Nextcloud server root).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-REGISTER_JSON="${APP_ROOT}/lib/Settings/docudesk_register.json"
+REGISTER_JSON="${APP_ROOT}/lib/Settings/filinq_register.json"
 
-# Nextcloud server root: two levels above the app dir (server/apps/docudesk or
-# server/custom_apps/docudesk). Fall back to the cwd if that is not it.
+# Nextcloud server root: two levels above the app dir (server/apps/filinq or
+# server/custom_apps/filinq). Fall back to the cwd if that is not it.
 NC_ROOT="$(cd "${APP_ROOT}/../.." && pwd)"
 if [ ! -f "${NC_ROOT}/occ" ] && [ -f "${PWD}/occ" ]; then
 	NC_ROOT="${PWD}"
 fi
 
 if [ ! -f "$REGISTER_JSON" ]; then
-	echo "::error::DocuDesk register definition not found at ${REGISTER_JSON}."
+	echo "::error::Filinq register definition not found at ${REGISTER_JSON}."
 	exit 1
 fi
 
@@ -155,7 +155,7 @@ echo "[ci-seed] nc root:   ${NC_ROOT}"
 #     /ocs/v2.php/cloud/capabilities  -> 404 index.php's router page
 #
 # So WebDAV and OCS are both unreachable, and `/index.php/apps/...` works only
-# because index.php is the fallback. Two of DocuDesk's workflow specs seed a
+# because index.php is the fallback. Two of Filinq's workflow specs seed a
 # real file node over WebDAV; they cannot be written around a server that does
 # not route to remote.php.
 #
@@ -203,9 +203,9 @@ if { [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; } && [ "$ROUT
 	fi
 fi
 
-# ── 0. Let DocuDesk's own boot-time import run once, first ───────────────────
+# ── 0. Let Filinq's own boot-time import run once, first ───────────────────
 # `Application::boot()` calls `SettingsService::initialize()` on EVERY request
-# until `docudesk/configuration_version` has been written, and that call
+# until `filinq/configuration_version` has been written, and that call
 # re-imports the whole definition (5 registers, 20 schemas, 46 objects).
 #
 # Order matters: if we bound the object-type config keys BEFORE that ran, the
@@ -217,13 +217,13 @@ fi
 # Its outcome is deliberately not checked: it is unobservable by design (boot()
 # swallows every \Exception), which is exactly why the rest of this script
 # exists. No timeout either — this is the request that pays the whole import.
-echo "[ci-seed] priming DocuDesk boot-time initialization…"
+echo "[ci-seed] priming Filinq boot-time initialization…"
 PRIME_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
-	-H 'OCS-APIRequest: true' "${BASE}/index.php/apps/docudesk/" || echo 000)"
-echo "[ci-seed] prime /index.php/apps/docudesk/ -> ${PRIME_CODE}"
+	-H 'OCS-APIRequest: true' "${BASE}/index.php/apps/filinq/" || echo 000)"
+echo "[ci-seed] prime /index.php/apps/filinq/ -> ${PRIME_CODE}"
 
-# ── 1. Import the DocuDesk configuration into OpenRegister ───────────────────
-# DocuDesk has NO import route of its own — `appinfo/routes.php` registers only
+# ── 1. Import the Filinq configuration into OpenRegister ───────────────────
+# Filinq has NO import route of its own — `appinfo/routes.php` registers only
 # `settings#index` (GET) and `settings#create` (POST) at `api/settings`. So the
 # import goes through OpenRegister's generic importer.
 #
@@ -234,7 +234,7 @@ echo "[ci-seed] prime /index.php/apps/docudesk/ -> ${PRIME_CODE}"
 # upload. `force` is compared `=== 'true' || === true`, so the multipart string
 # "true" is accepted here.
 IMPORT_URL="${BASE}/index.php/apps/openregister/api/configurations/import"
-echo "[ci-seed] POST ${IMPORT_URL} (force=true, appId=docudesk)"
+echo "[ci-seed] POST ${IMPORT_URL} (force=true, appId=filinq)"
 
 IMPORT_BODY="$(mktemp)"
 IMPORT_CODE="$(
@@ -244,7 +244,7 @@ IMPORT_CODE="$(
 		-H 'OCS-APIRequest: true' \
 		-F "file=@${REGISTER_JSON};type=application/json" \
 		-F 'force=true' \
-		-F 'appId=docudesk' \
+		-F 'appId=filinq' \
 		"$IMPORT_URL" || echo 000
 )"
 
@@ -252,7 +252,7 @@ echo "[ci-seed] import HTTP ${IMPORT_CODE}"
 head -c 2000 "$IMPORT_BODY"; echo
 
 if [ "$IMPORT_CODE" != "200" ]; then
-	echo "::error::DocuDesk configuration import failed (HTTP ${IMPORT_CODE}). The e2e suite cannot exercise templates or signing without it."
+	echo "::error::Filinq configuration import failed (HTTP ${IMPORT_CODE}). The e2e suite cannot exercise templates or signing without it."
 	exit 1
 fi
 
@@ -326,7 +326,7 @@ fi
 # ── 2. Verify the registers and schemas are actually there ───────────────────
 # The importer reporting success is not the same as the registers existing.
 # Verify against OpenRegister directly, and require exactly the slugs declared
-# in `lib/Settings/docudesk_register.json` — so this check cannot drift away
+# in `lib/Settings/filinq_register.json` — so this check cannot drift away
 # from what the app actually ships.
 REG_BODY="$(mktemp)"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
@@ -389,9 +389,9 @@ print(f'[ci-seed] schemas present:   {sorted(sch_by_slug)}', file=sys.stderr)
 
 if missing_registers or missing_schemas:
     if missing_registers:
-        print(f'::error::DocuDesk registers missing after import: {missing_registers}', file=sys.stderr)
+        print(f'::error::Filinq registers missing after import: {missing_registers}', file=sys.stderr)
     if missing_schemas:
-        print(f'::error::DocuDesk schemas missing after import: {missing_schemas}', file=sys.stderr)
+        print(f'::error::Filinq schemas missing after import: {missing_schemas}', file=sys.stderr)
     sys.exit(1)
 
 print(
@@ -401,7 +401,7 @@ print(
 )
 
 # ── Derive the object-type bindings an administrator would set by hand. ──
-# For every schema DocuDesk ships, bind it to the register that actually holds
+# For every schema Filinq ships, bind it to the register that actually holds
 # it. Prefer the register the definition file declares it in, so a schema slug
 # that also happens to exist in an unrelated register (another app's import)
 # cannot capture the binding.
@@ -434,8 +434,8 @@ for schema_slug in want_schemas:
     print(f'{schema_slug}_source\topenregister')
 PY
 
-# ── 3. Bind the object types in DocuDesk's app config ────────────────────────
-# Written with `occ` rather than `POST /apps/docudesk/api/settings`: that route
+# ── 3. Bind the object types in Filinq's app config ────────────────────────
+# Written with `occ` rather than `POST /apps/filinq/api/settings`: that route
 # is `#[AuthorizedAdminSetting]` WITHOUT `@NoCSRFRequired`, so a basic-auth curl
 # is rejected before the controller runs, and harvesting a request-token in bash
 # would be a second, fragile session. `occ` is the documented administrative
@@ -444,22 +444,22 @@ PY
 # publicationConsent/template), and signing needs `signingRequest_*` /
 # `signerRecord_*`.
 if [ ! -f "${NC_ROOT}/occ" ]; then
-	echo "::error::occ not found at ${NC_ROOT}/occ — cannot bind DocuDesk's object types."
+	echo "::error::occ not found at ${NC_ROOT}/occ — cannot bind Filinq's object types."
 	exit 1
 fi
 
 BOUND=0
 while IFS=$'\t' read -r key value; do
 	[ -z "$key" ] && continue
-	php "${NC_ROOT}/occ" config:app:set docudesk "$key" --value="$value" --output=plain > /dev/null
+	php "${NC_ROOT}/occ" config:app:set filinq "$key" --value="$value" --output=plain > /dev/null
 	BOUND=$((BOUND + 1))
 done < "$BINDINGS"
-echo "[ci-seed] bound ${BOUND} DocuDesk object-type config keys."
+echo "[ci-seed] bound ${BOUND} Filinq object-type config keys."
 
 # The native signing provider refuses to produce an SES artifact without a
 # verification secret — `NativeSigningProvider` throws 'Cannot produce a native
 # SES artifact: signing_verification_secret is unset. Configure the signing
-# secret in DocuDesk admin settings before enabling signing.' A fresh install
+# secret in Filinq admin settings before enabling signing.' A fresh install
 # has no secret, so `POST /api/signing/requests/{id}/sign` answers 500 and the
 # signing journey cannot complete. This is an ADMIN SETUP step, exactly like
 # the register bindings above, so it belongs here.
@@ -471,7 +471,7 @@ echo "[ci-seed] bound ${BOUND} DocuDesk object-type config keys."
 # runner — but it is generated rather than a literal, so nothing here can ever
 # become a copied-and-pasted production secret.
 SIGNING_SECRET="ci-$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-php "${NC_ROOT}/occ" config:app:set docudesk signing_verification_secret \
+php "${NC_ROOT}/occ" config:app:set filinq signing_verification_secret \
 	--value="$SIGNING_SECRET" --output=plain > /dev/null
 echo "[ci-seed] provisioned signing_verification_secret (${#SIGNING_SECRET} chars, ephemeral)."
 
@@ -483,12 +483,12 @@ SETTINGS_BODY="$(mktemp)"
 SETTINGS_CODE="$(
 	curl -sS -o "$SETTINGS_BODY" -w '%{http_code}' \
 		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-		"${BASE}/index.php/apps/docudesk/api/settings" || echo 000
+		"${BASE}/index.php/apps/filinq/api/settings" || echo 000
 )"
 echo "[ci-seed] GET /api/settings -> ${SETTINGS_CODE}"
 
 if [ "$SETTINGS_CODE" != "200" ]; then
-	echo "::error::DocuDesk settings endpoint returned HTTP ${SETTINGS_CODE}; cannot verify the object-type bindings."
+	echo "::error::Filinq settings endpoint returned HTTP ${SETTINGS_CODE}; cannot verify the object-type bindings."
 	head -c 1000 "$SETTINGS_BODY"; echo
 	exit 1
 fi
@@ -508,13 +508,13 @@ required = [
 missing = [k for k in required if not configuration.get(k)]
 print(f'[ci-seed] settings.configuration: {json.dumps(configuration, sort_keys=True)}')
 if missing:
-    print(f'::error::DocuDesk object-type bindings still empty after seeding: {missing}')
+    print(f'::error::Filinq object-type bindings still empty after seeding: {missing}')
     print('::error::Template/consent writes would 500 with "register/schema not configured".')
     sys.exit(1)
 print('[ci-seed] object-type bindings OK.')
 PY
 
-echo "[ci-seed] DocuDesk registers, schemas and object-type bindings provisioned."
+echo "[ci-seed] Filinq registers, schemas and object-type bindings provisioned."
 
 # ── 4a-bis. Policy RBAC groups ─────────────────────────────────────────────
 # The policy surface is group-gated, not admin-gated, and THREE group names are
@@ -522,7 +522,7 @@ echo "[ci-seed] DocuDesk registers, schemas and object-type bindings provisioned
 #
 #   PolicyCrudService::PROHIBITION_GROUP      = docudesk-prohibition-admins
 #   PolicyCrudService::STANDING_CONSENT_GROUP = docudesk-standing-consent-admins
-#   docudesk_register.json RBAC on publicationProhibition
+#   filinq_register.json RBAC on publicationProhibition
 #                          (create/update/delete) = docudesk-policy-admins
 #
 # ⚠️ The first and third DISAGREE, and they gate the same operation at two
@@ -626,7 +626,7 @@ dav DELETE "$DAV_PROBE"
 # ── 5. Warm the SPA so the first spec doesn't pay the cold start ─────────────
 # The runner serves Nextcloud with `php -S`. Even with PHP_CLI_SERVER_WORKERS=8
 # the first hit pays a cold opcache, the first parse of the webpack bundle, and
-# — specific to DocuDesk — `Application::boot()`'s own register import, which
+# — specific to Filinq — `Application::boot()`'s own register import, which
 # runs on the FIRST request after enable and touches 5 registers, 20 schemas and
 # 46 objects. Paying that here, in the environment-preparation step, is where it
 # belongs; the alternative (raising the first spec's timeout) would hide a cold
@@ -635,10 +635,10 @@ dav DELETE "$DAV_PROBE"
 # Failures are ignored on purpose: this is a warm-up, not a gate. The real
 # checks are above and below.
 for path in \
-	"/index.php/apps/docudesk/" \
-	"/index.php/apps/docudesk/api/settings" \
-	"/index.php/apps/docudesk/api/templates" \
-	"/index.php/apps/docudesk/api/signing/requests" \
+	"/index.php/apps/filinq/" \
+	"/index.php/apps/filinq/api/settings" \
+	"/index.php/apps/filinq/api/templates" \
+	"/index.php/apps/filinq/api/signing/requests" \
 	"/index.php/apps/openregister/api/registers?_limit=1"
 do
 	code="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
@@ -656,8 +656,8 @@ fi
 # Pull the main webpack bundle once so it is in the page cache.
 #
 # Do NOT hardcode the URL. Nextcloud serves an app's assets from whichever apps
-# directory it was installed into — `/apps/docudesk/js/...` on the CI runner,
-# `/custom_apps/docudesk/js/...` in the docker dev images — and asking for the
+# directory it was installed into — `/apps/filinq/js/...` on the CI runner,
+# `/custom_apps/filinq/js/...` in the docker dev images — and asking for the
 # wrong one does not 404. It returns **HTTP 200 with `text/html`**: the NC error
 # page, served through index.php. A status-code check therefore reports success
 # while fetching a 40 KB HTML page instead of a multi-MB bundle, so the warm-up
@@ -667,13 +667,13 @@ fi
 # response is actually JavaScript.
 APP_HTML="$(mktemp)"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/docudesk/" -o "$APP_HTML" || true
+	"${BASE}/index.php/apps/filinq/" -o "$APP_HTML" || true
 
 # `|| true` is load-bearing: grep exits 1 when it matches nothing, and under
 # `set -euo pipefail` that aborts the script right here — so the case the gate
 # below exists to explain (no bundle) would die with a bare non-zero exit and
 # none of the diagnosis. Let it fall through to the gate instead.
-BUNDLE_SRC="$(grep -oE 'src="[^"]*docudesk-main[^"]*"' "$APP_HTML" \
+BUNDLE_SRC="$(grep -oE 'src="[^"]*filinq-main[^"]*"' "$APP_HTML" \
 	| head -1 | sed 's/^src="//; s/"$//' || true)"
 
 if [ -n "$BUNDLE_SRC" ]; then
@@ -702,7 +702,7 @@ if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
 			echo "[ci-seed] bundle verified as JavaScript."
 			;;
 		*)
-			echo "::error::The DocuDesk frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
+			echo "::error::The Filinq frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
 			echo "::error::The SPA cannot mount, so every UI spec would fail on a selector timeout with a misleading cause."
 			echo "::error::Check the 'Build app frontend' step — a missing bundle returns HTTP 200 text/html, not 404."
 			exit 1

@@ -19,6 +19,14 @@ module.exports = {
 	// module. Ignore the whole directory rather than listing files one by one.
 	testPathIgnorePatterns: [
 		'/node_modules/',
+		// Composer dependencies, not this app's tests. conduction/hydra-gates
+		// ships Playwright fixture specs under
+		// vendor/conduction/hydra-gates/**/scripts/test-fixtures/, and jest
+		// collects them the moment `composer install` has run — 7 suites that
+		// fail on `import { test } from '@playwright/test'` and have nothing to
+		// do with this app. Pre-existing; it only stays hidden while vendor/ is
+		// absent, which is never the case in CI.
+		'/vendor/',
 		'<rootDir>/tests/e2e/',
 		'<rootDir>/tests/vitest/',
 		'<rootDir>/tests/unit/reachability.spec.js',

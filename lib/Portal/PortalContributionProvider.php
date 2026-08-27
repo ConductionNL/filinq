@@ -1,9 +1,9 @@
 <?php
 
 /**
- * DocuDesk Portal Contribution Provider
+ * Filinq Portal Contribution Provider
  *
- * DocuDesk's contribution to the shared Portaliq external portal (hydra
+ * Filinq's contribution to the shared Portaliq external portal (hydra
  * ADR-046, contribution contract v2.1, extended by v2.2 `rowActions`).
  * Portaliq — the ONE shared portal for people WITHOUT Nextcloud accounts —
  * discovers this class by convention FQCN
@@ -11,13 +11,13 @@
  * method_exists(), never instanceof. This class is therefore deliberately
  * PLAIN: no portaliq imports, no `implements` clause, no info.xml dependency,
  * no constructor dependencies. Without portaliq installed it is inert and
- * DocuDesk behaves exactly as before (amendment A1).
+ * Filinq behaves exactly as before (amendment A1).
  *
  * It declares — for the `data-subject` (a WOO-affected entity exercising their
  * consent/objection rights) and `signer` (an external party invited to sign a
  * document) audiences — the OpenRegister collections a portal subject may read
  * and the field whitelists projected onto each. All scoping uses the STABLE
- * claim contract `claims.docudesk.contactId` / `claims.docudesk.signerEmail`;
+ * claim contract `claims.filinq.contactId` / `claims.filinq.signerEmail`;
  * see openspec/changes/portal-contribution/design.md. No create/endpoint
  * actions ship at the manifest top level (see design.md "Deferred actions"):
  * consent objection and document signing are UPDATE / A6 flows the
@@ -29,7 +29,7 @@
  * `portal-signing-actions` (this file, further extended) adds the SAME three
  * acts as top-level contract-v2 A6 `endpoint` actions (`sign`, `decline`,
  * `viewDocument`, REQ-DDPSA-001) — both point at
- * `/apps/docudesk/api/portal/signing/{sign,decline,viewDocument}`, now backed
+ * `/apps/filinq/api/portal/signing/{sign,decline,viewDocument}`, now backed
  * by a real receiver: `Controller\PortalSigningReceiverController` +
  * `Portal\PortalAssertionVerifier` validate portaliq's frozen
  * `X-Portal-Subject` assertion, derive the invited signer's identity
@@ -46,12 +46,12 @@
  * every act until that lands — safe to ship early by design.
  *
  * @category  Portal
- * @package   OCA\DocuDesk\Portal
+ * @package   OCA\Filinq\Portal
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -63,10 +63,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Portal;
+namespace OCA\Filinq\Portal;
 
 /**
- * Declares what an external portal subject may see in DocuDesk.
+ * Declares what an external portal subject may see in Filinq.
  *
  * The contribution is a declarative manifest (pure data — no I/O, no
  * callbacks). All subject identity (subjectRef, audience, organisation, trust)
@@ -91,23 +91,32 @@ class PortalContributionProvider {
 	/**
 	 * The OpenRegister register slug holding the consent surfaces.
 	 *
+	 * `filinq`, not `consent`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
+	 *
 	 * @var string
 	 */
-	private const REGISTER_CONSENT = 'consent';
+	private const REGISTER_CONSENT = 'filinq';
 
 	/**
 	 * The OpenRegister register slug holding the signing surfaces.
 	 *
+	 * `filinq`, not `signing`, for the same reason. The two constants now hold
+	 * the same value and are deliberately NOT collapsed into one: they name two
+	 * different portal surfaces, and folding them together would lose the
+	 * record of which surface each call site is addressing the moment anything
+	 * ever moves again.
+	 *
 	 * @var string
 	 */
-	private const REGISTER_SIGNING = 'signing';
+	private const REGISTER_SIGNING = 'filinq';
 
 	/**
 	 * The human label portaliq renders for this app's portal section.
 	 *
 	 * @var string
 	 */
-	private const LABEL = 'DocuDesk';
+	private const LABEL = 'Filinq';
 
 	/**
 	 * Instance-local relative endpoint the `sign` rowAction resolves to.
@@ -119,7 +128,7 @@ class PortalContributionProvider {
 	 *
 	 * @var string
 	 */
-	private const SIGN_ENDPOINT = '/apps/docudesk/api/portal/signing/sign';
+	private const SIGN_ENDPOINT = '/apps/filinq/api/portal/signing/sign';
 
 	/**
 	 * Instance-local relative endpoint the `decline` rowAction resolves to.
@@ -129,7 +138,7 @@ class PortalContributionProvider {
 	 *
 	 * @var string
 	 */
-	private const DECLINE_ENDPOINT = '/apps/docudesk/api/portal/signing/decline';
+	private const DECLINE_ENDPOINT = '/apps/filinq/api/portal/signing/decline';
 
 	/**
 	 * Instance-local relative endpoint the `viewDocument` A6 action resolves to.
@@ -140,7 +149,7 @@ class PortalContributionProvider {
 	 *
 	 * @var string
 	 */
-	private const VIEW_DOCUMENT_ENDPOINT = '/apps/docudesk/api/portal/signing/viewDocument';
+	private const VIEW_DOCUMENT_ENDPOINT = '/apps/filinq/api/portal/signing/viewDocument';
 
 	/**
 	 * Minimum eIDAS-aligned portal trust required to sign or decline.
@@ -160,7 +169,7 @@ class PortalContributionProvider {
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
-	 * The registry probes for this method first. DocuDesk serves WOO-affected
+	 * The registry probes for this method first. Filinq serves WOO-affected
 	 * data subjects (`data-subject`) and external document signers (`signer`).
 	 *
 	 * @return array<int, string> The audience identifiers.
@@ -190,7 +199,7 @@ class PortalContributionProvider {
 	 *
 	 * The subject array is server-derived by portaliq (subjectRef UUID,
 	 * audience, organisation, trust level low|substantial|high). Returns null
-	 * for any audience DocuDesk does not serve (fail-closed; the registry
+	 * for any audience Filinq does not serve (fail-closed; the registry
 	 * already filters by audience, but a provider must not rely on that). This
 	 * wave declares read collections only — no create or endpoint actions.
 	 *
@@ -386,7 +395,7 @@ class PortalContributionProvider {
 			],
 			// Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
 			// ONLY three actions on the `signer` manifest, all instance-local
-			// relative endpoints under `/apps/docudesk/api/portal/signing/`,
+			// relative endpoints under `/apps/filinq/api/portal/signing/`,
 			// all gated `minTrust: substantial`. Handled by
 			// `PortalSigningReceiverController` +
 			// `Portal\PortalAssertionVerifier`.

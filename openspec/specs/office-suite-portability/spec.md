@@ -9,7 +9,7 @@ status: in-progress
 
 ## Purpose
 
-Defines how DocuDesk detects an office suite, what it refuses to assume about one,
+Defines how Filinq detects an office suite, what it refuses to assume about one,
 and what is guaranteed to work with no suite present at all.
 
 The governing decision is ADR-087: office-suite divergence is **brokered, not
@@ -45,7 +45,7 @@ serves nothing.
 
 ### Requirement: No document capability may require a specific office suite
 
-Every capability DocuDesk exposes over a document MUST be reachable through the
+Every capability Filinq exposes over a document MUST be reachable through the
 suite-independent path. No file under `lib/` or `src/` may reference a suite's app
 id in executable code; the same identifier in a comment or in human-readable prose
 is documentation, not a dependency.

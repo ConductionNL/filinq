@@ -4,7 +4,7 @@
  * Unit tests for OcrService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,12 +12,12 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\OcrService;
+use OCA\Filinq\Service\OcrService;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -31,10 +31,10 @@ use Psr\Log\LoggerInterface;
  * Tests OCR detection logic and configuration methods.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase
@@ -267,7 +267,7 @@ class OcrServiceTest extends TestCase {
 	 */
 	public function testIsOcrEnabledDefaultsToTrue(): void {
 		$this->mockConfig->method('getValueString')
-			->with('docudesk', 'ocr_enabled', '1')
+			->with('filinq', 'ocr_enabled', '1')
 			->willReturn('1');
 
 		$result = $this->ocrService->isOcrEnabled();
@@ -282,7 +282,7 @@ class OcrServiceTest extends TestCase {
 	 */
 	public function testIsOcrEnabledReturnsFalseWhenDisabled(): void {
 		$this->mockConfig->method('getValueString')
-			->with('docudesk', 'ocr_enabled', '1')
+			->with('filinq', 'ocr_enabled', '1')
 			->willReturn('0');
 
 		$result = $this->ocrService->isOcrEnabled();
@@ -301,8 +301,8 @@ class OcrServiceTest extends TestCase {
 		$this->mockConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'ocr.default_languages', '', false, ''],
-					['docudesk', 'ocr_languages', 'nld+eng', false, 'nld+eng'],
+					['filinq', 'ocr.default_languages', '', false, ''],
+					['filinq', 'ocr_languages', 'nld+eng', false, 'nld+eng'],
 				]
 			);
 
@@ -321,8 +321,8 @@ class OcrServiceTest extends TestCase {
 		$this->mockConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'ocr.default_languages', '', false, 'nld+eng+deu+fra'],
-					['docudesk', 'ocr_languages', 'nld+eng', false, 'nld+eng'],
+					['filinq', 'ocr.default_languages', '', false, 'nld+eng+deu+fra'],
+					['filinq', 'ocr_languages', 'nld+eng', false, 'nld+eng'],
 				]
 			);
 
@@ -341,8 +341,8 @@ class OcrServiceTest extends TestCase {
 		$this->mockConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'ocr.default_dpi', '', false, ''],
-					['docudesk', 'ocr_dpi', '300', false, '300'],
+					['filinq', 'ocr.default_dpi', '', false, ''],
+					['filinq', 'ocr_dpi', '300', false, '300'],
 				]
 			);
 
@@ -361,8 +361,8 @@ class OcrServiceTest extends TestCase {
 		$this->mockConfig->method('getValueString')
 			->willReturnMap(
 				[
-					['docudesk', 'ocr.default_dpi', '', false, '400'],
-					['docudesk', 'ocr_dpi', '300', false, '300'],
+					['filinq', 'ocr.default_dpi', '', false, '400'],
+					['filinq', 'ocr_dpi', '300', false, '300'],
 				]
 			);
 

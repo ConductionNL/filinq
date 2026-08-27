@@ -14,12 +14,12 @@
  * (which rule kinds exist) in ConsentService, where the matcher lives.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
@@ -30,7 +30,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\App\IAppManager;
@@ -42,10 +42,10 @@ use RuntimeException;
  * Persistence layer for publicationConsent workflow records.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1

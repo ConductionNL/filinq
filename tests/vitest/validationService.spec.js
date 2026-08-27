@@ -32,7 +32,7 @@ describe('validateFile', () => {
 		const result = await validateFile(42, 'factuur')
 
 		const [url, body] = postMock.mock.calls[0]
-		expect(url).toContain('/apps/docudesk/api/validation/validate')
+		expect(url).toContain('/apps/filinq/api/validation/validate')
 		expect(body).toEqual({ fileId: 42, documentType: 'factuur' })
 		expect(result).toBe(payload)
 	})

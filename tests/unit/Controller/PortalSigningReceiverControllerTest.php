@@ -15,12 +15,12 @@
  * failure relays 502 without leaking exception internals.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,14 +33,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\PortalSigningReceiverController;
-use OCA\DocuDesk\Portal\PortalAssertionVerifier;
-use OCA\DocuDesk\Service\OpenRegisterResolver;
-use OCA\DocuDesk\Service\PortalSigningDocumentResolver;
-use OCA\DocuDesk\Service\SettingsService;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Controller\PortalSigningReceiverController;
+use OCA\Filinq\Portal\PortalAssertionVerifier;
+use OCA\Filinq\Service\OpenRegisterResolver;
+use OCA\Filinq\Service\PortalSigningDocumentResolver;
+use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Service\SigningService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Http;
 use OCP\Files\File;
@@ -48,9 +48,9 @@ use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\Security\Bruteforce\IThrottler;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use OCP\Security\Bruteforce\IThrottler;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -67,7 +67,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	 * test-only secretOverride so the controller exercises a REAL verifier
 	 * (not a mock) end to end.
 	 */
-	private const SECRET = 'docudesk-receiver-test-secret-01';
+	private const SECRET = 'filinq-receiver-test-secret-01';
 
 	/**
 	 * @var IRequest|MockObject
@@ -138,7 +138,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		// passing '' through as two of the four filters that scope the lookup.
 		// An unstubbed mock returns null, so the deny path fires.
 		$this->mockSettingsService->method('resolveSignerRecordBinding')
-			->willReturn(['register' => 'signing', 'schema' => 'signerRecord']);
+			->willReturn(['register' => 'filinq', 'schema' => 'signerRecord']);
 		$this->mockConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => $default
 		);
@@ -152,7 +152,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	 */
 	private function controller(): PortalSigningReceiverController {
 		return new PortalSigningReceiverController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			verifier: new PortalAssertionVerifier(config: null, secretOverride: self::SECRET),
 			signingService: $this->mockSigningService,

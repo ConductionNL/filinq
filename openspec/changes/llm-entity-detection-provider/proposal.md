@@ -7,7 +7,7 @@ kind: code
 ## Why
 
 "Anonimiseren met LLM" is the narrative the Dutch government is actively
-writing, and DocuDesk should own it before a competitor does:
+writing, and Filinq should own it before a competitor does:
 
 - The rijksbrede innovatieproject **"Anonimiseren met LLM"** (Digitale
   Overheid) and Binnenlands Bestuur's "Anonimiseren in de Woo met kunstmatige
@@ -15,12 +15,12 @@ writing, and DocuDesk should own it before a competitor does:
   procurement conversations (R3 section C, demand_score 4).
 - The NL flagship **"anonimiseren bij de bron"** tool — a Conduction project
   with Hoeksche Waard + 5 municipalities, built on **Nextcloud + LLM** — is
-  the exact position DocuDesk holds in market (R2 C2). Its selling point is
+  the exact position Filinq holds in market (R2 C2). Its selling point is
   **on-prem sovereignty**: the model runs inside the organisation's perimeter,
   no document ever leaves it.
 - The **Hoeksche Waard tool** and the MinBZK **maskeringsscript** (R2 A3/A5)
   prove fully-local LLM/NLP anonymisation is real; ZyLAB/Reveal already
-  *market* the LLM angle. DocuDesk is Presidio/regex today (R2 D:
+  *market* the LLM angle. Filinq is Presidio/regex today (R2 D:
   "COVERED — on-prem is core positioning" for sovereignty, but no LLM engine
   option is specced).
 
@@ -47,31 +47,31 @@ Verified at HEAD (why this is a thin provider seam, not an engine):
   (object), `subjectUuid`, `subjectRegister`, `subjectSchema` and runs over an
   existing OpenRegister object, not raw text. There is no text→entities
   endpoint yet.
-- DocuDesk already owns the detection entry point
+- Filinq already owns the detection entry point
   (`AnonymizationService::extractAndDetectEntities`), reads document text
   itself (`readNodeTextSafely()`) and writes entities into OR's catalogue via
   `EntityRelationMapper`.
 
-So DocuDesk formalises a small **DetectionProvider** seam whose default
+So Filinq formalises a small **DetectionProvider** seam whose default
 implementation delegates to OpenRegister's existing detection (unchanged), and
 adds an LLM provider that calls a local hermiq agentflow, maps its output into
 OR's entity/confidence shape, and — critically — falls back to the default
 provider with an **explicit report warning** on any failure. The provider is
 chosen **per organisation** (the config surface OR does not have). We do not
-touch OR's stub or hermiq's engine; we own the DocuDesk-side selection,
+touch OR's stub or hermiq's engine; we own the Filinq-side selection,
 mapping and honest fallback.
 
 ## What Changes
 
-- **DetectionProvider seam (DocuDesk)**: an interface with two
+- **DetectionProvider seam (Filinq)**: an interface with two
   implementations — `DefaultDetectionProvider` (delegates to OR's existing
   `extractAndDetectEntities` path; the default) and `LlmDetectionProvider`
   (calls a configured local hermiq agentflow). Both return the same
   entity/confidence shape OR persists.
-- **Per-organisation provider selection**: `docudesk.detection.provider`
+- **Per-organisation provider selection**: `filinq.detection.provider`
   resolved per organisation (default `default`), with the hermiq endpoint +
   agentflow reference held in admin config. OR's global method setting is
-  unchanged; this is a DocuDesk overlay.
+  unchanged; this is a Filinq overlay.
 - **LLM provider over hermiq (local only)**: `LlmDetectionProvider` sends the
   document's extracted text to the configured hermiq graph endpoint and reads
   detected entities from the returned state, mapping `{value, type, positions,
@@ -100,7 +100,7 @@ mapping and honest fallback.
 
 ### Modified Capabilities
 
-<!-- none in DocuDesk. OR's detection engine, catalogue and the global
+<!-- none in Filinq. OR's detection engine, catalogue and the global
      backend-method setting are consumed unchanged; OR's own detectWithLLM
      stub and a hermiq text->entities agentflow endpoint are declared as
      dependencies below, not modified here. -->
@@ -117,9 +117,9 @@ mapping and honest fallback.
 - New `lib/Controller/DetectionProviderSettingsController.php` +
   `api/detection-provider/*` (get/set per-org config, test connectivity);
   fail-closed admin auth.
-- Admin config keys: `docudesk.detection.provider` (per-org overlay),
-  `docudesk.detection.hermiq_endpoint`, `docudesk.detection.hermiq_agentflow`,
-  `docudesk.detection.require_local` (default true).
+- Admin config keys: `filinq.detection.provider` (per-org overlay),
+  `filinq.detection.hermiq_endpoint`, `filinq.detection.hermiq_agentflow`,
+  `filinq.detection.require_local` (default true).
 - `src/manifest.json` + settings view: provider picker + hermiq wiring.
 - Consumes / depends on (declared, not modified):
   - OpenRegister `EntityRelationMapper`, `TextExtractionService`,
@@ -129,7 +129,7 @@ mapping and honest fallback.
     and returns entities in OR's shape (or an app-callable variant of
     `/api/graph/run`); the current admin-only/object-centric shape is the HEAD
     reality and is documented as the integration contract + open question in
-    design.md. DocuDesk never assumes it can call the engine directly without
+    design.md. Filinq never assumes it can call the engine directly without
     that endpoint — it fails closed to the default provider.
 - Non-overlap (declared dependencies, not re-specced):
   `custom-dictionary-recognition` (sibling; both add recognizers into OR's

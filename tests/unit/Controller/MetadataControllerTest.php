@@ -4,7 +4,7 @@
  * Unit tests for MetadataController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,16 +12,16 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\MetadataController;
-use OCA\DocuDesk\Service\MetadataService;
+use OCA\Filinq\Controller\MetadataController;
+use OCA\Filinq\Service\MetadataService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -35,10 +35,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for MetadataController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -96,7 +96,7 @@ class MetadataControllerTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new MetadataController(
-			'docudesk',
+			'filinq',
 			$this->mockRequest,
 			$this->mockLogger,
 			$this->mockMetadataService,

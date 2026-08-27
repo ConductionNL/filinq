@@ -10,7 +10,7 @@
  * that folds them together lets a notes edit rewrite what is on screen.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -23,10 +23,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\PackagePartIo;
-use OCA\DocuDesk\Service\Editing\PptxPresentationCodec;
+use OCA\Filinq\Service\Editing\PackagePartIo;
+use OCA\Filinq\Service\Editing\PptxPresentationCodec;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -47,7 +47,9 @@ class PptxPresentationCodecTest extends TestCase {
 			/**
 			 * @param array<string, string> $parts Path => XML.
 			 */
-			public function __construct(public array $parts) {
+			public function __construct(
+				public array $parts,
+			) {
 			}
 
 			/**
@@ -65,7 +67,7 @@ class PptxPresentationCodecTest extends TestCase {
 			 * Read one part.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         The path.
+			 * @param string $part The path.
 			 *
 			 * @return string The XML.
 			 */
@@ -77,8 +79,8 @@ class PptxPresentationCodecTest extends TestCase {
 			 * Replace one part in memory.
 			 *
 			 * @param string $packageBytes Ignored.
-			 * @param string $part         The path.
-			 * @param string $xml          The new XML.
+			 * @param string $part The path.
+			 * @param string $xml The new XML.
 			 *
 			 * @return string A stand-in for the new package bytes.
 			 */

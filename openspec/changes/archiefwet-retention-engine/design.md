@@ -56,12 +56,12 @@ documents why:
 Schema `archive` config is a first-class `Schema` entity column
 (`Schema::setArchive()`, json type); `Schema::hydrate()` maps top-level keys
 through generic setters, so an `archive` object on a schema entry in
-`docudesk_register.json` is expected to survive
+`filinq_register.json` is expected to survive
 `ConfigurationService::importFromApp()`. **Uncertainty, stated**: the
 config-import path was traced through `hydrate()` only; task 1.1 pins this
 end-to-end with a unit test, and an OR issue is filed if import drops the key.
 
-### Verified at DocuDesk HEAD (this branch, 9cc14407)
+### Verified at Filinq HEAD (this branch, 9cc14407)
 
 - Five registers (`consent`, `signing`, `templates`, `document`, `dossier`);
   none carries retention data. No register slug `archief` exists in any
@@ -87,7 +87,7 @@ that incumbent vendors contractually exclude archiving.
 **Goals:**
 
 - Selectielijst semantics (waardering bewaren/vernietigen + termijn) on every
-  DocuDesk record, computed by OR from a configured trigger event + term.
+  Filinq record, computed by OR from a configured trigger event + term.
 - A vernietigingslijst workflow an archivist can actually operate, ending in
   a verklaring van vernietiging.
 - Transfer state for permanent records; destruction-date propagation into
@@ -96,7 +96,7 @@ that incumbent vendors contractually exclude archiving.
 **Non-Goals:**
 
 - No retention date math, destruction execution, certificate generation or
-  approval logic in DocuDesk (OR owns it; ADR-022/ADR-011).
+  approval logic in Filinq (OR owns it; ADR-022/ADR-011).
 - No TMLO/MDTO export, no e-depot transport (next change), no legal holds
   (e-discovery-legal-hold).
 - No editing of the dossier-register canonical spec (sibling ownership).
@@ -105,14 +105,14 @@ that incumbent vendors contractually exclude archiving.
 
 ## Decisions
 
-### D1 — Consume OR's records-management stack; DocuDesk ships no retention logic
+### D1 — Consume OR's records-management stack; Filinq ships no retention logic
 
 All computation (`archiefactiedatum` from afleidingswijze + bewaartermijn,
 recalculation on trigger change), eligibility scanning, destruction lists,
-approval semantics, execution and certificates stay in OR. DocuDesk's only
+approval semantics, execution and certificates stay in OR. Filinq's only
 backend addition is a thin `RetentionSurfaceService` that (a) reads retention
 verdicts for UI display, and (b) implements the propagation rule of D6.
-Rejected alternative — a DocuDesk-side scheduler mirroring
+Rejected alternative — a Filinq-side scheduler mirroring
 `files_retention` — recreates exactly the inadequacy the ecosystem report
 documents and duplicates OR's authz/audit path.
 
@@ -134,7 +134,7 @@ Three schemas, no custom tables:
   `approvers[]`, counts, `complianceStatement`, `immutable: true`).
 
 Rationale: OR deliberately does not ship these homes — its settings expect
-the deploying organisation to designate a register. DocuDesk is the records
+the deploying organisation to designate a register. Filinq is the records
 app of the fleet, so it provides them. The register slug `archief` collides
 with nothing at HEAD. Open question: promote selectielijst master data to an
 OR-owned shared register once a second app consumes it (unification
@@ -147,12 +147,12 @@ a destruction list.
 
 ### D3 — Wiring OR's archival settings is an explicit, admin-visible step
 
-DocuDesk admin settings gain an "Archiefbeheer" section that shows OR's
+Filinq admin settings gain an "Archiefbeheer" section that shows OR's
 current archival settings (`GET /api/settings/archival`, an OR endpoint) and
 offers a one-click "Koppel archiefregister" action which PUTs
 `selectielijstRegister/Schema`, `destructionListRegister/Schema` and
 `archivalRegister` pointing at the `archief` register. Rejected alternative —
-silently writing OR app config from a DocuDesk repair step — violates the
+silently writing OR app config from a Filinq repair step — violates the
 MDM trust rule (repair steps cannot own another app's config) and hides a
 municipal governance decision. The panel warns when settings point elsewhere
 (another app may legitimately own them) and never overwrites without the
@@ -161,7 +161,7 @@ admin action.
 ### D4 — Retention categories: schema-level defaults + trigger fields
 
 `archive` config lands on record schemas as data in
-`docudesk_register.json`:
+`filinq_register.json`:
 
 | Schema (register) | classificatie | afleidingswijze | trigger |
 |---|---|---|---|
@@ -184,7 +184,7 @@ schema default): OR exposes `extendArchiefactiedatum()` semantics via
 retention endpoints, but no public per-object classificatie write was found
 at HEAD. **Uncertainty, stated**: the spec requires the override surface;
 if OR lacks the endpoint at apply time, an OR issue is filed and the UI
-degrades to schema-level categories + date extension — never a DocuDesk-side
+degrades to schema-level categories + date extension — never a Filinq-side
 write around OR's immutability guards.
 
 ### D5 — Disposal workflow UI calls OR's API directly
@@ -195,9 +195,9 @@ count, created, approvers), list detail (objects with title, schema,
 register, archiefactiedatum, selectielijst category; per-object exclusion
 with mandatory reason for partial approval; reject with mandatory reason),
 certificates index. All calls go straight from the frontend to OR's
-`/api/archival/*` — DocuDesk adds **no** pass-through controllers
+`/api/archival/*` — Filinq adds **no** pass-through controllers
 (redundant-controller gate; ADR-022). Access: OR guards these endpoints
-(403 for non-archivists per its spec); DocuDesk hides the navigation entry
+(403 for non-archivists per its spec); Filinq hides the navigation entry
 for users without the archivist capability but never relies on hiding for
 security.
 
@@ -254,7 +254,7 @@ files under `src/modals/`; NcSelect with `inputLabel`.
 | Immutability | OR 409 `OBJECT_DESTROYED` / `OBJECT_TRANSFERRED` |
 | Audit | OR audit trail + destruction-list/certificate objects |
 
-ADR-011 check: no new validation/formatting/date utilities in DocuDesk;
+ADR-011 check: no new validation/formatting/date utilities in Filinq;
 ISO-8601 durations are passed opaquely to OR.
 
 ## Declarative-vs-imperative decision (ADR-031)
@@ -271,7 +271,7 @@ ISO-8601 durations are passed opaquely to OR.
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (nil-UUID/`seed-*`
+Shipped in `filinq_register.json` `objects[]` (nil-UUID/`seed-*`
 placeholders, demo-municipality flavour, category numbers marked TODO):
 
 ```json
@@ -311,12 +311,12 @@ runtime artifacts; unit tests build fixtures with nil-UUIDs.
   imported schema (task 1.1); OR issue if it fails; degradation = admin sets
   archive config through OR's schema UI, engine semantics unchanged.
 - [No per-object classificatie override endpoint at OR HEAD] → D4
-  degradation path + OR issue; never a DocuDesk-side write.
+  degradation path + OR issue; never a Filinq-side write.
 - [Canonical document-register modification races
   `docudesk-adopt-or-abstractions`] → mechanism-only MODIFIED delta (D7);
   flagged in the PR for the owning change's reviewer.
 - [Archivist authorization] → relies on OR's 403 guard on `/api/archival/*`;
-  DocuDesk adds no weaker parallel path (no pass-through controllers).
+  Filinq adds no weaker parallel path (no pass-through controllers).
 - [Wrong seeded category numbers cause unlawful destruction] → the seeds ship
   as explicit `TODO-*` placeholders during authoring, and REQ-DDARE-009 makes
   replacing them with real selectielijst-manager-approved numbers a hard
@@ -354,5 +354,5 @@ on processing-log schemas is likewise an apply-blocker).
 - Promote selectielijst master data + destruction homes to an OR-owned (or
   hydra-ADR'd shared) register once a second app consumes them?
 - Should `notificationLeadDays` pre-destruction notifications surface in
-  DocuDesk's notification center (OR emits INotification to archivists
+  Filinq's notification center (OR emits INotification to archivists
   already)? Deferred until OR's notification is verified live.

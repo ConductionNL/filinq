@@ -5,20 +5,20 @@ status: done
 # signing-via-or-approval-with-provider-plugins Specification
 
 ## Purpose
-Implements document signing on top of OpenRegister's approval-workflow, creating an `ApprovalChain` with one ordered `ApprovalStep` per signer instead of a DocuDesk-local approval store. Signer decisions are emitted exclusively through OR's approve and reject step endpoints, while pluggable signing providers (the native provider and external providers) present the signing UI and return a sign-or-decline result without mutating step state themselves. This reuses OR's chain orchestration for sequencing and lets DocuDesk integrate alternative signing backends.
+Implements document signing on top of OpenRegister's approval-workflow, creating an `ApprovalChain` with one ordered `ApprovalStep` per signer instead of a Filinq-local approval store. Signer decisions are emitted exclusively through OR's approve and reject step endpoints, while pluggable signing providers (the native provider and external providers) present the signing UI and return a sign-or-decline result without mutating step state themselves. This reuses OR's chain orchestration for sequencing and lets Filinq integrate alternative signing backends.
 ## Requirements
 ### Requirement: Sign-Request Creation SHALL Create an OR ApprovalChain with One Step per Signer
 
 SHALL be the primary requirement that when a signing request is initiated on a document,
-docudesk creates an OR `ApprovalChain` with one `ApprovalStep` per signer in the requested
-order. Step roles are NC group IDs. No new signing-chain rows are written to any docudesk-local
+filinq creates an OR `ApprovalChain` with one `ApprovalStep` per signer in the requested
+order. Step roles are NC group IDs. No new signing-chain rows are written to any filinq-local
 approval schema.
 
 #### Scenario: Sign request with two signers creates a two-step OR ApprovalChain
 
-- GIVEN a document with UUID `doc-xyz` stored in a docudesk OR register
+- GIVEN a document with UUID `doc-xyz` stored in a filinq OR register
 - AND a sign request is initiated with signers in order: `signer-a`, `signer-b`
-- WHEN the POST to docudesk's sign-request endpoint is called
+- WHEN the POST to filinq's sign-request endpoint is called
 - THEN an `ApprovalChain` SHALL be created in OR with two steps (order 1, 2)
 - AND step order-1 `role` SHALL be the NC group ID for `signer-a`, status `pending`
 - AND step order-2 `role` SHALL be the NC group ID for `signer-b`, status `waiting`
@@ -36,7 +36,7 @@ approval schema.
 ### Requirement: Signer Approval and Decline MUST Emit Via OR's Approval-Workflow API
 
 MUST be the requirement that all signer decisions (sign or decline) are emitted through
-OR's approval-step decision endpoints. Docudesk MUST NOT update step state in any local storage
+OR's approval-step decision endpoints. Filinq MUST NOT update step state in any local storage
 path in parallel with or instead of calling OR's API.
 
 #### Scenario: Signer signs — OR approve endpoint is called
@@ -44,7 +44,7 @@ path in parallel with or instead of calling OR's API.
 - GIVEN an ApprovalStep with `status: pending` for `doc-xyz`, step `order: 1`
 - AND the requesting user is a member of the step's `role` group
 - WHEN the signer completes the signing flow (e.g. via NativeSigningProvider)
-- THEN docudesk SHALL call `POST /api/approval-steps/{id}/approve`
+- THEN filinq SHALL call `POST /api/approval-steps/{id}/approve`
 - AND OR SHALL set `status: approved`, `decidedBy`, `decidedAt` on the step
 - AND OR SHALL advance step `order: 2` to `status: pending`
 
@@ -52,7 +52,7 @@ path in parallel with or instead of calling OR's API.
 
 - GIVEN an ApprovalStep with `status: pending` for `doc-xyz`
 - WHEN the signer clicks "Decline" with reason "Niet akkoord met de inhoud"
-- THEN docudesk SHALL call `POST /api/approval-steps/{id}/reject` with the reason in `comment`
+- THEN filinq SHALL call `POST /api/approval-steps/{id}/reject` with the reason in `comment`
 - AND OR SHALL set `status: rejected`; no next step is advanced
 
 ---
@@ -79,18 +79,18 @@ calls OR's approve or reject endpoint with that result.
 - GIVEN a sign request configured with an external signing provider
 - AND ApprovalStep `order: 1` becomes `pending`
 - WHEN OR dispatches `ApprovalStepInitiatedEvent` or `ApprovalStepApprovedEvent` for that step
-- THEN docudesk SHALL delegate to the configured `SigningProviderInterface` implementation
+- THEN filinq SHALL delegate to the configured `SigningProviderInterface` implementation
 - AND the provider SHALL return a signing URL or handle the external signing flow
-- AND on callback/completion, docudesk SHALL call `POST /api/approval-steps/{id}/approve`
+- AND on callback/completion, filinq SHALL call `POST /api/approval-steps/{id}/approve`
   or `/reject` based on the provider's result
 
 ---
 
 ### Requirement: Signing API Surface for Clients SHALL Be Preserved
 
-SHALL be the requirement that all existing docudesk signing endpoints (initiate sign request,
+SHALL be the requirement that all existing filinq signing endpoints (initiate sign request,
 get sign status, cancel sign request) retain their current request parameters and response
-shapes. Callers require no changes when docudesk migrates signing-chain state to OR.
+shapes. Callers require no changes when filinq migrates signing-chain state to OR.
 
 #### Scenario: Existing sign-request endpoint behaves identically after migration
 
@@ -110,15 +110,15 @@ shapes. Callers require no changes when docudesk migrates signing-chain state to
 
 ### Requirement: MUST NOT Write to Deprecated Signing-Chain Schema
 
-MUST NOT be violated: after this migration ships, no code path in docudesk creates or updates
+MUST NOT be violated: after this migration ships, no code path in filinq creates or updates
 objects in any app-local signing-chain approval schema. All new signing chains are OR
 `ApprovalChain` objects. Existing pre-migration signing-chain rows remain accessible read-only.
 
 #### Scenario: Migration does not write new rows to deprecated schema
 
 - GIVEN the migration is deployed
-- WHEN any docudesk endpoint initiates or advances a signing flow
-- THEN no object of any deprecated docudesk signing-chain schema type SHALL be created
+- WHEN any filinq endpoint initiates or advances a signing flow
+- THEN no object of any deprecated filinq signing-chain schema type SHALL be created
 - AND the deprecated schema's object store SHALL contain only pre-migration rows
 
 ---
@@ -126,7 +126,7 @@ objects in any app-local signing-chain approval schema. All new signing chains a
 ### Requirement: Retention Configured Per Audit-Trail Migration Cross-Reference
 
 SHALL be the requirement that Archiefwet 10-year retention for signed documents is satisfied
-by OR's archival-destruction-workflow configured on the document schema, not by docudesk-local
+by OR's archival-destruction-workflow configured on the document schema, not by filinq-local
 retention logic. This migration does not introduce new retention code; it relies on the
 retention configuration in the document schema's register definition.
 
@@ -135,7 +135,7 @@ retention configuration in the document schema's register definition.
 - GIVEN a sign request for `doc-xyz` completes (all steps approved)
 - WHEN the retention period for signed documents applies
 - THEN the document SHALL be subject to OR's archival-destruction-workflow
-- AND no docudesk-local retention service SHALL duplicate OR's archival logic
+- AND no filinq-local retention service SHALL duplicate OR's archival logic
 
 ---
 

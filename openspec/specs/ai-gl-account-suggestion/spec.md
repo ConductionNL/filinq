@@ -7,9 +7,9 @@ built_by: openspec/changes/archive/2026-07-13-ai-gl-account-suggestion
 # ai-gl-account-suggestion Specification
 
 **Status**: done
-**Scope**: docudesk
+**Scope**: filinq
 **OpenSpec changes**:
-- [ai-gl-account-suggestion](../../changes/archive/2026-07-13-ai-gl-account-suggestion/) _(done)_ — deterministic, history-ranked GL-account ("grootboekrekening") suggestion for a financial extraction, with an admin-editable cold-start keyword/category fallback, optional absent-safe AI re-ranking, a correction-feedback loop that extends the existing corrections endpoint, and the sibling `nl.conduction.docudesk.gl-account.suggested` event contract (kind: code)
+- [ai-gl-account-suggestion](../../changes/archive/2026-07-13-ai-gl-account-suggestion/) _(done)_ — deterministic, history-ranked GL-account ("grootboekrekening") suggestion for a financial extraction, with an admin-editable cold-start keyword/category fallback, optional absent-safe AI re-ranking, a correction-feedback loop that extends the existing corrections endpoint, and the sibling `nl.conduction.filinq.gl-account.suggested` event contract (kind: code)
 
 ## Purpose
 
@@ -21,7 +21,7 @@ human-readable rationale. Falls back to admin-editable keyword/category rules
 for suppliers with no booking history yet, and never fabricates a suggestion
 when neither history nor a rule matches.
 
-DocuDesk never hardcodes a chart of accounts (e.g. the Dutch RGS schema) —
+Filinq never hardcodes a chart of accounts (e.g. the Dutch RGS schema) —
 every account code/label is an opaque string supplied by the consumer, via a
 correction, a `candidateAccounts` allow-list, or an admin-authored mapping
 rule.
@@ -29,7 +29,7 @@ rule.
 ## Follow-up (out of scope here)
 
 shillinq must build `gl-account-suggestion-consume`, subscribing to
-`nl.conduction.docudesk.gl-account.suggested` and supplying its own chart of
+`nl.conduction.filinq.gl-account.suggested` and supplying its own chart of
 accounts as the opaque candidate/history data this capability operates on.
 
 See [design.md](../../changes/archive/2026-07-13-ai-gl-account-suggestion/design.md) for the
@@ -123,7 +123,7 @@ admin-editable, per-tenant `glAccountMappingRule` table: an ordered list of `{ke
 accountCode, accountLabel, priority}` rules. The first rule (by descending `priority`) whose
 keyword substring-matches the supplier name or document text SHALL produce a single suggestion at
 a fixed, lower confidence than any history-backed suggestion, with a rationale naming the matched
-keyword and the target account. DocuDesk SHALL NOT ship any pre-populated chart-of-accounts data —
+keyword and the target account. Filinq SHALL NOT ship any pre-populated chart-of-accounts data —
 the rule table starts empty and is populated by the tenant admin. When no history AND no rule
 match exist, the system SHALL return an empty `suggestedAccounts` list rather than guess.
 
@@ -223,9 +223,9 @@ The system SHALL expose `POST /api/extraction/{id}/suggest-account`, accepting a
 `candidateAccounts: [{code, label}]` array, returning `{extractionId, supplierIdentity,
 identityType, suggestedAccounts: [{code, label, confidence, rationale}], source}` where `source` is
 `history`, `keyword-rule`, or `none`. On success, the system SHALL dispatch
-`nl.conduction.docudesk.gl-account.suggested` on the Nextcloud event bus via
+`nl.conduction.filinq.gl-account.suggested` on the Nextcloud event bus via
 `OCP\EventDispatcher\IEventDispatcher`, carrying the same fields as the response plus `sourceApp`
-and `requestedBy`. This is a **sibling** event to `nl.conduction.docudesk.extraction.completed` —
+and `requestedBy`. This is a **sibling** event to `nl.conduction.filinq.extraction.completed` —
 it SHALL NOT be merged into that event's payload, and this change SHALL NOT modify the
 `extraction.completed` contract in any way.
 
@@ -240,23 +240,23 @@ it SHALL NOT be merged into that event's payload, and this change SHALL NOT modi
 
 - **GIVEN** a valid extraction id with a history-backed suggestion
 - **WHEN** the suggestion endpoint completes successfully
-- **THEN** `nl.conduction.docudesk.gl-account.suggested` SHALL be dispatched
+- **THEN** `nl.conduction.filinq.gl-account.suggested` SHALL be dispatched
 - **AND** its payload SHALL carry `extractionId`, `supplierIdentity`, `identityType`,
   `suggestedAccounts`, `source`, `sourceApp`, and `requestedBy`
 
 #### Scenario: extraction.completed contract is untouched
 
 - **WHEN** a financial extraction completes (financial-document-field-extraction, REQ-FIN-05)
-- **THEN** its `nl.conduction.docudesk.extraction.completed` payload SHALL remain exactly the
+- **THEN** its `nl.conduction.filinq.extraction.completed` payload SHALL remain exactly the
   shape defined in that spec, with no `suggestedAccounts` key added
 
 ### Requirement: No Hardcoded Chart of Accounts (REQ-GLS-07)
 
 **Priority:** MUST
 
-DocuDesk SHALL treat every GL account code and label as an opaque string supplied by the consumer
+Filinq SHALL treat every GL account code and label as an opaque string supplied by the consumer
 (via a correction's `glAccountCode`/`glAccountLabel`, a `candidateAccounts` entry, or an admin-
-authored `glAccountMappingRule`). DocuDesk SHALL NOT ship, seed, or hardcode any Dutch RGS or other
+authored `glAccountMappingRule`). Filinq SHALL NOT ship, seed, or hardcode any Dutch RGS or other
 chart-of-accounts data, and SHALL NOT validate account codes against any built-in chart — it only
 counts and matches the strings it is given.
 
@@ -268,7 +268,7 @@ counts and matches the strings it is given.
 
 #### Scenario: No built-in mapping rules ship with the app
 
-- **WHEN** DocuDesk is freshly installed with no admin-authored `glAccountMappingRule` objects
+- **WHEN** Filinq is freshly installed with no admin-authored `glAccountMappingRule` objects
 - **THEN** the cold-start fallback (REQ-GLS-03) SHALL have zero rules to match against
 - **AND** SHALL correctly fall through to an empty `suggestedAccounts` result
 

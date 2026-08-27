@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <id>docudesk</id>
-    <name>DocuDesk</name>
+    <id>filinq</id>
+    <name>Filinq</name>
     <summary lang="en">Document generation, anonymisation, signing, and GDPR/WOO publication consent for Nextcloud</summary>
     <summary lang="nl">Documentgeneratie, anonimisering, ondertekening en AVG/Woo-publicatie-instemming voor Nextcloud</summary>
     <description><![CDATA[Document generation, anonymisation, signing, and GDPR/WOO publication consent for Nextcloud
 
-DocuDesk generates documents from templates bound to Open Register fields, anonymises personal data (PII) in documents through a configurable entity-detection backend, signs outbound documents (eIDAS SES/AdES/QES), and tracks GDPR and Wet Open Overheid (Woo) publication consent — all processed locally on the customer's own Nextcloud instance. It integrates with Open Register via events to enrich documents as they are created and updated.
+Filinq generates documents from templates bound to Open Register fields, anonymises personal data (PII) in documents through a configurable entity-detection backend, signs outbound documents (eIDAS SES/AdES/QES), and tracks GDPR and Wet Open Overheid (Woo) publication consent — all processed locally on the customer's own Nextcloud instance. It integrates with Open Register via events to enrich documents as they are created and updated.
 
 ## Key Features
 
@@ -23,38 +23,44 @@ DocuDesk generates documents from templates bound to Open Register fields, anony
 
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Requirements can be found [here](https://docudesk.conduction.nl)
+Requirements can be found [here](https://filinq.conduction.nl)
 
-The Roadmap is available [here](https://codeberg.org/Conduction/docudesk/milestones)
+The Roadmap is available [here](https://github.com/ConductionNL/filinq/milestones)
 
-Create a [bug report](https://codeberg.org/Conduction/docudesk/issues/new)
+Create a [bug report](https://github.com/ConductionNL/filinq/issues/new)
 
-Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
+Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
     <version>0.0.39-beta.20260820202811</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
-    <namespace>DocuDesk</namespace>
+    <namespace>Filinq</namespace>
+    <!--
+        `filinq.conduction.nl` resolves as of 2026-08-23: it was attached as a
+        second custom domain on the SAME `docudesk-docs` worker that serves
+        `docudesk.conduction.nl`, so both hosts answer and no link goes dead in
+        either direction. That is what unfroze these three URLs.
+    -->
     <documentation>
-        <user>https://docudesk.conduction.nl</user>
-        <admin>https://docudesk.conduction.nl</admin>
-        <developer>https://docudesk.conduction.nl</developer>
+        <user>https://filinq.conduction.nl</user>
+        <admin>https://filinq.conduction.nl</admin>
+        <developer>https://filinq.conduction.nl</developer>
     </documentation>
     <category>organization</category>
-    <website>https://codeberg.org/Conduction/docudesk</website>
-    <bugs>https://codeberg.org/Conduction/docudesk/issues</bugs>
-    <repository>https://codeberg.org/Conduction/docudesk</repository>
-    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-dashboard.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-consent.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-anonymization.png</screenshot>
+    <website>https://github.com/ConductionNL/filinq</website>
+    <bugs>https://github.com/ConductionNL/filinq/issues</bugs>
+    <repository>https://github.com/ConductionNL/filinq</repository>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/filinq/main/img/screenshot-dashboard.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/filinq/main/img/screenshot-consent.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/filinq/main/img/screenshot-anonymization.png</screenshot>
     <!--
         Processing-activity export (AVG Art. 30) consumes OpenRegister's
         per-access read-logging capability (x-openregister-processing dialect,
         ProcessingLogService / ProcessingLogController). That capability ships
         from OpenRegister >= 0.2.14. The minimum is also recorded as the
-        `openregister` constraint in lib/Settings/docudesk_register.json.
+        `openregister` constraint in lib/Settings/filinq_register.json.
     -->
     <dependencies>
         <php min-version="8.3" min-int-size="64"/>
@@ -78,7 +84,7 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         -->
         <lib>zip</lib>
         <!--
-        App dependency (not expressible in app-info.xsd): OpenRegister — Docudesk's
+        App dependency (not expressible in app-info.xsd): OpenRegister — Filinq's
         documents, templates and reports are OpenRegister objects, and
         src/manifest.json lists "openregister" as a required dependency.
 
@@ -96,7 +102,7 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         <nextcloud min-version="32" max-version="34"/>
     </dependencies>
     <background-jobs>
-        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
+        <job>OCA\Filinq\BackgroundJob\SigningExpirationJob</job>
     </background-jobs>
     <!--
         info.xsd fixes the order of these elements: background-jobs, repair-steps,
@@ -105,18 +111,123 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         <settings> — not after <navigations>, where it fails validation with
         "Element 'commands': This element is not expected."
     -->
+    <!--
+        docudesk -> filinq APP-ID RENAME (applies to BOTH blocks below).
+
+        Nextcloud has no in-place app-id upgrade: changing <id> makes the server
+        discover a DIFFERENT app. On a real deployment the old `docudesk` app is
+        removed and `filinq` is installed fresh, so <install> — not just
+        <post-migration> — is the hook this actually runs through. Both steps are
+        registered under both hooks so neither path can miss them.
+
+        `oc_appconfig` and `oc_preferences` are BOTH namespaced by app id, and
+        they are different stores: MigrateAppConfigKeys covers the first,
+        MigrateUserPreferences the second. Copying one does nothing for the
+        other, which is why there are two steps and not one.
+
+        ORDERING vs. settings initialisation. This app has no InitializeSettings
+        repair step — SettingsInitializer runs from RegistrationBootstrap::boot()
+        instead, i.e. only once the app is enabled and loaded for a request,
+        which is strictly after every repair step of the install has run. The
+        migrations therefore still land before the register import reads
+        `configuration_version` out of the app-config namespace. If an
+        InitializeSettings repair step is ever added, it MUST be listed AFTER
+        these two: it would otherwise see an unconfigured app, re-import from
+        scratch, and write fresh values that MigrateAppConfigKeys then refuses to
+        overwrite — silently pointing the install at newly created, empty
+        registers instead of the existing data-carrying ones.
+
+        Both steps are idempotent and copy-only (no `docudesk` row is ever
+        deleted), so they are safe no-ops on an instance that never had
+        `docudesk` installed, and a rollback to the old app id still finds its
+        data intact.
+    -->
+    <!--
+        FIVE REGISTERS INTO ONE — ConsolidateRegisters (applies to BOTH blocks
+        below). This app used to declare five registers (consent, signing,
+        templates, document, dossier) over 23 schemas; it now declares one,
+        `filinq`, holding all 23. Unlike every sibling step here, that one MOVES
+        OBJECT ROWS BETWEEN TABLES.
+
+        WHY IT IS LISTED LAST, WHICH IS THE OPPOSITE OF A SLUG RENAME. An object
+        is bound to its register by NUMERIC id, and the shard tables are named
+        `<prefix>openregister_table_<registerId>_<schemaId>`. So the target
+        register `filinq` and its 23 schemas must ALREADY EXIST — and their shard
+        tables with them — before a single row can be inserted into one. A
+        register-SLUG migration is the mirror image: it has to run BEFORE the
+        import so the import matches the existing row instead of forking a second
+        one. Getting the two orderings the same way round breaks one of them.
+
+        WHAT THAT MEANS IN PRACTICE ON THIS APP. The register import runs from
+        RegistrationBootstrap::boot(), i.e. on the first request after the app is
+        enabled — strictly AFTER every repair step. So on the very first pass
+        this step finds no target register (or no target shard tables), SKIPS,
+        and says so; the import then creates them, and the next repair pass
+        (`occ maintenance:repair`, or the next upgrade) performs the move. That
+        is by design: it is idempotent, it never creates a table itself, and
+        "not yet" is reported as "nothing moved", never as "done".
+
+        It never throws, never overwrites a uuid that already exists in the
+        target, and deletes source rows only after counting them back out of the
+        target. See the class docblock for the full property list.
+    -->
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
+            <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!--
+                THE THIRD STORE KEYED BY APP ID, AND THE TWO ABOVE DO NOT COVER
+                IT. `oc_appconfig` and `oc_preferences` are Nextcloud's; this
+                one is OpenRegister's `openregister_schemas.application`.
+
+                OpenRegister resolves the two halves of a configuration by
+                DIFFERENT keys: a REGISTER by slug alone, a SCHEMA by the PAIR
+                (application, slug) via findByApplicationAndSlug(). This app
+                now passes `appId: Application::APP_ID` = `filinq`, while every
+                schema it already owns still carries `application = docudesk` —
+                so the pair matches nothing, and ImportHandler's not-found
+                branch is not an error path, it is the "create a new one" path.
+                The import then builds a SECOND, EMPTY schema set while every
+                stored object stays bound to the old rows. Nothing errors; the
+                app renders empty collections. Measured before this step
+                existed: 231 schemas under `docudesk`, zero under `filinq`.
+
+                It must run BEFORE the register import, which this app triggers
+                from RegistrationBootstrap::boot() — i.e. on the first request
+                after the app is enabled, strictly after every repair step.
+
+                Refuses rather than merges where a slug already has a twin
+                under the new application id, never deletes a schema, and never
+                throws.
+            -->
+            <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
+            <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+        </post-migration>
+        <install>
+            <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
+            <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!-- Same step, same reason; see the <post-migration> block. An
+                 app-id rename presents to Nextcloud as a FRESH INSTALL, so
+                 this block is the one that actually fires on the upgrade the
+                 step exists for. -->
+            <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
+            <!-- Same step, same reason, same position: LAST. See the comment
+                 above the <repair-steps> block. -->
+            <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+        </install>
+    </repair-steps>
     <commands>
-        <command>OCA\DocuDesk\Command\OfficeProbeCommand</command>
+        <command>OCA\Filinq\Command\OfficeProbeCommand</command>
     </commands>
     <settings>
-        <admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
-        <admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
+        <admin>OCA\Filinq\Settings\FilinqAdmin</admin>
+        <admin-section>OCA\Filinq\Sections\FilinqAdmin</admin-section>
     </settings>
     <navigations>
         <navigation>
-            <id>docudesk</id>
-            <name>DocuDesk</name>
-            <route>docudesk.dashboard.page</route>
+            <id>filinq</id>
+            <name>Filinq</name>
+            <route>filinq.dashboard.page</route>
             <icon>app.svg</icon>
         </navigation>
     </navigations>

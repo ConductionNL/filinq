@@ -6,7 +6,7 @@ Verified current state (HEAD of this worktree):
 
 - Templates are OpenRegister objects in the `templates` register (v2.0.0),
   schemas `template` + `templateVersion`
-  (`lib/Settings/docudesk_register.json`). `template.content` is a Twig/HTML
+  (`lib/Settings/filinq_register.json`). `template.content` is a Twig/HTML
   string (`format: html`); required fields are `name`, `content`,
   `namespace`.
 - `TemplateService` (CRUD, advisory lock, duplicate), `TemplateVersionService`
@@ -50,7 +50,7 @@ data).
 **Non-Goals:**
 
 - No in-browser WYSIWYG DOCX editor — authoring happens in Word/LibreOffice/
-  Collabora; DocuDesk manages, validates, and renders. (Collabora editing of
+  Collabora; Filinq manages, validates, and renders. (Collabora editing of
   the stored source file is a natural follow-up, not this change.)
 - No charts/dynamic-image modules (competitor theme #9) this wave.
 - No change to the Twig template type, the Twig sandbox, or `PdfService`.
@@ -128,7 +128,7 @@ OR's schema API via the container, same access pattern as
 `OpenRegisterResolver`): `known` (property or dotted sub-path exists),
 `fragment` (`fragment:` prefix), `unknown`. Unknown tags produce a structured
 report on the template object (`tagReport`). Whether unknown tags block or
-warn is admin-configurable (`docudesk.templates.unknown_tag_severity`,
+warn is admin-configurable (`filinq.templates.unknown_tag_severity`,
 default `warning` — migration estates must be importable before mapping).
 Templates without a binding get a `not validated against a schema` notice,
 never a block (Twig templates today have no binding either).
@@ -150,7 +150,7 @@ listed valid imperative exception (external-binary conversion, file
 assembly), matching how the existing generation/conversion services already
 work — no `x-openregister-*` behaviour annotation can express "run soffice".
 The *data* side stays declarative: the schema extensions, the new
-`textFragment` schema, and the register bump are pure `docudesk_register.json`
+`textFragment` schema, and the register bump are pure `filinq_register.json`
 edits; no lifecycle/aggregation/notification annotations are added or needed.
 
 ### D6 — Text fragments (bouwstenen): schema + pre-pass resolution
@@ -191,7 +191,7 @@ ZIP folder import as `textFragment` objects (Den Helder: 433 fragments).
 - The fill step executes no template-authored logic (unlike Twig): the office
   path is data-substitution only, so it needs no sandbox — conditionality
   stays declarative via block cloning.
-- Uploads are size-capped (`docudesk.templates.max_upload_bytes`, default
+- Uploads are size-capped (`filinq.templates.max_upload_bytes`, default
   20 MB) and mime-sniffed (reuse the extension/mime approach proven in
   `DocumentValidationService`).
 
@@ -211,7 +211,7 @@ is a tab on the template index (same `CnDataTable` pattern).
 |---|---|
 | Template/fragment/import-job CRUD | `ObjectService` (`saveObject`/`find`/`searchObjectsPaginated`/`deleteObject`) via `OpenRegisterResolver`, exactly as `TemplateService` does today |
 | Office source + version binaries | NC app folder files referenced by file id (pattern of `anonymizationLink.sourceFileId`) |
-| Bound-schema property lookup (tag validation) | OR schema read via the container (no schema duplication in DocuDesk) |
+| Bound-schema property lookup (tag validation) | OR schema read via the container (no schema duplication in Filinq) |
 | Generation audit | existing `generatedDocument` objects — `templateType` is added to the logged metadata |
 
 No custom database tables. Register import stays via
@@ -227,7 +227,7 @@ Shipped as demo/seed objects (municipality-flavoured, nil-UUID pattern):
   "template": {
     "id": "00000000-0000-0000-0000-000000000101",
     "name": "Beschikking parkeervergunning",
-    "namespace": "docudesk",
+    "namespace": "filinq",
     "templateType": "office",
     "sourceFileId": 0,
     "contentHash": "<sha256-of-seed-docx>",
@@ -242,7 +242,7 @@ Shipped as demo/seed objects (municipality-flavoured, nil-UUID pattern):
     "id": "00000000-0000-0000-0000-000000000102",
     "name": "Ondertekening burgemeester",
     "slug": "ondertekening-burgemeester",
-    "namespace": "docudesk",
+    "namespace": "filinq",
     "content": "Hoogachtend,\nde burgemeester van Demostad,\nnamens deze,",
     "category": "ondertekening",
     "language": "nl"

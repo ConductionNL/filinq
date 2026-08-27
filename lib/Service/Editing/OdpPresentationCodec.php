@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk OdpPresentationCodec
+ * Filinq OdpPresentationCodec
  *
  * Shape access for ODF presentations (`.odp`).
  *
@@ -16,7 +16,7 @@
  * enough to confuse.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -25,14 +25,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#2-presentation
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -53,7 +53,9 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 *
 	 * @param PackagePartIo $io Package reader/writer.
 	 */
-	public function __construct(private readonly PackagePartIo $io) {
+	public function __construct(
+		private readonly PackagePartIo $io,
+	) {
 	}//end __construct()
 
 	/**
@@ -102,10 +104,10 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 * Replace one frame's text.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $slide        The page name.
-	 * @param string $shape        The frame name.
-	 * @param string $region       Either `slide` or `notes`.
-	 * @param string $text         The replacement text.
+	 * @param string $slide The page name.
+	 * @param string $shape The frame name.
+	 * @param string $region Either `slide` or `notes`.
+	 * @param string $text The replacement text.
 	 *
 	 * @return string The rewritten package.
 	 *
@@ -154,11 +156,11 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	 * outside the page entirely. The reader then found no notes at all, so a
 	 * slide edit silently DELETED every speaker note on that slide.
 	 *
-	 * @param string $markup    The page markup.
-	 * @param string $shape     The frame name.
-	 * @param string $region    Either `slide` or `notes`.
-	 * @param string $escaped   The escaped replacement text.
-	 * @param bool   $rewritten Set true when a frame was rewritten.
+	 * @param string $markup The page markup.
+	 * @param string $shape The frame name.
+	 * @param string $region Either `slide` or `notes`.
+	 * @param string $escaped The escaped replacement text.
+	 * @param bool $rewritten Set true when a frame was rewritten.
 	 *
 	 * @return string The rewritten page markup.
 	 */
@@ -204,10 +206,10 @@ class OdpPresentationCodec implements PresentationFamilyCodec {
 	/**
 	 * Replace the first paragraph of a named frame.
 	 *
-	 * @param string $markup    The markup to search.
-	 * @param string $shape     The frame name.
-	 * @param string $escaped   The escaped replacement text.
-	 * @param bool   $rewritten Set true when a frame was rewritten.
+	 * @param string $markup The markup to search.
+	 * @param string $shape The frame name.
+	 * @param string $escaped The escaped replacement text.
+	 * @param bool $rewritten Set true when a frame was rewritten.
 	 *
 	 * @return string The rewritten markup.
 	 */

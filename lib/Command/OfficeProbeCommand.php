@@ -1,12 +1,12 @@
 <?php
 
 /**
- * DocuDesk office-suite probe command
+ * Filinq office-suite probe command
  *
  * Reports, per configured suite, whether WOPI is actually usable on this instance.
  *
  * @category Command
- * @package  OCA\DocuDesk\Command
+ * @package  OCA\Filinq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -14,7 +14,7 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -22,9 +22,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Command;
+namespace OCA\Filinq\Command;
 
-use OCA\DocuDesk\Service\Office\OfficeSuiteCapabilityService;
+use OCA\Filinq\Service\Office\OfficeSuiteCapabilityService;
 use OCP\IAppConfig;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,7 +32,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * `occ docudesk:office:probe` — the command the setup documentation told people to run.
+ * `occ filinq:office:probe` — the command the setup documentation told people to run.
  *
  * It was documented before it existed. The setup guide instructed operators to
  * verify with this command and showed its expected output; running it returned
@@ -45,7 +45,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * that impossible to do by accident.
  *
  * @category Command
- * @package  OCA\DocuDesk\Command
+ * @package  OCA\Filinq\Command
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -53,7 +53,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/office-suite-portability/spec.md
  *
@@ -77,18 +77,18 @@ class OfficeProbeCommand extends Command {
 	 */
 	private const SUITES = [
 		'onlyoffice' => [
-			'app'   => 'onlyoffice',
-			'key'   => 'DocumentServerInternalUrl',
+			'app' => 'onlyoffice',
+			'key' => 'DocumentServerInternalUrl',
 			'paths' => ['/hosting/discovery', '/hosting/capabilities'],
 		],
 		'eurooffice' => [
-			'app'   => 'eurooffice',
-			'key'   => 'DocumentServerInternalUrl',
+			'app' => 'eurooffice',
+			'key' => 'DocumentServerInternalUrl',
 			'paths' => ['/hosting/discovery', '/hosting/capabilities'],
 		],
-		'collabora'  => [
-			'app'   => 'richdocuments',
-			'key'   => 'wopi_url',
+		'collabora' => [
+			'app' => 'richdocuments',
+			'key' => 'wopi_url',
 			'paths' => ['/hosting/discovery'],
 		],
 	];
@@ -97,7 +97,7 @@ class OfficeProbeCommand extends Command {
 	 * Constructor.
 	 *
 	 * @param OfficeSuiteCapabilityService $capability The WOPI capability probe.
-	 * @param IAppConfig                   $appConfig  App configuration.
+	 * @param IAppConfig $appConfig App configuration.
 	 *
 	 * @return void
 	 */
@@ -111,7 +111,7 @@ class OfficeProbeCommand extends Command {
 	/**
 	 * Define the command.
 	 *
-	 * Registers `docudesk:office:probe` — the verification step the setup guide
+	 * Registers `filinq:office:probe` — the verification step the setup guide
 	 * already instructed operators to run. The requirement below forbids inferring
 	 * availability from installation, which is only enforceable if the probe the
 	 * documentation names actually exists.
@@ -121,7 +121,7 @@ class OfficeProbeCommand extends Command {
 	 * @spec openspec/specs/office-suite-portability/spec.md#requirement-wopi-availability-must-be-probed-never-inferred-from-installation
 	 */
 	protected function configure(): void {
-		$this->setName(name: 'docudesk:office:probe')
+		$this->setName(name: 'filinq:office:probe')
 			->setDescription('Probe each office suite separately and report whether WOPI is usable')
 			->addOption('suite', null, InputOption::VALUE_REQUIRED, 'Probe only this suite.');
 	}//end configure()
@@ -134,7 +134,7 @@ class OfficeProbeCommand extends Command {
 	 * requirement below records, where an ONLYOFFICE measurement was reported under
 	 * a Euro-Office heading.
 	 *
-	 * @param InputInterface  $input  The console input.
+	 * @param InputInterface $input The console input.
 	 * @param OutputInterface $output The console output.
 	 *
 	 * @return int The exit code.
@@ -165,8 +165,8 @@ class OfficeProbeCommand extends Command {
 	 * Report one suite.
 	 *
 	 * @param OutputInterface $output The console output.
-	 * @param string          $name   The suite name.
-	 * @param array           $suite  The suite mapping.
+	 * @param string $name The suite name.
+	 * @param array $suite The suite mapping.
 	 *
 	 * @return void
 	 */
@@ -179,7 +179,7 @@ class OfficeProbeCommand extends Command {
 		}
 
 		foreach ($suite['paths'] as $path) {
-			$verdict = $this->capability->probeDiscovery(discoveryUrl: rtrim($base, "/") . $path);
+			$verdict = $this->capability->probeDiscovery(discoveryUrl: rtrim($base, '/') . $path);
 			if ($verdict['available'] === true) {
 				$output->writeln(sprintf('%-12s <info>available</info> at %s', $name, $path));
 				return;

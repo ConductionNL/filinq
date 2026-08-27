@@ -5,7 +5,7 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Additive register edit in `lib/Settings/docudesk_register.json`: schemas `bulkSigningBatch` + `signingEnvelope`, properties `signingRequest.fieldPlacements[]` + `signingRequest.envelopeRef` per REQ-DDBSF-001; register version bump for boot import
+- [ ] 1.1 Additive register edit in `lib/Settings/filinq_register.json`: schemas `bulkSigningBatch` + `signingEnvelope`, properties `signingRequest.fieldPlacements[]` + `signingRequest.envelopeRef` per REQ-DDBSF-001; register version bump for boot import
   - Union-additive diff against merge base; `tests/validate-manifest.js` passes; property titles present (hydra schema-property-titles gate)
 
 - [ ] 1.2 Seed data per design.md (nil-UUID batch `…f001` with rejected-row fixture, envelope `…f002`, placement demo request); CSV fixture with `@example.invalid` emails under `tests/fixtures/`
@@ -37,7 +37,7 @@
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests ≥75% on new code (validation matrix, row isolation, cap enforcement, roll-up semantics, placement MAC coverage); run in container `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 5.1 Unit tests ≥75% on new code (validation matrix, row isolation, cap enforcement, roll-up semantics, placement MAC coverage); run in container `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/bulk-signing-field-builder.spec.ts`: 50-row CSV (3 bad) → report → 47-request batch; placement rendered in completed artifact + verify `verified`; 3-doc envelope single ceremony → 3 artifacts/trails, decline → `partially_declined`; verify on Postgres (8080), nldesign theme enabled
 
@@ -48,7 +48,7 @@
 ## Quality checklist
 
 - Batches/envelopes never bypass single-request gates (ownership, status machine, level/provider honesty, assurance) — parity tests mandatory
-- All new objects via OpenRegister; no DocuDesk-local tables (ADR-001)
+- All new objects via OpenRegister; no Filinq-local tables (ADR-001)
 - CSV cells inert (no formula evaluation), caps enforced, report initiator/admin-only
 - `composer check:strict` green; hydra gates pass; no overlap with `BulkSigningPanel.vue` (bulk *signing*) semantics
 - Depends on `signing-trust-rebuild` — placement rendering builds on the v2 MAC; do not apply before it lands

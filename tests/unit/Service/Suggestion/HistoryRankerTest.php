@@ -8,11 +8,11 @@
  * candidate-set constraint.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Service\Suggestion
+ * @package   OCA\Filinq\Tests\Unit\Service\Suggestion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,9 +22,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Suggestion;
+namespace OCA\Filinq\Tests\Unit\Service\Suggestion;
 
-use OCA\DocuDesk\Service\Suggestion\HistoryRanker;
+use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use PHPUnit\Framework\TestCase;
 
 /**

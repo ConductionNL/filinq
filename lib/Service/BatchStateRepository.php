@@ -21,12 +21,12 @@
  * to deploy a distributed cache.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
@@ -37,7 +37,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
@@ -48,10 +48,10 @@ use Throwable;
  * OpenRegister-backed store for anonymization batch records.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  */
@@ -60,9 +60,12 @@ class BatchStateRepository {
 	/**
 	 * Register slug the batch schema lives in.
 	 *
+	 * `filinq`, not `document`: this app declares ONE register holding all 23
+	 * schemas. The five it used to declare are retired.
+	 *
 	 * @var string
 	 */
-	public const REGISTER = 'document';
+	public const REGISTER = 'filinq';
 
 	/**
 	 * Schema slug for a batch record.
@@ -94,7 +97,7 @@ class BatchStateRepository {
 	 * @param OpenRegisterAvailabilityService $openRegister Owns the OpenRegister
 	 *                                                      installed/version probe
 	 *                                                      and the ObjectService handle.
-	 * @param LoggerInterface                 $logger       Structured logger.
+	 * @param LoggerInterface $logger Structured logger.
 	 *
 	 * @return void
 	 */
@@ -168,8 +171,8 @@ class BatchStateRepository {
 	 * write is an upsert keyed by the identifier the rest of the app already
 	 * hands around; no secondary lookup is needed to update.
 	 *
-	 * @param string               $batchId Batch identifier (used as the object UUID).
-	 * @param array<string, mixed> $batch   The full batch record.
+	 * @param string $batchId Batch identifier (used as the object UUID).
+	 * @param array<string, mixed> $batch The full batch record.
 	 *
 	 * @return void
 	 *

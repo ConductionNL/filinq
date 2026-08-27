@@ -80,7 +80,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 			this.warnings = []
 
 			try {
-				const url = generateUrl('/apps/docudesk/api/correspondence/generate')
+				const url = generateUrl('/apps/filinq/api/correspondence/generate')
 				const response = await axios.post(
 					url,
 					{
@@ -130,7 +130,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 
 			try {
 				const url = generateUrl(
-					'/apps/docudesk/api/correspondence/generate/batch',
+					'/apps/filinq/api/correspondence/generate/batch',
 				)
 				const response = await axios.post(url, {
 					templateId: this.templateId,
@@ -176,7 +176,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 
 			try {
 				const url = generateUrl(
-					'/apps/docudesk/api/correspondence/jobs/'
+					'/apps/filinq/api/correspondence/jobs/'
 						+ encodeURIComponent(this.jobId),
 				)
 				const response = await axios.get(url)

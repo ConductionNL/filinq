@@ -3,23 +3,23 @@
 /**
  * EML Template Loader
  *
- * Loads a bundled Twig template from DocuDesk's template root, refusing any
+ * Loads a bundled Twig template from Filinq's template root, refusing any
  * name that resolves outside it. Extracted from {@see EmlPdfAssemblyService}
  * so the envelope and attachment renderers share one sandboxed loader instead
  * of each carrying a copy of the path check.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use RuntimeException;
 
@@ -27,11 +27,11 @@ use RuntimeException;
  * Reads bundled template files from the sandboxed template root.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  */
 class EmlTemplateLoader {
 	/**

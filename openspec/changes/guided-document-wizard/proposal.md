@@ -6,7 +6,7 @@ kind: code
 
 ## Why
 
-Every generation path DocuDesk ships today assumes the user already knows the
+Every generation path Filinq ships today assumes the user already knows the
 full request shape: `POST /api/documents/generate` takes a `templateId`, raw
 `dataRefs` (`{register, schema, id}` triples) and an `adHocData` blob (verified
 at HEAD: `DocumentController::parseGenerateParams()`,
@@ -21,12 +21,12 @@ interview**:
   question order computed from what the document needs; multilingual;
   accessible" (spectr).
 - Demand is concrete: GH
-  [#96](https://github.com/ConductionNL/docudesk/issues/96) (open, verified)
+  [#96](https://github.com/ConductionNL/filinq/issues/96) (open, verified)
   asks for Procest-driven document generation and cites **475 tender sources**
   mentioning document generation — every one of those flows ends with a human
   answering case-specific questions before the letter goes out.
 
-Without a wizard, DocuDesk's template estate (Twig today, office templates
+Without a wizard, Filinq's template estate (Twig today, office templates
 after Wave-1 `office-template-authoring`) is only usable from API integrations
 or by staff who understand registers and schemas. The wizard closes the gap
 between "template exists" and "clerk produces a correct beschikking",
@@ -93,7 +93,7 @@ extension), local-only, and documented in design.md Security.
 - **Backend**: new `WizardService` (CRUD, answer validation, prefill via
   `DataResolverService`), new `WizardController` + routes; small extension in
   `DocumentService::generateDocument()` (validate + log `wizardContext`).
-- **Register**: `lib/Settings/docudesk_register.json` — new `wizardDefinition`
+- **Register**: `lib/Settings/filinq_register.json` — new `wizardDefinition`
   schema in the `templates` register (version bump, additive on top of
   Wave-1's `2.1.0`); `generatedDocument` schema gains optional
   `wizardContext` (document register bump `2.2.0` → `2.3.0`, additive; `2.2.0`
@@ -108,7 +108,7 @@ extension), local-only, and documented in design.md Security.
 - **Dependencies**: none new. ADR-011 check: OpenRegister owns object
   reads (used via `ObjectService`/`DataResolverService`); no OR
   `lib/Formats/`/`lib/Service/` utility implements interview/skip-logic
-  semantics — this is DocuDesk domain logic.
+  semantics — this is Filinq domain logic.
 - **Sibling boundaries**: no OpenRegister/OpenConnector/Procest changes; GH #96
   event-driven auto-generation stays a separate change (the wizard is the
   human-in-the-loop counterpart).

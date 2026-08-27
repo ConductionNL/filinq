@@ -9,7 +9,7 @@ status: proposed
 Add a reversible anonymisation mode alongside the existing irreversible one:
 entities are replaced with the stable, readable placeholders OpenRegister
 already emits (`[PERSOON: 1]`, `[ADRES: 2]`, scope-local via
-`getLastPlaceholderMap()` — verified at HEAD), and DocuDesk additionally stores
+`getLastPlaceholderMap()` — verified at HEAD), and Filinq additionally stores
 an encrypted `placeholder → original value` mapping keyed to the existing
 `anonymizationLink`. An authorised, fail-closed, audit-logged restore operation
 reconstructs the original from the anonymised copy plus the mapping. The
@@ -103,7 +103,7 @@ corrupted document — never a silent no-op.
 ### Requirement: Restore is fail-closed gated and audit-logged (REQ-DDRPS-005)
 
 Every restore route MUST be restricted to admins and members of the groups in
-`docudesk.pseudonymisation.restore_allowed_groups` (default empty = admins
+`filinq.pseudonymisation.restore_allowed_groups` (default empty = admins
 only), enforced server-side with an explicit auth attribute plus an in-method
 gate; a non-member MUST receive HTTP 403 with a neutral body and a
 configuration read failure MUST deny access. Every restore AND every denied

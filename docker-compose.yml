@@ -28,7 +28,7 @@ services:
   nextcloud:
     user: root
     container_name: nextcloud
-#    entrypoint: occ app:enable docudesk
+#    entrypoint: occ app:enable filinq
     image: nextcloud:34.0.0-apache
     restart: always
     ports:
@@ -38,7 +38,7 @@ services:
     volumes:
       - nextcloud:/var/www/html:rw
       - ./custom_apps:/var/www/html/custom_apps
-      - .:/var/www/html/custom_apps/docudesk
+      - .:/var/www/html/custom_apps/filinq
     environment:
       - MYSQL_PASSWORD='!ChangeMe!'
       - MYSQL_DATABASE=nextcloud

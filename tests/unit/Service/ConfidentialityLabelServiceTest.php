@@ -4,7 +4,7 @@
  * Unit tests for ConfidentialityLabelService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  *
@@ -20,10 +20,10 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\ConfidentialityLabel;
-use OCA\DocuDesk\Service\ConfidentialityLabelService;
+use OCA\Filinq\Service\ConfidentialityLabel;
+use OCA\Filinq\Service\ConfidentialityLabelService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\SystemTag\ISystemTag;
@@ -37,10 +37,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for ConfidentialityLabelService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */

@@ -27,10 +27,10 @@
  * "no shard tables on this install" and the tests passed while migrating nothing.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,9 +38,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit;
+namespace OCA\Filinq\Tests\Unit;
 
-use OCA\DocuDesk\Repair\RenameDutchColumns;
+use OCA\Filinq\Repair\RenameDutchColumns;
 use OCP\DB\Exception;
 use OCP\DB\IPreparedStatement;
 use OCP\DB\IResult;
@@ -53,16 +53,18 @@ use Psr\Log\LoggerInterface;
  * A result that yields a fixed list of scalars.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 final class FakeResult implements IResult {
 	/**
 	 * @param array<int, mixed> $rows Rows this result yields.
 	 */
-	public function __construct(private array $rows = []) {
+	public function __construct(
+		private array $rows = [],
+	) {
 	}//end __construct()
 
 	/**
@@ -116,10 +118,10 @@ final class FakeResult implements IResult {
  * A prepared statement over a fixed set of information_schema rows.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit
+ * @package  OCA\Filinq\Tests\Unit
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 final class FakeStatement implements IPreparedStatement {
 	/** @var array<string, mixed> Values bound by the caller. */
@@ -131,7 +133,9 @@ final class FakeStatement implements IPreparedStatement {
 	/**
 	 * @param callable $rowsFor Given the bound values, return the rows to yield.
 	 */
-	public function __construct(private $rowsFor) {
+	public function __construct(
+		private $rowsFor,
+	) {
 	}//end __construct()
 
 	/**
@@ -179,7 +183,7 @@ final class FakeStatement implements IPreparedStatement {
 	/**
 	 * @param mixed $param Placeholder name.
 	 * @param mixed $value Bound value.
-	 * @param mixed $type  Ignored.
+	 * @param mixed $type Ignored.
 	 *
 	 * @return bool
 	 */
@@ -189,10 +193,10 @@ final class FakeStatement implements IPreparedStatement {
 	}//end bindValue()
 
 	/**
-	 * @param mixed $param    Placeholder name.
+	 * @param mixed $param Placeholder name.
 	 * @param mixed $variable Bound variable.
-	 * @param mixed $type     Ignored.
-	 * @param mixed $length   Ignored.
+	 * @param mixed $type Ignored.
+	 * @param mixed $length Ignored.
 	 *
 	 * @return bool
 	 */
@@ -222,7 +226,7 @@ final class FakeStatement implements IPreparedStatement {
 }//end class
 
 /**
- * @covers \OCA\DocuDesk\Repair\RenameDutchColumns
+ * @covers \OCA\Filinq\Repair\RenameDutchColumns
  */
 class RenameDutchColumnsTest extends TestCase {
 	/** @var array<int, string> Every statement the step executed. */
@@ -237,12 +241,12 @@ class RenameDutchColumnsTest extends TestCase {
 	/**
 	 * Build the step over a described database.
 	 *
-	 * @param array<int, int>              $registerIds    Ids the register lookup returns.
-	 * @param array<int, string>           $tables         Table names information_schema reports.
-	 * @param array<string, array<string>> $columns        Column names per table.
-	 * @param string|null                  $failOn         Substring of a statement that should fail.
-	 * @param bool                         $registersThrow Whether the register lookup throws.
-	 * @param bool                         $tablesThrow    Whether the table listing throws.
+	 * @param array<int, int> $registerIds Ids the register lookup returns.
+	 * @param array<int, string> $tables Table names information_schema reports.
+	 * @param array<string, array<string>> $columns Column names per table.
+	 * @param string|null $failOn Substring of a statement that should fail.
+	 * @param bool $registersThrow Whether the register lookup throws.
+	 * @param bool $tablesThrow Whether the table listing throws.
 	 *
 	 * @return RenameDutchColumns
 	 */
@@ -354,7 +358,7 @@ class RenameDutchColumnsTest extends TestCase {
 	 */
 	public function testGetNameDescribesTheMigration(): void {
 		$step = $this->step([], [], []);
-		$this->assertStringContainsString('docudesk', strtolower($step->getName()));
+		$this->assertStringContainsString('filinq', strtolower($step->getName()));
 	}//end testGetNameDescribesTheMigration()
 
 	/**

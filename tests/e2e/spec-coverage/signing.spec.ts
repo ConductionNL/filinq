@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e spec-coverage tests — document-signing (UI surface).
@@ -24,7 +24,7 @@ test.describe('document-signing — signing requests list UI', () => {
 		// @e2e openspec/specs/document-signing/spec.md#list-all-signing-requests
 		const guard = attachConsoleGuard(page)
 		await go(page, 'signing')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/signing/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/signing/)
 
 		await expect(
 			page.getByRole('heading', { name: 'Signing Requests' }),
@@ -79,7 +79,7 @@ test.describe('document-signing — signing requests list UI', () => {
 		// @e2e openspec/specs/document-signing/spec.md#list-all-signing-requests
 		await go(page, '')
 		await navClick(page, 'Signing Requests')
-		await expect(page).toHaveURL(/\/apps\/docudesk\/signing/)
+		await expect(page).toHaveURL(/\/apps\/filinq\/signing/)
 		await expect(
 			page.getByRole('heading', { name: 'Signing Requests' }),
 		).toBeVisible()

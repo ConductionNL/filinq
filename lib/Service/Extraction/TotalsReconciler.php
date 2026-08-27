@@ -9,12 +9,12 @@
  * reconcile (REQ-FIN-03).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Extraction
+ * @package   OCA\Filinq\Service\Extraction
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
@@ -24,16 +24,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Extraction;
+namespace OCA\Filinq\Service\Extraction;
 
 /**
  * Reconciles totalExcl + totalVat against totalIncl within a tolerance.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Extraction
+ * @package  OCA\Filinq\Service\Extraction
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/financial-document-field-extraction/tasks.md#2-4
  */

@@ -3,7 +3,7 @@
 Two facts, both measured on 2026-08-16, and neither obvious from reading a
 controller:
 
-1. **20 of 21 DocuDesk schemas declare no `authorization` cascade**, and
+1. **20 of 21 Filinq schemas declare no `authorization` cascade**, and
    OpenRegister treats an unconfigured cascade as OPEN.
 2. **9 controller methods have no authorisation guard in their body**, and at least
    one of them (`DocumentController::preview`) acts on a request-supplied id behind
@@ -15,7 +15,7 @@ not there.
 ## Goals / Non-Goals
 
 **Goals:**
-- An explicit authorisation decision for every schema DocuDesk owns.
+- An explicit authorisation decision for every schema Filinq owns.
 - A guard on every endpoint the schema decision cannot cover.
 - A ratchet so the schema count cannot drift back.
 
@@ -73,7 +73,7 @@ one fails on the day it is added rather than at the next audit.
 ## Seed Data (ADR-001)
 
 **None** in the sense of new objects. The change edits authorisation blocks on
-existing schemas in `lib/Settings/docudesk_register.json`; no schema is introduced.
+existing schemas in `lib/Settings/filinq_register.json`; no schema is introduced.
 
 ## Declarative-vs-imperative decision (ADR-031)
 

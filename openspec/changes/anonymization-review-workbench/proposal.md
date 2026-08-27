@@ -7,7 +7,7 @@ kind: code
 ## Why
 
 Every serious buyer of anonymisation software demands a human-review surface,
-and DocuDesk does not have one as a coherent workbench yet:
+and Filinq does not have one as a coherent workbench yet:
 
 - The **joni-png wish set** (GH #45–#64, mirrored as CB #72–#87) asks for
   exactly this: side-by-side original/redacted preview, inline entity
@@ -22,15 +22,15 @@ and DocuDesk does not have one as a coherent workbench yet:
   are partly auto-redactable but ALL need review.
 - Seven competitors (xxllnc Anonimiseren, ZyLAB ONE, Octobox, CaseGuard,
   Redactable, Adobe Acrobat Pro, iOpenbaar) ship a suggest-then-approve review
-  UI; it is NL-market table stakes. DocuDesk's counter-positioning (fully
+  UI; it is NL-market table stakes. Filinq's counter-positioning (fully
   local, OR-native, EUPL) only lands if the review UX exists.
 
-DocuDesk already has most of the machinery, verified at HEAD: an
+Filinq already has most of the machinery, verified at HEAD: an
 `EntityReviewTable.vue` with search/type-filter/counters/bulk actions and
 per-entity grondslag pickers, an `AddManualEntityModal.vue` posting to
 OpenRegister's chunk-aware `POST /api/files/{fileId}/manual-entities` matcher,
 `GrondslagProposalService` (CB #122 — per-entity-type grondslag auto-proposal,
-fill-only-when-empty, config key `docudesk.grondslagen.entity_type_bases`),
+fill-only-when-empty, config key `filinq.grondslagen.entity_type_bases`),
 `PolicyMatchService::match()` returning `prohibition | standing_consent`
 matches, and in-app PDF/Word/Text viewers. What is missing is the workbench
 that composes them: a document preview next to the entity list, selection-to-
@@ -98,7 +98,7 @@ anonymise" lists).
   `PolicyMatchService`); `BatchAnonymizationController::batchAnonymize` and
   `AnonymizationController::anonymize` enforce the gate; `PolicyCrudService`
   accepts the new `bases` property.
-- **Register JSON** (`lib/Settings/docudesk_register.json`): new
+- **Register JSON** (`lib/Settings/filinq_register.json`): new
   `documentReview` schema; `bases` array added to `publicationProhibition`
   and `publicationConsent`.
 - **Frontend**: new `src/views/anonymization/ReviewWorkbench.vue` (+ preview

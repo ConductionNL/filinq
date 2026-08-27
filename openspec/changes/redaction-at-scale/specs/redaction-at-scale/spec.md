@@ -45,8 +45,8 @@ statuses (`pending`, `processing`, `success`, `error`) MUST be preserved.
 
 Batches on the background path MUST be processed by a cron-scheduled
 coordinator job in bounded work units: at most
-`docudesk.batch.files_per_tick` files (default 25) AND at most
-`docudesk.batch.seconds_per_tick` wall seconds (default 120) per run,
+`filinq.batch.files_per_tick` files (default 25) AND at most
+`filinq.batch.seconds_per_tick` wall seconds (default 120) per run,
 whichever limit is reached first, after which the coordinator MUST yield
 and continue in a later run. Per-file state MUST be written after each
 file so the work-unit boundary is the crash-recovery boundary. Both the
@@ -173,7 +173,7 @@ minimisation, Recital 26 — existing behaviour).
 ### Requirement: Sampling QA routed to human review (REQ-DDRAS-007)
 
 On completion of a background batch's anonymize phase, the system MUST
-select a uniform random sample of `docudesk.batch.qa_sample_rate` percent
+select a uniform random sample of `filinq.batch.qa_sample_rate` percent
 (default 5; minimum 1 file when the rate > 0 and the batch has successful
 files; rate 0 disables sampling) of successfully auto-anonymized files,
 mark them `qaSampled: true`, and route them to human review via the
@@ -199,7 +199,7 @@ report MUST record each sample's outcome (`pending`, `confirmed`,
 
 #### Scenario: Rate zero disables sampling
 
-- GIVEN `docudesk.batch.qa_sample_rate = 0`
+- GIVEN `filinq.batch.qa_sample_rate = 0`
 - WHEN a batch completes
 - THEN no file is marked `qaSampled` and the report shows sampling disabled
 - @e2e exclude admin-config branch; covered by PHPUnit (tests/unit/Service/BatchQaSamplerTest.php)
@@ -211,9 +211,9 @@ lock (`soffice:headless:convert`): a fail-fast lock miss MUST be treated
 as a retryable per-file outcome (retried in a later tick, bounded retry
 count) rather than a file error. The coordinator MUST never process more
 than one batch work unit concurrently per instance. Background batch size
-MUST be clamped server-side to `docudesk.batch.max_files_background`
+MUST be clamped server-side to `filinq.batch.max_files_background`
 (default 1000); the synchronous path keeps its existing
-`docudesk.batch.max_files_per_run` cap (default 100), and batches between
+`filinq.batch.max_files_per_run` cap (default 100), and batches between
 the two caps MUST be routed to the background path instead of rejected.
 
 #### Scenario: Lock miss is retried, not failed

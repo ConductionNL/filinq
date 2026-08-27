@@ -5,7 +5,7 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add the `sanitizationRecord` schema (`fileId`, `sanitizedFileId`, `trigger`, `engine`, `report` category counts, `sanitizedAt`, `sanitizedBy`) to `lib/Settings/docudesk_register.json` — additive, union-merge only; counts only, never removed content (REQ-DDSAN-003)
+- [ ] 1.1 Add the `sanitizationRecord` schema (`fileId`, `sanitizedFileId`, `trigger`, `engine`, `report` category counts, `sanitizedAt`, `sanitizedBy`) to `lib/Settings/filinq_register.json` — additive, union-merge only; counts only, never removed content (REQ-DDSAN-003)
 - [ ] 1.2 Seed one DOCX sample with comments + track changes + author metadata ("Concept besluit Demostad", tests/sample-documents) so the report panel demos non-zero counts
 
 ## 2. Cross-app (OpenRegister)
@@ -18,7 +18,7 @@
 - [ ] 3.1 New `DocumentSanitizationService`: MIME routing (office → OR `OfficeDocumentSanitizer`, PDF → OR seam), derivative naming beside the source, encrypted 422 fail-closed, `sanitizationSkipped`/`pdf_sanitizer_unavailable` degradation, `sanitizationRecord` persistence with the OR-report drift pin (REQ-DDSAN-001, REQ-DDSAN-002, REQ-DDSAN-003)
 - [ ] 3.2 New `SanitizationController` + route `POST /api/sanitization/{fileId}` — auth attribute, user-folder resolution (404, no existence disclosure) (REQ-DDSAN-001)
 - [ ] 3.3 Persist + surface the anonymise-run office report (`getLastSanitizationReport()` consumption, `trigger: "anonymisation"`, no fabrication for non-sanitisable formats) (REQ-DDSAN-006)
-- [ ] 3.4 Additive `sanitize` flag on single + batch anonymise: final-artifact pass after conversion/summary append, tenant default `docudesk.sanitization.default`, warning-not-error failure contract (REQ-DDSAN-007)
+- [ ] 3.4 Additive `sanitize` flag on single + batch anonymise: final-artifact pass after conversion/summary append, tenant default `filinq.sanitization.default`, warning-not-error failure contract (REQ-DDSAN-007)
 - [ ] 3.5 Sanitized signal + ordering checks: signal from `sanitizationRecord.sanitizedFileId`, hand-off warning wiring, sealed-artifact warning on sanitize, sanitized-state surfacing on the seal action (REQ-DDSAN-004, REQ-DDSAN-005)
 
 ## 4. Frontend
@@ -29,7 +29,7 @@
 ## 5. Quality
 
 - [ ] 5.1 PHPUnit for routing, degradation, record persistence, drift pin, final-artifact pass placement and failure contract — 75% coverage on new code (ADR-009)
-  - Run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
+  - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify on Postgres (8080) with OpenRegister: sanitize DOCX → derivative + report; anonymise DOCX → run report visible; `sanitize: true` on pdf output → clean final PDF.
 - [ ] 5.2 Playwright spec `tests/e2e/spec-coverage/document-sanitization.spec.ts` for the `@e2e`-referenced scenarios
 - [ ] 5.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)

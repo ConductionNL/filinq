@@ -14,7 +14,7 @@ editor.
 
 | | |
 |---|---|
-| Document server | **sidecar container** `docudesk-collabora`, image `collabora/code:latest`, host port **9980** |
+| Document server | **sidecar container** `filinq-collabora`, image `collabora/code:latest`, host port **9980** |
 | Nextcloud connector | app id **`richdocuments`** (plus optional `richdocumentscode`, a bundled server) |
 
 ## 1. Start it
@@ -26,7 +26,7 @@ docker compose -f docker-compose.office.yml --profile collabora up -d
 ## 2. The image has NO SHELL — this changes how you check it
 
 ```
-$ docker exec docudesk-collabora sh -c 'echo ok'
+$ docker exec filinq-collabora sh -c 'echo ok'
 exec: "sh": executable file not found in $PATH
 ```
 
@@ -46,7 +46,7 @@ Consequences, both measured 2026-08-16:
 docker exec nextcloud php occ app:install richdocuments
 docker exec nextcloud php occ app:enable richdocuments
 docker exec nextcloud php occ config:app:set richdocuments wopi_url \
-    --value="http://docudesk-collabora:9980"
+    --value="http://filinq-collabora:9980"
 docker exec nextcloud php occ richdocuments:activate-config
 ```
 
@@ -66,7 +66,7 @@ wildcards unless escaped — `http://nextcloud.local` also matches
 **Multipart upload, converted bytes returned inline.** No JSON, no URL fetch:
 
 ```bash
-curl -F 'data=@probe.docx' http://docudesk-collabora:9980/cool/convert-to/odt -o out.odt
+curl -F 'data=@probe.docx' http://filinq-collabora:9980/cool/convert-to/odt -o out.odt
 ```
 
 (`/lool/convert-to/<fmt>` on older builds.)
@@ -80,7 +80,7 @@ reachable from nextcloud                   PASS  HTTP 200
 WOPI discovery                             PASS  200 at /hosting/discovery
 conversion (docx->odt)                     PASS  ok at /cool/convert-to/odt (multipart, 10828B)
 self-report (/healthcheck)                 ----  <none>    (endpoint does not exist)
-docudesk:office:probe                      ----  collabora available at /hosting/discovery
+filinq:office:probe                      ----  collabora available at /hosting/discovery
 ```
 
 ## What is NOT verified for Collabora

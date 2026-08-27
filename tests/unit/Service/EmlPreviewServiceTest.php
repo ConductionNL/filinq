@@ -8,7 +8,7 @@
  * missing, resolved node not a File, anonymise-EML API absent).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -16,13 +16,13 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\EmlPdfAssemblyService;
-use OCA\DocuDesk\Service\EmlPreviewService;
+use OCA\Filinq\Service\EmlPdfAssemblyService;
+use OCA\Filinq\Service\EmlPreviewService;
 use OCP\App\IAppManager;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;

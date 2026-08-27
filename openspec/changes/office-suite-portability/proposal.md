@@ -7,7 +7,7 @@ kind: code
 ADR-087 decides that office-suite divergence is **brokered, not driven**: conversion
 goes through `IConversionManager`, format manipulation is suite-independent, editing
 sessions use WOPI and only WOPI, and availability is *capability-probed per instance,
-never assumed*. DocuDesk was built to that decision. None of it has been measured
+never assumed*. Filinq was built to that decision. None of it has been measured
 against a second suite.
 
 Two of the four clauses already hold, and were verified rather than assumed:
@@ -34,7 +34,7 @@ then does nothing.
 
 ADR-087 also records anchor stability as a **known unknown**: whether a suite
 preserves paragraph identity across a save round-trip *"has not been measured.
-Measure before building on §2."* DocuDesk already builds on §2, using content-hash
+Measure before building on §2."* Filinq already builds on §2, using content-hash
 anchors rather than `w14:paraId` precisely because the latter was expected not to
 survive. That expectation is still an expectation.
 
@@ -53,7 +53,7 @@ cannot reproduce the environment the claim is about.
 - **`docker-compose.office.yml`** in this repo — an overlay adding both
   `onlyoffice/documentserver` and `collabora/code`, each behind its own profile.
   Deliberately NOT added to the fleet `.github/docker-compose.yml`: an office suite
-  is a DocuDesk concern, and `.github` is a separate repository.
+  is a Filinq concern, and `.github` is a separate repository.
 - **`docs/office-suite-setup.md`** covering Collabora **and** ONLYOFFICE
   end to end — bring-up, connector configuration, the `wopi.enable` default that
   makes ONLYOFFICE look installed-but-inert, and how to verify with the probe rather
@@ -133,7 +133,7 @@ ordinarily-generated document.
 ## Capabilities
 
 ### New Capabilities
-- `office-suite-portability`: how DocuDesk detects an office suite, what it refuses
+- `office-suite-portability`: how Filinq detects an office suite, what it refuses
   to assume, and what is guaranteed to work without any suite present.
 
 ### Modified Capabilities

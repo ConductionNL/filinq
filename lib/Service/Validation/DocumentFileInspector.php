@@ -8,12 +8,12 @@
  * parser-free PDF heuristics (encryption, text-layer presence).
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Validation
+ * @package   OCA\Filinq\Service\Validation
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  *
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Validation;
+namespace OCA\Filinq\Service\Validation;
 
 use OCP\Files\File;
 use OCP\IAppConfig;
@@ -33,10 +33,10 @@ use Throwable;
  * Runs the file-level probes used by the validation checks.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Validation
+ * @package  OCA\Filinq\Service\Validation
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
  */
@@ -210,7 +210,7 @@ class DocumentFileInspector {
 	 * @return int The threshold.
 	 */
 	private function getTextLayerMin(): int {
-		$value = $this->appConfig->getValueInt('docudesk', self::CONFIG_TEXT_LAYER_MIN, self::DEFAULT_TEXT_LAYER_MIN);
+		$value = $this->appConfig->getValueInt('filinq', self::CONFIG_TEXT_LAYER_MIN, self::DEFAULT_TEXT_LAYER_MIN);
 		if ($value <= 0) {
 			return self::DEFAULT_TEXT_LAYER_MIN;
 		}

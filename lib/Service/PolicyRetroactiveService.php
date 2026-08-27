@@ -24,13 +24,13 @@
  * exactly one place.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/specs/entity-publication-policies/spec.md#requirement-adding-a-prohibition-must-force-resolve-in-flight-per-document-records
  *
@@ -40,12 +40,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use Exception;
-use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Retroactive rule-mutation handler.
@@ -287,7 +287,7 @@ class PolicyRetroactiveService {
 			$result = $this->objectService->findAll(
 				config: [
 					'filters' => [
-						'register' => 'consent',
+						'register' => 'filinq',
 						'schema' => 'publicationConsent',
 						'scope' => 'document',
 					],
@@ -309,8 +309,9 @@ class PolicyRetroactiveService {
 							return false;
 						}
 
+						// `!== null` dropped: isset() already excludes null. The
+						// `!== ''` stays — isset() is true for an empty string.
 						if (isset($r['policyMatch']) === true
-							&& $r['policyMatch'] !== null
 							&& $r['policyMatch'] !== ''
 						) {
 							return false;
@@ -368,7 +369,7 @@ class PolicyRetroactiveService {
 
 			$this->objectService->saveObject(
 				object: $newData,
-				register: 'consent',
+				register: 'filinq',
 				schema: 'publicationConsent',
 				uuid: $uuid,
 				_rbac: false,

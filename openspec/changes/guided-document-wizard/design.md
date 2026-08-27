@@ -26,7 +26,7 @@ Verified current state (HEAD of this worktree):
   `template` — the wizard's `registerObject` questions and prefill lean on
   that binding when present.
 - Frontend: `src/store/store.js` configures the shared
-  `createObjectStore('docudesk-objects')` (nc-vue `useObjectStore`) against
+  `createObjectStore('filinq-objects')` (nc-vue `useObjectStore`) against
   the canonical OR base — the register-object picker reads through it, no new
   OR client code.
 
@@ -236,7 +236,7 @@ aligned with Wave-1's seed template
   "wizardDefinition": {
     "id": "00000000-0000-0000-0000-000000000201",
     "name": "Beschikking parkeervergunning — begeleide aanmaak",
-    "namespace": "docudesk",
+    "namespace": "filinq",
     "templateId": "00000000-0000-0000-0000-000000000101",
     "active": true,
     "questions": [

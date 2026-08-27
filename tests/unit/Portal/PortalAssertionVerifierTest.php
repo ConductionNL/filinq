@@ -16,12 +16,12 @@
  * both must stay in lock-step with portaliq's real minter.
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Portal
+ * @package  OCA\Filinq\Tests\Unit\Portal
  *
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,9 +33,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Portal;
+namespace OCA\Filinq\Tests\Unit\Portal;
 
-use OCA\DocuDesk\Portal\PortalAssertionVerifier;
+use OCA\Filinq\Portal\PortalAssertionVerifier;
 use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 
@@ -49,7 +49,7 @@ class PortalAssertionVerifierTest extends TestCase {
 	/**
 	 * A >= 16 char signing secret for plain-secret construction.
 	 */
-	private const SECRET = 'docudesk-test-secret-0123456789';
+	private const SECRET = 'filinq-test-secret-0123456789';
 
 	/**
 	 * A different valid-length secret for forged-signature tests.

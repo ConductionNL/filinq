@@ -4,7 +4,7 @@
  * Unit tests for DocumentController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,15 +12,15 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\DocumentController;
-use OCA\DocuDesk\Service\DocumentService;
+use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Service\DocumentService;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -35,10 +35,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for DocumentController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -120,7 +120,7 @@ class DocumentControllerTest extends TestCase {
 			->willReturn($this->user);
 
 		$this->controller = new DocumentController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,
@@ -561,7 +561,7 @@ class DocumentControllerTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn(null);
 
 		$controller = new DocumentController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->documentSvc,
 			$this->userSession,

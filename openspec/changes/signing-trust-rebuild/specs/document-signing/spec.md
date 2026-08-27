@@ -140,9 +140,9 @@ honest-completion gate to the pluggable session seam).
 Each reported signature MUST carry `status` ∈ {`verified`, `invalid`,
 `unverifiable`} plus a machine-readable `reason`, with `valid` retained as the
 derived boolean `status === 'verified'` for response-shape compatibility. An
-embedded external signature (`/Type /Sig` without a DocuDesk marker) that
-DocuDesk cannot cryptographically validate MUST report `unverifiable` with
-reason `external-signature-unsupported` — not `invalid`. A DocuDesk v2 marker
+embedded external signature (`/Type /Sig` without a Filinq marker) that
+Filinq cannot cryptographically validate MUST report `unverifiable` with
+reason `external-signature-unsupported` — not `invalid`. A Filinq v2 marker
 whose MAC fails MUST report `invalid`. The document-level response MUST add
 `verdict` ∈ {`verified`, `tampered`, `unverifiable`, `mixed`} while `isValid`
 keeps its strict meaning (at least one signature and all `verified`). No state
@@ -150,7 +150,7 @@ may ever escalate to `verified` without a passing MAC.
 
 #### Scenario: Externally signed PDF is unverifiable, not tampered
 
-- GIVEN a PDF containing a genuine external CMS signature and no DocuDesk marker
+- GIVEN a PDF containing a genuine external CMS signature and no Filinq marker
 - WHEN GET `/api/signing/verify/{fileId}` is called
 - THEN the signature reports status `unverifiable` with reason `external-signature-unsupported`
 - AND the document `verdict` is `unverifiable` and `isValid` is `false`
@@ -189,7 +189,7 @@ no BSN, other national identifier, or raw token may appear in the seam payload
 - WHEN the signing request is created
 - THEN the response carries `id` (or `signingRequestId`) and `signingUrl` with unchanged field names and types
 - AND no previously present request or response field is removed or renamed
-- @e2e exclude cross-app OpenConnector Source contract — decidesk drives it with no docudesk UI surface; covered by Newman (docudesk-signing collection) + PHPUnit (tests/unit/Controller/SigningControllerTest.php)
+- @e2e exclude cross-app OpenConnector Source contract — decidesk drives it with no filinq UI surface; covered by Newman (docudesk-signing collection) + PHPUnit (tests/unit/Controller/SigningControllerTest.php)
 
 #### Scenario: Completion payload exposes the resolved assurance level
 

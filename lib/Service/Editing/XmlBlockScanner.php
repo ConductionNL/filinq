@@ -14,12 +14,12 @@
  * thing that is actually right.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Editing
+ * @package   OCA\Filinq\Service\Editing
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/document-editing-tools/tasks.md#task-2-4
  *
@@ -29,16 +29,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 /**
  * Finds element spans in a document part.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-editing/spec.md#requirement-untouched-parts-of-a-document-package-survive-an-edit-unchanged
  */
@@ -68,7 +68,7 @@ class XmlBlockScanner {
 	 * result is sorted by offset so callers keep the descending-rewrite
 	 * guarantee that stops one edit moving another's offsets.
 	 *
-	 * @param string             $xml  The part XML.
+	 * @param string $xml The part XML.
 	 * @param array<int, string> $tags The element names that count as a block.
 	 *
 	 * @return array<int, array{0: int, 1: int}> Offset/length pairs, in document order.
@@ -143,7 +143,6 @@ class XmlBlockScanner {
 		}//end while
 
 		return $spans;
-
 	}//end spans()
 
 	/**
@@ -187,7 +186,6 @@ class XmlBlockScanner {
 		}//end while
 
 		return $cursor;
-
 	}//end matchingClose()
 
 	/**
@@ -207,7 +205,6 @@ class XmlBlockScanner {
 		}
 
 		return ($xml[($tagEnd - 1)] !== '/');
-
 	}//end opensAnotherLevel()
 
 	/**
@@ -220,6 +217,5 @@ class XmlBlockScanner {
 	 */
 	private function isElementStart(string $xml, int $position): bool {
 		return in_array(($xml[$position] ?? ''), self::NAME_DELIMITERS, true);
-
 	}//end isElementStart()
 }//end class

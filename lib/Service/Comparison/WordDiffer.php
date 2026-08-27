@@ -8,12 +8,12 @@
  * op list and coalesced into ordered hunks with left/right offsets.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Comparison
+ * @package   OCA\Filinq\Service\Comparison
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-comparison/spec.md
  *
@@ -23,16 +23,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Comparison;
+namespace OCA\Filinq\Service\Comparison;
 
 /**
  * Computes a word-level structured diff coalesced into hunks.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Comparison
+ * @package  OCA\Filinq\Service\Comparison
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-comparison/spec.md
  */

@@ -7,13 +7,13 @@ built_by: openspec/changes/archive/2026-07-12-financial-document-field-extractio
 # financial-document-field-extraction Specification
 
 **Status**: done
-**Scope**: docudesk
+**Scope**: filinq
 **OpenSpec changes**:
-- [financial-document-field-extraction](../../changes/archive/2026-07-12-financial-document-field-extraction/) _(done)_ — structured "scan-en-herken" financial field extraction (supplier/IBAN/KvK/BTW, invoice number, dates, currency, VAT breakdown, line items) from receipts and supplier invoices on top of the existing OCR/enrichment machinery, with per-field confidence, deterministic heuristic extractors, optional NC-Assistant AI enhancement, the canonical `nl.conduction.docudesk.extraction.completed` event contract, and a correction-feedback path (kind: code)
+- [financial-document-field-extraction](../../changes/archive/2026-07-12-financial-document-field-extraction/) _(done)_ — structured "scan-en-herken" financial field extraction (supplier/IBAN/KvK/BTW, invoice number, dates, currency, VAT breakdown, line items) from receipts and supplier invoices on top of the existing OCR/enrichment machinery, with per-field confidence, deterministic heuristic extractors, optional NC-Assistant AI enhancement, the canonical `nl.conduction.filinq.extraction.completed` event contract, and a correction-feedback path (kind: code)
 
 ## Purpose
 
-Turns the raw text DocuDesk already obtains from receipts and supplier invoices
+Turns the raw text Filinq already obtains from receipts and supplier invoices
 (via `ocr-document-scanning`) into the structured financial fields a bookkeeping
 consumer needs — supplierName, supplierIban, supplierKvk, supplierVatId,
 invoiceNumber, issueDate, dueDate, currency, totalExcl, totalVat, totalIncl,
@@ -24,10 +24,10 @@ and amount patterns, plus totals reconciliation) forms the testable confidence
 floor; an optional Nextcloud Assistant text-processing provider refines or fills
 low-confidence fields when available, degrading gracefully to heuristics-only
 when absent. Results are persisted on a `financialExtraction` object in the
-`document` register and — when requested — published on the Nextcloud event bus.
+`filinq` register and — when requested — published on the Nextcloud event bus.
 
 This capability is the **canonical home** of the
-`nl.conduction.docudesk.extraction.completed` event contract (full payload in the
+`nl.conduction.filinq.extraction.completed` event contract (full payload in the
 active change's spec delta), consumed by the fleet bookkeeping app shillinq
 (`receipt-extraction-consume`, separate repo, event-decoupled per ADR-022). A
 correction-feedback endpoint captures human-corrected field values as a future
@@ -36,6 +36,9 @@ model-tuning / heuristic-calibration corpus.
 The full requirements land via the active change's spec delta at
 `openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md`
 and are folded into this file on archive.
+
+@e2e exclude backend extraction pipeline and JSON API contract, no browser surface — covered by PHPUnit (tests/unit/Service/FinancialExtractionServiceTest.php, tests/unit/Controller/ExtractionControllerTest.php)
+
 ## Requirements
 ### Requirement: Financial Extraction Endpoint (REQ-FIN-01)
 
@@ -45,16 +48,16 @@ The system SHALL expose `POST /api/extraction/financial` accepting a JSON body o
 `{fileId | documentUri, docType: 'receipt'|'supplier-invoice', callbackEvent: boolean}`. It SHALL
 resolve the file text via `ocr-document-scanning` (`OcrService`) — running OCR for image/scanned
 input and reusing embedded text for digital-born PDFs — run the extraction pipeline, persist the
-result on a `financialExtraction` object in the `document` register, and return the extracted
+result on a `financialExtraction` object in the `filinq` register, and return the extracted
 fields with per-field confidence. When `callbackEvent` is `true`, it SHALL also publish
-`nl.conduction.docudesk.extraction.completed` (REQ-FIN-05).
+`nl.conduction.filinq.extraction.completed` (REQ-FIN-05).
 
 #### Scenario: Extract a supplier invoice PDF
 
 - **WHEN** `POST /api/extraction/financial` is called with `{documentUri, docType: "supplier-invoice", callbackEvent: true}`
 - **THEN** the referenced file text SHALL be obtained via `OcrService` (embedded text reused, OCR only if needed)
 - **AND** the extraction pipeline SHALL populate the `fields` object (REQ-FIN-03)
-- **AND** a `financialExtraction` object SHALL be persisted in the `document` register
+- **AND** a `financialExtraction` object SHALL be persisted in the `filinq` register
 - **AND** the response SHALL include `fields`, `fieldConfidence`, and `overallConfidence`
 
 #### Scenario: Extract a receipt photo
@@ -62,7 +65,7 @@ fields with per-field confidence. When `callbackEvent` is `true`, it SHALL also 
 - **WHEN** `POST /api/extraction/financial` is called with `{fileId, docType: "receipt", callbackEvent: false}`
 - **THEN** the image SHALL be OCR'd via `OcrService` before extraction
 - **AND** the result SHALL be persisted and returned
-- **AND** no `nl.conduction.docudesk.extraction.completed` event SHALL be published (callbackEvent false)
+- **AND** no `nl.conduction.filinq.extraction.completed` event SHALL be published (callbackEvent false)
 
 #### Scenario: Neither fileId nor documentUri supplied
 
@@ -182,8 +185,8 @@ the populated field confidences.
 
 **Priority:** MUST
 
-This spec is the **canonical home** of the `nl.conduction.docudesk.extraction.completed` event.
-When an extraction completes and the request set `callbackEvent: true`, DocuDesk SHALL dispatch it
+This spec is the **canonical home** of the `nl.conduction.filinq.extraction.completed` event.
+When an extraction completes and the request set `callbackEvent: true`, Filinq SHALL dispatch it
 on the Nextcloud event bus via `OCP\EventDispatcher\IEventDispatcher`. The payload SHALL be
 exactly:
 
@@ -221,7 +224,7 @@ the API so a consumer can act on either the synchronous response or the async ev
 
 - **GIVEN** an extraction requested with `callbackEvent: true` by `sourceApp: "shillinq"`
 - **WHEN** the extraction completes
-- **THEN** `nl.conduction.docudesk.extraction.completed` SHALL be dispatched on the NC event bus
+- **THEN** `nl.conduction.filinq.extraction.completed` SHALL be dispatched on the NC event bus
 - **AND** its payload SHALL carry `documentUri`, `requestedBy`, `sourceApp`, `docType`, `fields`, `fieldConfidence`, and `overallConfidence`
 - **AND** the `fields` shape SHALL match the field set of REQ-FIN-03
 
@@ -230,7 +233,7 @@ the API so a consumer can act on either the synchronous response or the async ev
 - **GIVEN** an extraction requested with `callbackEvent: false`
 - **WHEN** the extraction completes
 - **THEN** the result SHALL still be persisted on the `financialExtraction` object
-- **AND** no `nl.conduction.docudesk.extraction.completed` event SHALL be dispatched
+- **AND** no `nl.conduction.filinq.extraction.completed` event SHALL be dispatched
 
 #### Scenario: Provenance carried to the consumer
 

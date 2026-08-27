@@ -6,7 +6,7 @@ depends_on:
 
 ## Why
 
-The DocuDesk anonymisation upload widget hard-blocks `.odt` (OpenDocument Text) files. `AnonymizationWidget.vue` restricts uploads to `docx`/`txt`/`pdf`/`eml` via its `accept` attribute, an `ALLOWED_EXTENSIONS`/`ALLOWED_MIMES` allow-list, and matching user-facing copy — so a user cannot select an ODT for anonymisation even though the rest of the stack now handles it. The allow-list was originally deliberately narrow because ODT anonymisation silently no-opped or corrupted the file in OpenRegister. That backend gap is closed by the paired `openregister:odt-anonymisation-writeback` change, which redacts ODT in place (structure preserved) with a fail-loud validation gate. This change opens the front door so users can actually anonymise ODT.
+The Filinq anonymisation upload widget hard-blocks `.odt` (OpenDocument Text) files. `AnonymizationWidget.vue` restricts uploads to `docx`/`txt`/`pdf`/`eml` via its `accept` attribute, an `ALLOWED_EXTENSIONS`/`ALLOWED_MIMES` allow-list, and matching user-facing copy — so a user cannot select an ODT for anonymisation even though the rest of the stack now handles it. The allow-list was originally deliberately narrow because ODT anonymisation silently no-opped or corrupted the file in OpenRegister. That backend gap is closed by the paired `openregister:odt-anonymisation-writeback` change, which redacts ODT in place (structure preserved) with a fail-loud validation gate. This change opens the front door so users can actually anonymise ODT.
 
 This is the frontend half of the ODT-support pair. It MUST land after the backend fix so users are never routed to the (now-fixed) bug before it ships.
 

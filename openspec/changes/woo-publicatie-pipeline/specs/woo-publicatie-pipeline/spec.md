@@ -6,14 +6,14 @@ status: proposed
 
 ## Purpose
 
-Readiness-gated active-publication pipeline chaining DocuDesk's existing
+Readiness-gated active-publication pipeline chaining Filinq's existing
 anonymisation and publication-consent capabilities into a handoff to
 OpenCatalogi as the publication endpoint (Woo active disclosure / Woo-index,
 DiWoo). One `publicationRecord` per published unit carries the readiness
 state (entities reviewed, consent clear, prohibitions clear), the assembled
 DiWoo metadata, the endpoint reference, the destruction date and the
 lifecycle; every pipeline action lands in an append-only publication log.
-DocuDesk prepares, hands off and tracks state — it builds no portal, sitemap
+Filinq prepares, hands off and tracks state — it builds no portal, sitemap
 or search surface (OpenCatalogi/OpenWoo own those).
 
 ## ADDED Requirements
@@ -34,7 +34,7 @@ objects (ADR-001), with a register version bump for boot import.
 
 #### Scenario: Register import creates the pipeline schemas
 
-- GIVEN DocuDesk and OpenRegister installed
+- GIVEN Filinq and OpenRegister installed
 - WHEN `ConfigurationService::importFromApp()` runs on boot
 - THEN `publicationRecord` and `publicationLogEntry` exist in the `document` register with the seeded demo objects queryable
 - @e2e exclude boot-time register import with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
@@ -100,7 +100,7 @@ before handoff: `wooCategory` (one of the 17 TOOI Woo informatiecategorie
 codes, selected from OpenCatalogi's bundled TOOI value list — never free
 text), `documentsoort`, `publisher` (TOOI organisatie URI), `officieleTitel`,
 `creatiedatum` and `publicatiedatum`. Handoff MUST be blocked while any
-mandatory DiWoo field is missing. DocuDesk assembles and passes these values;
+mandatory DiWoo field is missing. Filinq assembles and passes these values;
 TOOI validation and `diwoo:Document` emission remain OpenCatalogi's
 (WOO-TOOI-001/002).
 
@@ -126,7 +126,7 @@ OpenCatalogi's register slug `publication`, schema slug `publication`,
 mapping the record's title/summary/dates/DiWoo block, and attach the redacted
 derivative (`redactedFileRef`) — NEVER the original file. It MUST store
 `endpointPublicationRef` + `handoffAt`, transition to `handed_off` and append
-a `handed_off` log entry. DocuDesk MUST NOT render any public
+a `handed_off` log entry. Filinq MUST NOT render any public
 portal/sitemap/search surface. When OpenCatalogi is not installed, handoff
 MUST be disabled with an explanatory state — never a silent no-op. An OR
 authorization failure on the endpoint write MUST surface to the operator.
@@ -179,7 +179,7 @@ zgw-document-bridge metadata or operator entry, per Archiefwet/selectielijst)
 to the endpoint publication object as a
 `retentionExpiresAt` override accompanied by a `retentionNote` naming the
 source, as OpenCatalogi RET-003 requires. Actual disposal remains
-OpenCatalogi's retention job; DocuDesk MUST NOT delete or archive endpoint
+OpenCatalogi's retention job; Filinq MUST NOT delete or archive endpoint
 publications itself. Propagation MUST append a `destruction_date_propagated`
 log entry.
 
@@ -189,7 +189,7 @@ log entry.
 - WHEN the destruction date is propagated
 - THEN the endpoint publication carries `retentionExpiresAt` 2034-11-03 and a `retentionNote` naming the source
 - AND the record's log shows a `destruction_date_propagated` entry
-- @e2e exclude endpoint-side retention fields are not rendered in DocuDesk UI — covered by PHPUnit handoff-mapping tests (tests/unit/Service/PublicationPipelineServiceTest.php); the log entry is covered under REQ-DDWPP-008
+- @e2e exclude endpoint-side retention fields are not rendered in Filinq UI — covered by PHPUnit handoff-mapping tests (tests/unit/Service/PublicationPipelineServiceTest.php); the log entry is covered under REQ-DDWPP-008
 
 ### Requirement: Append-only publication log (REQ-DDWPP-008)
 

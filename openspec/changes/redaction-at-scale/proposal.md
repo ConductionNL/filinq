@@ -1,13 +1,13 @@
 ---
 kind: code
-tracking_issue: https://github.com/ConductionNL/docudesk/issues/236
+tracking_issue: https://github.com/ConductionNL/filinq/issues/236
 ---
 
 # Proposal: redaction-at-scale
 
 ## Why
 
-The tenders DocuDesk is being measured against are municipal-scale:
+The tenders Filinq is being measured against are municipal-scale:
 
 - **Arnhem 407824** (with Renkum + Rheden): ~275 Woo dossiers and ~55.000
   documents per year, ~50 staff, irreversible blackout, "SaaS tenzij".
@@ -18,10 +18,10 @@ The tenders DocuDesk is being measured against are municipal-scale:
   `redaction-at-scale` record the same demand. GH #84 asks for async dossier
   processing.
 
-Verified at HEAD, DocuDesk's batch pipeline cannot carry that load:
+Verified at HEAD, Filinq's batch pipeline cannot carry that load:
 
 - Batch state lives in **ICache** (`BatchStateService`, TTL 7200s, prefix
-  `docudesk_batch_`) — a cache eviction or restart loses a running batch.
+  `filinq_batch_`) — a cache eviction or restart loses a running batch.
 - `POST /api/anonymization/batch/{batchId}/extract` processes **one file per
   HTTP call** (client-driven polling loop).
 - `POST /api/anonymization/batch/{batchId}/anonymize` runs a **synchronous
@@ -104,9 +104,9 @@ trustworthy volume processing.
   and completes them) gain progress/cancellation/QA fields.
 - **Frontend**: batch progress view with cancel/resume actions and an
   operations list; QA-sample badge linking to the review workbench.
-- **Admin settings**: `docudesk.batch.max_files_background`,
-  `docudesk.batch.files_per_tick`, `docudesk.batch.seconds_per_tick`,
-  `docudesk.batch.qa_sample_rate`.
+- **Admin settings**: `filinq.batch.max_files_background`,
+  `filinq.batch.files_per_tick`, `filinq.batch.seconds_per_tick`,
+  `filinq.batch.qa_sample_rate`.
 - **Engines untouched**: extraction/detection/anonymisation remain
   OpenRegister services; LibreOffice serialization stays as-is and is
   respected, not bypassed.

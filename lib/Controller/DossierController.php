@@ -26,15 +26,15 @@
  *
  * So any authenticated user in the organisation can trigger a regen for any
  * dossier uuid they can name; what they get back is scoped to the files they
- * can already see. Tracked in ConductionNL/docudesk#441.
+ * can already see. Tracked in ConductionNL/filinq#441.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  *
@@ -44,10 +44,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\LegalBasesSummaryService;
+use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -60,10 +60,10 @@ use Psr\Log\LoggerInterface;
  * Controller for dossier-level endpoints.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class DossierController extends Controller {
 	/**

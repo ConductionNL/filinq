@@ -1,10 +1,10 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Playwright config for DocuDesk.
+ * Playwright config for Filinq.
  *
- * Scaffolded by /journeydoc-init (ADR-030). DocuDesk previously had
+ * Scaffolded by /journeydoc-init (ADR-030). Filinq previously had
  * no Playwright setup — this is a from-scratch config with two
  * projects:
  *
@@ -33,7 +33,7 @@ export default defineConfig({
 	testDir: './tests/e2e',
 	globalSetup: path.resolve(__dirname, 'tests/e2e/global-setup.ts'),
 	// A shared dev instance running many Conduction apps can take several
-	// seconds just to serve /index.php/login, and DocuDesk ships a ~3 MB
+	// seconds just to serve /index.php/login, and Filinq ships a ~3 MB
 	// bundle that Playwright loads with a cold cache on every run. The
 	// original 30s budget made the whole suite time out on navigation even
 	// when the app was healthy, so it is generous by design; a real hang

@@ -1,15 +1,15 @@
 <?php
 
 /**
- * Application route definitions for DocuDesk.
+ * Application route definitions for Filinq.
  *
  * @category  AppInfo
- * @package   OCA\DocuDesk\AppInfo
+ * @package   OCA\Filinq\AppInfo
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -17,19 +17,19 @@
 
 // The mechanical boilerplate routes — `dashboard#page` (`/`) and the SPA
 // catch-all (`/{path}`, `dashboard#catchAll`) — are supplied by
-// `Routes::standard()`; both resolve to docudesk's `DashboardController`, so
-// the route name `docudesk.dashboard.page` that the navigation (info.xml) and
+// `Routes::standard()`; both resolve to filinq's `DashboardController`, so
+// the route name `filinq.dashboard.page` that the navigation (info.xml) and
 // the dashboard widgets link to is defined. The app-specific API routes below
 // are passed through as `$extra` and inserted before the catch-all.
 //
 // ⚠️ The AppHost builder is invoked through a `class_exists()` guard. Nextcloud
-// `include`s this file for EVERY docudesk request, so an unguarded static call
+// `include`s this file for EVERY filinq request, so an unguarded static call
 // to a class in another app makes every route in the app fatal with HTTP 500
-// when openregister is absent — not just the AppHost ones. DocuDesk does not
+// when openregister is absent — not just the AppHost ones. Filinq does not
 // declare `<app>openregister</app>`, so an admin can create exactly that
 // configuration. Fixing only the controllers MOVES the fatal here rather than
 // removing it. The `$fallback` branch below reproduces `Routes::standard()`'s
-// output locally so docudesk still routes (and degrades per-endpoint) without
+// output locally so filinq still routes (and degrades per-endpoint) without
 // openregister. See decidesk#377 / #388.
 $extra = [
         // Metrics and health.
@@ -201,7 +201,7 @@ $extra = [
         // Served by lib/Controller/PreferencesController (a local OCP-only
         // implementation of OpenRegister's GenericPreferencesController). The
         // route name MUST stay `preferences#…`: Nextcloud resolves `foo#bar` to
-        // OCA\DocuDesk\Controller\FooController, so a namespaced name here
+        // OCA\Filinq\Controller\FooController, so a namespaced name here
         // resolves to a class that does not exist and 500s.
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],

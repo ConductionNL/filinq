@@ -4,7 +4,7 @@
  * Unit tests for AnonymizationService's confidentiality-signal merge
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  *
@@ -20,13 +20,13 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymizationResultParser;
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\ConfidentialityLabel;
-use OCA\DocuDesk\Service\ConfidentialityLabelService;
-use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\Filinq\Service\AnonymizationResultParser;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\ConfidentialityLabel;
+use OCA\Filinq\Service\ConfidentialityLabelService;
+use OCA\Filinq\Service\EntityDetectionService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -40,10 +40,10 @@ use Psr\Log\LoggerInterface;
  * omitted otherwise (files-confidential-labels, design.md D2).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -104,7 +104,7 @@ class AnonymizationServiceConfidentialityTest extends TestCase {
 			[['entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen', 'confidence' => 0.95]]
 		);
 
-		$mockBasis = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
+		$mockBasis = $this->createMock(\OCA\Filinq\Service\LegalBasisProposalService::class);
 		$mockBasis->method('getEntityTypeWhitelist')->willReturn(null);
 		$mockBasis->method('enrichEntitiesWithBases')->willReturnArgument(0);
 
@@ -113,8 +113,8 @@ class AnonymizationServiceConfidentialityTest extends TestCase {
 				return match ($class) {
 					'OCA\OpenRegister\Service\TextExtractionService' => $mockExtractor,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mockMapper,
-					'OCA\DocuDesk\Service\LegalBasisProposalService' => $mockBasis,
-					'OCA\DocuDesk\Service\PolicyMatchService' => throw new \Exception('PolicyMatchService not registered'),
+					'OCA\Filinq\Service\LegalBasisProposalService' => $mockBasis,
+					'OCA\Filinq\Service\PolicyMatchService' => throw new \Exception('PolicyMatchService not registered'),
 					default => throw new \Exception("Unknown service: $class"),
 				};
 			}

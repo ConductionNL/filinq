@@ -3,19 +3,19 @@
 /**
  * SignerChainCompletedEvent
  *
- * Typed docudesk-side event fired ONCE per signing-request when the final OR
+ * Typed filinq-side event fired ONCE per signing-request when the final OR
  * approval step is approved — i.e. every signer has signed. Bridges OR's
- * `ApprovalStepCompletedEvent`. Internal docudesk subscribers (notifications,
+ * `ApprovalStepCompletedEvent`. Internal filinq subscribers (notifications,
  * downstream archival, signed-document assembly) react to this event in place
  * of polling the legacy `SigningService::updateRequestStatus()` flag.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCA\OpenRegister\Db\ApprovalChain;
 use OCA\OpenRegister\Db\ApprovalStep;
@@ -35,10 +35,10 @@ use OCP\EventDispatcher\Event;
  * Fired once when the OR approval chain backing a sign-request completes.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SignerChainCompletedEvent extends Event {
 	/**
@@ -89,7 +89,7 @@ class SignerChainCompletedEvent extends Event {
 	}//end getUserId()
 
 	/**
-	 * Get the docudesk signing-request UUID this chain backed.
+	 * Get the filinq signing-request UUID this chain backed.
 	 *
 	 * @return string Signing-request UUID.
 	 */

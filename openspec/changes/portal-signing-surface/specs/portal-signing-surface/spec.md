@@ -6,7 +6,7 @@ status: proposed
 
 ## Purpose
 
-DocuDesk gives an external, accountless **signer** a real signing surface
+Filinq gives an external, accountless **signer** a real signing surface
 through **portaliq** (hydra ADR-046, contribution contract v2.2): `sign` and
 `decline` rendered as per-document `rowActions` on the documents-awaiting-me
 collection, at eIDAS-aligned substantial trust. It records the signer's consent
@@ -22,7 +22,7 @@ identity-bound MAC from `signing-trust-rebuild`; it does not re-implement them.
 
 ### Requirement: Signer manifest declares sign and decline as substantial-gated rowActions (REQ-DDPSS-001)
 
-`OCA\DocuDesk\Portal\PortalContributionProvider`'s `signer` manifest MUST
+`OCA\Filinq\Portal\PortalContributionProvider`'s `signer` manifest MUST
 reference exactly two contract-v2.2 `rowActions` — `sign` and `decline` — on the
 `signerSigningRequests` collection (the documents-awaiting-me rows), each gated
 at `minTrust: substantial` (eIDAS-aligned: an advanced-electronic-signature act
@@ -47,7 +47,7 @@ The `signDocument` receiver act MUST, for a verified invited signer, record the
 signer's explicit consent confirmation (evidence of intent) and an OPTIONAL
 drawn-signature payload into the existing `signerRecord.signatureData` field
 (schema `visible:false`, never projected to the read manifest), then drive the
-honest `OCA\DocuDesk\Service\SigningService::sign()` primitive to transition the
+honest `OCA\Filinq\Service\SigningService::sign()` primitive to transition the
 request `status → signed`. Server-side ownership MUST be re-verified via the
 `portal-signing-actions` invited-signer scope (`signerRecord.email == verified
 assertion signerEmail AND signingRequestId == target`) before any act; the

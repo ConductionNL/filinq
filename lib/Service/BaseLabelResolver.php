@@ -11,19 +11,19 @@
  * are one concern, and the renderer no longer needs to know any of it.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -32,10 +32,10 @@ use Psr\Log\LoggerInterface;
  * Resolves `base` references to display names and toelichtingen.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class BaseLabelResolver {
 
@@ -187,7 +187,7 @@ class BaseLabelResolver {
 
 		try {
 			$result = $objectService->searchObjectsBySlug(
-				registerSlug: 'dossier',
+				registerSlug: 'filinq',
 				schemaSlug: 'base',
 				filters: [],
 				_rbac: false,

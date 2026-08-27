@@ -7,13 +7,13 @@ built_by: openspec/changes/portal-signing-surface
 # portal-signing-surface Specification
 
 **Status**: in-progress
-**Scope**: docudesk
+**Scope**: filinq
 **OpenSpec changes**:
 - [portal-signing-surface](../../changes/portal-signing-surface/) _(active)_ — contract-v2.2 `rowActions` on the signer manifest + portal-subject evidence binding (kind: code)
 
 ## Purpose
 
-DocuDesk gives an external, accountless **signer** a real signing surface
+Filinq gives an external, accountless **signer** a real signing surface
 through **portaliq** (hydra ADR-046, contribution contract v2.2): `sign` and
 `decline` rendered as per-document `rowActions` on the documents-awaiting-me
 collection, at eIDAS-aligned substantial trust. Closing the forgeable-signer
@@ -41,7 +41,7 @@ evidence today.
 
 ### Requirement: Signer manifest declares sign and decline as substantial-gated rowActions (REQ-DDPSS-001)
 
-`OCA\DocuDesk\Portal\PortalContributionProvider`'s `signer` manifest MUST
+`OCA\Filinq\Portal\PortalContributionProvider`'s `signer` manifest MUST
 reference exactly two contract-v2.2 `rowActions` — `sign` and `decline` — on the
 `signerSigningRequests` collection (the documents-awaiting-me rows), each gated
 at `minTrust: substantial` (eIDAS-aligned: an advanced-electronic-signature act
@@ -57,7 +57,7 @@ constructor) — it only adds pure-data rowAction declarations.
 - **WHEN** `getContribution($subject)` is called
 - **THEN** the `signerSigningRequests` collection references exactly `sign` and `decline` as `rowActions`, each `minTrust: substantial`, each pointing at an instance-local relative receiver endpoint
 - **AND** the `signerRecords` collection and the `data-subject` manifest carry no write action
-- @e2e exclude backend-only manifest rendered inside portaliq, not DocuDesk — covered by PHPUnit (tests/unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only manifest rendered inside portaliq, not Filinq — covered by PHPUnit (tests/unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: signDocument records consent plus optional drawn signature and transitions to signed (REQ-DDPSS-002)
 
@@ -65,7 +65,7 @@ The `signDocument` receiver act MUST, for a verified invited signer, record the
 signer's explicit consent confirmation (evidence of intent) and an OPTIONAL
 drawn-signature payload into the existing `signerRecord.signatureData` field
 (schema `visible:false`, never projected to the read manifest), then drive the
-honest `OCA\DocuDesk\Service\SigningService::sign()` primitive to transition the
+honest `OCA\Filinq\Service\SigningService::sign()` primitive to transition the
 request `status → signed`. Server-side ownership MUST be re-verified via the
 `portal-signing-actions` invited-signer scope (`signerRecord.email == verified
 assertion signerEmail AND signingRequestId == target`) before any act; the
@@ -79,7 +79,7 @@ the request body.
 - **WHEN** the receiver processes `signDocument`
 - **THEN** it records the consent + drawn signature into `signerRecord.signatureData`, calls `SigningService::sign()` acting as the resolved signer, and the request transitions `status → signed`
 - **AND** a `signDocument` on an already-terminal request is rejected by the status machine unchanged, and a signer not invited on the target gets the uniform not-authorised result with `SigningService` never called
-- @e2e exclude backend receiver act with no DocuDesk UI surface — covered by PHPUnit (tests/unit/Controller/PortalSigningReceiverControllerTest.php)
+- @e2e exclude backend receiver act with no Filinq UI surface — covered by PHPUnit (tests/unit/Controller/PortalSigningReceiverControllerTest.php)
 
 ### Requirement: declineDocument records a reason and transitions through the honest primitive (REQ-DDPSS-003)
 
@@ -96,7 +96,7 @@ dropped). Ownership and identity MUST be server-derived exactly as for
 - **WHEN** the receiver processes `declineDocument`
 - **THEN** it records the `reason` and calls `SigningService::decline()`, transitioning the request out of pending through the status machine
 - **AND** a decline on an already-terminal request is rejected unchanged, and a non-invited signer gets the uniform not-authorised result
-- @e2e exclude backend receiver act with no DocuDesk UI surface — covered by PHPUnit (tests/unit/Controller/PortalSigningReceiverControllerTest.php)
+- @e2e exclude backend receiver act with no Filinq UI surface — covered by PHPUnit (tests/unit/Controller/PortalSigningReceiverControllerTest.php)
 
 ### Requirement: Portal signature evidence cryptographically binds the portal signer identity (REQ-DDPSS-004)
 

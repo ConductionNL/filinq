@@ -14,7 +14,7 @@ jobs:
     name: l10n coverage (en.json)
     runs-on: ubuntu-latest
     # Observed fleet-wide across 225 executions: median 0.1 min, max 1.2 min
-    # (docudesk). No job in this workflow declared a timeout, so a hang ran to
+    # (filinq). No job in this workflow declared a timeout, so a hang ran to
     # GitHub's 6-hour default; 15 min is a wide margin over every real run.
     timeout-minutes: 15
     steps:

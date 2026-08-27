@@ -16,7 +16,7 @@ keywords:
 
 # Orphaned Surface Restoration
 
-DocuDesk mounts the manifest-V2 shell (`CnAppRoot` + a router built *from the
+Filinq mounts the manifest-V2 shell (`CnAppRoot` + a router built *from the
 manifest* in `src/main.js` via `routesFromManifest()`). A legacy
 `src/router/index.js` used to list a larger set of views but was imported
 nowhere — the app never routed through it. Any view whose only wiring was

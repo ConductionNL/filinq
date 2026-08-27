@@ -15,7 +15,7 @@ the surface is fail-closed permission-gated and every use is recorded in an
 append-only Art. 30 processing log that never stores the raw searched value.
 Detected entities live in OR's entity catalogue
 (`oc_openregister_entities` + `oc_openregister_entity_relations`, verified at
-HEAD) — DocuDesk adds no detection or indexing engine.
+HEAD) — Filinq adds no detection or indexing engine.
 
 ## ADDED Requirements
 
@@ -28,7 +28,7 @@ filters and mandatory pagination. Each result MUST include the entity uuid,
 type, value, category and occurrence (relation) count. Results MUST be
 organisation-scoped with the same fail-closed rule as OR's own entity API
 (non-admins see only entities of their accessible organisations; a non-admin
-with none sees an empty set). The surface MUST NOT introduce any DocuDesk
+with none sees an empty set). The surface MUST NOT introduce any Filinq
 copy of entity data and MUST NOT perform detection — documents never
 extracted are absent, and the UI empty-state MUST say so. When OpenRegister
 is not available the endpoint MUST return an explanatory unavailable state,
@@ -78,7 +78,7 @@ listed under a separate "other occurrences" group with their kind.
 
 Access to every `api/entity-search/*` route MUST be restricted to admins and
 members of the Nextcloud groups configured in
-`docudesk.entity_search.allowed_groups` (default empty = admins only). The
+`filinq.entity_search.allowed_groups` (default empty = admins only). The
 gate MUST be enforced server-side in the controller on every route and MUST
 fail closed: a non-member receives HTTP 403 with a neutral body; a
 configuration read failure denies access. Hiding the navigation entry for
@@ -106,14 +106,14 @@ object (`document` register) before the response is returned: `action`
 `queryDigest` (sha256 of the lower-cased trimmed query), the type/category
 filters and the result count; for detail views the OR entity uuid
 (`entityRef`) and occurrence count. The raw searched value MUST NOT be stored
-anywhere by DocuDesk (AVG data minimisation — a logged BSN would be a new PII
+anywhere by Filinq (AVG data minimisation — a logged BSN would be a new PII
 store). The log MUST be append-only in app code (no update or delete
 endpoint). If the log write fails, the search or detail response MUST be
 refused — an unlogged PII lookup MUST NOT happen. The `entitySearchLog`
-schema MUST carry a `docudesk-entity-search` `x-openregister-processing`
+schema MUST carry a `filinq-entity-search` `x-openregister-processing`
 annotation (rechtsgrond `public-task`, `logReads: true`) so the activity
 appears in the platform AVG Art. 30 verwerkingsregister via the existing
-processing-activity-export mechanism — DocuDesk MUST NOT add any aggregation
+processing-activity-export mechanism — Filinq MUST NOT add any aggregation
 or export engine of its own.
 
 #### Scenario: Search produces a digest-only log entry
@@ -133,9 +133,9 @@ or export engine of its own.
 
 #### Scenario: Activity is declared in the platform register
 
-- GIVEN DocuDesk's register configuration is imported into OpenRegister
+- GIVEN Filinq's register configuration is imported into OpenRegister
 - WHEN the platform verwerkingsregister is inspected
-- THEN a `docudesk-entity-search` activity exists, declared via the `x-openregister-processing` annotation on `entitySearchLog`
+- THEN a `filinq-entity-search` activity exists, declared via the `x-openregister-processing` annotation on `entitySearchLog`
 - @e2e exclude boot-time register import contract — covered by PHPUnit register-import assertions (tests/unit/Settings/)
 
 ### Requirement: Entity-search UI (REQ-DDESR-005)

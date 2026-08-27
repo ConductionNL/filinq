@@ -3,18 +3,18 @@
 /**
  * Settings Initializer
  *
- * Service for initializing the DocuDesk app configuration from
+ * Service for initializing the Filinq app configuration from
  * the settings JSON file. Handles version checking and importing
  * configuration into OpenRegister. Extracted from SettingsService
  * to reduce class complexity.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/admin-settings/spec.md
  * @spec openspec/specs/admin-settings/spec.md
@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use Exception;
 use OCP\App\IAppManager;
@@ -35,13 +35,13 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Service for initializing DocuDesk configuration from JSON settings
+ * Service for initializing Filinq configuration from JSON settings
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class SettingsInitializer {
 
@@ -82,7 +82,7 @@ class SettingsInitializer {
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 	) {
-		$this->appName = 'docudesk';
+		$this->appName = 'filinq';
 
 	}//end __construct()
 
@@ -130,7 +130,7 @@ class SettingsInitializer {
 	}//end getConfigurationService()
 
 	/**
-	 * Load settings from the docudesk_register.json file
+	 * Load settings from the filinq_register.json file
 	 *
 	 * @return array<string, mixed> The loaded settings configuration
 	 *
@@ -139,7 +139,7 @@ class SettingsInitializer {
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
 	private function loadSettings(): array {
-		$settingsFilePath = __DIR__ . '/../Settings/docudesk_register.json';
+		$settingsFilePath = __DIR__ . '/../Settings/filinq_register.json';
 
 		try {
 			if (file_exists($settingsFilePath) === false) {
@@ -241,7 +241,7 @@ class SettingsInitializer {
 			// `$currentVersion` above stays at its '0.0.0' default forever, the
 			// version gate can never close, and this import runs on EVERY
 			// request. It is reached from Application::boot(), so that is every
-			// request to the whole instance, not just DocuDesk's own.
+			// request to the whole instance, not just Filinq's own.
 			//
 			// Measured 2026-07-29 on the dev instance, an OpenRegister object
 			// create: 354ms median with the key absent, 255ms with it set —
@@ -257,7 +257,7 @@ class SettingsInitializer {
 		} catch (Exception $e) {
 			$results['errors'][] = $e->getMessage();
 			$this->logger->error(
-				'Failed to initialize DocuDesk: ' . $e->getMessage(),
+				'Failed to initialize Filinq: ' . $e->getMessage(),
 				['app' => $this->appName]
 			);
 		}//end try

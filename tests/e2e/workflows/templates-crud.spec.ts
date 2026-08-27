@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * DEEP, data-dependent workflow tests — Template CRUD with persistence.
@@ -10,18 +10,37 @@
  * lifecycle PERSISTS, and that the persisted state surfaces in the
  * read-only Templates list UI.
  *
- * Why the create/edit/delete legs are API-driven: the DocuDesk Templates
- * UI is read-only. `TemplateIndex.vue` renders a non-interactive table;
- * its "New template" button routes to `TemplateDetail.vue`, which is a
- * STUB ("Template editor" heading + descriptive paragraph) with no name/
- * content fields and no save button. There is no edit or delete control
- * on a row. So the writes go through the documented REST endpoints
- * (`TemplatesController` / `templateStore`) and persistence is asserted
- * BOTH through follow-up API reads AND through the real UI list — which
- * is exactly the OpenRegister-backed data path the UI itself consumes.
+ * Why the create/edit/delete legs are API-driven: the live Templates list
+ * is read-only. The `Templates` manifest page is `type:"index"`, so it is
+ * rendered by CnIndexPage, and its manifest entry declares no `actions`
+ * or `headerActions` — there is no create, edit or delete control on the
+ * page or on a row. So the writes go through the documented REST
+ * endpoints (`TemplatesController` / `templateStore`) and persistence is
+ * asserted BOTH through follow-up API reads AND through the real UI list
+ * — which is exactly the OpenRegister-backed data path the UI consumes.
  *
- * The missing create/edit/delete UI is flagged as a product gap in the
- * run report; a `test.fixme` below documents it as an executable TODO.
+ * ⚠️ CORRECTED 2026-08-25. This header used to say the "New template"
+ * button routes to `TemplateDetail.vue`, "which is a STUB ('Template
+ * editor' heading + descriptive paragraph) with no name/content fields
+ * and no save button". Both halves were wrong, and that description is
+ * what steered every later pass away from the detail surface:
+ *
+ *   - `TemplateDetail.vue` is an 806-line registered editor with Name /
+ *     Namespace / Category / Tags / Description / Change-note fields, a
+ *     WYSIWYG content surface with a raw-HTML toggle, a Save button, a
+ *     preview tab, a versions tab, a restore-confirmation dialog and a
+ *     "Locked by {user}" banner. `tests/e2e/workflows/template-detail.spec.ts`
+ *     asserts the fields and the Save button so this cannot go stale again.
+ *   - The button that routes to it lives on `TemplateIndex.vue`, which is
+ *     no longer registered in `src/registry.js` and therefore renders
+ *     nowhere. It is not the page a user sees.
+ *
+ * The real gap is narrower and is documented in `template-detail.spec.ts`:
+ * `TemplateDetail` hydrates only from `templateStore.templateItem`, never
+ * from `$route.params`, so on any reachable navigation it mounts in
+ * new-template mode and its Versions tab and lock banner cannot render.
+ * A `test.fixme` below documents the missing list-level CRUD controls as
+ * an executable TODO.
  *
  * @spec openspec/specs/template-management/spec.md#create-a-template
  * @spec openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
@@ -90,7 +109,7 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 	expect(read.status, 'GET template by id after create').toBe(200)
 	expect(read.body.name).toBe(tmpl.name)
 	expect(read.body.content).toContain('{{recipient}}')
-	expect(read.body.namespace).toBe('docudesk')
+	expect(read.body.namespace).toBe('filinq')
 
 	// -- READ (API list): the template appears in the listing results
 	const afterCreate = await listTemplates(req, token)
@@ -111,7 +130,7 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 		row,
 		'seeded template row must be visible in the Templates table',
 	).toBeVisible()
-	await expect(row).toContainText('docudesk') // namespace column
+	await expect(row).toContainText('filinq') // namespace column
 
 	// -- DELETE -------------------------------------------------------------
 	const del = await deleteTemplate(req, token, tmpl.id)
@@ -181,7 +200,7 @@ test('Template update persists new name + content and the renamed row shows in t
 	expect(
 		reread.body.namespace,
 		'namespace must be immutable across an update',
-	).toBe('docudesk')
+	).toBe('filinq')
 
 	await go(page, TemplateDetail)
 	await page.waitForTimeout(1500)
@@ -246,7 +265,7 @@ test('Template create validation rejects missing required fields (name / content
 	// Missing content.
 	const noContent = await req.post(`${API}/templates`, {
 		headers: jsonHeaders(token),
-		data: { name: `${TEST_PREFIX}-bad2`, namespace: 'docudesk' },
+		data: { name: `${TEST_PREFIX}-bad2`, namespace: 'filinq' },
 	})
 	expect(
 		noContent.status(),
@@ -256,7 +275,7 @@ test('Template create validation rejects missing required fields (name / content
 	// Missing name.
 	const noName = await req.post(`${API}/templates`, {
 		headers: jsonHeaders(token),
-		data: { content: 'x', namespace: 'docudesk' },
+		data: { content: 'x', namespace: 'filinq' },
 	})
 	expect(noName.status(), 'missing name must be rejected').toBeGreaterThanOrEqual(
 		400,

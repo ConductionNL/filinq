@@ -9,12 +9,12 @@
  * based on the WOO profile and a minimum-confidence threshold.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
@@ -24,7 +24,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -36,10 +36,10 @@ use RuntimeException;
  * Consolidates per-file entity detections into a unified batch-level list.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  */
@@ -243,7 +243,7 @@ class EntityConsolidationService {
 	 */
 	private function getHighConfidenceThreshold(): float {
 		return $this->appConfig->getValueFloat(
-			app: 'docudesk',
+			app: 'filinq',
 			key: self::HIGH_CONFIDENCE_THRESHOLD_KEY,
 			default: self::DEFAULT_HIGH_CONFIDENCE_THRESHOLD
 		);

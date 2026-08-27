@@ -2,7 +2,7 @@
 
 ### Requirement: The anonymisation upload widget MUST accept ODT files
 
-The DocuDesk anonymisation upload surface (`AnonymizationWidget.vue`) MUST accept `.odt` (OpenDocument Text, MIME `application/vnd.oasis.opendocument.text`) files for anonymisation, alongside the existing `docx`/`txt`/`pdf`/`eml` formats. Acceptance MUST hold both when the browser supplies the MIME type and when only the filename extension is available (drag-and-drop). The file input's `accept` attribute, the upload allow-list, and the user-facing "supported formats" copy MUST all include ODT, and the copy MUST have NL and EN translations.
+The Filinq anonymisation upload surface (`AnonymizationWidget.vue`) MUST accept `.odt` (OpenDocument Text, MIME `application/vnd.oasis.opendocument.text`) files for anonymisation, alongside the existing `docx`/`txt`/`pdf`/`eml` formats. Acceptance MUST hold both when the browser supplies the MIME type and when only the filename extension is available (drag-and-drop). The file input's `accept` attribute, the upload allow-list, and the user-facing "supported formats" copy MUST all include ODT, and the copy MUST have NL and EN translations.
 
 #### Scenario: An ODT selected from the file picker is accepted
 

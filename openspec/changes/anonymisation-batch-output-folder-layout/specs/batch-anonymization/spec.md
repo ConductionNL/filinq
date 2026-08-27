@@ -12,7 +12,7 @@ This delta extends the existing `batch-anonymization` capability so batch / fold
 
 After OpenRegister returns the anonymised file (which OR writes to `<source>/<base>_anonymized.<ext>` per its existing behaviour), the batch service MUST move the file to `<source>/<subfolder>/<cleanBase>.<ext>`, where:
 
-- `<subfolder>` is the value of the configuration key `docudesk.anonymisation.output_subfolder_name` (default: `anonymised`).
+- `<subfolder>` is the value of the configuration key `filinq.anonymisation.output_subfolder_name` (default: `anonymised`).
 - `<cleanBase>` is the original source file's base name with any trailing `_anonymized` suffix stripped.
 
 The subfolder MUST be created if it does not already exist. The move MUST be a single Nextcloud-API operation (preferably a same-filesystem rename, not a copy + delete).
@@ -82,13 +82,13 @@ If `<source>/<subfolder>/` exists from a previous run, the new run MUST reuse it
 - **THEN** `<dossier>/anonymised/old-file.pdf` is unchanged
 - **AND** no error or warning is raised — operators clean up manually if desired
 
-### Requirement: The subfolder name MUST be tenant-configurable via `docudesk.anonymisation.output_subfolder_name`
+### Requirement: The subfolder name MUST be tenant-configurable via `filinq.anonymisation.output_subfolder_name`
 
-The configuration key `docudesk.anonymisation.output_subfolder_name` MUST be readable via the standard `IAppConfig` pattern. Its default MUST be `anonymised`. The value MUST be validated as a single path segment: non-empty, lowercase letters / digits / hyphen / underscore only, no dots / slashes / spaces. Invalid values MUST be rejected at admin settings save time with a clear error.
+The configuration key `filinq.anonymisation.output_subfolder_name` MUST be readable via the standard `IAppConfig` pattern. Its default MUST be `anonymised`. The value MUST be validated as a single path segment: non-empty, lowercase letters / digits / hyphen / underscore only, no dots / slashes / spaces. Invalid values MUST be rejected at admin settings save time with a clear error.
 
 #### Scenario: Default is `anonymised`
 
-- **GIVEN** a fresh DocuDesk install where `output_subfolder_name` is unset
+- **GIVEN** a fresh Filinq install where `output_subfolder_name` is unset
 - **WHEN** the batch anonymise reads the config
 - **THEN** the resolved subfolder name is `anonymised`
 

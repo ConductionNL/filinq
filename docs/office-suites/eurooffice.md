@@ -24,7 +24,7 @@ ONLYOFFICE page.
 
 | | |
 |---|---|
-| Document server | **sidecar container** `docudesk-eurooffice`, image `ghcr.io/euro-office/documentserver:latest` (**4.35 GB**), host port **8093** |
+| Document server | **sidecar container** `filinq-eurooffice`, image `ghcr.io/euro-office/documentserver:latest` (**4.35 GB**), host port **8093** |
 | Nextcloud connector | app id **`eurooffice`**, inside the `nextcloud` container — **not bind-mounted**, see [README](README.md) |
 | Config root in image | `/etc/euro-office/` (ONLYOFFICE uses `/etc/onlyoffice/`) |
 
@@ -32,7 +32,7 @@ ONLYOFFICE page.
 
 ```bash
 docker compose -f docker-compose.office.yml --profile eurooffice up -d
-docker inspect docudesk-eurooffice --format '{{.State.Health.Status}}'   # want: healthy
+docker inspect filinq-eurooffice --format '{{.State.Health.Status}}'   # want: healthy
 ```
 
 First boot takes 2–4 minutes; its nginx answers **502** until the backend is up.
@@ -91,7 +91,7 @@ Each produced a **500** with a different cause, and none is obvious from the err
 docker exec nextcloud php occ config:app:set eurooffice DocumentServerUrl \
     --value="http://localhost:8093/"          # BROWSER -> server
 docker exec nextcloud php occ config:app:set eurooffice DocumentServerInternalUrl \
-    --value="http://docudesk-eurooffice/"     # NEXTCLOUD -> server
+    --value="http://filinq-eurooffice/"     # NEXTCLOUD -> server
 docker exec nextcloud php occ config:app:set eurooffice StorageUrl \
     --value="http://nextcloud/"               # SERVER -> NEXTCLOUD
 ```
@@ -105,7 +105,7 @@ reachable from nextcloud                   PASS  HTTP 302
 WOPI discovery                             PASS  200 at /hosting/discovery
 conversion (docx->odt)                     PASS  ok at /ConvertService.ashx (json/url)
 self-report (/healthcheck)                 ----  true
-docudesk:office:probe                      ----  eurooffice available at /hosting/discovery
+filinq:office:probe                      ----  eurooffice available at /hosting/discovery
 ```
 
 **In the browser:** `/index.php/apps/eurooffice/<fileId>` opens the document with the

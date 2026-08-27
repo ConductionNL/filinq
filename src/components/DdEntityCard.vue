@@ -27,7 +27,7 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 			<span class="dd-entity-card__count">{{ item.count }}x</span>
 		</div>
 		<div class="dd-entity-card__value" :title="item.value || ''">
-			{{ item.value || t('docudesk', 'Unknown value') }}
+			{{ item.value || t('filinq', 'Unknown value') }}
 		</div>
 		<div class="dd-entity-card__value dd-entity-card__value--hidden">
 			{{ item.placeholder }}
@@ -62,7 +62,7 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 				type="checkbox"
 				class="dd-entity-card__checkbox"
 				:checked="item.included"
-				:aria-label="t('docudesk', 'Include in anonymisation')"
+				:aria-label="t('filinq', 'Include in anonymisation')"
 				:disabled="
 					!!(item.prohibitionMatch && item.prohibitionMatch.highConfidence)
 				"
@@ -93,8 +93,8 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 				label="label"
 				:reduce="(o) => o.value"
 				:multiple="true"
-				:inputLabel="t('docudesk', 'Grondslagen')"
-				:placeholder="t('docudesk', 'Pick grondslagen…')"
+				:inputLabel="t('filinq', 'Grondslagen')"
+				:placeholder="t('filinq', 'Pick grondslagen…')"
 				:disabled="!editable || !hasRelation"
 				@update:modelValue="$emit('set-bases', $event)" />
 		</div>

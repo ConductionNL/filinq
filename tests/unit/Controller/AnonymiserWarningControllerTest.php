@@ -4,7 +4,7 @@
  * Unit tests for AnonymiserWarningController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,10 +17,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\AppInfo\Application;
-use OCA\DocuDesk\Controller\AnonymiserWarningController;
+use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Controller\AnonymiserWarningController;
 use OCP\IConfig;
 use OCP\IRequest;
 use OCP\IUser;
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * Unit tests for AnonymiserWarningController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl

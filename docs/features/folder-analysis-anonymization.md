@@ -58,7 +58,7 @@ import { getFilePickerBuilder, FilePickerType } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
-const picker = getFilePickerBuilder(t('docudesk', 'Select folder to analyze'))
+const picker = getFilePickerBuilder(t('filinq', 'Select folder to analyze'))
   .setMultiSelect(false)
   .setType(FilePickerType.Choose)
   .allowDirectories(true)
@@ -67,7 +67,7 @@ const picker = getFilePickerBuilder(t('docudesk', 'Select folder to analyze'))
 const [folder] = await picker.pick()
 
 const { data } = await axios.post(
-  generateUrl('/apps/docudesk/api/anonymization/batch/folder'),
+  generateUrl('/apps/filinq/api/anonymization/batch/folder'),
   { folderId: folder.fileid }
 )
 
@@ -149,7 +149,7 @@ Anonymized files are saved in a **dedicated subfolder** under the source folder 
     letter.docx           (anonymized copy)
 ```
 
-The subfolder name defaults to `anonymised` and is tenant-configurable via the admin settings (config key `docudesk.anonymisation.output_subfolder_name`). See the [batch anonymization docs](batch-anonymization.md) for shared configuration details.
+The subfolder name defaults to `anonymised` and is tenant-configurable via the admin settings (config key `filinq.anonymisation.output_subfolder_name`). See the [batch anonymization docs](batch-anonymization.md) for shared configuration details.
 
 Original files are never modified.
 
@@ -173,6 +173,6 @@ Batch state is stored in Nextcloud's distributed cache with a 2-hour TTL. The TT
 
 | Setting | Key | Default |
 |---------|-----|---------|
-| Maximum files per batch | `docudesk_batch_max_files` | 100 |
+| Maximum files per batch | `filinq_batch_max_files` | 100 |
 
 Configurable by admins via IAppConfig.

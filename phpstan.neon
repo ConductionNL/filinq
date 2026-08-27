@@ -1,4 +1,4 @@
-# DocuDesk — Conduction PHPStan config.
+# Filinq — Conduction PHPStan config.
 #
 # The shared base is the single source of truth. Everything here is either the
 # app's own tracked debt or an ignore naming a symbol that exists in no other
@@ -23,7 +23,7 @@ parameters:
 
     scanFiles:
         # AppHost generic preferences controller stub, so the thin
-        # OCA\DocuDesk\Controller\PreferencesController subclass resolves its
+        # OCA\Filinq\Controller\PreferencesController subclass resolves its
         # parent during static analysis when the openregister sibling app is
         # absent from the analysis path. PHPStan refuses to let an
         # "extends unknown class" error be silenced through ignoreErrors, and a
@@ -35,7 +35,7 @@ parameters:
         # OpenRegister's MCP contracts (ADR-063 chain 3/3), for the same reason:
         # PHPStan refuses to silence "implements unknown interface" through
         # ignoreErrors and points at excludePaths, which would stop analysing
-        # DocudeskScannableServices entirely. The stub also type-checks the named
+        # FilinqScannableServices entirely. The stub also type-checks the named
         # arguments every #[McpTool] declaration passes.
         - tests/stubs/openregister-mcp.stub.php
 
@@ -64,3 +64,18 @@ parameters:
         # fail under quota / locked-file conditions and we'd rather emit a typed
         # ConversionFailedException than crash the cascade.
         - '#Strict comparison using === between true and false will always evaluate to false#'
+        # RenameDutchColumns::hasCollision() refuses to migrate when two mapped
+        # sources target one destination. COLUMN_MAP currently holds a single
+        # entry ('zaak_id' => 'case_id'), so PHPStan can prove $sources is 0|1 and
+        # calls `$sources > 1` always false — correct today, and the guard is
+        # still the thing that makes adding a second mapping safe.
+        #
+        # NOT deleted, deliberately: this is a destructive ALTER TABLE path, and
+        # the guard's whole value is that it already exists on the day someone
+        # adds a colliding entry. Scoped to the one file so it cannot mask the
+        # same shape elsewhere; delete this ignore when COLUMN_MAP gains a second
+        # entry, because the error will stop firing on its own.
+        -
+            message: '#Comparison operation ">" between 0\|1 and 1 is always false#'
+            identifier: greater.alwaysFalse
+            path: lib/Repair/RenameDutchColumns.php

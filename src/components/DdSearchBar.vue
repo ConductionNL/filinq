@@ -24,7 +24,7 @@
 
 <script>
 /**
- * Reusable search input for DocuDesk.
+ * Reusable search input for Filinq.
  *
  * - v-model on the search query string.
  * - Optional clear button (X) when there is a value.

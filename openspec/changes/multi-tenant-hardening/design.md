@@ -19,7 +19,7 @@ Verified at HEAD:
   mandates OR Organisation as the tenant identity; ADR-022 mandates consuming
   OR abstractions rather than duplicating authz. A hydra grep gate flags new
   `Tenant*` classes outside openregister.
-- **DocuDesk opts out today**: 29 call sites in 8 `lib/Service/**` files pass
+- **Filinq opts out today**: 29 call sites in 8 `lib/Service/**` files pass
   `_rbac: false` and/or `_multitenancy: false` (inventory below).
   `MetadataService.php:203` carries the precedent comment: "Security (C2):
   `_rbac:false` / `_multitenancy:false` removed — OR's" — i.e. one service was
@@ -28,12 +28,12 @@ Verified at HEAD:
   accept any authenticated session and force both flags off, so any user in
   any tenant reads and overwrites any consent decision.
 - **Settings are instance-global**: `publication_objection_period_days`,
-  `docudesk_woo_entity_profiles` (WOO anonymization profile,
+  `filinq_woo_entity_profiles` (WOO anonymization profile,
   `WooProfileService`) and all toggles live in IAppConfig
   (`admin-settings` spec, `batch-anonymization` REQ on profiles).
 - **Templates/huisstijl/dossiers/signing/batches are OR objects** across five
   registers (`consent`, `signing`, `templates`, `document`, `dossier` —
-  verified in `lib/Settings/docudesk_register.json`), so organisation
+  verified in `lib/Settings/filinq_register.json`), so organisation
   stamping and read-filtering come from OR's envelope (`@self.organisation`),
   not from schema properties. The Vue frontend reads most collections through
   OR's object API (`useObjectStore`), which applies RBAC + multitenancy
@@ -61,7 +61,7 @@ time.
 
 **Goals**
 
-1. Every DocuDesk object family is organisation-scoped by OR enforcement:
+1. Every Filinq object family is organisation-scoped by OR enforcement:
    shared-nothing between organisations on one instance.
 2. Close the tenant-isolation dimension of GH #283.
 3. Per-organisation template library + branding (huisstijl).
@@ -72,7 +72,7 @@ time.
 
 **Non-Goals**
 
-- No organisation management UI or lifecycle logic in DocuDesk (OR-owned).
+- No organisation management UI or lifecycle logic in Filinq (OR-owned).
 - No cross-organisation sharing model.
 - No app-local tenant schema, service, middleware or controller (hydra
   tenant anti-pattern gate would flag it).
@@ -84,9 +84,9 @@ time.
 ### D1 — Tenant identity: the OR Organisation UUID, via OR's envelope
 
 An organisation **is** an OR Organisation; its UUID is the only tenant
-identifier DocuDesk ever handles. Objects carry it in OR's own envelope
+identifier Filinq ever handles. Objects carry it in OR's own envelope
 (`@self.organisation`), stamped by OR from the creator's active organisation
-(`getOrganisationForNewEntity()`). DocuDesk adds **no** `organisation`
+(`getOrganisationForNewEntity()`). Filinq adds **no** `organisation`
 property to any schema and never writes the stamp itself — schema-level
 tenant fields are exactly the anti-pattern `tenant-fleet-wide-consumption`
 forbids, and a writable field would let a client forge its tenant.
@@ -118,7 +118,7 @@ The success criterion is grep-shaped on purpose: zero bypass flags outside
 the seam. This mirrors the C2 fix already applied to `MetadataService`.
 
 Rejected: keeping silent per-call bypasses "where tests fail" (that is the
-defect); a DocuDesk middleware re-implementing org checks (ADR-022 violation
+defect); a Filinq middleware re-implementing org checks (ADR-022 violation
 — OR's provider is the authz rule).
 
 ### D3 — Per-organisation template library + branding are OR-scoping, not new features
@@ -148,7 +148,7 @@ already carries the instance-shaped objects `huisstijl`,
 |---|---|---|
 | `name` | string | Display label (defaults to the organisation name) |
 | `consentPeriodDays` | integer, 1–365, nullable | WOO objection period override; null = inherit instance default |
-| `anonymizationProfile` | object, nullable | WOO entity-category profile override (same shape as `docudesk_woo_entity_profiles`: `anonymize[]` / `keepVisible[]`) |
+| `anonymizationProfile` | object, nullable | WOO entity-category profile override (same shape as `filinq_woo_entity_profiles`: `anonymize[]` / `keepVisible[]`) |
 | `defaultHuisstijl` | string (uuid ref to `huisstijl`), nullable | Branding used by generation when set |
 | `notes` | string, nullable | Free-text admin context |
 
@@ -170,7 +170,7 @@ support model can't carry.
 Rejected: JSON-encoded per-org maps inside IAppConfig (unscoped, unauditable,
 invisible to OR RBAC); a settings bag on OR's Organisation entity (OR's
 entity is fleet-shared master data — app-specific keys don't belong there,
-and DocuDesk may not modify OR).
+and Filinq may not modify OR).
 
 ### D5 — Organisation-scoped dashboards and reports
 
@@ -185,9 +185,9 @@ is labelled "all organisations".
 
 ### D6 — Legacy rows: backfill to the default organisation
 
-Objects created before OR stamped organisations (or while DocuDesk forced
+Objects created before OR stamped organisations (or while Filinq forced
 `_multitenancy:false` writes) may carry a null/foreign organisation. A
-one-time repair step backfills **DocuDesk-owned** objects with a null
+one-time repair step backfills **Filinq-owned** objects with a null
 organisation stamp to OR's default organisation
 (`getDefaultOrganisationUuid()`), so they stay visible to the incumbent
 (single-tenant) user base instead of vanishing when enforcement turns on.
@@ -208,7 +208,7 @@ per schema. Multi-org instances review the log and reassign via OR tooling.
 
 ## Declarative-vs-imperative decision (ADR-031)
 
-Isolation is **not implemented in DocuDesk at all** — it is OR's declarative
+Isolation is **not implemented in Filinq at all** — it is OR's declarative
 enforcement, un-bypassed. The only imperative additions are the settings
 resolution helper (pure function over two lookups), the system-context seam
 (a guarded wrapper), and the one-time backfill. No new controller duplicates
@@ -219,7 +219,7 @@ service write path.
 
 ## Seed Data
 
-Shipped in `docudesk_register.json` `objects[]` (placeholder identifiers
+Shipped in `filinq_register.json` `objects[]` (placeholder identifiers
 only, nil-UUID pattern so fixtures can never collide with live data):
 
 ```json

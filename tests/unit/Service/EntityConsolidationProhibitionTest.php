@@ -14,7 +14,7 @@
  *   - backward compatibility: pre-change fields unchanged
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -30,12 +30,12 @@
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-6
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\BasesResolverService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\PolicyMatchService;
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Service\BasesResolverService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -51,7 +51,7 @@ use Psr\Log\LoggerInterface;
  * per test to simulate different prohibition rule scenarios and dossier states.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl

@@ -4,7 +4,7 @@
  * Unit tests for ConsentService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,16 +20,16 @@
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-6
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Exception\PolicyRejectedException;
-use OCA\DocuDesk\Service\ConsentNotesHelper;
-use OCA\DocuDesk\Service\ConsentRecordWriter;
-use OCA\DocuDesk\Service\ConsentScopeValidator;
-use OCA\DocuDesk\Service\ConsentService;
-use OCA\DocuDesk\Service\ConsentUpdateHandler;
-use OCA\DocuDesk\Service\ObjectionDeadlineChecker;
-use OCA\DocuDesk\Service\PolicyMatchService;
+use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Service\ConsentNotesHelper;
+use OCA\Filinq\Service\ConsentRecordWriter;
+use OCA\Filinq\Service\ConsentScopeValidator;
+use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\ConsentUpdateHandler;
+use OCA\Filinq\Service\ObjectionDeadlineChecker;
+use OCA\Filinq\Service\PolicyMatchService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -44,10 +44,10 @@ use Psr\Log\LoggerInterface;
  * rejection, and the validatePublicationConsentData scope rules.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  *

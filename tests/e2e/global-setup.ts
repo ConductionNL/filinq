@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Playwright globalSetup — logs into Nextcloud once and persists the
@@ -21,15 +21,15 @@ import { resolveBaseUrl } from './base-url'
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
 const APP_ROOT = path.resolve(__dirname, '..', '..')
-const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'docudesk-main.js')
+const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'filinq-main.js')
 
 /**
- * Ensure the webpack bundle exists before specs hit `/apps/docudesk/`.
+ * Ensure the webpack bundle exists before specs hit `/apps/filinq/`.
  *
  * On CI this is a HARD ERROR, not something to repair. The shared
  * `ConductionNL/.github/quality.yml` Playwright job now has a dedicated
  * "Build app frontend" step (`npm run build`) that runs before the specs,
- * so by the time we get here a missing `js/docudesk-main.js` means that
+ * so by the time we get here a missing `js/filinq-main.js` means that
  * step did not produce one. Silently rebuilding here would turn a broken
  * build into a green run with nothing to show for it.
  *
@@ -42,7 +42,7 @@ const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'docudesk-main.js')
  *
  * Locally the rebuild stays, because there it is a genuine convenience: the
  * dev container typically mounts a *separate* checkout into
- * `custom_apps/docudesk` and serves that build, and a fresh checkout has no
+ * `custom_apps/filinq` and serves that build, and a fresh checkout has no
  * `js/` at all with nothing else to build it.
  */
 function ensureBundleBuilt(): void {
@@ -208,12 +208,12 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	// state so CnSupportDialog never auto-opens during a spec.
 	//
 	// `_helpers.ts:dismissOverlays()` already CLOSES this dialog, and that is
-	// why DocuDesk's suite is currently clean — but closing it is inherently
+	// why Filinq's suite is currently clean — but closing it is inherently
 	// racy and only reactive. CnAppRoot calls
 	// `useSupportDialog(appId, { persistence: 'server' })`
 	// (nextcloud-vue CnAppRoot.vue:1297); in server mode `visible` starts FALSE
 	// and only flips true once
-	// `GET /apps/docudesk/api/preferences/support-dialog-seen` RESOLVES — i.e.
+	// `GET /apps/filinq/api/preferences/support-dialog-seen` RESOLVES — i.e.
 	// asynchronously, at an arbitrary point that can land AFTER dismissOverlays
 	// has run and a spec has started clicking. The modal then mounts a
 	// full-viewport `.modal-mask` that swallows pointer events and the click
@@ -224,17 +224,17 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	// run 31167878145 (`1 flaky`, call log naming
 	// `data-testid-modal="cn-support-dialog" … subtree intercepts pointer
 	// events`). globalSetup here never visits an app page, so the flag was
-	// never in admin.json and the dialog was armed on every spec — DocuDesk has
+	// never in admin.json and the dialog was armed on every spec — Filinq has
 	// simply been winning the race so far.
 	//
 	// `resolveServerVisibility()` checks the local flag FIRST and returns early
 	// when it reads exactly '1' (useSupportDialog.js `hasRealFlag`), so seeding
 	// it means the dialog is never scheduled at all. dismissOverlays() stays as
 	// the fallback. No spec asserts on CnSupportDialog — it is an nc-vue
-	// one-time nag unrelated to any DocuDesk scenario — so nothing is weakened.
+	// one-time nag unrelated to any Filinq scenario — so nothing is weakened.
 	await page.evaluate(() => {
 		try {
-			window.localStorage.setItem('cn-support-dialog-shown:docudesk', '1')
+			window.localStorage.setItem('cn-support-dialog-shown:filinq', '1')
 		} catch (e) {
 			/* private mode / quota — the dismissOverlays fallback still applies */
 		}

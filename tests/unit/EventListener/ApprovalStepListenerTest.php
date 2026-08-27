@@ -3,16 +3,16 @@
 /**
  * Unit tests for ApprovalStepListener
  *
- * Verifies the OR ApprovalStep* → docudesk Signer*Event bridge: ownership
+ * Verifies the OR ApprovalStep* → filinq Signer*Event bridge: ownership
  * filtering, typed-event re-emission, and provider invocation on the
  * step-pending transitions.
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\EventListener
+ * @package   OCA\Filinq\Tests\Unit\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,16 +22,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\EventListener;
+namespace OCA\Filinq\Tests\Unit\EventListener;
 
-use OCA\DocuDesk\Event\SignerChainCompletedEvent;
-use OCA\DocuDesk\Event\SignerStepApprovedEvent;
-use OCA\DocuDesk\Event\SignerStepPendingEvent;
-use OCA\DocuDesk\Event\SignerStepRejectedEvent;
-use OCA\DocuDesk\EventListener\ApprovalStepListener;
-use OCA\DocuDesk\EventListener\SignerEventTranslator;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
-use OCA\DocuDesk\Service\Signing\SigningProviderInterface;
+use OCA\Filinq\Event\SignerChainCompletedEvent;
+use OCA\Filinq\Event\SignerStepApprovedEvent;
+use OCA\Filinq\Event\SignerStepPendingEvent;
+use OCA\Filinq\Event\SignerStepRejectedEvent;
+use OCA\Filinq\EventListener\ApprovalStepListener;
+use OCA\Filinq\EventListener\SignerEventTranslator;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Service\Signing\SigningProviderInterface;
 use OCA\OpenRegister\Db\ApprovalChain;
 use OCA\OpenRegister\Db\ApprovalStep;
 use OCA\OpenRegister\Event\ApprovalStepApprovedEvent;
@@ -48,10 +48,10 @@ use Psr\Log\LoggerInterface;
  * Tests for ApprovalStepListener.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\EventListener
+ * @package  OCA\Filinq\Tests\Unit\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 final class ApprovalStepListenerTest extends TestCase {
 
@@ -63,7 +63,7 @@ final class ApprovalStepListenerTest extends TestCase {
 	private SigningProviderFactory $providerFactory;
 
 	/**
-	 * Dispatcher mock used for re-emitting typed docudesk events.
+	 * Dispatcher mock used for re-emitting typed filinq events.
 	 *
 	 * @var IEventDispatcher&MockObject
 	 */
@@ -91,7 +91,7 @@ final class ApprovalStepListenerTest extends TestCase {
 	private ApprovalStepListener $listener;
 
 	/**
-	 * Configure mocks for the docudesk signing-request slugs.
+	 * Configure mocks for the filinq signing-request slugs.
 	 *
 	 * @return void
 	 */
@@ -105,8 +105,8 @@ final class ApprovalStepListenerTest extends TestCase {
 
 		$this->config->method('getValueString')->willReturnMap(
 			[
-				['docudesk', 'signingRequest_register', '', 'docudesk'],
-				['docudesk', 'signingRequest_schema', '', 'signingRequest'],
+				['filinq', 'signingRequest_register', '', 'filinq'],
+				['filinq', 'signingRequest_schema', '', 'signingRequest'],
 			]
 		);
 
@@ -123,19 +123,19 @@ final class ApprovalStepListenerTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * Build a docudesk-owned ApprovalChain.
+	 * Build a filinq-owned ApprovalChain.
 	 *
 	 * @return ApprovalChain
 	 */
-	private function makeDocudeskChain(): ApprovalChain {
+	private function makeFilinqChain(): ApprovalChain {
 		$chain = new ApprovalChain();
 		$chain->setId(101);
 		$chain->setUuid('chain-101');
-		$chain->setRegisterSlug('docudesk');
+		$chain->setRegisterSlug('filinq');
 		$chain->setSchemaSlug('signingRequest');
 
 		return $chain;
-	}//end makeDocudeskChain()
+	}//end makeFilinqChain()
 
 	/**
 	 * Build a step.
@@ -151,20 +151,20 @@ final class ApprovalStepListenerTest extends TestCase {
 		$step->setChainId(101);
 		$step->setObjectUuid($objectUuid);
 		$step->setStepOrder($order);
-		$step->setRole('docudesk-signers');
+		$step->setRole('filinq-signers');
 		$step->setStatus('pending');
 
 		return $step;
 	}//end makeStep()
 
 	/**
-	 * An initiated event on a docudesk chain dispatches SignerStepPendingEvent
+	 * An initiated event on a filinq chain dispatches SignerStepPendingEvent
 	 * and invokes the active provider.
 	 *
 	 * @return void
 	 */
-	public function testInitiatedOnDocudeskChainDispatchesAndInvokesProvider(): void {
-		$chain = $this->makeDocudeskChain();
+	public function testInitiatedOnFilinqChainDispatchesAndInvokesProvider(): void {
+		$chain = $this->makeFilinqChain();
 		$step = $this->makeStep(order: 1);
 
 		$provider = $this->createMock(SigningProviderInterface::class);
@@ -180,7 +180,7 @@ final class ApprovalStepListenerTest extends TestCase {
 		$event = new ApprovalStepInitiatedEvent(chain: $chain, step: $step, objectUuid: 'sign-req-1');
 		$this->listener->handle($event);
 
-	}//end testInitiatedOnDocudeskChainDispatchesAndInvokesProvider()
+	}//end testInitiatedOnFilinqChainDispatchesAndInvokesProvider()
 
 	/**
 	 * Events for foreign chains (different register/schema) are ignored.
@@ -209,7 +209,7 @@ final class ApprovalStepListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testApprovedWithNextStepDispatchesAndInvokesProvider(): void {
-		$chain = $this->makeDocudeskChain();
+		$chain = $this->makeFilinqChain();
 		$step = $this->makeStep(order: 1);
 		$nextStep = $this->makeStep(order: 2);
 
@@ -250,7 +250,7 @@ final class ApprovalStepListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testApprovedAsFinalStepDoesNotInvokeProvider(): void {
-		$chain = $this->makeDocudeskChain();
+		$chain = $this->makeFilinqChain();
 		$step = $this->makeStep(order: 2);
 
 		$this->providerFactory->expects($this->never())->method('getActiveProvider');
@@ -282,7 +282,7 @@ final class ApprovalStepListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRejectedDispatchesAndDoesNotInvokeProvider(): void {
-		$chain = $this->makeDocudeskChain();
+		$chain = $this->makeFilinqChain();
 		$step = $this->makeStep(order: 1);
 
 		$this->providerFactory->expects($this->never())->method('getActiveProvider');
@@ -313,7 +313,7 @@ final class ApprovalStepListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testCompletedDispatchesChainCompletedEvent(): void {
-		$chain = $this->makeDocudeskChain();
+		$chain = $this->makeFilinqChain();
 		$finalStep = $this->makeStep(order: 3);
 
 		$this->providerFactory->expects($this->never())->method('getActiveProvider');
@@ -362,7 +362,7 @@ final class ApprovalStepListenerTest extends TestCase {
 		$this->dispatcher->expects($this->never())->method('dispatchTyped');
 
 		$event = new ApprovalStepInitiatedEvent(
-			chain: $this->makeDocudeskChain(),
+			chain: $this->makeFilinqChain(),
 			step: $this->makeStep(order: 1),
 			objectUuid: 'sign-req-1'
 		);
@@ -388,7 +388,7 @@ final class ApprovalStepListenerTest extends TestCase {
 		$this->dispatcher->expects($this->once())->method('dispatchTyped');
 
 		$event = new ApprovalStepInitiatedEvent(
-			chain: $this->makeDocudeskChain(),
+			chain: $this->makeFilinqChain(),
 			step: $this->makeStep(order: 1),
 			objectUuid: 'sign-req-1'
 		);

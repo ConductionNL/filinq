@@ -4,7 +4,7 @@
  * Unit tests for BatchAnonymizationController bases-passthrough validation
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,23 +12,23 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\BatchAnonymizationController;
-use OCA\DocuDesk\Service\BatchAnonymizeService;
-use OCA\DocuDesk\Service\BatchExtractionService;
-use OCA\DocuDesk\Service\BatchReportService;
-use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\BatchUploadService;
-use OCA\DocuDesk\Service\EntityConsolidationService;
-use OCA\DocuDesk\Service\FolderBatchService;
-use OCA\DocuDesk\Service\WooProfileService;
+use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchExtractionService;
+use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\BatchUploadService;
+use OCA\Filinq\Service\EntityConsolidationService;
+use OCA\Filinq\Service\FolderBatchService;
+use OCA\Filinq\Service\WooProfileService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -42,10 +42,10 @@ use Psr\Log\LoggerInterface;
  * Tests that batchAnonymize validates per-entity bases[] per the spec
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -96,7 +96,7 @@ class BatchAnonymizationControllerBasesTest extends TestCase {
 		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
 		$this->controller = new BatchAnonymizationController(
-			appName: 'docudesk',
+			appName: 'filinq',
 			request: $this->mockRequest,
 			logger: $this->createMock(LoggerInterface::class),
 			stateService: $this->createMock(BatchStateService::class),
@@ -117,7 +117,7 @@ class BatchAnonymizationControllerBasesTest extends TestCase {
 	/**
 	 * Stray non-array `bases` field on a payload entry is silently ignored — succeeds.
 	 *
-	 * Per spec.md (post-explore-mode rework 2026-05-12): DocuDesk MUST ignore any
+	 * Per spec.md (post-explore-mode rework 2026-05-12): Filinq MUST ignore any
 	 * `bases` field that erroneously appears on incoming payload entries (do NOT 400).
 	 * Bases are set per-relation via OR's own PATCH endpoint, not validated here.
 	 *

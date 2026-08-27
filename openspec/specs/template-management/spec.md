@@ -13,7 +13,7 @@ retrofit_extensions:
 **Status**: in-progress
 **OpenSpec changes**:
 - [office-template-authoring](../../changes/office-template-authoring/) _(active)_ — office-file-native templates: `templateType`/source-file data-model extension (REQ-DDOTA-006) and versioning/lock/preview/duplicate parity for office templates (REQ-DDOTA-007) (kind: code)
-- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — adds the `wizardDefinition` schema to the templates register (guided-interview definitions fronting a template by `templateId`; the `template`/`templateVersion` data model is unchanged) — full requirements live in the `guided-document-wizard` capability (REQ-DDGDW-*) (kind: code)
+- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — adds the `wizardDefinition` schema to the `filinq` register (guided-interview definitions fronting a template by `templateId`; the `template`/`templateVersion` data model is unchanged) — full requirements live in the `guided-document-wizard` capability (REQ-DDGDW-*) (kind: code)
 
 ## Purpose
 
@@ -23,7 +23,7 @@ retrofit_extensions:
 
   The removed reason read:
 
-    "template management has no dedicated DocuDesk UI — templates are managed
+    "template management has no dedicated Filinq UI — templates are managed
      via REST API or TemplateService DI injection from consumer apps; API
      behavior covered by PHPUnit service and controller tests"
 
@@ -66,7 +66,7 @@ Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister
 Templates are stored as OpenRegister objects with defined properties for name, content, namespace, and page configuration.
 
 #### Scenario: Template schema in OpenRegister
-- GIVEN DocuDesk boots and imports docudesk_register.json
+- GIVEN Filinq boots and imports filinq_register.json
 - WHEN the template schema is created
 - THEN it contains properties: name, description, content, namespace, format, orientation
 - AND the schema is searchable
@@ -85,7 +85,7 @@ Templates are stored as OpenRegister objects with defined properties for name, c
 |----|------------|----------|--------|
 | TMPL-001 | Templates stored as OpenRegister objects in template schema | MUST | Implemented |
 | TMPL-002 | Properties: name (required), description, content (required, HTML), namespace (required, facetable), format (A4/A3/Letter/Legal), orientation (P/L) | MUST | Implemented |
-| TMPL-003 | Schema in docudesk_register.json, imported on boot | MUST | Implemented |
+| TMPL-003 | Schema in filinq_register.json, imported on boot | MUST | Implemented |
 | TMPL-004 | Schema is searchable | MUST | Implemented |
 
 ### Requirement: Template CRUD API (REQ-TMPL-02)
@@ -202,7 +202,7 @@ TemplateService is injectable via DI, enabling other Nextcloud apps to manage te
 | TMPL-033 | `updateTemplate(id, data)` with namespace immutability | MUST | Implemented |
 | TMPL-034 | `deleteTemplate(id)` by UUID | MUST | Implemented |
 | TMPL-035 | `getTemplatesByNamespace(namespace)` convenience method | MUST | Implemented |
-| TMPL-036 | Injectable via DI: `OCA\DocuDesk\Service\TemplateService::class` | MUST | Implemented |
+| TMPL-036 | Injectable via DI: `OCA\Filinq\Service\TemplateService::class` | MUST | Implemented |
 
 ### Requirement: OpenRegister Integration (REQ-TMPL-05)
 
@@ -210,10 +210,12 @@ TemplateService is injectable via DI, enabling other Nextcloud apps to manage te
 
 TemplateService resolves register and schema configuration via OpenRegisterResolver and uses ObjectService for all data operations.
 
+@e2e exclude Internal service wiring (resolver lookup, RuntimeException when OpenRegister is absent, namespace-validation delegation) with no rendered surface; asserted by PHPUnit tests/unit/Service/OpenRegisterResolverTest.php and tests/unit/Service/TemplateServiceTest.php
+
 #### Scenario: Register/schema resolution
 - GIVEN TemplateService needs to perform a CRUD operation
 - WHEN `OpenRegisterResolver::getRegisterAndSchema()` is called
-- THEN the configured template register and schema IDs are returned
+- THEN the configured `filinq` register and schema IDs are returned
 - AND these are used for all ObjectService calls
 
 #### Scenario: OpenRegister unavailable
@@ -268,6 +270,8 @@ Template listing supports search, filtering, and pagination via OpenRegister's q
 
 Template objects from OpenRegister are consistently serialized for API responses.
 
+@e2e exclude PHP serialization internals (jsonSerialize() dispatch, array cast of non-object results, results/total envelope) invisible above the API boundary; asserted by PHPUnit tests/unit/Service/TemplateServiceTest.php
+
 #### Scenario: JSON serialization of OpenRegister objects
 - GIVEN an OpenRegister object is returned from a query
 - WHEN the object has a jsonSerialize() method
@@ -306,7 +310,7 @@ Template objects from OpenRegister are consistently serialized for API responses
 
 ### Templates Register Schemas
 
-The `templates` register (`lib/Settings/docudesk_register.json`) is the single
+The `filinq` register (`lib/Settings/filinq_register.json`) is the single
 source of truth for template-related schemas. It contains:
 
 | Schema | Owning capability | Purpose |
@@ -332,7 +336,7 @@ source of truth for template-related schemas. It contains:
 - **OpenRegister ObjectService**: CRUD operations on template objects
 - **OpenRegisterResolver**: Register/schema configuration and namespace validation
 - **TemplatesController**: REST API layer
-- **docudesk_register.json**: Template schema definition
+- **filinq_register.json**: Template schema definition
 
 ### Current Implementation Status
 - **Fully implemented** with file paths:
@@ -340,7 +344,7 @@ source of truth for template-related schemas. It contains:
   - `lib/Service/OpenRegisterResolver.php` -- register/schema resolution and namespace validation
   - `lib/Controller/TemplatesController.php` -- REST API endpoints
   - `lib/Controller/TemplateRequestHandler.php` -- request handling delegation
-  - `lib/Settings/docudesk_register.json` -- template schema definition
+  - `lib/Settings/filinq_register.json` -- template schema definition
   - `appinfo/routes.php` -- full CRUD routes
 - **No dedicated UI**: Templates managed via REST API or TemplateService DI
 
@@ -359,7 +363,7 @@ observed behavior — see Notes sections for surfaced ambiguities.
 
 ### REQ-TMPL-08: Template Version Snapshotting and Retrieval
 
-DocuDesk SHALL persist a versioned snapshot of every template each time its content changes and SHALL expose those snapshots via a paginated history endpoint plus a per-version restore endpoint.
+Filinq SHALL persist a versioned snapshot of every template each time its content changes and SHALL expose those snapshots via a paginated history endpoint plus a per-version restore endpoint.
 
 Snapshots are stored as OpenRegister objects in the version register/schema returned by `OpenRegisterResolver::getVersionRegisterAndSchema()`. Each snapshot carries `templateId`, an integer `version` number, the captured `content`, `name`, `description`, `format`, `orientation`, the `editor` user id, and an optional `changelog` note. The next version number for a template is computed as `total existing versions + 1`. Restoring a version first writes an auto-snapshot of the current state (with a changelog `"Auto-saved before restore to version <N>"`) and then overwrites the template's content/name/description/format/orientation with the target version's fields via `TemplateService::updateTemplateWithoutVersion()` so the restore itself does not produce a duplicate snapshot.
 
@@ -394,9 +398,11 @@ Snapshots are stored as OpenRegister objects in the version register/schema retu
 
 ### REQ-TMPL-09: Template Version Diff Retrieval
 
-DocuDesk SHALL return both source and target version objects for client-side diff rendering, leaving the actual diff computation to the consumer.
+Filinq SHALL return both source and target version objects for client-side diff rendering, leaving the actual diff computation to the consumer.
 
-The diff endpoint is intentionally thin: the server fetches both versions and returns them under `from` / `to` keys; clients (e.g. the DocuDesk template editor UI) compute the visual diff against the two `content` blobs.
+The diff endpoint is intentionally thin: the server fetches both versions and returns them under `from` / `to` keys; clients (e.g. the Filinq template editor UI) compute the visual diff against the two `content` blobs.
+
+@e2e exclude GET /api/templates/{id}/versions/diff has no frontend caller today (the only diff view, src/views/comparison/ComparisonView.vue, calls /api/comparison/compare instead); the response shape and its 400/404 paths are asserted by PHPUnit tests/unit/Controller/TemplateVersionsControllerTest.php and tests/unit/Service/TemplateVersionServiceTest.php
 
 #### Scenario: Diff requires both endpoints
 
@@ -420,7 +426,7 @@ The diff endpoint is intentionally thin: the server fetches both versions and re
 
 ### REQ-TMPL-10: Template Duplication
 
-DocuDesk SHALL provide a single-call template duplication endpoint that creates a new template object with the same content and metadata but a fresh UUID and an empty version history.
+Filinq SHALL provide a single-call template duplication endpoint that creates a new template object with the same content and metadata but a fresh UUID and an empty version history.
 
 The duplicated template name is the original name with the literal Dutch suffix `" (kopie)"` appended. `namespace`, `format`, `orientation`, `category`, and `tags` are preserved verbatim; `description` and `content` are copied. `lockedBy` / `lockedAt` and version-history snapshots are NOT copied — the duplicate starts unlocked with zero history.
 
@@ -451,7 +457,7 @@ The duplicated template name is the original name with the literal Dutch suffix 
 
 ### REQ-TMPL-11: Template Edit Lock Acquire and Release
 
-DocuDesk SHALL provide an opt-in edit-lock mechanism per template, allowing a single user to claim exclusive edit rights for a bounded TTL and to release the lock when finished.
+Filinq SHALL provide an opt-in edit-lock mechanism per template, allowing a single user to claim exclusive edit rights for a bounded TTL and to release the lock when finished.
 
 A lock is represented by two fields on the template object: `lockedBy` (user id) and `lockedAt` (ISO-8601 timestamp). Locks expire after a fixed `LOCK_TIMEOUT_MINUTES = 15` window. Acquire is idempotent for the lock holder (it refreshes the timestamp) and steals an expired lock from any other holder. Release clears both fields and is restricted to the current holder (or anyone if the lock is already expired). Locking does not block reads, updates, or deletes at the persistence layer — it is an advisory cooperative lock that clients should honour.
 
@@ -499,9 +505,11 @@ A lock is represented by two fields on the template object: `lockedBy` (user id)
 
 ### REQ-TMPL-12: Shared Template Request Parsing and Error Response Helpers
 
-DocuDesk SHALL centralise list-parameter parsing, body-parameter parsing, and exception-to-JSON conversion for template controllers in a single `TemplateRequestHandler` so every endpoint exposes consistent paging, filtering, and error semantics.
+Filinq SHALL centralise list-parameter parsing, body-parameter parsing, and exception-to-JSON conversion for template controllers in a single `TemplateRequestHandler` so every endpoint exposes consistent paging, filtering, and error semantics.
 
 `parseListParams(IRequest)` reads `namespace`, `_search`, `_limit` (default 20), `_offset` (default 0) and returns `{filters: {namespace?, _search?}, limit: int, offset: int}` — only non-empty filters are included. `parseBodyParams(IRequest, stripKeys?)` returns the request param bag with the framework's `_route` key always removed and any caller-listed keys also stripped (e.g. `id` on update). `buildErrorResponse(Exception, prefix)` logs the exception with the given prefix and returns a `JSONResponse` whose status code is the exception's code when it falls in `[400, 600)` and `500` otherwise; the body is `{"error":"<exception message>"}`.
+
+@e2e exclude PHP helper internals on TemplateRequestHandler (parseListParams, parseBodyParams, buildErrorResponse) with no rendered surface; asserted by PHPUnit tests/unit/Controller/TemplateRequestHandlerTest.php
 
 #### Scenario: List-params parser keeps only non-empty filters
 

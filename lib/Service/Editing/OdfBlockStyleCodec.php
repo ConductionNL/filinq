@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk OdfBlockStyleCodec
+ * Filinq OdfBlockStyleCodec
  *
  * Block style for the ODF family (`.odt`).
  *
@@ -12,7 +12,7 @@
  * for a long time, and it is the whole of the difficulty.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -21,14 +21,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/document-rich-editing/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -48,9 +48,9 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 	 * @var array<string, string>
 	 */
 	private const ODF_ALIGNMENTS = [
-		'left'    => 'start',
-		'center'  => 'center',
-		'right'   => 'end',
+		'left' => 'start',
+		'center' => 'center',
+		'right' => 'end',
 		'justify' => 'justify',
 	];
 
@@ -81,8 +81,8 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 	 * before it did, converting a paragraph to a heading would have made the
 	 * block vanish from the next read.
 	 *
-	 * @param string $markup    The block markup.
-	 * @param array  $style     The style properties.
+	 * @param string $markup The block markup.
+	 * @param array $style The style properties.
 	 * @param string $styleName The automatic style name to mint.
 	 *
 	 * @return array{markup: string, automaticStyle: string|null} The rewritten block and its style.
@@ -120,7 +120,7 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 
 		$definition .= '</style:style>';
 
-        return [
+		return [
 			'markup' => $this->pointAtStyle(markup: $markup, styleName: $styleName),
 			'automaticStyle' => $definition,
 		];
@@ -196,7 +196,7 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 	 * Convert between `text:p` and `text:h` for the `heading` property.
 	 *
 	 * @param string $markup The block markup.
-	 * @param array  $style  The style properties.
+	 * @param array $style The style properties.
 	 *
 	 * @return string The rewritten markup.
 	 */
@@ -232,7 +232,7 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 	/**
 	 * Point a block at an automatic style, replacing any existing reference.
 	 *
-	 * @param string $markup    The block markup.
+	 * @param string $markup The block markup.
 	 * @param string $styleName The automatic style name.
 	 *
 	 * @return string The rewritten markup.

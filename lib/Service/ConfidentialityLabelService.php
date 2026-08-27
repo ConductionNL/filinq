@@ -9,18 +9,18 @@
  * anonymisation appraisal. Availability-guarded: returns null (never
  * throws) whenever `files_confidential` is not installed, the file carries
  * no tag matching the configured vocabulary, or the system-tag API fails.
- * Mirrors DocuDesk's existing optional-dependency idiom
+ * Mirrors Filinq's existing optional-dependency idiom
  * (MetadataService::getObjectService()) but binds only to Nextcloud's
  * public system-tag API (ISystemTagManager / ISystemTagObjectMapper) —
  * never to files_confidential internals.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  *
@@ -30,7 +30,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -45,10 +45,10 @@ use Throwable;
  * Read-only, no policy/enforcement of its own — see design.md (Non-Goals).
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  */
@@ -74,11 +74,11 @@ class ConfidentialityLabelService {
 	 *
 	 * @var string
 	 */
-	public const VOCABULARY_KEY = 'docudesk.confidentiality.label_vocabulary';
+	public const VOCABULARY_KEY = 'filinq.confidentiality.label_vocabulary';
 
 	/**
 	 * Default TSCP/BAILS-style confidentiality vocabulary, seeded when the
-	 * admin has not configured `docudesk.confidentiality.label_vocabulary`
+	 * admin has not configured `filinq.confidentiality.label_vocabulary`
 	 * (design.md Open Questions — adjustable without code change).
 	 *
 	 * @var array<string, int>
@@ -183,7 +183,7 @@ class ConfidentialityLabelService {
 	 * @return array<string, int> Map of label/tag name to normalised level
 	 */
 	private function getVocabulary(): array {
-		$raw = $this->appConfig->getValueString('docudesk', self::VOCABULARY_KEY, '');
+		$raw = $this->appConfig->getValueString('filinq', self::VOCABULARY_KEY, '');
 		if ($raw === '') {
 			return self::DEFAULT_VOCABULARY;
 		}

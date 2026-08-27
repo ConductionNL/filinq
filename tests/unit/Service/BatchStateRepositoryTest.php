@@ -4,7 +4,7 @@
  * Unit tests for BatchStateRepository
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,10 +20,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\BatchStateRepository;
-use OCA\DocuDesk\Service\OpenRegisterAvailabilityService;
+use OCA\Filinq\Service\BatchStateRepository;
+use OCA\Filinq\Service\OpenRegisterAvailabilityService;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -38,10 +38,10 @@ use RuntimeException;
  * schema or uuid. Everything below asserts on what was actually stored.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -97,7 +97,7 @@ class BatchStateRepositoryTest extends TestCase {
 	 *
 	 * ⚠️ `_rbac: false` is load-bearing and asserted here on purpose. The
 	 * schema now declares an authorization cascade (register v7.9.0), and an
-	 * OpenRegister cascade DENIES any action it does not name. DocuDesk's own
+	 * OpenRegister cascade DENIES any action it does not name. Filinq's own
 	 * batch writes must not be subject to it — ownership is enforced in
 	 * BatchStateService::getBatch() instead — so if this flag ever flips, the
 	 * whole batch flow fails closed for every user who is not in
@@ -114,7 +114,7 @@ class BatchStateRepositoryTest extends TestCase {
 		$this->assertCount(1, $this->store->saveCalls);
 		$call = $this->store->saveCalls[0];
 
-		$this->assertSame('document', $call['register']);
+		$this->assertSame('filinq', $call['register'], 'the five registers collapsed into one');
 		$this->assertSame('anonymizationBatch', $call['schema']);
 		$this->assertSame('batch-1', $call['uuid']);
 		$this->assertFalse($call['_rbac']);
@@ -471,7 +471,7 @@ class BatchStateRepositoryTest extends TestCase {
 	 * Build a repository against a caller-supplied store, with OpenRegister
 	 * reported as installed.
 	 *
-	 * @param ObjectService        $store  The OpenRegister handle to hand out.
+	 * @param ObjectService $store The OpenRegister handle to hand out.
 	 * @param RecordingLoggerFake|null $logger Logger to record into, or null for a mock.
 	 *
 	 * @return BatchStateRepository The repository.

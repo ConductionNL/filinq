@@ -60,7 +60,7 @@ reading only the existing fields continue to work.
 
 `POST /api/anonymization/batch/{batchId}/anonymize` MUST evaluate the
 per-document checked gate (`documentReview` objects, gate mode
-`docudesk.review.checked_gate`) for every non-error file in the batch
+`filinq.review.checked_gate`) for every non-error file in the batch
 before anonymizing anything. In `enforced` mode (default) the endpoint MUST
 return HTTP 409 with `reason: "documents_not_reviewed"` and an
 `uncheckedFiles` array (fileId + fileName) when one or more files lack a

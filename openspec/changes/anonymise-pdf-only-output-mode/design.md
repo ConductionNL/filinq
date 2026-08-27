@@ -2,7 +2,7 @@
 
 The completed `anonymise-output-as-pdf-by-default` change introduced two `outputFormat` values:
 
-- `pdf` (default today) — after OpenRegister anonymises the file, if the result is not already a PDF, DocuDesk runs `PdfConversionService::convertToPdf()` and writes the resulting PDF/A-3b to Nextcloud Files.
+- `pdf` (default today) — after OpenRegister anonymises the file, if the result is not already a PDF, Filinq runs `PdfConversionService::convertToPdf()` and writes the resulting PDF/A-3b to Nextcloud Files.
 - `preserve` — skip conversion; the native anonymised file is the only output.
 
 The conversion gate lives in `AnonymizationService::anonymizeDocument()` (around lines 245–286). `PdfConversionService::convertToPdf(File $source, array $opts = []): File` (signature at `lib/Service/PdfConversionService.php:82`) returns a **brand-new** PDF node and leaves its `$source` (the native anonymised intermediate) untouched. So in `pdf` mode the cascade produces e.g. `report_anonymized.pdf` while `report_anonymized.docx` is left orphaned on disk. The `anonymizationLink` relation already records the PDF id in `anonymizedFileId` (`recordAnonymizationLink()`, ~line 357), so the native file is unreferenced leftover.
@@ -88,7 +88,7 @@ The conversion gate is guarded by `mime !== 'application/pdf'`. When the anonymi
 
 ### D5. New default via config + service param
 
-The tenant default `docudesk.anonymisation.default_output_format` flips from `'pdf'` to `'pdf-only'` in `SettingsService` (~line 197–201), and the `anonymizeDocument()` default param flips from `'pdf'` to `'pdf-only'`. The per-call `outputFormat` value continues to override the tenant default in the controllers' `resolveOutputFormat()`. Rollback is configuration-only: set the key back to `pdf`.
+The tenant default `filinq.anonymisation.default_output_format` flips from `'pdf'` to `'pdf-only'` in `SettingsService` (~line 197–201), and the `anonymizeDocument()` default param flips from `'pdf'` to `'pdf-only'`. The per-call `outputFormat` value continues to override the tenant default in the controllers' `resolveOutputFormat()`. Rollback is configuration-only: set the key back to `pdf`.
 
 ### D6. Declarative-vs-imperative (ADR-031): justified imperative exception
 
@@ -109,7 +109,7 @@ ADR-031 prefers declarative behaviour wiring for lifecycle/aggregation/derived-f
 4. Add unit tests for the new path; run `composer check:strict`.
 5. Release with a CHANGELOG "Behavior changes" entry and a release note.
 
-**Rollback:** configuration-only — set `docudesk.anonymisation.default_output_format = pdf` to restore the keep-both default. No code rollback or DB migration needed. There is no DB migration artifact for this change.
+**Rollback:** configuration-only — set `filinq.anonymisation.default_output_format = pdf` to restore the keep-both default. No code rollback or DB migration needed. There is no DB migration artifact for this change.
 
 ## Seed Data
 

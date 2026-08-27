@@ -1,12 +1,12 @@
 ---
 sidebar_position: 1
 title: Manage the templates library
-description: Curate the shared library of document templates so every DocuDesk user works from the same approved set.
+description: Curate the shared library of document templates so every Filinq user works from the same approved set.
 ---
 
 # Manage the templates library
 
-The **Templates library** is the instance-wide catalogue of approved templates. Anything an admin promotes here becomes available to every DocuDesk user; anything an admin deprecates is hidden from new renders but kept for traceability of past documents.
+The **Templates library** is the instance-wide catalogue of approved templates. Anything an admin promotes here becomes available to every Filinq user; anything an admin deprecates is hidden from new renders but kept for traceability of past documents.
 
 ## Goal
 
@@ -14,7 +14,7 @@ By the end you will know how to promote a user-created template into the shared 
 
 ## Prerequisites
 
-- You are an administrator on the Nextcloud instance, or your user has been granted the DocuDesk *Library curator* role.
+- You are an administrator on the Nextcloud instance, or your user has been granted the Filinq *Library curator* role.
 - At least one user has created a template that is ready to promote (see [Create a template](../user/04-create-template.md)).
 
 ## Steps
@@ -37,7 +37,7 @@ By the end you will know how to promote a user-created template into the shared 
 
 ## Verification
 
-You are done when: the promoted template appears in the **Library** view with its assigned category and audience, regular DocuDesk users can pick it from the render-picker dropdown, and the deprecated template no longer appears in that dropdown (but is still listed in **Library** with the *Deprecated* badge).
+You are done when: the promoted template appears in the **Library** view with its assigned category and audience, regular Filinq users can pick it from the render-picker dropdown, and the deprecated template no longer appears in that dropdown (but is still listed in **Library** with the *Deprecated* badge).
 
 ## Common issues
 

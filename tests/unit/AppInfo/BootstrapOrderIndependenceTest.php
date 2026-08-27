@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Guards the bootstrap invariant that keeps DocuDesk independent of app load order.
+ * Guards the bootstrap invariant that keeps Filinq independent of app load order.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\AppInfo
+ * @package  OCA\Filinq\Tests\Unit\AppInfo
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,13 +12,13 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\AppInfo;
+namespace OCA\Filinq\Tests\Unit\AppInfo;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -27,8 +27,8 @@ use ReflectionMethod;
  * `OC_App::getEnabledApps()` sorts the app list, and
  * `Coordinator::registerApps()` walks that sorted list one app at a time,
  * calling `registerAutoloading()` and then `register()` for each app before
- * moving to the next. `docudesk` sorts before `openregister`, so during
- * DocuDesk's own `register()` the `OCA\OpenRegister\` prefix is NOT yet on the
+ * moving to the next. `filinq` sorts before `openregister`, so during
+ * Filinq's own `register()` the `OCA\OpenRegister\` prefix is NOT yet on the
  * autoloader — on a completely healthy instance with OpenRegister enabled.
  *
  * Two consequences, both fail-silent:
@@ -41,7 +41,7 @@ use ReflectionMethod;
  *     on, so the app stays enabled and looks fine while half its wiring never
  *     registered.
  *
- * DocuDesk already fixed this the right way: the one `class_exists()` probe
+ * Filinq already fixed this the right way: the one `class_exists()` probe
  * lives in `ObjectEventRegistrar::boot()`, and `boot()` runs only after EVERY
  * app's `register()` has completed, which makes the probe order-independent.
  * That fix is invisible in the code — nothing stops a future edit from moving
@@ -120,7 +120,7 @@ class BootstrapOrderIndependenceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheFilteredListenerProbeLivesInBootNotRegister(): void {
-		$class = 'OCA\\DocuDesk\\AppInfo\\ObjectEventRegistrar';
+		$class = 'OCA\\Filinq\\AppInfo\\ObjectEventRegistrar';
 		$boot = $this->methodSource($class, 'boot');
 		$reg = $this->methodSource($class, 'register');
 		$needle = 'registerFilteredObjectListener(';
@@ -154,7 +154,7 @@ class BootstrapOrderIndependenceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheMetricsEngineIsRegisteredUnderAStringKey(): void {
-		$source = $this->methodSource('OCA\\DocuDesk\\AppInfo\\ObservabilityRegistrar', 'register');
+		$source = $this->methodSource('OCA\\Filinq\\AppInfo\\ObservabilityRegistrar', 'register');
 
 		$this->assertStringContainsString(
 			"'OCA\\\\OpenRegister\\\\AppHost\\\\Observability\\\\MetricsEngine'",
@@ -173,11 +173,11 @@ class BootstrapOrderIndependenceTest extends TestCase {
 	 */
 	public static function registerTimeRegistrarProvider(): array {
 		return [
-			'ObjectEventRegistrar' => ['OCA\\DocuDesk\\AppInfo\\ObjectEventRegistrar'],
-			'SigningEventRegistrar' => ['OCA\\DocuDesk\\AppInfo\\SigningEventRegistrar'],
-			'PdfConversionRegistrar' => ['OCA\\DocuDesk\\AppInfo\\PdfConversionRegistrar'],
-			'ObservabilityRegistrar' => ['OCA\\DocuDesk\\AppInfo\\ObservabilityRegistrar'],
-			'RegistrationBootstrap' => ['OCA\\DocuDesk\\AppInfo\\RegistrationBootstrap'],
+			'ObjectEventRegistrar' => ['OCA\\Filinq\\AppInfo\\ObjectEventRegistrar'],
+			'SigningEventRegistrar' => ['OCA\\Filinq\\AppInfo\\SigningEventRegistrar'],
+			'PdfConversionRegistrar' => ['OCA\\Filinq\\AppInfo\\PdfConversionRegistrar'],
+			'ObservabilityRegistrar' => ['OCA\\Filinq\\AppInfo\\ObservabilityRegistrar'],
+			'RegistrationBootstrap' => ['OCA\\Filinq\\AppInfo\\RegistrationBootstrap'],
 		];
 
 	}//end registerTimeRegistrarProvider()

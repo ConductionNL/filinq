@@ -1,9 +1,9 @@
 # Tasks: document-detail-leaf-widgets
 
-All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days.
+All tasks are `[filinq]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days.
 NO apply in this change — implementation runs through Hydra later.
 
-## [docudesk] Surface integration leaves on the document detail record
+## [filinq] Surface integration leaves on the document detail record
 
 ### D-1. Render contacts / activity / shares leaf tabs via the registry (M)
 

@@ -1,6 +1,6 @@
 # Tasks — odt-viewer-preview
 
-> Frontend-only, DocuDesk-only. Client-side render; no backend, no new dependency (JSZip already present).
+> Frontend-only, Filinq-only. Client-side render; no backend, no new dependency (JSZip already present).
 > Depends on `odt-anonymisation-frontend` (ODT accepted for upload) → `openregister:odt-anonymisation-writeback`.
 
 ## 1. ODF transform service

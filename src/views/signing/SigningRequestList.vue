@@ -12,20 +12,20 @@
 <template>
 	<div class="signing-request-list">
 		<div class="signing-header">
-			<h2>{{ t('docudesk', 'Signing Requests') }}</h2>
+			<h2>{{ t('filinq', 'Signing Requests') }}</h2>
 		</div>
 		<NcLoadingIcon v-if="signingStore.loading" :size="44" />
 		<NcEmptyContent
 			v-else-if="signingStore.signingRequests.length === 0"
-			:name="t('docudesk', 'No signing requests')" />
+			:name="t('filinq', 'No signing requests')" />
 		<table v-else class="signing-table">
 			<thead>
 				<tr>
-					<th scope="col">{{ t('docudesk', 'Document') }}</th>
-					<th scope="col">{{ t('docudesk', 'Status') }}</th>
-					<th scope="col">{{ t('docudesk', 'Level') }}</th>
-					<th scope="col">{{ t('docudesk', 'Mode') }}</th>
-					<th scope="col">{{ t('docudesk', 'Deadline') }}</th>
+					<th scope="col">{{ t('filinq', 'Document') }}</th>
+					<th scope="col">{{ t('filinq', 'Status') }}</th>
+					<th scope="col">{{ t('filinq', 'Level') }}</th>
+					<th scope="col">{{ t('filinq', 'Mode') }}</th>
+					<th scope="col">{{ t('filinq', 'Deadline') }}</th>
 				</tr>
 			</thead>
 			<tbody>

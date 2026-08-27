@@ -115,7 +115,7 @@ The same tuple goes into the OR audit `changed` context (extends the existing
 `signing-audit-via-or` context contract additively) and into the artifact
 assertion (covered by the v2 MAC per REQ-DDSTR-001, making identity claims
 tamper-evident end to end). Raw ID tokens are never persisted: the evidence
-hash allows later dispute resolution against broker logs without DocuDesk
+hash allows later dispute resolution against broker logs without Filinq
 holding token PII.
 
 ### D4 — ADR-064 custody for broker secrets
@@ -155,11 +155,11 @@ step-up hint, nothing mutates.
 
 All persistence via OR ObjectService on the existing `signing` register:
 additive properties `signingRequest.requiredAssurance`,
-`signerRecord.identityEvidence` in `lib/Settings/docudesk_register.json`
+`signerRecord.identityEvidence` in `lib/Settings/filinq_register.json`
 (register version bump for boot import; additive union — never drop existing
 properties, diff against merge base per the union-merge lesson). Audit context
 extension rides the existing `SigningAuditService::logEvent()` metadata
-pass-through. No new registers; no DocuDesk-local tables.
+pass-through. No new registers; no Filinq-local tables.
 
 ## Seed Data
 

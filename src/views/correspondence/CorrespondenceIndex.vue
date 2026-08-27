@@ -8,11 +8,11 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<div class="correspondence-index">
 		<div class="correspondence-index__header">
-			<h2>{{ t('docudesk', 'Letters & correspondence') }}</h2>
+			<h2>{{ t('filinq', 'Letters & correspondence') }}</h2>
 			<p class="correspondence-index__subtitle">
 				{{
 					t(
-						'docudesk',
+						'filinq',
 						'Generate letters and correspondence from templates with merge data.',
 					)
 				}}
@@ -27,20 +27,20 @@ SPDX-License-Identifier: EUPL-1.2
 			<!-- Template selection -->
 			<div class="correspondence-index__field">
 				<label class="correspondence-index__label" for="corr-template-id">
-					{{ t('docudesk', 'Template ID') }} *
+					{{ t('filinq', 'Template ID') }} *
 				</label>
 				<NcTextField
 					id="corr-template-id"
 					v-model="store.templateId"
-					:label="t('docudesk', 'Template UUID')"
-					:placeholder="t('docudesk', 'Enter template UUID')"
+					:label="t('filinq', 'Template UUID')"
+					:placeholder="t('filinq', 'Enter template UUID')"
 					required />
 			</div>
 
 			<!-- Output format -->
 			<div class="correspondence-index__field">
 				<label class="correspondence-index__label">
-					{{ t('docudesk', 'Output format') }}
+					{{ t('filinq', 'Output format') }}
 				</label>
 				<div class="correspondence-index__radio-group">
 					<label
@@ -59,13 +59,13 @@ SPDX-License-Identifier: EUPL-1.2
 			<!-- Case reference -->
 			<div class="correspondence-index__field">
 				<label class="correspondence-index__label" for="corr-case-ref">
-					{{ t('docudesk', 'Case reference') }}
+					{{ t('filinq', 'Case reference') }}
 				</label>
 				<NcTextField
 					id="corr-case-ref"
 					v-model="store.caseReference"
-					:label="t('docudesk', 'Case reference (optional)')"
-					:placeholder="t('docudesk', 'e.g. Z/2026/001')" />
+					:label="t('filinq', 'Case reference (optional)')"
+					:placeholder="t('filinq', 'e.g. Z/2026/001')" />
 			</div>
 
 			<!-- Mode tabs -->
@@ -73,12 +73,12 @@ SPDX-License-Identifier: EUPL-1.2
 				<NcButton
 					:variant="!batchMode ? 'primary' : 'secondary'"
 					@click="batchMode = false">
-					{{ t('docudesk', 'Single recipient') }}
+					{{ t('filinq', 'Single recipient') }}
 				</NcButton>
 				<NcButton
 					:variant="batchMode ? 'primary' : 'secondary'"
 					@click="batchMode = true">
-					{{ t('docudesk', 'Batch (multiple recipients)') }}
+					{{ t('filinq', 'Batch (multiple recipients)') }}
 				</NcButton>
 			</div>
 
@@ -86,7 +86,7 @@ SPDX-License-Identifier: EUPL-1.2
 			<template v-if="!batchMode">
 				<div class="correspondence-index__field">
 					<label class="correspondence-index__label">
-						{{ t('docudesk', 'Data references') }}
+						{{ t('filinq', 'Data references') }}
 					</label>
 					<div
 						v-for="(ref, idx) in store.dataRefs"
@@ -94,28 +94,28 @@ SPDX-License-Identifier: EUPL-1.2
 						class="correspondence-index__data-ref">
 						<NcTextField
 							v-model="ref.register"
-							:label="t('docudesk', 'Register')"
-							:placeholder="t('docudesk', 'e.g. brp')"
+							:label="t('filinq', 'Register')"
+							:placeholder="t('filinq', 'e.g. brp')"
 							class="correspondence-index__ref-field" />
 						<NcTextField
 							v-model="ref.schema"
-							:label="t('docudesk', 'Schema')"
-							:placeholder="t('docudesk', 'e.g. persoon')"
+							:label="t('filinq', 'Schema')"
+							:placeholder="t('filinq', 'e.g. persoon')"
 							class="correspondence-index__ref-field" />
 						<NcTextField
 							v-model="ref.id"
-							:label="t('docudesk', 'UUID')"
-							:placeholder="t('docudesk', 'Object UUID')"
+							:label="t('filinq', 'UUID')"
+							:placeholder="t('filinq', 'Object UUID')"
 							class="correspondence-index__ref-field" />
 						<NcButton
 							variant="tertiary"
-							:aria-label="t('docudesk', 'Remove data reference')"
+							:aria-label="t('filinq', 'Remove data reference')"
 							@click="removeDataRef(idx)">
 							✕
 						</NcButton>
 					</div>
 					<NcButton variant="secondary" @click="addDataRef">
-						+ {{ t('docudesk', 'Add data reference') }}
+						+ {{ t('filinq', 'Add data reference') }}
 					</NcButton>
 				</div>
 
@@ -129,8 +129,8 @@ SPDX-License-Identifier: EUPL-1.2
 						</template>
 						{{
 							store.loading
-								? t('docudesk', 'Generating…')
-								: t('docudesk', 'Generate letter')
+								? t('filinq', 'Generating…')
+								: t('filinq', 'Generate letter')
 						}}
 					</NcButton>
 				</div>
@@ -140,37 +140,37 @@ SPDX-License-Identifier: EUPL-1.2
 			<template v-else>
 				<div class="correspondence-index__field">
 					<label class="correspondence-index__label" for="corr-register">
-						{{ t('docudesk', 'Register') }}
+						{{ t('filinq', 'Register') }}
 					</label>
 					<NcTextField
 						id="corr-register"
 						v-model="batchRegister"
-						:label="t('docudesk', 'Register slug')"
-						:placeholder="t('docudesk', 'e.g. brp')" />
+						:label="t('filinq', 'Register slug')"
+						:placeholder="t('filinq', 'e.g. brp')" />
 				</div>
 				<div class="correspondence-index__field">
 					<label class="correspondence-index__label" for="corr-schema">
-						{{ t('docudesk', 'Schema') }}
+						{{ t('filinq', 'Schema') }}
 					</label>
 					<NcTextField
 						id="corr-schema"
 						v-model="batchSchema"
-						:label="t('docudesk', 'Schema slug')"
-						:placeholder="t('docudesk', 'e.g. persoon')" />
+						:label="t('filinq', 'Schema slug')"
+						:placeholder="t('filinq', 'e.g. persoon')" />
 				</div>
 				<div class="correspondence-index__field">
 					<label class="correspondence-index__label" for="corr-recipients">
-						{{ t('docudesk', 'Recipient UUIDs') }} *
+						{{ t('filinq', 'Recipient UUIDs') }} *
 					</label>
 					<textarea
 						id="corr-recipients"
 						v-model="store.recipientIdsText"
 						class="correspondence-index__textarea"
-						:placeholder="t('docudesk', 'One UUID per line')"
+						:placeholder="t('filinq', 'One UUID per line')"
 						rows="8" />
 					<p class="correspondence-index__hint">
 						{{
-							t('docudesk', '{count} recipient(s)', {
+							t('filinq', '{count} recipient(s)', {
 								count: store.recipientIds.length,
 							})
 						}}
@@ -187,18 +187,18 @@ SPDX-License-Identifier: EUPL-1.2
 						</template>
 						{{
 							store.loading
-								? t('docudesk', 'Sending…')
-								: t('docudesk', 'Generate batch')
+								? t('filinq', 'Sending…')
+								: t('filinq', 'Generate batch')
 						}}
 					</NcButton>
 				</div>
 
 				<!-- Job status -->
 				<div v-if="store.jobStatus" class="correspondence-index__job-status">
-					<h3>{{ t('docudesk', 'Batch job status') }}</h3>
+					<h3>{{ t('filinq', 'Batch job status') }}</h3>
 					<p>
 						{{
-							t('docudesk', 'Status: {status}', {
+							t('filinq', 'Status: {status}', {
 								status: store.jobStatus.status,
 							})
 						}}
@@ -206,7 +206,7 @@ SPDX-License-Identifier: EUPL-1.2
 					<p v-if="store.jobStatus.total">
 						{{
 							t(
-								'docudesk',
+								'filinq',
 								'{completed} / {total} completed, {errors} errors',
 								{
 									completed: store.jobStatus.completed || 0,
@@ -220,7 +220,7 @@ SPDX-License-Identifier: EUPL-1.2
 						v-if="store.jobId && store.jobStatus.status !== 'completed'"
 						variant="secondary"
 						@click="store.pollJobStatus()">
-						{{ t('docudesk', 'Refresh status') }}
+						{{ t('filinq', 'Refresh status') }}
 					</NcButton>
 				</div>
 			</template>
@@ -260,10 +260,10 @@ export default {
 			batchRegister: '',
 			batchSchema: '',
 			formats: [
-				{ value: 'pdf', label: t('docudesk', 'PDF') },
-				{ value: 'docx', label: t('docudesk', 'DOCX (editable)') },
-				{ value: 'html', label: t('docudesk', 'HTML') },
-				{ value: 'email', label: t('docudesk', 'Email body') },
+				{ value: 'pdf', label: t('filinq', 'PDF') },
+				{ value: 'docx', label: t('filinq', 'DOCX (editable)') },
+				{ value: 'html', label: t('filinq', 'HTML') },
+				{ value: 'email', label: t('filinq', 'Email body') },
 			],
 		}
 	},

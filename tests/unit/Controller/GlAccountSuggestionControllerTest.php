@@ -4,11 +4,11 @@
  * Unit tests for GlAccountSuggestionController
  *
  * @category  Tests
- * @package   OCA\DocuDesk\Tests\Unit\Controller
+ * @package   OCA\Filinq\Tests\Unit\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -18,10 +18,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\GlAccountSuggestionController;
-use OCA\DocuDesk\Service\GlAccountSuggestionService;
+use OCA\Filinq\Controller\GlAccountSuggestionController;
+use OCA\Filinq\Service\GlAccountSuggestionService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -66,7 +66,7 @@ class GlAccountSuggestionControllerTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$this->controller = new GlAccountSuggestionController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->suggestionService,
 			$this->userSession,
@@ -137,7 +137,7 @@ class GlAccountSuggestionControllerTest extends TestCase {
 		$l10n->method('t')->willReturnCallback(static fn ($text, $params = []): string => vsprintf($text, $params));
 
 		$controller = new GlAccountSuggestionController(
-			'docudesk',
+			'filinq',
 			$this->request,
 			$this->suggestionService,
 			$userSession,

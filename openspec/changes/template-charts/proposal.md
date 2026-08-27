@@ -8,7 +8,7 @@ kind: code
 
 Formal municipal documents increasingly carry data, not just prose:
 jaarverslagen, Woo-inventarislijsten, subsidie-beschikkingen with financial
-breakdowns, handhavingsrapportages with trend lines. DocuDesk templates today
+breakdowns, handhavingsrapportages with trend lines. Filinq templates today
 can interpolate scalars and loop over collections (Twig sandbox, verified:
 `TemplateRenderer` whitelists `for`/`if` and list filters), but they cannot
 render a chart, cannot produce a consistently formatted table from an object

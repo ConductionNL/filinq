@@ -1,5 +1,5 @@
 /**
- * DocuDesk brand font (Inter).
+ * Filinq brand font (Inter).
  *
  * Kept separate from app.css so it can be imported by *every* entry point
  * (main, dashboard, settings) without pulling in app.css's component
@@ -34,7 +34,7 @@
 
 /* Remap Nextcloud's `--font-face` token so every component that honours it
    — including @nextcloud/vue internals — renders in Inter, with the stock
-   NC system-font stack kept as fallback. Scoped to the DocuDesk bundle, so
+   NC system-font stack kept as fallback. Scoped to the Filinq bundle, so
    it does not leak into other Nextcloud apps. */
 :root {
 	--font-face:

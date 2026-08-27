@@ -6,7 +6,7 @@
 ## Implementation
 
 - [x] Ship the plain, dependency-free provider class `lib/Portal/PortalContributionProvider.php`
-  - Namespace `OCA\DocuDesk\Portal`; no `use` of any portaliq symbol; no `implements`; no constructor; no info.xml dependency; repo-standard EUPL-1.2/SPDX docblock + `@spec` tags.
+  - Namespace `OCA\Filinq\Portal`; no `use` of any portaliq symbol; no `implements`; no constructor; no info.xml dependency; repo-standard EUPL-1.2/SPDX docblock + `@spec` tags.
   - Not registered in `lib/AppInfo/Application.php` — discovery is pull-based by FQCN from portaliq.
 
 - [x] Implement the v2 + v1 audience contract
@@ -21,7 +21,7 @@
 
 - [x] Unit-test the full provider contract (`tests/unit/Portal/PortalContributionProviderTest.php`)
   - Direct construction (no mocks/container); pins audiences, fail-closed null, both manifests, the `via` shape, field whitelists and forbidden exclusions.
-  - Register-drift pin: every scopeField, `via` field and projected field exists on the shipped schema in `lib/Settings/docudesk_register.json`.
+  - Register-drift pin: every scopeField, `via` field and projected field exists on the shipped schema in `lib/Settings/filinq_register.json`.
 
 - [x] Register the capability spec `openspec/specs/portal-contribution/spec.md`
   - Exists with status `in-progress`, pointing at this change.

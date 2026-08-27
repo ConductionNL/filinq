@@ -4,7 +4,7 @@
  * Unit tests for ObjectionDeadlineChecker
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,12 +12,12 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\ObjectionDeadlineChecker;
+use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -29,10 +29,10 @@ use Psr\Log\LoggerInterface;
  * Unit tests for ObjectionDeadlineChecker
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -92,7 +92,7 @@ class ObjectionDeadlineCheckerTest extends TestCase {
 	 */
 	public function testGetObjectionPeriodDaysReturnsConfiguredValue(): void {
 		$this->mockConfig->method('getValueString')
-			->with('docudesk', 'publication_objection_period_days', '28')
+			->with('filinq', 'publication_objection_period_days', '28')
 			->willReturn('14');
 
 		$this->assertEquals(14, $this->checker->getObjectionPeriodDays());
@@ -106,7 +106,7 @@ class ObjectionDeadlineCheckerTest extends TestCase {
 	 */
 	public function testGetObjectionPeriodDaysReturnsDefault(): void {
 		$this->mockConfig->method('getValueString')
-			->with('docudesk', 'publication_objection_period_days', '28')
+			->with('filinq', 'publication_objection_period_days', '28')
 			->willReturn('28');
 
 		$this->assertEquals(28, $this->checker->getObjectionPeriodDays());

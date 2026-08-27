@@ -4,7 +4,7 @@
  * Unit tests for EditSessionService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,20 +12,20 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Editing;
+namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\DocuDesk\Service\Editing\AgentArtefactMarker;
-use OCA\DocuDesk\Service\Editing\DocumentGuard;
-use OCA\DocuDesk\Service\Editing\EditSessionService;
-use OCA\DocuDesk\Service\Editing\DocumentCodecs;
-use OCA\DocuDesk\Service\Editing\GuardedWriter;
-use OCA\DocuDesk\Service\Editing\PackageCodec;
-use OCA\DocuDesk\Service\Editing\PackagePartIo;
-use OCA\DocuDesk\Service\Editing\PresentationCodec;
-use OCA\DocuDesk\Service\Editing\SpreadsheetCodec;
+use OCA\Filinq\Service\Editing\AgentArtefactMarker;
+use OCA\Filinq\Service\Editing\DocumentCodecs;
+use OCA\Filinq\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\Editing\EditSessionService;
+use OCA\Filinq\Service\Editing\GuardedWriter;
+use OCA\Filinq\Service\Editing\PackageCodec;
+use OCA\Filinq\Service\Editing\PackagePartIo;
+use OCA\Filinq\Service\Editing\PresentationCodec;
+use OCA\Filinq\Service\Editing\SpreadsheetCodec;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -45,10 +45,10 @@ use ZipArchive;
  * Unit tests for the agent document edit session.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Editing
+ * @package  OCA\Filinq\Tests\Unit\Service\Editing
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  *
@@ -179,7 +179,7 @@ class EditSessionServiceTest extends TestCase {
 	 * @return string The package bytes.
 	 */
 	private function docx(): string {
-		$path = tempnam(sys_get_temp_dir(), 'docudesk-session-');
+		$path = tempnam(sys_get_temp_dir(), 'filinq-session-');
 		$this->spilled[] = $path;
 		unlink($path);
 
@@ -195,7 +195,6 @@ class EditSessionServiceTest extends TestCase {
 		$zip->close();
 
 		return (string)file_get_contents($path);
-
 	}//end docx()
 
 	/**
@@ -225,7 +224,6 @@ class EditSessionServiceTest extends TestCase {
 		);
 
 		return $file;
-
 	}//end file()
 
 	/**
@@ -282,7 +280,6 @@ class EditSessionServiceTest extends TestCase {
 	 */
 	private function firstAnchor(): string {
 		return (new PackageCodec())->readBlocks($this->docx(), 'docx')['blocks'][0]['anchor'];
-
 	}//end firstAnchor()
 
 	/**
@@ -292,7 +289,6 @@ class EditSessionServiceTest extends TestCase {
 	 */
 	private function edit(): array {
 		return [['anchor' => $this->firstAnchor(), 'action' => 'replace', 'text' => 'Revised heading']];
-
 	}//end edit()
 
 	/**

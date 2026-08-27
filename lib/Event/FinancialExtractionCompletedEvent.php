@@ -1,23 +1,23 @@
 <?php
 
 /**
- * DocuDesk FinancialExtractionCompletedEvent
+ * Filinq FinancialExtractionCompletedEvent
  *
- * Public cross-app event DocuDesk dispatches when a financial-document field
+ * Public cross-app event Filinq dispatches when a financial-document field
  * extraction (scan-en-herken) completes and the requester asked for a
  * callback event. This is the canonical home of the
- * `nl.conduction.docudesk.extraction.completed` wire contract. Consumer
+ * `nl.conduction.filinq.extraction.completed` wire contract. Consumer
  * fleet apps (e.g. shillinq's receipt-extraction-consume) subscribe to it to
- * turn the extracted fields into a purchase invoice — DocuDesk owns the
+ * turn the extracted fields into a purchase invoice — Filinq owns the
  * extraction only, never the consumer's downstream side effect (ADR-022).
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
@@ -27,20 +27,20 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCP\EventDispatcher\Event;
 
 /**
- * Cross-app completion event: DocuDesk reports a completed financial
- * extraction. Fully immutable — DocuDesk constructs it from the persisted
+ * Cross-app completion event: Filinq reports a completed financial
+ * extraction. Fully immutable — Filinq constructs it from the persisted
  * extraction result; consumers only read.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  */
@@ -150,7 +150,7 @@ class FinancialExtractionCompletedEvent extends Event {
 
 	/**
 	 * Build the canonical wire payload for
-	 * `nl.conduction.docudesk.extraction.completed`.
+	 * `nl.conduction.filinq.extraction.completed`.
 	 *
 	 * @return array<string, mixed> The canonical payload shape.
 	 *

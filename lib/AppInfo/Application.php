@@ -1,19 +1,19 @@
 <?php
 
 /**
- * Application bootstrap class for DocuDesk
+ * Application bootstrap class for Filinq
  *
  * Thin Nextcloud entry point: it owns the app id and the bundled-vendor
  * autoload include, and delegates all service/listener/middleware wiring to
  * {@see RegistrationBootstrap} and its per-concern registrars.
  *
  * @category  AppInfo
- * @package   OCA\DocuDesk\AppInfo
+ * @package   OCA\Filinq\AppInfo
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\AppInfo;
+namespace OCA\Filinq\AppInfo;
 
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -31,10 +31,10 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 /**
  * Class Application
  *
- * @package OCA\DocuDesk\AppInfo
+ * @package OCA\Filinq\AppInfo
  */
 class Application extends App implements IBootstrap {
-	public const APP_ID = 'docudesk';
+	public const APP_ID = 'filinq';
 
 	/**
 	 * Constructor

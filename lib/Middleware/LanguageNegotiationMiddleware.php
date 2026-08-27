@@ -1,15 +1,15 @@
 <?php
 
 /**
- * DocuDesk Language Negotiation Middleware
+ * Filinq Language Negotiation Middleware
  *
- * Bridges OpenRegister's request-scoped `LanguageService` to DocuDesk's
- * controllers. When a docudesk endpoint is hit (e.g. `/apps/docudesk/api/...`),
+ * Bridges OpenRegister's request-scoped `LanguageService` to Filinq's
+ * controllers. When a filinq endpoint is hit (e.g. `/apps/filinq/api/...`),
  * the OR `LanguageMiddleware` is NOT invoked because Nextcloud only runs
  * middleware registered by the app handling the route. This middleware
  * replays OR's negotiation rules — query overrides → Accept-Language →
  * default — directly on OR's `LanguageService`, so subsequent OR calls
- * made by docudesk services (via `ObjectService`) see the correct
+ * made by filinq services (via `ObjectService`) see the correct
  * preferred language and the `TranslationHandler` resolves translatable
  * properties to the right variant.
  *
@@ -32,7 +32,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Middleware
- * @package  OCA\DocuDesk\Middleware
+ * @package  OCA\Filinq\Middleware
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -40,14 +40,14 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/register-i18n/tasks.md#task-3-2
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Middleware;
+namespace OCA\Filinq\Middleware;
 
 use OCA\OpenRegister\Service\LanguageService;
 use OCP\AppFramework\Http\Response;
@@ -56,10 +56,10 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 /**
- * Bridges OpenRegister's LanguageService into DocuDesk's controller
+ * Bridges OpenRegister's LanguageService into Filinq's controller
  * request lifecycle.
  *
- * @package OCA\DocuDesk\Middleware
+ * @package OCA\Filinq\Middleware
  */
 class LanguageNegotiationMiddleware extends Middleware {
 
@@ -184,7 +184,7 @@ class LanguageNegotiationMiddleware extends Middleware {
 		if (preg_match(self::BCP47_PATTERN, $targetTrim) !== 1) {
 			$this->logger->warning(
 				sprintf(
-					'[DocuDesk LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
+					'[Filinq LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
 					$targetTrim
 				)
 			);
@@ -197,7 +197,7 @@ class LanguageNegotiationMiddleware extends Middleware {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * Emit language response headers so docudesk responses surface the
+	 * Emit language response headers so filinq responses surface the
 	 * resolved language the same way OR responses do.
 	 *
 	 * `$controller` and `$methodName` are pinned by the inherited
@@ -246,7 +246,7 @@ class LanguageNegotiationMiddleware extends Middleware {
 			if (preg_match(self::BCP47_PATTERN, $trimmed) !== 1) {
 				$this->logger->warning(
 					sprintf(
-						"[DocuDesk LanguageNegotiationMiddleware] Invalid ?%s value '%s' — falling through",
+						"[Filinq LanguageNegotiationMiddleware] Invalid ?%s value '%s' — falling through",
 						$name,
 						$trimmed
 					)

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk SpreadsheetCodec
+ * Filinq SpreadsheetCodec
  *
  * Reads and edits spreadsheet cells addressed as `Sheet!Cell`.
  *
@@ -13,7 +13,7 @@
  * two cells both said "10".
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,14 +22,14 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#1-codec-interface--spreadsheet
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -71,7 +71,7 @@ class SpreadsheetCodec {
 	/**
 	 * Constructor.
 	 *
-	 * @param PackagePartIo                         $io       Package reader/writer.
+	 * @param PackagePartIo $io Package reader/writer.
 	 * @param array<int, SpreadsheetFamilyCodec>|null $families Optional override, for tests.
 	 */
 	public function __construct(
@@ -98,7 +98,7 @@ class SpreadsheetCodec {
 	 * Read every populated cell, addressed as `Sheet!Cell`.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $extension    The file extension.
+	 * @param string $extension The file extension.
 	 *
 	 * @return array<int, array{cell: string, value: string, formula: string|null}> The cells.
 	 *
@@ -121,8 +121,8 @@ class SpreadsheetCodec {
 	 * ends up permitting what the other refuses.
 	 *
 	 * @param string $packageBytes The package.
-	 * @param string $extension    The file extension.
-	 * @param array  $edits        Each `{cell, value, replaceFormula?}`.
+	 * @param string $extension The file extension.
+	 * @param array $edits Each `{cell, value, replaceFormula?}`.
 	 *
 	 * @return array{bytes: string, applied: array<int, string>, staleDependents: array<int, string>, erroredDependents: array<int, string>} The result.
 	 *
@@ -218,10 +218,10 @@ class SpreadsheetCodec {
 	 * every other cell in the same call, and the formula the caller never
 	 * looked at is exactly the one that gets destroyed.
 	 *
-	 * @param string $cell     The cell address.
-	 * @param array  $edit     The edit.
-	 * @param array  $existing Cells indexed by address.
-	 * @param int    $position The edit's position, for the message.
+	 * @param string $cell The cell address.
+	 * @param array $edit The edit.
+	 * @param array $existing Cells indexed by address.
+	 * @param int $position The edit's position, for the message.
 	 *
 	 * @return void
 	 *
@@ -260,7 +260,7 @@ class SpreadsheetCodec {
 	 * leaving them is the failure this reporting exists to prevent.
 	 *
 	 * @param array<string, array{cell: string, value: string, formula: string|null}> $existing Cells by address.
-	 * @param array<int, string>                                                      $written  Addresses written.
+	 * @param array<int, string> $written Addresses written.
 	 *
 	 * @return array<int, string> Addresses whose cached values no longer follow.
 	 *
@@ -296,7 +296,7 @@ class SpreadsheetCodec {
 	 * a word makes it look like content.
 	 *
 	 * @param array<string, array{cell: string, value: string, formula: string|null}> $existing Cells by address.
-	 * @param array<int, string>                                                      $stale    Stale addresses.
+	 * @param array<int, string> $stale Stale addresses.
 	 *
 	 * @return array<int, string> Addresses whose cached value is an error literal.
 	 *

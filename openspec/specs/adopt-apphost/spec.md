@@ -7,8 +7,8 @@ parity verification (anon + admin curl against /api/health and /api/metrics), an
 
 ## Purpose
 
-DocuDesk's `/api/health` and `/api/metrics` endpoints are served by OpenRegister's AppHost
-observability engine (ADR-006 / ADR-040): thin DocuDesk subclasses of the engine-owned generic
+Filinq's `/api/health` and `/api/metrics` endpoints are served by OpenRegister's AppHost
+observability engine (ADR-006 / ADR-040): thin Filinq subclasses of the engine-owned generic
 controllers, driven by a declarative `observability` block in `src/manifest.json`. The bespoke
 health checks, metric lines, and `MetricsCollector` are removed. Endpoint URLs and the
 admin/public auth posture are preserved (with health correctly made public).
@@ -17,7 +17,7 @@ admin/public auth posture are preserved (with health correctly made public).
 
 ### Requirement: Declarative observability block in the manifest
 
-DocuDesk SHALL declare its health checks and Prometheus metrics in the `observability` block of
+Filinq SHALL declare its health checks and Prometheus metrics in the `observability` block of
 `src/manifest.json`, consumed by the OpenRegister AppHost engine.
 
 #### Scenario: Health checks declared
@@ -37,7 +37,7 @@ DocuDesk SHALL declare its health checks and Prometheus metrics in the `observab
 
 ### Requirement: Endpoints re-pointed at the AppHost engine with unchanged URLs
 
-DocuDesk SHALL serve `/api/health` and `/api/metrics` from thin subclasses of OpenRegister's generic
+Filinq SHALL serve `/api/health` and `/api/metrics` from thin subclasses of OpenRegister's generic
 AppHost controllers, leaving the route URLs in `appinfo/routes.php` unchanged.
 
 #### Scenario: Health endpoint is public and ADR-006 shaped
@@ -45,7 +45,7 @@ AppHost controllers, leaving the route URLs in `appinfo/routes.php` unchanged.
 - **GIVEN** an anonymous request to `GET /api/health`
 - **WHEN** the endpoint responds
 - **THEN** it returns HTTP 200 with a body of shape `{status, app, version, checks}` where `app` is
-  `docudesk`
+  `filinq`
 
 #### Scenario: Metrics endpoint is admin-only Prometheus text
 
@@ -54,11 +54,11 @@ AppHost controllers, leaving the route URLs in `appinfo/routes.php` unchanged.
 - **THEN** the response is not 200 (login/admin required)
 - **AND WHEN** the caller is an admin
 - **THEN** the response is HTTP 200 `text/plain; version=0.0.4` beginning with the implicit
-  `docudesk_info` and `docudesk_up` metrics
+  `filinq_info` and `filinq_up` metrics
 
 ### Requirement: Bespoke observability logic removed
 
-DocuDesk SHALL NOT carry hand-written health-check or metric-collection logic once the declarative
+Filinq SHALL NOT carry hand-written health-check or metric-collection logic once the declarative
 block is in place. `HealthController` and `MetricsController` remain only as thin subclasses of the
 OpenRegister generic controllers (so the routes resolve to concrete classes with explicit auth
 attributes) and contain no observability logic; `MetricsCollector` is deleted.

@@ -8,12 +8,12 @@
  * inline template content for rendering.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/print-preview/spec.md
  * @spec openspec/specs/print-preview/spec.md
@@ -26,11 +26,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\PdfService;
-use OCA\DocuDesk\Service\TemplateService;
+use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\TemplateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -46,10 +46,10 @@ use Psr\Log\LoggerInterface;
  * inline template content, then delegates to PdfService for rendering.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
 class PrintController extends Controller {
 	/**

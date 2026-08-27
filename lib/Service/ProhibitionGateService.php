@@ -7,18 +7,18 @@
  * interaction on an anonymise call: it resolves the file's detected entities,
  * matches each against the active prohibition rules, validates the caller's
  * acknowledged overrides, checks that every high-confidence match is present
- * in the to-be-anonymised set, and commits the validated overrides (DocuDesk
+ * in the to-be-anonymised set, and commits the validated overrides (Filinq
  * audit entry followed by the OpenRegister PATCH).
  *
  * Extracted verbatim from AnonymizationService.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,9 +31,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
-use OCA\DocuDesk\Exception\ProhibitionGateException;
+use OCA\Filinq\Exception\ProhibitionGateException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -43,10 +43,10 @@ use Throwable;
  * Enforces the publication-prohibition gate before an anonymise call.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service
+ * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  */
@@ -126,7 +126,7 @@ class ProhibitionGateService {
 	 * Resolves detected entities for the file, matches each against active
 	 * prohibition rules, validates overrides, checks that high-confidence
 	 * matches are present in the to-be-anonymised set, and commits validated
-	 * overrides (DocuDesk audit entry + OR PATCH). Throws
+	 * overrides (Filinq audit entry + OR PATCH). Throws
 	 * ProhibitionGateException when the gate blocks the call.
 	 *
 	 * @param int $fileId Nextcloud file ID.
@@ -203,7 +203,7 @@ class ProhibitionGateService {
 	/**
 	 * Read the high-confidence threshold from app config.
 	 *
-	 * Default 0.85; configurable via docudesk.prohibition.high_confidence_threshold.
+	 * Default 0.85; configurable via filinq.prohibition.high_confidence_threshold.
 	 *
 	 * @return float Threshold value (inclusive boundary).
 	 *
@@ -211,7 +211,7 @@ class ProhibitionGateService {
 	 */
 	public function getHighConfidenceThreshold(): float {
 		return $this->appConfig->getValueFloat(
-			app: 'docudesk',
+			app: 'filinq',
 			key: self::HIGH_CONFIDENCE_THRESHOLD_KEY,
 			default: self::DEFAULT_HIGH_CONFIDENCE_THRESHOLD
 		);
@@ -223,7 +223,7 @@ class ProhibitionGateService {
 	 *
 	 * Defaults to TRUE — the gate fails closed by default for any backend
 	 * outage path. Operators can flip to false for non-production via
-	 * docudesk.prohibition.fail_closed.
+	 * filinq.prohibition.fail_closed.
 	 *
 	 * @return bool True when a backend outage must reject the call.
 	 *
@@ -231,7 +231,7 @@ class ProhibitionGateService {
 	 */
 	public function isFailClosed(): bool {
 		return $this->appConfig->getValueBool(
-			app: 'docudesk',
+			app: 'filinq',
 			key: self::FAIL_CLOSED_KEY,
 			default: self::DEFAULT_FAIL_CLOSED
 		);
@@ -244,7 +244,7 @@ class ProhibitionGateService {
 	 * PolicyMatchService not available — fail-CLOSED by default for a
 	 * privacy-critical safety gate. Silent fail-open would let any service
 	 * outage disable witness/undercover-officer protection. Operators can opt
-	 * into legacy fail-open via docudesk.prohibition.fail_closed=false in
+	 * into legacy fail-open via filinq.prohibition.fail_closed=false in
 	 * non-production environments.
 	 *
 	 * @param int $fileId Nextcloud file ID (for the log context).
@@ -257,7 +257,7 @@ class ProhibitionGateService {
 	 */
 	private function resolvePolicyService(int $fileId): mixed {
 		try {
-			return $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+			return $this->container->get('OCA\Filinq\Service\PolicyMatchService');
 		} catch (Throwable) {
 			// Fall through to the fail-mode handling below.
 		}

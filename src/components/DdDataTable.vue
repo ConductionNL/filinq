@@ -88,7 +88,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcCheckboxRadioSwitch, NcLoadingIcon } from '@nextcloud/vue'
 
 /**
- * Data table for DocuDesk index views.
+ * Data table for Filinq index views.
  *
  * Manual columns only (no schema mode). Per-column rendering via
  * `column-{key}` scoped slots; whole-row click via `row-click`;
@@ -234,7 +234,7 @@ export default {
 				first === undefined || first === null || first === ''
 					? row[this.rowKey]
 					: first
-			return t('docudesk', 'Select {row}', { row: String(name ?? '') })
+			return t('filinq', 'Select {row}', { row: String(name ?? '') })
 		},
 	},
 }

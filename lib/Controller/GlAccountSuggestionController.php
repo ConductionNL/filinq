@@ -7,12 +7,12 @@
  * endpoint that sits on top of an existing financial extraction.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
@@ -22,10 +22,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\GlAccountSuggestionService;
+use OCA\Filinq\Service\GlAccountSuggestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -38,10 +38,10 @@ use Psr\Log\LoggerInterface;
  * Controller for the GL-account suggestion endpoint.
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
@@ -76,7 +76,7 @@ class GlAccountSuggestionController extends Controller {
 	 *
 	 * Accepts an optional `{candidateAccounts: [{code, label}]}` body to
 	 * constrain/seed ranking, and dispatches
-	 * `nl.conduction.docudesk.gl-account.suggested` on success.
+	 * `nl.conduction.filinq.gl-account.suggested` on success.
 	 *
 	 * @param string $id The `financialExtraction` object id.
 	 *

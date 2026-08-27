@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DocuDesk BlockStyleCodec
+ * Filinq BlockStyleCodec
  *
  * Applies style and layout properties to an anchored paragraph, in place.
  *
@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,12 +17,12 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Editing;
+namespace OCA\Filinq\Service\Editing;
 
 use RuntimeException;
 
@@ -48,7 +48,7 @@ use RuntimeException;
  * family codec be tested against a plain string.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Editing
+ * @package  OCA\Filinq\Service\Editing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -56,7 +56,7 @@ use RuntimeException;
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  *
  * @spec openspec/specs/document-rich-editing/spec.md
  */
@@ -130,9 +130,9 @@ class BlockStyleCodec {
 	 * vocabulary, and two copies of "which keys are legal" is how they drift
 	 * into accepting different things.
 	 *
-	 * @param string $markup    The block markup.
-	 * @param array  $style     The style properties.
-	 * @param string $format    The package family constant.
+	 * @param string $markup The block markup.
+	 * @param array $style The style properties.
+	 * @param string $format The package family constant.
 	 * @param string $styleName A unique name a family may mint a style under.
 	 *
 	 * @return array{markup: string, automaticStyle: string|null} The rewritten block and any style to inject.

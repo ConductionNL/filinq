@@ -1,6 +1,6 @@
 ## Services
 
-DocuDesk's backend is built around several key services:
+Filinq's backend is built around several key services:
 
 ### ReportingService
 Handles document analysis and report generation:

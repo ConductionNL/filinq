@@ -5,7 +5,7 @@
 
 ## 2. Flip the default to pdf-only
 
-- [x] 2.1 In `lib/Service/SettingsService.php` (~line 197–201), change the `docudesk.anonymisation.default_output_format` fallback from `'pdf'` to `'pdf-only'`; update the adjacent comment to describe the three modes.
+- [x] 2.1 In `lib/Service/SettingsService.php` (~line 197–201), change the `filinq.anonymisation.default_output_format` fallback from `'pdf'` to `'pdf-only'`; update the adjacent comment to describe the three modes.
 - [x] 2.2 In `lib/Service/AnonymizationService.php`, change the `anonymizeDocument()` default param from `$outputFormat='pdf'` to `$outputFormat='pdf-only'`; update its docblock.
 
 ## 3. Delete-after-convert in the conversion gate
@@ -32,7 +32,7 @@
 
 ## 6. Admin settings UI
 
-- [x] 6.1 In `src/views/settings/Settings.vue`, replace the boolean PDF switch with a three-option radio group (`pdf-only` / `pdf` / `preserve`) bound to `docudesk.anonymisation.default_output_format`; default the in-component value to `pdf-only` and load the persisted value with a `pdf-only` fallback.
+- [x] 6.1 In `src/views/settings/Settings.vue`, replace the boolean PDF switch with a three-option radio group (`pdf-only` / `pdf` / `preserve`) bound to `filinq.anonymisation.default_output_format`; default the in-component value to `pdf-only` and load the persisted value with a `pdf-only` fallback.
 - [x] 6.2 Fix the save mapping so the selected value is persisted as-is (validated against the three allowed values, defaulting to `pdf-only`) instead of being coerced to `pdf`/`preserve`; update labels/description i18n strings to describe the three modes.
 
 ## Acceptance criteria

@@ -30,7 +30,7 @@
  *
  * Consequences for any Nextcloud app's e2e suite on this runner:
  *   - WebDAV (`/remote.php/dav/...`) is unreachable, so no spec can create a
- *     real file node — DocuDesk's signing and folder-anonymisation journeys
+ *     real file node — Filinq's signing and folder-anonymisation journeys
  *     both seed one.
  *   - OCS (`/ocs/v2.php/...`) is unreachable, so user-status, capabilities and
  *     every other OCS call 404s. (`tests/e2e/spec-coverage/_helpers.ts` already
@@ -44,7 +44,7 @@
  * the `php -S` invocation it patches — every fleet app that touches files or
  * OCS hits this. It lives here only because a caller cannot influence that
  * command, and `tests/e2e/ci-seed.sh` restarts the server with this router
- * rather than leaving two of DocuDesk's workflow specs failing against an
+ * rather than leaving two of Filinq's workflow specs failing against an
  * environment fault they cannot be written around. Delete this file and the
  * restart block in ci-seed.sh once the shared workflow passes its own router.
  *

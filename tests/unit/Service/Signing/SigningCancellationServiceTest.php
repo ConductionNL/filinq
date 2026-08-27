@@ -9,7 +9,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests\Unit\Service\Signing
+ * @package  OCA\Filinq\Tests\Unit\Service\Signing
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,18 +17,18 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://docudesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Signing;
+namespace OCA\Filinq\Tests\Unit\Service\Signing;
 
-use OCA\DocuDesk\Exception\SigningCancellationNotSupportedException;
-use OCA\DocuDesk\Service\Signing\SigningCancellationService;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
-use OCA\DocuDesk\Service\Signing\SigningProviderInterface;
-use OCA\DocuDesk\Service\SigningService;
+use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Service\Signing\SigningCancellationService;
+use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Service\Signing\SigningProviderInterface;
+use OCA\Filinq\Service\SigningService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -41,8 +41,8 @@ class SigningCancellationServiceTest extends TestCase {
 	/**
 	 * Build the service over doubles.
 	 *
-	 * @param array|null $request  What getRequest() returns, or null.
-	 * @param object     $provider The provider double.
+	 * @param array|null $request What getRequest() returns, or null.
+	 * @param object $provider The provider double.
 	 *
 	 * @return SigningCancellationService The service.
 	 */
@@ -81,17 +81,17 @@ class SigningCancellationServiceTest extends TestCase {
 	 * A signing request fixture.
 	 *
 	 * @param string $creator The initiating user id.
-	 * @param string $status  The request status.
+	 * @param string $status The request status.
 	 *
 	 * @return array The request.
 	 */
 	private function request(string $creator = 'alice', string $status = 'pending'): array {
 		return [
-			'id'              => 'req-1',
+			'id' => 'req-1',
 			'initiatorUserId' => $creator,
-			'externalId'      => 'ext-1',
-			'status'          => $status,
-			'signerIds'       => ['bob'],
+			'externalId' => 'ext-1',
+			'status' => $status,
+			'signerIds' => ['bob'],
 		];
 	}//end request()
 

@@ -33,7 +33,7 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/release.yml@main
     with:
       release-type: unstable
-      app-name: docudesk
+      app-name: filinq
     secrets: inherit
 
   beta:
@@ -41,7 +41,7 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/release.yml@main
     with:
       release-type: beta
-      app-name: docudesk
+      app-name: filinq
     secrets: inherit
 
   stable:
@@ -49,5 +49,5 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/release.yml@main
     with:
       release-type: stable
-      app-name: docudesk
+      app-name: filinq
     secrets: inherit

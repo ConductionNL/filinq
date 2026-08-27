@@ -6,16 +6,16 @@
  * Pure, side-effect-free helper implementing the cold-start GL-account
  * fallback: matches admin-editable keyword/category rules against a
  * supplier name or document text when no booking history exists
- * (REQ-GLS-03). DocuDesk ships zero rules — the rule table is entirely
+ * (REQ-GLS-03). Filinq ships zero rules — the rule table is entirely
  * tenant-authored, so no chart of accounts is ever hardcoded here.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service\Suggestion
+ * @package   OCA\Filinq\Service\Suggestion
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
@@ -25,16 +25,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service\Suggestion;
+namespace OCA\Filinq\Service\Suggestion;
 
 /**
  * Matches admin-edited keyword/category rules against free text.
  *
  * @category Service
- * @package  OCA\DocuDesk\Service\Suggestion
+ * @package  OCA\Filinq\Service\Suggestion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */

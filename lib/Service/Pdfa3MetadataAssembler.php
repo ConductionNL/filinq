@@ -14,12 +14,12 @@
  * serialisation lives in one cohesive place.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,11 +29,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Service;
+namespace OCA\Filinq\Service;
 
 use DOMDocument;
 use Mpdf\Mpdf;
-use OCA\DocuDesk\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCP\IAppConfig;
 
 /**
@@ -41,11 +41,11 @@ use OCP\IAppConfig;
  * and embedded-attachment set.
  *
  * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @package   OCA\Filinq\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
@@ -54,12 +54,12 @@ class Pdfa3MetadataAssembler {
 	/**
 	 * App identifier used for IAppConfig reads.
 	 */
-	private const APP_ID = 'docudesk';
+	private const APP_ID = 'filinq';
 
 	/**
 	 * App config key: maximum size of a single embedded attachment, in bytes.
 	 */
-	private const CFG_MAX_ATTACHMENT_BYTES = 'docudesk.pdfa3.max_attachment_bytes';
+	private const CFG_MAX_ATTACHMENT_BYTES = 'filinq.pdfa3.max_attachment_bytes';
 
 	/**
 	 * Default cap: 20 MiB per attachment.
@@ -114,9 +114,9 @@ class Pdfa3MetadataAssembler {
 			$mpdf->SetTitle($title);
 		}
 
-		$author = (string)($metadata['author'] ?? $metadata['creator'] ?? 'DocuDesk');
+		$author = (string)($metadata['author'] ?? $metadata['creator'] ?? 'Filinq');
 		$mpdf->SetAuthor($author);
-		$mpdf->SetCreator('DocuDesk PDF/A-3 Conversion');
+		$mpdf->SetCreator('Filinq PDF/A-3 Conversion');
 
 		if (isset($metadata['subject']) === true) {
 			$mpdf->SetSubject((string)$metadata['subject']);
@@ -209,6 +209,17 @@ class Pdfa3MetadataAssembler {
 	 * description block under the `docudesk` namespace. Values are
 	 * HTML/XML-escaped; keys are sanitised to valid XML local names.
 	 *
+	 * ⚠️ THE XMP NAMESPACE URI AND PREFIX STAY `docudesk` ACROSS THE FILINQ
+	 * RENAME. An XML namespace URI is an IDENTIFIER, not an address: it is
+	 * baked into the XMP packet of every PDF/A-3 this app has already produced,
+	 * and an MDTO/archival consumer matches archival fields BY that URI.
+	 * Changing it does not rename the vocabulary — it declares a DIFFERENT one,
+	 * so files produced before and after the rename stop being readable by the
+	 * same rule, and an e-depot keyed on the old URI silently sees no archival
+	 * metadata at all on new deliveries. Nothing in this repo reads the packet
+	 * back, so no test would catch it. Moving the vocabulary is a versioned
+	 * MDTO-profile decision, not part of a rebrand.
+	 *
 	 * @param array<string,mixed> $metadata Caller-supplied metadata.
 	 *
 	 * @return string RDF/XML fragment, or '' when no archival fields were given.
@@ -255,6 +266,9 @@ class Pdfa3MetadataAssembler {
 		$doc = new DOMDocument(version: '1.0', encoding: 'UTF-8');
 		$doc->formatOutput = true;
 
+		// Root element name pinned to the pre-rename spelling for the same
+		// reason as the XMP namespace above: it is the document element of a
+		// sidecar XML already embedded in every PDF/A-3 this app has shipped.
 		$root = $doc->createElement('docudeskMetadata');
 		$doc->appendChild($root);
 

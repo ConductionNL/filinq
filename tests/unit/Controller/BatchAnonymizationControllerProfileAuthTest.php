@@ -4,7 +4,7 @@
  * Authorization-posture tests for BatchAnonymizationController's WOO profile endpoints.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,10 +17,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\BatchAnonymizationController;
-use OCA\DocuDesk\Settings\DocuDeskAdmin;
+use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use PHPUnit\Framework\TestCase;
@@ -61,9 +61,9 @@ class BatchAnonymizationControllerProfileAuthTest extends TestCase {
 		);
 
 		$this->assertSame(
-			[DocuDeskAdmin::class],
+			[FilinqAdmin::class],
 			$attributes[0]->getArguments(),
-			'The admin setting must be DocuDesk\'s own, matching SettingsController and AnonymiserWarningController.'
+			'The admin setting must be Filinq\'s own, matching SettingsController and AnonymiserWarningController.'
 		);
 
 	}//end testUpdateProfilesIsAdminOnly()
