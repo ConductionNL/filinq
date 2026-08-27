@@ -273,7 +273,7 @@ class PolicyCrudService {
 	 * OpenRegister's `ObjectService::deleteObject()` refuses every user-driven
 	 * delete on an archival schema and throws
 	 * `OCA\OpenRegister\Exception\ArchivalImmutableException`; rows are removed
-	 * only by `OCA\OpenRegister\Cron\ArchivalRetentionTask` once their
+	 * only by `OCA\OpenRegister\BackgroundJob\ArchivalRetentionTask` once their
 	 * retention lapses. `PolicyController::deleteProhibition()` translates that
 	 * refusal into HTTP 409 Conflict instead of letting it surface as a 500.
 	 *
