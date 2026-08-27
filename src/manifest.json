@@ -487,7 +487,7 @@
 							"optional": true,
 							"allowManualNext": true,
 							"title": "Where the automation lives",
-							"body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.",
+							"body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.",
 							"task": "Open Flows in the menu",
 							"target": {"kind": "nav-item", "ref": "Flows"},
 							"advanceOn": {"type": "route-match", "route": "Flows"}

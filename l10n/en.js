@@ -857,7 +857,7 @@ OC.L10N.register(
         "Revoke standing consent": "Revoke standing consent",
         "Total Consents — open the consent overview": "Total Consents — open the consent overview",
         "Where the automation lives": "Where the automation lives",
-        "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.",
+        "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.",
         "Open Flows in the menu": "Open Flows in the menu"
     },
     "nplurals=2; plural=(n != 1);"
