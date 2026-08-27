@@ -201,6 +201,12 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
                 throws.
             -->
             <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
+            <!-- Runs BEFORE ConsolidateRegisters, which moves rows between
+                 shard tables: renaming the columns first means the rows it
+                 moves already carry the English names the register declares.
+                 Reversing the order would migrate rows and leave the Dutch
+                 columns behind in the destination. -->
+            <step>OCA\Filinq\Repair\RenameDutchColumns</step>
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
         </post-migration>
         <install>
@@ -211,6 +217,11 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
                  this block is the one that actually fires on the upgrade the
                  step exists for. -->
             <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
+            <!-- Same step, same reason, same position: before
+                 ConsolidateRegisters. See the <post-migration> block. On a
+                 genuinely fresh install there are no shard tables and it
+                 returns having done nothing. -->
+            <step>OCA\Filinq\Repair\RenameDutchColumns</step>
             <!-- Same step, same reason, same position: LAST. See the comment
                  above the <repair-steps> block. -->
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
