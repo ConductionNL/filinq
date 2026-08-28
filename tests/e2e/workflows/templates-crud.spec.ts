@@ -287,9 +287,13 @@ test('Template create validation rejects missing required fields (name / content
 // create form ships on TemplateDetail.vue, this should drive name+content
 // through the UI and assert the new row appears — replacing the API-seeded
 // create leg above with a genuine UI-create journey.
-test.fixme('UI can create a template via the New-template editor form', async ({
+test('UI can create a template via the New-template editor form', async ({
 	page,
 }) => {
+	test.fixme(
+		true,
+		'product gap, not a failure: the Templates UI ships no create/edit/delete affordances. When a real create form lands on TemplateDetail.vue this should drive name+content through the UI and assert the new row appears, replacing the API-seeded create leg above with a genuine UI journey.',
+	)
 	await go(page, TemplateDetail)
 	await page.getByRole('button', { name: 'New template' }).click()
 	// TODO: fill name + content fields and save once TemplateDetail.vue is
