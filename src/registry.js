@@ -71,6 +71,7 @@ import CorrespondenceIndex from './views/correspondence/CorrespondenceIndex.vue'
 import CustomDictionaryDetail from './views/customDictionary/CustomDictionaryDetail.vue'
 import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryIndex.vue'
 import DashboardIndex from './views/dashboard/DashboardIndex.vue'
+import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
@@ -82,6 +83,12 @@ import TemplateDetail from './views/templates/TemplateDetail.vue'
 import VersionsView from './views/versions/VersionsView.vue'
 
 export default {
+	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
+	//     the list and the canvas are the shared `flows` / `flow-detail`
+	//     manifest page types. CnFlowSidebar has to mount in the NC app
+	//     sidebar for the canvas to keep full width. ---
+	FlowDetailSidebar: { kind: 'page', component: FlowDetailSidebar },
+
 	DashboardIndex: { kind: 'page', component: DashboardIndex },
 	ConsentIndex: { kind: 'page', component: ConsentIndex },
 	ConsentDetail: { kind: 'page', component: ConsentDetail },
