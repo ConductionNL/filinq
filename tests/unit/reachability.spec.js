@@ -292,7 +292,9 @@ function crossCheckManifestRegistry(manifest, registryEntries) {
 	for (const page of manifest.pages || []) {
 		if (page.type === 'custom' && typeof page.component === 'string') {
 			if (!pageKindKeys.has(page.component)) {
-				missingRegistryEntry.push(`${page.id} → component "${page.component}"`)
+				missingRegistryEntry.push(
+					`${page.id} → component "${page.component}"`,
+				)
 			}
 		}
 		if (typeof page.sidebarComponent === 'string') {
