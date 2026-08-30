@@ -4,7 +4,7 @@
  * Unit tests for FileUploadService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,12 +12,12 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\FileUploadService;
+use OCA\Filinq\Service\FileUploadService;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IUser;
@@ -30,148 +30,134 @@ use Psr\Log\LoggerInterface;
  * Unit tests for FileUploadService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class FileUploadServiceTest extends TestCase
-{
+class FileUploadServiceTest extends TestCase {
 
-    /**
-     * @var FileUploadService
-     */
-    private FileUploadService $service;
+	/**
+	 * @var FileUploadService
+	 */
+	private FileUploadService $service;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * @var IRootFolder|MockObject
-     */
-    private IRootFolder|MockObject $mockRootFolder;
+	/**
+	 * @var IRootFolder|MockObject
+	 */
+	private IRootFolder|MockObject $mockRootFolder;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $mockUserSession;
+	/**
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $mockUserSession;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
+		$this->mockRootFolder = $this->createMock(IRootFolder::class);
+		$this->mockUserSession = $this->createMock(IUserSession::class);
 
-        $this->mockLogger      = $this->createMock(LoggerInterface::class);
-        $this->mockRootFolder  = $this->createMock(IRootFolder::class);
-        $this->mockUserSession = $this->createMock(IUserSession::class);
+		$this->service = new FileUploadService(
+			$this->mockLogger,
+			$this->mockRootFolder,
+			$this->mockUserSession
+		);
 
-        $this->service = new FileUploadService(
-            $this->mockLogger,
-            $this->mockRootFolder,
-            $this->mockUserSession
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test getCurrentUserId throws when no user logged in
+	 *
+	 * @return void
+	 */
+	public function testGetCurrentUserIdThrowsWhenNoUser(): void {
+		$this->expectException(\Exception::class);
+		$this->expectExceptionMessage('No user is currently logged in.');
 
+		$this->mockUserSession->method('getUser')
+			->willReturn(null);
 
-    /**
-     * Test getCurrentUserId throws when no user logged in
-     *
-     * @return void
-     */
-    public function testGetCurrentUserIdThrowsWhenNoUser(): void
-    {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('No user is currently logged in.');
+		$this->service->getCurrentUserId();
 
-        $this->mockUserSession->method('getUser')
-            ->willReturn(null);
+	}//end testGetCurrentUserIdThrowsWhenNoUser()
 
-        $this->service->getCurrentUserId();
+	/**
+	 * Test getCurrentUserId returns user ID
+	 *
+	 * @return void
+	 */
+	public function testGetCurrentUserIdReturnsUserId(): void {
+		$mockUser = $this->createMock(IUser::class);
+		$mockUser->method('getUID')
+			->willReturn('admin');
 
-    }//end testGetCurrentUserIdThrowsWhenNoUser()
+		$this->mockUserSession->method('getUser')
+			->willReturn($mockUser);
 
+		$this->assertEquals('admin', $this->service->getCurrentUserId());
 
-    /**
-     * Test getCurrentUserId returns user ID
-     *
-     * @return void
-     */
-    public function testGetCurrentUserIdReturnsUserId(): void
-    {
-        $mockUser = $this->createMock(IUser::class);
-        $mockUser->method('getUID')
-            ->willReturn('admin');
+	}//end testGetCurrentUserIdReturnsUserId()
 
-        $this->mockUserSession->method('getUser')
-            ->willReturn($mockUser);
+	/**
+	 * Test resolveUniqueFileName returns original when no conflict
+	 *
+	 * @return void
+	 */
+	public function testResolveUniqueFileNameNoConflict(): void {
+		$mockFolder = $this->createMock(Folder::class);
+		$mockFolder->method('nodeExists')
+			->willReturn(false);
 
-        $this->assertEquals('admin', $this->service->getCurrentUserId());
+		$result = $this->service->resolveUniqueFileName($mockFolder, 'test.pdf');
+		$this->assertEquals('test.pdf', $result);
 
-    }//end testGetCurrentUserIdReturnsUserId()
+	}//end testResolveUniqueFileNameNoConflict()
 
+	/**
+	 * Test resolveUniqueFileName appends counter on conflict
+	 *
+	 * @return void
+	 */
+	public function testResolveUniqueFileNameWithConflict(): void {
+		$mockFolder = $this->createMock(Folder::class);
+		$mockFolder->method('nodeExists')
+			->willReturnMap([
+				['test.pdf', true],
+				['test_1.pdf', false],
+			]);
 
-    /**
-     * Test resolveUniqueFileName returns original when no conflict
-     *
-     * @return void
-     */
-    public function testResolveUniqueFileNameNoConflict(): void
-    {
-        $mockFolder = $this->createMock(Folder::class);
-        $mockFolder->method('nodeExists')
-            ->willReturn(false);
+		$result = $this->service->resolveUniqueFileName($mockFolder, 'test.pdf');
+		$this->assertEquals('test_1.pdf', $result);
 
-        $result = $this->service->resolveUniqueFileName($mockFolder, 'test.pdf');
-        $this->assertEquals('test.pdf', $result);
+	}//end testResolveUniqueFileNameWithConflict()
 
-    }//end testResolveUniqueFileNameNoConflict()
+	/**
+	 * Test getFilinqFolder throws when no user logged in
+	 *
+	 * @return void
+	 */
+	public function testGetFilinqFolderThrowsWhenNoUser(): void {
+		$this->expectException(\Exception::class);
 
+		$this->mockUserSession->method('getUser')
+			->willReturn(null);
 
-    /**
-     * Test resolveUniqueFileName appends counter on conflict
-     *
-     * @return void
-     */
-    public function testResolveUniqueFileNameWithConflict(): void
-    {
-        $mockFolder = $this->createMock(Folder::class);
-        $mockFolder->method('nodeExists')
-            ->willReturnMap([
-                ['test.pdf', true],
-                ['test_1.pdf', false],
-            ]);
+		$this->service->getFilinqFolder();
 
-        $result = $this->service->resolveUniqueFileName($mockFolder, 'test.pdf');
-        $this->assertEquals('test_1.pdf', $result);
-
-    }//end testResolveUniqueFileNameWithConflict()
-
-
-    /**
-     * Test getDocuDeskFolder throws when no user logged in
-     *
-     * @return void
-     */
-    public function testGetDocuDeskFolderThrowsWhenNoUser(): void
-    {
-        $this->expectException(\Exception::class);
-
-        $this->mockUserSession->method('getUser')
-            ->willReturn(null);
-
-        $this->service->getDocuDeskFolder();
-
-    }//end testGetDocuDeskFolderThrowsWhenNoUser()
-
+	}//end testGetFilinqFolderThrowsWhenNoUser()
 
 }//end class

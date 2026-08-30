@@ -1,7 +1,16 @@
+---
+status: in-progress
+---
+
 # document-validation-checks Specification
 
+**Status**: in-progress
+**OpenSpec changes**:
+- [pdfua-accessible-output](../../changes/pdfua-accessible-output/) _(active)_ — adds the accessibility check category (`pdf-not-tagged`, `pdf-language-missing`, `pdf-title-missing`, `pdfua-identifier-missing`; REQ-DDPUA-003) riding the existing profile/severity mechanism (kind: code)
+- [verapdf-validation](../../changes/verapdf-validation/) _(active)_ — adds the validator-backed `archival` check category (`pdfa-conformance-failed`, `pdfa-font-not-embedded`, `archival-validator-unavailable`; REQ-DDVPV-005) and amends the shipped-defaults sentence of the profiles requirement (archival checks default `off`) (kind: code)
+
 ## Purpose
-TBD - created by archiving change document-validation-checks. Update Purpose after archive.
+Runs a catalogue of document quality checks covering format allowlisting, extension/mime consistency, file integrity, PDF encryption, text-layer presence, and metadata completeness, returning structured findings keyed by a stable check ID and severity. It is a pure computation backend that reads document content and records but never writes fields, creates objects, or modifies files. This lets Filinq flag documents that are unreadable, scan-only, encrypted, or missing required metadata before further processing.
 ## Requirements
 ### Requirement: The check catalogue MUST cover format, integrity, encryption, text-layer, and metadata completeness
 
@@ -13,7 +22,7 @@ TBD - created by archiving change document-validation-checks. Update Purpose aft
 - `extension-mime-mismatch` — file extension does not match the sniffed mime type.
 - `file-unreadable` — `DocumentTextExtractor` cannot parse the file (corruption or unsupported structure).
 - `pdf-encrypted` — the PDF is encrypted/password-protected (and therefore cannot be anonymised).
-- `text-layer-missing` — a page-bearing format yields on average fewer extracted characters per page than app config `docudesk.validation.text_layer_min_chars_per_page` (default 32); the finding MUST carry `suggestedAction: "ocr"`.
+- `text-layer-missing` — a page-bearing format yields on average fewer extracted characters per page than app config `filinq.validation.text_layer_min_chars_per_page` (default 32); the finding MUST carry `suggestedAction: "ocr"`.
 - `metadata-incomplete` — a required metadata field per the profile is absent or empty on the document record; the finding MUST name the field.
 
 The service is a pure computation backend: it MUST NOT write fields, create objects, or modify files.
@@ -53,7 +62,7 @@ The service is a pure computation backend: it MUST NOT write fields, create obje
 
 ### Requirement: Validation profiles MUST be configurable per document type with per-check severity
 
-Profiles live in app config `docudesk.validation.profiles`: per document type an allowed-mime list, required metadata fields, and a severity per check from `off | warning | blocking`. Unknown document types MUST resolve to the `default` profile. Shipped defaults MUST set every check to `warning` (no blocking out of the box). Profile reads happen at validation time so config changes propagate without restart.
+Profiles live in app config `filinq.validation.profiles`: per document type an allowed-mime list, required metadata fields, and a severity per check from `off | warning | blocking`. Unknown document types MUST resolve to the `default` profile. Shipped defaults MUST set every check to `warning` (no blocking out of the box). Profile reads happen at validation time so config changes propagate without restart.
 
 @e2e exclude Profile resolution, per-check severity, default fallback, off-skip — config-driven service logic. Covered by PHPUnit (DocumentValidationServiceTest).
 
@@ -87,7 +96,7 @@ Profiles live in app config `docudesk.validation.profiles`: per document type an
 
 ### Requirement: The verdict MUST be stored as an OR calculation, not an ad-hoc write
 
-`validationStatus` and `validationFindings` SHALL be declared as `x-openregister-calculations` on the document/report schemas in `docudesk_register.json`, with `DocumentValidationService` as the computation backend (same phasing as `metadata-enrichment` REQ-META-CAL: until OR's ADR-031 calculation runtime ships, the event-listener fallback dispatches the same service; the listener MUST NOT contain validation logic). `validationStatus` aggregates findings: any `blocking`-severity finding → `failed`; otherwise any `warning` finding → `warnings`; otherwise `passed`. Records never validated render as "not yet validated" (absent value); no backfill migration.
+`validationStatus` and `validationFindings` SHALL be declared as `x-openregister-calculations` on the document/report schemas in `filinq_register.json`, with `DocumentValidationService` as the computation backend (same phasing as `metadata-enrichment` REQ-META-CAL: until OR's ADR-031 calculation runtime ships, the event-listener fallback dispatches the same service; the listener MUST NOT contain validation logic). `validationStatus` aggregates findings: any `blocking`-severity finding → `failed`; otherwise any `warning` finding → `warnings`; otherwise `passed`. Records never validated render as "not yet validated" (absent value); no backfill migration.
 
 @e2e exclude Verdict aggregation + calculation/listener-fallback storage — backend wiring (x-openregister-calculations on generatedDocument + ValidationRunner). Covered by PHPUnit and the schema annotation; not browser-observable in isolation.
 
@@ -180,6 +189,6 @@ The document listing and detail views MUST show a verdict chip (`passed` / `warn
 @e2e exclude DEFERRED with the admin profile-editor UI (tasks.md task 7) — the per-check severity selector + blocking-active banner ships in the admin-settings overhaul; the config key + severity semantics are built and tested server-side here.
 
 - **GIVEN** at least one check in any profile set to `blocking`
-- **WHEN** the admin opens DocuDesk validation settings
+- **WHEN** the admin opens Filinq validation settings
 - **THEN** a summary banner states that blocking checks are active and names them
 

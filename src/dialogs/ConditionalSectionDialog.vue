@@ -1,35 +1,39 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Insert conditional section')"
+	<NcDialog
+		:name="t('filinq', 'Insert conditional section')"
 		@closing="$emit('close')">
 		<template #default>
-			<NcTextField :value.sync="condField"
-				:label="t('docudesk', 'Field name')"
-				:placeholder="t('docudesk', 'e.g. zaaktype')" />
-			<NcSelect v-model="condOp"
+			<NcTextField
+				v-model="condField"
+				:label="t('filinq', 'Field name')"
+				:placeholder="t('filinq', 'e.g. zaaktype')" />
+			<NcSelect
+				v-model="condOp"
 				:options="opOptions"
-				:input-label="t('docudesk', 'Operator')" />
-			<NcTextField v-if="needsValue"
-				:value.sync="condValue"
-				:label="t('docudesk', 'Value')"
-				:placeholder="t('docudesk', 'e.g. omgevingsvergunning')" />
+				:inputLabel="t('filinq', 'Operator')" />
+			<NcTextField
+				v-if="needsValue"
+				v-model="condValue"
+				:label="t('filinq', 'Value')"
+				:placeholder="t('filinq', 'e.g. omgevingsvergunning')" />
 			<p class="conditional-dialog__hint">
 				{{ preview }}
 			</p>
 		</template>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" @click="confirm">
-				{{ t('docudesk', 'Insert') }}
+			<NcButton variant="primary" @click="confirm">
+				{{ t('filinq', 'Insert') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog, NcSelect, NcTextField } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'ConditionalSectionDialog',
@@ -42,6 +46,7 @@ export default {
 			condValue: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * Conditional operator options for the dialog dropdown.
@@ -50,13 +55,14 @@ export default {
 		 */
 		opOptions() {
 			return [
-				{ label: t('docudesk', 'equals'), value: 'equals' },
-				{ label: t('docudesk', 'not equals'), value: 'not_equals' },
-				{ label: t('docudesk', 'contains'), value: 'contains' },
-				{ label: t('docudesk', 'is empty'), value: 'is_empty' },
-				{ label: t('docudesk', 'is not empty'), value: 'is_not_empty' },
+				{ label: t('filinq', 'equals'), value: 'equals' },
+				{ label: t('filinq', 'not equals'), value: 'not_equals' },
+				{ label: t('filinq', 'contains'), value: 'contains' },
+				{ label: t('filinq', 'is empty'), value: 'is_empty' },
+				{ label: t('filinq', 'is not empty'), value: 'is_not_empty' },
 			]
 		},
+
 		/**
 		 * Whether the selected operator requires a comparison value.
 		 *
@@ -66,6 +72,7 @@ export default {
 			const op = this.condOp?.value || this.condOp
 			return op !== 'is_empty' && op !== 'is_not_empty'
 		},
+
 		/**
 		 * Live Twig-syntax preview of the conditional section.
 		 *
@@ -85,6 +92,7 @@ export default {
 			return `{% if ${field} ${labels[op] || op} %}…{% endif %}`
 		},
 	},
+
 	methods: {
 		t,
 		/**

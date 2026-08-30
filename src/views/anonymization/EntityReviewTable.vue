@@ -1,99 +1,186 @@
 <template>
 	<div class="entity-review">
 		<div class="summary-bar">
-			{{ selectedCount }} of {{ entities.length }} entities selected across {{ fileCount }} files
+			{{
+				t(
+					'filinq',
+					'{selected} of {total} entities selected across {files} files',
+					{
+						selected: selectedCount,
+						total: entities.length,
+						files: fileCount,
+					},
+				)
+			}}
 		</div>
 		<div class="filter-bar">
-			<input v-model="searchQuery" type="text" placeholder="Search entities...">
+			<input
+				v-model="searchQuery"
+				type="text"
+				:aria-label="t('filinq', 'Search entities')"
+				:placeholder="t('filinq', 'Search entities...')" />
 			<select v-model="typeFilter">
 				<option value="">
-					All types
-				</option><option v-for="t in availableTypes" :key="t" :value="t">
-					{{ t }}
+					{{ t('filinq', 'All types') }}
+				</option>
+				<option v-for="t in availableTypes" :key="t" :value="t">
+					{{ entityTypeLabel(t) }}
 				</option>
 			</select>
 		</div>
 		<div class="bulk-actions">
-			<NcButton type="tertiary" @click="$emit('bulk-select', filteredEntities.map(i => i.idx))">
-				Select All Visible
+			<NcButton
+				variant="tertiary"
+				@click="
+					$emit(
+						'bulk-select',
+						filteredEntities.map((i) => i.idx),
+					)
+				">
+				{{ t('filinq', 'Select All Visible') }}
 			</NcButton>
-			<NcButton type="tertiary" @click="$emit('bulk-deselect', filteredEntities.map(i => i.idx))">
-				Deselect All Visible
+			<NcButton
+				variant="tertiary"
+				@click="
+					$emit(
+						'bulk-deselect',
+						filteredEntities.map((i) => i.idx),
+					)
+				">
+				{{ t('filinq', 'Deselect All Visible') }}
 			</NcButton>
-			<NcButton v-if="defaultBases.length > 0" type="tertiary" @click="applyDefaultBasesToVisible">
-				Apply dossier grondslagen to visible
+			<NcButton
+				v-if="defaultBases.length > 0"
+				variant="tertiary"
+				@click="applyDefaultBasesToVisible">
+				{{ t('filinq', 'Apply dossier grondslagen to visible') }}
 			</NcButton>
 		</div>
 		<table class="entity-table">
 			<thead>
 				<tr>
-					<th /><th @click="sortBy('type')">
-						Type
-					</th><th @click="sortBy('value')">
-						Value
-					</th><th @click="sortBy('highestConfidence')">
-						Confidence
-					</th><th @click="sortBy('fileCount')">
-						Files
-					</th><th class="bases-col">
-						Grondslag (bases)
-					</th><th>
-						Skip
+					<th />
+					<th scope="col" @click="sortBy('type')">
+						{{ t('filinq', 'Type') }}
+					</th>
+					<th scope="col" @click="sortBy('value')">
+						{{ t('filinq', 'Value') }}
+					</th>
+					<th scope="col" @click="sortBy('highestConfidence')">
+						{{ t('filinq', 'Confidence') }}
+					</th>
+					<th scope="col" @click="sortBy('fileCount')">
+						{{ t('filinq', 'Files') }}
+					</th>
+					<th scope="col" class="bases-col">
+						{{ t('filinq', 'Grondslag (bases)') }}
+					</th>
+					<th scope="col">
+						{{ t('filinq', 'Skip') }}
 					</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr v-for="item in filteredEntities" :key="item.idx">
-					<td><input type="checkbox" :checked="item.e.included" @change="$emit('toggle', item.idx)"></td>
-					<td><span class="badge">{{ item.e.type }}</span></td><td>{{ item.e.value }}</td>
-					<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
+					<td>
+						<input
+							type="checkbox"
+							:aria-label="
+								t('filinq', 'Include {entity} in anonymisation', {
+									entity: item.e.value,
+								})
+							"
+							:checked="item.e.included"
+							@change="$emit('toggle', item.idx)" />
+					</td>
+					<td>
+						<span class="badge">{{ entityTypeLabel(item.e.type) }}</span>
+					</td>
+					<td>{{ item.e.value }}</td>
+					<td>
+						{{ ((item.e.highestConfidence || 0) * 100).toFixed(1) }}%
+					</td>
+					<td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
 						<NcSelect
-							:value="item.e._decisionBases || []"
+							:modelValue="item.e._decisionBases || []"
 							:options="basesOptions"
+							label="label"
+							:reduce="(o) => o.value"
 							:multiple="true"
-							:input-label="t('docudesk', 'Grondslagen')"
-							:placeholder="t('docudesk', 'Pick grondslagen…')"
-							:disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0"
-							@input="onBasesChange(item.idx, $event)" />
-						<div v-if="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0" class="warn-text">
-							{{ t('docudesk', '(no relation ids — grondslagen will not persist)') }}
+							:inputLabel="t('filinq', 'Grondslagen')"
+							:placeholder="t('filinq', 'Pick grondslagen…')"
+							:disabled="
+								!Array.isArray(item.e.relationIds)
+								|| item.e.relationIds.length === 0
+							"
+							@update:modelValue="onBasesChange(item.idx, $event)" />
+						<div
+							v-if="
+								!Array.isArray(item.e.relationIds)
+								|| item.e.relationIds.length === 0
+							"
+							class="warn-text">
+							{{
+								t(
+									'filinq',
+									'(no relation ids — grondslagen will not persist)',
+								)
+							}}
 						</div>
-						<div v-if="item.e._patchError" class="error-text" :title="item.e._patchError">
+						<div
+							v-if="item.e._patchError"
+							class="error-text"
+							:title="item.e._patchError">
 							{{ item.e._patchError }}
 						</div>
 					</td>
 					<td>
 						<NcCheckboxRadioSwitch
-							:checked="!!item.e._decisionSkip"
-							:disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0"
-							@update:checked="onSkipChange(item.idx, $event)" />
+							:aria-label="
+								t('filinq', 'Skip {entity}', {
+									entity: item.e.value,
+								})
+							"
+							:modelValue="!!item.e._decisionSkip"
+							:disabled="
+								!Array.isArray(item.e.relationIds)
+								|| item.e.relationIds.length === 0
+								|| !!(
+									item.e.prohibitionMatch
+									&& item.e.prohibitionMatch.highConfidence
+								)
+							"
+							@update:modelValue="onSkipChange(item.idx, $event)" />
 					</td>
 				</tr>
 			</tbody>
 		</table>
+		<ProhibitionBlockedDialog
+			:open="blockOpen"
+			:block="blockInfo"
+			@update:open="blockOpen = $event"
+			@force="onForceSkip" />
 	</div>
 </template>
+
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
-
-// Woo Art. 5 grondslagen seeded by the dossier register (Wave 1.1).
-// Hardcoded here to match AnonymizationWidget — a production page
-// would fetch /apps/openregister/api/objects/dossier/base so that
-// custom bases added by tenants surface too.
-const BASES_OPTIONS = [
-	'persoonsgegevens',
-	'bijzondere-persoonsgegevens',
-	'strafrechtelijk',
-	'bedrijfs-fabricagegegevens',
-	'onevenredige-benadeling',
-	'nationale-veiligheid',
-]
+import ProhibitionBlockedDialog from '../../dialogs/ProhibitionBlockedDialog.vue'
+import { fetchBaseOptions } from '../../services/bases.js'
+import { entityTypeLabel } from '../../services/entityTypes.js'
+import { anonymizationStore } from '../../store/store.js'
 
 export default {
 	name: 'EntityReviewTable',
-	components: { NcButton, NcCheckboxRadioSwitch, NcSelect },
+	components: {
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcSelect,
+		ProhibitionBlockedDialog,
+	},
+
 	props: {
 		entities: { type: Array, required: true },
 		fileCount: { type: Number, default: 0 },
@@ -102,29 +189,48 @@ export default {
 		// visible entity's _decisionBases gets set to this list.
 		defaultBases: { type: Array, default: () => [] },
 	},
-	emits: ['toggle', 'bulk-select', 'bulk-deselect', 'bases-change', 'skip-change', 'confidence-change'],
+
+	emits: [
+		'toggle',
+		'bulk-select',
+		'bulk-deselect',
+		'bases-change',
+		'skip-change',
+		'confidence-change',
+	],
+
 	data() {
 		return {
 			searchQuery: '',
 			typeFilter: '',
 			sf: 'highestConfidence',
 			sa: false,
-			basesOptions: BASES_OPTIONS,
+			basesOptions: [],
+			blockOpen: false,
+			blockInfo: null,
+			pendingSkipIdx: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Count of entities currently included for anonymization.
 		 *
 		 * @spec openspec/specs/anonymization-entity-review/spec.md
 		 */
-		selectedCount() { return this.entities.filter(e => e.included).length },
+		selectedCount() {
+			return this.entities.filter((e) => e.included).length
+		},
+
 		/**
 		 * Distinct sorted list of entity types for the type filter dropdown.
 		 *
 		 * @spec openspec/specs/anonymization-entity-review/spec.md
 		 */
-		availableTypes() { return [...new Set(this.entities.map(e => e.type))].sort() },
+		availableTypes() {
+			return [...new Set(this.entities.map((e) => e.type))].sort()
+		},
+
 		/**
 		 * Entities filtered by search query and type, then sorted.
 		 *
@@ -132,22 +238,155 @@ export default {
 		 */
 		filteredEntities() {
 			const q = this.searchQuery.toLowerCase()
-			return this.entities.map((e, i) => ({ e, idx: i }))
-				.filter(({ e }) => (!q || e.value.toLowerCase().includes(q)) && (!this.typeFilter || e.type === this.typeFilter))
-				.sort((a, b) => { const va = a.e[this.sf]; const vb = b.e[this.sf]; const c = typeof va === 'string' ? va.localeCompare(vb) : (va || 0) - (vb || 0); return this.sa ? c : -c })
+			return this.entities
+				.map((e, i) => ({ e, idx: i }))
+				.filter(
+					({ e }) =>
+						(!q || e.value.toLowerCase().includes(q))
+						&& (!this.typeFilter || e.type === this.typeFilter),
+				)
+				.sort((a, b) => {
+					const va = a.e[this.sf]
+					const vb = b.e[this.sf]
+					const c =
+						typeof va === 'string'
+							? va.localeCompare(vb)
+							: (va || 0) - (vb || 0)
+					return this.sa ? c : -c
+				})
 		},
 	},
+
+	async created() {
+		// Grondslagen options come from the register (label = name, value = slug),
+		// with a slug fallback on error. See services/bases.js.
+		this.basesOptions = await fetchBaseOptions()
+	},
+
 	methods: {
 		t,
-		sortBy(f) { if (this.sf === f) { this.sa = !this.sa } else { this.sf = f; this.sa = false } },
+		entityTypeLabel,
+		sortBy(f) {
+			if (this.sf === f) {
+				this.sa = !this.sa
+			} else {
+				this.sf = f
+				this.sa = false
+			}
+		},
+
 		onBasesChange(idx, value) {
-			this.$emit('bases-change', { idx, bases: Array.isArray(value) ? value : [] })
+			const entity = this.entities[idx]
+			if (!entity) {
+				return
+			}
+			this.persistBases(entity, Array.isArray(value) ? value : [])
 		},
-		onSkipChange(idx, checked) {
-			this.$emit('skip-change', { idx, skip: !!checked })
+
+		// Persist a bases change on every relation immediately (bases are never
+		// prohibition-guarded); skipAnonymization is left at its current value.
+		persistBases(entity, bases) {
+			entity._decisionBases = bases
+			this.$emit('bases-change', { idx: this.entities.indexOf(entity), bases })
+			const relationIds =
+				Array.isArray(entity.relationIds) && entity.relationIds.length > 0
+					? entity.relationIds
+					: entity.relationId != null
+						? [entity.relationId]
+						: []
+			if (relationIds.length === 0) {
+				return Promise.resolve({ ok: false, status: 0, body: {} })
+			}
+			return Promise.all(
+				relationIds.map((rid) =>
+					anonymizationStore.setRelationSkip(
+						rid,
+						!!entity._decisionSkip,
+						false,
+						bases,
+					),
+				),
+			).then((results) => {
+				const bad = results.find((r) => !r.ok)
+				if (bad) {
+					entity._patchError =
+						bad.body?.error || 'Failed to save grondslagen'
+					return bad
+				}
+				entity.bases = [...bases]
+				entity._patchError = null
+				return { ok: true, status: 200, body: {} }
+			})
 		},
+
+		// The "included" checkbox is the skip control: unchecking = skip.
+		onIncludedChange(idx, checked) {
+			return this.onSkipChange(idx, !checked)
+		},
+
+		async onSkipChange(idx, checked) {
+			const entity = this.entities[idx]
+			if (!entity) {
+				return
+			}
+			const res = await this.persistSkip(entity, !!checked, false)
+			if (!res.ok && res.status === 422) {
+				this.pendingSkipIdx = idx
+				this.blockInfo = res.body
+				this.blockOpen = true
+			}
+		},
+
+		// Persist one entity's skip/include across all its relations through
+		// the guarded endpoint; only mutate local state on success so a blocked
+		// skip leaves the toggle reverted.
+		persistSkip(entity, skip, force) {
+			const relationIds =
+				Array.isArray(entity.relationIds) && entity.relationIds.length > 0
+					? entity.relationIds
+					: entity.relationId != null
+						? [entity.relationId]
+						: []
+			if (relationIds.length === 0) {
+				return Promise.resolve({ ok: false, status: 0, body: {} })
+			}
+			return Promise.all(
+				relationIds.map((rid) =>
+					anonymizationStore.setRelationSkip(rid, skip, force),
+				),
+			).then((results) => {
+				const bad = results.find((r) => !r.ok)
+				if (bad) {
+					return bad
+				}
+				entity._decisionSkip = skip
+				entity.skipAnonymization = skip
+				entity.included = !skip
+				entity._patchError = null
+				this.$emit('skip-change', {
+					idx: this.entities.indexOf(entity),
+					skip,
+				})
+				return { ok: true, status: 200, body: {} }
+			})
+		},
+
+		// Dialog force action: retry the pending skip with force=true.
+		onForceSkip() {
+			const idx = this.pendingSkipIdx
+			if (idx == null || !this.entities[idx]) {
+				return
+			}
+			this.persistSkip(this.entities[idx], true, true).then((res) => {
+				if (!res.ok) {
+					this.blockInfo = res.body
+					this.blockOpen = res.status === 422
+				}
+			})
+		},
+
 		applyDefaultBasesToVisible() {
-			const visibleIdx = this.filteredEntities.map(i => i.idx)
+			const visibleIdx = this.filteredEntities.map((i) => i.idx)
 			for (const idx of visibleIdx) {
 				this.$emit('bases-change', { idx, bases: [...this.defaultBases] })
 			}
@@ -155,6 +394,7 @@ export default {
 	},
 }
 </script>
+
 <style scoped>
 .entity-review {
 	margin: 16px 0;

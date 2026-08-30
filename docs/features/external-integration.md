@@ -3,75 +3,30 @@ id: external-integration
 title: External Integration
 sidebar_label: External Integration
 sidebar_position: 6
-description: Seamlessly integrate with external systems while maintaining document sovereignty
+description: Integrate Filinq with workflow tools and Nextcloud's own office-app integrations
 keywords:
   - integration
-  - SharePoint
-  - Office 365
-  - collaboration
+  - OpenConnector
+  - Windmill
+  - n8n
+  - Collabora
+  - OnlyOffice
 ---
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 # 🤝 External Integration
 
 ## Overview
-Connect seamlessly with external systems while maintaining complete control over your documents and processing.
+Filinq does not ship a bespoke connector for external platforms such as SharePoint or Office 365. Integration happens through two real, implemented paths:
 
-## Features
+## Integration Capabilities
 
-### Integration Capabilities
-- SharePoint connectivity
-- Office 365 integration
-- Case management systems
-- Custom API support
-- Secure metadata sync
+### Nextcloud office-app conversion
+PDF conversion dispatches through Nextcloud's `IConversionManager` (NC 31+). When an office app — Collabora, OnlyOffice, or Euro Office — is installed and registered as a conversion provider, Filinq uses it for the highest-fidelity source-to-PDF conversion, falling through to LibreOffice headless, PhpWord, or mPDF when no provider is registered. This is a Nextcloud-internal integration, not a connection to Microsoft 365 or SharePoint.
 
-## Quick Start
-
-<Tabs>
-<TabItem value="sharepoint" label="SharePoint" default>
-
-```php
-// Sync with SharePoint
-$connector = $integrationService->connect('sharepoint', [
-    'site' => 'https://company.sharepoint.com/sites/docs',
-    'syncMode' => 'metadata_only'
-]);
-
-$connector->syncDocument($documentId);
-```
-
-</TabItem>
-<TabItem value="office365" label="Office 365">
-
-```php
-// Office 365 integration
-$result = $integrationService->shareDocument(
-    documentId: 123,
-    platform: 'office365',
-    options: [
-        'permissions' => 'read',
-        'expiration' => '+7 days'
-    ]
-);
-```
-
-</TabItem>
-</Tabs>
-
-:::tip Data Sovereignty
-Only metadata is synchronized with external systems - documents remain secure in your local environment.
-:::
-
-:::info Flexible Integration
-Connect to any external system while maintaining complete control over document processing and storage.
-:::
+### Workflow automation (OpenConnector, Windmill, n8n)
+Filinq exposes its document generation, anonymisation, and signing operations through its REST API and OpenRegister objects. Workflow tools such as OpenConnector, Windmill, or n8n can call these endpoints as a step in a larger flow — for example, pulling fields from a register, calling Filinq to render a template, and routing the signed PDF onward. There is no dedicated no-code connector shipped in this app; integration is via the documented API.
 
 ## Use Cases
-- Hybrid cloud deployments
-- Enterprise system integration
-- Collaborative workflows
-- Cross-system document management
-- Secure external sharing 
+- Triggering document generation from a workflow tool (Windmill/n8n)
+- Rendering documents with the office app already installed on the Nextcloud instance (Collabora/OnlyOffice/Euro Office)
+- Cross-system document routing via OpenConnector

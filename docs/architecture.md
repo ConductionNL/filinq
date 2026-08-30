@@ -1,17 +1,17 @@
-# DocuDesk Architecture
+# Filinq Architecture
 
 ## Overview
 
-DocuDesk is a document anonymization and metadata enhancement app for Nextcloud. It integrates with OpenRegister for document storage, text extraction, and document manipulation. DocuDesk focuses on GDPR-compliant anonymization and metadata enhancement capabilities.
+Filinq is a document anonymization and metadata enhancement app for Nextcloud. It integrates with OpenRegister for document storage, text extraction, and document manipulation. Filinq focuses on GDPR-compliant anonymization and metadata enhancement capabilities.
 
 ## Architecture Diagram
 
-The following diagram shows how DocuDesk integrates with OpenRegister:
+The following diagram shows how Filinq integrates with OpenRegister:
 
 ```mermaid
 graph TB
     subgraph "Nextcloud"
-        subgraph "DocuDesk App"
+        subgraph "Filinq App"
             AC[AnonymizationController]
             MC[MetadataController]
             DC[DocumentController]
@@ -58,38 +58,38 @@ The following sequence diagram shows how document anonymization works:
 ```mermaid
 sequenceDiagram
     participant User
-    participant DocuDesk
+    participant Filinq
     participant OpenRegister
     participant Presidio
     participant Files
     
-    User->>DocuDesk: Request anonymization
-    DocuDesk->>OpenRegister: Get document
-    OpenRegister-->>DocuDesk: Document object
+    User->>Filinq: Request anonymization
+    Filinq->>OpenRegister: Get document
+    OpenRegister-->>Filinq: Document object
     
-    DocuDesk->>OpenRegister: Get extracted text
+    Filinq->>OpenRegister: Get extracted text
     OpenRegister->>Files: Read file
     Files-->>OpenRegister: File content
-    OpenRegister-->>DocuDesk: Extracted text
+    OpenRegister-->>Filinq: Extracted text
     
-    DocuDesk->>Presidio: Analyze text for entities
-    Presidio-->>DocuDesk: Detected entities
+    Filinq->>Presidio: Analyze text for entities
+    Presidio-->>Filinq: Detected entities
     
-    DocuDesk->>OpenRegister: Request anonymization
+    Filinq->>OpenRegister: Request anonymization
     OpenRegister->>Files: Read original file
     Files-->>OpenRegister: File content
     OpenRegister->>OpenRegister: Replace entities
     OpenRegister->>Files: Write anonymized file
     Files-->>OpenRegister: Anonymized file
     
-    OpenRegister-->>DocuDesk: Anonymized file node
-    DocuDesk->>OpenRegister: Update document metadata
-    DocuDesk-->>User: Anonymization complete
+    OpenRegister-->>Filinq: Anonymized file node
+    Filinq->>OpenRegister: Update document metadata
+    Filinq-->>User: Anonymization complete
 ```
 
 ## Component Responsibilities
 
-### DocuDesk Components
+### Filinq Components
 
 - **AnonymizationController**: Handles HTTP requests for anonymization operations
 - **MetadataController**: Handles HTTP requests for metadata operations
@@ -119,16 +119,16 @@ All documents are stored as objects in OpenRegister. The document object contain
 
 1. Document is stored in OpenRegister (via FileService)
 2. OpenRegister extracts text automatically (TextExtractionService)
-3. DocuDesk retrieves document and extracted text
-4. DocuDesk sends text to Presidio for entity detection
-5. DocuDesk uses OpenRegister DocumentService to replace detected entities
+3. Filinq retrieves document and extracted text
+4. Filinq sends text to Presidio for entity detection
+5. Filinq uses OpenRegister DocumentService to replace detected entities
 6. Anonymized file is created in Nextcloud Files
 7. Document metadata is updated with anonymization results
 
 ### Metadata Enhancement Process
 
 1. Document is stored in OpenRegister
-2. DocuDesk retrieves document object
+2. Filinq retrieves document object
 3. MetadataService extracts basic metadata from document object
 4. MetadataService enhances metadata with:
    - Language detection
@@ -141,21 +141,21 @@ All documents are stored as objects in OpenRegister. The document object contain
 
 ### OpenRegister Integration
 
-DocuDesk integrates with OpenRegister through:
+Filinq integrates with OpenRegister through:
 - **ObjectService**: For document CRUD operations
 - **TextExtractionService**: For accessing extracted text
 - **DocumentService**: For word replacement and anonymization
 
 ### Presidio Integration
 
-DocuDesk uses Presidio for entity detection:
+Filinq uses Presidio for entity detection:
 - Analyzer endpoint: Detects PII entities in text
 - Configurable confidence threshold
 - Supports multiple entity types (PERSON, EMAIL_ADDRESS, PHONE_NUMBER, etc.)
 
 ## Publication Consent Workflow
 
-For GDPR and Dutch Wet Open Overheid compliance, DocuDesk includes a publication consent management system. The following diagram shows the workflow:
+For GDPR and Dutch Wet Open Overheid compliance, Filinq includes a publication consent management system. The following diagram shows the workflow:
 
 ```mermaid
 stateDiagram-v2
@@ -205,7 +205,7 @@ The `publicationConsent` schema tracks:
 
 ## Configuration
 
-DocuDesk configuration includes:
+Filinq configuration includes:
 - `document_register`: OpenRegister register type for documents (default: 'document')
 - `document_schema`: OpenRegister schema type for documents (default: 'document')
 - `presidio_analyzer_url`: Presidio analyzer API URL

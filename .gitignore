@@ -2,24 +2,21 @@
 /.idea/
 /*.iml
 *.Identifier
-
 # Dependencies
 /vendor/
 /vendor-bin/*/vendor/
 /node_modules/
-
 # Build artifacts
 /js/
-
 # Documentation
 /docs/node_modules/
 /docs/build/
 /docs/.docusaurus/
 /website/node_modules/
 /website/.docusaurus/
-
 # Testing & Quality
 /.php-cs-fixer.cache
+.phpunit.cache
 /tests/.phpunit.cache
 /.phpunit.cache/
 .phpunit.cache/
@@ -29,37 +26,39 @@
 /phpmetrics/
 /quality-reports/
 /phpqa/
-
 # Test/build artifacts
-.phpunit.cache/
-.phpunit.result.cache
 phpmetrics/
-
 # Claude Code
 /.claude/
 /CLAUDE.md
-
 # SBOM is published as release asset (see SECURITY.md), not stored in repo
 sbom.cdx.json
 bom-php.cdx.json
 bom-npm.cdx.json
-
 # Playwright (journeydoc / ADR-030)
 /tests/e2e/.auth/
 /tests/e2e/playwright-report/
 /tests/e2e/test-results/
+# App-root duplicates of the two above. They are NOT redundant: the root
+# `playwright.config.ts` (local runs) writes under `tests/e2e/`, while the
+# CI-only `tests/e2e/playwright.config.ts` writes to the APP ROOT, because the
+# shared workflow uploads `server/apps/filinq/{playwright-report,test-results}/`.
 /test-results/
 /playwright-report/
-
 # Nextcloud
 /custom_apps/
 /config/
-
 # OS
 .DS_Store
 Thumbs.db
-
-# Claude Code
 .claude/worktrees/
 /coverage-vitest/
-/coverage/
+# macOS
+/js
+.phpunit.cache/
+
+# Agent/test scratch and tool caches — generated, never source.
+# Added by the 2026-08-25 fleet hygiene sweep (ADR-100 Decision 2).
+.stale/
+/.e2e-state/
+.phpunit.cache

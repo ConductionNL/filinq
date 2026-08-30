@@ -1,6 +1,31 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
-	"version": "1.0.0",
+		"setup": {
+			"version": 1,
+			"completionConfigKey": "setup_completed_version",
+			"steps": [
+				{
+					"id": "welcome",
+					"type": "info",
+					"title": "Welcome",
+					"body": "A short setup to get this app ready. Nothing here is required; you can close it and come back later."
+				},
+				{
+					"id": "demo-data",
+					"type": "run-action",
+					"action": "install-demo-data",
+					"title": "Demo data (optional)",
+					"required": false,
+					"body": "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install."
+				},
+				{
+					"id": "done",
+					"type": "summary",
+					"title": "All set"
+				}
+			]
+		},
+	"version": "1.1.0",
 	"dependencies": [
 		"openregister"
 	],
@@ -8,67 +33,103 @@
 		{
 			"id": "Dashboard",
 			"label": "Dashboard",
-			"icon": "icon-category-dashboard",
+			"icon": "ViewDashboardOutline",
 			"route": "Dashboard",
 			"order": 10
 		},
 		{
 			"id": "Consent",
 			"label": "Consent Management",
-			"icon": "icon-user",
+			"icon": "FileCheckOutline",
 			"route": "Consent",
 			"order": 20
 		},
 		{
 			"id": "Anonymization",
 			"label": "Anonymization",
-			"icon": "icon-password",
+			"icon": "EyeOffOutline",
 			"route": "Anonymization",
 			"order": 30
 		},
 		{
 			"id": "MyDocuments",
 			"label": "My Documents",
-			"icon": "icon-file",
+			"icon": "FileDocumentMultipleOutline",
 			"route": "MyDocuments",
 			"order": 35
 		},
 		{
 			"id": "FolderAnonymization",
 			"label": "Folder Analysis",
-			"icon": "icon-folder",
+			"icon": "FolderOutline",
 			"route": "FolderAnonymization",
 			"order": 40
 		},
 		{
 			"id": "Templates",
 			"label": "Templates",
-			"icon": "icon-files-dark",
+			"icon": "FileReplaceOutline",
 			"route": "Templates",
 			"order": 50
 		},
 		{
+			"id": "Correspondence",
+			"label": "Letters & correspondence",
+			"icon": "EmailOutline",
+			"route": "Correspondence",
+			"order": 55
+		},
+		{
 			"id": "SigningRequests",
 			"label": "Signing Requests",
-			"icon": "icon-rename",
+			"icon": "SignatureFreehand",
 			"route": "SigningRequests",
 			"order": 60
 		},
 		{
+			"id": "CustomDictionary",
+			"label": "Custom dictionaries",
+			"icon": "Domain",
+			"route": "CustomDictionary",
+			"order": 70
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
-			"icon": "icon-info",
-			"href": "https://docudesk.conduction.nl",
+			"icon": "BookOpenVariantOutline",
+			"href": "https://filinq.conduction.nl",
 			"section": "footer",
 			"order": 90
 		},
 		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
-			"icon": "icon-toggle",
+			"icon": "MapMarkerPath",
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 91
+		},
+		{
+			"id": "FlowsMenu",
+			"label": "Flows",
+			"icon": "Sitemap",
+			"route": "Flows",
+			"section": "settings",
+			"order": 96
+		}
+	],
+	"deepLinks": [
+		{
+			"registerSlug": "filinq",
+			"schemaSlug": "template",
+			"urlTemplate": "/apps/filinq/templates/{uuid}",
+			"displayName": "Template"
+		},
+		{
+			"registerSlug": "filinq",
+			"schemaSlug": "signingRequest",
+			"urlTemplate": "/apps/filinq/signing/{uuid}",
+			"displayName": "Signing request"
 		}
 	],
 	"pages": [
@@ -79,7 +140,7 @@
 			"title": "Dashboard",
 			"component": "DashboardIndex",
 			"config": {
-				"documentationUrl": "https://docudesk.conduction.nl"
+				"documentationUrl": "https://filinq.conduction.nl"
 			},
 			"_note": "DashboardIndex is a self-contained view that renders a single CnDashboardPage (KPI cards + recent-activity list + quick-anonymization panel). It is mounted via type:\"custom\" so only one CnDashboardPage renders — wrapping it as a body widget of a type:\"dashboard\" page nested CnDashboardPage-in-CnDashboardPage (hydra dashboard-antipattern)."
 		},
@@ -89,7 +150,7 @@
 			"type": "custom",
 			"title": "Consent Management",
 			"component": "ConsentIndex",
-			"_note": "Consent objects are fetched from docudesk's own PHP controller (not a plain OR index endpoint) and rendered via CnIndexPage with custom column formatters; type:custom preserves the existing data path."
+			"_note": "Consent objects are fetched from filinq's own PHP controller (not a plain OR index endpoint) and rendered via CnIndexPage with custom column formatters; type:custom preserves the existing data path."
 		},
 		{
 			"id": "ConsentDetail",
@@ -100,12 +161,28 @@
 			"_note": "Detail fetched via consent store; sidebar driven by navigationStore.selected. Uses custom layout; type:custom preserves the existing data path."
 		},
 		{
+			"id": "CustomDictionary",
+			"route": "/custom-dictionaries",
+			"type": "custom",
+			"title": "Custom dictionaries",
+			"component": "CustomDictionaryIndex",
+			"_note": "Dictionaries are fetched from filinq's own PHP controller (organisation-gated, term-count-enriched) not a plain OR index endpoint — same rationale as ConsentIndex; type:custom preserves that data path."
+		},
+		{
+			"id": "CustomDictionaryDetail",
+			"route": "/custom-dictionaries/:id",
+			"type": "custom",
+			"title": "Custom Dictionary Detail",
+			"component": "CustomDictionaryDetail",
+			"_note": "Term management (add/remove/import) + metadata edit for one dictionary, fetched via customDictionaryStore. type:custom preserves the filinq-controller data path."
+		},
+		{
 			"id": "Anonymization",
 			"route": "/anonymization",
 			"type": "custom",
 			"title": "Anonymization",
 			"component": "AnonymizationIndex",
-			"_note": "Anonymization uses the anonymization store (docudesk API) not OpenRegister; type:custom preserves the existing data path."
+			"_note": "Anonymization uses the anonymization store (filinq API) not OpenRegister; type:custom preserves the existing data path."
 		},
 		{
 			"id": "FolderAnonymization",
@@ -113,15 +190,24 @@
 			"type": "custom",
 			"title": "Folder Analysis",
 			"component": "FolderAnonymizationView",
-			"_note": "Folder-level anonymization scan; fetches via folderAnonymizationStore (docudesk API); type:custom preserves the existing data path."
+			"_note": "Folder-level anonymization scan; fetches via folderAnonymizationStore (filinq API); type:custom preserves the existing data path."
 		},
 		{
 			"id": "Templates",
 			"route": "/templates",
-			"type": "custom",
+			"type": "index",
 			"title": "Templates",
-			"component": "TemplateIndex",
-			"_note": "Templates are managed by docudesk's own template controller. Future ADR may migrate to OR-backed index if a template schema is registered."
+			"config": {
+				"register": "filinq",
+				"schema": "template",
+				"columns": ["name", "category", "format", "namespace", "description"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New template",
+				"emptyText": "No templates found"
+			},
+			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered, so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail. `register` MUST be a register SLUG from lib/Settings/filinq_register.json — it was `filinq` from Phase 8 until 2026-08-03, a register Filinq has never shipped (the definition has declared `templates` since before Phase 8 landed), so this page listed a register that holds nothing while TemplatesController wrote to the `templates` register resolved from app config `template_register`."
 		},
 		{
 			"id": "TemplateDetail",
@@ -132,12 +218,43 @@
 			"_note": "Template detail view with lock/unlock, editor, and preview. Hybrid data path via templateStore."
 		},
 		{
+			"id": "Correspondence",
+			"route": "/correspondence",
+			"type": "custom",
+			"title": "Letters & correspondence",
+			"component": "CorrespondenceIndex",
+			"_note": "Letter/correspondence generation from templates with merge data (single or batch), via correspondenceStore + CorrespondenceController (generate/generateBatch/jobStatus). Hybrid data path; type:custom preserves it. Restored reachability — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-003); the component and backend already existed, only the manifest/registry/menu wiring was missing."
+		},
+		{
 			"id": "SigningRequests",
 			"route": "/signing",
-			"type": "custom",
+			"type": "index",
 			"title": "Signing Requests",
-			"component": "SigningRequestList",
-			"_note": "Signing requests are managed by docudesk's signing controller; type:custom preserves the existing data path."
+			"config": {
+				"register": "filinq",
+				"schema": "signingRequest",
+				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No signing requests",
+				"actionToggles": { "showAdd": false }
+			},
+			"primaryAction": {
+				"id": "NewSigningRequest",
+				"label": "New signing request",
+				"icon": "Plus",
+				"route": "SigningRequestForm"
+			},
+			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered in the `signing` register, so CnIndexPage lists the requests directly. (`register` was `filinq` from Phase 8 until 2026-08-03 — a register Filinq has never shipped; see the Templates note.) Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
+		},
+		{
+			"id": "SigningRequestForm",
+			"route": "/signing/new",
+			"type": "custom",
+			"title": "New Signing Request",
+			"component": "SigningRequestForm",
+			"_note": "Signer-chain create form (documentFileId/documentName/signatureLevel/signingMode via signingStore.createSigningRequest — POST signing#createRequest, which drafts a signingRequest record; it does not send/sign/bind a provider — those remain separate signing#sign / not-yet-built provider-binding actions). Reachable from the SigningRequests index primaryAction. Restored — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-004); trust/identity-assertion controls are gated to signing-trust-rebuild / signer-identity-rails per design.md D4 — this page composes a draft only."
 		},
 		{
 			"id": "SigningRequestDetail",
@@ -145,7 +262,15 @@
 			"type": "custom",
 			"title": "Signing Request Detail",
 			"component": "SigningRequestDetail",
-			"_note": "Signing request detail view driven by signingStore."
+			"_note": "Signing request detail view driven by signingStore. Links to SignatureVerification (restored — REQ-DDOSR-004) for the document's file id. MUST stay declared AFTER the static /signing/new route: vue-router matches in declaration order, so a leading :id route swallows /signing/new."
+		},
+		{
+			"id": "SignatureVerification",
+			"route": "/signing/verify/:fileId",
+			"type": "custom",
+			"title": "Signature Verification",
+			"component": "SignatureVerification",
+			"_note": "Read-only verify page over signing#verify/{fileId} (SigningVerificationService); renders the backend verdict verbatim, attributed to the signing engine — it does not compute or assert its own validity. Linked from SigningRequestDetail. Restored — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-004)."
 		},
 		{
 			"id": "MyDocuments",
@@ -164,13 +289,252 @@
 			"_note": "Standalone print-preview page; no nav item; launched programmatically."
 		},
 		{
+			"id": "Comparison",
+			"route": "/comparison",
+			"type": "custom",
+			"title": "Document comparison",
+			"component": "ComparisonView",
+			"_note": "Side-by-side document comparison (original vs anonymised output). Standalone page; no nav item; deep-linked with ?left=&right= file-id query params."
+		},
+		{
+			"id": "Versions",
+			"route": "/versions",
+			"type": "custom",
+			"title": "Versions",
+			"component": "VersionsView",
+			"_note": "Document versions (Versies) — thin consumer of Nextcloud files_versions. Part of the ADR-001 document-detail family; standalone deep-linked page (?fileId=) like Comparison, no nav item. Lists/opens/downloads/restores/compares a document's file versions."
+		},
+		{
+			"id": "ComponentGallery",
+			"route": "/gallery",
+			"type": "custom",
+			"title": "Component gallery",
+			"component": "ComponentGallery",
+			"_note": "Living design-system reference for the reusable Dd* components (each shown with its variants/states). Self-contained view; standalone deep-linked page (/gallery), no nav item, like PrintPreview/Comparison/Versions."
+		},
+		{
+			"id": "Prohibitions",
+			"route": "/policy/prohibitions",
+			"type": "custom",
+			"title": "Publish never",
+			"component": "ProhibitionIndex",
+			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Deep-link reachable, no menu entry — the policy menu label/placement is owned by openspec/changes/publication-policy-labels-and-nav; this change (orphaned-surface-restoration, REQ-DDOSR-005) only restores the page's reachability. Modal is ProhibitionFormModal (registry kind:modal), its own file per ADR-004."
+		},
+		{
+			"id": "StandingConsents",
+			"route": "/policy/standing-consents",
+			"type": "custom",
+			"title": "Publish always",
+			"component": "StandingConsentIndex",
+			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Deep-link reachable, no menu entry — owned by publication-policy-labels-and-nav (see Prohibitions note). This change (orphaned-surface-restoration, REQ-DDOSR-005) only restores reachability. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
+		},
+		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
 			"type": "roadmap",
 			"title": "Features & roadmap",
 			"config": {
-				"documentationUrl": "https://docudesk.conduction.nl"
+				"documentationUrl": "https://filinq.conduction.nl"
 			}
+		},
+		{
+			"id": "Flows",
+			"route": "/flows",
+			"type": "index",
+			"title": "Flows",
+			"config": { "entitySource": "flows", "app": "filinq" },
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app."
+		},
+		{
+			"id": "FlowDetail",
+			"route": "/flows/:id",
+			"type": "flow",
+			"title": "Flow",
+			"config": { "app": "filinq" },
+			"sidebarComponent": "FlowDetailSidebar",
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490."
 		}
-	]
+	],
+	"observability": {
+		"_note": "Consumed by OpenRegister's AppHost observability engine (ADR-006 / ADR-040). The GenericHealthController + GenericMetricsController read this block to serve /api/health (public) and /api/metrics (admin-only). Replaces the bespoke HealthController/MetricsController/MetricsCollector deleted in build/adopt-apphost-2026-06-16.",
+		"health": {
+			"statusCodePolicy": "adr006",
+			"checks": [
+				{
+					"id": "database",
+					"type": "database",
+					"severity": "critical"
+				},
+				{
+					"id": "openregister",
+					"type": "orAvailable",
+					"severity": "degraded"
+				}
+			]
+		},
+		"metrics": [
+			{
+				"name": "documents_total",
+				"type": "gauge",
+				"help": "Total number of documents",
+				"source": {
+					"kind": "objectCount",
+					"schema": "document"
+				}
+			},
+			{
+				"name": "templates_total",
+				"type": "gauge",
+				"help": "Total number of templates",
+				"source": {
+					"kind": "objectCount",
+					"schema": "template"
+				}
+			},
+			{
+				"name": "pdf_generations_total",
+				"type": "counter",
+				"help": "Total PDF generation operations",
+				"source": {
+					"kind": "appConfig",
+					"key": "pdf_generations_total"
+				}
+			},
+			{
+				"name": "anonymizations_total",
+				"type": "counter",
+				"help": "Total anonymization operations",
+				"source": {
+					"kind": "appConfig",
+					"key": "anonymizations_total"
+				}
+			}
+		]
+	},
+	"walkthrough": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "walkthrough_completed_version",
+		"tours": [
+			{
+				"id": "filinq:getting-started",
+				"title": "Getting started",
+				"trigger": "first-visit",
+				"minAppVersion": "0.0.34-unstable.17",
+				"steps": [
+					{
+						"id": "welcome",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "center",
+						"title": "Welcome to Filinq",
+						"body": "Let's take a quick spin through your document workspace. We'll set up a template and a signing request together so you can see how the pieces fit, and you'll add each record yourself.",
+						"target": {
+							"kind": "page",
+							"ref": "Dashboard"
+						},
+						"advanceOn": {
+							"type": "manual"
+						}
+					},
+					{
+						"id": "go-templates",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "right",
+						"body": "Templates are the reusable documents you generate, anonymise and send. Open Templates from the menu to get started.",
+						"task": "Click Templates in the menu",
+						"target": {
+							"kind": "nav-item",
+							"ref": "Templates"
+						},
+						"advanceOn": {
+							"type": "route-match",
+							"route": "Templates"
+						}
+					},
+					{
+						"id": "create-template",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Add your first template. Give it a name and save. You can edit its content and reuse it for documents and signing requests later.",
+						"task": "Click New and save a template",
+						"target": {
+							"kind": "element",
+							"ref": "index-add"
+						},
+						"advanceOn": {
+							"type": "object-created",
+							"register": "filinq",
+							"schema": "template",
+							"capture": {
+								"templateId": ":id"
+							}
+						}
+					},
+					{
+						"id": "go-signing",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "right",
+						"body": "Signing requests track documents sent out for signature. Open Signing Requests from the menu.",
+						"task": "Click Signing Requests in the menu",
+						"target": {
+							"kind": "nav-item",
+							"ref": "SigningRequests"
+						},
+						"advanceOn": {
+							"type": "route-match",
+							"route": "SigningRequests"
+						}
+					},
+					{
+						"id": "create-signing-request",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Create your first signing request. Name it and save. From here you can attach a document and track its signatures.",
+						"task": "Click New and save a signing request",
+						"target": {
+							"kind": "element",
+							"ref": "index-add"
+						},
+						"advanceOn": {
+							"type": "object-created",
+							"register": "filinq",
+							"schema": "signingRequest",
+							"capture": {
+								"signingRequestId": ":id"
+							}
+						}
+					},
+						{
+							"id": "see-flows",
+							"sinceVersion": "1.1.0",
+							"placement": "right",
+							"optional": true,
+							"allowManualNext": true,
+							"title": "Where the automation lives",
+							"body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.",
+							"task": "Open Flows in the menu",
+							"target": {"kind": "nav-item", "ref": "Flows"},
+							"advanceOn": {"type": "route-match", "route": "Flows"}
+						},
+					{
+						"id": "done",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "center",
+						"title": "Your first template is ready",
+						"body": "You have a template and a signing request. The Dashboard tracks them as your document workspace grows, and the documentation covers the rest.",
+						"task": "Open the documentation to keep going",
+						"target": {
+							"kind": "nav-item",
+							"ref": "Documentation"
+						},
+						"advanceOn": {
+							"type": "manual"
+						}
+					}
+				]
+			}
+		]
+	}
 }

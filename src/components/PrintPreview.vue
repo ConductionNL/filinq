@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
+import { onMounted, ref, watch } from 'vue'
 
 const props = defineProps({
 	templateId: {
@@ -50,7 +50,7 @@ async function fetchPreview() {
 			body.options = props.options
 		}
 
-		const url = generateUrl('/apps/docudesk/api/print/preview')
+		const url = generateUrl('/apps/filinq/api/print/preview')
 		const response = await axios.post(url, body)
 
 		previewHtml.value = response.data.html || ''
@@ -70,7 +70,8 @@ function updateIframe() {
 		return
 	}
 
-	const doc = iframeRef.value.contentDocument || iframeRef.value.contentWindow.document
+	const doc =
+		iframeRef.value.contentDocument || iframeRef.value.contentWindow.document
 	doc.open()
 	doc.write(previewHtml.value)
 	doc.close()
@@ -107,7 +108,7 @@ async function handleDownloadPdfA() {
 			body.options = props.options
 		}
 
-		const url = generateUrl('/apps/docudesk/api/print/pdf-a')
+		const url = generateUrl('/apps/filinq/api/print/pdf-a')
 		const response = await axios.post(url, body, {
 			responseType: 'blob',
 		})
@@ -140,26 +141,29 @@ watch(previewHtml, () => {
 <template>
 	<div class="print-preview">
 		<div class="print-preview__header">
-			<h2>{{ t('docudesk', 'Print Preview') }}: {{ previewTitle }}</h2>
+			<h2>{{ t('filinq', 'Print Preview') }}: {{ previewTitle }}</h2>
 			<div class="print-preview__actions">
-				<button class="primary" :disabled="loading || !previewHtml" @click="handlePrint">
-					{{ t('docudesk', 'Print') }}
+				<button
+					class="primary"
+					:disabled="loading || !previewHtml"
+					@click="handlePrint">
+					{{ t('filinq', 'Print') }}
 				</button>
 				<button :disabled="loading" @click="handleDownloadPdfA">
-					{{ t('docudesk', 'Download PDF/A') }}
+					{{ t('filinq', 'Download PDF/A') }}
 				</button>
 				<button @click="emit('close')">
-					{{ t('docudesk', 'Close') }}
+					{{ t('filinq', 'Close') }}
 				</button>
 			</div>
 		</div>
 
 		<div v-if="loading" class="print-preview__loading">
-			<p>{{ t('docudesk', 'Loading preview...') }}</p>
+			<p>{{ t('filinq', 'Loading preview...') }}</p>
 		</div>
 
 		<div v-else-if="error" class="print-preview__error">
-			<p>{{ t('docudesk', 'Preview failed: {error}', { error }) }}</p>
+			<p>{{ t('filinq', 'Preview failed: {error}', { error }) }}</p>
 		</div>
 
 		<div v-else class="print-preview__content">
@@ -167,7 +171,7 @@ watch(previewHtml, () => {
 				ref="iframeRef"
 				class="print-preview__iframe"
 				sandbox="allow-same-origin"
-				:title="t('docudesk', 'Print Preview')" />
+				:title="t('filinq', 'Print Preview')" />
 		</div>
 	</div>
 </template>

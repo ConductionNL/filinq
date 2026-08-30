@@ -1,5 +1,5 @@
 /**
- * DocuDesk brand font (Inter).
+ * Filinq brand font (Inter).
  *
  * Kept separate from app.css so it can be imported by *every* entry point
  * (main, dashboard, settings) without pulling in app.css's component
@@ -17,7 +17,8 @@
 	font-style: normal;
 	font-weight: 100 900;
 	font-display: swap;
-	src: url('./fonts/Inter-Variable.woff2') format('woff2-variations'),
+	src:
+		url('./fonts/Inter-Variable.woff2') format('woff2-variations'),
 		url('./fonts/Inter-Variable.ttf') format('truetype-variations');
 }
 
@@ -26,14 +27,19 @@
 	font-style: italic;
 	font-weight: 100 900;
 	font-display: swap;
-	src: url('./fonts/Inter-Italic-Variable.woff2') format('woff2-variations'),
+	src:
+		url('./fonts/Inter-Italic-Variable.woff2') format('woff2-variations'),
 		url('./fonts/Inter-Italic-Variable.ttf') format('truetype-variations');
 }
 
 /* Remap Nextcloud's `--font-face` token so every component that honours it
    — including @nextcloud/vue internals — renders in Inter, with the stock
-   NC system-font stack kept as fallback. Scoped to the DocuDesk bundle, so
+   NC system-font stack kept as fallback. Scoped to the Filinq bundle, so
    it does not leak into other Nextcloud apps. */
 :root {
-	--font-face: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Oxygen-Sans, Cantarell, Ubuntu, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+	--font-face:
+		'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Oxygen-Sans,
+		Cantarell, Ubuntu, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial,
+		sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+		'Noto Color Emoji';
 }

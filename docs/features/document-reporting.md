@@ -4,7 +4,7 @@ sidebar_position: 9
 
 # Document Reporting
 
-DocuDesk's document reporting feature provides comprehensive analysis of documents to identify sensitive information and assess potential privacy risks. This feature integrates with Microsoft Presidio to detect and report on personally identifiable information (PII) and other sensitive data within your documents.
+Filinq's document reporting feature provides comprehensive analysis of documents to identify sensitive information and assess potential privacy risks. This feature integrates with Microsoft Presidio to detect and report on personally identifiable information (PII) and other sensitive data within your documents.
 
 ## Overview
 
@@ -136,7 +136,7 @@ You can generate reports programmatically:
 
 ```php
 // Example: Generate a report for a document
-$reportingService = \OC::$server->get(OCA\DocuDesk\Service\ReportingService::class);
+$reportingService = \OC::$server->get(OCA\Filinq\Service\ReportingService::class);
 $report = $reportingService->generateReport('/path/to/document.pdf', 'doc-123', 'Important Contract');
 
 // Example: Retrieve a previously generated report
@@ -157,9 +157,9 @@ The reporting feature integrates with Microsoft Presidio, an open-source PII det
 
 ## Configuration
 
-Configure the reporting feature in the DocuDesk admin settings:
+Configure the reporting feature in the Filinq admin settings:
 
-1. Navigate to **Admin Settings** > **DocuDesk**
+1. Navigate to **Admin Settings** > **Filinq**
 2. Set the **Presidio API URL** (default: http://presidio-api:8080/analyze)
 3. Adjust the **Confidence Threshold** (0.0-1.0) for entity detection sensitivity
 4. Enable or disable the reporting feature
@@ -170,7 +170,7 @@ To use the reporting feature, you need to set up Microsoft Presidio:
 
 1. Deploy Presidio using Docker or Kubernetes (see [Presidio documentation](https://microsoft.github.io/presidio/))
 2. Configure the analyzer service with appropriate recognition models
-3. Update the DocuDesk settings with your Presidio API URL
+3. Update the Filinq settings with your Presidio API URL
 
 ## Performance Considerations
 

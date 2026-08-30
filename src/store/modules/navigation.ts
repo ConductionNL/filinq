@@ -1,17 +1,18 @@
 import { defineStore } from 'pinia'
 
 interface NavigationStoreState {
-    modal: string | null;
-    dialog: string | null;
-    transferData: string | null;
+	modal: string | null
+	dialog: string | null
+	transferData: string | null
 }
 
 export const useNavigationStore = defineStore('ui', {
-	state: () => ({
-		modal: null,
-		dialog: null,
-		transferData: null,
-	} as NavigationStoreState),
+	state: () =>
+		({
+			modal: null,
+			dialog: null,
+			transferData: null,
+		}) as NavigationStoreState,
 	actions: {
 		setModal(modal: NavigationStoreState['modal']) {
 			this.modal = modal

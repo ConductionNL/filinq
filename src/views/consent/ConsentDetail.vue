@@ -5,137 +5,221 @@ import { consentStore } from '../../store/store.js'
 
 <template>
 	<CnDetailPage
-		:title="consentStore.consentItem?.entityText || t('docudesk', 'Consent Detail')"
+		:title="
+			consentStore.consentItem?.entityText || t('filinq', 'Consent Detail')
+		"
 		:loading="consentStore.loading"
-		:loading-label="t('docudesk', 'Loading consent record...')"
+		:loadingLabel="t('filinq', 'Loading consent record...')"
 		:error="!consentStore.consentItem"
-		:error-message="t('docudesk', 'No consent record selected.')"
-		:stats-title="consentStore.consentItem ? t('docudesk', 'Entity Information') : ''"
-		:stats-columns="consentStore.consentItem ? [
-			{ key: 'field', label: t('docudesk', 'Field') },
-			{ key: 'value', label: t('docudesk', 'Value') },
-		] : []">
+		:errorMessage="t('filinq', 'No consent record selected.')">
+		<!--
+			ENTITY INFORMATION IS A DEFAULT-SLOT SECTION, NOT A STATS TABLE, AND
+			THAT IS LOAD-BEARING.
+
+			CnDetailPage renders the stats table and the default slot as
+			`v-if="hasStats"` / `v-else` — they are mutually exclusive:
+
+			    <div v-if="hasStats" class="cn-detail-page__stats"> … </div>
+			    <div v-else class="cn-detail-page__content"><slot /></div>
+
+			    hasStats() { return this.statsColumns.length > 0
+			        && (this.statsRows.length > 0 || !!this.$slots['stats-rows']) }
+
+			This page used to pass BOTH `statsColumns` + `#stats-rows` AND put
+			the anonymisation toggle, the consent-status form and the Save
+			Changes button in the default slot. `statsColumns` and `#stats-rows`
+			are non-empty exactly when `consentItem` is set — which is exactly
+			when the form is supposed to exist — so the stats branch always won
+			and the entire operator UI below it rendered nothing at all. Vue
+			reports no error for a slot that is never evaluated, so the page
+			looked complete: it simply stopped after the Entity Information
+			table.
+
+			Rendering these rows as an ordinary section keeps `hasStats` false,
+			which lets the default slot through. The visible information and its
+			order are unchanged.
+		-->
 		<!-- Back button in header -->
 		<template #header-actions>
-			<NcButton type="tertiary" @click="goBack">
+			<NcButton variant="tertiary" @click="goBack">
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
-				{{ t('docudesk', 'Back to Consents') }}
+				{{ t('filinq', 'Back to Consents') }}
 			</NcButton>
 		</template>
 
 		<!-- Error actions -->
 		<template #error-actions>
 			<NcButton @click="goBack">
-				{{ t('docudesk', 'Back to Consents') }}
+				{{ t('filinq', 'Back to Consents') }}
 			</NcButton>
 		</template>
 
-		<!-- Entity info stats rows -->
-		<template v-if="consentStore.consentItem" #stats-rows>
-			<tr>
-				<td>{{ t('docudesk', 'Entity Text') }}</td>
-				<td>{{ consentStore.consentItem.entityText }}</td>
-			</tr>
-			<tr>
-				<td>{{ t('docudesk', 'Entity Type') }}</td>
-				<td>
-					<CnStatusBadge
-						:label="consentStore.consentItem.entityType || t('docudesk', 'Unknown')"
-						:color-map="entityTypeColorMap" />
-				</td>
-			</tr>
-			<tr v-if="consentStore.consentItem.entityKey">
-				<td>{{ t('docudesk', 'Entity Key') }}</td>
-				<td>{{ consentStore.consentItem.entityKey }}</td>
-			</tr>
-			<tr v-if="consentStore.consentItem.contactEmail">
-				<td>{{ t('docudesk', 'Contact Email') }}</td>
-				<td>{{ consentStore.consentItem.contactEmail }}</td>
-			</tr>
-			<tr v-if="consentStore.consentItem.contactAddress">
-				<td>{{ t('docudesk', 'Contact Address') }}</td>
-				<td>{{ consentStore.consentItem.contactAddress }}</td>
-			</tr>
-		</template>
+		<!-- Entity information -->
+		<div v-if="consentStore.consentItem" class="detail-section">
+			<h3>{{ t('filinq', 'Entity Information') }}</h3>
+			<!--
+				A name/value grid: every row's first cell IS the name of that
+				row, so it is a row header. `<th scope="row">` states what the
+				markup already means (WCAG 1.3.1), matching the Consent Status
+				table below.
+			-->
+			<table class="detail-table">
+				<tr>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Entity Text') }}
+					</th>
+					<td>{{ consentStore.consentItem.entityText }}</td>
+				</tr>
+				<tr>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Entity Type') }}
+					</th>
+					<td>
+						<CnStatusBadge
+							:label="
+								consentStore.consentItem.entityType
+								|| t('filinq', 'Unknown')
+							"
+							:colorMap="entityTypeColorMap" />
+					</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.entityKey">
+					<th scope="row" class="label">
+						{{ t('filinq', 'Entity Key') }}
+					</th>
+					<td>{{ consentStore.consentItem.entityKey }}</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.contactEmail">
+					<th scope="row" class="label">
+						{{ t('filinq', 'Contact Email') }}
+					</th>
+					<td>{{ consentStore.consentItem.contactEmail }}</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.contactAddress">
+					<th scope="row" class="label">
+						{{ t('filinq', 'Contact Address') }}
+					</th>
+					<td>{{ consentStore.consentItem.contactAddress }}</td>
+				</tr>
+			</table>
+		</div>
 
 		<!-- Policy-driven anonymisation toggle (§6.1, §6.2) -->
 		<div v-if="consentStore.consentItem" class="detail-section">
-			<h3>{{ t('docudesk', 'Anonymisation') }}</h3>
+			<h3>{{ t('filinq', 'Anonymisation') }}</h3>
 			<div class="anonymisation-toggle">
 				<NcCheckboxRadioSwitch
 					v-model="anonymiseToggle"
 					type="switch"
 					:disabled="toggleLocked"
-					@update:checked="onToggleAnonymise">
-					{{ t('docudesk', 'Anonymise this entity in the published document') }}
+					@update:modelValue="onToggleAnonymise">
+					{{
+						t(
+							'filinq',
+							'Anonymise this entity in the published document',
+						)
+					}}
 				</NcCheckboxRadioSwitch>
-				<p v-if="policyMatchKind === 'prohibition'" class="toggle-note toggle-note-locked">
-					{{ t('docudesk', 'This entity is on the publication prohibition list. The decision is locked.') }}
+				<p
+					v-if="policyMatchKind === 'prohibition'"
+					class="toggle-note toggle-note-locked">
+					{{
+						t(
+							'filinq',
+							'This entity is on the publication prohibition list. The decision is locked.',
+						)
+					}}
 				</p>
-				<p v-else-if="policyMatchKind === 'standing_consent'" class="toggle-note">
-					{{ t('docudesk', 'A standing publication consent applies. You may override to anonymise anyway; the override is audit-logged.') }}
+				<p
+					v-else-if="policyMatchKind === 'standing_consent'"
+					class="toggle-note">
+					{{
+						t(
+							'filinq',
+							'A standing publication consent applies. You may override to anonymise anyway; the override is audit-logged.',
+						)
+					}}
 				</p>
-				<p v-else-if="consentStore.consentItem.policyMatch" class="toggle-note">
-					{{ t('docudesk', 'Pre-empted by policy match {ref}.', { ref: consentStore.consentItem.policyMatch }) }}
+				<p
+					v-else-if="consentStore.consentItem.policyMatch"
+					class="toggle-note">
+					{{
+						t('filinq', 'Pre-empted by policy match {ref}.', {
+							ref: consentStore.consentItem.policyMatch,
+						})
+					}}
 				</p>
 			</div>
 		</div>
 
 		<!-- Consent status section -->
 		<div v-if="consentStore.consentItem" class="detail-section">
-			<h3>{{ t('docudesk', 'Consent Status') }}</h3>
+			<h3>{{ t('filinq', 'Consent Status') }}</h3>
+			<!--
+				This is a name/value grid: every row's first cell IS the name of
+				that row, so it is a row header, not data. It shipped as a table
+				of nothing but <td>, which left the values with no header to be
+				announced against at all (WCAG 1.3.1). <th scope="row"> states
+				what was already true of the markup.
+			-->
 			<table class="detail-table">
 				<tr>
-					<td class="label">
-						{{ t('docudesk', 'Consent Status') }}
-					</td>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Consent Status') }}
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.consentStatus"
 							:options="consentStatusOptions"
-							:input-label="t('docudesk', 'Consent Status')" />
+							:inputLabel="t('filinq', 'Consent Status')" />
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
-						{{ t('docudesk', 'Notification Status') }}
-					</td>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Notification Status') }}
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.notificationStatus"
 							:options="notificationStatusOptions"
-							:input-label="t('docudesk', 'Notification Status')" />
+							:inputLabel="t('filinq', 'Notification Status')" />
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
-						{{ t('docudesk', 'Publication Decision') }}
-					</td>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Publication Decision') }}
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.publicationDecision"
 							:options="publicationDecisionOptions"
-							:input-label="t('docudesk', 'Publication Decision')" />
+							:inputLabel="t('filinq', 'Publication Decision')" />
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
-						{{ t('docudesk', 'Objection Deadline') }}
+					<th scope="row" class="label">
+						{{ t('filinq', 'Objection Deadline') }}
+					</th>
+					<td>
+						{{ formatDate(consentStore.consentItem.objectionDeadline) }}
 					</td>
-					<td>{{ formatDate(consentStore.consentItem.objectionDeadline) }}</td>
 				</tr>
 				<tr v-if="consentStore.consentItem.objectionReceivedAt">
-					<td class="label">
-						{{ t('docudesk', 'Objection Received') }}
+					<th scope="row" class="label">
+						{{ t('filinq', 'Objection Received') }}
+					</th>
+					<td>
+						{{
+							formatDate(consentStore.consentItem.objectionReceivedAt)
+						}}
 					</td>
-					<td>{{ formatDate(consentStore.consentItem.objectionReceivedAt) }}</td>
 				</tr>
 				<tr v-if="consentStore.consentItem.legalBasis">
-					<td class="label">
-						{{ t('docudesk', 'Legal Basis') }}
-					</td>
+					<th scope="row" class="label">
+						{{ t('filinq', 'Legal Basis') }}
+					</th>
 					<td>{{ consentStore.consentItem.legalBasis }}</td>
 				</tr>
 			</table>
@@ -143,7 +227,7 @@ import { consentStore } from '../../store/store.js'
 
 		<!-- Objection reason -->
 		<div v-if="consentStore.consentItem?.objectionReason" class="detail-section">
-			<h3>{{ t('docudesk', 'Objection Reason') }}</h3>
+			<h3>{{ t('filinq', 'Objection Reason') }}</h3>
 			<p class="notes-text">
 				{{ consentStore.consentItem.objectionReason }}
 			</p>
@@ -151,7 +235,7 @@ import { consentStore } from '../../store/store.js'
 
 		<!-- Notes -->
 		<div v-if="consentStore.consentItem?.notes" class="detail-section">
-			<h3>{{ t('docudesk', 'Notes') }}</h3>
+			<h3>{{ t('filinq', 'Notes') }}</h3>
 			<p class="notes-text">
 				{{ consentStore.consentItem.notes }}
 			</p>
@@ -159,25 +243,33 @@ import { consentStore } from '../../store/store.js'
 
 		<!-- Save button -->
 		<div v-if="consentStore.consentItem" class="detail-actions">
-			<NcButton type="primary" :disabled="consentStore.loading" @click="saveChanges">
+			<NcButton
+				variant="primary"
+				:disabled="consentStore.loading"
+				@click="saveChanges">
 				<template #icon>
 					<NcLoadingIcon v-if="consentStore.loading" :size="20" />
 					<ContentSave v-else :size="20" />
 				</template>
-				{{ t('docudesk', 'Save Changes') }}
+				{{ t('filinq', 'Save Changes') }}
 			</NcButton>
 		</div>
 	</CnDetailPage>
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
 import { CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+} from '@nextcloud/vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'ConsentDetail',
@@ -191,12 +283,31 @@ export default {
 		ArrowLeft,
 		ContentSave,
 	},
+
 	props: {
-		consentId: {
+		/**
+		 * The consent record to show.
+		 *
+		 * MUST be named `id`, because that is the name of the route
+		 * parameter. src/main.js builds this route with `props: true` for
+		 * any path containing a `:`, and vue-router's `props: true` passes
+		 * `route.params` through BY NAME. The manifest route is
+		 * `/consent/:id`, so a prop called anything else is simply never
+		 * supplied — this was declared `consentId` with `default: ''`, so
+		 * the falsy guard in `created()` never fired, `fetchConsent()` was
+		 * never called, and every deep link or page refresh on
+		 * `/consent/<uuid>` rendered the "No consent record selected."
+		 * error state instead of the record. The page only ever appeared to
+		 * work when reached by clicking a row, because ConsentIndex calls
+		 * `setConsentItem()` before routing. Same defect, same fix as
+		 * SigningRequestDetail's `requestId` → `id`.
+		 */
+		id: {
 			type: String,
-			default: '',
+			required: true,
 		},
 	},
+
 	data() {
 		return {
 			editData: {
@@ -204,40 +315,55 @@ export default {
 				notificationStatus: null,
 				publicationDecision: null,
 			},
+
 			anonymiseToggle: false,
 			policyMatchKind: null,
 			entityTypeColorMap: {
 				person: 'warning',
 				organization: 'primary',
 			},
+
 			consentStatusOptions: [
-				{ label: t('docudesk', 'Pending'), value: 'pending' },
-				{ label: t('docudesk', 'Consent Given'), value: 'consent_given' },
-				{ label: t('docudesk', 'Objection Received'), value: 'objection_received' },
-				{ label: t('docudesk', 'No Response'), value: 'no_response' },
-				{ label: t('docudesk', 'Anonymized'), value: 'anonymized' },
+				{ label: t('filinq', 'Pending'), value: 'pending' },
+				{ label: t('filinq', 'Consent Given'), value: 'consent_given' },
+				{
+					label: t('filinq', 'Objection Received'),
+					value: 'objection_received',
+				},
+				{ label: t('filinq', 'No Response'), value: 'no_response' },
+				{ label: t('filinq', 'Anonymized'), value: 'anonymized' },
 			],
+
 			notificationStatusOptions: [
-				{ label: t('docudesk', 'Pending'), value: 'pending' },
-				{ label: t('docudesk', 'Sent'), value: 'sent' },
-				{ label: t('docudesk', 'Delivered'), value: 'delivered' },
-				{ label: t('docudesk', 'Failed'), value: 'failed' },
-				{ label: t('docudesk', 'Skipped'), value: 'skipped' },
+				{ label: t('filinq', 'Pending'), value: 'pending' },
+				{ label: t('filinq', 'Sent'), value: 'sent' },
+				{ label: t('filinq', 'Delivered'), value: 'delivered' },
+				{ label: t('filinq', 'Failed'), value: 'failed' },
+				{ label: t('filinq', 'Skipped'), value: 'skipped' },
 			],
+
 			publicationDecisionOptions: [
-				{ label: t('docudesk', 'Pending'), value: 'pending' },
-				{ label: t('docudesk', 'Anonymize'), value: 'anonymize' },
-				{ label: t('docudesk', 'Publish with Consent'), value: 'publish_with_consent' },
-				{ label: t('docudesk', 'Publish Anonymized'), value: 'publish_anonymized' },
-				{ label: t('docudesk', 'Reject'), value: 'reject' },
+				{ label: t('filinq', 'Pending'), value: 'pending' },
+				{ label: t('filinq', 'Anonymize'), value: 'anonymize' },
+				{
+					label: t('filinq', 'Publish with Consent'),
+					value: 'publish_with_consent',
+				},
+				{
+					label: t('filinq', 'Publish Anonymized'),
+					value: 'publish_anonymized',
+				},
+				{ label: t('filinq', 'Reject'), value: 'reject' },
 			],
 		}
 	},
+
 	computed: {
 		toggleLocked() {
 			return this.policyMatchKind === 'prohibition'
 		},
 	},
+
 	watch: {
 		'consentStore.consentItem': {
 			immediate: true,
@@ -249,19 +375,41 @@ export default {
 			 */
 			handler(item) {
 				if (item) {
-					this.editData.consentStatus = this.consentStatusOptions.find(o => o.value === item.consentStatus) || null
-					this.editData.notificationStatus = this.notificationStatusOptions.find(o => o.value === item.notificationStatus) || null
-					this.editData.publicationDecision = this.publicationDecisionOptions.find(o => o.value === item.publicationDecision) || null
+					this.editData.consentStatus =
+						this.consentStatusOptions.find(
+							(o) => o.value === item.consentStatus,
+						) || null
+					this.editData.notificationStatus =
+						this.notificationStatusOptions.find(
+							(o) => o.value === item.notificationStatus,
+						) || null
+					this.editData.publicationDecision =
+						this.publicationDecisionOptions.find(
+							(o) => o.value === item.publicationDecision,
+						) || null
 					this.refreshPolicyMatch()
 				}
 			},
 		},
 	},
+
+	/**
+	 * Load the consent record named by the route parameter.
+	 *
+	 * The guard compares the id rather than testing for "any item at all":
+	 * `consentStore.consentItem` is module-level state that survives
+	 * navigation, so a bare truthiness check would keep the PREVIOUS
+	 * record on screen when the operator moves straight from one consent
+	 * to another.
+	 *
+	 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+	 */
 	created() {
-		if (this.consentId && !consentStore.consentItem) {
-			consentStore.fetchConsent(this.consentId)
+		if (this.id && consentStore.consentItem?.id !== this.id) {
+			consentStore.fetchConsent(this.id)
 		}
 	},
+
 	methods: {
 		/**
 		 * Clear the selected consent and return to the consent list.
@@ -272,6 +420,7 @@ export default {
 			consentStore.clearConsentItem()
 			this.$router.push({ name: 'Consent' })
 		},
+
 		/**
 		 * Resolve the policyMatch UUID into a kind for toggle behaviour.
 		 *
@@ -279,18 +428,23 @@ export default {
 		 *   - referent is a prohibition  → ON + locked
 		 *   - referent is a standing consent (scope=entity) → OFF + interactive
 		 *   - no policyMatch → driven by consentStatus (legacy UX)
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-ui-toggle-behavior-must-be-derived-from-policymatch-referent-type
 		 */
 		async refreshPolicyMatch() {
 			const item = consentStore.consentItem
 			this.policyMatchKind = null
 			if (!item?.policyMatch) {
-				this.anonymiseToggle = (item?.publicationDecision === 'anonymize')
+				this.anonymiseToggle = item?.publicationDecision === 'anonymize'
 				return
 			}
 
 			try {
 				await axios.get(
-					generateUrl(`/apps/docudesk/api/policy/prohibitions/${item.policyMatch}`),
+					generateUrl(
+						`/apps/filinq/api/policy/prohibitions/${item.policyMatch}`,
+					),
 				)
 				this.policyMatchKind = 'prohibition'
 				this.anonymiseToggle = true
@@ -301,24 +455,29 @@ export default {
 
 			try {
 				await axios.get(
-					generateUrl(`/apps/docudesk/api/policy/standing-consents/${item.policyMatch}`),
+					generateUrl(
+						`/apps/filinq/api/policy/standing-consents/${item.policyMatch}`,
+					),
 				)
 				this.policyMatchKind = 'standing_consent'
 				// Default OFF for standing consent; user may override.
-				this.anonymiseToggle = (item.publicationDecision === 'anonymize')
+				this.anonymiseToggle = item.publicationDecision === 'anonymize'
 				return
 			} catch (err) {
 				// Dangling reference — fall through to legacy.
 			}
 
-			this.anonymiseToggle = (item?.publicationDecision === 'anonymize')
+			this.anonymiseToggle = item?.publicationDecision === 'anonymize'
 		},
+
 		/**
 		 * Handle toggle clicks. For standing-consent matches, flipping ON
 		 * records an override: publicationDecision=anonymize while consentStatus
 		 * stays consent_given and policyMatch is preserved. The audit trail
 		 * comes from OpenRegister's mapper-level history.
+		 *
 		 * @param checked
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-ui-toggle-behavior-must-be-derived-from-policymatch-referent-type
 		 */
 		async onToggleAnonymise(checked) {
 			if (this.policyMatchKind === 'prohibition') {
@@ -327,7 +486,10 @@ export default {
 				return
 			}
 
-			const id = consentStore.consentItem?.['@self']?.id || consentStore.consentItem?.id || consentStore.consentItem?.uuid
+			const id =
+				consentStore.consentItem?.['@self']?.id
+				|| consentStore.consentItem?.id
+				|| consentStore.consentItem?.uuid
 			if (!id) return
 
 			const update = {
@@ -335,12 +497,13 @@ export default {
 			}
 			try {
 				await consentStore.updateConsent(id, update)
-				showSuccess(t('docudesk', 'Anonymisation decision updated'))
+				showSuccess(t('filinq', 'Anonymisation decision updated'))
 			} catch (err) {
-				showError(t('docudesk', 'Failed to update anonymisation decision'))
+				showError(t('filinq', 'Failed to update anonymisation decision'))
 				this.anonymiseToggle = !checked
 			}
 		},
+
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *
@@ -355,6 +518,7 @@ export default {
 				return dateStr
 			}
 		},
+
 		/**
 		 * Persist edited consent status/decision fields for the record.
 		 *
@@ -369,17 +533,19 @@ export default {
 				updateData.consentStatus = this.editData.consentStatus.value
 			}
 			if (this.editData.notificationStatus?.value) {
-				updateData.notificationStatus = this.editData.notificationStatus.value
+				updateData.notificationStatus =
+					this.editData.notificationStatus.value
 			}
 			if (this.editData.publicationDecision?.value) {
-				updateData.publicationDecision = this.editData.publicationDecision.value
+				updateData.publicationDecision =
+					this.editData.publicationDecision.value
 			}
 
 			const result = await consentStore.updateConsent(id, updateData)
 			if (result) {
-				showSuccess(t('docudesk', 'Consent record updated successfully'))
+				showSuccess(t('filinq', 'Consent record updated successfully'))
 			} else {
-				showError(t('docudesk', 'Failed to update consent record'))
+				showError(t('filinq', 'Failed to update consent record'))
 			}
 		},
 	},
@@ -405,12 +571,16 @@ export default {
 	width: 100%;
 }
 
-.detail-table td {
+.detail-table td,
+.detail-table th {
 	padding: 8px 4px;
 	vertical-align: middle;
 }
 
+/* The row headers are <th> now; neutralise the UA's centred default so the
+   rendering is unchanged. */
 .detail-table .label {
+	text-align: start;
 	font-weight: bold;
 	color: var(--color-text-maxcontrast);
 	width: 200px;

@@ -1,41 +1,46 @@
 <template>
 	<div class="template-index">
 		<div class="template-index__header">
-			<h2>{{ t('docudesk', 'Templates') }}</h2>
-			<NcButton type="primary" @click="openNewTemplate">
-				{{ t('docudesk', 'New template') }}
+			<h2>{{ t('filinq', 'Templates') }}</h2>
+			<NcButton variant="primary" @click="openNewTemplate">
+				{{ t('filinq', 'New template') }}
 			</NcButton>
 		</div>
 
 		<div class="template-index__filters">
-			<NcSelect v-model="selectedCategory"
+			<NcSelect
+				v-model="selectedCategory"
 				:options="categoryOptions"
-				:placeholder="t('docudesk', 'Filter by category')"
-				:input-label="t('docudesk', 'Category filter')"
+				:placeholder="t('filinq', 'Filter by category')"
+				:inputLabel="t('filinq', 'Category filter')"
 				class="template-index__filter-select"
 				@update:modelValue="applyFilters" />
-			<NcTextField :value.sync="searchQuery"
-				:label="t('docudesk', 'Search templates')"
-				:placeholder="t('docudesk', 'Search by name...')"
+			<NcTextField
+				v-model="searchQuery"
+				:label="t('filinq', 'Search templates')"
+				:placeholder="t('filinq', 'Search by name...')"
 				class="template-index__search"
-				@update:value="applyFilters" />
+				@update:modelValue="applyFilters" />
 		</div>
 
 		<NcLoadingIcon v-if="templateStore.loading" />
 
-		<table v-else-if="templateStore.templates.length > 0" class="template-index__table">
+		<table
+			v-else-if="templateStore.templates.length > 0"
+			class="template-index__table">
 			<thead>
 				<tr>
-					<th>{{ t('docudesk', 'Name') }}</th>
-					<th>{{ t('docudesk', 'Category') }}</th>
-					<th>{{ t('docudesk', 'Namespace') }}</th>
-					<th>{{ t('docudesk', 'Tags') }}</th>
-					<th>{{ t('docudesk', 'Status') }}</th>
-					<th>{{ t('docudesk', 'Actions') }}</th>
+					<th scope="col">{{ t('filinq', 'Name') }}</th>
+					<th scope="col">{{ t('filinq', 'Category') }}</th>
+					<th scope="col">{{ t('filinq', 'Namespace') }}</th>
+					<th scope="col">{{ t('filinq', 'Tags') }}</th>
+					<th scope="col">{{ t('filinq', 'Status') }}</th>
+					<th scope="col">{{ t('filinq', 'Actions') }}</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="tmpl in templateStore.templates"
+				<tr
+					v-for="tmpl in templateStore.templates"
 					:key="tmpl.id"
 					class="template-index__row"
 					@click="openTemplate(tmpl)">
@@ -43,7 +48,8 @@
 					<td>{{ tmpl.category || '-' }}</td>
 					<td>{{ tmpl.namespace }}</td>
 					<td>
-						<span v-for="tag in (tmpl.tags || [])"
+						<span
+							v-for="tag in tmpl.tags || []"
 							:key="tag"
 							class="template-index__tag">
 							{{ tag }}
@@ -51,66 +57,93 @@
 					</td>
 					<td>
 						<span v-if="tmpl.lockedBy" class="template-index__locked">
-							{{ t('docudesk', 'Locked by {user}', { user: tmpl.lockedBy }) }}
+							{{
+								t('filinq', 'Locked by {user}', {
+									user: tmpl.lockedBy,
+								})
+							}}
 						</span>
 					</td>
 					<td @click.stop>
-						<NcButton type="tertiary"
-							:aria-label="t('docudesk', 'Edit template')"
+						<NcButton
+							variant="tertiary"
+							:aria-label="t('filinq', 'Edit template')"
 							@click="openTemplate(tmpl)">
-							{{ t('docudesk', 'Edit') }}
+							{{ t('filinq', 'Edit') }}
 						</NcButton>
-						<NcButton type="tertiary"
-							:aria-label="t('docudesk', 'Duplicate template')"
+						<NcButton
+							variant="tertiary"
+							:aria-label="t('filinq', 'Duplicate template')"
 							@click="duplicateTemplate(tmpl)">
-							{{ t('docudesk', 'Duplicate') }}
+							{{ t('filinq', 'Duplicate') }}
 						</NcButton>
-						<NcButton type="error"
-							:aria-label="t('docudesk', 'Delete template')"
+						<NcButton
+							variant="error"
+							:aria-label="t('filinq', 'Delete template')"
 							@click="confirmDelete(tmpl)">
-							{{ t('docudesk', 'Delete') }}
+							{{ t('filinq', 'Delete') }}
 						</NcButton>
 					</td>
 				</tr>
 			</tbody>
 		</table>
 
-		<NcEmptyContent v-else
-			:name="t('docudesk', 'No templates found')"
-			:description="t('docudesk', 'Create your first template to get started.')" />
+		<NcEmptyContent
+			v-else
+			:name="t('filinq', 'No templates found')"
+			:description="
+				t('filinq', 'Create your first template to get started.')
+			" />
 
-		<ConfirmDeleteTemplateDialog v-if="deleteTarget"
-			:template-name="deleteTarget.name"
+		<ConfirmDeleteTemplateDialog
+			v-if="deleteTarget"
+			:templateName="deleteTarget.name"
 			@confirm="executeDelete"
 			@cancel="deleteTarget = null" />
 	</div>
 </template>
 
 <script>
+import {
+	NcButton,
+	NcEmptyContent,
+	NcLoadingIcon,
+	NcSelect,
+	NcTextField,
+} from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField } from '@conduction/nextcloud-vue'
-import { useTemplateStore } from '../../store/modules/template.js'
-import { navigationStore } from '../../store/store.js'
 import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
+import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
 	name: 'TemplateIndex',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField, ConfirmDeleteTemplateDialog },
+	components: {
+		NcButton,
+		NcEmptyContent,
+		NcLoadingIcon,
+		NcSelect,
+		NcTextField,
+		ConfirmDeleteTemplateDialog,
+	},
+
 	data() {
 		return {
-			navigationStore,
 			selectedCategory: null,
 			searchQuery: '',
 			deleteTarget: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Pinia template store accessor for the index view.
 		 *
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
-		templateStore() { return useTemplateStore() },
+		templateStore() {
+			return useTemplateStore()
+		},
+
 		/**
 		 * Build the category filter dropdown options from loaded templates.
 		 *
@@ -118,19 +151,19 @@ export default {
 		 */
 		categoryOptions() {
 			const cats = new Set(
-				this.templateStore.templates
-					.map(t => t.category)
-					.filter(Boolean),
+				this.templateStore.templates.map((t) => t.category).filter(Boolean),
 			)
 			return [
-				{ label: t('docudesk', 'All categories'), value: '' },
-				...[...cats].map(c => ({ label: c, value: c })),
+				{ label: t('filinq', 'All categories'), value: '' },
+				...[...cats].map((c) => ({ label: c, value: c })),
 			]
 		},
 	},
+
 	mounted() {
 		this.templateStore.fetchTemplates()
 	},
+
 	methods: {
 		t,
 		/**
@@ -148,6 +181,7 @@ export default {
 			}
 			this.templateStore.fetchTemplates(filters)
 		},
+
 		/**
 		 * Open the selected template in the detail editor.
 		 *
@@ -156,8 +190,9 @@ export default {
 		 */
 		openTemplate(tmpl) {
 			this.templateStore.templateItem = tmpl
-			navigationStore.setSelected('templateDetail')
+			this.$router.push({ name: 'TemplateDetail', params: { id: tmpl.id } })
 		},
+
 		/**
 		 * Open the detail editor for a brand-new template.
 		 *
@@ -165,8 +200,9 @@ export default {
 		 */
 		openNewTemplate() {
 			this.templateStore.templateItem = null
-			navigationStore.setSelected('templateDetail')
+			this.$router.push({ name: 'TemplateDetail', params: { id: 'new' } })
 		},
+
 		/**
 		 * Duplicate a template and refresh the list.
 		 *
@@ -179,6 +215,7 @@ export default {
 				await this.templateStore.fetchTemplates()
 			}
 		},
+
 		/**
 		 * Open the delete confirmation dialog for a template.
 		 *
@@ -188,6 +225,7 @@ export default {
 		confirmDelete(tmpl) {
 			this.deleteTarget = tmpl
 		},
+
 		/**
 		 * Execute deletion after user confirmed in the dialog.
 		 *

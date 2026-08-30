@@ -20,7 +20,7 @@ This feature is part of the batch anonymization workflow. It provides a consolid
 
 ## Overview
 
-After text extraction is complete for all files in a batch, DocuDesk presents a unified entity list deduplicated by value (case-insensitive). Each entity shows its type, highest confidence score, and the number of files in which it appears. Entities are pre-selected based on the active WOO anonymization profile.
+After text extraction is complete for all files in a batch, Filinq presents a unified entity list deduplicated by value (case-insensitive). Each entity shows its type, highest confidence score, and the number of files in which it appears. Entities are pre-selected based on the active WOO anonymization profile.
 
 Users can toggle individual entities on or off. The final selection is sent to the backend when the user triggers anonymization.
 
@@ -39,7 +39,7 @@ Users can toggle individual entities on or off. The final selection is sent to t
 | `GET` | `/api/anonymization/batch/{batchId}/entities` | Retrieve consolidated entity list for review (batch must be in "review" status) |
 | `POST` | `/api/anonymization/batch/{batchId}/anonymize` | Start anonymization with the reviewed entity list |
 
-### GET /api/anonymization/batch/{batchId}/entities — response shape
+### GET `/api/anonymization/batch/{batchId}/entities` response shape
 
 Each entry in the `entities` array carries the following fields:
 
@@ -50,7 +50,7 @@ Each entry in the `entities` array carries the following fields:
 | `highestConfidence` | float | Highest confidence score across all files in the batch |
 | `fileCount` | int | Number of files in which this entity was detected |
 | `included` | bool | Whether the entity is pre-selected for anonymization |
-| `prohibitionMatch` | object\|null | `null` when no prohibition rule matches; `{ruleId, ruleName, highConfidence}` when a `publicationProhibition` rule matches. `highConfidence` is `true` when `highestConfidence ≥ docudesk.prohibition.high_confidence_threshold` (default 0.85, inclusive). |
+| `prohibitionMatch` | object\|null | `null` when no prohibition rule matches; `{ruleId, ruleName, highConfidence}` when a `publicationProhibition` rule matches. `highConfidence` is `true` when `highestConfidence ≥ filinq.prohibition.high_confidence_threshold` (default 0.85, inclusive). |
 | `suggestedBases` | string[] | Deduplicated union of `bases[]` from the dossier(s) the batch's files belong to; `[]` when the files are not in any dossier or the dossier has no bases configured. Used to pre-fill the grondslag picker in the review UI. |
 
 The response is a strict superset of the pre-`anonymisation-entity-review-prohibition-hints` shape — clients reading only `type`, `value`, `highestConfidence`, `fileCount`, and `included` continue to work without modification.

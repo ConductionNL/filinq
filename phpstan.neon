@@ -1,62 +1,51 @@
+# Filinq — Conduction PHPStan config.
+#
+# The shared base is the single source of truth. Everything here is either the
+# app's own tracked debt or an ignore naming a symbol that exists in no other
+# fleet app. Anything you are tempted to add that another app would also need
+# belongs in the base, not here.
 includes:
-    # Per-app tracked lint debt lives here (auto-generated via `phpstan --generate-baseline`).
-    # Apps without debt ship an empty baseline file; canonical includes are otherwise byte-identical
-    # across the fleet.
+    - vendor/conduction/hydra-gates/quality-config/phpstan-base.neon
+    # Per-app tracked lint debt (auto-generated via `phpstan --generate-baseline`).
     - phpstan-baseline.neon
 
 parameters:
-    level: 5
-    paths:
-        - lib
-    bootstrapFiles:
-        - phpstan-bootstrap.php
+    # App-specific only. The base already sets level, paths, bootstrapFiles,
+    # excludePaths, scanDirectories and every fleet-wide ignore.
     excludePaths:
-        - vendor
-        - vendor-bin
-        # Apps that ship a verbatim template snapshot under lib/Resources/template/ (e.g. openbuilt).
-        - lib/Resources/template
-    scanDirectories:
-        - vendor/nextcloud/ocp
-    reportUnmatchedIgnoredErrors: false
+        # AppHost-delegator controllers: thin subclasses of OCA\OpenRegister\AppHost classes
+        # that are absent during static analysis (OR is co-installed at runtime only).
+        # PHPStan disallows ignoreErrors for "extends unknown class" — excludePaths is the
+        # mandated approach. No logic lives in these files; the only risk is the parent call.
+        - lib/Controller/DashboardController.php
+        - lib/Controller/HealthController.php
+        - lib/Controller/MetricsController.php
+
+    scanFiles:
+        # AppHost generic preferences controller stub, so the thin
+        # OCA\Filinq\Controller\PreferencesController subclass resolves its
+        # parent during static analysis when the openregister sibling app is
+        # absent from the analysis path. PHPStan refuses to let an
+        # "extends unknown class" error be silenced through ignoreErrors, and a
+        # truthful stub (mirroring the real engine constructor) beats an
+        # excludePaths suppression: it also type-checks the named arguments
+        # Application::register() passes to the engine constructor.
+        # The real class lives in openregister/lib/AppHost/Controller/.
+        - tests/stubs/openregister-apphost.stub.php
+        # OpenRegister's MCP contracts (ADR-063 chain 3/3), for the same reason:
+        # PHPStan refuses to silence "implements unknown interface" through
+        # ignoreErrors and points at excludePaths, which would stop analysing
+        # FilinqScannableServices entirely. The stub also type-checks the named
+        # arguments every #[McpTool] declaration passes.
+        - tests/stubs/openregister-mcp.stub.php
+
     ignoreErrors:
-        # Nextcloud server internals (\OC, OC_App, OC\) not stubbed in nextcloud/ocp
-        - '#Call to an undefined method OC::#'
-        - '#Class OC not found#'
-        - '#Access to static property \$server on an unknown class OC#'
-        - '#unknown class OC\\#'
-        - '#Caught class OC\\#'
-        - '#unknown class OC_App#'
-        - '#Class OC_App not found#'
-        # OCA\DAV is server-internal and not in nextcloud/ocp stubs
-        - '#unknown class OCA\\DAV\\#'
-        - '#Class OCA\\DAV\\#'
-        # OCA classes from other apps (OpenRegister) not available during static analysis
-        - '#unknown class OCA\\OpenRegister\\#'
-        - '#OCA\\OpenRegister\\[a-zA-Z\\]+.*not found#'
-        - '#on an unknown class OCA\\OpenRegister\\#'
-        - '#has invalid return type OCA\\OpenRegister\\#'
-        - '#has invalid type OCA\\OpenRegister\\#'
-        - '#implements unknown interface OCA\\OpenRegister\\#'
-        # GuzzleHttp is available at runtime via Nextcloud but not in composer require
-        - '#unknown class GuzzleHttp\\#'
-        - '#GuzzleHttp\\[a-zA-Z\\]+.*not found#'
-        - '#on an unknown class GuzzleHttp\\#'
-        - '#invalid type GuzzleHttp\\#'
-        - '#Caught class GuzzleHttp\\#'
-        # Doctrine\DBAL is shipped by Nextcloud server but not stubbed in nextcloud/ocp
-        - '#unknown class Doctrine\\DBAL\\#'
-        - '#Doctrine\\DBAL\\[a-zA-Z\\]+.*not found#'
-        - '#on an unknown class Doctrine\\DBAL\\#'
-        # Dynamic HTTP status codes from business rule validation results
-        # (matches both `Parameter $statusCode` and `Parameter #N $statusCode` forms emitted by phpstan)
-        - '#Parameter (\#\d+ )?\$statusCode of class OCP\\AppFramework\\Http\\JSONResponse constructor expects#'
-        # registerRepairStep exists on server; not yet in nextcloud/ocp stub used for analysis
-        - '#Call to an undefined method OCP\\AppFramework\\Bootstrap\\IRegistrationContext::registerRepairStep#'
-        # OCP stub gaps for methods that exist at runtime
-        - '#Call to an undefined method OCP\\IRequest::getContent\(\)#'
-        - '#Call to an undefined method OCP\\IRequest::setParameter\(\)#'
-        - '#Call to an undefined method OCP\\Mail\\IMessage::attachFile\(\)#'
-        - '#Call to an undefined method OCP\\AppFramework\\Db\\Entity::jsonSerialize#'
+        # @template-implements IEventListener<OCA\OpenRegister\Event\*> in listeners:
+        # OR events are absent in static analysis — the generic bound check fails
+        # and registerEventListener rejects the class-string as not matching
+        # IEventListener<Event>. Both errors stem from the same missing OR type.
+        - '#is not subtype of template type T of OCP\\\\EventDispatcher\\\\Event#'
+        - '#expects class-string.OCP\\\\EventDispatcher\\\\IEventListener.OCP\\\\EventDispatcher\\\\Event..,.+DossierCheckedOnListener.+given#'
         # TesseractOCR uses __call magic methods for lang(), dpi() etc.
         - '#Call to an undefined method .+TesseractOCR::#'
         # DI-injected properties in scaffold classes not yet using them
@@ -66,14 +55,27 @@ parameters:
         # it; in CI / fresh-checkout phpstan runs without the package
         # vendored. The PhpWordBackend usages are guarded by
         # class_exists() in isAvailable(), so the runtime behaviour is
-        # safe. Same exemption pattern as the OpenRegister one above.
+        # safe. Same exemption pattern as the OpenRegister ignores in the base.
         - '#unknown class PhpOffice\\PhpWord\\#'
         - '#static method [^ ]+ on an unknown class PhpOffice\\PhpWord\\#'
         - '#Access to constant [^ ]+ on an unknown class PhpOffice\\PhpWord\\#'
-        # Defensive runtime guards (`is_string(...) === false`) on file-
-        # content reads. The docblock for File::getContent() promises
-        # `string`, so phpstan treats the negated check as unreachable.
-        # The guards stay — Nextcloud's File implementation can fail
-        # under quota / locked-file conditions and we'd rather emit a
-        # typed ConversionFailedException than crash the cascade.
+        # Defensive guards whose PHPDoc-narrowed types make phpstan treat the negated
+        # check as unreachable. The guards stay — Nextcloud's File implementation can
+        # fail under quota / locked-file conditions and we'd rather emit a typed
+        # ConversionFailedException than crash the cascade.
         - '#Strict comparison using === between true and false will always evaluate to false#'
+        # RenameDutchColumns::hasCollision() refuses to migrate when two mapped
+        # sources target one destination. COLUMN_MAP currently holds a single
+        # entry ('zaak_id' => 'case_id'), so PHPStan can prove $sources is 0|1 and
+        # calls `$sources > 1` always false — correct today, and the guard is
+        # still the thing that makes adding a second mapping safe.
+        #
+        # NOT deleted, deliberately: this is a destructive ALTER TABLE path, and
+        # the guard's whole value is that it already exists on the day someone
+        # adds a colliding entry. Scoped to the one file so it cannot mask the
+        # same shape elsewhere; delete this ignore when COLUMN_MAP gains a second
+        # entry, because the error will stop firing on its own.
+        -
+            message: '#Comparison operation ">" between 0\|1 and 1 is always false#'
+            identifier: greater.alwaysFalse
+            path: lib/Repair/RenameDutchColumns.php

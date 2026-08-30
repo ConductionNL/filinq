@@ -7,7 +7,7 @@
  * rendering paths (PdfService is mocked so mPDF itself is not invoked).
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -15,7 +15,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/pdf-conversion-service/tasks.md#task-11
  *
@@ -23,11 +23,11 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service\Conversion;
+namespace OCA\Filinq\Tests\Unit\Service\Conversion;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\Conversion\MpdfBackend;
-use OCA\DocuDesk\Service\PdfService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Conversion\MpdfBackend;
+use OCA\Filinq\Service\PdfService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\IAppConfig;
@@ -40,272 +40,258 @@ use RuntimeException;
  * Unit tests for MpdfBackend
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
+ * @package  OCA\Filinq\Tests\Unit\Service\Conversion
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class MpdfBackendTest extends TestCase
-{
+class MpdfBackendTest extends TestCase {
 
-    /**
-     * App config mock.
-     *
-     * @var IAppConfig|MockObject
-     */
-    private IAppConfig|MockObject $appConfig;
+	/**
+	 * App config mock.
+	 *
+	 * @var IAppConfig|MockObject
+	 */
+	private IAppConfig|MockObject $appConfig;
 
-    /**
-     * PdfService mock.
-     *
-     * @var PdfService|MockObject
-     */
-    private PdfService|MockObject $pdfService;
+	/**
+	 * PdfService mock.
+	 *
+	 * @var PdfService|MockObject
+	 */
+	private PdfService|MockObject $pdfService;
 
-    /**
-     * Logger mock.
-     *
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $logger;
+	/**
+	 * Logger mock.
+	 *
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $logger;
 
-    /**
-     * Backend under test.
-     *
-     * @var MpdfBackend
-     */
-    private MpdfBackend $backend;
+	/**
+	 * Backend under test.
+	 *
+	 * @var MpdfBackend
+	 */
+	private MpdfBackend $backend;
 
-    /**
-     * Set up the test.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up the test.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->appConfig  = $this->createMock(originalClassName: IAppConfig::class);
-        $this->pdfService = $this->createMock(originalClassName: PdfService::class);
-        $this->logger     = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
+		$this->pdfService = $this->createMock(originalClassName: PdfService::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 
-        $this->backend = new MpdfBackend(
-            pdfService: $this->pdfService,
-            appConfig: $this->appConfig,
-            logger: $this->logger,
-        );
+		$this->backend = new MpdfBackend(
+			pdfService: $this->pdfService,
+			appConfig: $this->appConfig,
+			logger: $this->logger,
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test that name() returns the stable identifier 'mpdf'
-     *
-     * @return void
-     */
-    public function testNameReturnsMpdf(): void
-    {
-        $this->assertSame(expected: 'mpdf', actual: $this->backend->name());
+	/**
+	 * Test that name() returns the stable identifier 'mpdf'
+	 *
+	 * @return void
+	 */
+	public function testNameReturnsMpdf(): void {
+		$this->assertSame(expected: 'mpdf', actual: $this->backend->name());
 
-    }//end testNameReturnsMpdf()
+	}//end testNameReturnsMpdf()
 
-    /**
-     * Test that isAvailable() returns true when the tenant flag is not 'false'
-     *
-     * @return void
-     */
-    public function testIsAvailableWhenFlagNotFalse(): void
-    {
-        $this->appConfig->method('getValueString')->willReturn('true');
-        $this->assertTrue(condition: $this->backend->isAvailable());
+	/**
+	 * Test that isAvailable() returns true when the tenant flag is not 'false'
+	 *
+	 * @return void
+	 */
+	public function testIsAvailableWhenFlagNotFalse(): void {
+		$this->appConfig->method('getValueString')->willReturn('true');
+		$this->assertTrue(condition: $this->backend->isAvailable());
 
-    }//end testIsAvailableWhenFlagNotFalse()
+	}//end testIsAvailableWhenFlagNotFalse()
 
-    /**
-     * Test that isAvailable() returns false when tenant flag is 'false'
-     *
-     * @return void
-     */
-    public function testIsUnavailableWhenFlagFalse(): void
-    {
-        $this->appConfig->method('getValueString')->willReturn('false');
-        $this->assertFalse(condition: $this->backend->isAvailable());
+	/**
+	 * Test that isAvailable() returns false when tenant flag is 'false'
+	 *
+	 * @return void
+	 */
+	public function testIsUnavailableWhenFlagFalse(): void {
+		$this->appConfig->method('getValueString')->willReturn('false');
+		$this->assertFalse(condition: $this->backend->isAvailable());
 
-    }//end testIsUnavailableWhenFlagFalse()
+	}//end testIsUnavailableWhenFlagFalse()
 
-    /**
-     * Test that canHandle() returns true for text/html MIME
-     *
-     * @return void
-     */
-    public function testCanHandleHtmlMime(): void
-    {
-        $this->assertTrue(condition: $this->backend->canHandle(mimeType: 'text/html', extension: 'html'));
+	/**
+	 * Test that canHandle() returns true for text/html MIME
+	 *
+	 * @return void
+	 */
+	public function testCanHandleHtmlMime(): void {
+		$this->assertTrue(condition: $this->backend->canHandle(mimeType: 'text/html', extension: 'html'));
 
-    }//end testCanHandleHtmlMime()
+	}//end testCanHandleHtmlMime()
 
-    /**
-     * Test that canHandle() returns true for text/plain MIME
-     *
-     * @return void
-     */
-    public function testCanHandlePlainTextMime(): void
-    {
-        $this->assertTrue(condition: $this->backend->canHandle(mimeType: 'text/plain', extension: 'txt'));
+	/**
+	 * Test that canHandle() returns true for text/plain MIME
+	 *
+	 * @return void
+	 */
+	public function testCanHandlePlainTextMime(): void {
+		$this->assertTrue(condition: $this->backend->canHandle(mimeType: 'text/plain', extension: 'txt'));
 
-    }//end testCanHandlePlainTextMime()
+	}//end testCanHandlePlainTextMime()
 
-    /**
-     * Test that canHandle() returns true for .md extension
-     *
-     * @return void
-     */
-    public function testCanHandleMarkdownExtension(): void
-    {
-        $this->assertTrue(condition: $this->backend->canHandle(mimeType: 'text/markdown', extension: 'md'));
+	/**
+	 * Test that canHandle() returns true for .md extension
+	 *
+	 * @return void
+	 */
+	public function testCanHandleMarkdownExtension(): void {
+		$this->assertTrue(condition: $this->backend->canHandle(mimeType: 'text/markdown', extension: 'md'));
 
-    }//end testCanHandleMarkdownExtension()
+	}//end testCanHandleMarkdownExtension()
 
-    /**
-     * Test that canHandle() returns false for DOCX MIME
-     *
-     * @return void
-     */
-    public function testCannotHandleDocxMime(): void
-    {
-        $this->assertFalse(
-            condition: $this->backend->canHandle(
-                mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                extension: 'docx'
-            )
-        );
+	/**
+	 * Test that canHandle() returns false for DOCX MIME
+	 *
+	 * @return void
+	 */
+	public function testCannotHandleDocxMime(): void {
+		$this->assertFalse(
+			condition: $this->backend->canHandle(
+				mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+				extension: 'docx'
+			)
+		);
 
-    }//end testCannotHandleDocxMime()
+	}//end testCannotHandleDocxMime()
 
-    /**
-     * Test that canHandle() returns true for xhtml+xml MIME
-     *
-     * @return void
-     */
-    public function testCanHandleXhtmlMime(): void
-    {
-        $this->assertTrue(
-            condition: $this->backend->canHandle(mimeType: 'application/xhtml+xml', extension: 'xhtml')
-        );
+	/**
+	 * Test that canHandle() returns true for xhtml+xml MIME
+	 *
+	 * @return void
+	 */
+	public function testCanHandleXhtmlMime(): void {
+		$this->assertTrue(
+			condition: $this->backend->canHandle(mimeType: 'application/xhtml+xml', extension: 'xhtml')
+		);
 
-    }//end testCanHandleXhtmlMime()
+	}//end testCanHandleXhtmlMime()
 
-    /**
-     * Test that convert() for an HTML file calls PdfService and returns the new PDF node
-     *
-     * @return void
-     */
-    public function testConvertHtmlReturnsPdfFile(): void
-    {
-        $htmlContent = '<html><body>Hello</body></html>';
-        $pdfBytes    = '%PDF-1.4 fake';
+	/**
+	 * Test that convert() for an HTML file calls PdfService and returns the new PDF node
+	 *
+	 * @return void
+	 */
+	public function testConvertHtmlReturnsPdfFile(): void {
+		$htmlContent = '<html><body>Hello</body></html>';
+		$pdfBytes = '%PDF-1.4 fake';
 
-        $folder     = $this->createMock(originalClassName: Folder::class);
-        $outputFile = $this->createMock(originalClassName: File::class);
-        $folder->method('nodeExists')->willReturn(false);
-        $folder->method('newFile')->willReturn($outputFile);
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$outputFile = $this->createMock(originalClassName: File::class);
+		$folder->method('nodeExists')->willReturn(false);
+		$folder->method('newFile')->willReturn($outputFile);
 
-        $source = $this->createMock(originalClassName: File::class);
-        $source->method('getName')->willReturn('page.html');
-        $source->method('getContent')->willReturn($htmlContent);
-        $source->method('getParent')->willReturn($folder);
+		$source = $this->createMock(originalClassName: File::class);
+		$source->method('getName')->willReturn('page.html');
+		$source->method('getContent')->willReturn($htmlContent);
+		$source->method('getParent')->willReturn($folder);
 
-        $this->pdfService->method('generatePdfFromHtml')->willReturn($pdfBytes);
+		$this->pdfService->method('generatePdfFromHtml')->willReturn($pdfBytes);
 
-        $result = $this->backend->convert(source: $source);
-        $this->assertSame(expected: $outputFile, actual: $result);
+		$result = $this->backend->convert(source: $source);
+		$this->assertSame(expected: $outputFile, actual: $result);
 
-    }//end testConvertHtmlReturnsPdfFile()
+	}//end testConvertHtmlReturnsPdfFile()
 
-    /**
-     * Test that convert() for a TXT file wraps the content in pre tag before calling PdfService
-     *
-     * @return void
-     */
-    public function testConvertTxtWrapsInPreTag(): void
-    {
-        $textContent = 'Hello world';
-        $pdfBytes    = '%PDF-1.4 fake';
+	/**
+	 * Test that convert() for a TXT file wraps the content in pre tag before calling PdfService
+	 *
+	 * @return void
+	 */
+	public function testConvertTxtWrapsInPreTag(): void {
+		$textContent = 'Hello world';
+		$pdfBytes = '%PDF-1.4 fake';
 
-        $folder = $this->createMock(originalClassName: Folder::class);
-        $folder->method('nodeExists')->willReturn(false);
-        $folder->method('newFile')->willReturn($this->createMock(originalClassName: File::class));
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->method('nodeExists')->willReturn(false);
+		$folder->method('newFile')->willReturn($this->createMock(originalClassName: File::class));
 
-        $source = $this->createMock(originalClassName: File::class);
-        $source->method('getName')->willReturn('note.txt');
-        $source->method('getContent')->willReturn($textContent);
-        $source->method('getParent')->willReturn($folder);
+		$source = $this->createMock(originalClassName: File::class);
+		$source->method('getName')->willReturn('note.txt');
+		$source->method('getContent')->willReturn($textContent);
+		$source->method('getParent')->willReturn($folder);
 
-        $capturedHtml = null;
-        $this->pdfService
-            ->method('generatePdfFromHtml')
-            ->willReturnCallback(
-                function (string $html) use ($pdfBytes, &$capturedHtml): string {
-                    $capturedHtml = $html;
-                    return $pdfBytes;
-                }
-            );
+		$capturedHtml = null;
+		$this->pdfService
+			->method('generatePdfFromHtml')
+			->willReturnCallback(
+				function (string $html) use ($pdfBytes, &$capturedHtml): string {
+					$capturedHtml = $html;
+					return $pdfBytes;
+				}
+			);
 
-        $this->backend->convert(source: $source);
+		$this->backend->convert(source: $source);
 
-        $this->assertStringContainsString(needle: '<pre', haystack: (string) $capturedHtml);
-        $this->assertStringContainsString(needle: 'Hello world', haystack: (string) $capturedHtml);
+		$this->assertStringContainsString(needle: '<pre', haystack: (string)$capturedHtml);
+		$this->assertStringContainsString(needle: 'Hello world', haystack: (string)$capturedHtml);
 
-    }//end testConvertTxtWrapsInPreTag()
+	}//end testConvertTxtWrapsInPreTag()
 
-    /**
-     * Test that convert() deletes an existing output file before writing the new one
-     *
-     * @return void
-     */
-    public function testConvertDeletesExistingOutputFile(): void
-    {
-        $pdfBytes    = '%PDF-1.4 fake';
-        $existingPdf = $this->createMock(originalClassName: File::class);
-        $existingPdf->expects($this->once())->method('delete');
+	/**
+	 * Test that convert() deletes an existing output file before writing the new one
+	 *
+	 * @return void
+	 */
+	public function testConvertDeletesExistingOutputFile(): void {
+		$pdfBytes = '%PDF-1.4 fake';
+		$existingPdf = $this->createMock(originalClassName: File::class);
+		$existingPdf->expects($this->once())->method('delete');
 
-        $folder = $this->createMock(originalClassName: Folder::class);
-        $folder->method('nodeExists')->willReturn(true);
-        $folder->method('get')->willReturn($existingPdf);
-        $folder->method('newFile')->willReturn($this->createMock(originalClassName: File::class));
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->method('nodeExists')->willReturn(true);
+		$folder->method('get')->willReturn($existingPdf);
+		$folder->method('newFile')->willReturn($this->createMock(originalClassName: File::class));
 
-        $source = $this->createMock(originalClassName: File::class);
-        $source->method('getName')->willReturn('page.html');
-        $source->method('getContent')->willReturn('<p>hi</p>');
-        $source->method('getParent')->willReturn($folder);
+		$source = $this->createMock(originalClassName: File::class);
+		$source->method('getName')->willReturn('page.html');
+		$source->method('getContent')->willReturn('<p>hi</p>');
+		$source->method('getParent')->willReturn($folder);
 
-        $this->pdfService->method('generatePdfFromHtml')->willReturn($pdfBytes);
+		$this->pdfService->method('generatePdfFromHtml')->willReturn($pdfBytes);
 
-        $this->backend->convert(source: $source);
+		$this->backend->convert(source: $source);
 
-    }//end testConvertDeletesExistingOutputFile()
+	}//end testConvertDeletesExistingOutputFile()
 
-    /**
-     * Test that convert() throws ConversionFailedException when PdfService throws
-     *
-     * @return void
-     */
-    public function testConvertThrowsWhenPdfServiceFails(): void
-    {
-        $source = $this->createMock(originalClassName: File::class);
-        $source->method('getName')->willReturn('page.html');
-        $source->method('getContent')->willReturn('<p>hi</p>');
-        $source->method('getPath')->willReturn('/u/admin/page.html');
+	/**
+	 * Test that convert() throws ConversionFailedException when PdfService throws
+	 *
+	 * @return void
+	 */
+	public function testConvertThrowsWhenPdfServiceFails(): void {
+		$source = $this->createMock(originalClassName: File::class);
+		$source->method('getName')->willReturn('page.html');
+		$source->method('getContent')->willReturn('<p>hi</p>');
+		$source->method('getPath')->willReturn('/u/admin/page.html');
 
-        $this->pdfService
-            ->method('generatePdfFromHtml')
-            ->willThrowException(new RuntimeException('mPDF OOM'));
+		$this->pdfService
+			->method('generatePdfFromHtml')
+			->willThrowException(new RuntimeException('mPDF OOM'));
 
-        $this->expectException(exception: ConversionFailedException::class);
-        $this->expectExceptionMessageMatches(regularExpression: '/mPDF/');
+		$this->expectException(exception: ConversionFailedException::class);
+		$this->expectExceptionMessageMatches(regularExpression: '/mPDF/');
 
-        $this->backend->convert(source: $source);
+		$this->backend->convert(source: $source);
 
-    }//end testConvertThrowsWhenPdfServiceFails()
+	}//end testConvertThrowsWhenPdfServiceFails()
 }//end class

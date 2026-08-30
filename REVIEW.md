@@ -1,4 +1,4 @@
-# DocuDesk Final Review
+# Filinq Final Review
 
 **Date:** 2026-03-21
 **Version:** 0.0.34-unstable.8
@@ -58,15 +58,15 @@ testUpdateSettingsSkipsEmptyKeys: Failed asserting that an array is empty.
 
 ## 3. Browser Test Results
 
-### Main App (http://localhost:8080/apps/docudesk)
-- **App loads successfully** -- DocuDesk appears in the Nextcloud app menu and navigates correctly.
+### Main App (http://localhost:8080/apps/filinq)
+- **App loads successfully** -- Filinq appears in the Nextcloud app menu and navigates correctly.
 - **Navigation:** Three menu items render: Dashboard, Anonymization, Consent Management.
 
 #### Dashboard
 - Renders consent statistics cards: Total Consents, Pending, Approved, Objected (all show "No items found").
 - Shows "Recent Consent Activity" section with empty state message.
 - Shows "Quick Anonymization" section.
-- **Console error:** `Failed to fetch consents` -- the `/apps/docudesk/api/consents` endpoint returns an error. This is a backend API issue (likely missing consent register/schema configuration).
+- **Console error:** `Failed to fetch consents` -- the `/apps/filinq/api/consents` endpoint returns an error. This is a backend API issue (likely missing consent register/schema configuration).
 
 #### Anonymization
 - Renders the 4-step pipeline: Upload -> Analyze -> Anonymize -> Done.
@@ -76,13 +76,13 @@ testUpdateSettingsSkipsEmptyKeys: Failed asserting that an array is empty.
 #### Consent Management
 - Shows status cards with counts: Total (0), Pending (0), Approved (0), Objected (0).
 - Empty state: "No consent records -- No publication consent records found. Consent records are created when entities are detected in documents."
-- **Console error:** Same `/apps/docudesk/api/consents` fetch failure as Dashboard.
+- **Console error:** Same `/apps/filinq/api/consents` fetch failure as Dashboard.
 
-### Admin Settings (http://localhost:8080/settings/admin/docudesk)
-- Page loads with title "Administration settings: DocuDesk".
+### Admin Settings (http://localhost:8080/settings/admin/filinq)
+- Page loads with title "Administration settings: Filinq".
 - **Version Information:** Shows version 0.0.34-unstable.8, "Up to date" badge.
 - **Support:** Contact info for support@conduction.nl and sales@conduction.nl.
-- **DocuDesk description:** "GDPR publication consent management and document metadata enrichment for Nextcloud" with external docs link.
+- **Filinq description:** "GDPR publication consent management and document metadata enrichment for Nextcloud" with external docs link.
 - **Consent Settings:** Objection Period field set to 28 days, with WOO compliance note.
 - **Metadata Enrichment:** Three toggles -- Language Detection (checked), Keyword Extraction (checked), Topic Classification (checked).
 - **Data Storage:** Register combobox for Publication Consent configuration, Save button.
@@ -131,7 +131,7 @@ testUpdateSettingsSkipsEmptyKeys: Failed asserting that an array is empty.
 
 ### Warning
 2. **SettingsServiceTest::testUpdateSettingsSkipsEmptyKeys fails** -- Assertion expects empty array but gets non-empty. Either the test expectation or the service behavior needs alignment.
-3. **Console error on Dashboard/Consent pages** -- `/apps/docudesk/api/consents` returns a server error. Likely needs consent register/schema to be configured via admin settings first (Data Storage section).
+3. **Console error on Dashboard/Consent pages** -- `/apps/filinq/api/consents` returns a server error. Likely needs consent register/schema to be configured via admin settings first (Data Storage section).
 4. **Console error on Admin Settings** -- `TypeError: Cannot read properties of undefined (reading 'loading')` in the settings Vue component. A state property is not initialized before the template renders.
 5. **woo-transparency spec has no archive entry** -- All other 12 specs have corresponding archives; this one does not.
 
@@ -152,7 +152,7 @@ testUpdateSettingsSkipsEmptyKeys: Failed asserting that an array is empty.
 
 ## 7. Overall Assessment
 
-**DocuDesk is a functional Nextcloud app** with a well-structured OpenSpec workflow (13 specs, 13 archives, clean change directory), comprehensive documentation (29 feature docs, 5 screenshots, dual-language i18n), and a working frontend with Dashboard, Anonymization pipeline, Consent Management, and Admin Settings pages.
+**Filinq is a functional Nextcloud app** with a well-structured OpenSpec workflow (13 specs, 13 archives, clean change directory), comprehensive documentation (29 feature docs, 5 screenshots, dual-language i18n), and a working frontend with Dashboard, Anonymization pipeline, Consent Management, and Admin Settings pages.
 
 **Primary concern:** The unit test suite has 12 failures out of 35 tests (34% failure rate), all traceable to two root causes -- a stale constructor mock in TemplateServiceTest and one assertion mismatch in SettingsServiceTest. These are straightforward fixes that would bring the suite to 100% pass rate.
 

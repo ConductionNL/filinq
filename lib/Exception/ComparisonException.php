@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Comparison Exception
  *
@@ -7,14 +8,14 @@
  * failures into the correct HTTP response without leaking detail.
  *
  * @category  Exception
- * @package   OCA\DocuDesk\Exception
+ * @package   OCA\Filinq\Exception
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+ * @spec openspec/specs/document-comparison/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Exception;
+namespace OCA\Filinq\Exception;
 
 use RuntimeException;
 
@@ -30,63 +31,58 @@ use RuntimeException;
  * Exception for the document-comparison flow.
  *
  * @category Exception
- * @package  OCA\DocuDesk\Exception
+ * @package  OCA\Filinq\Exception
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
-class ComparisonException extends RuntimeException
-{
-    /**
-     * HTTP status code for this failure.
-     *
-     * @var integer
-     */
-    private int $statusCode;
+class ComparisonException extends RuntimeException {
 
-    /**
-     * Machine-readable reason code.
-     *
-     * @var string
-     */
-    private string $reason;
+	/**
+	 * HTTP status code for this failure.
+	 *
+	 * @var integer
+	 */
+	private int $statusCode;
 
-    /**
-     * Constructor.
-     *
-     * @param int    $statusCode HTTP status code.
-     * @param string $reason     Machine-readable reason code.
-     * @param string $message    Human-readable message.
-     *
-     * @return void
-     */
-    public function __construct(int $statusCode, string $reason, string $message='')
-    {
-        parent::__construct($message);
-        $this->statusCode = $statusCode;
-        $this->reason     = $reason;
+	/**
+	 * Machine-readable reason code.
+	 *
+	 * @var string
+	 */
+	private string $reason;
 
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param int $statusCode HTTP status code.
+	 * @param string $reason Machine-readable reason code.
+	 * @param string $message Human-readable message.
+	 *
+	 * @return void
+	 */
+	public function __construct(int $statusCode, string $reason, string $message = '') {
+		parent::__construct(message: $message);
+		$this->statusCode = $statusCode;
+		$this->reason = $reason;
 
-    /**
-     * Get the HTTP status code.
-     *
-     * @return int The status code.
-     */
-    public function getStatusCode(): int
-    {
-        return $this->statusCode;
+	}//end __construct()
 
-    }//end getStatusCode()
+	/**
+	 * Get the HTTP status code.
+	 *
+	 * @return int The status code.
+	 */
+	public function getStatusCode(): int {
+		return $this->statusCode;
+	}//end getStatusCode()
 
-    /**
-     * Get the machine-readable reason code.
-     *
-     * @return string The reason code.
-     */
-    public function getReason(): string
-    {
-        return $this->reason;
-
-    }//end getReason()
+	/**
+	 * Get the machine-readable reason code.
+	 *
+	 * @return string The reason code.
+	 */
+	public function getReason(): string {
+		return $this->reason;
+	}//end getReason()
 }//end class

@@ -21,14 +21,14 @@
 
 <script>
 /**
- * Reusable page header for DocuDesk views.
+ * Reusable page header for Filinq views.
  *
  * Renders a page-level title with optional description, optional leading
  * icon (DdIcon by name, or fully custom via the `icon` slot), and an
  * optional `actions` slot for right-aligned controls (buttons, badges).
  *
  * Usage:
- *   <DdPageHeader :title="t('docudesk', 'Documents')" />
+ *   <DdPageHeader :title="t('filinq', 'Documents')" />
  *   <DdPageHeader title="Anonymization" icon="shield" description="..." />
  */
 import DdIcon from './DdIcon.vue'
@@ -42,16 +42,19 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		/** Optional sub-line shown below the title. */
 		description: {
 			type: String,
 			default: '',
 		},
+
 		/** Optional DdIcon name shown left of the title. */
 		icon: {
 			type: String,
 			default: '',
 		},
+
 		/** Square icon size in pixels. */
 		iconSize: {
 			type: Number,

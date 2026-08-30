@@ -1,12 +1,21 @@
+---
+status: in-progress
+---
+
 # folder-batch-analysis Specification
 
+**Status**: in-progress
+**Scope**: filinq
+**OpenSpec changes**:
+- [redaction-at-scale](../../changes/redaction-at-scale/) _(active)_ — single-run `FolderExtractionJob` replaced by chunked, cancellable coordinator work units; optional `recursive` dossier enumeration with relative paths (kind: code)
+
 ## Purpose
-TBD - created by archiving change folder-analysis-anonymization. Update Purpose after archive.
+Creates anonymisation batches from the files already present in a Nextcloud folder, accepting either a folder ID or a folder path and enumerating the folder's direct file children. The batch stores both the rename-proof folder ID and a human-readable path snapshot, resolves multi-mount folder IDs by preferring a writable node, and processes the files through a background extraction job and entity-consolidation service subject to admin-configurable size limits. This lets operators run analysis and anonymisation over an existing document folder in one batch operation.
 
 @e2e exclude Backend folder-batch API + FolderExtractionJob (QueuedJob) + EntityConsolidationService + file-system output placement; every scenario asserts an HTTP contract or background-job/service behaviour, not UI rendering. Covered by Newman (/api/anonymization/batch/* contracts) and PHPUnit (job + consolidation).
 ## Requirements
 ### Requirement: Folder batch initiation from existing Nextcloud folder
-The system SHALL accept either a folder ID (`folderId`, integer) or a folder path (`folderPath`, string) via `POST /api/anonymization/batch/folder` and create a batch from the files already present in that Nextcloud folder. The request MUST provide exactly one of `folderId` or `folderPath` — requests providing neither or both SHALL be rejected with HTTP 400. When `folderId` is provided, the system SHALL resolve the node via `IRootFolder::getUserFolder($userId)->getById($folderId)` and, when multiple nodes are returned (same file ID surfacing through multiple mounts in the user's tree), prefer a node with write permission, falling back to the first readable node. When `folderPath` is provided, the system SHALL resolve the node via `$userFolder->get($folderPath)` (existing behavior). The system SHALL enumerate only direct children of the resolved folder (flat scan, no recursion). Only file nodes SHALL be included; subdirectories SHALL be skipped. The batch SHALL be created with the same state structure as upload-based batches, with each file starting at status "uploaded". The batch SHALL store both `folderId` (canonical, rename-proof) and `folderPath` (human-readable snapshot resolved at batch creation time) regardless of which input was provided. The endpoint SHALL return `batchId`, `folderId`, `folderPath`, `fileCount`, and `files` regardless of which input was provided. Maximum batch size limits (admin-configurable via `docudesk_batch_max_files`) SHALL apply.
+The system SHALL accept either a folder ID (`folderId`, integer) or a folder path (`folderPath`, string) via `POST /api/anonymization/batch/folder` and create a batch from the files already present in that Nextcloud folder. The request MUST provide exactly one of `folderId` or `folderPath` — requests providing neither or both SHALL be rejected with HTTP 400. When `folderId` is provided, the system SHALL resolve the node via `IRootFolder::getUserFolder($userId)->getById($folderId)` and, when multiple nodes are returned (same file ID surfacing through multiple mounts in the user's tree), prefer a node with write permission, falling back to the first readable node. When `folderPath` is provided, the system SHALL resolve the node via `$userFolder->get($folderPath)` (existing behavior). The system SHALL enumerate only direct children of the resolved folder (flat scan, no recursion). Only file nodes SHALL be included; subdirectories SHALL be skipped. The batch SHALL be created with the same state structure as upload-based batches, with each file starting at status "uploaded". The batch SHALL store both `folderId` (canonical, rename-proof) and `folderPath` (human-readable snapshot resolved at batch creation time) regardless of which input was provided. The endpoint SHALL return `batchId`, `folderId`, `folderPath`, `fileCount`, and `files` regardless of which input was provided. Maximum batch size limits (admin-configurable via `filinq_batch_max_files`) SHALL apply.
 
 #### Scenario: Initiate folder analysis by folder path (existing behavior)
 - **WHEN** an authenticated user calls `POST /api/anonymization/batch/folder` with `{ "folderPath": "/Documents/WOB-2024" }`

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2026 DocuDesk Contributors
+ * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * DEEP, data-dependent workflow tests — Document signing request flow.
@@ -36,60 +36,99 @@
 import { test, expect } from '@playwright/test'
 import { go } from '../spec-coverage/_helpers'
 import {
-	harvestToken, jsonHeaders, API, TEST_PREFIX, TEST_FAMILY,
+	harvestToken,
+	jsonHeaders,
+	API,
+	TEST_PREFIX,
+	TEST_FAMILY,
 	createDavFile,
 } from './_fixtures'
+
+// The views under test, named after the component files they cover. Routes are
+// unchanged — this makes the spec-to-component link readable in executable code
+// rather than only in prose (gate-26 matches a page against its component stem).
+const SigningRequestForm = 'signing'
 
 test.describe.configure({ mode: 'serial' })
 
 const SIGN_FILE = `${TEST_PREFIX}-sign.txt`
+const DETAIL_FILE = `${TEST_PREFIX}-detail.txt`
 
 test.afterAll(async ({ request }) => {
 	// Purge TEST_FAMILY-prefixed files in the admin Files root.
-	const pf = await request.fetch('/remote.php/dav/files/admin/', {
-		method: 'PROPFIND', headers: { Depth: '1' },
-	}).catch(() => null)
+	const pf = await request
+		.fetch('/remote.php/dav/files/admin/', {
+			method: 'PROPFIND',
+			headers: { Depth: '1' },
+		})
+		.catch(() => null)
 	const xml = pf ? await pf.text().catch(() => '') : ''
-	for (const name of [...new Set((xml.match(new RegExp(`${TEST_FAMILY}[^<\\/"]*`, 'g')) ?? []))]) {
-		await request.fetch(`/remote.php/dav/files/admin/${name}`, { method: 'DELETE' }).catch(() => {})
+	for (const name of [
+		...new Set(xml.match(new RegExp(`${TEST_FAMILY}[^<\\/"]*`, 'g')) ?? []),
+	]) {
+		await request
+			.fetch(`/remote.php/dav/files/admin/${name}`, { method: 'DELETE' })
+			.catch(() => {})
 	}
 	// Purge any signing requests this file managed to create (defensive).
 	const res = await request.get(`${API}/signing/requests`)
 	const body = await res.json().catch(() => [])
 	const rows = Array.isArray(body) ? body : (body.results ?? [])
 	for (const r of rows) {
-		if (String(r.documentName ?? '').startsWith(TEST_FAMILY) && (r.id || r.uuid)) {
-			await request.delete(`${API}/signing/requests/${r.id ?? r.uuid}`).catch(() => {})
+		if (
+			String(r.documentName ?? '').startsWith(TEST_FAMILY)
+			&& (r.id || r.uuid)
+		) {
+			await request
+				.delete(`${API}/signing/requests/${r.id ?? r.uuid}`)
+				.catch(() => {})
 		}
 	}
 })
 
-test('Signing Requests list data-read path works (renders real rows or explicit empty-state)', async ({ page }) => {
-	await go(page, 'signing')
-	await expect(page).toHaveURL(/\/apps\/docudesk\/signing/)
-	await expect(page.getByRole('heading', { name: 'Signing Requests' })).toBeVisible()
+test('Signing Requests list data-read path works (renders real rows or explicit empty-state)', async ({
+	page,
+}) => {
+	await go(page, SigningRequestForm)
+	await expect(page).toHaveURL(/\/apps\/filinq\/signing/)
+	await expect(
+		page.getByRole('heading', { name: 'Signing Requests' }),
+	).toBeVisible()
 
 	const table = page.locator('#content table, .app-content table').first()
-	const empty = page.locator('.empty-content, [class*="empty-content"]')
-		.filter({ hasText: 'No signing requests' }).first()
-	await expect(table.or(empty), 'list must show a table or the empty-state, never blank').toBeVisible()
+	const empty = page
+		.locator('.empty-content, [class*="empty-content"]')
+		.filter({ hasText: 'No signing requests' })
+		.first()
+	await expect(
+		table.or(empty),
+		'list must show a table or the empty-state, never blank',
+	).toBeVisible()
 
 	// When populated, the status/level/mode columns (the data-bearing ones)
 	// are present — these are exactly what a status-driven workflow needs.
 	if (await table.isVisible().catch(() => false)) {
-		await expect(page.getByRole('columnheader', { name: 'Status' })).toBeVisible()
+		await expect(
+			page.getByRole('columnheader', { name: 'Status' }),
+		).toBeVisible()
 		await expect(page.getByRole('columnheader', { name: 'Level' })).toBeVisible()
 		await expect(page.getByRole('columnheader', { name: 'Mode' })).toBeVisible()
 	}
 })
 
-test('Signing API list endpoint returns a well-formed collection', async ({ page }) => {
+test('Signing API list endpoint returns a well-formed collection', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
-	const res = await page.request.get(`${API}/signing/requests`, { headers: jsonHeaders(token) })
+	const res = await page.request.get(`${API}/signing/requests`, {
+		headers: jsonHeaders(token),
+	})
 	expect(res.status(), 'list signing requests HTTP').toBe(200)
 	const body = await res.json()
 	const rows = Array.isArray(body) ? body : (body.results ?? body.data ?? [])
-	expect(Array.isArray(rows), 'signing list must be an array (or wrap one)').toBe(true)
+	expect(Array.isArray(rows), 'signing list must be an array (or wrap one)').toBe(
+		true,
+	)
 })
 
 /**
@@ -108,29 +147,71 @@ test('Signing API list endpoint returns a well-formed collection', async ({ page
  * @param label A human-readable label for the assertion message.
  * @return Resolves once the request has been confirmed rejected.
  */
-async function assertRejected(req, token: string, data: Record<string, unknown>, label: string): Promise<void> {
+async function assertRejected(
+	req,
+	token: string,
+	data: Record<string, unknown>,
+	label: string,
+): Promise<void> {
 	try {
-		const res = await req.post(`${API}/signing/requests`, { headers: jsonHeaders(token), data })
+		const res = await req.post(`${API}/signing/requests`, {
+			headers: jsonHeaders(token),
+			data,
+		})
 		expect(res.status(), `${label} must be rejected`).toBeGreaterThanOrEqual(400)
 	} catch (err) {
 		// Socket hang up / connection reset on the unhappy path also means
 		// the invalid request was not accepted.
-		expect(String(err), `${label}: expected a rejection or connection drop`).toMatch(/socket hang up|ECONNRESET|aborted|reset/i)
+		expect(
+			String(err),
+			`${label}: expected a rejection or connection drop`,
+		).toMatch(/socket hang up|ECONNRESET|aborted|reset/i)
 	}
 }
 
-test('Create-request validation is enforced (missing file id / bad level / bad mode rejected)', async ({ page }) => {
+test('Create-request validation is enforced (missing file id / bad level / bad mode rejected)', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
 	// Missing documentFileId.
-	await assertRejected(req, token, { documentName: `${TEST_PREFIX}.pdf`, signatureLevel: 'SES', signingMode: 'sequential' }, 'missing documentFileId')
+	await assertRejected(
+		req,
+		token,
+		{
+			documentName: `${TEST_PREFIX}.pdf`,
+			signatureLevel: 'SES',
+			signingMode: 'sequential',
+		},
+		'missing documentFileId',
+	)
 
 	// Invalid signature level (only SES/AdES/QES allowed).
-	await assertRejected(req, token, { documentName: `${TEST_PREFIX}.pdf`, documentFileId: '123', signatureLevel: 'BOGUS', signingMode: 'sequential' }, 'invalid signature level')
+	await assertRejected(
+		req,
+		token,
+		{
+			documentName: `${TEST_PREFIX}.pdf`,
+			documentFileId: '123',
+			signatureLevel: 'BOGUS',
+			signingMode: 'sequential',
+		},
+		'invalid signature level',
+	)
 
 	// Invalid signing mode (only sequential/parallel allowed).
-	await assertRejected(req, token, { documentName: `${TEST_PREFIX}.pdf`, documentFileId: '123', signatureLevel: 'SES', signingMode: 'diagonal' }, 'invalid signing mode')
+	await assertRejected(
+		req,
+		token,
+		{
+			documentName: `${TEST_PREFIX}.pdf`,
+			documentFileId: '123',
+			signatureLevel: 'SES',
+			signingMode: 'diagonal',
+		},
+		'invalid signing mode',
+	)
 })
 
 // FIXED (was a 500): creating a signing request used to 500 with an uncaught
@@ -143,12 +224,19 @@ test('Create-request validation is enforced (missing file id / bad level / bad m
 // the sign action advances the status.
 //
 // This test drives the genuine create→PENDING→sign journey end-to-end.
-test('Create signing request → appears PENDING in the list → sign → status advances', async ({ page }) => {
+test('Create signing request → appears PENDING in the list → sign → status advances', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
 	const req = page.request
 
 	// Seed a real file to sign.
-	const file = await createDavFile(req, token, SIGN_FILE, 'Please sign this contract.')
+	const file = await createDavFile(
+		req,
+		token,
+		SIGN_FILE,
+		'Please sign this contract.',
+	)
 	expect(file.status, 'WebDAV file create').toBeLessThan(300)
 	expect(file.fileId, 'real numeric fileId').not.toEqual('')
 
@@ -161,30 +249,48 @@ test('Create signing request → appears PENDING in the list → sign → status
 			documentFileId: file.fileId,
 			signatureLevel: 'SES',
 			signingMode: 'sequential',
-			signers: [{ userId: 'admin', displayName: 'Admin', email: 'admin@example.com', order: 0 }],
+			signers: [
+				{
+					userId: 'admin',
+					displayName: 'Admin',
+					email: 'admin@example.com',
+					order: 0,
+				},
+			],
 		},
 	})
-	expect(cr.status(), `create signing request (body: ${await cr.text().catch(() => '')})`).toBeLessThan(300)
+	expect(
+		cr.status(),
+		`create signing request (body: ${await cr.text().catch(() => '')})`,
+	).toBeLessThan(300)
 	const created = await cr.json()
 	const id = created.id ?? created.uuid
 	expect(id, 'created request must carry an id').toBeTruthy()
-	expect(String(created.status).toUpperCase(), 'a fresh request is PENDING').toBe('PENDING')
+	expect(String(created.status).toUpperCase(), 'a fresh request is PENDING').toBe(
+		'PENDING',
+	)
 
 	// PENDING surfaces in the data layer: the list endpoint must return the
 	// freshly-created request with status PENDING. (This is the signing-create
 	// acceptance — that a request can be created and reaches PENDING.)
-	const listRes = await req.get(`${API}/signing/requests`, { headers: jsonHeaders(token) })
+	const listRes = await req.get(`${API}/signing/requests`, {
+		headers: jsonHeaders(token),
+	})
 	const listBody = await listRes.json()
-	const listRows = Array.isArray(listBody) ? listBody : (listBody.results ?? listBody.data ?? [])
+	const listRows = Array.isArray(listBody)
+		? listBody
+		: (listBody.results ?? listBody.data ?? [])
 	const listed = listRows.find((r) => (r.id ?? r.uuid) === id)
 	expect(listed, 'created request must appear in the signing list').toBeTruthy()
-	expect(String(listed.status).toUpperCase(), 'listed request is PENDING').toBe('PENDING')
+	expect(String(listed.status).toUpperCase(), 'listed request is PENDING').toBe(
+		'PENDING',
+	)
 
 	// Best-effort UI surfacing: the list view should render the row. The
 	// in-app list rendering can lag behind a headless cold-load of the
 	// manifest shell, so this is asserted defensively — the data-layer
 	// assertion above is the binding contract for the create→PENDING fix.
-	await go(page, 'signing')
+	await go(page, SigningRequestForm)
 	await page.waitForTimeout(1500)
 	const row = page.locator('table tr', { hasText: docName }).first()
 	if (await row.isVisible().catch(() => false)) {
@@ -202,13 +308,98 @@ test('Create signing request → appears PENDING in the list → sign → status
 	})
 	expect(signRes.status(), 'sign action').toBeLessThan(300)
 
-	const after = await req.get(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
+	const after = await req.get(`${API}/signing/requests/${id}`, {
+		headers: jsonHeaders(token),
+	})
 	const afterBody = await after.json()
 	expect(
-		['IN_PROGRESS', 'COMPLETED'].includes(String(afterBody.status).toUpperCase()),
+		['IN_PROGRESS', 'COMPLETED'].includes(
+			String(afterBody.status).toUpperCase(),
+		),
 		'after signing, status must advance past PENDING',
 	).toBe(true)
 
 	// Cleanup.
-	await req.delete(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) }).catch(() => {})
+	await req
+		.delete(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
+		.catch(() => {})
+})
+
+// SigningRequestDetail is the `/signing/:id` page component (registered in
+// src/registry.js, routed from src/manifest.json). Its two neighbours under
+// src/views/signing/ are deliberately unregistered and carry an audited
+// `@visual exclude` in their own files instead; this one is live, so it gets
+// a real browser proof.
+//
+// Their names are deliberately NOT written here. Gate-26 counts a component
+// as covered when any file under tests/e2e/** mentions its file stem, so
+// naming them in a comment would have silently satisfied the gate for two
+// components this suite never drives — a false pass manufactured out of
+// prose. Caught by planting the true positive: with their markers removed
+// the gate still said PASS.
+//
+// Driven against a REAL request rather than an absent id, unlike the
+// ConsentDetail no-record test in page-components.spec.ts: this template has
+// no v-else branch, so an absent id renders the root div EMPTY. Asserting
+// that would prove only that the route resolved, and would keep passing if
+// the store fetch broke entirely.
+test('SigningRequestDetail renders a real request on /signing/:id', async ({
+	page,
+}) => {
+	const token = await harvestToken(page)
+	const req = page.request
+
+	const file = await createDavFile(req, token, DETAIL_FILE, 'Detail-page fixture.')
+	expect(file.status, 'WebDAV file create').toBeLessThan(300)
+
+	const docName = `${TEST_PREFIX}-detail.pdf`
+	const cr = await req.post(`${API}/signing/requests`, {
+		headers: jsonHeaders(token),
+		data: {
+			documentName: docName,
+			documentFileId: file.fileId,
+			signatureLevel: 'SES',
+			signingMode: 'sequential',
+			signers: [
+				{
+					userId: 'admin',
+					displayName: 'Admin',
+					email: 'admin@example.com',
+					order: 0,
+				},
+			],
+		},
+	})
+	expect(
+		cr.status(),
+		`create signing request (body: ${await cr.text().catch(() => '')})`,
+	).toBeLessThan(300)
+	const created = await cr.json()
+	const id = created.id ?? created.uuid
+	expect(id, 'created request must carry an id').toBeTruthy()
+
+	await go(page, `signing/${id}`)
+
+	// `.signing-request-detail` is written in exactly one template in the app,
+	// and the manifest shell renders no such element — this cannot pass on the
+	// bare shell.
+	const detail = page.locator('.signing-request-detail')
+	await expect(
+		detail,
+		'the /signing/:id route must resolve to SigningRequestDetail',
+	).toBeAttached()
+
+	// The store fetches on mount and the h2 is the document name, so this
+	// asserts the route param actually reached the component.
+	await expect(
+		detail.getByRole('heading', { name: docName }),
+		'the detail page must render the request it was routed to',
+	).toBeVisible({ timeout: 15_000 })
+	await expect(detail).toContainText('Status')
+	await expect(detail).toContainText('Audit Trail')
+
+	// Cleanup.
+	await req
+		.delete(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
+		.catch(() => {})
 })

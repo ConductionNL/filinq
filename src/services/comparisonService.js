@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+ * @spec openspec/specs/document-comparison/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -19,10 +19,10 @@ import { generateUrl } from '@nextcloud/router'
  * @param {object} right Right subject `{ fileId, versionTimestamp? }`.
  * @return {Promise<object>} The comparison response.
  *
- * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+ * @spec openspec/specs/document-comparison/spec.md
  */
 export async function compareDocuments(left, right) {
-	const url = generateUrl('/apps/docudesk/api/comparison/compare')
+	const url = generateUrl('/apps/filinq/api/comparison/compare')
 	const { data } = await axios.post(url, { left, right })
 	return data
 }

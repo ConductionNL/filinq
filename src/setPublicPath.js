@@ -1,12 +1,12 @@
-/* eslint-disable camelcase, no-undef */
+/* eslint-disable no-undef */
 /**
  * Webpack runtime bootstrap — MUST be the first import of every entry point.
  *
  * Two globals have to be set before any other module evaluates:
  *
- * 1. `__webpack_public_path__` — webpack bakes a default of `/apps/docudesk/js/`,
- *    but DocuDesk is installed under a non-default apps path (`apps-extra`), so
- *    the real webroot is `/apps-extra/docudesk/js/`. `generateFilePath` resolves
+ * 1. `__webpack_public_path__` — webpack bakes a default of `/apps/filinq/js/`,
+ *    but Filinq is installed under a non-default apps path (`apps-extra`), so
+ *    the real webroot is `/apps-extra/filinq/js/`. `generateFilePath` resolves
  *    the correct path at runtime. This must run BEFORE the entry's CSS imports:
  *    `asset/resource` URLs (our bundled fonts) are computed as
  *    `__webpack_require__.p + '<hash>.woff2'` at the moment the importing CSS
@@ -21,4 +21,4 @@
 import { generateFilePath } from '@nextcloud/router'
 
 __webpack_nonce__ = btoa(OC.requestToken)
-__webpack_public_path__ = generateFilePath('docudesk', '', 'js/')
+__webpack_public_path__ = generateFilePath('filinq', '', 'js/')

@@ -1,28 +1,28 @@
 <template>
-	<NcDialog :name="t('docudesk', 'Insert merge field')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('filinq', 'Insert merge field')" @closing="$emit('close')">
 		<template #default>
-			<NcTextField :value.sync="fieldName"
-				:label="t('docudesk', 'Field name')"
-				:placeholder="t('docudesk', 'e.g. name, address, date')" />
+			<NcTextField
+				v-model="fieldName"
+				:label="t('filinq', 'Field name')"
+				:placeholder="t('filinq', 'e.g. name, address, date')" />
 			<p class="merge-field-dialog__hint">
 				{{ hintText }}
 			</p>
 		</template>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('docudesk', 'Cancel') }}
+				{{ t('filinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!fieldName" @click="confirm">
-				{{ t('docudesk', 'Insert') }}
+			<NcButton variant="primary" :disabled="!fieldName" @click="confirm">
+				{{ t('filinq', 'Insert') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog, NcTextField } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'MergeFieldDialog',
@@ -31,6 +31,7 @@ export default {
 	data() {
 		return { fieldName: '' }
 	},
+
 	computed: {
 		/**
 		 * Hint text showing the merge-field placeholder that will be inserted.
@@ -39,9 +40,12 @@ export default {
 		 */
 		hintText() {
 			const name = this.fieldName || 'field'
-			return t('docudesk', 'This inserts {placeholder} into the template.', { placeholder: '{{ ' + name + ' }}' })
+			return t('filinq', 'This inserts {placeholder} into the template.', {
+				placeholder: '{{ ' + name + ' }}',
+			})
 		},
 	},
+
 	methods: {
 		t,
 		/**

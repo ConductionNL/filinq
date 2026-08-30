@@ -6,7 +6,7 @@
 
 use OCP\Util;
 
-$appId = OCA\DocuDesk\AppInfo\Application::APP_ID;
+$appId = OCA\Filinq\AppInfo\Application::APP_ID;
 // Shared chunks must load before the entry — settings expects Vue /
 // @nextcloud/vue / @conduction/nextcloud-vue / pinia / vue-material-design-icons
 // to be resolved by the time its chunkOnLoad callback runs.

@@ -1,7 +1,7 @@
 publiccodeYmlVersion: "0.4"
 
-name: DocuDesk
-url: "https://github.com/ConductionNL/docudesk"
+name: Filinq
+url: "https://github.com/ConductionNL/filinq"
 softwareVersion: "0.0.34"
 releaseDate: "2026-05-26"
 developmentStatus: stable
@@ -18,7 +18,7 @@ description:
     shortDescription: >
       GDPR publication consent management and document metadata enrichment for Nextcloud.
     longDescription: >
-      DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid)
+      Filinq provides GDPR-compliant publication consent tracking (Wet Open Overheid)
       and automatic document metadata enrichment. It integrates with Open Register via
       events to enrich documents as they are created and updated. Features include
       consent tracking with configurable objection periods, WOO compliance (minimum
@@ -37,7 +37,7 @@ description:
     shortDescription: >
       AVG-publicatietoestemmingsbeheer en documentmetadata-verrijking voor Nextcloud.
     longDescription: >
-      DocuDesk biedt AVG-conforme bijhouding van publicatietoestemmingen (Wet Open
+      Filinq biedt AVG-conforme bijhouding van publicatietoestemmingen (Wet Open
       Overheid) en automatische verrijking van documentmetadata. Het integreert via
       events met Open Register om documenten te verrijken zodra ze worden aangemaakt
       of bijgewerkt. Functionaliteit omvat toestemmingsbeheer met instelbare

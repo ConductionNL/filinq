@@ -1,12 +1,12 @@
 ---
 sidebar_position: 2
 title: Upload a document
-description: Upload a file into DocuDesk so it appears in the Documents register and can be anonymised, templated, signed or retained.
+description: Upload a file into Filinq so it appears in the Documents register and can be anonymised, templated, signed or retained.
 ---
 
 # Upload a document
 
-DocuDesk treats every file as a typed Document object stored in the OpenRegister **Documents** register. Uploading a file kicks off the metadata-enrichment pipeline (language detection, keyword extraction, topic classification) and makes the file available to every other DocuDesk flow.
+Filinq treats every file as a typed Document object stored in the OpenRegister **Documents** register. Uploading a file kicks off the metadata-enrichment pipeline (language detection, keyword extraction, topic classification) and makes the file available to every other Filinq flow.
 
 ## Goal
 
@@ -14,7 +14,7 @@ By the end you will have uploaded one document, watched the metadata enrichment 
 
 ## Prerequisites
 
-- You have completed [Open DocuDesk for the first time](./01-first-launch.md).
+- You have completed [Open Filinq for the first time](./01-first-launch.md).
 - You have a sample document on disk — PDF, DOCX or plain text work; image-only files are accepted but won't trigger language detection without OCR.
 
 ## Steps
@@ -43,8 +43,8 @@ You are done when: the document appears in the **Documents** list, the *Processi
 
 | Symptom | Fix |
 |---|---|
-| Upload fails with "MIME type not allowed" | The instance admin restricts allowed types in **Settings → DocuDesk → Allowed MIME types** — ask them to extend the list. |
-| *Processing…* badge never clears | The metadata-enrichment service (Tika / Solr / language-detection) is unreachable — check **Settings → DocuDesk → Service status**. |
+| Upload fails with "MIME type not allowed" | The instance admin restricts allowed types in **Settings → Filinq → Allowed MIME types** — ask them to extend the list. |
+| *Processing…* badge never clears | The metadata-enrichment service (Tika / Solr / language-detection) is unreachable — check **Settings → Filinq → Service status**. |
 | Detail view shows empty *Language* / *Topic* fields | The document is too short for reliable detection (under ~200 words) or contains only scanned images — try OCR before upload. |
 
 ## Reference

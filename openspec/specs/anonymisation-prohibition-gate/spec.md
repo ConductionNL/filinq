@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # anonymisation-prohibition-gate Specification
 
 ## Purpose
-TBD - created by archiving change anonymisation-prohibition-gate. Update Purpose after archive.
+Enforces publication-prohibition policies during anonymisation by checking every detected entity against active prohibition rules before forwarding a request to OpenRegister. High-confidence prohibited entities must be included in the set to be anonymised or the request is rejected with HTTP 422, while low-confidence matches can be released through acknowledged overrides that record an audit entry and flag the entity to skip redaction. This ensures legally protected entities cannot be left unredacted without an explicit, audited operator decision.
 ## Requirements
 ### Requirement: The anonymise endpoint MUST consult the prohibition cache before forwarding the request
 
@@ -10,7 +14,7 @@ When the anonymise endpoint is called, the controller / service MUST resolve eve
 #### Scenario: No prohibitions configured — gate is a no-op
 
 - **GIVEN** an anonymise request with a payload of detected entities
-- **AND** zero active `publicationProhibition` records exist in the consent register
+- **AND** zero active `publicationProhibition` records exist in the `filinq` register
 - **WHEN** the endpoint processes the request
 - **THEN** the gate runs but matches nothing
 - **AND** the request is forwarded to OpenRegister unchanged
@@ -28,7 +32,7 @@ When the anonymise endpoint is called, the controller / service MUST resolve eve
 
 For every detected entity in the file with confidence ≥ 0.85 that matches an active `publicationProhibition` rule, the anonymise request payload's `entities[]` MUST include that entity (i.e. it must be in the set the operator chose to anonymise). If any such entity is missing, the endpoint MUST respond with HTTP 422.
 
-The threshold (0.85) MUST be configurable via app config key `docudesk.prohibition.high_confidence_threshold` (default 0.85). Reads MUST happen at request time; runtime config changes propagate without restart.
+The threshold (0.85) MUST be configurable via app config key `filinq.prohibition.high_confidence_threshold` (default 0.85). Reads MUST happen at request time; runtime config changes propagate without restart.
 
 #### Scenario: All high-confidence prohibitions are included — request proceeds
 
@@ -58,7 +62,7 @@ The threshold (0.85) MUST be configurable via app config key `docudesk.prohibiti
 
 #### Scenario: Configurable threshold at 0.90
 
-- **GIVEN** the app config sets `docudesk.prohibition.high_confidence_threshold` to 0.90
+- **GIVEN** the app config sets `filinq.prohibition.high_confidence_threshold` to 0.90
 - **AND** a detected entity matches a prohibition at confidence 0.87
 - **AND** the anonymise payload does not include this entity
 - **WHEN** the endpoint processes the request
@@ -139,13 +143,13 @@ When an override validates, the corresponding prohibition match is treated as "r
 - **AND** the anonymise payload omits this entity
 - **AND** the payload includes `acknowledgedOverrides: [{ruleId: "R-X", entityId: 7, reason: "false positive — public figure"}]`
 - **WHEN** the endpoint processes the request
-- **THEN** DocuDesk MUST persist a side-by-side audit entry capturing `{ruleId: "R-X", entityRelationId: <R7's id>, fileId: <file>, reason: "false positive — public figure", acknowledgedBy: <user UID>, acknowledgedAt: <ISO-8601>}`
-- **AND** DocuDesk MUST call `EntityRelationMapper::updateDecisionMetadata(R7.id, ['skipAnonymization' => true])` via OR DI
+- **THEN** Filinq MUST persist a side-by-side audit entry capturing `{ruleId: "R-X", entityRelationId: <R7's id>, fileId: <file>, reason: "false positive — public figure", acknowledgedBy: <user UID>, acknowledgedAt: <ISO-8601>}`
+- **AND** Filinq MUST call `EntityRelationMapper::updateDecisionMetadata(R7.id, ['skipAnonymization' => true])` via OR DI
 - **AND** the gate MUST release the match
 - **AND** the request MUST be forwarded to OpenRegister
 - **AND** the entity MUST NOT be redacted (OR's anonymise flow honours the skip flag — per OR's `entity-relation-grondslagen` spec)
 - **AND** OR's audit-trail MUST record one entry for the skip-flip on R7
-- **AND** DocuDesk's audit store MUST record one entry capturing the override's reason
+- **AND** Filinq's audit store MUST record one entry capturing the override's reason
 
 #### Scenario: Override for high-confidence match is rejected with 422
 
@@ -166,7 +170,7 @@ When an override validates, the corresponding prohibition match is treated as "r
 
 ### Requirement: The gate MUST NOT create `publicationConsent` records
 
-This change is read-only with respect to the consent register. The gate consults `publicationProhibition` records but MUST NOT create, modify, or query `publicationConsent` records. Generic anonymisation flows continue to be outside the publication-clearance workflow.
+This change is read-only with respect to the `filinq` register. The gate consults `publicationProhibition` records but MUST NOT create, modify, or query `publicationConsent` records. Generic anonymisation flows continue to be outside the publication-clearance workflow.
 
 #### Scenario: Successful anonymise creates no publicationConsent
 
@@ -181,21 +185,21 @@ This change is read-only with respect to the consent register. The gate consults
 - **WHEN** the response is returned
 - **THEN** zero `publicationConsent` records are created or modified
 
-### Requirement: Acknowledged overrides MUST persist a DocuDesk-side audit entry AND PATCH OpenRegister with `skipAnonymization=true`
+### Requirement: Acknowledged overrides MUST persist a Filinq-side audit entry AND PATCH OpenRegister with `skipAnonymization=true`
 
-For every `acknowledgedOverrides` entry that validates per the previous Requirement, DocuDesk's controller MUST:
+For every `acknowledgedOverrides` entry that validates per the previous Requirement, Filinq's controller MUST:
 
-1. **Persist a DocuDesk-side audit entry** capturing `{ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}`. Implementations MUST use a `prohibitionOverrideAudit` schema in `docudesk_register.json` for this entry, alongside the existing schemas. (Alternative persistent stores — dedicated audit-log table, structured-logger payload — were considered and rejected: keeping audit on the register surface keeps DD's audit volume queryable via the existing `objects` endpoints and reuses the standard OpenRegister retention/RBAC story. Implementations MAY add an additional sink, but the register-backed entry is the mandated one.) This entry records *why* the operator chose to release a flagged entity from anonymisation — operator-commentary metadata that OpenRegister's audit-trail does not carry (OR's PATCH whitelist is decision-only).
-2. **PATCH OpenRegister's matching `EntityRelation` row** with `{skipAnonymization: true}` via `EntityRelationMapper::updateDecisionMetadata` (via OR's DI lookup). The DocuDesk-side audit entry MUST be written BEFORE the corresponding OR PATCH so a failure of the OR call doesn't leave the override unrecorded on the DD side. Each override is processed sequentially (per-relation audit + PATCH pair). Best-effort semantics: if one OR PATCH fails, DocuDesk MUST stop processing further overrides in the same request and respond with HTTP 500. Already-committed DD audit entries and already-applied OR PATCHes from earlier overrides in the same request are NOT rolled back — they remain on disk as a per-relation audit trail of operator intent. The skip flag is idempotent (PATCH-ing the same relation again with `skipAnonymization: true` is a semantic no-op on OR's side), so a retry replays cleanly.
-3. **Proceed with the anonymise call** to OpenRegister. OR's `markAsAnonymized` will already exclude the skip-flagged row from the redaction set — no further DocuDesk work is needed for execution.
+1. **Persist a Filinq-side audit entry** capturing `{ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}`. Implementations MUST use a `prohibitionOverrideAudit` schema in `filinq_register.json` for this entry, alongside the existing schemas. (Alternative persistent stores — dedicated audit-log table, structured-logger payload — were considered and rejected: keeping audit on the register surface keeps DD's audit volume queryable via the existing `objects` endpoints and reuses the standard OpenRegister retention/RBAC story. Implementations MAY add an additional sink, but the register-backed entry is the mandated one.) This entry records *why* the operator chose to release a flagged entity from anonymisation — operator-commentary metadata that OpenRegister's audit-trail does not carry (OR's PATCH whitelist is decision-only).
+2. **PATCH OpenRegister's matching `EntityRelation` row** with `{skipAnonymization: true}` via `EntityRelationMapper::updateDecisionMetadata` (via OR's DI lookup). The Filinq-side audit entry MUST be written BEFORE the corresponding OR PATCH so a failure of the OR call doesn't leave the override unrecorded on the DD side. Each override is processed sequentially (per-relation audit + PATCH pair). Best-effort semantics: if one OR PATCH fails, Filinq MUST stop processing further overrides in the same request and respond with HTTP 500. Already-committed DD audit entries and already-applied OR PATCHes from earlier overrides in the same request are NOT rolled back — they remain on disk as a per-relation audit trail of operator intent. The skip flag is idempotent (PATCH-ing the same relation again with `skipAnonymization: true` is a semantic no-op on OR's side), so a retry replays cleanly.
+3. **Proceed with the anonymise call** to OpenRegister. OR's `markAsAnonymized` will already exclude the skip-flagged row from the redaction set — no further Filinq work is needed for execution.
 
 The two persistence side-effects (DD audit + OR PATCH) MUST happen for every validated override. They MUST happen on the same request that carried the override; there is no deferred or asynchronous commit. There is NO request-level transaction — atomicity is per-override (audit then PATCH for ONE relation), not all-overrides-or-nothing.
 
 #### Scenario: Override acknowledgement writes both audit and skip flag
 
 - **GIVEN** an anonymise request with `acknowledgedOverrides: [{ruleId: "R-X", entityId: 7, reason: "low-confidence false positive"}]` releasing a low-confidence match
-- **WHEN** DocuDesk's controller processes the request
-- **THEN** a new DocuDesk audit entry MUST exist with `{ruleId: "R-X", entityRelationId: <R7.id>, fileId: <file>, reason: "low-confidence false positive", acknowledgedBy: <UID>, acknowledgedAt: <ISO-8601>}`
+- **WHEN** Filinq's controller processes the request
+- **THEN** a new Filinq audit entry MUST exist with `{ruleId: "R-X", entityRelationId: <R7.id>, fileId: <file>, reason: "low-confidence false positive", acknowledgedBy: <UID>, acknowledgedAt: <ISO-8601>}`
 - **AND** OR's row R7 MUST have `skipAnonymization = true`
 - **AND** OR's audit-trail MUST record one entry for the skip-flip on R7 with the acting user UID
 - **AND** the anonymise call to OR MUST succeed
@@ -206,13 +210,13 @@ The two persistence side-effects (DD audit + OR PATCH) MUST happen for every val
 - **GIVEN** an anonymise request with three validated overrides for relations R7, R8, R9 (in that order)
 - **AND** OR's `updateDecisionMetadata` succeeds for R7
 - **AND** OR's `updateDecisionMetadata` raises an exception for R8 (e.g. relation no longer exists)
-- **WHEN** DocuDesk processes the request
+- **WHEN** Filinq processes the request
 - **THEN** the response MUST be HTTP 500
-- **AND** R7's DocuDesk audit entry MUST be persisted (already committed before the failure)
+- **AND** R7's Filinq audit entry MUST be persisted (already committed before the failure)
 - **AND** R7's OR `skipAnonymization` MUST be `true` (already committed before the failure)
-- **AND** R8's DocuDesk audit entry MUST be persisted (written BEFORE its OR PATCH per the per-override audit-first ordering — see Requirement above)
+- **AND** R8's Filinq audit entry MUST be persisted (written BEFORE its OR PATCH per the per-override audit-first ordering — see Requirement above)
 - **AND** R9 MUST NOT have been PATCHed (sequential processing stops at the first failure)
-- **AND** R9's DocuDesk audit entry MUST NOT exist
+- **AND** R9's Filinq audit entry MUST NOT exist
 - **AND** the anonymise call MUST NOT have been forwarded to OpenRegister
 
 #### Scenario: Multiple overrides commit sequentially (happy path)
@@ -220,7 +224,7 @@ The two persistence side-effects (DD audit + OR PATCH) MUST happen for every val
 - **GIVEN** an anonymise request with two validated overrides
 - **AND** OR's `updateDecisionMetadata` succeeds for both
 - **WHEN** the request processes
-- **THEN** two DocuDesk audit entries MUST be persisted, in submission order
+- **THEN** two Filinq audit entries MUST be persisted, in submission order
 - **AND** two OR PATCH operations MUST have committed, in submission order
 - **AND** the anonymise call MUST be issued with both relations excluded from redaction
 
@@ -229,9 +233,9 @@ The two persistence side-effects (DD audit + OR PATCH) MUST happen for every val
 - **GIVEN** an earlier anonymise request committed the override for R7 (skip=true) and then failed at R8
 - **AND** the operator retries the same request with the same overrides for R7, R8, R9
 - **AND** the underlying R8 issue has been resolved on the next attempt
-- **WHEN** DocuDesk processes the retry
+- **WHEN** Filinq processes the retry
 - **THEN** R7's repeat PATCH MUST be a semantic no-op on OR (skip is already true; no duplicate OR audit entry per OR's `entity-relation-grondslagen` spec)
-- **AND** R7's DocuDesk audit entry from the previous attempt MUST remain, AND a second DD audit entry for the same retry MUST also be written (each acknowledged override on a request gets its own audit row — the retry is a separate operator intent event)
+- **AND** R7's Filinq audit entry from the previous attempt MUST remain, AND a second DD audit entry for the same retry MUST also be written (each acknowledged override on a request gets its own audit row — the retry is a separate operator intent event)
 - **AND** R8 and R9 MUST succeed and produce their DD audit entries + OR PATCHes
 - **AND** the anonymise call MUST be forwarded with all three relations excluded from redaction
 

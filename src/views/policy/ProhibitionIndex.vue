@@ -7,72 +7,84 @@ import { prohibitionStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Publication Prohibitions')"
-			:description="t('docudesk', 'Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.')"
-			:show-title="true"
+			:title="t('filinq', 'Publish never')"
+			:description="
+				t(
+					'filinq',
+					'Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.',
+				)
+			"
+			:showTitle="true"
 			:objects="prohibitionStore.prohibitions"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="prohibitionStore.loading"
 			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="false"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-view-toggle="false"
-			:show-add="true"
-			row-key="id"
-			:empty-text="emptyText"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			:showViewToggle="false"
+			:showAdd="true"
+			rowKey="id"
+			:emptyText="emptyText"
 			:refreshing="isRefreshing"
 			@refresh="handleRefresh"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
+			@pageChanged="onPageChanged"
+			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateDialog">
-			<template #above-table>
+			<!-- `below-header`, not `above-table` — CnIndexPage defines no
+			     `above-table` slot and Vue drops an unmatched named slot
+			     silently, so these stats rendered nothing at all. -->
+			<template #below-header>
 				<div class="policy-stats">
 					<CnStatsBlock
-						:title="t('docudesk', 'Total')"
+						:title="t('filinq', 'Total')"
 						:count="prohibitionStore.prohibitionStats.total"
-						:count-label="t('docudesk', 'rules')"
+						:countLabel="t('filinq', 'rules')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Active')"
+						:title="t('filinq', 'Active')"
 						:count="prohibitionStore.prohibitionStats.active"
-						:count-label="t('docudesk', 'active')"
+						:countLabel="t('filinq', 'active')"
 						variant="error"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Inactive')"
+						:title="t('filinq', 'Inactive')"
 						:count="prohibitionStore.prohibitionStats.inactive"
-						:count-label="t('docudesk', 'inactive')"
+						:countLabel="t('filinq', 'inactive')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 				</div>
 			</template>
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
-					:color-map="entityTypeColorMap" />
+					:label="row.entityType || t('filinq', 'Unknown')"
+					:colorMap="entityTypeColorMap" />
 			</template>
 
 			<template #column-severity="{ row }">
 				<CnStatusBadge
 					:label="row.severity || '-'"
-					:color-map="severityColorMap" />
+					:colorMap="severityColorMap" />
 			</template>
 
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="row.active === false ? t('docudesk', 'Inactive') : t('docudesk', 'Active')"
-					:color-map="activeColorMap" />
+					:label="
+						row.active === false
+							? t('filinq', 'Inactive')
+							: t('filinq', 'Active')
+					"
+					:colorMap="activeColorMap" />
 			</template>
 
 			<template #column-matchRules="{ row }">
@@ -84,17 +96,17 @@ import { prohibitionStore } from '../../store/store.js'
 					<template #icon>
 						<DotsHorizontal :size="20" />
 					</template>
-					<NcActionButton close-after-click @click="openEditDialog(row)">
+					<NcActionButton closeAfterClick @click="openEditDialog(row)">
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
-						{{ t('docudesk', 'Edit') }}
+						{{ t('filinq', 'Edit') }}
 					</NcActionButton>
-					<NcActionButton close-after-click @click="confirmDelete(row)">
+					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
-						{{ t('docudesk', 'Delete') }}
+						{{ t('filinq', 'Delete') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -107,25 +119,36 @@ import { prohibitionStore } from '../../store/store.js'
 		-->
 		<ProhibitionFormModal
 			:open="dialogOpen"
-			:editing-record="editingRecord"
+			:editingRecord="editingRecord"
 			:saving="saving"
-			:form-error="formError"
+			:formError="formError"
 			@update:open="dialogOpen = $event"
 			@submit="onModalSubmit"
 			@cancel="dialogOpen = false" />
+
+		<!--
+			Delete confirmation. Replaces window.confirm(): the deletion below
+			runs only from @confirm, so an explicit confirmation is still
+			required before anything is removed.
+		-->
+		<ConfirmActionDialog
+			v-if="deleteTarget"
+			:name="t('filinq', 'Delete prohibition')"
+			:message="deleteMessage"
+			:busy="deleting"
+			@confirm="executeDelete"
+			@cancel="cancelDelete" />
 	</div>
 </template>
 
 <script>
-import {
-	NcActions,
-	NcActionButton,
-} from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ProhibitionFormModal from './ProhibitionFormModal.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import ProhibitionFormModal from '../../dialogs/ProhibitionFormModal.vue'
 
 export default {
 	name: 'ProhibitionIndex',
@@ -136,10 +159,12 @@ export default {
 		NcActions,
 		NcActionButton,
 		ProhibitionFormModal,
+		ConfirmActionDialog,
 		Delete,
 		DotsHorizontal,
 		Pencil,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
@@ -150,50 +175,91 @@ export default {
 			editing: null, // UUID of the record being edited, or null for create
 			editingRecord: null, // full record passed to the modal so it can hydrate its form
 			formError: '',
+			deleteTarget: null, // row awaiting delete confirmation, or null
+			deleting: false,
 			entityTypeColorMap: {
 				PERSON: 'warning',
 				ORGANIZATION: 'primary',
 				OTHER: 'default',
 			},
+
 			// Severity values must mirror the publicationProhibition schema
-			// enum (`high` / `medium` / `low`) in docudesk_register.json.
+			// enum (`high` / `medium` / `low`) in filinq_register.json.
 			severityColorMap: {
 				high: 'error',
 				medium: 'warning',
 				low: 'default',
 			},
+
 			activeColorMap: {
-				[t('docudesk', 'Active')]: 'error',
-				[t('docudesk', 'Inactive')]: 'default',
+				[t('filinq', 'Active')]: 'error',
+				[t('filinq', 'Inactive')]: 'default',
 			},
 		}
 	},
+
 	computed: {
+		/**
+		 * CnDataTable column set for the Publication Prohibitions surface.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		tableColumns() {
 			return [
-				{ key: 'primaryName', label: t('docudesk', 'Primary name'), sortable: true },
-				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'matchRules', label: t('docudesk', 'Match rules') },
-				{ key: 'severity', label: t('docudesk', 'Severity'), sortable: true },
-				{ key: 'reason', label: t('docudesk', 'Reason') },
-				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
+				{
+					key: 'primaryName',
+					label: t('filinq', 'Primary name'),
+					sortable: true,
+				},
+				{ key: 'entityType', label: t('filinq', 'Type'), sortable: true },
+				{ key: 'matchRules', label: t('filinq', 'Match rules') },
+				{
+					key: 'severity',
+					label: t('filinq', 'Severity'),
+					sortable: true,
+				},
+				{ key: 'reason', label: t('filinq', 'Reason') },
+				{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 			]
 		},
+
 		paginationData() {
 			const total = prohibitionStore.prohibitions.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
+		/**
+		 * Empty-state text for the Publication Prohibitions surface — the
+		 * store's error when loading failed, otherwise the no-rules message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		emptyText() {
 			if (prohibitionStore.error) {
 				return prohibitionStore.error
 			}
-			return t('docudesk', 'No publication prohibitions defined.')
+			return t('filinq', 'No publication prohibitions defined.')
+		},
+
+		/**
+		 * Body text of the delete confirmation dialog.
+		 *
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		deleteMessage() {
+			const name =
+				this.deleteTarget?.primaryName || t('filinq', 'this prohibition')
+			return t('filinq', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
+
 	mounted() {
 		prohibitionStore.fetchProhibitions()
 	},
+
 	methods: {
 		async handleRefresh() {
 			this.isRefreshing = true
@@ -203,25 +269,30 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		formatMatchRules(rules) {
 			if (!Array.isArray(rules) || rules.length === 0) {
 				return '-'
 			}
-			return rules.map(r => `${r.type}:${r.value}`).join(', ')
+			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
 		},
+
 		openCreateDialog() {
 			this.editing = null
 			this.editingRecord = null
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
 		openEditDialog(row) {
 			this.editing = row['@self']?.id || row.id || row.uuid
 			this.editingRecord = {
@@ -235,12 +306,21 @@ export default {
 				validUntil: row.validUntil || '',
 				active: row.active !== false,
 				matchRules: Array.isArray(row.matchRules)
-					? row.matchRules.map(r => ({ type: r.type, value: r.value }))
+					? row.matchRules.map((r) => ({ type: r.type, value: r.value }))
 					: [],
 			}
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
+		/**
+		 * Create or update a `publicationProhibition` record from the modal
+		 * form; the write itself is RBAC-governed server-side.
+		 *
+		 * @param {object} formData Modal form payload.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-rbac-must-govern-writes-to-both-policy-surfaces
+		 */
 		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''
@@ -252,22 +332,59 @@ export default {
 				}
 				this.dialogOpen = false
 			} catch (err) {
-				this.formError = err.response?.data?.error || err.message || t('docudesk', 'Save failed')
+				this.formError =
+					err.response?.data?.error
+					|| err.message
+					|| t('filinq', 'Save failed')
 			} finally {
 				this.saving = false
 			}
 		},
-		async confirmDelete(row) {
-			const id = row['@self']?.id || row.id || row.uuid
-			const name = row.primaryName || t('docudesk', 'this prohibition')
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('docudesk', 'Delete "{name}"? This cannot be undone.', { name }))) {
+
+		/**
+		 * Ask for confirmation before deleting a prohibition.
+		 *
+		 * Opens ConfirmActionDialog; nothing is removed here.
+		 *
+		 * @param {object} row - The prohibition row to delete.
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		confirmDelete(row) {
+			this.deleteTarget = row
+		},
+
+		/**
+		 * Dismiss the delete confirmation without deleting anything.
+		 *
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		cancelDelete() {
+			this.deleteTarget = null
+		},
+
+		/**
+		 * Delete the confirmed prohibition. Reachable only from the dialog's
+		 *
+		 * @confirm, so the record is never removed without an explicit
+		 * confirmation.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		async executeDelete() {
+			const row = this.deleteTarget
+			if (!row) {
 				return
 			}
+			const id = row['@self']?.id || row.id || row.uuid
+			this.deleting = true
 			try {
 				await prohibitionStore.deleteProhibition(id)
+				this.deleteTarget = null
 			} catch (err) {
 				console.error('Failed to delete prohibition:', err)
+			} finally {
+				this.deleting = false
 			}
 		},
 	},

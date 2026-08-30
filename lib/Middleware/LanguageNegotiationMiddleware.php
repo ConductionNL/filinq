@@ -1,15 +1,15 @@
 <?php
 
 /**
- * DocuDesk Language Negotiation Middleware
+ * Filinq Language Negotiation Middleware
  *
- * Bridges OpenRegister's request-scoped `LanguageService` to DocuDesk's
- * controllers. When a docudesk endpoint is hit (e.g. `/apps/docudesk/api/...`),
+ * Bridges OpenRegister's request-scoped `LanguageService` to Filinq's
+ * controllers. When a filinq endpoint is hit (e.g. `/apps/filinq/api/...`),
  * the OR `LanguageMiddleware` is NOT invoked because Nextcloud only runs
  * middleware registered by the app handling the route. This middleware
  * replays OR's negotiation rules — query overrides → Accept-Language →
  * default — directly on OR's `LanguageService`, so subsequent OR calls
- * made by docudesk services (via `ObjectService`) see the correct
+ * made by filinq services (via `ObjectService`) see the correct
  * preferred language and the `TranslationHandler` resolves translatable
  * properties to the right variant.
  *
@@ -32,7 +32,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Middleware
- * @package  OCA\DocuDesk\Middleware
+ * @package  OCA\Filinq\Middleware
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -40,14 +40,14 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/register-i18n/tasks.md#task-3-2
  */
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Middleware;
+namespace OCA\Filinq\Middleware;
 
 use OCA\OpenRegister\Service\LanguageService;
 use OCP\AppFramework\Http\Response;
@@ -56,161 +56,207 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 /**
- * Bridges OpenRegister's LanguageService into DocuDesk's controller
+ * Bridges OpenRegister's LanguageService into Filinq's controller
  * request lifecycle.
  *
- * @package OCA\DocuDesk\Middleware
- *
- * @SuppressWarnings(PHPMD.StaticAccess)
+ * @package OCA\Filinq\Middleware
  */
-class LanguageNegotiationMiddleware extends Middleware
-{
+class LanguageNegotiationMiddleware extends Middleware {
 
-    /**
-     * Basic BCP-47 syntax check used to discard malformed overrides.
-     *
-     * Lax by design — never 400 on a malformed tag; fall through.
-     *
-     * @var string
-     */
-    private const BCP47_PATTERN = '/^[a-z]{2,3}(-[a-zA-Z0-9]{2,8})*$/';
+	/**
+	 * Basic BCP-47 syntax check used to discard malformed overrides.
+	 *
+	 * Lax by design — never 400 on a malformed tag; fall through.
+	 *
+	 * @var string
+	 */
+	private const BCP47_PATTERN = '/^[a-z]{2,3}(-[a-zA-Z0-9]{2,8})*$/';
 
-    /**
-     * Constructor.
-     *
-     * @param IRequest        $request         The incoming request.
-     * @param LanguageService $languageService Request-scoped OR language service.
-     * @param LoggerInterface $logger          Logger for invalid-tag warnings.
-     */
-    public function __construct(
-        private readonly IRequest $request,
-        private readonly LanguageService $languageService,
-        private readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The incoming request.
+	 * @param LanguageService $languageService Request-scoped OR language service.
+	 * @param LoggerInterface $logger Logger for invalid-tag warnings.
+	 */
+	public function __construct(
+		private readonly IRequest $request,
+		private readonly LanguageService $languageService,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Resolve the preferred language and write-side target language
-     * from the incoming request and stash them on OR's LanguageService.
-     *
-     * @param mixed  $controller The controller instance.
-     * @param string $methodName The method name being called.
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/changes/register-i18n/tasks.md#task-3-2
-     */
-    public function beforeController($controller, $methodName): void
-    {
-        // 1. Query-parameter overrides take precedence over Accept-Language.
-        $resolvedFromQuery = $this->resolveFromQueryParams();
-        if ($resolvedFromQuery !== null) {
-            $this->languageService->setPreferredLanguage($resolvedFromQuery);
-            $this->languageService->setRequestedLanguageSource('query');
-        }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Resolve the preferred language and write-side target language
+	 * from the incoming request and stash them on OR's LanguageService.
+	 *
+	 * `$controller` and `$methodName` are pinned by the inherited
+	 * `OCP\AppFramework\Middleware::beforeController()` signature; negotiation
+	 * is route-agnostic so neither is consulted.
+	 *
+	 * @param mixed $controller The controller instance.
+	 * @param string $methodName The method name being called.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/register-i18n/tasks.md#task-3-2
+	 */
+	public function beforeController($controller, $methodName): void {
+		// 1. Query-parameter overrides take precedence over Accept-Language.
+		$resolvedFromQuery = $this->resolveFromQueryParams();
+		if ($resolvedFromQuery !== null) {
+			$this->languageService->setPreferredLanguage($resolvedFromQuery);
+			$this->languageService->setRequestedLanguageSource('query');
+		}
 
-        // 2. Accept-Language header is the next priority.
-        $acceptLanguage = $this->request->getHeader('Accept-Language');
-        if ($acceptLanguage !== '' && $acceptLanguage !== null) {
-            $acceptedLanguages = LanguageService::parseAcceptLanguageHeader($acceptLanguage);
-            $this->languageService->setAcceptedLanguages($acceptedLanguages);
+		// 2. Accept-Language header is the next priority.
+		$this->applyAcceptLanguageHeader(queryOverride: $resolvedFromQuery);
 
-            if (empty($acceptedLanguages) === false && $resolvedFromQuery === null) {
-                $preferred = strtolower(explode('-', $acceptedLanguages[0])[0]);
-                $this->languageService->setPreferredLanguage($preferred);
-                $this->languageService->setRequestedLanguageSource('header');
-            }
-        }
+		// 3. _translations=all (return-all override).
+		$translations = $this->request->getParam('_translations');
+		if ($translations === 'all') {
+			$this->languageService->setReturnAllTranslations(true);
+		}
 
-        // 3. _translations=all (return-all override).
-        $translations = $this->request->getParam('_translations');
-        if ($translations === 'all') {
-            $this->languageService->setReturnAllTranslations(true);
-        }
+		// 4. Write-side X-Translation-Target-Language on mutating verbs.
+		$this->applyTargetLanguageHeader();
+	}//end beforeController()
 
-        // 4. Write-side X-Translation-Target-Language on mutating verbs.
-        $method = strtoupper((string) $this->request->getMethod());
-        if (in_array($method, ['POST', 'PUT', 'PATCH'], true) === true) {
-            $targetHeader = $this->request->getHeader('X-Translation-Target-Language');
-            if ($targetHeader !== '' && $targetHeader !== null) {
-                $targetTrim = trim($targetHeader);
-                if (preg_match(self::BCP47_PATTERN, $targetTrim) === 1) {
-                    $this->languageService->setTargetLanguage($targetTrim);
-                } else {
-                    $this->logger->warning(
-                            sprintf(
-                        '[DocuDesk LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
-                        $targetTrim
-                    )
-                            );
-                }
-            }
-        }
-    }//end beforeController()
+	/**
+	 * Apply the `Accept-Language` header to OR's LanguageService.
+	 *
+	 * Always records the parsed priority list. Only promotes the top entry to
+	 * the preferred language when no higher-priority query override was found.
+	 *
+	 * @param string|null $queryOverride The language already resolved from query params, or null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/register-i18n/tasks.md#task-3-2
+	 */
+	private function applyAcceptLanguageHeader(?string $queryOverride): void {
+		// IRequest::getHeader() returns a string ('' when absent), never null.
+		$acceptLanguage = $this->request->getHeader('Accept-Language');
+		if ($acceptLanguage === '') {
+			return;
+		}
 
-    /**
-     * Emit language response headers so docudesk responses surface the
-     * resolved language the same way OR responses do.
-     *
-     * @param mixed    $controller The controller instance.
-     * @param string   $methodName The method name that was called.
-     * @param Response $response   The response object.
-     *
-     * @return Response The modified response with language headers.
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function afterController($controller, $methodName, Response $response): Response
-    {
-        $language = $this->languageService->getPreferredLanguage();
-        $response->addHeader('Content-Language', $language);
+		// Instance dispatch on the injected collaborator — the parser is a
+		// static utility on OR's LanguageService, but routing it through the
+		// injected instance keeps the class dependency substitutable.
+		$acceptedLanguages = $this->languageService->parseAcceptLanguageHeader($acceptLanguage);
+		$this->languageService->setAcceptedLanguages($acceptedLanguages);
 
-        if ($this->languageService->isFallbackUsed() === true) {
-            $response->addHeader('X-Content-Language-Fallback', 'true');
-        }
+		if (empty($acceptedLanguages) === true || $queryOverride !== null) {
+			return;
+		}
 
-        return $response;
-    }//end afterController()
+		$preferred = strtolower(explode('-', $acceptedLanguages[0])[0]);
+		$this->languageService->setPreferredLanguage($preferred);
+		$this->languageService->setRequestedLanguageSource('header');
+	}//end applyAcceptLanguageHeader()
 
-    /**
-     * Resolve a language from `?_lang=` or `?language=`, in that order.
-     *
-     * Returns null when neither is set, or when neither value passes
-     * basic BCP-47 syntax validation. Invalid tags log a warning and
-     * cause the lookup to fall through to the next priority level —
-     * we never 400 on a malformed language tag.
-     *
-     * @return string|null The resolved tag, or null when no valid query override is present.
-     */
-    private function resolveFromQueryParams(): ?string
-    {
-        foreach (['_lang', 'language'] as $name) {
-            $value = $this->request->getParam($name);
-            if ($value === null || $value === '') {
-                continue;
-            }
+	/**
+	 * Apply the write-side `X-Translation-Target-Language` header on mutating verbs.
+	 *
+	 * Only POST/PUT/PATCH carry a write-side target. A malformed tag is logged
+	 * and ignored — we never 400 on a malformed language tag.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/register-i18n/tasks.md#task-3-2
+	 */
+	private function applyTargetLanguageHeader(): void {
+		$method = strtoupper((string)$this->request->getMethod());
+		if (in_array($method, ['POST', 'PUT', 'PATCH'], true) === false) {
+			return;
+		}
 
-            if (is_string($value) === false) {
-                continue;
-            }
+		// IRequest::getHeader() returns a string ('' when absent), never null.
+		$targetHeader = $this->request->getHeader('X-Translation-Target-Language');
+		if ($targetHeader === '') {
+			return;
+		}
 
-            $trimmed = trim($value);
-            if (preg_match(self::BCP47_PATTERN, $trimmed) !== 1) {
-                $this->logger->warning(
-                        sprintf(
-                    "[DocuDesk LanguageNegotiationMiddleware] Invalid ?%s value '%s' — falling through",
-                    $name,
-                    $trimmed
-                )
-                        );
-                continue;
-            }
+		$targetTrim = trim($targetHeader);
+		if (preg_match(self::BCP47_PATTERN, $targetTrim) !== 1) {
+			$this->logger->warning(
+				sprintf(
+					'[Filinq LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
+					$targetTrim
+				)
+			);
+			return;
+		}
 
-            return $trimmed;
-        }//end foreach
+		$this->languageService->setTargetLanguage($targetTrim);
+	}//end applyTargetLanguageHeader()
 
-        return null;
-    }//end resolveFromQueryParams()
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Emit language response headers so filinq responses surface the
+	 * resolved language the same way OR responses do.
+	 *
+	 * `$controller` and `$methodName` are pinned by the inherited
+	 * `OCP\AppFramework\Middleware::afterController()` signature; the emitted
+	 * headers are route-agnostic so neither is consulted.
+	 *
+	 * @param mixed $controller The controller instance.
+	 * @param string $methodName The method name that was called.
+	 * @param Response $response The response object.
+	 *
+	 * @return Response The modified response with language headers.
+	 */
+	public function afterController($controller, $methodName, Response $response): Response {
+		$language = $this->languageService->getPreferredLanguage();
+		$response->addHeader('Content-Language', $language);
+
+		if ($this->languageService->isFallbackUsed() === true) {
+			$response->addHeader('X-Content-Language-Fallback', 'true');
+		}
+
+		return $response;
+	}//end afterController()
+
+	/**
+	 * Resolve a language from `?_lang=` or `?language=`, in that order.
+	 *
+	 * Returns null when neither is set, or when neither value passes
+	 * basic BCP-47 syntax validation. Invalid tags log a warning and
+	 * cause the lookup to fall through to the next priority level —
+	 * we never 400 on a malformed language tag.
+	 *
+	 * @return string|null The resolved tag, or null when no valid query override is present.
+	 */
+	private function resolveFromQueryParams(): ?string {
+		foreach (['_lang', 'language'] as $name) {
+			$value = $this->request->getParam($name);
+			if ($value === null || $value === '') {
+				continue;
+			}
+
+			if (is_string($value) === false) {
+				continue;
+			}
+
+			$trimmed = trim($value);
+			if (preg_match(self::BCP47_PATTERN, $trimmed) !== 1) {
+				$this->logger->warning(
+					sprintf(
+						"[Filinq LanguageNegotiationMiddleware] Invalid ?%s value '%s' — falling through",
+						$name,
+						$trimmed
+					)
+				);
+				continue;
+			}
+
+			return $trimmed;
+		}//end foreach
+
+		return null;
+	}//end resolveFromQueryParams()
 }//end class

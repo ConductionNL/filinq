@@ -1,105 +1,112 @@
 <?php
 
 /**
- * Unit tests for DashboardController
+ * Wire-contract tests for DashboardController
+ *
+ * Covers `GET /` (dashboard#page) and the Vue history-mode catch-all
+ * `GET /{path}` (dashboard#catchAll). Both must answer HTTP 200 with a
+ * TemplateResponse that renders the `index` template of the `filinq` app —
+ * the SPA host that info.xml navigation and every dashboard widget link to.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
  *
- * @author    Conduction Development Team <info@conduction.nl>
- * @copyright 2025 Conduction B.V.
- * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * @version GIT: <git_id>
- *
- * @link https://www.DocuDesk.app
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+declare(strict_types=1);
 
-use OCA\DocuDesk\Controller\DashboardController;
+namespace OCA\Filinq\Tests\Unit\Controller;
+
+use OCA\Filinq\Controller\DashboardController;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Unit tests for DashboardController
+ * Tests for the SPA host endpoints.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class DashboardControllerTest extends TestCase
-{
+class DashboardControllerTest extends TestCase {
 
-    /**
-     * @var DashboardController
-     */
-    private DashboardController $controller;
+	/**
+	 * Controller under test.
+	 *
+	 * @var DashboardController
+	 */
+	private DashboardController $controller;
 
-    /**
-     * @var IRequest|MockObject
-     */
-    private IRequest|MockObject $mockRequest;
+	/**
+	 * Set up the controller.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
+		$this->controller = new DashboardController($this->createMock(IRequest::class));
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	}//end setUp()
 
-        $this->mockRequest = $this->createMock(IRequest::class);
-        $this->controller  = new DashboardController('docudesk', $this->mockRequest);
+	/**
+	 * `dashboard#page` renders the filinq `index` template with HTTP 200.
+	 *
+	 * @return void
+	 */
+	public function testPageRendersIndexTemplate(): void {
+		$response = $this->controller->page();
 
-    }//end setUp()
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('index', $response->getTemplateName());
+		$this->assertSame('filinq', $response->getApp());
 
+	}//end testPageRendersIndexTemplate()
 
-    /**
-     * Test page returns TemplateResponse
-     *
-     * @return void
-     */
-    public function testPageReturnsTemplateResponse(): void
-    {
-        $result = $this->controller->page(null);
-        $this->assertInstanceOf(TemplateResponse::class, $result);
+	/**
+	 * `dashboard#catchAll` serves the same SPA host, so a deep link such as
+	 * `/apps/filinq/templates/abc` boots the Vue router instead of 404ing.
+	 *
+	 * @return void
+	 */
+	public function testCatchAllServesTheSameSpaHost(): void {
+		$response = $this->controller->catchAll();
 
-    }//end testPageReturnsTemplateResponse()
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('index', $response->getTemplateName());
+		$this->assertSame('filinq', $response->getApp());
 
+	}//end testCatchAllServesTheSameSpaHost()
 
-    /**
-     * Test page with parameter returns TemplateResponse
-     *
-     * @return void
-     */
-    public function testPageWithParameterReturnsTemplateResponse(): void
-    {
-        $result = $this->controller->page('some-param');
-        $this->assertInstanceOf(TemplateResponse::class, $result);
+	/**
+	 * The catch-all is defined as a delegate of `page()`, so the two responses
+	 * must be interchangeable — a divergence here means a deep link renders a
+	 * different document than the app root.
+	 *
+	 * @return void
+	 */
+	public function testCatchAllMatchesPageResponse(): void {
+		$page = $this->controller->page();
+		$catchAll = $this->controller->catchAll();
 
-    }//end testPageWithParameterReturnsTemplateResponse()
+		$this->assertSame($page->getTemplateName(), $catchAll->getTemplateName());
+		$this->assertSame($page->getApp(), $catchAll->getApp());
+		$this->assertSame($page->getStatus(), $catchAll->getStatus());
+		$this->assertSame($page->getRenderAs(), $catchAll->getRenderAs());
 
-
-    /**
-     * Test page renders index template
-     *
-     * @return void
-     */
-    public function testPageRendersIndexTemplate(): void
-    {
-        $result = $this->controller->page(null);
-        $this->assertEquals('index', $result->getTemplateName());
-
-    }//end testPageRendersIndexTemplate()
-
+	}//end testCatchAllMatchesPageResponse()
 
 }//end class

@@ -7,11 +7,11 @@ without a Nextcloud account. Contribution contract v2.1: an app contributes via
 a single plain class at the convention FQCN
 `OCA\{App}\Portal\PortalContributionProvider`, duck-typed by portaliq
 (`method_exists()`, never `instanceof`) — inert without portaliq installed
-(amendment A1). DocuDesk ships that one class; nothing else in the runtime app
+(amendment A1). Filinq ships that one class; nothing else in the runtime app
 is touched.
 
 All register facts below were verified against HEAD
-(`lib/Settings/docudesk_register.json`). DocuDesk uses **five** OpenRegister
+(`lib/Settings/filinq_register.json`). Filinq uses **five** OpenRegister
 registers; the two the portal reads from are:
 
 | Register slug | Schemas (verified at HEAD) |
@@ -22,15 +22,15 @@ registers; the two the portal reads from are:
 The manifest is an explicit **allowlist**: every register/schema not named below
 is out of portal scope by default.
 
-## Claim-names contract (DocuDesk's claim namespace — STABLE, do not rename)
+## Claim-names contract (Filinq's claim namespace — STABLE, do not rename)
 
 portaliq resolves a bare `scopeClaim` against the subject's own server-managed
-`portalAccount` claim bag at `claims.docudesk.<name>` (the value is read
-server-side only, never from client input). These two names are DocuDesk's claim
+`portalAccount` claim bag at `claims.filinq.<name>` (the value is read
+server-side only, never from client input). These two names are Filinq's claim
 contract with portaliq operators; provisioning an account sets them, so renaming
 either is a breaking change:
 
-| Claim (`claims.docudesk.*`) | Value | Used by audience | Scopes |
+| Claim (`claims.filinq.*`) | Value | Used by audience | Scopes |
 |---|---|---|---|
 | `contactId` | The `contactRef` value — a linkage pointer to the canonical Nextcloud Contact record for the affected entity (`publicationConsent.contactRef`, `type: string`, `format: uri`) | `data-subject` | `publicationConsent.contactRef` |
 | `signerEmail` | The email a signer was invited under (`signerRecord.email`, `type: string`, `format: email`) | `signer` | `signerRecord.email` (directly, and via the join) |
@@ -53,7 +53,7 @@ consent rows that predate contact-linkage and have `contactRef` empty are simply
 id, which A4 forbids as an external-subject scope (externals have no NC account
 by premise). The only stable identifier a signer is known by is the **invitation
 email** portaliq's auth edge verifies (magic-link / eIDAS) and stamps into
-`claims.docudesk.signerEmail`. This is the documented "email only when no UUID
+`claims.filinq.signerEmail`. This is the documented "email only when no UUID
 linkage exists" case — the email is a scoping key here, and it is deliberately
 NOT projected back into any row (see the exclusions).
 
@@ -209,11 +209,11 @@ So no `notifications`/inbox collection ships; `notifications` is `[]`.
   clean whitelist exists, else defer").
 - **Signer sign / decline — deferred.** These are **A6 endpoint actions** (a
   signed server-to-server assertion forwarded to a guarded receiver, per the
-  petstore recipe). The task marks A6 optional; DocuDesk ships read surfaces
+  petstore recipe). The task marks A6 optional; Filinq ships read surfaces
   first and defers the sign/decline endpoint actions to a follow-up so the
   receiver + `PortalAssertionVerifier` land as a reviewed unit.
 
-Both are recorded on tracking issue Conduction/docudesk#160 for a follow-up
+Both are recorded on tracking issue Conduction/filinq#160 for a follow-up
 change.
 
 ## Declarative vs imperative
@@ -226,7 +226,7 @@ constants. Rejected alternatives:
   already scopes reads server-side and verifies per row; app-side queries would
   duplicate the authz path (ADR-022 violation) and add OR coupling to a class
   whose entire value is being dependency-free.
-- *Reusing DocuDesk's `SigningService`/`ConsentService`*: couples the
+- *Reusing Filinq's `SigningService`/`ConsentService`*: couples the
   contribution to services with constructor dependencies, breaking the
   duck-typed inertness guarantee.
 
@@ -264,8 +264,8 @@ $signerSubject = [
 ];
 ```
 
-Live-portal seeding (a `portalAccount` carrying `claims.docudesk.contactId` /
-`claims.docudesk.signerEmail`) belongs to portaliq's own e2e environment, keyed
+Live-portal seeding (a `portalAccount` carrying `claims.filinq.contactId` /
+`claims.filinq.signerEmail`) belongs to portaliq's own e2e environment, keyed
 by the claim-names contract above.
 
 ## Security Considerations

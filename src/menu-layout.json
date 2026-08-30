@@ -1,0 +1,12 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "Canonical navigation layout applied to manifest.menu before it reaches CnAppNav (see applyMenuLayout in main.js). The manifest stays the source of WHAT exists in the menu (ADR-037); this file is the single place deciding WHERE entries live. relocations: sourceId -> targetGroupId (groups dissolve into the target, leaves move under it, a child group targeting its own parent flattens). sections: menu-entry id -> section name (assigns a top-level leaf to a navigation section). removals: leaf menu-entry ids retired as duplicate navigation — their PAGES stay routable for deep links and e2e specs. settingsSection: top-level config/admin/integration ids lifted into Nextcloud's settings foldout (NcAppNavigationSettings gear, OUTSIDE the scrollable nav) — see applySettingsSection in main.js; operational/report items stay in the main nav. Lives outside manifest.json because the app-manifest-v2 schema has additionalProperties:false at the root."
+	},
+	"relocations": {},
+	"sections": {},
+	"removals": [],
+	"settingsSection": [],
+	"_settingsSectionNote": "Filinq's in-app menu is entirely operational (Dashboard, Consent Management, Anonymization, My Documents, Folder Analysis, Templates, Signing Requests). Its admin/config surface lives in Nextcloud's own settings framework (src/views/settings/Settings.vue mounted at #admin-settings via src/settings.js + lib/Settings/AdminSettings.php), NOT in the in-app navigation — so there is currently no in-menu config item to fold into the gear, and settingsSection is intentionally empty. Documentation and Features & roadmap already render in the NcAppNavigation #footer slot (section:'footer', matching the fleet convention in procest). This layout file + the applyMenuLayout wiring in main.js install the canonical fleet foldout mechanism so any future in-menu config/admin/integration entry can be promoted into the gear by listing its id here, with zero further main.js changes."
+}

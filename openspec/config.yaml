@@ -1,8 +1,8 @@
 schema: spec-driven
 
 context: |
-  Project: DocuDesk
-  Repo: ConductionNL/docudesk
+  Project: Filinq
+  Repo: ConductionNL/filinq
   Type: Nextcloud App (PHP backend + Vue 2 frontend)
 
 rules:
@@ -20,7 +20,7 @@ rules:
     - "ADR-009: Include test scenarios for all MUST/SHALL requirements"
   design:
     - Uses OpenRegister services for all data operations (no own database tables)
-    - Register config in lib/Settings/docudesk_register.json (OpenAPI 3.0.0 format)
+    - Register config in lib/Settings/filinq_register.json (OpenAPI 3.0.0 format)
     - Imported via ConfigurationService::importFromApp() on Application::boot()
     - All anonymization delegated to OpenRegister's FileService::anonymizeDocument()
     - All entity detection delegated to OpenRegister's TextExtractionService::extractFile()

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # document-comparison Specification
 
 ## Purpose
-TBD - created by archiving change document-comparison. Update Purpose after archive.
+Compares two documents or two versions of the same document and returns a structured diff, without copying, persisting, or indexing either subject's content. Each subject is resolved through the requesting user's Nextcloud folder by file ID and optional version timestamp, with access failures returning an IDOR-safe 404. This lets users review what changed between document revisions or between distinct files.
 ## Requirements
 ### Requirement: The comparison endpoint MUST accept two subjects resolved from NC Files without re-storing content
 
@@ -44,7 +48,7 @@ TBD - created by archiving change document-comparison. Update Purpose after arch
 
 ### Requirement: The diff MUST be a server-computed word-level structured diff
 
-The service MUST extract text from both subjects via the existing `DocumentTextExtractor`, normalise whitespace, and compute a word-level diff returned as ordered hunks. Each hunk MUST have shape `{type: "unchanged"|"added"|"removed"|"changed", left: {offset, length}|null, right: {offset, length}|null, leftText?: string, rightText?: string}`. Extracted text per subject is capped at app config `docudesk.comparison.max_text_bytes` (default 5242880); exceeding the cap MUST yield HTTP 413. A subject whose format the extractor does not support MUST yield HTTP 415 naming the unsupported subject. When the two subjects have different source formats, the response MUST set `crossFormat: true` so the UI can warn about layout-derived noise.
+The service MUST extract text from both subjects via the existing `DocumentTextExtractor`, normalise whitespace, and compute a word-level diff returned as ordered hunks. Each hunk MUST have shape `{type: "unchanged"|"added"|"removed"|"changed", left: {offset, length}|null, right: {offset, length}|null, leftText?: string, rightText?: string}`. Extracted text per subject is capped at app config `filinq.comparison.max_text_bytes` (default 5242880); exceeding the cap MUST yield HTTP 413. A subject whose format the extractor does not support MUST yield HTTP 415 naming the unsupported subject. When the two subjects have different source formats, the response MUST set `crossFormat: true` so the UI can warn about layout-derived noise.
 
 @e2e exclude LCS diff engine, whitespace normalisation, hunk shape, size cap (413), unsupported-format (415) and cross-format flagging — pure server computation. Covered by PHPUnit (DocumentComparisonServiceTest).
 
@@ -72,7 +76,7 @@ The service MUST extract text from both subjects via the existing `DocumentTextE
 
 #### Scenario: Oversize subject yields 413
 
-- **GIVEN** a subject whose extracted text exceeds `docudesk.comparison.max_text_bytes`
+- **GIVEN** a subject whose extracted text exceeds `filinq.comparison.max_text_bytes`
 - **WHEN** the endpoint is called
 - **THEN** the response is HTTP 413
 

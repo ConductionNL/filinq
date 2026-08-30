@@ -1,6 +1,6 @@
 ## Context
 
-OpenRegister's `DocumentProcessingHandler::anonymizeDocument` writes redacted files as `<original>_anonymized.<ext>` in the source folder. For batch flows, this is operationally noisy. The fix is a DocuDesk-side post-process — move + rename the file after OR returns — into a `<source>/<configured-subfolder>/` location with a clean filename.
+OpenRegister's `DocumentProcessingHandler::anonymizeDocument` writes redacted files as `<original>_anonymized.<ext>` in the source folder. For batch flows, this is operationally noisy. The fix is a Filinq-side post-process — move + rename the file after OR returns — into a `<source>/<configured-subfolder>/` location with a clean filename.
 
 This change covers the **batch anonymise** surface. The folder-analysis surface uses the same helper + config + conventions and is specced in `anonymisation-folder-output-folder-layout`.
 
@@ -19,7 +19,7 @@ This change covers the **batch anonymise** surface. The folder-analysis surface 
 - Migrate past anonymisations.
 - Auto-backup of a previous run's subfolder.
 - Per-dossier subfolder override.
-- OR-side changes — the post-process is entirely DocuDesk-side.
+- OR-side changes — the post-process is entirely Filinq-side.
 
 ## Decisions
 

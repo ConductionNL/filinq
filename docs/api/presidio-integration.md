@@ -5,11 +5,11 @@ title: Entity Recognition Integration
 
 # Entity Recognition Integration
 
-DocuDesk integrates with entity recognition engines like Microsoft Presidio for powerful entity recognition and anonymization capabilities. This page explains how DocuDesk processes entity recognition output and transforms it into the AnonymizationLog object.
+Filinq integrates with entity recognition engines like Microsoft Presidio for powerful entity recognition and anonymization capabilities. This page explains how Filinq processes entity recognition output and transforms it into the AnonymizationLog object.
 
 ## Overview
 
-DocuDesk supports integration with various entity recognition engines, with [Microsoft Presidio](https://github.com/microsoft/presidio) as the default implementation. These engines enable DocuDesk to:
+Filinq supports integration with various entity recognition engines, with [Microsoft Presidio](https://github.com/microsoft/presidio) as the default implementation. These engines enable Filinq to:
 
 - Detect personal data in documents
 - Classify entities by type (PERSON, LOCATION, etc.)
@@ -18,7 +18,7 @@ DocuDesk supports integration with various entity recognition engines, with [Mic
 
 ## Entity Recognition Response Format
 
-When DocuDesk sends a document to an entity recognition engine like Presidio for analysis, it expects a response in the following format:
+When Filinq sends a document to an entity recognition engine like Presidio for analysis, it expects a response in the following format:
 
 ```json
 {
@@ -162,13 +162,13 @@ The entity recognition engine can return various additional information based on
 
 ## Transformation to AnonymizationLog
 
-DocuDesk transforms the entity recognition response into an `AnonymizationLog` object, which provides more comprehensive tracking of the anonymization process. Here's how the transformation works:
+Filinq transforms the entity recognition response into an `AnonymizationLog` object, which provides more comprehensive tracking of the anonymization process. Here's how the transformation works:
 
 ### 1. Entity Mapping
 
-DocuDesk maps the entity recognition engine's entity types to its own standardized entity types:
+Filinq maps the entity recognition engine's entity types to its own standardized entity types:
 
-| Engine Entity Type | DocuDesk Entity Type |
+| Engine Entity Type | Filinq Entity Type |
 |----------------------|----------------------|
 | PERSON               | PERSON               |
 | LOCATION             | LOCATION             |
@@ -185,7 +185,7 @@ DocuDesk maps the entity recognition engine's entity types to its own standardiz
 
 ### 2. Position Calculation
 
-DocuDesk calculates the position of each entity in the document:
+Filinq calculates the position of each entity in the document:
 
 ```php
 /**
@@ -236,7 +236,7 @@ public function calculatePosition(string $text, string $entityText, int $occurre
 
 ### 3. Replacement Generation
 
-For each entity, DocuDesk generates a replacement text based on the entity type:
+For each entity, Filinq generates a replacement text based on the entity type:
 
 ```php
 /**
@@ -277,7 +277,7 @@ public function generateReplacement(string $entityType, string $originalText): s
 
 ### 4. Anonymization Key Generation
 
-DocuDesk generates a secure key that can be used to de-anonymize the document:
+Filinq generates a secure key that can be used to de-anonymize the document:
 
 ```php
 /**
@@ -302,7 +302,7 @@ public function generateAnonymizationKey(array $entityReplacements): string
 
 ### 5. Creating the AnonymizationLog
 
-Finally, DocuDesk creates an `AnonymizationLog` object with all the information:
+Finally, Filinq creates an `AnonymizationLog` object with all the information:
 
 ```php
 /**
@@ -501,7 +501,7 @@ Let's walk through a complete example of processing an entity recognition respon
 
 ## Handling Partial Matches
 
-In the example above, the entity recognition engine detected "Jan de Hoog" while the full name was "Jan de Hooglander". DocuDesk handles these partial matches by:
+In the example above, the entity recognition engine detected "Jan de Hoog" while the full name was "Jan de Hooglander". Filinq handles these partial matches by:
 
 1. Using the exact text and position provided by the entity recognition engine
 2. Applying replacements in order from longest to shortest to avoid conflicts
@@ -509,7 +509,7 @@ In the example above, the entity recognition engine detected "Jan de Hoog" while
 
 ## Confidence Threshold
 
-DocuDesk allows you to set a confidence threshold when creating an anonymization log:
+Filinq allows you to set a confidence threshold when creating an anonymization log:
 
 ```php
 // Only consider entities with a confidence score >= 0.7
@@ -523,7 +523,7 @@ Entities with a confidence score below the threshold will not be anonymized. The
 
 ## Customizing Entity Replacements
 
-You can customize how DocuDesk generates replacement text for different entity types:
+You can customize how Filinq generates replacement text for different entity types:
 
 ```php
 // In your configuration
@@ -548,7 +548,7 @@ $config = [
 
 ## Supported Entity Recognition Engines
 
-DocuDesk supports the following entity recognition engines:
+Filinq supports the following entity recognition engines:
 
 1. **Microsoft Presidio** (default): Open-source PII detection and anonymization
 2. **Amazon Comprehend**: AWS service for entity recognition
@@ -571,7 +571,7 @@ $config = [
 
 ## Conclusion
 
-DocuDesk's integration with entity recognition engines provides powerful entity recognition and anonymization capabilities. By transforming the engine's output into comprehensive AnonymizationLog objects, DocuDesk ensures that all anonymization operations are properly tracked and can be audited for GDPR compliance.
+Filinq's integration with entity recognition engines provides powerful entity recognition and anonymization capabilities. By transforming the engine's output into comprehensive AnonymizationLog objects, Filinq ensures that all anonymization operations are properly tracked and can be audited for GDPR compliance.
 
 The AnonymizationLog object provides detailed information about:
 - What entities were detected and with what confidence
@@ -579,4 +579,4 @@ The AnonymizationLog object provides detailed information about:
 - How to de-anonymize the document if needed
 - The overall effectiveness of the anonymization process
 
-This integration is a key component of DocuDesk's privacy and compliance features, helping organizations protect personal data while maintaining the ability to access the original information when necessary. 
+This integration is a key component of Filinq's privacy and compliance features, helping organizations protect personal data while maintaining the ability to access the original information when necessary. 

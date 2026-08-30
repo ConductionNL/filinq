@@ -12,17 +12,18 @@ The selected language persists across navigation via the template store (REQ-I18
 -->
 <template>
 	<div class="language-selector">
-		<NcSelect v-if="hasMultipleLanguages"
-			:value="currentOption"
+		<NcSelect
+			v-if="hasMultipleLanguages"
+			:modelValue="currentOption"
 			:options="languageOptions"
 			:clearable="false"
-			:input-label="t('docudesk', 'Content language')"
+			:inputLabel="t('filinq', 'Content language')"
 			label="label"
-			track-by="value"
+			trackBy="value"
 			class="language-selector__select"
-			@input="onLanguageChange" />
+			@update:modelValue="onLanguageChange" />
 		<span v-if="isFallbackLanguage" class="language-selector__fallback-badge">
-			{{ t('docudesk', 'Showing fallback language') }}
+			{{ t('filinq', 'Showing fallback language') }}
 		</span>
 	</div>
 </template>
@@ -50,6 +51,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * Currently selected language code.
 		 */
@@ -57,6 +59,7 @@ export default {
 			type: String,
 			default: null,
 		},
+
 		/**
 		 * Whether the content is being shown in a fallback language (REQ-I18N-012).
 		 */
@@ -65,25 +68,33 @@ export default {
 			default: false,
 		},
 	},
+
 	emits: ['language-change'],
 	computed: {
 		/** True when the template has translations in more than one language. */
 		hasMultipleLanguages() {
 			return this.availableLanguages.length >= 2
 		},
+
 		languageOptions() {
-			return this.availableLanguages.map(lang => ({
+			return this.availableLanguages.map((lang) => ({
 				value: lang,
 				label: LANGUAGE_LABELS[lang] || lang.toUpperCase(),
 			}))
 		},
+
 		currentOption() {
 			if (!this.selectedLanguage) {
 				return this.languageOptions[0] || null
 			}
-			return this.languageOptions.find(o => o.value === this.selectedLanguage) || this.languageOptions[0] || null
+			return (
+				this.languageOptions.find((o) => o.value === this.selectedLanguage)
+				|| this.languageOptions[0]
+				|| null
+			)
 		},
 	},
+
 	methods: {
 		t,
 		onLanguageChange(option) {

@@ -4,7 +4,7 @@
  * Unit tests for AnonymizationService — publication-clearance-anonymise-payload change
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
  *
@@ -20,16 +20,15 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymizationService;
-use OCA\DocuDesk\Service\ConsentCrudService;
-use OCA\DocuDesk\Service\ConsentService;
-use OCA\DocuDesk\Service\EntityDetectionService;
-use OCA\DocuDesk\Service\FileEntityStatsService;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\Filinq\Service\AnonymizationPersistenceService;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\ConsentCrudService;
+use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\EntityDetectionService;
+use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -39,338 +38,353 @@ use Psr\Log\NullLogger;
  * Tests for unredactedEntities orchestration in AnonymizationService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  *
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
  */
-class AnonymizationServicePublicationClearanceTest extends TestCase
-{
-    /**
-     * Build an AnonymizationService with all constructor deps stubbed.
-     *
-     * @param ContainerInterface|null $container      Optional container override
-     * @param ConsentCrudService|null $consentCrud    Optional consentCrud override
-     * @param ConsentService|null     $consentService Optional consentService override
-     *
-     * @return AnonymizationService
-     */
-    private function buildService(
-        ?ContainerInterface $container=null,
-        ?ConsentCrudService $consentCrud=null,
-        ?ConsentService $consentService=null
-    ): AnonymizationService {
-        $logger          = new NullLogger();
-        $container       = $container ?? $this->createMock(originalClassName: ContainerInterface::class);
-        $appManager      = $this->createMock(originalClassName: IAppManager::class);
-        $entityDetection = $this->createMock(originalClassName: EntityDetectionService::class);
-        $appConfig       = $this->createMock(originalClassName: IAppConfig::class);
-        $consentCrud     = $consentCrud ?? $this->createMock(originalClassName: ConsentCrudService::class);
-        $consentService  = $consentService ?? $this->createMock(originalClassName: ConsentService::class);
+class AnonymizationServicePublicationClearanceTest extends TestCase {
+	use BuildsAnonymizationService;
 
-        $grondslagenSummary = $this->createMock(originalClassName: GrondslagenSummaryService::class);
-        $fileEntityStats    = $this->createMock(originalClassName: FileEntityStatsService::class);
+	/**
+	 * Build an AnonymizationService with all constructor deps stubbed.
+	 *
+	 * @param ContainerInterface|null $container Optional container override
+	 *
+	 * @return AnonymizationService
+	 */
+	private function buildService(?ContainerInterface $container = null): AnonymizationService {
+		return $this->makeAnonymizationServiceFrom(
+			[
+				'container' => ($container ?? $this->createMock(originalClassName: ContainerInterface::class)),
+				'entityDetection' => $this->createMock(originalClassName: EntityDetectionService::class),
+			]
+		);
 
-        return new AnonymizationService(
-            logger: $logger,
-            container: $container,
-            appManager: $appManager,
-            entityDetection: $entityDetection,
-            appConfig: $appConfig,
-            consentCrud: $consentCrud,
-            consentService: $consentService,
-            grondslagenSummary: $grondslagenSummary,
-            fileEntityStats: $fileEntityStats,
-            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class)
-        );
+	}//end buildService()
 
-    }//end buildService()
+	/**
+	 * Build the persistence collaborator that owns consent creation.
+	 *
+	 * `createConsentsForUnredactedEntities()` lives on
+	 * AnonymizationPersistenceService — the collaborator the anonymise pipeline
+	 * delegates its post-run persistence to — so the behaviour is exercised on
+	 * its owner rather than through the orchestrator.
+	 *
+	 * @param ConsentCrudService $consentCrud Consent CRUD double.
+	 * @param ConsentService $consentService Consent creation double.
+	 *
+	 * @return AnonymizationPersistenceService
+	 */
+	private function buildPersistence(
+		ConsentCrudService $consentCrud,
+		ConsentService $consentService,
+	): AnonymizationPersistenceService {
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$appManager = $this->createMock(originalClassName: IAppManager::class);
 
-    /**
-     * Returns empty array when PolicyMatchService is unavailable.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
-     */
-    public function testCheckUnredactedProhibitionsReturnsEmptyWhenPolicyServiceUnavailable(): void
-    {
-        $container = $this->createMock(originalClassName: ContainerInterface::class);
-        $container->method('get')->willThrowException(new \RuntimeException('not found'));
+		return new AnonymizationPersistenceService(
+			logger: new NullLogger(),
+			locator: new OpenRegisterServiceLocator($appManager, $container),
+			consentCrud: $consentCrud,
+			consentService: $consentService
+		);
 
-        $service = $this->buildService(container: $container);
+	}//end buildPersistence()
 
-        $unredacted = [
-            [
-                'entityId'         => 1,
-                'entityText'       => 'Jan Jansen',
-                'entityType'       => 'PERSON',
-                'publicationBases' => ['basis-a'],
-            ],
-        ];
+	/**
+	 * Returns empty array when PolicyMatchService is unavailable.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
+	 */
+	public function testCheckUnredactedProhibitionsReturnsEmptyWhenPolicyServiceUnavailable(): void {
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willThrowException(new \RuntimeException('not found'));
 
-        $result = $service->checkUnredactedProhibitions(unredactedEntities: $unredacted);
+		$service = $this->buildService(container: $container);
 
-        $this->assertSame(expected: [], actual: $result, message: 'No violations when policy service is unavailable.');
+		$unredacted = [
+			[
+				'entityId' => 1,
+				'entityText' => 'Jan Jansen',
+				'entityType' => 'PERSON',
+				'publicationBases' => ['basis-a'],
+			],
+		];
 
-    }//end testCheckUnredactedProhibitionsReturnsEmptyWhenPolicyServiceUnavailable()
+		$result = $service->checkUnredactedProhibitions(unredactedEntities: $unredacted);
 
-    /**
-     * Returns a violation record when the policy service matches an entity.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
-     */
-    public function testCheckUnredactedProhibitionsReturnsViolationsOnMatch(): void
-    {
-        $fakePolicyService = new class {
-            /**
-             * Match a prohibition rule against an entity.
-             *
-             * @param string $entityType  The entity type.
-             * @param string $entityValue The entity value.
-             *
-             * @return array<string, mixed>|null Match record or null.
-             */
-            public function matchProhibition(string $entityType, string $entityValue): ?array
-            {
-                if ($entityValue === 'Verboden Persoon') {
-                    return ['ruleId' => 'rule-x', 'ruleName' => 'Prohibited Rule X'];
-                }
+		$this->assertSame(expected: [], actual: $result, message: 'No violations when policy service is unavailable.');
 
-                return null;
+	}//end testCheckUnredactedProhibitionsReturnsEmptyWhenPolicyServiceUnavailable()
 
-            }//end matchProhibition()
-        };
+	/**
+	 * Returns a violation record when the policy service matches an entity.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
+	 */
+	public function testCheckUnredactedProhibitionsReturnsViolationsOnMatch(): void {
+		$fakePolicyService = new class {
+			/**
+			 * Match a prohibition rule against an entity.
+			 *
+			 * @param string $entityType The entity type.
+			 * @param string $entityValue The entity value.
+			 *
+			 * @return array<string, mixed>|null Match record or null.
+			 */
+			public function matchProhibition(string $entityType, string $entityValue): ?array {
+				if ($entityValue === 'Verboden Persoon') {
+					return ['ruleId' => 'rule-x', 'ruleName' => 'Prohibited Rule X'];
+				}
 
-        $container = $this->createMock(originalClassName: ContainerInterface::class);
-        $container->method('get')->willReturn($fakePolicyService);
+				return null;
+			}//end matchProhibition()
+		};
 
-        $service = $this->buildService(container: $container);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($fakePolicyService);
 
-        $unredacted = [
-            [
-                'entityId'         => 2,
-                'entityText'       => 'Verboden Persoon',
-                'entityType'       => 'PERSON',
-                'publicationBases' => ['basis-b'],
-            ],
-        ];
+		$service = $this->buildService(container: $container);
 
-        $result = $service->checkUnredactedProhibitions(unredactedEntities: $unredacted);
+		$unredacted = [
+			[
+				'entityId' => 2,
+				'entityText' => 'Verboden Persoon',
+				'entityType' => 'PERSON',
+				'publicationBases' => ['basis-b'],
+			],
+		];
 
-        $this->assertCount(expectedCount: 1, haystack: $result);
-        $this->assertSame(expected: 2, actual: $result[0]['entityId']);
-        $this->assertSame(expected: 'Verboden Persoon', actual: $result[0]['entityText']);
-        $this->assertSame(expected: 'rule-x', actual: $result[0]['ruleId']);
+		$result = $service->checkUnredactedProhibitions(unredactedEntities: $unredacted);
 
-    }//end testCheckUnredactedProhibitionsReturnsViolationsOnMatch()
+		$this->assertCount(expectedCount: 1, haystack: $result);
+		$this->assertSame(expected: 2, actual: $result[0]['entityId']);
+		$this->assertSame(expected: 'Verboden Persoon', actual: $result[0]['entityText']);
+		$this->assertSame(expected: 'rule-x', actual: $result[0]['ruleId']);
 
-    /**
-     * AnonymizeDocument accepts an unredactedEntities param without failing.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
-     */
-    public function testAnonymizeDocumentSignatureAcceptsUnredactedEntitiesParam(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString(needle: 'unredactedEntities', haystack: $content);
-        $this->assertStringContainsString(needle: 'checkUnredactedProhibitions', haystack: $content);
-        $this->assertStringContainsString(needle: 'createConsentsForUnredactedEntities', haystack: $content);
+	}//end testCheckUnredactedProhibitionsReturnsViolationsOnMatch()
 
-    }//end testAnonymizeDocumentSignatureAcceptsUnredactedEntitiesParam()
+	/**
+	 * Both anonymise entry points accept an `unredactedEntities` argument, and
+	 * the prohibition-check entry point is part of the public contract.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
+	 */
+	public function testAnonymizeDocumentSignatureAcceptsUnredactedEntitiesParam(): void {
+		foreach (['anonymizeDocument', 'anonymizeDocumentWithBasisSummary'] as $entryPoint) {
+			$names = array_map(
+				static fn (\ReflectionParameter $p): string => $p->getName(),
+				(new \ReflectionMethod(AnonymizationService::class, $entryPoint))->getParameters()
+			);
+			$this->assertContains(
+				needle: 'unredactedEntities',
+				haystack: $names,
+				message: $entryPoint . '() must accept an $unredactedEntities argument.'
+			);
+		}
 
-    /**
-     * CreateConsentsForUnredactedEntities is present as a private method.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
-     */
-    public function testCreateConsentsForUnredactedEntitiesMethodExists(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString(needle: 'function createConsentsForUnredactedEntities', haystack: $content);
+		$this->assertTrue(
+			condition: method_exists(AnonymizationService::class, 'checkUnredactedProhibitions'),
+			message: 'The prohibition check on unredacted entities must stay on the public contract.'
+		);
 
-    }//end testCreateConsentsForUnredactedEntitiesMethodExists()
+	}//end testAnonymizeDocumentSignatureAcceptsUnredactedEntitiesParam()
 
-    /**
-     * CreateConsentsForUnredactedEntities calls ConsentService::createConsentRequest once per entry.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
-     */
-    public function testCreateConsentsCallsConsentServiceOncePerEntry(): void
-    {
-        // @var ConsentCrudService|MockObject $consentCrud
-        $consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
-        $consentCrud->method('getConsentConfig')->willReturn(
-            ['register' => 'docudesk', 'schema' => 'publicationConsent']
-        );
+	/**
+	 * CreateConsentsForUnredactedEntities is owned by the persistence collaborator.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
+	 */
+	public function testCreateConsentsForUnredactedEntitiesMethodExists(): void {
+		$this->assertTrue(
+			condition: method_exists(
+				AnonymizationPersistenceService::class,
+				'createConsentsForUnredactedEntities'
+			),
+			message: 'AnonymizationPersistenceService must own consent creation for unredacted entities.'
+		);
 
-        // @var ConsentService|MockObject $consentService
-        $consentService = $this->createMock(originalClassName: ConsentService::class);
-        $consentService->expects($this->exactly(count: 2))
-            ->method('createConsentRequest')
-            ->willReturnCallback(
-                static function (
-                    string $documentId,
-                    string $entityType,
-                    string $entityText,
-                    string $register,
-                    string $schema,
-                    array $extra=[]
-                ): array {
-                    return [
-                        'id'            => 'consent-'.md5($entityText),
-                        'consentStatus' => 'pending',
-                    ];
-                }
-            );
+	}//end testCreateConsentsForUnredactedEntitiesMethodExists()
 
-        $service = $this->buildService(
-            consentCrud: $consentCrud,
-            consentService: $consentService
-        );
+	/**
+	 * CreateConsentsForUnredactedEntities calls ConsentService::createConsentRequest once per entry.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
+	 */
+	public function testCreateConsentsCallsConsentServiceOncePerEntry(): void {
+		// @var ConsentCrudService|MockObject $consentCrud
+		$consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
+		$consentCrud->method('getConsentConfig')->willReturn(
+			['register' => 'filinq', 'schema' => 'publicationConsent']
+		);
 
-        $unredacted = [
-            [
-                'entityId'         => 1,
-                'entityText'       => 'Alice',
-                'entityType'       => 'PERSON',
-                'publicationBases' => ['woo-art-1'],
-            ],
-            [
-                'entityId'         => 2,
-                'entityText'       => 'Bob',
-                'entityType'       => 'PERSON',
-                'publicationBases' => ['woo-art-2'],
-            ],
-        ];
+		// @var ConsentService|MockObject $consentService
+		$consentService = $this->createMock(originalClassName: ConsentService::class);
+		$consentService->expects($this->exactly(count: 2))
+			->method('createConsentRequest')
+			->willReturnCallback(
+				static function (
+					string $documentId,
+					string $entityType,
+					string $entityText,
+					string $register,
+					string $schema,
+					array $extra = [],
+				): array {
+					return [
+						'id' => 'consent-' . md5($entityText),
+						'consentStatus' => 'pending',
+					];
+				}
+			);
 
-        $reflection = new \ReflectionMethod(AnonymizationService::class, 'createConsentsForUnredactedEntities');
-        $reflection->setAccessible(true);
+		$service = $this->buildPersistence(
+			consentCrud: $consentCrud,
+			consentService: $consentService
+		);
 
-        $resultInfo = ['anonymizedFileId' => 'anon-file-1'];
-        $result     = $reflection->invoke($service, $resultInfo, $unredacted);
+		$unredacted = [
+			[
+				'entityId' => 1,
+				'entityText' => 'Alice',
+				'entityType' => 'PERSON',
+				'publicationBases' => ['woo-art-1'],
+			],
+			[
+				'entityId' => 2,
+				'entityText' => 'Bob',
+				'entityType' => 'PERSON',
+				'publicationBases' => ['woo-art-2'],
+			],
+		];
 
-        $this->assertArrayHasKey(key: 'createdConsents', array: $result);
-        $this->assertCount(expectedCount: 2, haystack: $result['createdConsents']);
-        $this->assertSame(expected: 'created', actual: $result['createdConsents'][0]['action']);
-        $this->assertSame(expected: 'created', actual: $result['createdConsents'][1]['action']);
+		$result = $service->createConsentsForUnredactedEntities(
+			resultInfo: ['anonymizedFileId' => 'anon-file-1'],
+			unredactedEntities: $unredacted
+		);
 
-    }//end testCreateConsentsCallsConsentServiceOncePerEntry()
+		$this->assertArrayHasKey(key: 'createdConsents', array: $result);
+		$this->assertCount(expectedCount: 2, haystack: $result['createdConsents']);
+		$this->assertSame(expected: 'created', actual: $result['createdConsents'][0]['action']);
+		$this->assertSame(expected: 'created', actual: $result['createdConsents'][1]['action']);
 
-    /**
-     * CreateConsentsForUnredactedEntities returns createdConsents=[] when config is null.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
-     */
-    public function testCreateConsentsReturnsEmptyWhenConsentConfigNull(): void
-    {
-        // @var ConsentCrudService|MockObject $consentCrud
-        $consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
-        $consentCrud->method('getConsentConfig')->willReturn(null);
+	}//end testCreateConsentsCallsConsentServiceOncePerEntry()
 
-        // @var ConsentService|MockObject $consentService
-        $consentService = $this->createMock(originalClassName: ConsentService::class);
-        $consentService->expects($this->never())->method('createConsentRequest');
+	/**
+	 * CreateConsentsForUnredactedEntities returns createdConsents=[] when config is null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
+	 */
+	public function testCreateConsentsReturnsEmptyWhenConsentConfigNull(): void {
+		// @var ConsentCrudService|MockObject $consentCrud
+		$consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
+		$consentCrud->method('getConsentConfig')->willReturn(null);
 
-        $service = $this->buildService(
-            consentCrud: $consentCrud,
-            consentService: $consentService
-        );
+		// @var ConsentService|MockObject $consentService
+		$consentService = $this->createMock(originalClassName: ConsentService::class);
+		$consentService->expects($this->never())->method('createConsentRequest');
 
-        $unredacted = [
-            [
-                'entityId'         => 1,
-                'entityText'       => 'Alice',
-                'entityType'       => 'PERSON',
-                'publicationBases' => ['woo-art-1'],
-            ],
-        ];
+		$service = $this->buildPersistence(
+			consentCrud: $consentCrud,
+			consentService: $consentService
+		);
 
-        $reflection = new \ReflectionMethod(AnonymizationService::class, 'createConsentsForUnredactedEntities');
-        $reflection->setAccessible(true);
+		$unredacted = [
+			[
+				'entityId' => 1,
+				'entityText' => 'Alice',
+				'entityType' => 'PERSON',
+				'publicationBases' => ['woo-art-1'],
+			],
+		];
 
-        $resultInfo = ['anonymizedFileId' => 'anon-file-1'];
-        $result     = $reflection->invoke($service, $resultInfo, $unredacted);
+		$result = $service->createConsentsForUnredactedEntities(
+			resultInfo: ['anonymizedFileId' => 'anon-file-1'],
+			unredactedEntities: $unredacted
+		);
 
-        $this->assertArrayHasKey(key: 'createdConsents', array: $result);
-        $this->assertSame(expected: [], actual: $result['createdConsents']);
+		$this->assertArrayHasKey(key: 'createdConsents', array: $result);
+		$this->assertSame(expected: [], actual: $result['createdConsents']);
 
-    }//end testCreateConsentsReturnsEmptyWhenConsentConfigNull()
+	}//end testCreateConsentsReturnsEmptyWhenConsentConfigNull()
 
-    /**
-     * Call order matches input array: first entry's consent is created before the second.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
-     */
-    public function testCreateConsentsPreservesEntryOrder(): void
-    {
-        // @var ConsentCrudService|MockObject $consentCrud
-        $consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
-        $consentCrud->method('getConsentConfig')->willReturn(
-            ['register' => 'reg', 'schema' => 'sch']
-        );
+	/**
+	 * Call order matches input array: first entry's consent is created before the second.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-7
+	 */
+	public function testCreateConsentsPreservesEntryOrder(): void {
+		// @var ConsentCrudService|MockObject $consentCrud
+		$consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
+		$consentCrud->method('getConsentConfig')->willReturn(
+			['register' => 'reg', 'schema' => 'sch']
+		);
 
-        $order = [];
+		$order = [];
 
-        // @var ConsentService|MockObject $consentService
-        $consentService = $this->createMock(originalClassName: ConsentService::class);
-        $consentService->method('createConsentRequest')
-            ->willReturnCallback(
-                static function (
-                    string $documentId,
-                    string $entityType,
-                    string $entityText,
-                    string $register,
-                    string $schema,
-                    array $extra=[]
-                ) use (&$order): array {
-                    $order[] = $entityText;
-                    return ['id' => 'c-'.md5($entityText), 'consentStatus' => 'pending'];
-                }
-            );
+		// @var ConsentService|MockObject $consentService
+		$consentService = $this->createMock(originalClassName: ConsentService::class);
+		$consentService->method('createConsentRequest')
+			->willReturnCallback(
+				static function (
+					string $documentId,
+					string $entityType,
+					string $entityText,
+					string $register,
+					string $schema,
+					array $extra = [],
+				) use (&$order): array {
+					$order[] = $entityText;
+					return ['id' => 'c-' . md5($entityText), 'consentStatus' => 'pending'];
+				}
+			);
 
-        $service = $this->buildService(
-            consentCrud: $consentCrud,
-            consentService: $consentService
-        );
+		$service = $this->buildPersistence(
+			consentCrud: $consentCrud,
+			consentService: $consentService
+		);
 
-        $unredacted = [
-            ['entityId' => 1, 'entityText' => 'First', 'entityType' => 'PERSON', 'publicationBases' => ['b1']],
-            ['entityId' => 2, 'entityText' => 'Second', 'entityType' => 'PERSON', 'publicationBases' => ['b2']],
-            ['entityId' => 3, 'entityText' => 'Third', 'entityType' => 'PERSON', 'publicationBases' => ['b3']],
-        ];
+		$unredacted = [
+			['entityId' => 1, 'entityText' => 'First', 'entityType' => 'PERSON', 'publicationBases' => ['b1']],
+			['entityId' => 2, 'entityText' => 'Second', 'entityType' => 'PERSON', 'publicationBases' => ['b2']],
+			['entityId' => 3, 'entityText' => 'Third', 'entityType' => 'PERSON', 'publicationBases' => ['b3']],
+		];
 
-        $reflection = new \ReflectionMethod(AnonymizationService::class, 'createConsentsForUnredactedEntities');
-        $reflection->setAccessible(true);
-        $reflection->invoke($service, ['anonymizedFileId' => 'anon-f'], $unredacted);
+		$service->createConsentsForUnredactedEntities(
+			resultInfo: ['anonymizedFileId' => 'anon-f'],
+			unredactedEntities: $unredacted
+		);
 
-        $this->assertSame(
-            expected: ['First', 'Second', 'Third'],
-            actual: $order,
-            message: 'Consent creation order must match input array order.'
-        );
+		$this->assertSame(
+			expected: ['First', 'Second', 'Third'],
+			actual: $order,
+			message: 'Consent creation order must match input array order.'
+		);
 
-    }//end testCreateConsentsPreservesEntryOrder()
+	}//end testCreateConsentsPreservesEntryOrder()
 }//end class

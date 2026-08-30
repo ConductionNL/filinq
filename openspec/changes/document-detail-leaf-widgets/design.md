@@ -4,7 +4,7 @@
 
 The integration registry (ADR-019) renders DI-tagged `IntegrationProvider` tabs and widgets on
 an OR object's detail surface. OR ships the contacts (`integration-contacts`), activity
-(`integration-activity`), and shares (`integration-shares`) leaves. DocuDesk's document detail
+(`integration-activity`), and shares (`integration-shares`) leaves. Filinq's document detail
 page (ADR-001) is an OR-backed record (`document` register, `report` schema), so consuming these
 leaves is a render-only consume — no app-local tab system.
 
@@ -23,13 +23,13 @@ document object:
 | shares | current NC shares on the document tab/widget | present when NC sharing / the shares leaf is enabled |
 
 Each is sourced from `IntegrationRegistry::getEnabled()` and rendered via the shared
-`@conduction/nextcloud-vue` registry tab host — DocuDesk does not author a parallel tab/widget
+`@conduction/nextcloud-vue` registry tab host — Filinq does not author a parallel tab/widget
 system (ADR-019/ADR-022 anti-pattern).
 
 ## Kept-in-app (documented ADR-022 exception)
 
-PDF/letter generation, eIDAS signing crypto, and anonymisation remain in DocuDesk — **no leaf
-exists for these and DocuDesk IS the partner service** that provides them. The existing
+PDF/letter generation, eIDAS signing crypto, and anonymisation remain in Filinq — **no leaf
+exists for these and Filinq IS the partner service** that provides them. The existing
 document-detail tabs that surface these (`Anonimisatie`, `Redactie`, `Handtekeningen`) are
 app-owned and untouched; this change only adds the consumed leaf tabs alongside them.
 
@@ -47,7 +47,7 @@ No new OR schema. No new register file changes.
 
 - **ADR-019** (primary mechanism) — integration registry tab+widget surface.
 - **ADR-022** — consume OR leaves over bespoke per-document panels.
-- **ADR-001** (docudesk) — the document detail page IA where the tabs land.
+- **ADR-001** (filinq) — the document detail page IA where the tabs land.
 - **Leaves** — `openregister/openspec/specs/integration-shares/spec.md`,
   `openregister/openspec/changes/integration-contacts/`,
   `openregister/openspec/changes/integration-activity/`.

@@ -1,7 +1,7 @@
 <script setup>
+import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 </script>
 
 <template>
@@ -10,7 +10,7 @@ import axios from '@nextcloud/axios'
 		<div v-if="loading" class="loading-area">
 			<NcLoadingIcon :size="28" />
 			<p class="loading-text">
-				{{ t('docudesk', 'Loading files...') }}
+				{{ t('filinq', 'Loading files...') }}
 			</p>
 		</div>
 
@@ -25,7 +25,7 @@ import axios from '@nextcloud/axios'
 		<div v-else-if="files.length === 0" class="empty-area">
 			<FileDocumentOutline :size="32" class="empty-icon" />
 			<p class="empty-text">
-				{{ t('docudesk', 'No processed files yet') }}
+				{{ t('filinq', 'No processed files yet') }}
 			</p>
 		</div>
 
@@ -34,18 +34,18 @@ import axios from '@nextcloud/axios'
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'File') }}</th>
-						<th class="col-number">
-							{{ t('docudesk', 'Entities') }}
+						<th scope="col">{{ t('filinq', 'File') }}</th>
+						<th scope="col" class="col-number">
+							{{ t('filinq', 'Entities') }}
 						</th>
-						<th class="col-risk">
-							{{ t('docudesk', 'Risk') }}
+						<th scope="col" class="col-risk">
+							{{ t('filinq', 'Risk') }}
 						</th>
-						<th class="col-status">
-							{{ t('docudesk', 'Status') }}
+						<th scope="col" class="col-status">
+							{{ t('filinq', 'Status') }}
 						</th>
-						<th class="col-ocr">
-							{{ t('docudesk', 'OCR') }}
+						<th scope="col" class="col-ocr">
+							{{ t('filinq', 'OCR') }}
 						</th>
 					</tr>
 				</thead>
@@ -64,7 +64,10 @@ import axios from '@nextcloud/axios'
 							{{ file.entityCount }}
 						</td>
 						<td class="col-risk">
-							<span :class="'risk-badge risk-' + (file.riskLevel || 'none')">
+							<span
+								:class="
+									'risk-badge risk-' + (file.riskLevel || 'none')
+								">
 								{{ riskLevelLabel(file.riskLevel) }}
 							</span>
 						</td>
@@ -74,10 +77,11 @@ import axios from '@nextcloud/axios'
 							</span>
 						</td>
 						<td class="col-ocr">
-							<span v-if="file.ocrProcessed"
+							<span
+								v-if="file.ocrProcessed"
 								class="ocr-badge"
-								:title="t('docudesk', 'Processed with OCR')">
-								{{ t('docudesk', 'OCR') }}
+								:title="t('filinq', 'Processed with OCR')">
+								{{ t('filinq', 'OCR') }}
 							</span>
 						</td>
 					</tr>
@@ -87,7 +91,7 @@ import axios from '@nextcloud/axios'
 
 		<!-- Footer -->
 		<a class="widget-footer" :href="appUrl">
-			{{ t('docudesk', 'Open DocuDesk') }}
+			{{ t('filinq', 'Open Filinq') }}
 		</a>
 	</div>
 </template>
@@ -102,12 +106,14 @@ export default {
 		NcLoadingIcon,
 		FileDocumentOutline,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			files: [],
@@ -115,19 +121,22 @@ export default {
 			error: null,
 		}
 	},
+
 	computed: {
 		/**
-		 * Deep link to the DocuDesk app from the widget footer.
+		 * Deep link to the Filinq app from the widget footer.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		appUrl() {
-			return generateUrl('/apps/docudesk')
+			return generateUrl('/apps/filinq')
 		},
 	},
+
 	mounted() {
 		this.fetchFiles()
 	},
+
 	methods: {
 		/**
 		 * Fetch the processed-file list with risk assessment for the widget.
@@ -139,16 +148,17 @@ export default {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/docudesk/api/anonymization/files'),
+					generateUrl('/apps/filinq/api/anonymization/files'),
 				)
 				this.files = response.data
 			} catch (e) {
-				console.error('[DocuDesk] Failed to fetch processed files:', e)
-				this.error = t('docudesk', 'Failed to load files')
+				console.error('[Filinq] Failed to fetch processed files:', e)
+				this.error = t('filinq', 'Failed to load files')
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Build a Files-app link to a processed file.
 		 *
@@ -160,12 +170,19 @@ export default {
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
 				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
-				const dir = relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
-				const file = relativePath.substring(relativePath.lastIndexOf('/') + 1)
-				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', { dir, file })
+				const dir =
+					relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
+				const file = relativePath.substring(
+					relativePath.lastIndexOf('/') + 1,
+				)
+				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', {
+					dir,
+					file,
+				})
 			}
 			return generateUrl('/apps/files')
 		},
+
 		/**
 		 * Localized label for a file's personal-data risk level.
 		 *
@@ -174,14 +191,15 @@ export default {
 		 */
 		riskLevelLabel(level) {
 			const labels = {
-				none: t('docudesk', 'None'),
-				low: t('docudesk', 'Low'),
-				medium: t('docudesk', 'Medium'),
-				high: t('docudesk', 'High'),
-				very_high: t('docudesk', 'Very High'),
+				none: t('filinq', 'None'),
+				low: t('filinq', 'Low'),
+				medium: t('filinq', 'Medium'),
+				high: t('filinq', 'High'),
+				very_high: t('filinq', 'Very High'),
 			}
 			return labels[level] || labels.none
 		},
+
 		/**
 		 * Localized label for a file's processing status.
 		 *
@@ -190,9 +208,9 @@ export default {
 		 */
 		statusLabel(status) {
 			const labels = {
-				uploaded: t('docudesk', 'Uploaded'),
-				extracted: t('docudesk', 'Extracted'),
-				anonymized: t('docudesk', 'Anonymized'),
+				uploaded: t('filinq', 'Uploaded'),
+				extracted: t('filinq', 'Extracted'),
+				anonymized: t('filinq', 'Anonymized'),
 			}
 			return labels[status] || status
 		},
@@ -351,13 +369,13 @@ export default {
 }
 
 .status-extracted {
-	background-color: var(--color-warning-element-light, #fef3cd);
-	color: var(--color-warning-text, #856404);
+	background-color: var(--color-warning);
+	color: var(--color-warning-text);
 }
 
 .status-anonymized {
-	background-color: var(--color-success-element-light, #d4edda);
-	color: var(--color-success-text, #155724);
+	background-color: var(--color-success);
+	color: var(--color-success-text);
 }
 
 /* Risk badges */
@@ -375,23 +393,23 @@ export default {
 }
 
 .risk-low {
-	background-color: var(--color-info-element-light, #cce5ff);
-	color: var(--color-info-text, #004085);
+	background-color: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .risk-medium {
-	background-color: var(--color-warning-element-light, #fef3cd);
-	color: var(--color-warning-text, #856404);
+	background-color: var(--color-warning);
+	color: var(--color-warning-text);
 }
 
 .risk-high {
-	background-color: var(--color-error-element-light, #f8d7da);
-	color: var(--color-error-text, #721c24);
+	background-color: var(--color-error);
+	color: var(--color-error-text);
 }
 
 .risk-very_high {
-	background-color: var(--color-error);
-	color: white;
+	background-color: var(--color-element-error);
+	color: var(--color-primary-element-text);
 }
 
 /* Footer link */
