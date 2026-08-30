@@ -1,5 +1,11 @@
 name: Documentation
 
+# Publishes the docs site to the Cloudflare Worker that serves it.
+#
+# TRIGGERS ON `development`, NOT ON A `documentation` BRANCH. This file used to
+# listen on a branch called `documentation`; nobody has pushed to one since
+# 2026-05-25, so the site simply stopped being rebuilt while every docs change
+# merged to development satisfied its review and published nothing.
 on:
   push:
     branches: [development]
@@ -9,40 +15,30 @@ on:
 jobs:
   deploy:
     uses: ConductionNL/.github/.github/workflows/documentation.yml@main
-    # A reusable workflow receives NO secrets by default. Without this block
-    # `secrets.CF_API_TOKEN` is empty inside the callee, its "Publish to the
-    # Cloudflare Worker" step skips itself on its own guard, and the run
-    # finishes GREEN having written only gh-pages — which nothing serves. The
-    # live site never changes and no check goes red to say so.
-    #
-    # Mapped explicitly rather than `secrets: inherit`, because `inherit`
-    # hands the callee EVERY secret this repo holds — signing cert and key,
-    # appstore token, deploy keys — for the sake of two Cloudflare values.
-    # This way only those two cross the boundary.
-    #
-    # The exposure above is the ONLY reason for the explicit mapping. The
-    # names are the same on both sides: the org secrets really are
-    # `CF_API_TOKEN` / `CF_ACCOUNT_ID` — the names ConductionNL/.github's own
-    # deploy-docs.yml reads directly, and the names the callee declares under
-    # `workflow_call.secrets`.
-    #
-    # This block used to read `secrets.CLOUDFLARE_API_TOKEN` /
-    # `secrets.CLOUDFLARE_ACCOUNT_ID`, which are not secrets anywhere in this
-    # org. Mapping from a name that does not exist is NOT an error — it
-    # yields an empty string — so the callee's publish step skipped itself on
-    # its own guard and the run still finished green. Measured on planninq
-    # run 32760529026: "Publish to the Cloudflare Worker" SKIPPED, the log
-    # showing `CF_API_TOKEN:` with no value.
+    # A reusable workflow receives NO secrets by default. Without this block the
+    # callee's publish step finds CF_API_TOKEN empty, skips itself on its own
+    # `if:` guard, and the run finishes GREEN having changed nothing -- the
+    # failure that left the fleet's docs sites on May builds. The names are the
+    # same on both sides; the org secrets really are CF_API_TOKEN/CF_ACCOUNT_ID.
     secrets:
       CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
     with:
       cname: filinq.conduction.nl
 
-      # PINNED, not derived. The callee defaults worker-name to the first label
-      # of `cname` + "-docs" — which since the app-id rename would be
-      # `filinq-docs`, a worker that does not exist. wrangler would CREATE it
-      # and deploy there, while both custom domains keep routing to
-      # `docudesk-docs`. Green every time, reaching nobody.
-      worker-name: docudesk-docs
+      # docudesk.conduction.nl is the retired hostname. It stays in docs-hosts so
+      # existing links keep resolving, and canonical-host below turns it into a
+      # 301 rather than a second live copy of every page.
+      # EVERY host this worker answers on, in FULL: wrangler reconciles the
+      # worker's triggers against this list, so a host left out is REMOVED and
+      # goes dark.
       docs-hosts: docudesk.conduction.nl,filinq.conduction.nl
+      # The ONE hostname this site is reached on. Every other host in
+      # docs-hosts answers 301 to the same path here. Before this, both hostnames
+      # served identical content and the retired name stayed as discoverable
+      # as the current one.
+      canonical-host: filinq.conduction.nl
+      # PINNED. Deriving the name is how a deploy goes green and reaches
+      # nobody: wrangler creates the derived worker and publishes there while
+      # the custom domains keep routing to the real one.
+      worker-name: docudesk-docs

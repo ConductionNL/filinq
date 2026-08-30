@@ -1,6 +1,31 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
-	"version": "1.0.0",
+		"setup": {
+			"version": 1,
+			"completionConfigKey": "setup_completed_version",
+			"steps": [
+				{
+					"id": "welcome",
+					"type": "info",
+					"title": "Welcome",
+					"body": "A short setup to get this app ready. Nothing here is required; you can close it and come back later."
+				},
+				{
+					"id": "demo-data",
+					"type": "run-action",
+					"action": "install-demo-data",
+					"title": "Demo data (optional)",
+					"required": false,
+					"body": "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install."
+				},
+				{
+					"id": "done",
+					"type": "summary",
+					"title": "All set"
+				}
+			]
+		},
+	"version": "1.1.0",
 	"dependencies": [
 		"openregister"
 	],
@@ -315,15 +340,15 @@
 		{
 			"id": "Flows",
 			"route": "/flows",
-			"type": "flows",
+			"type": "index",
 			"title": "Flows",
-			"config": { "app": "filinq" },
-			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app."
+			"config": { "entitySource": "flows", "app": "filinq" },
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app."
 		},
 		{
 			"id": "FlowDetail",
 			"route": "/flows/:id",
-			"type": "flow-detail",
+			"type": "flow",
 			"title": "Flow",
 			"config": { "app": "filinq" },
 			"sidebarComponent": "FlowDetailSidebar",
@@ -481,6 +506,18 @@
 							}
 						}
 					},
+						{
+							"id": "see-flows",
+							"sinceVersion": "1.1.0",
+							"placement": "right",
+							"optional": true,
+							"allowManualNext": true,
+							"title": "Where the automation lives",
+							"body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.",
+							"task": "Open Flows in the menu",
+							"target": {"kind": "nav-item", "ref": "Flows"},
+							"advanceOn": {"type": "route-match", "route": "Flows"}
+						},
 					{
 						"id": "done",
 						"sinceVersion": "0.0.34-unstable.17",

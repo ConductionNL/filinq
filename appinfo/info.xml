@@ -33,7 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.0.38-unstable.20260826203520</version>
+    <version>0.1.2-unstable.20260829125632</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
@@ -202,6 +202,27 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
             -->
             <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+            <!-- WRITTEN BUT NEVER REGISTERED until now, so it never ran
+                 anywhere. gate-98 (repair-step-registration) found it, and the
+                 same step was unregistered in integriq (#1603).
+
+                 What that costs is money reading as null. OpenRegister stores
+                 each schema property as a real snake_cased COLUMN in the
+                 per-schema shard table; on sync MagicMapper ADDS a column when
+                 the name is absent and NEVER renames. So renaming `bedrag` to
+                 `amount` in the register leaves the money in `bedrag` while
+                 every read looks at `amount` and finds null - no error, no data
+                 loss, and invisible to a suite that asserts against fixtures
+                 rather than migrated rows.
+
+                 Last in the block and after ConsolidateRegisters, so the
+                 register sync has already added the English columns. The step
+                 is non-destructive and idempotent by its own contract: renames
+                 only when the old column exists and the new one does not,
+                 copies across where the new column already exists and LEAVES
+                 the old one in place, REFUSES two sources targeting one
+                 destination, deletes nothing, and a re-run is a no-op. -->
+            <step>OCA\Filinq\Repair\RenameDutchColumns</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>

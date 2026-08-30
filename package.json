@@ -28,14 +28,16 @@
     "stylelint:fix": "stylelint \"{src,css}/**/*.{vue,scss,css}\" --fix",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config core.hooksPath .githooks || true",
+    "l10n:build": "node scripts/build-l10n-js.js",
+    "check:l10n-js": "node scripts/build-l10n-js.js --check"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
     "@babel/core": "^7.29.0",
-    "@conduction/nextcloud-vue": "^2.19.0",
+    "@conduction/nextcloud-vue": "^2.24.2",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
