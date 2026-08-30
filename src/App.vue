@@ -24,8 +24,14 @@
 		  outside the manifest page tree and manage their own visibility via
 		  the navigation store, so they continue to work unchanged.
 		-->
-		<template #sidebar>
+		<template #sidebar="{ pageSidebarComponent }">
 			<SideBars />
+			<!-- The manifest page's own sidebar (pages[].sidebarComponent). Passed in
+			     as a slot prop because filling this slot suppresses CnAppRoot's
+			     fallback, which is what hid the flow sidebar. -->
+			<component
+				:is="pageSidebarComponent"
+				v-if="pageSidebarComponent" />
 		</template>
 		<template #footer>
 			<Modals />
