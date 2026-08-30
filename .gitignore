@@ -16,6 +16,7 @@
 /website/.docusaurus/
 # Testing & Quality
 /.php-cs-fixer.cache
+.phpunit.cache
 /tests/.phpunit.cache
 /.phpunit.cache/
 .phpunit.cache/
