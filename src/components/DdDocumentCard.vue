@@ -243,7 +243,7 @@ export default {
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .dd-document-card__date {

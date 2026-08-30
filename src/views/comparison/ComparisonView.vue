@@ -316,7 +316,7 @@ export default {
 	border-radius: var(--border-radius);
 	padding: 8px;
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .comparison-view__hunk--added {
@@ -338,7 +338,7 @@ export default {
 	color: var(--color-primary-element-text);
 	border-radius: var(--border-radius);
 	padding: 0 4px;
-	margin-left: 2px;
+	margin-inline-start: 2px;
 }
 
 .comparison-view__advisory {

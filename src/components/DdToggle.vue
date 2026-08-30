@@ -88,7 +88,7 @@ export default {
 	padding: 0;
 	border: 0;
 	overflow: hidden;
-	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
 	white-space: nowrap;
 }
 
@@ -105,7 +105,7 @@ export default {
 .dd-toggle__knob {
 	position: absolute;
 	top: 2px;
-	left: 2px;
+	inset-inline-start: 2px;
 	width: 20px;
 	height: 20px;
 	border-radius: 50%;

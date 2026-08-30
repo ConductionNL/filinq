@@ -265,7 +265,7 @@ export default {
 .dd-data-table__td {
 	background: var(--dd-data-table-cell-background, var(--color-main-background));
 	padding: var(--dd-data-table-cell-padding, 8px);
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid
 		var(--dd-data-table-cell-border-color, var(--color-border));
 	vertical-align: middle;

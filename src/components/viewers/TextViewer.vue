@@ -180,7 +180,7 @@ export default {
 	font-size: 13px;
 	line-height: 1.5;
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: break-word;
 	margin: 0;
 }
 </style>
