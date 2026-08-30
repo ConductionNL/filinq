@@ -366,6 +366,6 @@ export default {
 }
 
 .policy-preempted-badge {
-	margin-left: 8px;
+	margin-inline-start: 8px;
 }
 </style>

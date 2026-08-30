@@ -167,6 +167,6 @@
 
 .filesListDragDropNoticeTitle {
 	margin: 12px 0;
-	margin-left: 16px;
+	margin-inline-start: 16px;
 	color: inherit;
 }

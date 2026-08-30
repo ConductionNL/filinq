@@ -242,7 +242,7 @@ export default {
 
 .required {
 	color: var(--color-error);
-	margin-left: 2px;
+	margin-inline-start: 2px;
 }
 
 .field-error {

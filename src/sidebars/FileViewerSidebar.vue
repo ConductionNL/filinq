@@ -1607,7 +1607,7 @@ export default {
 	--color-main-background: var(--dd-glass-bg, rgba(255, 255, 255, 0.54));
 	border-radius: var(--dd-radius-panel);
 	box-shadow: var(--dd-shadow-panel);
-	margin-left: 8px;
+	margin-inline-start: 8px;
 }
 
 /* Hide the built-in X close button — the user must finish the entity
@@ -1788,7 +1788,7 @@ export default {
 
 .residual-list {
 	margin: 6px 0 0;
-	padding-left: 18px;
+	padding-inline-start: 18px;
 	font-size: 0.85rem;
 	max-height: 160px;
 	overflow-y: auto;

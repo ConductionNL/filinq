@@ -87,7 +87,7 @@ export default {
 	line-height: 1.2;
 	margin: 0;
 	color: var(--color-main-text);
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .dd-file-viewer-header__description {
@@ -100,6 +100,6 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 </style>

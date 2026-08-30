@@ -109,7 +109,7 @@ export default {
 .dd-view-toggle__thumb {
 	position: absolute;
 	top: 4px;
-	left: 4px;
+	inset-inline-start: 4px;
 	width: calc(50% - 4px);
 	height: calc(100% - 8px);
 	border-radius: var(--dd-radius-pill-full);

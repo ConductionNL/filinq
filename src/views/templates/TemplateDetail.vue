@@ -787,7 +787,7 @@ export default {
 .template-detail__versions-table td {
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
-	text-align: left;
+	text-align: start;
 }
 
 .template-detail__error {

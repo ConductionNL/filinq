@@ -290,7 +290,7 @@ export default {
 }
 
 .results-table th {
-	text-align: left;
+	text-align: start;
 	font-weight: 600;
 	padding: 4px 6px;
 	border-bottom: 1px solid var(--color-border);
@@ -324,7 +324,7 @@ export default {
 }
 
 .col-status {
-	text-align: right;
+	text-align: end;
 	width: 90px;
 	white-space: nowrap;
 }
