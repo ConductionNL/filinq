@@ -1433,7 +1433,7 @@ export default {
 <style scoped>
 .selectionContainer {
 	display: grid;
-	grid-gap: 5px;
+	gap: 5px;
 	grid-template-columns: 1fr;
 }
 

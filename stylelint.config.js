@@ -7,18 +7,13 @@ module.exports = {
 				ignorePseudoElements: ['v-deep'],
 			},
 		],
-		// Indentation is prettier's now — the same handover eslint-config-prettier
-		// performs for eslint, and for the same reason: two formatters with
-		// overlapping jurisdiction make a repo unfixable. They genuinely disagree
-		// on continuation lines — a wrapped multi-line selector
-		// (PdfViewer.vue:376) and a long wrapped `cursor:` value
-		// (src/assets/app.css:185) are the two cases here.
+		// Indentation is prettier's, not stylelint's. The two genuinely disagree
+		// on continuation lines, and two formatters with overlapping jurisdiction
+		// make a repo unfixable. Prettier's glob also covers more than the
+		// `stylelint` script's did, so the handover gains coverage rather than
+		// losing it.
 		//
-		// The handover LOSES nothing and GAINS coverage: this rule only ever saw
-		// what the `stylelint` script's `src/**` glob passes it, so it reported
-		// clean while `css/main.css` — outside that glob — sat at 78 space-indented
-		// lines. Prettier's glob is `**/*.{js,ts,vue,css,scss}` and covers both.
-		// `indentation` is also deprecated in stylelint 15 and removed in 16.
-		indentation: null,
+		// The rule is not merely disabled here: stylelint removed `indentation`
+		// in 16, and 17 errors on an unknown rule even when it is set to null.
 	},
 }

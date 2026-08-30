@@ -646,7 +646,7 @@ export default {
 	font-size: 11px;
 	color: var(--color-text-maxcontrast);
 	text-align: center;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .dd-mini-card {

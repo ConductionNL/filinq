@@ -441,6 +441,6 @@ export default {
 
 .correspondence-index__warnings ul {
 	margin: 0;
-	padding-left: 16px;
+	padding-inline-start: 16px;
 }
 </style>

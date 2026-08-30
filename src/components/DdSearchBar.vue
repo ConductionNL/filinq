@@ -163,7 +163,7 @@ export default {
 
 .dd-search-bar__icon {
 	position: absolute;
-	left: 14px;
+	inset-inline-start: 14px;
 	color: var(--color-text-maxcontrast);
 	pointer-events: none;
 }
@@ -196,7 +196,7 @@ export default {
 
 .dd-search-bar__clear {
 	position: absolute;
-	right: 8px;
+	inset-inline-end: 8px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;

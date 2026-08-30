@@ -469,7 +469,7 @@ export default {
 }
 
 .results-table th {
-	text-align: left;
+	text-align: start;
 	font-weight: 600;
 	padding: 4px 6px;
 	border-bottom: 1px solid var(--color-border);
@@ -497,7 +497,7 @@ export default {
 }
 
 .col-action {
-	text-align: right;
+	text-align: end;
 	width: 80px;
 	white-space: nowrap;
 }
@@ -578,7 +578,7 @@ export default {
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 8px;
-	text-align: left;
+	text-align: start;
 }
 
 .drop-title {

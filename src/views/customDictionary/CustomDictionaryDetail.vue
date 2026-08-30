@@ -493,7 +493,7 @@ export default {
 
 .custom-dictionary-detail__terms-table th,
 .custom-dictionary-detail__terms-table td {
-	text-align: left;
+	text-align: start;
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
 }

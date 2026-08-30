@@ -273,7 +273,7 @@ export default {
 .template-index__table td {
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
-	text-align: left;
+	text-align: start;
 }
 
 .template-index__row {
@@ -291,7 +291,7 @@ export default {
 	border-radius: 12px;
 	padding: 2px 8px;
 	font-size: 12px;
-	margin-right: 4px;
+	margin-inline-end: 4px;
 }
 
 .template-index__locked {
