@@ -109,6 +109,6 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 </style>

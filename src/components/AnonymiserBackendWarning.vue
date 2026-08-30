@@ -181,7 +181,7 @@ export default {
 
 .anonymiser-backend-warning__links {
 	list-style: disc;
-	margin-left: 20px;
+	margin-inline-start: 20px;
 }
 
 .anonymiser-backend-warning__links li {

@@ -221,6 +221,6 @@ export default {
 .single-file__name {
 	font-weight: 600;
 	color: var(--color-main-text);
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 </style>
