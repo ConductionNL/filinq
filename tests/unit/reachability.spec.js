@@ -267,11 +267,21 @@ function parseRegistrySource(registryText, registryDir) {
  *   with `kind:"page"` that no manifest page's `component` references.
  */
 function crossCheckManifestRegistry(manifest, registryEntries) {
-	const customPageComponents = new Set(
-		(manifest.pages || [])
-			.filter((p) => p.type === 'custom' && typeof p.component === 'string')
-			.map((p) => p.component),
-	)
+	// Every way a manifest page can name an app component. `component` is the
+	// custom-page body; `sidebarComponent` is the NC app-sidebar slot that
+	// non-custom page types (notably `flow-detail`) use to mount their
+	// controls. Both are app components that MUST carry a registry entry, and
+	// counting only the first made every legitimate sidebar registration look
+	// dangling.
+	const customPageComponents = new Set()
+	for (const p of manifest.pages || []) {
+		if (p.type === 'custom' && typeof p.component === 'string') {
+			customPageComponents.add(p.component)
+		}
+		if (typeof p.sidebarComponent === 'string') {
+			customPageComponents.add(p.sidebarComponent)
+		}
+	}
 	const pageKindKeys = new Set(
 		Object.entries(registryEntries)
 			.filter(([, entry]) => entry.kind === 'page')
@@ -280,9 +290,19 @@ function crossCheckManifestRegistry(manifest, registryEntries) {
 
 	const missingRegistryEntry = []
 	for (const page of manifest.pages || []) {
-		if (page.type !== 'custom' || typeof page.component !== 'string') continue
-		if (!pageKindKeys.has(page.component)) {
-			missingRegistryEntry.push(`${page.id} → component "${page.component}"`)
+		if (page.type === 'custom' && typeof page.component === 'string') {
+			if (!pageKindKeys.has(page.component)) {
+				missingRegistryEntry.push(
+					`${page.id} → component "${page.component}"`,
+				)
+			}
+		}
+		if (typeof page.sidebarComponent === 'string') {
+			if (!pageKindKeys.has(page.sidebarComponent)) {
+				missingRegistryEntry.push(
+					`${page.id} → sidebarComponent "${page.sidebarComponent}"`,
+				)
+			}
 		}
 	}
 

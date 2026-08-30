@@ -33,6 +33,9 @@
 // openregister. See decidesk#377 / #388.
 $extra = [
         // Metrics and health.
+        // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
+        ['name' => 'setup#status',    'url' => '/api/setup/status',            'verb' => 'GET'],
+        ['name' => 'setup#runAction', 'url' => '/api/setup/action/{actionId}', 'verb' => 'POST', 'requirements' => ['actionId' => '[a-z0-9\\-]+']],
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
 

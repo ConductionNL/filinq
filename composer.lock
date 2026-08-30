@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9565b16882b59a49feb7f44e87acc142",
+    "content-hash": "4058699afffe04b91f7885213da6232e",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -2084,16 +2084,16 @@
         },
         {
             "name": "conduction/hydra-gates",
-            "version": "v1.9.0",
+            "version": "v1.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/.github.git",
-                "reference": "9801ffdbff17d05f0934742190742d733ac912b4"
+                "reference": "d143bc27aecbb44a66c843dba89d374628bf9eef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/.github/zipball/9801ffdbff17d05f0934742190742d733ac912b4",
-                "reference": "9801ffdbff17d05f0934742190742d733ac912b4",
+                "url": "https://api.github.com/repos/ConductionNL/.github/zipball/d143bc27aecbb44a66c843dba89d374628bf9eef",
+                "reference": "d143bc27aecbb44a66c843dba89d374628bf9eef",
                 "shasum": ""
             },
             "require": {
@@ -2132,9 +2132,9 @@
             "support": {
                 "docs": "https://github.com/ConductionNL/.github/blob/main/hydra-gates/README.md",
                 "issues": "https://github.com/ConductionNL/.github/issues",
-                "source": "https://github.com/ConductionNL/.github/tree/v1.9.0"
+                "source": "https://github.com/ConductionNL/.github/tree/v1.10.0"
             },
-            "time": "2026-08-22T00:30:18+00:00"
+            "time": "2026-08-27T16:18:04+00:00"
         },
         {
             "name": "consolidation/annotated-command",
@@ -3889,21 +3889,21 @@
         },
         {
             "name": "phpcsstandards/phpcsextra",
-            "version": "1.5.0",
+            "version": "1.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHPCSExtra.git",
-                "reference": "b598aa890815b8df16363271b659d73280129101"
+                "reference": "39467533fdb742446d68c1d10ac33d625ee0311c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHPCSExtra/zipball/b598aa890815b8df16363271b659d73280129101",
-                "reference": "b598aa890815b8df16363271b659d73280129101",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHPCSExtra/zipball/39467533fdb742446d68c1d10ac33d625ee0311c",
+                "reference": "39467533fdb742446d68c1d10ac33d625ee0311c",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.4",
-                "phpcsstandards/phpcsutils": "^1.2.0",
+                "phpcsstandards/phpcsutils": "^1.2.3",
                 "squizlabs/php_codesniffer": "^3.13.5 || ^4.0.1"
             },
             "require-dev": {
@@ -3967,7 +3967,7 @@
                     "type": "thanks_dev"
                 }
             ],
-            "time": "2025-11-12T23:06:57+00:00"
+            "time": "2026-07-27T11:13:17+00:00"
         },
         {
             "name": "phpcsstandards/phpcsutils",
@@ -4322,16 +4322,16 @@
         },
         {
             "name": "phpmetrics/phpmetrics",
-            "version": "v2.9.1",
+            "version": "v2.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpmetrics/PhpMetrics.git",
-                "reference": "e2e68ddd1543bc3f44402c383f7bccb62de1ece3"
+                "reference": "55c5e23b34afb8fa9b6c6ea95cbd59b710160235"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpmetrics/PhpMetrics/zipball/e2e68ddd1543bc3f44402c383f7bccb62de1ece3",
-                "reference": "e2e68ddd1543bc3f44402c383f7bccb62de1ece3",
+                "url": "https://api.github.com/repos/phpmetrics/PhpMetrics/zipball/55c5e23b34afb8fa9b6c6ea95cbd59b710160235",
+                "reference": "55c5e23b34afb8fa9b6c6ea95cbd59b710160235",
                 "shasum": ""
             },
             "require": {
@@ -4380,7 +4380,7 @@
             ],
             "support": {
                 "issues": "https://github.com/PhpMetrics/PhpMetrics/issues",
-                "source": "https://github.com/phpmetrics/PhpMetrics/tree/v2.9.1"
+                "source": "https://github.com/phpmetrics/PhpMetrics/tree/v2.11.0"
             },
             "funding": [
                 {
@@ -4388,7 +4388,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-09-25T05:21:02+00:00"
+            "time": "2026-08-09T06:58:42+00:00"
         },
         {
             "name": "phpowermove/docblock",
@@ -4491,11 +4491,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.2.8",
+            "version": "2.2.9",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/e285254e60f33c21902efef4a926ca0987c06804",
-                "reference": "e285254e60f33c21902efef4a926ca0987c06804",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/13d6b4f347bad222da436580c8304fa6f83e6bd0",
+                "reference": "13d6b4f347bad222da436580c8304fa6f83e6bd0",
                 "shasum": ""
             },
             "require": {
@@ -4551,7 +4551,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-04T22:21:45+00:00"
+            "time": "2026-08-22T07:38:16+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -7319,26 +7319,31 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.13.6",
+            "version": "4.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
-                "reference": "4c378e1a528ea066890fc2397cbdd2f94eb2fc91"
+                "reference": "bbdc3d0532623e21838b7041a4364383a8126f96"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/4c378e1a528ea066890fc2397cbdd2f94eb2fc91",
-                "reference": "4c378e1a528ea066890fc2397cbdd2f94eb2fc91",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/bbdc3d0532623e21838b7041a4364383a8126f96",
+                "reference": "bbdc3d0532623e21838b7041a4364383a8126f96",
                 "shasum": ""
             },
             "require": {
+                "ext-libxml": "*",
                 "ext-simplexml": "*",
                 "ext-tokenizer": "*",
                 "ext-xmlwriter": "*",
-                "php": ">=5.4.0"
+                "php": ">=7.2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.0 || ^5.0 || ^6.0 || ^7.0 || ^8.0 || ^9.3.4"
+                "phpunit/phpunit": "^8.4.0 || ^9.3.4 || ^10.5.32 || 11.3.3 - 11.5.28 || ^11.5.31"
+            },
+            "suggest": {
+                "ext-iconv": "For accurate character length calculation when the checked files contain multi-byte characters.",
+                "ext-pcntl": "For parallel processing support via the --parallel CLI option."
             },
             "bin": [
                 "bin/phpcbf",
@@ -7363,7 +7368,7 @@
                     "homepage": "https://github.com/PHPCSStandards/PHP_CodeSniffer/graphs/contributors"
                 }
             ],
-            "description": "PHP_CodeSniffer tokenizes PHP, JavaScript and CSS files and detects violations of a defined set of coding standards.",
+            "description": "PHP_CodeSniffer tokenizes PHP files and detects violations of a defined set of coding standards.",
             "homepage": "https://github.com/PHPCSStandards/PHP_CodeSniffer",
             "keywords": [
                 "phpcs",
@@ -7394,7 +7399,7 @@
                     "type": "thanks_dev"
                 }
             ],
-            "time": "2026-08-06T00:17:32+00:00"
+            "time": "2026-08-06T02:45:27+00:00"
         },
         {
             "name": "symfony/config",
@@ -8366,86 +8371,6 @@
                 }
             ],
             "time": "2026-07-01T12:47:55+00:00"
-        },
-        {
-            "name": "symfony/polyfill-php86",
-            "version": "v1.41.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-php86.git",
-                "reference": "6bc356ed3d8dbfeea8f0de235e34d670704e880e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php86/zipball/6bc356ed3d8dbfeea8f0de235e34d670704e880e",
-                "reference": "6bc356ed3d8dbfeea8f0de235e34d670704e880e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.2"
-            },
-            "type": "library",
-            "extra": {
-                "thanks": {
-                    "url": "https://github.com/symfony/polyfill",
-                    "name": "symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ],
-                "psr-4": {
-                    "Symfony\\Polyfill\\Php86\\": ""
-                },
-                "classmap": [
-                    "Resources/stubs"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nicolas Grekas",
-                    "email": "p@tchwork.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill backporting some PHP 8.6+ features to lower PHP versions",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "polyfill",
-                "portable",
-                "shim"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-php86/tree/v1.41.0"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/nicolas-grekas",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2026-07-02T13:42:24+00:00"
         },
         {
             "name": "symfony/process",

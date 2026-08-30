@@ -246,9 +246,13 @@ test('Anonymization extract degrades gracefully (clean JSON 200, never an HTML 5
 // above), but the regex fallback does not detect arbitrary BSN/name/email on
 // the fly, so the entities-detected outcome cannot be asserted headlessly
 // here. This flips green once the sidecar is provisioned.
-test.fixme('Folder Analysis detects entities (BSN / name / email) in the seeded document', async ({
+test('Folder Analysis detects entities (BSN / name / email) in the seeded document', async ({
 	page,
 }) => {
+	test.fixme(
+		true,
+		'environment-dependent: live NER detection of fresh PII needs the NER backend sidecar, which is absent in this dev environment. The controllers no longer 500 (see the green test above), but the regex fallback cannot detect arbitrary BSN/name/email on the fly, so the entities-detected outcome is not assertable headlessly. Flips green once the sidecar is provisioned.',
+	)
 	const token = await harvestToken(page)
 	const req = page.request
 
