@@ -5,11 +5,11 @@ title: Document Reports
 
 # Document Reports
 
-DocuDesk provides comprehensive document analysis through its reporting system. This page explains how document reports work and how they can help you ensure your documents meet privacy, accessibility, and readability standards.
+Filinq provides comprehensive document analysis through its reporting system. This page explains how document reports work and how they can help you ensure your documents meet privacy, accessibility, and readability standards.
 
 ## Overview
 
-The Document Reports system in DocuDesk enables you to:
+The Document Reports system in Filinq enables you to:
 
 - Identify files containing personal data
 - Categorize the types of personal data present
@@ -25,11 +25,11 @@ The Document Reports system in DocuDesk enables you to:
 
 ## Automatic Report Generation
 
-DocuDesk can automatically generate reports for documents as they are uploaded or modified in Nextcloud. This process works as follows:
+Filinq can automatically generate reports for documents as they are uploaded or modified in Nextcloud. This process works as follows:
 
-1. When a file is created or modified in Nextcloud, DocuDesk detects the event
+1. When a file is created or modified in Nextcloud, Filinq detects the event
 2. A document log entry is created to maintain an audit trail
-3. If reporting is enabled, DocuDesk checks if a report already exists for the current version of the file
+3. If reporting is enabled, Filinq checks if a report already exists for the current version of the file
 4. If no report exists (or the file has changed), a new report is created with a 'pending' status
 5. Depending on the configuration, the report is either:
    - Processed immediately (synchronous processing)
@@ -77,7 +77,7 @@ sequenceDiagram
 
 ### Configuration Options
 
-The report generation process can be configured through the DocuDesk settings page:
+The report generation process can be configured through the Filinq settings page:
 
 - **Enable Reporting**: Turn automatic report generation on or off
 - **Enable Anonymization**: Turn automatic anonymization of sensitive data on or off
@@ -87,7 +87,7 @@ The report generation process can be configured through the DocuDesk settings pa
 
 ### Processing Modes
 
-DocuDesk supports two processing modes for report generation:
+Filinq supports two processing modes for report generation:
 
 #### Synchronous Processing
 
@@ -193,7 +193,7 @@ Reports can have the following status values:
 
 ## Handling Non-Text Documents
 
-DocuDesk's anonymization capabilities rely on text extraction from documents. However, certain file types cannot be processed for text content, which affects how DocuDesk handles these documents.
+Filinq's anonymization capabilities rely on text extraction from documents. However, certain file types cannot be processed for text content, which affects how Filinq handles these documents.
 
 ### Unsupported Document Types
 
@@ -206,9 +206,9 @@ The following document types typically cannot be processed for text extraction:
 - **Encrypted documents**: Documents with password protection or encryption
 - **Scanned documents without OCR**: Image-based PDFs without text layers
 
-### How DocuDesk Handles These Files
+### How Filinq Handles These Files
 
-When DocuDesk encounters a file that cannot be processed for text extraction:
+When Filinq encounters a file that cannot be processed for text extraction:
 
 1. A report is still created for the document
 2. The report status is set to 'completed'
@@ -253,11 +253,11 @@ When working with non-text documents that might contain sensitive information:
 2. **Metadata Cleaning**: Remove EXIF data from images which may contain location or device information
 3. **OCR Processing**: Consider using OCR tools on scanned documents before uploading
 4. **Alternative Formats**: When possible, provide text-based alternatives for important image-based content
-5. **Custom Tagging**: Use DocuDesk's manual tagging features to mark non-text documents that contain sensitive information
+5. **Custom Tagging**: Use Filinq's manual tagging features to mark non-text documents that contain sensitive information
 
 ## Report Creation Process
 
-When a file event occurs (creation or modification), DocuDesk follows these steps to create or update reports:
+When a file event occurs (creation or modification), Filinq follows these steps to create or update reports:
 
 ```mermaid
 flowchart TD
@@ -295,7 +295,7 @@ flowchart TD
 
 ### Simplified Event Handling
 
-DocuDesk has streamlined the report creation process by:
+Filinq has streamlined the report creation process by:
 
 1. **Centralizing Decision Logic**: All decisions about whether to create reports and how to process them are now made in the ReportingService
 2. **Automatic Processing Mode**: The system automatically determines whether to process reports synchronously based on configuration settings
@@ -305,7 +305,7 @@ This approach ensures consistent behavior and makes the system easier to maintai
 
 ### Report Update Logic
 
-When a file is modified, DocuDesk updates the existing report rather than creating a new one:
+When a file is modified, Filinq updates the existing report rather than creating a new one:
 
 ```mermaid
 sequenceDiagram
@@ -374,7 +374,7 @@ The language level analysis assesses the readability and complexity of document 
 
 ### Data Categories
 
-DocuDesk recognizes the following categories of personal data:
+Filinq recognizes the following categories of personal data:
 
 - **name**: Names of individuals
 - **address**: Physical addresses
@@ -399,7 +399,7 @@ The anonymization status can be one of the following:
 
 ### Legal Basis
 
-Under GDPR, personal data processing must have a legal basis. DocuDesk supports tracking the following legal bases:
+Under GDPR, personal data processing must have a legal basis. Filinq supports tracking the following legal bases:
 
 - **consent**: The data subject has given consent
 - **contract**: Processing is necessary for a contract
@@ -410,7 +410,7 @@ Under GDPR, personal data processing must have a legal basis. DocuDesk supports 
 
 ## API Endpoints
 
-DocuDesk provides the following API endpoints for managing document reports:
+Filinq provides the following API endpoints for managing document reports:
 
 ### API Flow
 
@@ -449,7 +449,7 @@ sequenceDiagram
 ### List Document Reports
 
 ```
-GET /apps/docudesk/api/v1/reports
+GET /apps/filinq/api/v1/reports
 ```
 
 Returns a list of document reports. You can filter the reports by:
@@ -460,7 +460,7 @@ Returns a list of document reports. You can filter the reports by:
 ### Create Document Report
 
 ```
-POST /apps/docudesk/api/v1/reports
+POST /apps/filinq/api/v1/reports
 ```
 
 Creates a new document report. You need to specify:
@@ -477,7 +477,7 @@ Creates a new document report. You need to specify:
 ### Get Document Report
 
 ```
-GET /apps/docudesk/api/v1/reports/{reportId}
+GET /apps/filinq/api/v1/reports/{reportId}
 ```
 
 Returns a specific document report by ID.
@@ -485,7 +485,7 @@ Returns a specific document report by ID.
 ### Update Document Report
 
 ```
-PUT /apps/docudesk/api/v1/reports/{reportId}
+PUT /apps/filinq/api/v1/reports/{reportId}
 ```
 
 Updates a specific document report.
@@ -493,7 +493,7 @@ Updates a specific document report.
 ### Get Latest Report for Node
 
 ```
-GET /apps/docudesk/api/v1/reports/node/{nodeId}
+GET /apps/filinq/api/v1/reports/node/{nodeId}
 ```
 
 Returns the latest document report for a specific Nextcloud node.
@@ -501,7 +501,7 @@ Returns the latest document report for a specific Nextcloud node.
 ### Get Report Configuration
 
 ```
-GET /apps/docudesk/api/v1/settings/report
+GET /apps/filinq/api/v1/settings/report
 ```
 
 Returns the current report configuration settings.
@@ -509,7 +509,7 @@ Returns the current report configuration settings.
 ### Save Report Configuration
 
 ```
-POST /apps/docudesk/api/v1/settings/report
+POST /apps/filinq/api/v1/settings/report
 ```
 
 Updates the report configuration settings. You can specify:
@@ -551,7 +551,7 @@ Document reports help improve content readability by:
 
 ## Integration with Document Processing
 
-The document reports system integrates with DocuDesk's document processing capabilities:
+The document reports system integrates with Filinq's document processing capabilities:
 
 - Reports can trigger automatic document processing (e.g., anonymization)
 - Processing results are reflected in updated reports
@@ -574,7 +574,7 @@ $reportData = [
     'analysis_types' => ['anonymization', 'wcag_compliance', 'language_level']
 ];
 
-$response = $client->post('/apps/docudesk/api/v1/reports', [
+$response = $client->post('/apps/filinq/api/v1/reports', [
     'json' => $reportData
 ]);
 
@@ -582,7 +582,7 @@ $report = json_decode($response->getBody(), true);
 $reportId = $report['id'];
 
 // Check report status
-$response = $client->get('/apps/docudesk/api/v1/reports/' . $reportId);
+$response = $client->get('/apps/filinq/api/v1/reports/' . $reportId);
 $report = json_decode($response->getBody(), true);
 
 if ($report['status'] === 'completed') {
@@ -618,12 +618,12 @@ $configData = [
     'store_original_text' => true
 ];
 
-$response = $client->post('/apps/docudesk/api/v1/settings/report', [
+$response = $client->post('/apps/filinq/api/v1/settings/report', [
     'json' => $configData
 ]);
 
 // Get current report configuration
-$response = $client->get('/apps/docudesk/api/v1/settings/report');
+$response = $client->get('/apps/filinq/api/v1/settings/report');
 $config = json_decode($response->getBody(), true);
 ```
 
@@ -643,7 +643,7 @@ Document reports provide a powerful way to ensure your documents meet privacy, a
 
 ## File Event Handling
 
-DocuDesk uses Nextcloud's event system to detect file operations and trigger report generation. The following diagram illustrates how file events are handled:
+Filinq uses Nextcloud's event system to detect file operations and trigger report generation. The following diagram illustrates how file events are handled:
 
 ```mermaid
 flowchart TD
@@ -651,7 +651,7 @@ flowchart TD
         A[File Operation] -->|Triggers| B[Event Dispatcher]
     end
     
-    subgraph DocuDesk
+    subgraph Filinq
         B -->|Dispatches to| C[FileEventListener]
         
         C -->|Validates| D[Is it a file?]
@@ -693,7 +693,7 @@ For file creation and modification events, the listener creates reports if repor
 
 ### Efficient File Change Detection
 
-DocuDesk uses Nextcloud's ETag (Entity Tag) system when available to efficiently detect file changes:
+Filinq uses Nextcloud's ETag (Entity Tag) system when available to efficiently detect file changes:
 
 ```mermaid
 sequenceDiagram
@@ -792,7 +792,7 @@ This centralized processing approach ensures consistent handling of reports rega
 
 ## Background Job Processing
 
-DocuDesk uses a background job (`ProcessPendingReports`) to process pending reports asynchronously. This job runs periodically (every 15 minutes by default) and processes a batch of pending reports.
+Filinq uses a background job (`ProcessPendingReports`) to process pending reports asynchronously. This job runs periodically (every 15 minutes by default) and processes a batch of pending reports.
 
 ```mermaid
 flowchart TD
@@ -849,11 +849,11 @@ sequenceDiagram
     PPR-->>Cron: Job completed
 ```
 
-This background processing approach allows DocuDesk to handle large volumes of documents efficiently without impacting user experience.
+This background processing approach allows Filinq to handle large volumes of documents efficiently without impacting user experience.
 
 ## Entity Detection and Risk Scoring
 
-DocuDesk uses the Presidio API to detect entities in documents and calculate risk scores based on the detected entities.
+Filinq uses the Presidio API to detect entities in documents and calculate risk scores based on the detected entities.
 
 ```mermaid
 flowchart TD
@@ -943,7 +943,7 @@ This risk assessment helps organizations prioritize which documents need attenti
 
 ### Risk Assessment Visualization
 
-DocuDesk provides a comprehensive risk assessment visualization in the document details view. This feature helps users understand:
+Filinq provides a comprehensive risk assessment visualization in the document details view. This feature helps users understand:
 
 1. The overall risk score of a document (0-100)
 2. The risk level classification (Low, Medium, High, Critical)

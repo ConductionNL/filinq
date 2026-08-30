@@ -2,7 +2,7 @@
 
 ## Overview
 
-Digital document signing within DocuDesk, supporting both internal (ambtelijke) and external (burger/ketenpartner) signing flows. Required by 76% of analyzed Dutch government tenders.
+Digital document signing within Filinq, supporting both internal (ambtelijke) and external (burger/ketenpartner) signing flows. Required by 76% of analyzed Dutch government tenders.
 
 ## Status: Proposed
 

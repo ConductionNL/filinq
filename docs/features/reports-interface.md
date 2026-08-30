@@ -4,7 +4,7 @@ sidebar_position: 10
 
 # Reports Interface
 
-The DocuDesk reports interface has been completely redesigned to provide a modern, efficient way to view and manage document analysis reports. The new interface features a table-based layout with detailed sidebars, inspired by modern data management applications.
+The Filinq reports interface has been completely redesigned to provide a modern, efficient way to view and manage document analysis reports. The new interface features a table-based layout with detailed sidebars, inspired by modern data management applications.
 
 ## Interface Overview
 

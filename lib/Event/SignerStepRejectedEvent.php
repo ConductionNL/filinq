@@ -3,17 +3,17 @@
 /**
  * SignerStepRejectedEvent
  *
- * Typed docudesk-side event fired when a `pending` OR approval step linked to
- * a docudesk signing-request is rejected (i.e. a signer declined). Bridges
+ * Typed filinq-side event fired when a `pending` OR approval step linked to
+ * a filinq signing-request is rejected (i.e. a signer declined). Bridges
  * OR's `ApprovalStepRejectedEvent`. A rejection terminates the chain.
  *
  * @category  Event
- * @package   OCA\DocuDesk\Event
+ * @package   OCA\Filinq\Event
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,84 +23,75 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Event;
+namespace OCA\Filinq\Event;
 
 use OCA\OpenRegister\Db\ApprovalChain;
 use OCA\OpenRegister\Db\ApprovalStep;
 use OCP\EventDispatcher\Event;
 
 /**
- * Fired after an approval step linked to a docudesk sign-request is rejected.
+ * Fired after an approval step linked to a filinq sign-request is rejected.
  *
  * @category Event
- * @package  OCA\DocuDesk\Event
+ * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
-class SignerStepRejectedEvent extends Event
-{
-    /**
-     * Constructor.
-     *
-     * @param ApprovalChain $chain      The OR approval chain.
-     * @param ApprovalStep  $step       The rejected OR approval step.
-     * @param string        $userId     UID of the user who rejected.
-     * @param string        $objectUuid Signing-request UUID.
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly ApprovalChain $chain,
-        private readonly ApprovalStep $step,
-        private readonly string $userId,
-        private readonly string $objectUuid
-    ) {
-        parent::__construct();
+class SignerStepRejectedEvent extends Event {
+	/**
+	 * Constructor.
+	 *
+	 * @param ApprovalChain $chain The OR approval chain.
+	 * @param ApprovalStep $step The rejected OR approval step.
+	 * @param string $userId UID of the user who rejected.
+	 * @param string $objectUuid Signing-request UUID.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly ApprovalChain $chain,
+		private readonly ApprovalStep $step,
+		private readonly string $userId,
+		private readonly string $objectUuid,
+	) {
+		parent::__construct();
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the approval chain.
-     *
-     * @return ApprovalChain The OR approval chain.
-     */
-    public function getChain(): ApprovalChain
-    {
-        return $this->chain;
+	/**
+	 * Get the approval chain.
+	 *
+	 * @return ApprovalChain The OR approval chain.
+	 */
+	public function getChain(): ApprovalChain {
+		return $this->chain;
+	}//end getChain()
 
-    }//end getChain()
+	/**
+	 * Get the rejected step.
+	 *
+	 * @return ApprovalStep The OR approval step.
+	 */
+	public function getStep(): ApprovalStep {
+		return $this->step;
+	}//end getStep()
 
-    /**
-     * Get the rejected step.
-     *
-     * @return ApprovalStep The OR approval step.
-     */
-    public function getStep(): ApprovalStep
-    {
-        return $this->step;
+	/**
+	 * Get the UID of the user who rejected this step.
+	 *
+	 * @return string Nextcloud user ID.
+	 */
+	public function getUserId(): string {
+		return $this->userId;
+	}//end getUserId()
 
-    }//end getStep()
-
-    /**
-     * Get the UID of the user who rejected this step.
-     *
-     * @return string Nextcloud user ID.
-     */
-    public function getUserId(): string
-    {
-        return $this->userId;
-
-    }//end getUserId()
-
-    /**
-     * Get the docudesk signing-request UUID this step relates to.
-     *
-     * @return string Signing-request UUID.
-     */
-    public function getSigningRequestUuid(): string
-    {
-        return $this->objectUuid;
-
-    }//end getSigningRequestUuid()
+	/**
+	 * Get the filinq signing-request UUID this step relates to.
+	 *
+	 * @return string Signing-request UUID.
+	 */
+	public function getSigningRequestUuid(): string {
+		return $this->objectUuid;
+	}//end getSigningRequestUuid()
 }//end class

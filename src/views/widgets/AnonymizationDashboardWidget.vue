@@ -4,27 +4,21 @@ import { anonymizationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<div class="docudesk-anon-widget">
-		<!-- Greeting header -->
-		<h2 class="anon-widget__title">
-			{{ greeting }}<br>
-			{{ t('docudesk', 'what would you like to anonymize today?') }}
-		</h2>
-
+	<div class="filinq-anon-widget">
 		<!-- Results table: shown when files are in the queue -->
 		<div v-if="anonymizationStore.hasFiles" class="results-area">
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'File') }}</th>
-						<th class="col-number">
-							{{ t('docudesk', 'Entities') }}
+						<th scope="col">{{ t('filinq', 'File') }}</th>
+						<th scope="col" class="col-number">
+							{{ t('filinq', 'Entities') }}
 						</th>
-						<th class="col-number">
-							{{ t('docudesk', 'Removed') }}
+						<th scope="col" class="col-number">
+							{{ t('filinq', 'Removed') }}
 						</th>
-						<th class="col-action">
-							{{ t('docudesk', 'Result') }}
+						<th scope="col" class="col-action">
+							{{ t('filinq', 'Result') }}
 						</th>
 					</tr>
 				</thead>
@@ -42,7 +36,11 @@ import { anonymizationStore } from '../../store/store.js'
 							<span v-else :title="file.name">{{ file.name }}</span>
 						</td>
 						<td class="col-number">
-							<template v-if="file.status === 'completed' || file.status === 'anonymizing'">
+							<template
+								v-if="
+									file.status === 'completed'
+									|| file.status === 'anonymizing'
+								">
 								{{ file.entityCount }}
 							</template>
 							<template v-else-if="file.status === 'error'">
@@ -57,24 +55,35 @@ import { anonymizationStore } from '../../store/store.js'
 							<template v-else-if="file.status === 'error'">
 								&mdash;
 							</template>
-							<NcLoadingIcon v-else-if="file.status === 'anonymizing'" :size="16" />
-							<template v-else>
-								&mdash;
-							</template>
+							<NcLoadingIcon
+								v-else-if="file.status === 'anonymizing'"
+								:size="16" />
+							<template v-else> &mdash; </template>
 						</td>
 						<td class="col-action">
 							<a
-								v-if="file.status === 'completed' && file.anonymizedFilePath"
+								v-if="
+									file.status === 'completed'
+									&& file.anonymizedFilePath
+								"
 								:href="downloadUrl(file.anonymizedFilePath)"
 								download
 								class="download-link">
-								{{ t('docudesk', 'Download') }}
+								{{ t('filinq', 'Download') }}
 							</a>
-							<span v-else-if="file.status === 'completed' && !file.anonymizedFilePath" class="status-clean">
-								{{ t('docudesk', 'Clean') }}
+							<span
+								v-else-if="
+									file.status === 'completed'
+									&& !file.anonymizedFilePath
+								"
+								class="status-clean">
+								{{ t('filinq', 'Clean') }}
 							</span>
-							<span v-else-if="file.status === 'error'" class="status-error" :title="file.error">
-								{{ t('docudesk', 'Error') }}
+							<span
+								v-else-if="file.status === 'error'"
+								class="status-error"
+								:title="file.error">
+								{{ t('filinq', 'Error') }}
 							</span>
 							<span v-else class="status-label">
 								{{ statusLabel(file.status) }}
@@ -87,87 +96,83 @@ import { anonymizationStore } from '../../store/store.js'
 
 		<!-- Drop zone -->
 		<div class="upload-area" :class="{ compact: anonymizationStore.hasFiles }">
+			<!--
+				Drag-and-drop is a pointer-only affordance by nature, so the file
+				picker is opened by a REAL <button> rather than by a click handler
+				on this wrapper. The wrapper used to carry `@click` while the
+				<input type="file"> was `display: none`, which left keyboard users
+				with no way at all to reach the picker (WCAG 2.1.1).
+			-->
 			<div
 				class="drop-zone"
 				:class="{ dragging: isDragging }"
 				@dragover.prevent="isDragging = true"
 				@dragleave.prevent="isDragging = false"
-				@drop.prevent="handleDrop"
-				@click="$refs.fileInput.click()">
-				<img v-if="!anonymizationStore.hasFiles"
+				@drop.prevent="handleDrop">
+				<img
+					v-if="!anonymizationStore.hasFiles"
 					:src="uploadIcon"
 					alt=""
-					class="upload-icon">
+					class="upload-icon" />
 				<div class="drop-content">
 					<p class="drop-title">
-						{{ anonymizationStore.hasFiles
-							? t('docudesk', 'Drop more files to anonymize')
-							: t('docudesk', 'Drag and drop one or more documents')
+						{{
+							anonymizationStore.hasFiles
+								? t('filinq', 'Drop more files to anonymize')
+								: t('filinq', 'Drag and drop one or more documents')
 						}}
 					</p>
 					<p v-if="!anonymizationStore.hasFiles" class="drop-subtitle">
-						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
+						{{
+							t(
+								'filinq',
+								'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.',
+							)
+						}}
 					</p>
-					<span class="fake-button">
-						{{ anonymizationStore.hasFiles ? t('docudesk', '+ Add more files') : t('docudesk', '+ Select files') }}
-					</span>
+					<button
+						type="button"
+						class="fake-button"
+						@click="$refs.fileInput.click()">
+						{{
+							anonymizationStore.hasFiles
+								? t('filinq', '+ Add more files')
+								: t('filinq', '+ Select files')
+						}}
+					</button>
 				</div>
 				<input
 					ref="fileInput"
 					type="file"
 					multiple
+					:aria-label="t('filinq', 'Select files to anonymise')"
 					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
 					class="file-input"
-					@change="handleFileSelect">
+					@change="handleFileSelect" />
 			</div>
 		</div>
 
 		<!-- Footer: shown in the Nextcloud dashboard widget context, hidden in-app -->
 		<a v-if="!inApp" class="widget-footer" :href="appUrl">
-			{{ t('docudesk', 'Open DocuDesk') }}
+			{{ t('filinq', 'Open Filinq') }}
 		</a>
 
-		<!-- Dossier name dialog (multi-file upload) -->
-		<NcDialog
+		<!-- Dossier name dialog (multi-file upload) — src/dialogs/ per ADR-004 -->
+		<DossierNameDialog
 			v-if="showDossierDialog"
-			:name="t('docudesk', 'Create dossier')"
-			:can-close="!dossierSubmitting"
-			size="normal"
-			@closing="cancelDossier">
-			<div class="dossier-dialog">
-				<NcTextField
-					ref="dossierInput"
-					:value.sync="dossierName"
-					:label="t('docudesk', 'Dossier name')"
-					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
-					:disabled="dossierSubmitting"
-					:error="!!dossierError"
-					:helper-text="dossierError"
-					@keyup.enter="confirmDossier" />
-				<NcNoteCard type="info">
-					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
-				</NcNoteCard>
-			</div>
-			<template #actions>
-				<NcButton type="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="dossierSubmitting" @click="confirmDossier">
-					<template v-if="dossierSubmitting" #icon>
-						<NcLoadingIcon :size="18" />
-					</template>
-					{{ t('docudesk', 'Continue to anonymization') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			v-model="dossierName"
+			:submitting="dossierSubmitting"
+			:error="dossierError"
+			@confirm="confirmDossier"
+			@cancel="cancelDossier" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
-import { getCurrentUser } from '@nextcloud/auth'
-import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
+import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
+import { NcLoadingIcon } from '@nextcloud/vue'
+import DossierNameDialog from '../../dialogs/DossierNameDialog.vue'
 import uploadIcon from '../../assets/upload.png'
 
 const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
@@ -177,6 +182,10 @@ const ALLOWED_MIMES = new Set([
 	'application/pdf',
 ])
 
+/**
+ *
+ * @param files
+ */
 function partitionFiles(files) {
 	const accepted = []
 	const rejected = []
@@ -194,26 +203,26 @@ function partitionFiles(files) {
 export default {
 	name: 'AnonymizationDashboardWidget',
 	components: {
-		NcButton,
-		NcDialog,
+		DossierNameDialog,
 		NcLoadingIcon,
-		NcNoteCard,
-		NcTextField,
 	},
+
 	props: {
 		title: {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Set to true when embedded in the in-app dashboard to hide the
-		 * "Open DocuDesk" footer link (redundant when already in the app).
+		 * "Open Filinq" footer link (redundant when already in the app).
 		 */
 		inApp: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	data() {
 		return {
 			isDragging: false,
@@ -225,31 +234,16 @@ export default {
 			uploadIcon,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		appUrl() {
-			return generateUrl('/apps/docudesk')
-		},
-		userName() {
-			const user = getCurrentUser()
-			return user?.displayName || user?.uid || ''
-		},
-		/**
-		 * Time-of-day greeting (morning 05–11, afternoon 12–17, evening 18–04).
-		 */
-		greeting() {
-			const hour = new Date().getHours()
-			if (hour >= 5 && hour < 12) {
-				return t('docudesk', 'Good morning {name},', { name: this.userName })
-			}
-			if (hour >= 12 && hour < 18) {
-				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
-			}
-			return t('docudesk', 'Good evening {name},', { name: this.userName })
+			return generateUrl('/apps/filinq')
 		},
 	},
+
 	methods: {
 		/**
 		 * @param event
@@ -265,6 +259,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @param event
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
@@ -279,14 +274,30 @@ export default {
 			}
 			event.target.value = ''
 		},
+
+		/**
+		 * Drop files whose extension/MIME isn't in the supported set, naming
+		 * each rejected file in a toast.
+		 *
+		 * @param {FileList | File[]} files Incoming files from drop or input.
+		 * @return {File[]} Accepted subset.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		filterAllowed(files) {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
-				showError(t('docudesk', 'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}', { names }))
+				showError(
+					t(
+						'filinq',
+						'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}',
+						{ names },
+					),
+				)
 			}
 			return accepted
 		},
+
 		async dispatchFiles(fileList) {
 			const files = Array.from(fileList)
 			if (files.length >= 2) {
@@ -301,10 +312,12 @@ export default {
 				this.gotoViewer(entry, mimeType)
 			}
 		},
+
 		/**
-		 * Navigate to the file-viewer when inside the DocuDesk app.
+		 * Navigate to the file-viewer when inside the Filinq app.
 		 * Safe to call from the NC dashboard context — $router is absent there
 		 * and the optional chaining prevents any error.
+		 *
 		 * @param entry
 		 * @param mimeType
 		 */
@@ -314,15 +327,23 @@ export default {
 				this.$router.push({ name: 'MyDocuments' }).catch(() => {})
 			}
 		},
+
+		/**
+		 * Open the dossier-name dialog for a multi-file drop.
+		 *
+		 * @param {File[]} files Files pending upload.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		openDossierDialog(files) {
 			this.pendingFiles = files
 			this.dossierName = ''
 			this.dossierError = ''
+			// DossierNameDialog focuses its own name field when it mounts,
+			// which is this same tick — the parent no longer reaches across
+			// the boundary for it.
 			this.showDossierDialog = true
-			this.$nextTick(() => {
-				this.$refs.dossierInput?.focus?.()
-			})
 		},
+
 		async confirmDossier() {
 			const name = this.dossierName.trim()
 			this.dossierSubmitting = true
@@ -330,7 +351,10 @@ export default {
 			try {
 				const before = anonymizationStore.files.length
 				if (name) {
-					await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+					await anonymizationStore.addFilesAsDossier(
+						this.pendingFiles,
+						name,
+					)
 					try {
 						await anonymizationStore.bindDossier(name)
 					} catch (err) {
@@ -345,21 +369,25 @@ export default {
 				}
 				this.closeDossierDialog()
 			} catch (err) {
-				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to upload'
+				this.dossierError =
+					err?.response?.data?.error || err?.message || 'Failed to upload'
 			} finally {
 				this.dossierSubmitting = false
 			}
 		},
+
 		cancelDossier() {
 			if (this.dossierSubmitting) return
 			this.closeDossierDialog()
 		},
+
 		closeDossierDialog() {
 			this.showDossierDialog = false
 			this.pendingFiles = []
 			this.dossierName = ''
 			this.dossierError = ''
 		},
+
 		/**
 		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
@@ -369,12 +397,19 @@ export default {
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
 				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
-				const dir = relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
-				const file = relativePath.substring(relativePath.lastIndexOf('/') + 1)
-				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', { dir, file })
+				const dir =
+					relativePath.substring(0, relativePath.lastIndexOf('/')) || '/'
+				const file = relativePath.substring(
+					relativePath.lastIndexOf('/') + 1,
+				)
+				return generateUrl('/apps/files/?dir={dir}&scrollto={file}', {
+					dir,
+					file,
+				})
 			}
 			return generateUrl('/apps/files')
 		},
+
 		/**
 		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
@@ -388,16 +423,17 @@ export default {
 			}
 			return generateRemoteUrl('webdav')
 		},
+
 		/**
 		 * @param status
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		statusLabel(status) {
 			const labels = {
-				queued: t('docudesk', 'Queued'),
-				uploading: t('docudesk', 'Uploading...'),
-				extracting: t('docudesk', 'Detecting...'),
-				anonymizing: t('docudesk', 'Anonymizing...'),
+				queued: t('filinq', 'Queued'),
+				uploading: t('filinq', 'Uploading...'),
+				extracting: t('filinq', 'Detecting...'),
+				anonymizing: t('filinq', 'Anonymizing...'),
 			}
 			return labels[status] || status
 		},
@@ -406,7 +442,7 @@ export default {
 </script>
 
 <style scoped>
-.docudesk-anon-widget {
+.filinq-anon-widget {
 	display: flex;
 	flex-direction: column;
 	padding: 20px;
@@ -513,8 +549,10 @@ export default {
 	border-radius: var(--border-radius-large);
 	padding: 32px;
 	background-color: var(--color-main-background);
-	cursor: pointer;
-	transition: border-color 0.2s, background-color 0.2s;
+	/* Not a click target any more — the picker is opened by .fake-button. */
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .upload-area.compact .drop-zone {
@@ -556,15 +594,25 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+/* A real <button> now, so the browser's own border/font defaults are reset
+   here to keep the previous appearance byte-for-byte. */
 .fake-button {
 	margin-top: 4px;
 	padding: 8px 16px;
+	border: none;
 	border-radius: var(--border-radius);
 	background-color: var(--color-primary-element);
 	color: var(--color-primary-element-text);
+	font-family: inherit;
 	font-size: 0.9rem;
 	font-weight: 500;
 	white-space: nowrap;
+	cursor: pointer;
+}
+
+.fake-button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .file-input {
@@ -589,14 +637,11 @@ export default {
 }
 
 /* Dossier dialog */
-.dossier-dialog {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	padding: 20px;
-}
-
-.dossier-dialog :deep(.notecard) {
-	margin: 0;
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.drop-zone {
+		transition: none;
+	}
 }
 </style>

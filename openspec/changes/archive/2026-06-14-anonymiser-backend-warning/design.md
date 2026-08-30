@@ -1,4 +1,4 @@
-## Status: pr-created — PR #94 https://codeberg.org/Conduction/docudesk/pulls/94
+## Status: pr-created — Codeberg PR docudesk#94 (pre-migration, not migrated to GitHub)
 
 ## Context
 

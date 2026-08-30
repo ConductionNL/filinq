@@ -2,39 +2,54 @@
 	<div class="template-detail">
 		<!-- Header bar -->
 		<div class="template-detail__header">
-			<NcButton type="tertiary" @click="handleBack">
-				{{ t('docudesk', 'Back to templates') }}
+			<NcButton variant="tertiary" @click="handleBack">
+				{{ t('filinq', 'Back to templates') }}
 			</NcButton>
 			<h2 class="template-detail__title">
-				{{ isNew ? t('docudesk', 'New template') : (form.name || t('docudesk', 'Edit template')) }}
+				{{
+					isNew
+						? t('filinq', 'New template')
+						: form.name || t('filinq', 'Edit template')
+				}}
 			</h2>
 			<div class="template-detail__header-actions">
-				<span v-if="lockOwner && !isLockMine" class="template-detail__lock-warning">
-					{{ t('docudesk', 'Locked by {user}', { user: lockOwner }) }}
+				<span
+					v-if="lockOwner && !isLockMine"
+					class="template-detail__lock-warning">
+					{{ t('filinq', 'Locked by {user}', { user: lockOwner }) }}
 				</span>
-				<NcButton type="secondary" :disabled="saving" @click="handleBack">
-					{{ t('docudesk', 'Cancel') }}
+				<NcButton variant="secondary" :disabled="saving" @click="handleBack">
+					{{ t('filinq', 'Cancel') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="saving || (lockOwner && !isLockMine)" @click="saveTemplate">
-					{{ saving ? t('docudesk', 'Saving…') : t('docudesk', 'Save') }}
+				<NcButton
+					variant="primary"
+					:disabled="saving || (lockOwner && !isLockMine)"
+					@click="saveTemplate">
+					{{ saving ? t('filinq', 'Saving…') : t('filinq', 'Save') }}
 				</NcButton>
 			</div>
 		</div>
 
 		<!-- Tab navigation -->
 		<div class="template-detail__tabs">
-			<button :class="['template-detail__tab', { active: activeTab === 'edit' }]"
+			<button
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'edit' }]"
 				@click="activeTab = 'edit'">
-				{{ t('docudesk', 'Editor') }}
+				{{ t('filinq', 'Editor') }}
 			</button>
-			<button :class="['template-detail__tab', { active: activeTab === 'preview' }]"
+			<button
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'preview' }]"
 				@click="loadPreview">
-				{{ t('docudesk', 'Preview') }}
+				{{ t('filinq', 'Preview') }}
 			</button>
-			<button v-if="!isNew"
-				:class="['template-detail__tab', { active: activeTab === 'versions' }]"
+			<button
+				v-if="!isNew"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'versions' }]"
 				@click="loadVersions">
-				{{ t('docudesk', 'Versions') }}
+				{{ t('filinq', 'Versions') }}
 			</button>
 		</div>
 
@@ -42,128 +57,151 @@
 		<div v-if="activeTab === 'edit'" class="template-detail__editor-panel">
 			<!-- Metadata fields -->
 			<div class="template-detail__meta">
-				<NcTextField :value.sync="form.name"
-					:label="t('docudesk', 'Name')"
+				<NcTextField
+					v-model="form.name"
+					:label="t('filinq', 'Name')"
 					:required="true"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.namespace"
-					:label="t('docudesk', 'Namespace')"
+				<NcTextField
+					v-model="form.namespace"
+					:label="t('filinq', 'Namespace')"
 					:required="true"
 					:disabled="!isNew"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.category"
-					:label="t('docudesk', 'Category')"
-					:placeholder="t('docudesk', 'e.g. beschikkingen, brieven')"
+				<NcTextField
+					v-model="form.category"
+					:label="t('filinq', 'Category')"
+					:placeholder="t('filinq', 'e.g. beschikkingen, brieven')"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.tagsInput"
-					:label="t('docudesk', 'Tags (comma-separated)')"
-					:placeholder="t('docudesk', 'tag1, tag2, tag3')"
+				<NcTextField
+					v-model="form.tagsInput"
+					:label="t('filinq', 'Tags (comma-separated)')"
+					:placeholder="t('filinq', 'tag1, tag2, tag3')"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.description"
-					:label="t('docudesk', 'Description')"
+				<NcTextField
+					v-model="form.description"
+					:label="t('filinq', 'Description')"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.changelog"
-					:label="t('docudesk', 'Change note (optional)')"
-					:placeholder="t('docudesk', 'Describe what changed...')"
+				<NcTextField
+					v-model="form.changelog"
+					:label="t('filinq', 'Change note (optional)')"
+					:placeholder="t('filinq', 'Describe what changed...')"
 					class="template-detail__field" />
 			</div>
 
 			<!-- WYSIWYG toolbar -->
 			<div class="template-detail__toolbar">
-				<button type="button"
-					:title="t('docudesk', 'Bold')"
+				<button
+					type="button"
+					:title="t('filinq', 'Bold')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('bold')">
 					<strong>B</strong>
 				</button>
-				<button type="button"
-					:title="t('docudesk', 'Italic')"
+				<button
+					type="button"
+					:title="t('filinq', 'Italic')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('italic')">
 					<em>I</em>
 				</button>
-				<button type="button"
-					:title="t('docudesk', 'Underline')"
+				<button
+					type="button"
+					:title="t('filinq', 'Underline')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('underline')">
 					<u>U</u>
 				</button>
 				<span class="template-detail__toolbar-sep" />
-				<button type="button"
-					:title="t('docudesk', 'Heading 1')"
+				<button
+					type="button"
+					:title="t('filinq', 'Heading 1')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execBlock('h1')">
 					H1
 				</button>
-				<button type="button"
-					:title="t('docudesk', 'Heading 2')"
+				<button
+					type="button"
+					:title="t('filinq', 'Heading 2')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execBlock('h2')">
 					H2
 				</button>
 				<span class="template-detail__toolbar-sep" />
-				<button type="button"
-					:title="t('docudesk', 'Unordered list')"
+				<button
+					type="button"
+					:title="t('filinq', 'Unordered list')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('insertUnorderedList')">
 					&#8226;&#8212;
 				</button>
-				<button type="button"
-					:title="t('docudesk', 'Ordered list')"
+				<button
+					type="button"
+					:title="t('filinq', 'Ordered list')"
 					class="template-detail__toolbar-btn"
 					@mousedown.prevent="execFormat('insertOrderedList')">
 					1&#8212;
 				</button>
 				<span class="template-detail__toolbar-sep" />
-				<button type="button"
-					:title="t('docudesk', 'Insert merge field')"
+				<button
+					type="button"
+					:title="t('filinq', 'Insert merge field')"
 					class="template-detail__toolbar-btn"
 					@click="showMergeDialog = true">
-					{{ t('docudesk', '{ }') }}
+					{{ t('filinq', '{ }') }}
 				</button>
-				<button type="button"
-					:title="t('docudesk', 'Insert conditional section')"
+				<button
+					type="button"
+					:title="t('filinq', 'Insert conditional section')"
 					class="template-detail__toolbar-btn"
 					@click="showConditionalDialog = true">
-					{{ t('docudesk', 'if…') }}
+					{{ t('filinq', 'if…') }}
 				</button>
 			</div>
 
 			<!-- Content-editable WYSIWYG area -->
-			<div ref="editor"
+			<div
+				ref="editor"
 				class="template-detail__content-editor"
 				contenteditable="true"
-				:aria-label="t('docudesk', 'Template content')"
+				:aria-label="t('filinq', 'Template content')"
 				@input="syncFromEditor"
 				v-html="editorHtml" />
 
 			<!-- Raw HTML toggle -->
 			<div class="template-detail__raw-toggle">
-				<button type="button"
+				<button
+					type="button"
 					class="template-detail__raw-btn"
 					@click="showRaw = !showRaw">
-					{{ showRaw ? t('docudesk', 'Hide HTML') : t('docudesk', 'Edit HTML') }}
+					{{
+						showRaw ? t('filinq', 'Hide HTML') : t('filinq', 'Edit HTML')
+					}}
 				</button>
 			</div>
-			<textarea v-if="showRaw"
+			<textarea
+				v-if="showRaw"
 				:value="form.content"
 				class="template-detail__raw-area"
-				:aria-label="t('docudesk', 'Raw HTML')"
+				:aria-label="t('filinq', 'Raw HTML')"
 				@input="syncFromRaw" />
 		</div>
 
 		<!-- PREVIEW TAB -->
-		<div v-else-if="activeTab === 'preview'" class="template-detail__preview-panel">
+		<div
+			v-else-if="activeTab === 'preview'"
+			class="template-detail__preview-panel">
 			<div class="template-detail__preview-header">
-				<h3>{{ t('docudesk', 'Preview') }}</h3>
-				<NcButton type="secondary" @click="loadPreview">
-					{{ t('docudesk', 'Refresh preview') }}
+				<h3>{{ t('filinq', 'Preview') }}</h3>
+				<NcButton variant="secondary" @click="loadPreview">
+					{{ t('filinq', 'Refresh preview') }}
 				</NcButton>
 			</div>
 			<div class="template-detail__sample-data">
-				<NcTextField :value.sync="sampleDataJson"
-					:label="t('docudesk', 'Sample data (JSON)')"
-					:placeholder="'{ &quot;name&quot;: &quot;Jan de Vries&quot; }'"
+				<NcTextField
+					v-model="sampleDataJson"
+					:label="t('filinq', 'Sample data (JSON)')"
+					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
 			</div>
 			<NcLoadingIcon v-if="previewLoading" />
@@ -171,28 +209,37 @@
 				{{ previewError }}
 			</div>
 			<!-- eslint-disable-next-line vue/no-v-html -->
-			<div v-else-if="previewHtml"
+			<div
+				v-else-if="previewHtml"
 				class="template-detail__preview-output"
 				v-html="previewHtml" />
-			<NcEmptyContent v-else
-				:name="t('docudesk', 'No preview yet')"
-				:description="t('docudesk', 'Click \'Refresh preview\' to render the template.')" />
+			<NcEmptyContent
+				v-else
+				:name="t('filinq', 'No preview yet')"
+				:description="
+					t('filinq', 'Click \'Refresh preview\' to render the template.')
+				" />
 		</div>
 
 		<!-- VERSIONS TAB -->
-		<div v-else-if="activeTab === 'versions'" class="template-detail__versions-panel">
-			<h3>{{ t('docudesk', 'Version history') }}</h3>
+		<div
+			v-else-if="activeTab === 'versions'"
+			class="template-detail__versions-panel">
+			<h3>{{ t('filinq', 'Version history') }}</h3>
 			<NcLoadingIcon v-if="versionsLoading" />
-			<NcEmptyContent v-else-if="!versions.length"
-				:name="t('docudesk', 'No versions yet')"
-				:description="t('docudesk', 'Versions are saved automatically on each update.')" />
+			<NcEmptyContent
+				v-else-if="!versions.length"
+				:name="t('filinq', 'No versions yet')"
+				:description="
+					t('filinq', 'Versions are saved automatically on each update.')
+				" />
 			<table v-else class="template-detail__versions-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'Version') }}</th>
-						<th>{{ t('docudesk', 'Editor') }}</th>
-						<th>{{ t('docudesk', 'Change note') }}</th>
-						<th>{{ t('docudesk', 'Actions') }}</th>
+						<th scope="col">{{ t('filinq', 'Version') }}</th>
+						<th scope="col">{{ t('filinq', 'Editor') }}</th>
+						<th scope="col">{{ t('filinq', 'Change note') }}</th>
+						<th scope="col">{{ t('filinq', 'Actions') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -201,8 +248,10 @@
 						<td>{{ ver.editor }}</td>
 						<td>{{ ver.changelog || '-' }}</td>
 						<td>
-							<NcButton type="tertiary" @click="restoreVersion(ver)">
-								{{ t('docudesk', 'Restore') }}
+							<NcButton
+								variant="tertiary"
+								@click="restoreVersion(ver)">
+								{{ t('filinq', 'Restore') }}
 							</NcButton>
 						</td>
 					</tr>
@@ -211,36 +260,51 @@
 		</div>
 
 		<!-- Dialogs (extracted per ADR-004) -->
-		<MergeFieldDialog v-if="showMergeDialog"
+		<MergeFieldDialog
+			v-if="showMergeDialog"
 			@close="showMergeDialog = false"
 			@insert="insertMergeField" />
 
-		<ConditionalSectionDialog v-if="showConditionalDialog"
+		<ConditionalSectionDialog
+			v-if="showConditionalDialog"
 			@close="showConditionalDialog = false"
 			@insert="insertConditionalSection" />
 
-		<ConfirmRestoreVersionDialog v-if="restoreTarget"
-			:version-number="restoreTarget ? restoreTarget.version : 0"
+		<ConfirmRestoreVersionDialog
+			v-if="restoreTarget"
+			:versionNumber="restoreTarget ? restoreTarget.version : 0"
 			@confirm="executeRestore"
 			@cancel="restoreTarget = null" />
 	</div>
 </template>
 
 <script>
+import {
+	NcButton,
+	NcEmptyContent,
+	NcLoadingIcon,
+	NcTextField,
+} from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@conduction/nextcloud-vue'
-import { useTemplateStore } from '../../store/modules/template.js'
-import { navigationStore } from '../../store/store.js'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
-import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
+import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
+import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
 	name: 'TemplateDetail',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField, ConditionalSectionDialog, MergeFieldDialog, ConfirmRestoreVersionDialog },
+	components: {
+		NcButton,
+		NcEmptyContent,
+		NcLoadingIcon,
+		NcTextField,
+		ConditionalSectionDialog,
+		MergeFieldDialog,
+		ConfirmRestoreVersionDialog,
+	},
+
 	data() {
 		return {
-			navigationStore,
 			activeTab: 'edit',
 			form: {
 				name: '',
@@ -253,6 +317,7 @@ export default {
 				format: 'A4',
 				orientation: 'P',
 			},
+
 			// WYSIWYG
 			editorHtml: '',
 			showRaw: false,
@@ -274,17 +339,25 @@ export default {
 			restoreTarget: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Pinia template store accessor for the detail editor.
 		 *
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		templateStore() { return useTemplateStore() },
-		isNew() { return this.templateStore.templateItem === null },
+		templateStore() {
+			return useTemplateStore()
+		},
+
+		isNew() {
+			return this.templateStore.templateItem === null
+		},
+
 		isLockMine() {
 			return this.lockOwner === null || this.lockOwner === this.currentUserId
 		},
+
 		/**
 		 * Current Nextcloud user ID, used for lock ownership checks.
 		 *
@@ -294,6 +367,7 @@ export default {
 			return window.OC?.currentUser || ''
 		},
 	},
+
 	/**
 	 * Hydrate the editor form from the selected template and acquire its edit lock.
 	 *
@@ -320,9 +394,11 @@ export default {
 			}
 		}
 	},
+
 	async beforeUnmount() {
 		await this.releaseLockIfMine()
 	},
+
 	methods: {
 		t,
 		/**
@@ -332,8 +408,9 @@ export default {
 		 */
 		async handleBack() {
 			await this.releaseLockIfMine()
-			navigationStore.setSelected('templates')
+			this.$router.push({ name: 'Templates' })
 		},
+
 		/**
 		 * Release the edit lock if the current user owns it.
 		 *
@@ -345,6 +422,7 @@ export default {
 				await this.templateStore.releaseLock(tmpl.id)
 			}
 		},
+
 		/**
 		 * Apply an inline formatting command in the WYSIWYG editor.
 		 *
@@ -355,6 +433,7 @@ export default {
 			document.execCommand(cmd, false, null)
 			this.syncFromEditor()
 		},
+
 		/**
 		 * Apply a block-level format (heading) in the WYSIWYG editor.
 		 *
@@ -365,6 +444,7 @@ export default {
 			document.execCommand('formatBlock', false, tag)
 			this.syncFromEditor()
 		},
+
 		/**
 		 * Sync the form content from the WYSIWYG editor's HTML.
 		 *
@@ -375,6 +455,7 @@ export default {
 				this.form.content = this.$refs.editor.innerHTML
 			}
 		},
+
 		/**
 		 * Sync the form content from the raw HTML textarea.
 		 *
@@ -385,6 +466,7 @@ export default {
 			this.form.content = event.target.value
 			this.editorHtml = event.target.value
 		},
+
 		/**
 		 * Render a live preview of the current template content with sample data.
 		 *
@@ -406,11 +488,12 @@ export default {
 					sampleData,
 				)
 			} catch (err) {
-				this.previewError = err.message || t('docudesk', 'Preview failed')
+				this.previewError = err.message || t('filinq', 'Preview failed')
 			} finally {
 				this.previewLoading = false
 			}
 		},
+
 		/**
 		 * Load the version history for the current template.
 		 *
@@ -420,18 +503,23 @@ export default {
 			this.activeTab = 'versions'
 			if (this.isNew) return
 			this.versionsLoading = true
-			const result = await this.templateStore.fetchVersions(this.templateStore.templateItem.id)
+			const result = await this.templateStore.fetchVersions(
+				this.templateStore.templateItem.id,
+			)
 			this.versions = result?.results || []
 			this.versionsLoading = false
 		},
+
 		/**
 		 * Open the restore confirmation dialog for a version.
 		 *
+		 * @param ver
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		restoreVersion(ver) {
 			this.restoreTarget = ver
 		},
+
 		/**
 		 * Execute restore after user confirmed in the dialog.
 		 *
@@ -452,6 +540,7 @@ export default {
 				this.activeTab = 'edit'
 			}
 		},
+
 		/**
 		 * Persist the template (create or update), release the lock and return to the list.
 		 *
@@ -461,7 +550,7 @@ export default {
 			this.saving = true
 			const tags = this.form.tagsInput
 				.split(',')
-				.map(s => s.trim())
+				.map((s) => s.trim())
 				.filter(Boolean)
 			const payload = {
 				name: this.form.name,
@@ -484,12 +573,13 @@ export default {
 					)
 				}
 				await this.releaseLockIfMine()
-				navigationStore.setSelected('templates')
+				this.$router.push({ name: 'Templates' })
 				await this.templateStore.fetchTemplates()
 			} finally {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Insert a merge-field token at the cursor in the editor.
 		 *
@@ -501,6 +591,7 @@ export default {
 			document.execCommand('insertText', false, token)
 			this.syncFromEditor()
 		},
+
 		/**
 		 * Insert a conditional section block (data-condition attributes) at the cursor.
 		 *
@@ -512,7 +603,10 @@ export default {
 		 */
 		insertConditionalSection({ field, op, value }) {
 			const opAttr = `data-condition-field="${field}" data-condition-op="${op}"`
-			const valAttr = (op !== 'is_empty' && op !== 'is_not_empty') ? ` data-condition-value="${value}"` : ''
+			const valAttr =
+				op !== 'is_empty' && op !== 'is_not_empty'
+					? ` data-condition-value="${value}"`
+					: ''
 			const html = `<div ${opAttr}${valAttr}>{{ ${field} }}</div>`
 			document.execCommand('insertHTML', false, html)
 			this.syncFromEditor()

@@ -14,7 +14,7 @@ keywords:
 
 # Print Functionality
 
-DocuDesk provides a dedicated print pipeline for generating browser-ready print previews and
+Filinq provides a dedicated print pipeline for generating browser-ready print previews and
 PDF/A-3b compliant archival documents from Twig/HTML templates. All rendering happens
 server-side using mPDF with bundled DejaVu Sans fonts.
 
@@ -35,7 +35,7 @@ provided as inline Twig/HTML content in the request body.
 ### Print Preview
 
 ```
-POST /apps/docudesk/api/print/preview
+POST /apps/filinq/api/print/preview
 ```
 
 Returns rendered HTML with print-optimized CSS injected. Intended for use in a preview iframe
@@ -72,7 +72,7 @@ before the user commits to a download.
 ### PDF/A Download
 
 ```
-POST /apps/docudesk/api/print/pdf-a
+POST /apps/filinq/api/print/pdf-a
 ```
 
 Returns a PDF/A-3b binary as a file download. PDF/A mode is always enabled for this endpoint.
@@ -120,7 +120,7 @@ When `template` (inline content) is supplied, `options` from the request body ar
 The PDF/A-3b output includes:
 
 - **Embedded fonts** — DejaVu Sans (Regular, Bold, Italic, Bold Italic) bundled with the app
-- **XMP metadata** — Author (`DocuDesk`), creator (`DocuDesk PDF/A Generator`), and title
+- **XMP metadata** — Author (`Filinq`), creator (`Filinq PDF/A Generator`), and title
 - **Print CSS** — Automatic `@page` size, margin normalization, and page-break rules
 - **PDFAauto** — mPDF auto-corrects non-compliant elements where possible
 

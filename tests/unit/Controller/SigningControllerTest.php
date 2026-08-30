@@ -11,10 +11,10 @@
  * so monitoring sees them.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,13 +22,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\SigningController;
-use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
-use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\DocuDesk\Service\SigningService;
-use OCA\DocuDesk\Service\SigningVerificationService;
+use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Service\SigningAuditService;
+use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Service\SigningVerificationService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
@@ -45,158 +45,146 @@ use RuntimeException;
  * Tests for SigningController::listRequests() error handling
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class SigningControllerTest extends TestCase
-{
+class SigningControllerTest extends TestCase {
 
-    /**
-     * @var SigningController
-     */
-    private SigningController $controller;
+	/**
+	 * @var SigningController
+	 */
+	private SigningController $controller;
 
-    /**
-     * @var SigningService|MockObject
-     */
-    private SigningService|MockObject $signingService;
+	/**
+	 * @var SigningService|MockObject
+	 */
+	private SigningService|MockObject $signingService;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $userSession;
+	/**
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $logger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $logger;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$request = $this->createMock(IRequest::class);
+		$this->signingService = $this->createMock(SigningService::class);
+		$auditService = $this->createMock(SigningAuditService::class);
+		$verificationService = $this->createMock(SigningVerificationService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(
+			function ($text, $params = []) {
+				return is_array($params) === true ? vsprintf($text, $params) : $text;
+			}
+		);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn(false);
 
-        $request             = $this->createMock(IRequest::class);
-        $this->signingService = $this->createMock(SigningService::class);
-        $auditService        = $this->createMock(SigningAuditService::class);
-        $verificationService = $this->createMock(SigningVerificationService::class);
-        $this->userSession   = $this->createMock(IUserSession::class);
-        $this->logger        = $this->createMock(LoggerInterface::class);
-        $l10n                = $this->createMock(IL10N::class);
-        $l10n->method('t')->willReturnCallback(
-            function ($text, $params = []) {
-                return is_array($params) === true ? vsprintf($text, $params) : $text;
-            }
-        );
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->willReturn(false);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $this->userSession->method('getUser')->willReturn($user);
+		$this->controller = new SigningController(
+			'filinq',
+			$request,
+			$this->signingService,
+			$auditService,
+			$verificationService,
+			$this->userSession,
+			$this->logger,
+			$l10n,
+			$groupManager
+		);
 
-        $this->controller = new SigningController(
-            'docudesk',
-            $request,
-            $this->signingService,
-            $auditService,
-            $verificationService,
-            $this->userSession,
-            $this->logger,
-            $l10n,
-            $groupManager
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * `RegisterNotConfiguredException` continues to return an empty list
+	 * with `notConfigured: true` — that's the genuine "not configured yet"
+	 * UI state we explicitly keep calm.
+	 *
+	 * @return void
+	 */
+	public function testListRequestsReturnsEmptyOnRegisterNotConfigured(): void {
+		$this->signingService->method('listRequests')
+			->willThrowException(new RegisterNotConfiguredException('signing register/schema not configured'));
 
+		$response = $this->controller->listRequests();
 
-    /**
-     * `RegisterNotConfiguredException` continues to return an empty list
-     * with `notConfigured: true` — that's the genuine "not configured yet"
-     * UI state we explicitly keep calm.
-     *
-     * @return void
-     */
-    public function testListRequestsReturnsEmptyOnRegisterNotConfigured(): void
-    {
-        $this->signingService->method('listRequests')
-            ->willThrowException(new RegisterNotConfiguredException('signing register/schema not configured'));
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame([], $data['results']);
+		$this->assertTrue($data['notConfigured']);
 
-        $response = $this->controller->listRequests();
+	}//end testListRequestsReturnsEmptyOnRegisterNotConfigured()
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame([], $data['results']);
-        $this->assertTrue($data['notConfigured']);
+	/**
+	 * A real `\Exception` from a runtime failure (e.g. a DB outage rethrown
+	 * as `RuntimeException`) MUST propagate — finding #288 was that the
+	 * previous broad `catch (\Throwable)` masked these as "no requests".
+	 *
+	 * @return void
+	 */
+	public function testListRequestsLetsRuntimeExceptionPropagate(): void {
+		$this->signingService->method('listRequests')
+			->willThrowException(new RuntimeException('OpenRegister DB outage'));
 
-    }//end testListRequestsReturnsEmptyOnRegisterNotConfigured()
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('OpenRegister DB outage');
 
+		$this->controller->listRequests();
 
-    /**
-     * A real `\Exception` from a runtime failure (e.g. a DB outage rethrown
-     * as `RuntimeException`) MUST propagate — finding #288 was that the
-     * previous broad `catch (\Throwable)` masked these as "no requests".
-     *
-     * @return void
-     */
-    public function testListRequestsLetsRuntimeExceptionPropagate(): void
-    {
-        $this->signingService->method('listRequests')
-            ->willThrowException(new RuntimeException('OpenRegister DB outage'));
+	}//end testListRequestsLetsRuntimeExceptionPropagate()
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('OpenRegister DB outage');
+	/**
+	 * A PHP `\Error` (e.g. call to undefined method on a mock) now propagates
+	 * as-is since the `\Error` fallback was removed when SigningService was
+	 * migrated to the canonical OR API (findAll / find / saveObject).
+	 *
+	 * @return void
+	 */
+	public function testListRequestsLetsErrorPropagate(): void {
+		$this->signingService->method('listRequests')
+			->willThrowException(new \Error('Call to undefined method'));
 
-        $this->controller->listRequests();
+		$this->expectException(\Error::class);
 
-    }//end testListRequestsLetsRuntimeExceptionPropagate()
+		$this->controller->listRequests();
 
+	}//end testListRequestsLetsErrorPropagate()
 
-    /**
-     * A PHP `\Error` (e.g. call to undefined method on a mock) now propagates
-     * as-is since the `\Error` fallback was removed when SigningService was
-     * migrated to the canonical OR API (findAll / find / saveObject).
-     *
-     * @return void
-     */
-    public function testListRequestsLetsErrorPropagate(): void
-    {
-        $this->signingService->method('listRequests')
-            ->willThrowException(new \Error('Call to undefined method'));
+	/**
+	 * Successful list passes through unchanged.
+	 *
+	 * @return void
+	 */
+	public function testListRequestsReturnsServiceResultOnSuccess(): void {
+		$expected = [['id' => 'req-1', 'status' => 'PENDING']];
+		$this->signingService->method('listRequests')->willReturn($expected);
 
-        $this->expectException(\Error::class);
+		$response = $this->controller->listRequests();
 
-        $this->controller->listRequests();
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame($expected, $response->getData());
 
-    }//end testListRequestsLetsErrorPropagate()
-
-
-    /**
-     * Successful list passes through unchanged.
-     *
-     * @return void
-     */
-    public function testListRequestsReturnsServiceResultOnSuccess(): void
-    {
-        $expected = [['id' => 'req-1', 'status' => 'PENDING']];
-        $this->signingService->method('listRequests')->willReturn($expected);
-
-        $response = $this->controller->listRequests();
-
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame($expected, $response->getData());
-
-    }//end testListRequestsReturnsServiceResultOnSuccess()
-
+	}//end testListRequestsReturnsServiceResultOnSuccess()
 
 }//end class

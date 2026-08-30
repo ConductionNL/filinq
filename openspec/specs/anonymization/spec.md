@@ -1,9 +1,15 @@
 ---
-status: implementing
+status: in-progress
 or_adoption_change: docudesk-adopt-or-abstractions
 ---
 
 # Anonymization Pipeline
+
+**Status**: in-progress
+**OpenSpec changes**:
+- [image-redaction](../../changes/image-redaction/) _(active)_ — extract response gains image-origin entities with region geometry, anonymise gains the pixel-burn step for image-bearing content with a fail-flagged contract (REQ-DDIMR-007/008) (kind: code)
+- [document-sanitization](../../changes/document-sanitization/) _(active)_ — anonymisation runs persist/surface OpenRegister's sanitization report and the anonymise endpoint gains the additive opt-in `sanitize` flag for the final artifact (REQ-DDSAN-006/007) (kind: code)
+- [odt-anonymisation-frontend](../../changes/odt-anonymisation-frontend/) _(active)_ — ODT accepted by the upload widget (kind: code)
 
 ## Purpose
 
@@ -11,7 +17,7 @@ Provides a complete document anonymization pipeline: files are stored as **OR Fi
 
 ## OR Adoption decisions (from docudesk-adopt-or-abstractions)
 
-- **Decision 4** — Anonymization consumes OR primitives, no replacement: OR's `TextExtractionService` and File Attachments cover the input side. The custom file-upload + entity-extraction flow is replaced by these primitives. The actual NLP/PII detection algorithms remain in docudesk (value-add). Custom plumbing is dropped.
+- **Decision 4** — Anonymization consumes OR primitives, no replacement: OR's `TextExtractionService` and File Attachments cover the input side. The custom file-upload + entity-extraction flow is replaced by these primitives. The actual NLP/PII detection algorithms remain in filinq (value-add). Custom plumbing is dropped.
 - **Decision 3** — Anonymization-result confidence, risk-level, entity-density, and redaction-coverage are declared as `x-openregister-calculations` annotations on the file-attachment extension schema, NOT populated by ad-hoc writes in `AnonymizationService`. Service code calls `lifecycleService->transitionTo()` for state changes; OR derives calculated fields automatically.
 - **Decision 2** — `anonymizationResult` objects (if stored separately) carry `x-openregister-archival.retention: P1Y` (Archiefwet cat. 1.2: operational processing logs). File attachments inherit OR's standard retention; DPO sign-off required for legal-hold override.
 - **Decision 5** — Status strings on the wire stay the same (`uploaded`, `extracted`, `anonymized`). Lifecycle annotation maps these states; no renaming.
@@ -22,7 +28,7 @@ Provides a complete document anonymization pipeline: files are stored as **OR Fi
 
 **Priority:** MUST
 
-Uploaded files MUST be stored as OR File Attachments, not by docudesk-specific storage code. Virus-scan and MIME-validation hooks are inherited from OR.
+Uploaded files MUST be stored as OR File Attachments, not by filinq-specific storage code. Virus-scan and MIME-validation hooks are inherited from OR.
 
 #### Scenario: File persisted as OR File Attachment
 
@@ -37,7 +43,7 @@ Uploaded files MUST be stored as OR File Attachments, not by docudesk-specific s
 - **GIVEN** a file triggers OR's virus-scan hook
 - **WHEN** the hook returns `BLOCKED`
 - **THEN** the upload SHALL be rejected with HTTP 422 — "File rejected by security scan"
-- **AND** no docudesk record SHALL reference the rejected file
+- **AND** no filinq record SHALL reference the rejected file
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
@@ -77,26 +83,26 @@ Uploaded files MUST be stored as OR File Attachments, not by docudesk-specific s
 
 **Priority:** MUST
 
-Users upload files via multipart form data, and files MUST be stored in a per-user DocuDesk folder within Nextcloud Files.
+Users upload files via multipart form data, and files MUST be stored in a per-user Filinq folder within Nextcloud Files.
 
 #### Scenario: Successful file upload
 @e2e exclude multipart POST /api/anonymization/upload response shape — FileUploadService verified by PHPUnit; UI upload flow covered by complete-anonymization-workflow test
 - GIVEN a logged-in user
 - WHEN they upload a PDF file via `POST /api/anonymization/upload`
-- THEN the file is stored in their `DocuDesk/` subfolder in Nextcloud Files
+- THEN the file is stored in their `Filinq/` subfolder in Nextcloud Files
 - AND the response includes fileId, filePath, fileName, and fileSize
 
-#### Scenario: Auto-create DocuDesk folder
+#### Scenario: Auto-create Filinq folder
 @e2e exclude IRootFolder folder-creation side-effect — FileUploadService verified by PHPUnit; folder auto-creation not separately observable in UI
-- GIVEN a logged-in user who has never used DocuDesk
-- AND no `DocuDesk/` folder exists in their Nextcloud files
+- GIVEN a logged-in user who has never used Filinq
+- AND no `Filinq/` folder exists in their Nextcloud files
 - WHEN they upload their first file
-- THEN the `DocuDesk/` subfolder is created automatically
+- THEN the `Filinq/` subfolder is created automatically
 - AND the file is stored in the new folder
 
 #### Scenario: Duplicate file name handling
 @e2e exclude filename deduplication algorithm — FileUploadService collision logic verified by PHPUnit; not directly observable in UI without pre-existing file collision setup
-- GIVEN a user's DocuDesk folder already contains `report.pdf`
+- GIVEN a user's Filinq folder already contains `report.pdf`
 - WHEN they upload another file named `report.pdf`
 - THEN the file is saved as `report_1.pdf`
 - AND subsequent duplicates increment the counter (`report_2.pdf`, etc.)
@@ -116,8 +122,8 @@ Users upload files via multipart form data, and files MUST be stored in a per-us
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | ANON-001 | Users can upload files via multipart form data to `POST /api/anonymization/upload` | MUST | Implemented |
-| ANON-002 | Uploaded files are stored in the user's `DocuDesk/` subfolder in Nextcloud Files | MUST | Implemented |
-| ANON-003 | The DocuDesk subfolder is created automatically if it does not exist | MUST | Implemented |
+| ANON-002 | Uploaded files are stored in the user's `Filinq/` subfolder in Nextcloud Files | MUST | Implemented |
+| ANON-003 | The Filinq subfolder is created automatically if it does not exist | MUST | Implemented |
 | ANON-004 | Duplicate file names are handled by appending an incrementing counter | MUST | Implemented |
 | ANON-005 | Upload response includes fileId, filePath, fileName, and fileSize | MUST | Implemented |
 | ANON-006 | Upload requires an authenticated user session | MUST | Implemented |
@@ -151,11 +157,11 @@ Detected entities are replaced with anonymized placeholders in the document, pro
 
 **Priority:** MUST
 
-The system MUST list all files in the user's DocuDesk folder with entity counts, anonymization status, and risk level assessment.
+The system MUST list all files in the user's Filinq folder with entity counts, anonymization status, and risk level assessment.
 
 #### Scenario: List files with entity counts and status
-@e2e exclude FileListingService API response content — requires pre-processed files in DocuDesk/ folder; GET /api/anonymization/files verified by PHPUnit
-- GIVEN a user has 5 files in their DocuDesk folder (2 extracted, 1 anonymized, 2 uploaded)
+@e2e exclude FileListingService API response content — requires pre-processed files in Filinq/ folder; GET /api/anonymization/files verified by PHPUnit
+- GIVEN a user has 5 files in their Filinq folder (2 extracted, 1 anonymized, 2 uploaded)
 - WHEN they request `GET /api/anonymization/files`
 - THEN all 5 files are returned sorted by modification time (newest first)
 - AND each file includes entityCount, anonymizedCount, and status
@@ -176,7 +182,7 @@ The system MUST list all files in the user's DocuDesk folder with entity counts,
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| ANON-030 | List all files in the user's DocuDesk folder via `GET /api/anonymization/files` | MUST | Implemented |
+| ANON-030 | List all files in the user's Filinq folder via `GET /api/anonymization/files` | MUST | Implemented |
 | ANON-031 | Each file includes entityCount, anonymizedCount, and status (uploaded/extracted/anonymized) | MUST | Implemented |
 | ANON-032 | Each file includes riskLevel from OpenRegister's RiskLevelService | MUST | Implemented |
 | ANON-033 | Files are sorted by modification time descending (newest first) | MUST | Implemented |
@@ -380,7 +386,7 @@ The Pinia store MUST manage a sequential file processing queue with status track
 
 ### Requirement: The anonymise endpoint MUST accept an optional `outputFormat` field
 
-The anonymise endpoint payload MUST accept an optional top-level `outputFormat` field with allowed values `"pdf"` and `"preserve"`. When omitted, the endpoint MUST use the tenant default (`docudesk.anonymisation.default_output_format`, default `pdf`). Any other value MUST be rejected with HTTP 400.
+The anonymise endpoint payload MUST accept an optional top-level `outputFormat` field with allowed values `"pdf"` and `"preserve"`. When omitted, the endpoint MUST use the tenant default (`filinq.anonymisation.default_output_format`, default `pdf`). Any other value MUST be rejected with HTTP 400.
 
 #### Scenario: Default behaviour produces PDF
 
@@ -575,33 +581,33 @@ Pre-change callers that don't set `appendBasisSummary` MUST see behaviour identi
 - **THEN** the response shape is unchanged
 - **AND** no summary work runs
 
-### Requirement: The DocuDesk anonymise endpoint MUST NOT carry `bases` per entity in its payload
+### Requirement: The Filinq anonymise endpoint MUST NOT carry `bases` per entity in its payload
 
-The endpoint payload's `entities[]` array MUST NOT introduce a `bases` field on entries. Callers that wish to attach legal bases to a detected entity occurrence MUST do so via OpenRegister's `PATCH /api/entity-relations/{id}` endpoint (or the equivalent DI mapper method `EntityRelationMapper::updateDecisionMetadata`) BEFORE invoking DocuDesk's anonymise endpoint.
+The endpoint payload's `entities[]` array MUST NOT introduce a `bases` field on entries. Callers that wish to attach legal bases to a detected entity occurrence MUST do so via OpenRegister's `PATCH /api/entity-relations/{id}` endpoint (or the equivalent DI mapper method `EntityRelationMapper::updateDecisionMetadata`) BEFORE invoking Filinq's anonymise endpoint.
 
-DocuDesk MUST ignore any `bases` field that erroneously appears on incoming payload entries — silently drop it (do NOT 400). This preserves backwards-compatibility with any caller still on the old contract; the field becomes a no-op rather than a hard failure.
+Filinq MUST ignore any `bases` field that erroneously appears on incoming payload entries — silently drop it (do NOT 400). This preserves backwards-compatibility with any caller still on the old contract; the field becomes a no-op rather than a hard failure.
 
-DocuDesk MUST NOT persist bases locally. Single source of truth: the `EntityRelation` row, written via OR's audited PATCH endpoint.
+Filinq MUST NOT persist bases locally. Single source of truth: the `EntityRelation` row, written via OR's audited PATCH endpoint.
 
 #### Scenario: Anonymise request without bases works exactly as before
 
 - **GIVEN** an anonymise request payload with entities that have no `bases` field
-- **WHEN** DocuDesk's controller processes it
+- **WHEN** Filinq's controller processes it
 - **THEN** the call MUST succeed
 - **AND** behaviour MUST match the pre-change `anonymization` capability exactly
 
 #### Scenario: Stray `bases` field on a payload entry is silently ignored
 
 - **GIVEN** a caller still using the old contract sends `entities: [{text: "Jan Janssen", entityType: "PERSON", key: "x", bases: ["uuid-a"]}]`
-- **WHEN** DocuDesk's controller processes it
+- **WHEN** Filinq's controller processes it
 - **THEN** the call MUST succeed
-- **AND** no `bases` value MUST be written to any EntityRelation row by DocuDesk's code path (bases-set is via OR's PATCH, which the caller has not invoked)
+- **AND** no `bases` value MUST be written to any EntityRelation row by Filinq's code path (bases-set is via OR's PATCH, which the caller has not invoked)
 - **AND** no error MUST be raised
 
 #### Scenario: Bases-attached entities are redacted under their bases when those were set via OR's PATCH first
 
 - **GIVEN** an authorized caller PATCHes OR with `{bases: ["uuid-a"]}` for an EntityRelation row R
-- **AND** subsequently calls DocuDesk's anonymise endpoint without any `bases` field
+- **AND** subsequently calls Filinq's anonymise endpoint without any `bases` field
 - **WHEN** the call processes
 - **THEN** R's `bases` value MUST remain `["uuid-a"]` (set via OR's PATCH; not overwritten by the anonymise call)
 - **AND** R MUST be redacted (no `skipAnonymization=true`)
@@ -658,30 +664,30 @@ Pre-change clients that don't send `bases` and don't read `prohibitionMatch` MUS
 
 ### Requirement: Admin Warning When No Anonymiser Backend Is Available
 
-DocuDesk MUST surface a non-blocking admin warning when entity recognition is operating in regex-only mode AND the admin viewing the page has not dismissed the warning.
+Filinq MUST surface a non-blocking admin warning when entity recognition is operating in regex-only mode AND the admin viewing the page has not dismissed the warning.
 
-#### Scenario: Admin opens DocuDesk admin settings with no backend configured
+#### Scenario: Admin opens Filinq admin settings with no backend configured
 - **GIVEN** OpenRegister reports backend state `method = 'regex'`
 - **AND** the current user is in the admin group
 - **AND** the admin has not previously dismissed the warning
-- **WHEN** the admin loads the DocuDesk admin settings page
+- **WHEN** the admin loads the Filinq admin settings page
 - **THEN** a warning banner is shown at the top of the settings section
 - **AND** the banner contains a deep link to the App Store entry for `openanonymiser_light`
 - **AND** the banner contains a deep link to the App Store entry for `openanonymiser`
 - **AND** the banner contains a link to OpenRegister settings for configuring a custom endpoint
 - **AND** the banner contains a "Dismiss" action
 
-#### Scenario: Admin opens DocuDesk dashboard with no backend configured
+#### Scenario: Admin opens Filinq dashboard with no backend configured
 - **GIVEN** OpenRegister reports backend state `method = 'regex'`
 - **AND** the current user is in the admin group
 - **AND** the admin has not previously dismissed the warning
-- **WHEN** the admin loads the DocuDesk dashboard
+- **WHEN** the admin loads the Filinq dashboard
 - **THEN** the warning banner is shown at the top of the dashboard
 
-#### Scenario: Non-admin user opens DocuDesk dashboard with no backend configured
+#### Scenario: Non-admin user opens Filinq dashboard with no backend configured
 - **GIVEN** OpenRegister reports backend state `method = 'regex'`
 - **AND** the current user is NOT in the admin group
-- **WHEN** the user loads the DocuDesk dashboard
+- **WHEN** the user loads the Filinq dashboard
 - **THEN** the warning banner is NOT shown
 
 #### Scenario: Admin dismisses the warning banner
@@ -691,21 +697,21 @@ DocuDesk MUST surface a non-blocking admin warning when entity recognition is op
 
 #### Scenario: Admin re-enables the warning
 - **GIVEN** the admin has previously dismissed the warning
-- **WHEN** the admin enables "Show anonymiser backend warning" in DocuDesk admin settings
+- **WHEN** the admin enables "Show anonymiser backend warning" in Filinq admin settings
 - **THEN** the dismissal record is cleared
 - **AND** the banner is shown again on the next page load
 
 #### Scenario: Backend becomes available
 - **GIVEN** the warning was previously visible
 - **WHEN** OpenRegister reports backend state changes to any non-`regex` method (e.g. `openanonymiser`, `presidio`, custom URL)
-- **AND** the admin loads a DocuDesk admin page
+- **AND** the admin loads a Filinq admin page
 - **THEN** the warning banner is NOT shown
 - **AND** dismissal state remains intact (re-shown if backend later disappears)
 
 #### Scenario: AppAPI is not installed
 - **GIVEN** OpenRegister reports backend state `method = 'regex'`
 - **AND** the `app_api` Nextcloud app is not installed or not enabled
-- **WHEN** the admin loads the DocuDesk admin settings page
+- **WHEN** the admin loads the Filinq admin settings page
 - **THEN** the warning banner additionally indicates that AppAPI must be installed first
 - **AND** the deep-link CTAs to the ExApp entries remain visible
 
@@ -721,13 +727,13 @@ The warning banner's CTAs MUST link to Nextcloud App Store entries by app id, no
 
 ### Requirement: Detection State Source
 
-DocuDesk MUST NOT query AppAPI, `IAppManager`, or HTTP health endpoints directly to determine backend availability. All detection MUST be delegated to OpenRegister via the `AnonymisationBackendService::getState()` PHP service.
+Filinq MUST NOT query AppAPI, `IAppManager`, or HTTP health endpoints directly to determine backend availability. All detection MUST be delegated to OpenRegister via the `AnonymisationBackendService::getState()` PHP service.
 
-#### Scenario: DocuDesk delegates state lookup to OpenRegister
-- **WHEN** DocuDesk needs to determine whether to show the warning
+#### Scenario: Filinq delegates state lookup to OpenRegister
+- **WHEN** Filinq needs to determine whether to show the warning
 - **THEN** it calls `OCA\OpenRegister\Service\AnonymisationBackendService::getState()`
 - **AND** it does not directly call `IAppManager::isEnabledForUser('openanonymiser_light')` or any AppAPI service
-- **AND** if OpenRegister is not installed, DocuDesk treats this as a fatal install-time error consistent with its existing OpenRegister dependency
+- **AND** if OpenRegister is not installed, Filinq treats this as a fatal install-time error consistent with its existing OpenRegister dependency
 
 ### Requirement: The anonymise endpoint MUST reject calls when any skip-marked relation has a blocking consent record
 

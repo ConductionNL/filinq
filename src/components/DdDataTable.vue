@@ -7,21 +7,34 @@
 		<table v-else class="dd-data-table__table">
 			<thead>
 				<tr>
-					<th v-if="selectable" class="dd-data-table__th dd-data-table__th--select" @click.stop>
+					<th
+						v-if="selectable"
+						class="dd-data-table__th dd-data-table__th--select"
+						@click.stop>
 						<NcCheckboxRadioSwitch
-							:checked="allSelected"
+							:modelValue="allSelected"
 							:indeterminate="someSelected"
 							:aria-label="selectAllLabel"
-							@update:checked="$emit('toggle-select-all')" />
+							@update:modelValue="$emit('toggle-select-all')" />
 					</th>
+					<!--
+						Column headers name every cell beneath them, so they carry
+						scope="col" (WCAG 1.3.1). The select and row-actions
+						headers above/below have no accessible name of their own —
+						they are control columns — so scope on them would
+						associate nothing and is deliberately absent.
+					-->
 					<th
 						v-for="col in columns"
 						:key="col.key"
+						scope="col"
 						class="dd-data-table__th"
 						:style="col.width ? { width: col.width } : null">
 						{{ col.label }}
 					</th>
-					<th v-if="$scopedSlots['row-actions']" class="dd-data-table__th dd-data-table__th--actions">
+					<th
+						v-if="$slots['row-actions']"
+						class="dd-data-table__th dd-data-table__th--actions">
 						<slot name="actions-header" />
 					</th>
 				</tr>
@@ -38,10 +51,14 @@
 					:key="row[rowKey]"
 					class="dd-data-table__row"
 					@click="$emit('row-click', row)">
-					<td v-if="selectable" class="dd-data-table__td dd-data-table__td--select" @click.stop>
+					<td
+						v-if="selectable"
+						class="dd-data-table__td dd-data-table__td--select"
+						@click.stop>
 						<NcCheckboxRadioSwitch
-							:checked="isSelected(row)"
-							@update:checked="$emit('toggle-select', row)" />
+							:aria-label="rowSelectLabel(row)"
+							:modelValue="isSelected(row)"
+							@update:modelValue="$emit('toggle-select', row)" />
 					</td>
 					<td
 						v-for="col in columns"
@@ -54,7 +71,10 @@
 							{{ getCellValue(row, col.key) }}
 						</slot>
 					</td>
-					<td v-if="$scopedSlots['row-actions']" class="dd-data-table__td dd-data-table__td--actions" @click.stop>
+					<td
+						v-if="$slots['row-actions']"
+						class="dd-data-table__td dd-data-table__td--actions"
+						@click.stop>
 						<slot name="row-actions" :row="row" />
 					</td>
 				</tr>
@@ -64,10 +84,11 @@
 </template>
 
 <script>
-import { NcLoadingIcon, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { translate as t } from '@nextcloud/l10n'
+import { NcCheckboxRadioSwitch, NcLoadingIcon } from '@nextcloud/vue'
 
 /**
- * Data table for DocuDesk index views.
+ * Data table for Filinq index views.
  *
  * Manual columns only (no schema mode). Per-column rendering via
  * `column-{key}` scoped slots; whole-row click via `row-click`;
@@ -83,60 +104,76 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Row data array. Rows must have a unique `rowKey` field. */
 		rows: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Show a loading spinner instead of the table body. */
 		loading: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Property name used as unique row identifier. */
 		rowKey: {
 			type: String,
 			default: 'id',
 		},
+
 		/** Text shown when rows is empty and not loading. */
 		emptyText: {
 			type: String,
 			default: 'No items found',
 		},
+
 		/** Show a leading checkbox column for bulk selection. */
 		selectable: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Row keys (`row[rowKey]`) that are currently selected. */
 		selectedKeys: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Accessible label for the select-all header checkbox. */
 		selectAllLabel: {
 			type: String,
 			default: 'Select all',
 		},
 	},
+
 	computed: {
 		/**
 		 * @spec exclude Pure presentational layout calculation; no domain or persistence semantics.
 		 */
 		totalColumns() {
-			return this.columns.length
-				+ (this.$scopedSlots['row-actions'] ? 1 : 0)
+			return (
+				this.columns.length
+				+ (this.$slots['row-actions'] ? 1 : 0)
 				+ (this.selectable ? 1 : 0)
+			)
 		},
+
 		/**
 		 * True when every visible row is selected (drives the header checkbox).
 		 *
 		 * @spec exclude Local checkbox/selection state derivation; no domain or persistence semantics.
 		 */
 		allSelected() {
-			return this.rows.length > 0
-				&& this.rows.every((row) => this.selectedKeys.includes(row[this.rowKey]))
+			return (
+				this.rows.length > 0
+				&& this.rows.every((row) =>
+					this.selectedKeys.includes(row[this.rowKey]),
+				)
+			)
 		},
+
 		/**
 		 * True when some — but not all — visible rows are selected (indeterminate state).
 		 *
@@ -146,6 +183,7 @@ export default {
 			return this.selectedKeys.length > 0 && !this.allSelected
 		},
 	},
+
 	methods: {
 		/**
 		 * Whether a given row is currently selected.
@@ -156,6 +194,7 @@ export default {
 		isSelected(row) {
 			return this.selectedKeys.includes(row[this.rowKey])
 		},
+
 		/**
 		 * Resolve a cell value, supporting dot-notation keys.
 		 *
@@ -171,6 +210,32 @@ export default {
 			}
 			return row[key]
 		},
+
+		/**
+		 * Accessible name for a row's select checkbox.
+		 *
+		 * Without one, every row's checkbox announces as an unnamed
+		 * "checkbox, not checked" — on a twenty-row table that is twenty
+		 * indistinguishable controls (WCAG 2.2 AA SC 4.1.2). The first
+		 * column's rendered value is used because it is what identifies the
+		 * row on screen, so what is announced matches what is read; the row
+		 * key is the fallback when that cell is empty.
+		 *
+		 * @param {object} row Row object.
+		 * @return {string} Label such as `Select invoice-2026-01`.
+		 *
+		 * @spec exclude Generic presentational label derivation for a table row checkbox; no domain semantics.
+		 */
+		rowSelectLabel(row) {
+			const first = this.columns.length
+				? this.getCellValue(row, this.columns[0].key)
+				: undefined
+			const name =
+				first === undefined || first === null || first === ''
+					? row[this.rowKey]
+					: first
+			return t('filinq', 'Select {row}', { row: String(name ?? '') })
+		},
 	},
 }
 </script>
@@ -178,7 +243,7 @@ export default {
 <style scoped>
 .dd-data-table {
 	border-radius: var(--dd-data-table-border-radius, var(--dd-radius-panel));
-	border: 1px solid var(--dd-data-table-border-color, #E9E9E9);
+	border: 1px solid var(--dd-data-table-border-color, var(--dd-border, #e9e9e9));
 	overflow-x: auto;
 	box-shadow: var(--dd-shadow-panel);
 }
@@ -201,7 +266,8 @@ export default {
 	background: var(--dd-data-table-cell-background, var(--color-main-background));
 	padding: var(--dd-data-table-cell-padding, 8px);
 	text-align: left;
-	border-bottom: 1px solid var(--dd-data-table-cell-border-color, var(--color-border));
+	border-bottom: 1px solid
+		var(--dd-data-table-cell-border-color, var(--color-border));
 	vertical-align: middle;
 }
 
@@ -248,12 +314,24 @@ export default {
 }
 
 .dd-data-table__row:hover {
-	background: var(--dd-data-table-row-hover-background, var(--color-background-hover));
+	background: var(
+		--dd-data-table-row-hover-background,
+		var(--color-background-hover)
+	);
 }
 
 .dd-data-table__empty td {
 	text-align: center;
-	padding: calc(12 * var(--default-grid-baseline)) calc(6 * var(--default-grid-baseline));
+	padding: calc(12 * var(--default-grid-baseline))
+		calc(6 * var(--default-grid-baseline));
 	color: var(--dd-data-table-empty-color, var(--color-text-maxcontrast));
+}
+
+/* WCAG 2.2 SC 2.3.3 — the row hover tint still applies, it just arrives
+   instantly for users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-data-table__row {
+		transition: none;
+	}
 }
 </style>

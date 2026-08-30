@@ -1,17 +1,16 @@
 <template>
-	<span
-		class="dd-icon"
-		:style="sizeStyle"
-		v-bind="$attrs"
-		v-on="$listeners">
-		<span v-if="svg" class="dd-icon__svg" v-html="svg" /><!-- eslint-disable-line vue/no-v-html -->
+	<span class="dd-icon" :style="sizeStyle" v-bind="$attrs">
+		<span
+			v-if="svg"
+			class="dd-icon__svg"
+			v-html="svg" /><!-- eslint-disable-line vue/no-v-html -->
 		<slot v-else />
 	</span>
 </template>
 
 <script>
 /**
- * Generic icon component for DocuDesk.
+ * Generic icon component for Filinq.
  *
  * Resolves icons by name from the project's custom SVG set in
  * `src/assets/icons/` and inlines them so they inherit color via
@@ -40,22 +39,34 @@ const ICONS = iconContext.keys().reduce((acc, key) => {
 }, {})
 
 /**
- * Strip width/height from the root <svg> tag so the wrapper controls the
- * box, and replace the designer's hardcoded dark fill with `currentColor`
- * so consumers can recolor with standard CSS `color`.
+ * Clean up a raw Figma SVG export for crisp, themeable inline rendering:
+ *
+ * 1. Strip width/height from the root <svg> so the wrapper controls the box.
+ * 2. Replace the designer's hardcoded dark fill with `currentColor` so
+ *    consumers can recolor with standard CSS `color`.
+ * 3. Remove Figma's full-bleed `<mask>` wrapper. The mask is a no-op clip
+ *    (a solid rect covering the whole icon), but applying any mask forces
+ *    the browser to render the icon through an offscreen raster buffer —
+ *    which is rasterized at 1x DPI and upscaled on HiDPI screens, making
+ *    the icon look fuzzy. Dropping it keeps the icon as pure vector.
  *
  * @param {string} raw The raw SVG source.
  * @return {string} The cleaned-up SVG source.
  */
 function prepareSvg(raw) {
 	if (!raw) return ''
-	return raw
-		.replace(/<svg([^>]*)>/i, (match, attrs) => {
-			const stripped = attrs
-				.replace(/\s(width|height)="[^"]*"/gi, '')
-			return `<svg${stripped} width="100%" height="100%">`
-		})
-		.replace(/fill="#02162E"/gi, 'fill="currentColor"')
+	return (
+		raw
+			.replace(/<svg([^>]*)>/i, (match, attrs) => {
+				const stripped = attrs.replace(/\s(width|height)="[^"]*"/gi, '')
+				return `<svg${stripped} width="100%" height="100%">`
+			})
+			// Drop the <mask>…</mask> definition and the mask attribute that
+			// references it; the mask is full-coverage so removing it is safe.
+			.replace(/<mask[^>]*>[\s\S]*?<\/mask>/gi, '')
+			.replace(/\smask="url\(#[^)]*\)"/gi, '')
+			.replace(/fill="#02162E"/gi, 'fill="currentColor"')
+	)
 }
 
 export default {
@@ -71,6 +82,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Square size in pixels. Defaults to 24 (24x24).
 		 */
@@ -79,10 +91,12 @@ export default {
 			default: 24,
 		},
 	},
+
 	computed: {
 		svg() {
 			return ICONS[(this.name || '').toLowerCase()] || ''
 		},
+
 		sizeStyle() {
 			const px = typeof this.size === 'number' ? `${this.size}px` : this.size
 			return { width: px, height: px }

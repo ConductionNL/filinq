@@ -2,13 +2,13 @@
 
 ## Why
 
-DocuDesk's primary detail surface is the `document` / `report` record (ADR-001: the
+Filinq's primary detail surface is the `document` / `report` record (ADR-001: the
 "Document detail" page with its `Inhoud · Metadata · … · Versies · Audit` tab family). Per
 **ADR-022** + **ADR-019**, the contacts / activity / shares integration leaves OR provides
 SHALL be surfaced on that record through the integration registry's tab+widget mechanism —
 not re-implemented as bespoke per-document panels. Surfacing them is a pure *consume*: the
 leaves already exist in OR (`integration-contacts`, `integration-activity`,
-`integration-shares`); DocuDesk just renders their registry tabs/widgets on the document record.
+`integration-shares`); Filinq just renders their registry tabs/widgets on the document record.
 
 ## What
 
@@ -33,12 +33,12 @@ detail page (ADR-001). No bespoke sidebar-tab or widget system is introduced.
 
 ## Affected Projects
 
-- [x] Project: `docudesk` — all implementation work is in this repo
+- [x] Project: `filinq` — all implementation work is in this repo
 - Reference: `openregister/openspec/specs/integration-shares/spec.md`
 - Reference: `openregister/openspec/changes/integration-contacts/`,
   `openregister/openspec/changes/integration-activity/`
 - Reference: `hydra/openspec/architecture/adr-022-apps-consume-or-abstractions.md`,
-  `adr-019-*` (registry), docudesk `adr-001-information-architecture.md`
+  `adr-019-*` (registry), filinq `adr-001-information-architecture.md`
 
 ## Out of Scope
 
@@ -54,5 +54,5 @@ detail page (ADR-001). No bespoke sidebar-tab or widget system is introduced.
   via the registry when the corresponding NC apps are installed.
 - No bespoke per-document sidebar-tab or widget system is introduced (ADR-019/ADR-022
   anti-pattern: duplicate sidebar tab systems).
-- DocuDesk's in-app PDF/letter generation, eIDAS signing crypto, and anonymisation surfaces are
+- Filinq's in-app PDF/letter generation, eIDAS signing crypto, and anonymisation surfaces are
   untouched by this change.

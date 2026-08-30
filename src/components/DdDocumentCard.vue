@@ -1,6 +1,6 @@
 <script setup>
-import { translate as t } from '@nextcloud/l10n'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import dossierIcon from '../assets/dossier.png'
 import singleFileIcon from '../assets/single-file.png'
@@ -19,15 +19,12 @@ import singleFileIcon from '../assets/single-file.png'
 		<NcCheckboxRadioSwitch
 			v-if="selectable"
 			class="dd-document-card__select"
-			:checked="selected"
-			:aria-label="t('docudesk', 'Select')"
-			@update:checked="$emit('toggle-select', item)"
-			@click.native.stop />
+			:modelValue="selected"
+			:aria-label="t('filinq', 'Select')"
+			@update:modelValue="$emit('toggle-select', item)"
+			@click.stop />
 		<figure class="dd-document-card__icon">
-			<img
-				:src="iconSrc"
-				:alt="''"
-				class="dd-document-card__icon-img">
+			<img :src="iconSrc" alt="" class="dd-document-card__icon-img" />
 		</figure>
 		<div class="dd-document-card__title" :title="displayName">
 			{{ displayName }}
@@ -35,15 +32,13 @@ import singleFileIcon from '../assets/single-file.png'
 		<div class="dd-document-card__date">
 			{{ formattedDate }}
 		</div>
-		<CnStatusBadge
-			:label="pillLabel"
-			:color-map="pillColorMap" />
+		<CnStatusBadge :label="pillLabel" :colorMap="pillColorMap" />
 	</article>
 </template>
 
 <script>
 /**
- * Single document tile for DocuDesk index/dashboard surfaces.
+ * Single document tile for Filinq index/dashboard surfaces.
  *
  * Layout (top → bottom): asset icon (dossier.png / single-file.png),
  * filename without extension, date, kind pill (CnStatusBadge).
@@ -62,17 +57,20 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/** Show the bulk-selection checkbox in the top-left corner. */
 		selectable: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Whether this card's item is currently selected. */
 		selected: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['click', 'toggle-select'],
 	data() {
 		return {
@@ -81,12 +79,13 @@ export default {
 			// Color tokens used by CnStatusBadge — keyed on the localised
 			// label so swapping languages still picks the right colour.
 			pillColorMap: {
-				[t('docudesk', 'Dossier')]: 'info',
-				[t('docudesk', 'Concept')]: 'warning',
-				[t('docudesk', 'Anonymized')]: 'success',
+				[t('filinq', 'Dossier')]: 'info',
+				[t('filinq', 'Concept')]: 'warning',
+				[t('filinq', 'Anonymized')]: 'success',
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Asset icon source — dossier.png for folders, single-file.png
@@ -98,6 +97,7 @@ export default {
 		iconSrc() {
 			return this.item.isFolder ? this.dossierIconSrc : this.singleFileIconSrc
 		},
+
 		/**
 		 * Filename with the trailing extension stripped, so the title
 		 * stays scannable. Folders keep their full name.
@@ -108,17 +108,20 @@ export default {
 			const name = this.item.fileName || ''
 			return this.item.isFolder ? name : name.replace(/\.[^./]+$/, '')
 		},
+
 		/**
 		 * Pill label for the kind of document. Mirrors the labels used
 		 * by `MyDocumentsIndex` so the color map stays consistent.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/anonymization-link/spec.md#requirement-bidirectional-lookup-via-or-search-api-req-alink-03
 		 */
 		pillLabel() {
-			if (this.item.isFolder) return t('docudesk', 'Dossier')
-			if (this.item.isAnonymized) return t('docudesk', 'Anonymized')
-			return t('docudesk', 'Concept')
+			if (this.item.isFolder) return t('filinq', 'Dossier')
+			if (this.item.isAnonymized) return t('filinq', 'Anonymized')
+			return t('filinq', 'Concept')
 		},
+
 		/**
 		 * DD-MM-YYYY for the date row. Accepts unix seconds or ISO strings;
 		 * returns '-' for missing values.
@@ -135,6 +138,7 @@ export default {
 			const yyyy = d.getFullYear()
 			return `${dd}-${mm}-${yyyy}`
 		},
+
 		/**
 		 * Accessible label combining kind + name for screen readers.
 		 *
@@ -160,16 +164,19 @@ export default {
 	--dd-card-padding-inline: 16px;
 	--dd-card-radius: var(--dd-radius-panel);
 	--dd-card-gap: 16px;
-	--dd-card-border: 1px solid #d9d9d9;
-	--dd-card-bg: #fff;
+	--dd-card-border: 1px solid var(--dd-border, #d9d9d9);
+	--dd-card-bg: var(--dd-surface, #fff);
 	--dd-card-shadow: var(--dd-shadow-panel);
 	--dd-card-shadow-hover: 0 6px 26px -3px rgba(0, 0, 0, 0.12);
 	--dd-card-focus-ring: 0 0 0 2px var(--color-primary-element, #0a5eaf);
 	position: relative;
-	display: grid;
-	grid-template-rows: auto 1fr auto auto;
+
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
 	gap: var(--dd-card-gap);
-	padding: var(--dd-card-padding-block-start) var(--dd-card-padding-inline) var(--dd-card-padding-block-end);
+	padding: var(--dd-card-padding-block-start) var(--dd-card-padding-inline)
+		var(--dd-card-padding-block-end);
 	border: var(--dd-card-border);
 	border-radius: var(--dd-card-radius);
 	background: var(--dd-card-bg);
@@ -178,7 +185,9 @@ export default {
 	text-align: start;
 	inline-size: 100%;
 	block-size: 100%;
-	transition: box-shadow 0.15s ease, transform 0.15s ease;
+	transition:
+		box-shadow 0.15s ease,
+		transform 0.15s ease;
 
 	> * {
 		cursor: pointer;
@@ -240,5 +249,13 @@ export default {
 .dd-document-card__date {
 	font-size: 0.8rem;
 	color: var(--color-text-maxcontrast, #6b7280);
+}
+
+/* WCAG 2.2 SC 2.3.3 — the hover lift is decorative; drop it entirely for
+   users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-document-card {
+		transition: none;
+	}
 }
 </style>

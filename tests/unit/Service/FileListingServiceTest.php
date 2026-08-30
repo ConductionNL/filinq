@@ -4,7 +4,7 @@
  * Unit tests for FileListingService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,14 +12,14 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\FileEntityStatsService;
-use OCA\DocuDesk\Service\FileListingService;
-use OCA\DocuDesk\Service\FileUploadService;
+use OCA\Filinq\Service\FileEntityStatsService;
+use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Service\FileUploadService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -28,127 +28,117 @@ use Psr\Log\LoggerInterface;
  * Unit tests for FileListingService
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class FileListingServiceTest extends TestCase
-{
+class FileListingServiceTest extends TestCase {
 
-    /**
-     * @var FileListingService
-     */
-    private FileListingService $service;
+	/**
+	 * @var FileListingService
+	 */
+	private FileListingService $service;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * @var FileUploadService|MockObject
-     */
-    private FileUploadService|MockObject $mockFileUploadService;
+	/**
+	 * @var FileUploadService|MockObject
+	 */
+	private FileUploadService|MockObject $mockFileUploadService;
 
-    /**
-     * @var FileEntityStatsService|MockObject
-     */
-    private FileEntityStatsService|MockObject $mockEntityStatsService;
+	/**
+	 * @var FileEntityStatsService|MockObject
+	 */
+	private FileEntityStatsService|MockObject $mockEntityStatsService;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
+		$this->mockFileUploadService = $this->createMock(FileUploadService::class);
+		$this->mockEntityStatsService = $this->createMock(FileEntityStatsService::class);
 
-        $this->mockLogger             = $this->createMock(LoggerInterface::class);
-        $this->mockFileUploadService  = $this->createMock(FileUploadService::class);
-        $this->mockEntityStatsService = $this->createMock(FileEntityStatsService::class);
+		$this->service = new FileListingService(
+			$this->mockLogger,
+			$this->mockFileUploadService,
+			$this->mockEntityStatsService
+		);
 
-        $this->service = new FileListingService(
-            $this->mockLogger,
-            $this->mockFileUploadService,
-            $this->mockEntityStatsService
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test uploadFile delegates to FileUploadService
+	 *
+	 * @return void
+	 */
+	public function testUploadFileDelegates(): void {
+		$expected = [
+			'fileId' => 1,
+			'filePath' => '/path/test.pdf',
+			'fileName' => 'test.pdf',
+			'fileSize' => 1024,
+		];
 
+		$this->mockFileUploadService->method('uploadFile')
+			->with('test.pdf', 'content')
+			->willReturn($expected);
 
-    /**
-     * Test uploadFile delegates to FileUploadService
-     *
-     * @return void
-     */
-    public function testUploadFileDelegates(): void
-    {
-        $expected = [
-            'fileId'   => 1,
-            'filePath' => '/path/test.pdf',
-            'fileName' => 'test.pdf',
-            'fileSize' => 1024,
-        ];
+		$result = $this->service->uploadFile('test.pdf', 'content');
+		$this->assertEquals($expected, $result);
 
-        $this->mockFileUploadService->method('uploadFile')
-            ->with('test.pdf', 'content')
-            ->willReturn($expected);
+	}//end testUploadFileDelegates()
 
-        $result = $this->service->uploadFile('test.pdf', 'content');
-        $this->assertEquals($expected, $result);
+	/**
+	 * Test listProcessedFiles throws when user not logged in
+	 *
+	 * @return void
+	 */
+	public function testListProcessedFilesThrowsOnError(): void {
+		$this->expectException(\Exception::class);
 
-    }//end testUploadFileDelegates()
+		$this->mockFileUploadService->method('getCurrentUserId')
+			->willThrowException(new \Exception('No user is currently logged in.', 401));
 
+		$this->service->listProcessedFiles();
 
-    /**
-     * Test listProcessedFiles throws when user not logged in
-     *
-     * @return void
-     */
-    public function testListProcessedFilesThrowsOnError(): void
-    {
-        $this->expectException(\Exception::class);
+	}//end testListProcessedFilesThrowsOnError()
 
-        $this->mockFileUploadService->method('getCurrentUserId')
-            ->willThrowException(new \Exception('No user is currently logged in.', 401));
+	/**
+	 * Test listProcessedFiles returns empty for empty folder
+	 *
+	 * @return void
+	 */
+	public function testListProcessedFilesReturnsEmptyForEmptyFolder(): void {
+		$this->mockFileUploadService->method('getCurrentUserId')
+			->willReturn('admin');
 
-        $this->service->listProcessedFiles();
+		$mockFolder = $this->createMock(\OCP\Files\Folder::class);
+		$mockFolder->method('getDirectoryListing')
+			->willReturn([]);
 
-    }//end testListProcessedFilesThrowsOnError()
+		$this->mockFileUploadService->method('getFilinqFolder')
+			->willReturn($mockFolder);
 
+		$this->mockEntityStatsService->method('tryGetEntityRelationMapper')
+			->willReturn(null);
+		$this->mockEntityStatsService->method('tryGetRiskLevelService')
+			->willReturn(null);
 
-    /**
-     * Test listProcessedFiles returns empty for empty folder
-     *
-     * @return void
-     */
-    public function testListProcessedFilesReturnsEmptyForEmptyFolder(): void
-    {
-        $this->mockFileUploadService->method('getCurrentUserId')
-            ->willReturn('admin');
+		$result = $this->service->listProcessedFiles();
+		$this->assertIsArray($result);
+		$this->assertEmpty($result);
 
-        $mockFolder = $this->createMock(\OCP\Files\Folder::class);
-        $mockFolder->method('getDirectoryListing')
-            ->willReturn([]);
-
-        $this->mockFileUploadService->method('getDocuDeskFolder')
-            ->willReturn($mockFolder);
-
-        $this->mockEntityStatsService->method('tryGetEntityRelationMapper')
-            ->willReturn(null);
-        $this->mockEntityStatsService->method('tryGetRiskLevelService')
-            ->willReturn(null);
-
-        $result = $this->service->listProcessedFiles();
-        $this->assertIsArray($result);
-        $this->assertEmpty($result);
-
-    }//end testListProcessedFilesReturnsEmptyForEmptyFolder()
-
+	}//end testListProcessedFilesReturnsEmptyForEmptyFolder()
 
 }//end class

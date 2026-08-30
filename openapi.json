@@ -1,11 +1,11 @@
 {
     "openapi": "3.0.3",
     "info": {
-        "title": "DocuDesk",
-        "version": "0.0.1",
-        "description": "DocuDesk",
+        "title": "Filinq",
+        "version": "0.1.3-unstable.20260830082024",
+        "description": "Filinq",
         "license": {
-            "name": "agpl"
+            "name": "EUPL-1.2"
         }
     },
     "components": {

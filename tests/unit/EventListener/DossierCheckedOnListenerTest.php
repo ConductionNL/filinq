@@ -4,7 +4,7 @@
  * Unit tests for DossierCheckedOnListener
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\EventListener
+ * @package  OCA\Filinq\Tests\Unit\EventListener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -12,7 +12,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-10
  *
@@ -20,10 +20,10 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\EventListener;
+namespace OCA\Filinq\Tests\Unit\EventListener;
 
-use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\Filinq\EventListener\DossierCheckedOnListener;
+use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -33,80 +33,76 @@ use Psr\Log\LoggerInterface;
  * Unit tests for DossierCheckedOnListener
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\EventListener
+ * @package  OCA\Filinq\Tests\Unit\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class DossierCheckedOnListenerTest extends TestCase
-{
+class DossierCheckedOnListenerTest extends TestCase {
 
-    /**
-     * The listener under test.
-     *
-     * @var DossierCheckedOnListener
-     */
-    private DossierCheckedOnListener $listener;
+	/**
+	 * The listener under test.
+	 *
+	 * @var DossierCheckedOnListener
+	 */
+	private DossierCheckedOnListener $listener;
 
-    /**
-     * Mock logger.
-     *
-     * @var MockObject&LoggerInterface
-     */
-    private MockObject $logger;
+	/**
+	 * Mock logger.
+	 *
+	 * @var MockObject&LoggerInterface
+	 */
+	private MockObject $logger;
 
-    /**
-     * Mock grondslagen summary service.
-     *
-     * @var MockObject&GrondslagenSummaryService
-     */
-    private MockObject $grondslagenSummaryService;
+	/**
+	 * Mock grondslagen summary service.
+	 *
+	 * @var MockObject&LegalBasesSummaryService
+	 */
+	private MockObject $grondslagenSummaryService;
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->logger                    = $this->createMock(originalClassName: LoggerInterface::class);
-        $this->grondslagenSummaryService = $this->createMock(originalClassName: GrondslagenSummaryService::class);
+		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->grondslagenSummaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 
-        $this->listener = new DossierCheckedOnListener(
-            logger: $this->logger,
-            grondslagenSummaryService: $this->grondslagenSummaryService,
-        );
+		$this->listener = new DossierCheckedOnListener(
+			logger: $this->logger,
+			summaryService: $this->grondslagenSummaryService,
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test that listener can be instantiated with injected dependencies
-     *
-     * @return void
-     */
-    public function testListenerCanBeInstantiated(): void
-    {
-        $this->assertInstanceOf(expected: DossierCheckedOnListener::class, actual: $this->listener);
+	/**
+	 * Test that listener can be instantiated with injected dependencies
+	 *
+	 * @return void
+	 */
+	public function testListenerCanBeInstantiated(): void {
+		$this->assertInstanceOf(expected: DossierCheckedOnListener::class, actual: $this->listener);
 
-    }//end testListenerCanBeInstantiated()
+	}//end testListenerCanBeInstantiated()
 
-    /**
-     * Test that non-ObjectUpdatedEvent is silently ignored
-     *
-     * @return void
-     */
-    public function testHandleIgnoresNonObjectUpdatedEvent(): void
-    {
-        $genericEvent = $this->createMock(originalClassName: Event::class);
+	/**
+	 * Test that non-ObjectUpdatedEvent is silently ignored
+	 *
+	 * @return void
+	 */
+	public function testHandleIgnoresNonObjectUpdatedEvent(): void {
+		$genericEvent = $this->createMock(originalClassName: Event::class);
 
-        // Should not throw.
-        $this->listener->handle(event: $genericEvent);
+		// Should not throw.
+		$this->listener->handle(event: $genericEvent);
 
-        $this->addToAssertionCount(count: 1);
+		$this->addToAssertionCount(count: 1);
 
-    }//end testHandleIgnoresNonObjectUpdatedEvent()
+	}//end testHandleIgnoresNonObjectUpdatedEvent()
 }//end class

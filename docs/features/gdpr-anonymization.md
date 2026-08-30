@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 
 # 🔒 GDPR Anonymization
 
-DocuDesk provides powerful document anonymization capabilities to help you comply with GDPR and other privacy regulations. The anonymization feature automatically detects and redacts sensitive personal information in your documents, making it easier to share and process documents while protecting individual privacy.
+Filinq provides powerful document anonymization capabilities to help you comply with GDPR and other privacy regulations. The anonymization feature automatically detects and redacts sensitive personal information in your documents, making it easier to share and process documents while protecting individual privacy.
 
 ## Overview
 
@@ -57,7 +57,7 @@ The anonymization service can detect and anonymize various types of sensitive in
 
 ## Anonymization Methods
 
-DocuDesk supports different anonymization methods for different types of data:
+Filinq supports different anonymization methods for different types of data:
 
 - **Replacement**: Replace the entity with a generic placeholder (e.g., [PERSON])
 - **Masking**: Replace characters with a masking character (e.g., ******)
@@ -66,7 +66,7 @@ DocuDesk supports different anonymization methods for different types of data:
 
 ## Automatic Anonymization with Reports
 
-DocuDesk now supports automatic anonymization of documents when reports are processed. When the anonymization feature is enabled in the settings, the system will:
+Filinq now supports automatic anonymization of documents when reports are processed. When the anonymization feature is enabled in the settings, the system will:
 
 1. Process the document report as usual, detecting sensitive entities
 2. Automatically create an anonymized version of the document with the same name plus "_anonymized" suffix
@@ -105,7 +105,7 @@ sequenceDiagram
 
 ### Configuration
 
-Anonymization can be enabled or disabled in the DocuDesk admin settings. When enabled, all documents processed for reporting will automatically be anonymized.
+Anonymization can be enabled or disabled in the Filinq admin settings. When enabled, all documents processed for reporting will automatically be anonymized.
 
 ### Accessing Anonymized Documents
 
@@ -118,7 +118,7 @@ The report details will include links to both the original and anonymized docume
 In addition to automatic anonymization, you can also manually anonymize documents using the API:
 
 ```php
-$anonymizationService = \OC::$server->get(OCA\DocuDesk\Service\AnonymizationService::class);
+$anonymizationService = \OC::$server->get(OCA\Filinq\Service\AnonymizationService::class);
 $result = $anonymizationService->anonymizeDocument(
     '/path/to/document.pdf',
     '/path/to/output/anonymized.pdf',
@@ -133,7 +133,7 @@ You can retrieve anonymization data for a specific file:
 
 ```php
 // Get anonymization data for a file node
-$anonymizationService = \OC::$server->get(OCA\DocuDesk\Service\AnonymizationService::class);
+$anonymizationService = \OC::$server->get(OCA\Filinq\Service\AnonymizationService::class);
 $anonymization = $anonymizationService->getAnonymization($fileNode);
 
 // Or retrieve anonymization by ID
@@ -170,17 +170,34 @@ The anonymization feature integrates with Microsoft Presidio, an open-source PII
 
 ## Configuration
 
-Configure the anonymization feature in the DocuDesk admin settings:
+Configure the anonymization feature in the Filinq admin settings:
 
-1. Navigate to **Admin Settings** > **DocuDesk**
+1. Navigate to **Admin Settings** > **Filinq**
 2. Set the **Presidio Analyzer API URL** (default: http://presidio-api:8080/analyze)
 3. Set the **Presidio Anonymizer API URL** (default: http://presidio-api:8080/anonymize)
 4. Adjust the **Confidence Threshold** (0.0-1.0) for entity detection sensitivity
 5. Enable or disable the **Store Original Text** option for de-anonymization capability
 
+### Proposed legal basis (grondslag) per entity type
+
+Filinq can pre-fill a proposed **legal basis** (grondslag, Woo Art. 5 / AVG) on each detected entity, so operators don't assign one by hand for every detection. Within an organisation a given entity *type* (PERSON, BSN, EMAIL, …) almost always rests on the same grondslag, so the proposal is configured per type.
+
+Configure it under **Admin Settings → Filinq → "Legal basis per entity type"**:
+
+1. Each detectable entity type is listed with a multi-select of the available `base` (grondslag) records. Bases come from the `base` schema, so any grondslagen your organisation has added appear automatically.
+2. Pick one (or more) bases as the default for a type, then **Save All Settings**. The mapping is stored instance-wide in the app config key `filinq.grondslagen.entity_type_bases` (JSON: `{ "PERSON": ["base-slug"], … }`).
+
+Behaviour at detection time:
+
+- After analysis, each detected entity whose legal basis is still **empty** is pre-filled with the configured base(s) for its type.
+- **Operator choices are never overwritten** — a relation that already has a basis (manually assigned or previously proposed) is left untouched. This also means changing the mapping does **not** retroactively rewrite already-filled entities; only future detections onto empty entities use the new mapping.
+- Entity types with **no mapping** get no proposal (their basis stays empty) — Filinq never applies a catch-all default it isn't sure of.
+
+Proposed bases are stored in the same field as manually assigned ones, so they flow into the grondslagen summary exactly like operator-confirmed bases (no separate "proposed" badge). The list of selectable entity types is currently a curated list maintained in Filinq; sourcing it live from the anonymiser backend is a planned enhancement.
+
 ### OpenRegisters Integration
 
-DocuDesk supports storing anonymization data in OpenRegisters, which provides additional capabilities for data management:
+Filinq supports storing anonymization data in OpenRegisters, which provides additional capabilities for data management:
 
 1. **External Storage**: Store anonymization logs in external databases through OpenRegisters
 2. **Advanced Querying**: Use OpenRegisters' query capabilities for complex searches
@@ -189,7 +206,7 @@ DocuDesk supports storing anonymization data in OpenRegisters, which provides ad
 To configure OpenRegisters integration:
 
 1. Install the OpenRegisters app from the Nextcloud App Store
-2. In DocuDesk settings, select "OpenRegister" as the storage source for anonymization data
+2. In Filinq settings, select "OpenRegister" as the storage source for anonymization data
 3. Choose the appropriate register and schema for storing the data
 
 This integration is optional - if you prefer to use Nextcloud's internal storage, select "Internal" as the storage source.
@@ -201,7 +218,7 @@ To use the anonymization feature, you need to set up Microsoft Presidio:
 1. Deploy Presidio using Docker or Kubernetes (see [Presidio documentation](https://microsoft.github.io/presidio/))
 2. Configure the analyzer service with appropriate recognition models
 3. Configure the anonymizer service with desired anonymization methods
-4. Update the DocuDesk settings with your Presidio API URLs
+4. Update the Filinq settings with your Presidio API URLs
 
 ## Security Considerations
 
@@ -244,7 +261,7 @@ For optimal results with the anonymization feature:
 
 ## License
 
-DocuDesk is licensed under the European Union Public License (EUPL), version 1.2 only. This is an open-source license that is compatible with many other open-source licenses while providing strong copyleft protections. The full text of the license can be found at [https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12).
+Filinq is licensed under the European Union Public License (EUPL), version 1.2 only. This is an open-source license that is compatible with many other open-source licenses while providing strong copyleft protections. The full text of the license can be found at [https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12).
 
 Key aspects of the EUPL-1.2 license:
 

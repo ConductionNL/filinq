@@ -1,112 +1,105 @@
 <?php
 
 /**
- * Dashboard controller for DocuDesk
+ * Filinq Dashboard Controller.
  *
- * @category  Controller
- * @package   OCA\DocuDesk\Controller
- * @author    Conduction B.V. <info@conduction.nl>
- * @copyright 2024 Conduction B.V.
+ * SPA host: renders the SPA from `templates/index.php` and serves the Vue
+ * history-mode catch-all. Behaviourally identical to the OpenRegister AppHost
+ * `GenericDashboardController` it used to subclass, but implemented locally and
+ * depending on nothing outside Filinq and OCP. The conventional
+ * `dashboard#page` route resolves to this concrete
+ * `OCA\Filinq\Controller\DashboardController`, making the route name
+ * `filinq.dashboard.page` that the navigation (info.xml) and dashboard widgets
+ * link to resolvable.
+ *
+ * ⚠️ DO NOT "simplify" this back into a subclass of the AppHost generic.
+ * Nextcloud's router `ReflectionClass()`es every file in `lib/Controller/` while
+ * MATCHING a route, so an unresolvable parent makes EVERY route in Filinq
+ * return HTTP 500 — including routes with no OpenRegister involvement at all.
+ * Filinq does not declare `<app>openregister</app>`, so an admin can create
+ * exactly that configuration. `extends` is resolved by the AUTOLOADER, not the
+ * DI container, so no amount of lazy registration can rescue it, and the few
+ * lines below are cheaper than a whole-app outage. See decidesk#377 / #388.
+ *
+ * @category Controller
+ * @package  OCA\Filinq\Controller
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-18
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ *
+ * @link https://filinq.conduction.nl
  */
 
-namespace OCA\DocuDesk\Controller;
+declare(strict_types=1);
 
+namespace OCA\Filinq\Controller;
+
+use OCA\Filinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
 
 /**
- * Dashboard controller for DocuDesk
+ * Controller for the main Filinq SPA page.
  *
- * This controller handles dashboard-related requests and views.
- *
- * @category Controller
- * @package  OCA\DocuDesk\Controller
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2
- * @link     https://github.com/conductionnl/docudesk
+ * @psalm-suppress UnusedClass
  */
-class DashboardController extends Controller
-{
-    /**
-     * Constructor for DashboardController
-     *
-     * @param string   $appName The application name
-     * @param IRequest $request The request object
-     *
-     * @return void
-     */
-    public function __construct($appName, IRequest $request)
-    {
-        parent::__construct(appName: $appName, request: $request);
+class DashboardController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * Supplies the filinq app id so Nextcloud's DI can auto-wire this
+	 * controller from `IRequest` alone.
+	 *
+	 * @param IRequest $request HTTP request.
+	 */
+	public function __construct(IRequest $request) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Render the main dashboard page
-     *
-     * @param string|null $getParameter Optional GET parameter
-     *
-     * @return TemplateResponse The dashboard page template
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-18
-     */
-    public function page(?string $getParameter): TemplateResponse
-    {
-        try {
-            $response = new TemplateResponse(
-                $this->appName,
-                'index',
-                []
-            );
+	/**
+	 * Render the main SPA page from `templates/index.php`.
+	 *
+	 * `#[NoAdminRequired]` / `#[NoCSRFRequired]` were previously INHERITED from
+	 * the AppHost generic; they are declared explicitly here so the auth posture
+	 * is byte-for-byte unchanged by dropping the inheritance.
+	 *
+	 * @return TemplateResponse The rendered Filinq index template.
+	 *
+	 * @spec openspec/specs/adopt-apphost/spec.md
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function page(): TemplateResponse {
+		return $this->renderIndex();
+	}//end page()
 
-            return $response;
-        } catch (\Exception $e) {
-            return new TemplateResponse(
-                $this->appName,
-                'error',
-                ['error' => $e->getMessage()],
-                'error'
-            );
-        }
+	/**
+	 * Serve the SPA for deep links (Vue history mode). Delegates to {@see page()}.
+	 *
+	 * @return TemplateResponse The rendered Filinq index template.
+	 *
+	 * @spec openspec/specs/adopt-apphost/spec.md
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function catchAll(): TemplateResponse {
+		return $this->page();
+	}//end catchAll()
 
-    }//end page()
-
-    /**
-     * Serve the SPA shell for any deep link under /apps/docudesk/* so
-     * vue-router (HTML5 history mode) can resolve sub-routes on a hard
-     * URL refresh — otherwise NC's PHP router 404s before the SPA ever
-     * mounts. Delegates to {@see page()}.
-     *
-     * @param string $path Deep-link path captured by the route's `{path}`
-     *                     placeholder. Defaulted to empty so the same
-     *                     controller method serves `/` cleanly.
-     *
-     * @return TemplateResponse The dashboard page template
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-18
-     */
-    public function catchAll(string $path=''): TemplateResponse
-    {
-        return $this->page(getParameter: null);
-
-    }//end catchAll()
+	/**
+	 * Build the `index` TemplateResponse.
+	 *
+	 * @return TemplateResponse The rendered Filinq index template.
+	 */
+	protected function renderIndex(): TemplateResponse {
+		return new TemplateResponse($this->appName, 'index');
+	}//end renderIndex()
 }//end class

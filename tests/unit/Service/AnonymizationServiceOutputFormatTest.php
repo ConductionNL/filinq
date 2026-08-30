@@ -1,20 +1,25 @@
 <?php
 
 /**
- * Unit tests for AnonymizationService PDF output format behaviour
+ * Unit tests for the anonymised-PDF output behaviour
  *
- * Covers: outputFormat 'pdf' triggers PdfConversionService; rollback on
+ * Covers: outputFormat 'pdf'/'pdf-only' triggers PdfConversionService; rollback on
  * ConversionFailedException; atomic file replacement on success; 'preserve'
- * mode leaves conversion untouched; tenant default applied when per-call absent.
+ * mode leaves conversion untouched; pdf-only cleans up the native intermediate.
+ *
+ * The gate itself is owned by AnonymisedPdfOutputService — the collaborator the
+ * anonymise pipeline delegates the PDF-output step to — so the behaviour is
+ * asserted against its public API instead of against AnonymizationService's
+ * source text.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-7
  *
@@ -22,271 +27,362 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
-use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\AnonymisedPdfOutputService;
+use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\PdfConversionService;
+use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 
 /**
- * Tests for AnonymizationService PDF output format integration
+ * Tests for the PDF output-format gate on an anonymised intermediate
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class AnonymizationServiceOutputFormatTest extends TestCase
-{
-    /**
-     * Verify the source file exists and the class can be loaded.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-7
-     */
-    public function testSourceFileExists(): void
-    {
-        $this->assertFileExists(
-            __DIR__.'/../../../lib/Service/AnonymizationService.php'
-        );
+class AnonymizationServiceOutputFormatTest extends TestCase {
+	use BuildsAnonymizationService;
 
-    }//end testSourceFileExists()
+	/**
+	 * Build the gate under test around the supplied cascade double.
+	 *
+	 * @param PdfConversionService $pdfConversion The cascade double.
+	 *
+	 * @return AnonymisedPdfOutputService
+	 */
+	private function makeGate(PdfConversionService $pdfConversion): AnonymisedPdfOutputService {
+		return new AnonymisedPdfOutputService(
+			logger: new NullLogger(),
+			pdfConversion: $pdfConversion
+		);
 
-    /**
-     * The service delegates PDF conversion to PdfConversionService::convertToPdf.
-     *
-     * The real anonymizeDocument() path calls $this->pdfConversion->convertToPdf()
-     * when outputFormat is 'pdf' and the anonymised result is not already a PDF.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
-     */
-    public function testConvertToPdfDelegationExists(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('convertToPdf', $content);
+	}//end makeGate()
 
-    }//end testConvertToPdfDelegationExists()
+	/**
+	 * Build a File double with the given mime type.
+	 *
+	 * @param string $mime The mime type the node reports.
+	 *
+	 * @return File The node double.
+	 */
+	private function makeNode(string $mime): File {
+		$node = $this->createMock(File::class);
+		$node->method('getMimeType')->willReturn($mime);
 
-    /**
-     * The service rolls back the anonymised intermediate by deleting it when
-     * PDF conversion fails. The real source performs an inline $result->delete()
-     * inside the ConversionFailedException catch before re-throwing.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
-     */
-    public function testRollbackDeletesIntermediateOnFailure(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('$result->delete();', $content);
+		return $node;
+	}//end makeNode()
 
-    }//end testRollbackDeletesIntermediateOnFailure()
+	/**
+	 * Verify the source file exists and the class can be loaded.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-7
+	 */
+	public function testSourceFileExists(): void {
+		$this->assertFileExists(
+			__DIR__ . '/../../../lib/Service/AnonymizationService.php'
+		);
 
-    /**
-     * The PDF-conversion gate is guarded on outputFormat === 'pdf' and only runs
-     * when the anonymised result is a File. The atomic replacement (convert the
-     * native intermediate to PDF, then delete on failure) lives in this branch.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
-     */
-    public function testPdfConversionGateGuardExists(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString("\$outputFormat === 'pdf'", $content);
-        $this->assertStringContainsString('$result instanceof File', $content);
+	}//end testSourceFileExists()
 
-    }//end testPdfConversionGateGuardExists()
+	/**
+	 * The gate delegates the conversion to PdfConversionService::convertToPdf
+	 * and returns the converted node.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+	 */
+	public function testConvertToPdfDelegationExists(): void {
+		$native = $this->makeNode('application/vnd.oasis.opendocument.text');
+		$converted = $this->makeNode('application/pdf');
 
-    /**
-     * ConversionFailedException is imported and re-thrown uncaught from the outer
-     * catch (it bypasses the generic Exception wrapper).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
-     */
-    public function testConversionFailedExceptionIsRethrownUncaught(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('ConversionFailedException', $content);
-        $this->assertStringContainsString('throw $e;', $content);
+		$cascade = $this->createMock(PdfConversionService::class);
+		$cascade->expects($this->once())->method('convertToPdf')->with($native)->willReturn($converted);
 
-    }//end testConversionFailedExceptionIsRethrownUncaught()
+		$result = $this->makeGate($cascade)->convertResultToPdf(
+			result: $native,
+			outputFormat: 'pdf',
+			fileId: 7
+		);
 
-    /**
-     * The service calls convertToPdf only when outputFormat === 'pdf'.
-     * When outputFormat === 'preserve', conversion code is skipped.
-     *
-     * Verified structurally: the outputFormat === 'pdf' guard must appear in source.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
-     */
-    public function testOutputFormatGuardExistsInSource(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString("outputFormat === 'pdf'", $content);
+		$this->assertSame($converted, $result, 'the converted PDF node must be returned');
 
-    }//end testOutputFormatGuardExistsInSource()
+	}//end testConvertToPdfDelegationExists()
 
-    /**
-     * The PDF conversion delegates the .pdf naming to PdfConversionService.
-     *
-     * In the real source the atomic native→PDF replacement is performed by
-     * $this->pdfConversion->convertToPdf($result); the returned File becomes
-     * the new $result. The service does NOT derive the .pdf name itself — that
-     * is the PdfConversionService cascade's responsibility. We assert the
-     * delegation marker is present and the converted File is re-assigned.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
-     */
-    public function testPdfConversionReassignsResult(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('$result = $this->pdfConversion->convertToPdf($result);', $content);
+	/**
+	 * The gate rolls back the anonymised intermediate by deleting it when PDF
+	 * conversion fails.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
+	 */
+	public function testRollbackDeletesIntermediateOnFailure(): void {
+		$native = $this->makeNode('application/vnd.oasis.opendocument.text');
+		$native->expects($this->once())->method('delete');
 
-    }//end testPdfConversionReassignsResult()
+		$cascade = $this->createMock(PdfConversionService::class);
+		$cascade->method('convertToPdf')->willThrowException(new ConversionFailedException());
 
-    /**
-     * PdfConversionService::convertToPdf accepts a File and returns a File.
-     *
-     * Verifies the collaborator contract the AnonymizationService relies on so
-     * the mock wiring in this suite matches the real method signature.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
-     */
-    public function testPdfConversionServiceConvertToPdfSignature(): void
-    {
-        $method = new \ReflectionMethod(
-            \OCA\DocuDesk\Service\PdfConversionService::class,
-            'convertToPdf'
-        );
+		$this->expectException(ConversionFailedException::class);
+		$this->makeGate($cascade)->convertResultToPdf(result: $native, outputFormat: 'pdf', fileId: 7);
 
-        $params = $method->getParameters();
-        $this->assertSame('source', $params[0]->getName());
-        $this->assertSame(
-            'OCP\\Files\\File',
-            (string) $params[0]->getType(),
-            'convertToPdf must accept an OCP\\Files\\File source.'
-        );
+	}//end testRollbackDeletesIntermediateOnFailure()
 
-    }//end testPdfConversionServiceConvertToPdfSignature()
+	/**
+	 * The gate fires for BOTH 'pdf-only' and 'pdf', is skipped for 'preserve',
+	 * and is a no-op when the result is already a PDF or is not a File node.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+	 */
+	public function testPdfConversionGateGuardExists(): void {
+		foreach (['pdf-only', 'pdf'] as $format) {
+			$converted = $this->makeNode('application/pdf');
+			$cascade = $this->createMock(PdfConversionService::class);
+			$cascade->expects($this->once())->method('convertToPdf')->willReturn($converted);
 
-    /**
-     * Rollback delete failures are swallowed so the typed exception still
-     * propagates. The real source wraps $result->delete() in its own try/catch
-     * inside the ConversionFailedException handler and re-throws $e regardless.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
-     */
-    public function testRollbackDeleteFailureIsSwallowed(): void
-    {
-        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('catch (Throwable $deleteError)', $content);
-        $this->assertStringContainsString('throw $e;', $content);
+			$this->makeGate($cascade)->convertResultToPdf(
+				result: $this->makeNode('application/msword'),
+				outputFormat: $format,
+				fileId: 7
+			);
+		}
 
-    }//end testRollbackDeleteFailureIsSwallowed()
+		// 'preserve' never converts.
+		$preserveCascade = $this->createMock(PdfConversionService::class);
+		$preserveCascade->expects($this->never())->method('convertToPdf');
+		$native = $this->makeNode('application/msword');
+		$this->assertSame(
+			$native,
+			$this->makeGate($preserveCascade)->convertResultToPdf($native, 'preserve', 7)
+		);
 
-    /**
-     * ConversionFailedException carries getAttempts() per the exception contract.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
-     */
-    public function testConversionFailedExceptionGetAttempts(): void
-    {
-        $attempts = [
-            ['backend' => 'office_app', 'available' => false, 'supports' => true, 'reason' => 'Not installed'],
-            ['backend' => 'libreoffice_headless', 'available' => false, 'supports' => true, 'reason' => 'Binary not found'],
-        ];
+		// Already a PDF: no cascade, no delete.
+		$pdfCascade = $this->createMock(PdfConversionService::class);
+		$pdfCascade->expects($this->never())->method('convertToPdf');
+		$alreadyPdf = $this->makeNode('application/pdf');
+		$alreadyPdf->expects($this->never())->method('delete');
+		$this->assertSame(
+			$alreadyPdf,
+			$this->makeGate($pdfCascade)->convertResultToPdf($alreadyPdf, 'pdf-only', 7)
+		);
 
-        $e = new ConversionFailedException(
-            message: 'No backend could convert the file.',
-            attempts: $attempts
-        );
+		// Not a File node: returned untouched.
+		$nonFileCascade = $this->createMock(PdfConversionService::class);
+		$nonFileCascade->expects($this->never())->method('convertToPdf');
+		$notAFile = new \stdClass();
+		$this->assertSame(
+			$notAFile,
+			$this->makeGate($nonFileCascade)->convertResultToPdf($notAFile, 'pdf', 7)
+		);
 
-        $this->assertSame($attempts, $e->getAttempts());
-        $this->assertSame(422, $e->getCode());
+	}//end testPdfConversionGateGuardExists()
 
-    }//end testConversionFailedExceptionGetAttempts()
+	/**
+	 * ConversionFailedException propagates unchanged (it is not wrapped in the
+	 * generic Exception the pipeline uses for other failures).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
+	 */
+	public function testConversionFailedExceptionIsRethrownUncaught(): void {
+		$thrown = new ConversionFailedException(message: 'cascade exhausted', attempts: [['backend' => 'x']]);
+		$cascade = $this->createMock(PdfConversionService::class);
+		$cascade->method('convertToPdf')->willThrowException($thrown);
 
-    /**
-     * ConversionFailedException with no attempts returns an empty array.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
-     */
-    public function testConversionFailedExceptionEmptyAttempts(): void
-    {
-        $e = new ConversionFailedException();
-        $this->assertSame([], $e->getAttempts());
+		try {
+			$this->makeGate($cascade)->convertResultToPdf(
+				result: $this->makeNode('application/msword'),
+				outputFormat: 'pdf',
+				fileId: 7
+			);
+			$this->fail('ConversionFailedException must propagate.');
+		} catch (ConversionFailedException $e) {
+			$this->assertSame($thrown, $e, 'the typed exception must propagate as-is, unwrapped');
+		}
 
-    }//end testConversionFailedExceptionEmptyAttempts()
+	}//end testConversionFailedExceptionIsRethrownUncaught()
 
-    /**
-     * The service can be constructed with all ten promoted dependencies
-     * stubbed, proving the mock wiring in this suite matches the real
-     * constructor arity and parameter types.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
-     */
-    public function testServiceConstructsWithAllDependencies(): void
-    {
-        $service = $this->buildServiceWithoutDependencies();
-        $this->assertInstanceOf(AnonymizationService::class, $service);
+	/**
+	 * 'pdf-only' best-effort deletes the NATIVE intermediate after a successful
+	 * conversion (never the converted PDF), and 'pdf' keeps it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+	 */
+	public function testOutputFormatGuardExistsInSource(): void {
+		// pdf-only: native deleted, converted kept.
+		$native = $this->makeNode('application/msword');
+		$converted = $this->makeNode('application/pdf');
+		$native->expects($this->once())->method('delete');
+		$converted->expects($this->never())->method('delete');
 
-    }//end testServiceConstructsWithAllDependencies()
+		$cascade = $this->createMock(PdfConversionService::class);
+		$cascade->method('convertToPdf')->willReturn($converted);
 
-    /**
-     * Build AnonymizationService with all constructor deps stubbed.
-     *
-     * @return AnonymizationService
-     */
-    private function buildServiceWithoutDependencies(): AnonymizationService
-    {
-        $logger             = new \Psr\Log\NullLogger();
-        $container          = $this->createMock(\Psr\Container\ContainerInterface::class);
-        $appManager         = $this->createMock(\OCP\App\IAppManager::class);
-        $entityDetection    = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
-        $appConfig          = $this->createMock(\OCP\IAppConfig::class);
-        $consentCrud        = $this->createMock(\OCA\DocuDesk\Service\ConsentCrudService::class);
-        $consentService     = $this->createMock(\OCA\DocuDesk\Service\ConsentService::class);
-        $grondslagenSummary = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
-        $fileEntityStats    = $this->createMock(\OCA\DocuDesk\Service\FileEntityStatsService::class);
-        $pdfConversion      = $this->createMock(\OCA\DocuDesk\Service\PdfConversionService::class);
+		$this->makeGate($cascade)->convertResultToPdf($native, 'pdf-only', 7);
 
-        return new AnonymizationService(
-            $logger,
-            $container,
-            $appManager,
-            $entityDetection,
-            $appConfig,
-            $consentCrud,
-            $consentService,
-            $grondslagenSummary,
-            $fileEntityStats,
-            $pdfConversion
-        );
+		// pdf: native kept.
+		$keptNative = $this->makeNode('application/msword');
+		$keptConverted = $this->makeNode('application/pdf');
+		$keptNative->expects($this->never())->method('delete');
 
-    }//end buildServiceWithoutDependencies()
+		$keepCascade = $this->createMock(PdfConversionService::class);
+		$keepCascade->method('convertToPdf')->willReturn($keptConverted);
+
+		$this->makeGate($keepCascade)->convertResultToPdf($keptNative, 'pdf', 7);
+
+	}//end testOutputFormatGuardExistsInSource()
+
+	/**
+	 * The gate returns the node produced by the cascade, not the native input —
+	 * the native reference is captured before the reassignment so 'pdf-only'
+	 * still has something to clean up.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+	 */
+	public function testPdfConversionReassignsResult(): void {
+		$native = $this->makeNode('application/msword');
+		$converted = $this->makeNode('application/pdf');
+
+		$cascade = $this->createMock(PdfConversionService::class);
+		$cascade->method('convertToPdf')->willReturn($converted);
+
+		$result = $this->makeGate($cascade)->convertResultToPdf($native, 'pdf-only', 7);
+
+		$this->assertSame($converted, $result);
+		$this->assertNotSame($native, $result);
+
+	}//end testPdfConversionReassignsResult()
+
+	/**
+	 * PdfConversionService::convertToPdf accepts a File and returns a File.
+	 *
+	 * Verifies the collaborator contract the gate relies on so the mock wiring
+	 * in this suite matches the real method signature.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+	 */
+	public function testPdfConversionServiceConvertToPdfSignature(): void {
+		$method = new \ReflectionMethod(
+			\OCA\Filinq\Service\PdfConversionService::class,
+			'convertToPdf'
+		);
+
+		$params = $method->getParameters();
+		$this->assertSame('source', $params[0]->getName());
+		$this->assertSame(
+			'OCP\\Files\\File',
+			(string)$params[0]->getType(),
+			'convertToPdf must accept an OCP\\Files\\File source.'
+		);
+
+	}//end testPdfConversionServiceConvertToPdfSignature()
+
+	/**
+	 * A failing rollback delete is swallowed so the typed exception still
+	 * propagates, and a failing pdf-only cleanup delete does not fail an
+	 * otherwise-successful run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
+	 */
+	public function testRollbackDeleteFailureIsSwallowed(): void {
+		// Rollback delete blows up: the ConversionFailedException still wins.
+		$native = $this->makeNode('application/msword');
+		$native->method('delete')->willThrowException(new \RuntimeException('locked'));
+
+		$cascade = $this->createMock(PdfConversionService::class);
+		$cascade->method('convertToPdf')->willThrowException(new ConversionFailedException());
+
+		try {
+			$this->makeGate($cascade)->convertResultToPdf($native, 'pdf', 7);
+			$this->fail('ConversionFailedException must still propagate.');
+		} catch (ConversionFailedException $e) {
+			$this->addToAssertionCount(1);
+		}
+
+		// Cleanup delete blows up on the success path: the PDF is still returned.
+		$cleanupNative = $this->makeNode('application/msword');
+		$cleanupNative->method('delete')->willThrowException(new \RuntimeException('locked'));
+		$converted = $this->makeNode('application/pdf');
+
+		$okCascade = $this->createMock(PdfConversionService::class);
+		$okCascade->method('convertToPdf')->willReturn($converted);
+
+		$this->assertSame(
+			$converted,
+			$this->makeGate($okCascade)->convertResultToPdf($cleanupNative, 'pdf-only', 7),
+			'a failed pdf-only cleanup must not fail an otherwise-successful run'
+		);
+
+	}//end testRollbackDeleteFailureIsSwallowed()
+
+	/**
+	 * ConversionFailedException carries getAttempts() per the exception contract.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
+	 */
+	public function testConversionFailedExceptionGetAttempts(): void {
+		$attempts = [
+			['backend' => 'office_app', 'available' => false, 'supports' => true, 'reason' => 'Not installed'],
+			['backend' => 'libreoffice_headless', 'available' => false, 'supports' => true, 'reason' => 'Binary not found'],
+		];
+
+		$e = new ConversionFailedException(
+			message: 'No backend could convert the file.',
+			attempts: $attempts
+		);
+
+		$this->assertSame($attempts, $e->getAttempts());
+		$this->assertSame(422, $e->getCode());
+
+	}//end testConversionFailedExceptionGetAttempts()
+
+	/**
+	 * ConversionFailedException with no attempts returns an empty array.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
+	 */
+	public function testConversionFailedExceptionEmptyAttempts(): void {
+		$e = new ConversionFailedException();
+		$this->assertSame([], $e->getAttempts());
+
+	}//end testConversionFailedExceptionEmptyAttempts()
+
+	/**
+	 * The service can be constructed from its collaborators, proving the mock
+	 * wiring in this suite matches the real constructor arity and types.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+	 */
+	public function testServiceConstructsWithAllDependencies(): void {
+		$this->assertInstanceOf(AnonymizationService::class, $this->makeAnonymizationServiceFrom());
+
+	}//end testServiceConstructsWithAllDependencies()
 }//end class

@@ -2,7 +2,7 @@
 
 ## Overview
 
-DocuDesk provides GDPR-compliant publication consent tracking for entities detected in documents. Under the Wet Open Overheid (WOO), affected entities must be notified and given an objection period (minimum 4 weeks) before document publication.
+Filinq provides GDPR-compliant publication consent tracking for entities detected in documents. Under the Wet Open Overheid (WOO), affected entities must be notified and given an objection period (minimum 4 weeks) before document publication.
 
 ## Features
 

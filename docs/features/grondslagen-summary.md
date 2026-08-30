@@ -1,6 +1,6 @@
 # Grondslagen Summary
 
-DocuDesk generates PDF/A-3b grondslagen (legal-basis) summaries in two forms:
+Filinq generates PDF/A-3b grondslagen (legal-basis) summaries in two forms:
 
 1. **Per-document** — an extra summary page appended to an anonymised PDF, listing every redacted entity and the legal basis under which it was anonymised.
 2. **Per-dossier** — a standalone summary PDF aggregating grondslag data across all files in a dossier, generated on demand or automatically when the dossier is reviewed.
@@ -57,13 +57,13 @@ Templates are Twig files at `lib/Resources/templates/grondslagen/`:
 - `summary_per_doc.twig` — per-document summary page
 - `summary_per_dossier.twig` — per-dossier standalone PDF
 
-Both use Dutch labels (NL-only in v1; EN follows when `register-i18n` lands). Templates run in the same Twig sandbox as the rest of DocuDesk.
+Both use Dutch labels (NL-only in v1; EN follows when `register-i18n` lands). Templates run in the same Twig sandbox as the rest of Filinq.
 
 ## Cross-change dependencies
 
 | Change | Type | Why |
 |---|---|---|
 | `openregister:entity-relation-grondslagen` | **Hard** | Provides `EntityRelation.bases` data |
-| `docudesk:add-dossier-schema` | **Hard** | Provides the `base` schema and the `configuration` field |
-| `docudesk:anonymise-output-as-pdf-by-default` | Soft | Per-document append works cleanest on PDF/A-3b output |
-| `docudesk:anonymisation-output-folder-layout` | Soft | Provides the `anonymised/` subfolder destination |
+| `filinq:add-dossier-schema` | **Hard** | Provides the `base` schema and the `configuration` field |
+| `filinq:anonymise-output-as-pdf-by-default` | Soft | Per-document append works cleanest on PDF/A-3b output |
+| `filinq:anonymisation-output-folder-layout` | Soft | Provides the `anonymised/` subfolder destination |

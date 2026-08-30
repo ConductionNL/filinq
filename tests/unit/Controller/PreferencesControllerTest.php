@@ -1,20 +1,19 @@
 <?php
 
 /**
- * Unit tests for PreferencesController
+ * Wire-contract tests for PreferencesController
+ *
+ * Covers `GET /api/preferences/{key}` (preferences#getPreference) and
+ * `PUT /api/preferences/{key}` (preferences#setPreference): the documented
+ * `{value: string|null}` success body, the 401 anonymous rejection, the 400
+ * invalid-key rejection, the per-user storage scoping (`pref_<safeKey>` under
+ * the filinq app id) and the empty-value delete semantics.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
- *
- * @author    Conduction Development Team <info@conduction.nl>
- * @copyright 2026 Conduction B.V.
- * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * @version GIT: <git_id>
- *
- * @link https://www.DocuDesk.app
- *
- * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-5.4
+ * @package  OCA\Filinq\Tests\Unit\Controller
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,9 +21,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\PreferencesController;
+use OCA\Filinq\Controller\PreferencesController;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -34,167 +34,234 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Unit tests for PreferencesController
+ * Tests for the per-user preference read/write endpoints.
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class PreferencesControllerTest extends TestCase
-{
+class PreferencesControllerTest extends TestCase {
 
-    /**
-     * @var PreferencesController
-     */
-    private PreferencesController $controller;
+	/**
+	 * Mocked Nextcloud config service.
+	 *
+	 * @var IConfig|MockObject
+	 */
+	private IConfig|MockObject $config;
 
-    /**
-     * @var IConfig|MockObject
-     */
-    private IConfig|MockObject $mockConfig;
+	/**
+	 * Mocked user session.
+	 *
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $mockUserSession;
+	/**
+	 * Controller under test, with an authenticated session.
+	 *
+	 * @var PreferencesController
+	 */
+	private PreferencesController $controller;
 
-    /**
-     * @var IUser|MockObject
-     */
-    private IUser|MockObject $mockUser;
+	/**
+	 * Set up an authenticated controller.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->config = $this->createMock(IConfig::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $mockRequest           = $this->createMock(IRequest::class);
-        $this->mockConfig      = $this->createMock(IConfig::class);
-        $this->mockUserSession = $this->createMock(IUserSession::class);
-        $this->mockUser        = $this->createMock(IUser::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
-        $this->mockUser->method('getUID')->willReturn('testuser');
-        $this->mockUserSession->method('getUser')->willReturn($this->mockUser);
+		$this->controller = new PreferencesController(
+			$this->createMock(IRequest::class),
+			$this->config,
+			$this->userSession
+		);
 
-        $this->controller = new PreferencesController(
-            request: $mockRequest,
-            config: $this->mockConfig,
-            userSession: $this->mockUserSession,
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build a controller whose session has no logged-in user.
+	 *
+	 * @return PreferencesController The anonymous-session controller.
+	 */
+	private function anonymousController(): PreferencesController {
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
 
-    /**
-     * Test getPreference returns 401 when no user logged in.
-     *
-     * @return void
-     */
-    public function testGetPreferenceReturns401WhenNoUser(): void
-    {
-        $mockRequest = $this->createMock(IRequest::class);
-        $mockConfig  = $this->createMock(IConfig::class);
-        $mockSession = $this->createMock(IUserSession::class);
-        $mockSession->method('getUser')->willReturn(null);
+		return new PreferencesController(
+			$this->createMock(IRequest::class),
+			$this->config,
+			$session
+		);
 
-        $controller = new PreferencesController(
-            request: $mockRequest,
-            config: $mockConfig,
-            userSession: $mockSession,
-        );
+	}//end anonymousController()
 
-        $result = $controller->getPreference('some-key');
+	/**
+	 * GET returns 200 with `{value: <stored>}` and reads the per-user,
+	 * `pref_`-prefixed key under the filinq app id.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceReturnsStoredValue(): void {
+		$this->config->expects($this->once())
+			->method('getUserValue')
+			->with('alice', 'filinq', 'pref_support-dialog-seen', '')
+			->willReturn('1');
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertSame(401, $result->getStatus());
+		$response = $this->controller->getPreference('support-dialog-seen');
 
-    }//end testGetPreferenceReturns401WhenNoUser()
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => '1'], $response->getData());
 
-    /**
-     * Test getPreference returns null value when key not stored.
-     *
-     * @return void
-     */
-    public function testGetPreferenceReturnsNullWhenNotStored(): void
-    {
-        $this->mockConfig->method('getUserValue')->willReturn('');
+	}//end testGetPreferenceReturnsStoredValue()
 
-        $result = $this->controller->getPreference('my-key');
+	/**
+	 * An unset preference is reported as `{value: null}`, not as an empty
+	 * string — the UI distinguishes "never stored" from "stored empty".
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceReturnsNullWhenUnset(): void {
+		$this->config->method('getUserValue')->willReturn('');
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertSame(200, $result->getStatus());
-        $data = $result->getData();
-        $this->assertNull($data['value']);
+		$response = $this->controller->getPreference('support-dialog-seen');
 
-    }//end testGetPreferenceReturnsNullWhenNotStored()
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => null], $response->getData());
 
-    /**
-     * Test getPreference returns stored value.
-     *
-     * @return void
-     */
-    public function testGetPreferenceReturnsStoredValue(): void
-    {
-        $this->mockConfig->method('getUserValue')->willReturn('true');
+	}//end testGetPreferenceReturnsNullWhenUnset()
 
-        $result = $this->controller->getPreference('my-key');
+	/**
+	 * The caller-supplied key is sanitised before it reaches storage:
+	 * uppercase is lowered, hyphens survive, and everything outside
+	 * `[a-z0-9-]` (including path separators) is dropped.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceSanitisesKeyBeforeReading(): void {
+		$this->config->expects($this->once())
+			->method('getUserValue')
+			->with('alice', 'filinq', 'pref_my-key12', '')
+			->willReturn('x');
 
-        $this->assertSame(200, $result->getStatus());
-        $data = $result->getData();
-        $this->assertSame('true', $data['value']);
+		$response = $this->controller->getPreference('My-Key_1../2!');
 
-    }//end testGetPreferenceReturnsStoredValue()
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => 'x'], $response->getData());
 
-    /**
-     * Test getPreference returns 400 for invalid key.
-     *
-     * @return void
-     */
-    public function testGetPreferenceReturns400ForInvalidKey(): void
-    {
-        $result = $this->controller->getPreference('');
+	}//end testGetPreferenceSanitisesKeyBeforeReading()
 
-        $this->assertSame(400, $result->getStatus());
+	/**
+	 * A key that sanitises to nothing is rejected with 400 and never reaches
+	 * storage.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceRejectsUnusableKey(): void {
+		$this->config->expects($this->never())->method('getUserValue');
 
-    }//end testGetPreferenceReturns400ForInvalidKey()
+		$response = $this->controller->getPreference('***');
 
-    /**
-     * Test setPreference clears value when empty string provided.
-     *
-     * @return void
-     */
-    public function testSetPreferenceClearsValueOnEmptyString(): void
-    {
-        $this->mockConfig->expects($this->once())
-            ->method('deleteUserValue')
-            ->with('testuser', 'docudesk', 'pref_my-key');
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame(['message' => 'Invalid key'], $response->getData());
 
-        $result = $this->controller->setPreference('my-key', '');
+	}//end testGetPreferenceRejectsUnusableKey()
 
-        $this->assertSame(200, $result->getStatus());
-        $data = $result->getData();
-        $this->assertNull($data['value']);
+	/**
+	 * An anonymous caller gets 401 and no storage read is attempted.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceRejectsAnonymousCaller(): void {
+		$this->config->expects($this->never())->method('getUserValue');
 
-    }//end testSetPreferenceClearsValueOnEmptyString()
+		$response = $this->anonymousController()->getPreference('theme');
 
-    /**
-     * Test setPreference stores value when non-empty.
-     *
-     * @return void
-     */
-    public function testSetPreferenceStoresValue(): void
-    {
-        $this->mockConfig->expects($this->once())
-            ->method('setUserValue')
-            ->with('testuser', 'docudesk', 'pref_my-key', 'true');
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['message' => 'Not logged in'], $response->getData());
 
-        $result = $this->controller->setPreference('my-key', 'true');
+	}//end testGetPreferenceRejectsAnonymousCaller()
 
-        $this->assertSame(200, $result->getStatus());
-        $data = $result->getData();
-        $this->assertSame('true', $data['value']);
+	/**
+	 * PUT with a value writes it per-user and echoes it back with 200.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceStoresValue(): void {
+		$this->config->expects($this->once())
+			->method('setUserValue')
+			->with('alice', 'filinq', 'pref_theme', 'dark');
+		$this->config->expects($this->never())->method('deleteUserValue');
 
-    }//end testSetPreferenceStoresValue()
+		$response = $this->controller->setPreference('theme', 'dark');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => 'dark'], $response->getData());
+
+	}//end testSetPreferenceStoresValue()
+
+	/**
+	 * PUT with an empty value deletes the stored preference and answers
+	 * `{value: null}` — the documented clear semantics.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceWithEmptyValueDeletesIt(): void {
+		$this->config->expects($this->once())
+			->method('deleteUserValue')
+			->with('alice', 'filinq', 'pref_theme');
+		$this->config->expects($this->never())->method('setUserValue');
+
+		$response = $this->controller->setPreference('theme', '');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => null], $response->getData());
+
+	}//end testSetPreferenceWithEmptyValueDeletesIt()
+
+	/**
+	 * A key that sanitises to nothing is rejected with 400 and nothing is
+	 * written.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceRejectsUnusableKey(): void {
+		$this->config->expects($this->never())->method('setUserValue');
+		$this->config->expects($this->never())->method('deleteUserValue');
+
+		$response = $this->controller->setPreference('!!!', 'dark');
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame(['message' => 'Invalid key'], $response->getData());
+
+	}//end testSetPreferenceRejectsUnusableKey()
+
+	/**
+	 * An anonymous caller cannot write another session's preferences.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceRejectsAnonymousCaller(): void {
+		$this->config->expects($this->never())->method('setUserValue');
+
+		$response = $this->anonymousController()->setPreference('theme', 'dark');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['message' => 'Not logged in'], $response->getData());
+
+	}//end testSetPreferenceRejectsAnonymousCaller()
+
 }//end class

@@ -1,62 +1,101 @@
 <template>
 	<div class="folder-anonymization">
-		<h2>Folder Analysis &amp; Anonymization</h2>
+		<h2>{{ t('filinq', 'Folder Analysis & Anonymization') }}</h2>
 
 		<!-- Step 1: Folder input -->
 		<div v-if="!store.isActive" class="input-section">
-			<p>Enter a folder path from your Nextcloud files to analyze all documents in it.</p>
+			<p>
+				{{
+					t(
+						'filinq',
+						'Enter a folder path from your Nextcloud files to analyze all documents in it.',
+					)
+				}}
+			</p>
 			<div class="folder-input">
 				<input
 					v-model="folderPath"
 					type="text"
-					:placeholder="t('docudesk', 'e.g. Documents/contracts')"
+					:aria-label="t('filinq', 'Folder path to analyse')"
+					:placeholder="t('filinq', 'e.g. Documents/contracts')"
 					class="folder-path-input"
-					@keyup.enter="startAnalysis">
-				<NcButton type="primary" :disabled="!folderPath.trim() || store.processing" @click="startAnalysis">
-					{{ store.processing ? t('docudesk', 'Starting...') : t('docudesk', 'Analyze Folder') }}
+					@keyup.enter="startAnalysis" />
+				<NcButton
+					variant="primary"
+					:disabled="!folderPath.trim() || store.processing"
+					@click="startAnalysis">
+					{{
+						store.processing
+							? t('filinq', 'Starting...')
+							: t('filinq', 'Analyze Folder')
+					}}
 				</NcButton>
 			</div>
 		</div>
 
 		<!-- Step 2: Extraction progress + optional dossier creation (Wave 4a) -->
-		<div v-if="store.batchStatus === 'extracting' || store.batchStatus === 'review'" class="dossier-card">
-			<h3>{{ t('docudesk', 'Optional: bind a dossier') }}</h3>
+		<div
+			v-if="
+				store.batchStatus === 'extracting' || store.batchStatus === 'review'
+			"
+			class="dossier-card">
+			<h3>{{ t('filinq', 'Optional: bind a dossier') }}</h3>
 			<p class="muted">
-				{{ t('docudesk', 'Creating a dossier for this folder enables the per-dossier grondslagen report after anonymisation. You can skip this and anonymise without a dossier.') }}
+				{{
+					t(
+						'filinq',
+						'Creating a dossier for this folder enables the per-dossier grondslagen report after anonymisation. You can skip this and anonymise without a dossier.',
+					)
+				}}
 			</p>
 
 			<div v-if="!store.hasDossier">
 				<div class="row">
 					<label class="inline-label">
-						<span>{{ t('docudesk', 'Name') }}</span>
-						<input v-model="store.dossier.name"
+						<span>{{ t('filinq', 'Name') }}</span>
+						<input
+							v-model="store.dossier.name"
 							type="text"
-							:placeholder="t('docudesk', 'Dossier name')"
-							class="text-input">
+							:placeholder="t('filinq', 'Dossier name')"
+							class="text-input" />
 					</label>
 					<label class="inline-label">
-						<span>{{ t('docudesk', 'Description (optional)') }}</span>
-						<input v-model="store.dossier.description"
+						<span>{{ t('filinq', 'Description (optional)') }}</span>
+						<input
+							v-model="store.dossier.description"
 							type="text"
-							:placeholder="t('docudesk', 'Short description')"
-							class="text-input">
+							:placeholder="t('filinq', 'Short description')"
+							class="text-input" />
 					</label>
 				</div>
 				<div class="row">
 					<label class="inline-label bases-label">
-						<span>{{ t('docudesk', 'Default grondslagen (Woo Art. 5)') }}</span>
-						<select v-model="store.dossier.bases" multiple class="bases-select">
-							<option v-for="basis in store.basesOptions" :key="basis" :value="basis">
+						<span>{{
+							t('filinq', 'Default grondslagen (Woo Art. 5)')
+						}}</span>
+						<select
+							v-model="store.dossier.bases"
+							multiple
+							class="bases-select">
+							<option
+								v-for="basis in store.basesOptions"
+								:key="basis"
+								:value="basis">
 								{{ basis }}
 							</option>
 						</select>
 					</label>
 				</div>
 				<div class="row">
-					<NcButton type="primary"
+					<NcButton
+						variant="primary"
 						:disabled="store.dossier.creating || !store.folderId"
 						@click="store.createDossier()">
-						{{ store.dossier.creating ? t('docudesk', 'Creating dossier…') : t('docudesk', 'Create dossier for this folder') }}
+						{{
+							store.dossier.creating
+								? t('filinq', 'Creating dossier…')
+								: t('filinq', 'Create dossier for this folder')
+						}}
 					</NcButton>
 				</div>
 				<NcNoteCard v-if="store.dossier.error" type="error">
@@ -67,57 +106,99 @@
 			<div v-else class="dossier-summary">
 				<NcNoteCard type="success">
 					<div>
-						{{ t('docudesk', 'Dossier created.') }}
+						{{ t('filinq', 'Dossier created.') }}
 						<strong>{{ store.dossier.name }}</strong>
 					</div>
 					<div class="muted">
 						UUID: <code>{{ store.dossier.uuid }}</code>
 					</div>
-					<div v-if="store.dossier.bases && store.dossier.bases.length" class="muted">
-						{{ t('docudesk', 'Grondslagen') }}: {{ store.dossier.bases.join(', ') }}
+					<div
+						v-if="store.dossier.bases && store.dossier.bases.length"
+						class="muted">
+						{{ t('filinq', 'Grondslagen') }}:
+						{{ store.dossier.bases.join(', ') }}
 					</div>
 				</NcNoteCard>
 			</div>
 		</div>
 
 		<div v-if="store.batchStatus === 'extracting'" class="progress-section">
-			<h3>{{ t('docudesk', 'Analyzing files...') }}</h3>
+			<h3>{{ t('filinq', 'Analyzing files...') }}</h3>
 			<NcProgressBar :value="store.progress" />
 			<p class="progress-text">
-				{{ store.extractedCount }} / {{ store.totalFiles }} {{ t('docudesk', 'files processed') }}
+				{{ store.extractedCount }} / {{ store.totalFiles }}
+				{{ t('filinq', 'files processed') }}
 			</p>
 			<div class="file-list">
-				<div v-for="f in store.files" :key="f.fileId || f.fileName" class="file-item">
+				<div
+					v-for="f in store.files"
+					:key="f.fileId || f.fileName"
+					class="file-item">
 					<span class="file-name">{{ f.fileName }}</span>
-					<span :class="'status-badge status-' + f.status">{{ f.status }}</span>
-					<span v-if="f.entityCount" class="entity-count">{{ f.entityCount }} {{ t('docudesk', 'entities') }}</span>
+					<span :class="'status-badge status-' + f.status">{{
+						f.status
+					}}</span>
+					<span v-if="f.entityCount" class="entity-count"
+						>{{ f.entityCount }} {{ t('filinq', 'entities') }}</span
+					>
 				</div>
 			</div>
 		</div>
 
 		<!-- Step 3: Entity review -->
 		<div v-if="store.batchStatus === 'review'" class="review-section">
-			<h3>{{ t('docudesk', 'Review Entities') }}</h3>
-			<p>{{ t('docudesk', 'Folder') }}: <strong>{{ store.folderPath }}</strong></p>
+			<h3>{{ t('filinq', 'Review Entities') }}</h3>
+			<p>
+				{{ t('filinq', 'Folder') }}:
+				<strong>{{ store.folderPath }}</strong>
+			</p>
 			<EntityReviewTable
 				:entities="store.entities"
-				:file-count="store.filesWithEntities"
-				:default-bases="store.dossier.bases || []"
+				:fileCount="store.filesWithEntities"
+				:defaultBases="store.dossier.bases || []"
 				@toggle="store.toggleEntity($event)"
-				@bulk-select="store.setVisibleEntities($event, true)"
-				@bulk-deselect="store.setVisibleEntities($event, false)"
-				@bases-change="store.setEntityBases($event.idx, $event.bases)"
-				@skip-change="store.setEntitySkip($event.idx, $event.skip)" />
+				@bulkSelect="store.setVisibleEntities($event, true)"
+				@bulkDeselect="store.setVisibleEntities($event, false)"
+				@basesChange="store.setEntityBases($event.idx, $event.bases)"
+				@skipChange="store.setEntitySkip($event.idx, $event.skip)" />
 			<label class="flag-row">
-				<input v-model="store.appendBasisSummary" type="checkbox">
-				<span>{{ t('docudesk', 'Append a grondslagen-summary page to each anonymised PDF (Wave 4a)') }}</span>
+				<input v-model="store.appendBasisSummary" type="checkbox" />
+				<span>{{
+					t(
+						'filinq',
+						'Append a grondslagen-summary page to each anonymised PDF (Wave 4a)',
+					)
+				}}</span>
 			</label>
+			<!-- Hard warning: per-dossier placeholder numbers are carried across
+				the folder's files, so the whole folder MUST be published as ONE
+				publication/dossier. Splitting it into separate publications would
+				re-introduce the cross-publication linking key the scope-local
+				numbering exists to prevent. -->
+			<NcNoteCard type="warning">
+				{{
+					t(
+						'filinq',
+						'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.',
+					)
+				}}
+			</NcNoteCard>
 			<div class="action-bar">
-				<NcButton type="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeBatch()">
-					{{ t('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
+				<NcButton
+					variant="primary"
+					:disabled="store.selectedEntityCount === 0"
+					@click="store.anonymizeFolder()">
+					{{
+						n(
+							'filinq',
+							'Anonymize %n entity',
+							'Anonymize %n entities',
+							store.selectedEntityCount,
+						)
+					}}
 				</NcButton>
-				<NcButton type="tertiary" @click="store.reset()">
-					{{ t('docudesk', 'Cancel') }}
+				<NcButton variant="tertiary" @click="store.reset()">
+					{{ t('filinq', 'Cancel') }}
 				</NcButton>
 			</div>
 		</div>
@@ -125,26 +206,41 @@
 		<!-- Step 4: Anonymizing -->
 		<div v-if="store.batchStatus === 'anonymizing'" class="loading-section">
 			<NcLoadingIcon :size="44" />
-			<p>{{ t('docudesk', 'Anonymizing documents...') }}</p>
+			<p>{{ t('filinq', 'Anonymizing documents...') }}</p>
 		</div>
 
 		<!-- Step 5: Completed -->
 		<div v-if="store.batchStatus === 'completed'" class="completed-section">
 			<NcNoteCard type="success">
-				{{ t('docudesk', 'All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.') }}
+				{{
+					t(
+						'filinq',
+						'All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.',
+					)
+				}}
 			</NcNoteCard>
 
 			<!-- Wave 4a: dossier grondslagen report -->
 			<div v-if="store.hasDossier" class="dossier-report-block">
-				<h4>{{ t('docudesk', 'Dossier grondslagen report') }}</h4>
+				<h4>{{ t('filinq', 'Dossier grondslagen report') }}</h4>
 				<p class="muted">
-					{{ t('docudesk', 'Regenerates grondslagen.pdf at the dossier root, aggregating every anonymised file under this dossier.') }}
+					{{
+						t(
+							'filinq',
+							'Regenerates grondslagen.pdf at the dossier root, aggregating every anonymised file under this dossier.',
+						)
+					}}
 				</p>
 				<div class="action-bar">
-					<NcButton type="secondary"
+					<NcButton
+						variant="secondary"
 						:disabled="store.report.generating"
 						@click="store.generateDossierReport()">
-						{{ store.report.generating ? t('docudesk', 'Generating…') : t('docudesk', 'Generate dossier grondslagen report') }}
+						{{
+							store.report.generating
+								? t('filinq', 'Generating…')
+								: t('filinq', 'Generate dossier grondslagen report')
+						}}
 					</NcButton>
 				</div>
 				<NcNoteCard v-if="store.report.error" type="error">
@@ -152,17 +248,23 @@
 				</NcNoteCard>
 				<NcNoteCard v-if="store.report.result" type="success">
 					<div>
-						{{ t('docudesk', 'Report generated at') }}: <strong>{{ store.report.result.filePath }}</strong>
+						{{ t('filinq', 'Report generated at') }}:
+						<strong>{{ store.report.result.filePath }}</strong>
 					</div>
 				</NcNoteCard>
 			</div>
 
 			<div class="action-bar">
-				<NcButton type="secondary" @click="downloadReport">
-					{{ t('docudesk', 'Download Report') }}
-				</NcButton>
-				<NcButton type="primary" @click="store.reset()">
-					{{ t('docudesk', 'Analyze Another Folder') }}
+				<!--
+					The batch CSV "Download Report" button is temporarily removed.
+					The folder flow now anonymises file-by-file via the single-file
+					endpoint and no longer runs the batch-anonymise step, so the
+					batch record is never marked 'completed' and GET /batch/{id}/report
+					would return HTTP 409 / empty. It comes back once per-file results
+					are written back to the batch record (or a client-side summary is built).
+				-->
+				<NcButton variant="primary" @click="store.reset()">
+					{{ t('filinq', 'Analyze Another Folder') }}
 				</NcButton>
 			</div>
 		</div>
@@ -170,23 +272,31 @@
 		<!-- Error state -->
 		<div v-if="store.batchStatus === 'error'" class="error-section">
 			<NcNoteCard type="error">
-				{{ store.error || t('docudesk', 'An error occurred') }}
+				{{ store.error || t('filinq', 'An error occurred') }}
 			</NcNoteCard>
-			<NcButton type="primary" @click="store.reset()">
-				{{ t('docudesk', 'Try Again') }}
+			<NcButton variant="primary" @click="store.reset()">
+				{{ t('filinq', 'Try Again') }}
 			</NcButton>
 		</div>
 	</div>
 </template>
+
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { folderAnonymizationStore } from '../../store/store.js'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcProgressBar } from '@nextcloud/vue'
 import EntityReviewTable from './EntityReviewTable.vue'
+import { folderAnonymizationStore } from '../../store/store.js'
 
 export default {
 	name: 'FolderAnonymizationView',
-	components: { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard, EntityReviewTable },
+	components: {
+		NcButton,
+		NcProgressBar,
+		NcLoadingIcon,
+		NcNoteCard,
+		EntityReviewTable,
+	},
+
 	/**
 	 * Expose the folder anonymization store to the Options API.
 	 *
@@ -195,9 +305,11 @@ export default {
 	setup() {
 		return { store: folderAnonymizationStore }
 	},
+
 	data() {
 		return { folderPath: '' }
 	},
+
 	methods: {
 		t,
 		/**
@@ -211,17 +323,16 @@ export default {
 				folderAnonymizationStore.startFolderBatch(path)
 			}
 		},
-		/**
-		 * Open the completed batch report in a new tab.
-		 *
-		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#8-1
-		 */
-		downloadReport() {
-			window.open(folderAnonymizationStore.getReportUrl(), '_blank')
-		},
+		// Temporarily removed alongside the batch CSV "Download Report" button —
+		// see the store's getReportUrl() note. Comes back when the batch report
+		// is wired to the per-file anonymisation results.
+		// downloadReport() {
+		//     window.open(folderAnonymizationStore.getReportUrl(), '_blank')
+		// },
 	},
 }
 </script>
+
 <style scoped>
 .folder-anonymization {
 	padding: 20px;
@@ -411,5 +522,4 @@ export default {
 .dossier-report-block h4 {
 	margin-top: 0;
 }
-
 </style>

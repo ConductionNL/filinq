@@ -1,8 +1,13 @@
 ---
-status: implemented
+status: in-progress
 ---
 
 # PDF Generation
+
+**Status**: in-progress
+**OpenSpec changes**:
+- [pdfua-accessible-output](../../changes/pdfua-accessible-output/) _(active)_ — adds tagged, accessible PDF output (PDF/UA-1 target): `accessible` option routed through the LibreOffice accessible-export mode with mandatory language/title metadata and honest non-conformance failure on the mPDF path (REQ-DDPUA-001/002) (kind: code)
+- [template-charts](../../changes/template-charts/) _(active)_ — extends the Twig sandbox whitelist with exactly three side-effect-bounded visual-content functions `chart`/`data_table`/`nc_image`; all other sandbox guarantees unchanged (REQ-DDTCH-005) (kind: code)
 
 ## Purpose
 
@@ -39,8 +44,8 @@ PdfService accepts a Twig template string and data context, renders HTML via a s
 - AND the error message includes "Template rendering failed"
 
 #### Scenario: Service is injectable via DI
-- GIVEN any Nextcloud app has DocuDesk as a dependency
-- WHEN the app resolves `OCA\DocuDesk\Service\PdfService::class` from the container
+- GIVEN any Nextcloud app has Filinq as a dependency
+- WHEN the app resolves `OCA\Filinq\Service\PdfService::class` from the container
 - THEN the PdfService instance is provided
 - AND the app can generate PDFs without own mPDF/Twig integration
 
@@ -200,12 +205,12 @@ An HTTP endpoint allows authenticated users to generate PDFs on demand.
 PdfService requires mPDF and Twig libraries at specific minimum versions.
 
 #### Scenario: mPDF dependency
-- GIVEN DocuDesk's composer.json
+- GIVEN Filinq's composer.json
 - WHEN dependencies are inspected
 - THEN `mpdf/mpdf: ^8.2` is declared
 
 #### Scenario: Twig dependency
-- GIVEN DocuDesk's composer.json
+- GIVEN Filinq's composer.json
 - WHEN dependencies are inspected
 - THEN `twig/twig: ^3.18` is declared
 

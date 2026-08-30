@@ -9,37 +9,58 @@ SPDX-License-Identifier: EUPL-1.2
 	<div v-if="visible" class="anonymiser-backend-warning">
 		<NcNoteCard type="warning" class="anonymiser-backend-warning__card">
 			<div class="anonymiser-backend-warning__body">
-				<p v-if="!appApiInstalled" class="anonymiser-backend-warning__appapi-line">
-					{{ t('docudesk', 'AppAPI is not installed. Install AppAPI from the App Store before installing OpenAnonymiser.') }}
+				<p
+					v-if="!appApiInstalled"
+					class="anonymiser-backend-warning__appapi-line">
+					{{
+						t(
+							'filinq',
+							'AppAPI is not installed. Install AppAPI from the App Store before installing OpenAnonymiser.',
+						)
+					}}
 				</p>
 				<p>
-					{{ t('docudesk', 'Entity recognition is running in regex-only mode. For higher-quality anonymisation, install one of the supported backends:') }}
+					{{
+						t(
+							'filinq',
+							'Entity recognition is running in regex-only mode. For higher-quality anonymisation, install one of the supported backends:',
+						)
+					}}
 				</p>
 				<ul class="anonymiser-backend-warning__links">
 					<li>
-						<a :href="appStoreUrl('openanonymiser_light')" class="anonymiser-backend-warning__link">
-							{{ t('docudesk', 'OpenAnonymiser Light (CPU)') }}
+						<a
+							:href="appStoreUrl('openanonymiser_light')"
+							class="anonymiser-backend-warning__link">
+							{{ t('filinq', 'OpenAnonymiser Light (CPU)') }}
 						</a>
-						{{ t('docudesk', '— lightweight, no GPU required') }}
+						{{ t('filinq', '— lightweight, no GPU required') }}
 					</li>
 					<li>
-						<a :href="appStoreUrl('openanonymiser')" class="anonymiser-backend-warning__link">
-							{{ t('docudesk', 'OpenAnonymiser (GPU)') }}
+						<a
+							:href="appStoreUrl('openanonymiser')"
+							class="anonymiser-backend-warning__link">
+							{{ t('filinq', 'OpenAnonymiser (GPU)') }}
 						</a>
-						{{ t('docudesk', '— high accuracy, requires a GPU') }}
+						{{ t('filinq', '— high accuracy, requires a GPU') }}
 					</li>
 					<li>
-						<a href="/settings/admin/openregister" class="anonymiser-backend-warning__link">
-							{{ t('docudesk', 'Configure a custom anonymisation endpoint') }}
+						<a
+							href="/settings/admin/openregister"
+							class="anonymiser-backend-warning__link">
+							{{
+								t(
+									'filinq',
+									'Configure a custom anonymisation endpoint',
+								)
+							}}
 						</a>
-						{{ t('docudesk', '— via OpenRegister settings') }}
+						{{ t('filinq', '— via OpenRegister settings') }}
 					</li>
 				</ul>
 				<div class="anonymiser-backend-warning__actions">
-					<NcButton
-						type="tertiary"
-						@click="dismissWarning">
-						{{ t('docudesk', 'Dismiss') }}
+					<NcButton variant="tertiary" @click="dismissWarning">
+						{{ t('filinq', 'Dismiss') }}
 					</NcButton>
 				</div>
 			</div>
@@ -48,8 +69,8 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
-import { NcNoteCard, NcButton } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { NcButton, NcNoteCard } from '@nextcloud/vue'
 
 export default {
 	name: 'AnonymiserBackendWarning',
@@ -68,6 +89,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/**
 		 * Whether AppAPI is installed on this Nextcloud instance.
 		 * When false, a leading notice instructs the admin to install AppAPI first.
@@ -118,7 +140,7 @@ export default {
 			this.dismissing = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/docudesk/api/admin/anonymiser-warning/dismiss',
+					'/index.php/apps/filinq/api/admin/anonymiser-warning/dismiss',
 					{ method: 'POST' },
 				)
 				if (response.ok === false) {
@@ -127,7 +149,9 @@ export default {
 				this.visible = false
 				this.$emit('dismissed')
 			} catch (err) {
-				showError(t('docudesk', 'Failed to dismiss the anonymiser backend warning'))
+				showError(
+					t('filinq', 'Failed to dismiss the anonymiser backend warning'),
+				)
 			} finally {
 				this.dismissing = false
 			}

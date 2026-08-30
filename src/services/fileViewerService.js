@@ -1,7 +1,7 @@
-/* eslint-disable no-console */
-import axios from '@nextcloud/axios'
-import { generateRemoteUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
+import axios from '@nextcloud/axios'
+import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
+import { odfXmlToText } from './odfToHtml.js'
 
 /**
  * Build the WebDAV URL for a file inside the current user's storage.
@@ -21,7 +21,10 @@ export function buildWebdavUrl(path) {
 		throw new Error('User not authenticated')
 	}
 	const normalised = toUserRelativePath(path, user.uid)
-	const segments = normalised.split('/').map((s) => encodeURIComponent(s)).join('/')
+	const segments = normalised
+		.split('/')
+		.map((s) => encodeURIComponent(s))
+		.join('/')
 	return generateRemoteUrl(`dav/files/${user.uid}${segments}`)
 }
 
@@ -58,6 +61,33 @@ export async function fetchFileAsArrayBuffer(path) {
 }
 
 /**
+ * Fetch an arbitrary same-origin URL as an ArrayBuffer (for pdfjs).
+ *
+ * Used for content that isn't a plain WebDAV file — e.g. the server-rendered
+ * EML preview PDF served by Filinq's `eml_preview#preview` endpoint.
+ *
+ * @param {string} url Absolute or app-relative URL returning binary data.
+ * @return {Promise<ArrayBuffer>}
+ */
+export async function fetchUrlAsArrayBuffer(url) {
+	const response = await axios.get(url, { responseType: 'arraybuffer' })
+	return response.data
+}
+
+/**
+ * Build the URL of the server-rendered PDF preview for an original EML file.
+ *
+ * @param {number} fileId Nextcloud file id of the source .eml.
+ * @return {string} App-relative URL of the preview endpoint.
+ * @spec openspec/changes/eml-viewer-preview/specs/eml-preview/spec.md#requirement-the-file-viewer-must-render-eml-via-the-server-rendered-preview
+ */
+export function emlPreviewUrl(fileId) {
+	return generateUrl('/apps/filinq/api/anonymization/eml-preview/{fileId}', {
+		fileId,
+	})
+}
+
+/**
  * Fetch a file as plain text.
  *
  * @param {string} path Absolute path inside the user's storage.
@@ -74,6 +104,7 @@ export async function fetchFileAsText(path) {
 // PdfViewer.vue / WordViewer.vue so we don't double-bundle.
 let pdfjsLibPromise = null
 let mammothPromise = null
+let jsZipPromise = null
 
 /**
  * Lazy-load pdfjs-dist plus its worker.
@@ -83,12 +114,11 @@ let mammothPromise = null
 async function loadPdfjs() {
 	if (!pdfjsLibPromise) {
 		pdfjsLibPromise = (async () => {
-			// eslint-disable-next-line import/no-unresolved
 			const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs')
 			const workerUrl = new URL(
 				'pdfjs-dist/build/pdf.worker.min.mjs',
 				import.meta.url,
-			)
+			).toString()
 			pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
 			return pdfjsLib
 		})()
@@ -103,10 +133,21 @@ async function loadPdfjs() {
  */
 async function loadMammoth() {
 	if (!mammothPromise) {
-		// eslint-disable-next-line import/no-unresolved
 		mammothPromise = import('mammoth/mammoth.browser.js')
 	}
 	return mammothPromise
+}
+
+/**
+ * Lazy-load JSZip (odt is a ZIP container).
+ *
+ * @return {Promise<object>} JSZip module.
+ */
+async function loadJsZip() {
+	if (!jsZipPromise) {
+		jsZipPromise = import('jszip')
+	}
+	return jsZipPromise
 }
 
 /**
@@ -128,7 +169,22 @@ function isPdf(mime, name) {
  * @return {boolean}
  */
 function isWord(mime, name) {
-	return mime.includes('wordprocessingml') || mime.includes('msword') || /\.docx?$/i.test(name)
+	return (
+		mime.includes('wordprocessingml')
+		|| mime.includes('msword')
+		|| /\.docx?$/i.test(name)
+	)
+}
+
+/**
+ * Whether a MIME type / file name looks like an OpenDocument Text (.odt).
+ *
+ * @param {string} mime MIME type.
+ * @param {string} name File name.
+ * @return {boolean}
+ */
+function isOdt(mime, name) {
+	return mime.includes('opendocument.text') || /\.odt$/i.test(name)
 }
 
 /**
@@ -138,6 +194,8 @@ function isWord(mime, name) {
  * - text/* (and json/xml/markdown): fetched verbatim over WebDAV.
  * - PDF: every page's text content concatenated via pdfjs.
  * - Word (.docx): raw text via mammoth.
+ * - ODT: content.xml + styles.xml text via JSZip (the ZIP's transport bytes
+ *   would otherwise be fetched as garbage text).
  * - Anything else: best-effort WebDAV text fetch.
  *
  * @param {object} file File descriptor.
@@ -173,6 +231,23 @@ export async function extractDocumentText(file) {
 		const mammoth = mammothModule.default || mammothModule
 		const result = await mammoth.extractRawText({ arrayBuffer })
 		return result.value || ''
+	}
+
+	if (isOdt(mime, name)) {
+		const [jsZipModule, arrayBuffer] = await Promise.all([
+			loadJsZip(),
+			fetchFileAsArrayBuffer(file.path),
+		])
+		const JSZip = jsZipModule.default || jsZipModule
+		const zip = await JSZip.loadAsync(arrayBuffer)
+		const parts = []
+		for (const part of ['content.xml', 'styles.xml']) {
+			const entry = zip.file(part)
+			if (entry) {
+				parts.push(odfXmlToText(await entry.async('string')))
+			}
+		}
+		return parts.filter((p) => p !== '').join('\n')
 	}
 
 	// text/plain, markdown, json, xml, or unknown — fetch verbatim.

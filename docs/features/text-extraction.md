@@ -4,7 +4,7 @@ sidebar_position: 8
 
 # Text Extraction
 
-DocuDesk provides powerful text extraction capabilities that allow you to extract and process text content from various document formats. This feature serves as the foundation for many other DocuDesk capabilities, including document analysis, reporting, and anonymization.
+Filinq provides powerful text extraction capabilities that allow you to extract and process text content from various document formats. This feature serves as the foundation for many other Filinq capabilities, including document analysis, reporting, and anonymization.
 
 ## Supported File Formats
 
@@ -31,7 +31,7 @@ Text extraction is typically used as part of a larger workflow, but you can also
 
 ```php
 // Example: Extract text from a document
-$extractionService = \OC::$server->get(OCA\DocuDesk\Service\ExtractionService::class);
+$extractionService = \OC::$server->get(OCA\Filinq\Service\ExtractionService::class);
 $text = $extractionService->extractText('/path/to/document.pdf');
 
 // Example: Extract metadata from a document
@@ -58,7 +58,7 @@ Text extraction can be resource-intensive, especially for large documents. Consi
 
 ## Integration with Other Features
 
-Text extraction integrates with several other DocuDesk features:
+Text extraction integrates with several other Filinq features:
 
 - **Document Analysis**: Extracted text is analyzed for sensitive information
 - **Reporting**: Text content is used to generate document reports
@@ -67,7 +67,7 @@ Text extraction integrates with several other DocuDesk features:
 
 ## Configuration
 
-No specific configuration is required for basic text extraction functionality. The necessary libraries are included with DocuDesk.
+No specific configuration is required for basic text extraction functionality. The necessary libraries are included with Filinq.
 
 ## Limitations
 
@@ -85,4 +85,4 @@ If you encounter issues with text extraction:
 1. Verify the document is not corrupted or password-protected
 2. Check that the file format is supported
 3. Ensure your server has sufficient memory allocated
-4. Review the DocuDesk logs for specific error messages 
+4. Review the Filinq logs for specific error messages 

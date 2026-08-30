@@ -1,14 +1,14 @@
-# DocuDesk -- GDPR-Compliant Document Processing for Nextcloud
+# Filinq -- GDPR-Compliant Document Processing for Nextcloud
 
 ## Overview
 
-DocuDesk is a Nextcloud app for GDPR-compliant document processing, publication consent management, and automatic metadata enrichment. It enables organizations to anonymize sensitive documents, track publication consent under the Wet Open Overheid (WOO), and enrich document metadata -- all processed 100% locally with no external cloud dependencies. DocuDesk integrates tightly with OpenRegister via events to enrich documents as they are created and updated.
+Filinq is a Nextcloud app for GDPR-compliant document processing, publication consent management, and automatic metadata enrichment. It enables organizations to anonymize sensitive documents, track publication consent under the Wet Open Overheid (WOO), and enrich document metadata -- all processed 100% locally with no external cloud dependencies. Filinq integrates tightly with OpenRegister via events to enrich documents as they are created and updated.
 
 ## Architecture
 
 - **Type**: Nextcloud App (PHP backend + Vue 2 frontend)
 - **Data layer**: OpenRegister (consent objects stored as register objects; files stored in Nextcloud filesystem)
-- **Pattern**: Service-oriented -- DocuDesk orchestrates OpenRegister's TextExtractionService, FileService, EntityRelationMapper, and ObjectService
+- **Pattern**: Service-oriented -- Filinq orchestrates OpenRegister's TextExtractionService, FileService, EntityRelationMapper, and ObjectService
 - **License**: EUPL-1.2
 - **Event-driven**: Listens to OpenRegister ObjectCreated/Updated/Deleted events for automatic metadata enrichment
 
@@ -30,7 +30,7 @@ DocuDesk is a Nextcloud app for GDPR-compliant document processing, publication 
 | Backend | PHP 8.0+, Nextcloud App Framework |
 | Frontend | Vue 2.7, Pinia, @nextcloud/vue |
 | Data (Consent) | OpenRegister ObjectService (JSON object storage) |
-| Data (Files) | Nextcloud IRootFolder (user files in DocuDesk/ folder) |
+| Data (Files) | Nextcloud IRootFolder (user files in Filinq/ folder) |
 | Entity Recognition | OpenRegister TextExtractionService + EntityRelationMapper |
 | Anonymization | OpenRegister FileService (anonymizeDocument) |
 | Build | Webpack 5, @nextcloud/webpack-vue-config |
@@ -43,7 +43,7 @@ DocuDesk is a Nextcloud app for GDPR-compliant document processing, publication 
 | Feature | Description | Status |
 |---------|-------------|--------|
 | Anonymization Pipeline | Upload -> extract text/entities -> anonymize document (3-step pipeline) | Done |
-| Processed File Listing | List files in DocuDesk folder with entity counts, risk levels, and status | Done |
+| Processed File Listing | List files in Filinq folder with entity counts, risk levels, and status | Done |
 | Consent Management | GDPR publication consent tracking with configurable objection periods | Done |
 | Consent Detail View | View and update consent status, notification status, publication decision | Done |
 | Metadata Enrichment | Language detection, keyword extraction, topic classification | Done |
@@ -66,7 +66,7 @@ DocuDesk is a Nextcloud app for GDPR-compliant document processing, publication 
 ## Key Directories
 
 ```
-docudesk/
+filinq/
 ├── appinfo/              # App manifest (info.xml) and routes
 ├── lib/
 │   ├── AppInfo/          # Application bootstrap (event listeners, widgets)
@@ -75,7 +75,7 @@ docudesk/
 │   ├── EventListener/    # OpenRegister event listener
 │   ├── Sections/         # Admin settings section
 │   ├── Service/          # Business logic (AnonymizationService, ConsentService, MetadataService, SettingsService)
-│   └── Settings/         # Admin settings page + docudesk_register.json
+│   └── Settings/         # Admin settings page + filinq_register.json
 ├── src/
 │   ├── components/       # Shared Vue components
 │   ├── navigation/       # MainMenu navigation
@@ -89,7 +89,7 @@ docudesk/
 
 ## Development
 
-- **Local URL**: http://localhost:8080/apps/docudesk/
+- **Local URL**: http://localhost:8080/apps/filinq/
 - **Requires**: OpenRegister app installed and enabled (>= v0.2.10)
 - **Docker**: Part of openregister/docker-compose.yml
-- **Config JSON**: `lib/Settings/docudesk_register.json` defines the Consent Register + PublicationConsent schema
+- **Config JSON**: `lib/Settings/filinq_register.json` defines the Consent Register + PublicationConsent schema

@@ -7,69 +7,74 @@ import { consentStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Standing Publication Consents')"
-			:description="t('docudesk', 'Manage entity-level standing publication consent records')"
-			:show-title="true"
+			:title="t('filinq', 'Standing Publication Consents')"
+			:description="
+				t(
+					'filinq',
+					'Manage entity-level standing publication consent records',
+				)
+			"
+			:showTitle="true"
 			:objects="entityConsents"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="consentStore.loading"
 			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="false"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-view-toggle="false"
-			:show-add="true"
-			row-key="id"
-			:empty-text="emptyContentName"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			:showViewToggle="false"
+			:showAdd="true"
+			rowKey="id"
+			:emptyText="emptyContentName"
 			:refreshing="isRefreshing"
 			@refresh="handleRefresh"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
+			@pageChanged="onPageChanged"
+			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateModal">
 			<!-- Stats above the table -->
 			<template #above-table>
 				<div class="consent-stats">
 					<CnStatsBlock
-						:title="t('docudesk', 'Total')"
+						:title="t('filinq', 'Total')"
 						:count="entityConsents.length"
-						:count-label="t('docudesk', 'records')"
+						:countLabel="t('filinq', 'records')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Active')"
+						:title="t('filinq', 'Active')"
 						:count="activeCount"
-						:count-label="t('docudesk', 'active')"
+						:countLabel="t('filinq', 'active')"
 						variant="success"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Inactive')"
+						:title="t('filinq', 'Inactive')"
 						:count="inactiveCount"
-						:count-label="t('docudesk', 'inactive')"
+						:countLabel="t('filinq', 'inactive')"
 						variant="warning"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 				</div>
 			</template>
 
 			<!-- Entity type badge -->
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
-					:color-map="entityTypeColorMap" />
+					:label="row.entityType || t('filinq', 'Unknown')"
+					:colorMap="entityTypeColorMap" />
 			</template>
 
 			<!-- Consent method badge -->
 			<template #column-consentMethod="{ row }">
 				<CnStatusBadge
 					:label="formatConsentMethod(row.consentMethod)"
-					:color-map="consentMethodColorMap" />
+					:colorMap="consentMethodColorMap" />
 			</template>
 
 			<!-- Valid From column -->
@@ -85,15 +90,15 @@ import { consentStore } from '../../store/store.js'
 			<!-- Active column -->
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="row.active ? t('docudesk', 'Yes') : t('docudesk', 'No')"
-					:color-map="activeColorMap" />
+					:label="row.active ? t('filinq', 'Yes') : t('filinq', 'No')"
+					:colorMap="activeColorMap" />
 			</template>
 
 			<!-- Consent status badge -->
 			<template #column-consentStatus="{ row }">
 				<CnStatusBadge
 					:label="formatStatus(row.consentStatus)"
-					:color-map="consentStatusColorMap" />
+					:colorMap="consentStatusColorMap" />
 			</template>
 
 			<!-- Row actions -->
@@ -103,21 +108,19 @@ import { consentStore } from '../../store/store.js'
 						<DotsHorizontal :size="20" />
 					</template>
 					<NcActionButton
-						close-after-click
+						closeAfterClick
 						:disabled="row.active === false"
 						@click="expireConsent(row)">
 						<template #icon>
 							<ClockRemove :size="20" />
 						</template>
-						{{ t('docudesk', 'Expire') }}
+						{{ t('filinq', 'Expire') }}
 					</NcActionButton>
-					<NcActionButton
-						close-after-click
-						@click="revokeConsent(row)">
+					<NcActionButton closeAfterClick @click="revokeConsent(row)">
 						<template #icon>
 							<Cancel :size="20" />
 						</template>
-						{{ t('docudesk', 'Revoke') }}
+						{{ t('filinq', 'Revoke') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -128,16 +131,35 @@ import { consentStore } from '../../store/store.js'
 			:show="showCreateModal"
 			@close="closeCreateModal"
 			@created="handleCreate" />
+
+		<!--
+			Revoke confirmation. Replaces window.confirm(): revokeConsent below
+			runs only from @confirm, so the withdrawal still requires an
+			explicit confirmation.
+		-->
+		<ConfirmActionDialog
+			v-if="revokeTarget"
+			:name="t('filinq', 'Revoke standing consent')"
+			:message="
+				t(
+					'filinq',
+					'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.',
+				)
+			"
+			:confirmLabel="t('filinq', 'Revoke')"
+			:busy="revoking"
+			@confirm="executeRevoke"
+			@cancel="cancelRevoke" />
 	</div>
 </template>
 
 <script>
-import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
-import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
-import ClockRemove from 'vue-material-design-icons/ClockRemove.vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
-
+import ClockRemove from 'vue-material-design-icons/ClockRemove.vue'
+import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import CreateStandingConsentModal from '../../modals/CreateStandingConsentModal.vue'
 
 export default {
@@ -152,36 +174,44 @@ export default {
 		ClockRemove,
 		Cancel,
 		CreateStandingConsentModal,
+		ConfirmActionDialog,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
 			currentPage: 1,
 			pageSize: 20,
 			showCreateModal: false,
+			revokeTarget: null, // consent awaiting revoke confirmation, or null
+			revoking: false,
 			entityTypeColorMap: {
 				person: 'warning',
 				organization: 'primary',
 			},
+
 			consentMethodColorMap: {
-				[t('docudesk', 'Written')]: 'success',
-				[t('docudesk', 'Verbal')]: 'primary',
-				[t('docudesk', 'Digital')]: 'default',
-				[t('docudesk', 'Implicit')]: 'warning',
+				[t('filinq', 'Written')]: 'success',
+				[t('filinq', 'Verbal')]: 'primary',
+				[t('filinq', 'Digital')]: 'default',
+				[t('filinq', 'Implicit')]: 'warning',
 			},
+
 			activeColorMap: {
-				[t('docudesk', 'Yes')]: 'success',
-				[t('docudesk', 'No')]: 'error',
+				[t('filinq', 'Yes')]: 'success',
+				[t('filinq', 'No')]: 'error',
 			},
+
 			consentStatusColorMap: {
-				[t('docudesk', 'Pending')]: 'default',
-				[t('docudesk', 'Approved')]: 'success',
-				[t('docudesk', 'Objected')]: 'error',
-				[t('docudesk', 'No Response')]: 'warning',
-				[t('docudesk', 'Anonymized')]: 'primary',
+				[t('filinq', 'Pending')]: 'default',
+				[t('filinq', 'Approved')]: 'success',
+				[t('filinq', 'Objected')]: 'error',
+				[t('filinq', 'No Response')]: 'warning',
+				[t('filinq', 'Anonymized')]: 'primary',
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Filter the loaded consents to only entity-scope standing consents.
@@ -189,24 +219,27 @@ export default {
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		entityConsents() {
-			return consentStore.consents.filter(c => c.scope === 'entity')
+			return consentStore.consents.filter((c) => c.scope === 'entity')
 		},
+
 		/**
 		 * Count of active entity consents.
 		 *
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		activeCount() {
-			return this.entityConsents.filter(c => c.active === true).length
+			return this.entityConsents.filter((c) => c.active === true).length
 		},
+
 		/**
 		 * Count of inactive entity consents.
 		 *
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		inactiveCount() {
-			return this.entityConsents.filter(c => c.active !== true).length
+			return this.entityConsents.filter((c) => c.active !== true).length
 		},
+
 		/**
 		 * Column definitions for the standing consent records table.
 		 *
@@ -214,15 +247,36 @@ export default {
 		 */
 		tableColumns() {
 			return [
-				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
-				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'consentMethod', label: t('docudesk', 'Consent Method'), sortable: true },
-				{ key: 'validFrom', label: t('docudesk', 'Valid From'), sortable: true },
-				{ key: 'validUntil', label: t('docudesk', 'Valid Until'), sortable: true },
-				{ key: 'active', label: t('docudesk', 'Active'), sortable: true },
-				{ key: 'consentStatus', label: t('docudesk', 'Status'), sortable: true },
+				{
+					key: 'entityText',
+					label: t('filinq', 'Entity'),
+					sortable: true,
+				},
+				{ key: 'entityType', label: t('filinq', 'Type'), sortable: true },
+				{
+					key: 'consentMethod',
+					label: t('filinq', 'Consent Method'),
+					sortable: true,
+				},
+				{
+					key: 'validFrom',
+					label: t('filinq', 'Valid From'),
+					sortable: true,
+				},
+				{
+					key: 'validUntil',
+					label: t('filinq', 'Valid Until'),
+					sortable: true,
+				},
+				{ key: 'active', label: t('filinq', 'Active'), sortable: true },
+				{
+					key: 'consentStatus',
+					label: t('filinq', 'Status'),
+					sortable: true,
+				},
 			]
 		},
+
 		/**
 		 * Pagination metadata derived from the loaded entity consent list.
 		 *
@@ -233,6 +287,7 @@ export default {
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
 		/**
 		 * Empty-state message, surfacing any store error when present.
 		 *
@@ -242,12 +297,14 @@ export default {
 			if (consentStore.error) {
 				return consentStore.error
 			}
-			return t('docudesk', 'No standing consent records found')
+			return t('filinq', 'No standing consent records found')
 		},
 	},
+
 	mounted() {
 		consentStore.fetchConsents()
 	},
+
 	methods: {
 		/**
 		 * Open the create standing consent modal.
@@ -257,6 +314,7 @@ export default {
 		openCreateModal() {
 			this.showCreateModal = true
 		},
+
 		/**
 		 * Close the create standing consent modal.
 		 *
@@ -265,6 +323,7 @@ export default {
 		closeCreateModal() {
 			this.showCreateModal = false
 		},
+
 		/**
 		 * Persist a new standing consent record returned by the create modal.
 		 *
@@ -280,6 +339,7 @@ export default {
 				// Error is stored on consentStore.error — the empty-state text will show it.
 			}
 		},
+
 		/**
 		 * Set the consent's active flag to false (expire it).
 		 *
@@ -290,29 +350,60 @@ export default {
 			const id = consent.id || consent.uuid
 			await consentStore.updateConsent(id, { ...consent, active: false })
 		},
+
 		/**
-		 * Set the consent status to anonymized (revoke it).
+		 * Ask for confirmation before revoking a standing consent.
 		 *
 		 * Revoke is destructive — Art. 7(3) consent withdrawal flips
 		 * `consentStatus` to `anonymized` and `active` to false; the
-		 * record cannot be re-activated. Confirm before submitting so
-		 * a single mis-click in the row-action menu can't silently
-		 * destroy a standing consent.
+		 * record cannot be re-activated. So this only opens
+		 * ConfirmActionDialog; executeRevoke() does the write.
 		 *
 		 * @param consent
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
-		async revokeConsent(consent) {
-			const id = consent.id || consent.uuid
-			const ok = window.confirm(t(
-				'docudesk',
-				'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.',
-			))
-			if (!ok) {
+		revokeConsent(consent) {
+			this.revokeTarget = consent
+		},
+
+		/**
+		 * Dismiss the revoke confirmation without changing anything.
+		 *
+		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
+		 */
+		cancelRevoke() {
+			this.revokeTarget = null
+		},
+
+		/**
+		 * Apply the confirmed revocation.
+		 *
+		 * Reachable only from ConfirmActionDialog's @confirm, so a single
+		 * mis-click in the row-action menu still cannot destroy a standing
+		 * consent.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
+		 */
+		async executeRevoke() {
+			const consent = this.revokeTarget
+			if (!consent) {
 				return
 			}
-			await consentStore.updateConsent(id, { ...consent, consentStatus: 'anonymized', active: false })
+			const id = consent.id || consent.uuid
+			this.revoking = true
+			try {
+				await consentStore.updateConsent(id, {
+					...consent,
+					consentStatus: 'anonymized',
+					active: false,
+				})
+				this.revokeTarget = null
+			} finally {
+				this.revoking = false
+			}
 		},
+
 		/**
 		 * Reload the consent list from the backend.
 		 *
@@ -326,6 +417,7 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		/**
 		 * Update the current page index of the consent table.
 		 *
@@ -335,6 +427,7 @@ export default {
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		/**
 		 * Update the page size and reset to the first page.
 		 *
@@ -345,6 +438,7 @@ export default {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		/**
 		 * Map a consent method code to a localized label.
 		 *
@@ -353,13 +447,14 @@ export default {
 		 */
 		formatConsentMethod(method) {
 			const map = {
-				written: t('docudesk', 'Written'),
-				verbal: t('docudesk', 'Verbal'),
-				digital: t('docudesk', 'Digital'),
-				implicit: t('docudesk', 'Implicit'),
+				written: t('filinq', 'Written'),
+				verbal: t('filinq', 'Verbal'),
+				digital: t('filinq', 'Digital'),
+				implicit: t('filinq', 'Implicit'),
 			}
-			return map[method] || method || t('docudesk', 'Unknown')
+			return map[method] || method || t('filinq', 'Unknown')
 		},
+
 		/**
 		 * Map a consent status code to a localized label.
 		 *
@@ -368,14 +463,15 @@ export default {
 		 */
 		formatStatus(status) {
 			const map = {
-				pending: t('docudesk', 'Pending'),
-				consent_given: t('docudesk', 'Approved'),
-				objection_received: t('docudesk', 'Objected'),
-				no_response: t('docudesk', 'No Response'),
-				anonymized: t('docudesk', 'Anonymized'),
+				pending: t('filinq', 'Pending'),
+				consent_given: t('filinq', 'Approved'),
+				objection_received: t('filinq', 'Objected'),
+				no_response: t('filinq', 'No Response'),
+				anonymized: t('filinq', 'Anonymized'),
 			}
-			return map[status] || status || t('docudesk', 'Unknown')
+			return map[status] || status || t('filinq', 'Unknown')
 		},
+
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *

@@ -7,72 +7,84 @@ import { standingConsentStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Standing Publication Consents')"
-			:description="t('docudesk', 'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a prohibition rule also matches.')"
-			:show-title="true"
+			:title="t('filinq', 'Publish always')"
+			:description="
+				t(
+					'filinq',
+					'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.',
+				)
+			"
+			:showTitle="true"
 			:objects="standingConsentStore.standingConsents"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="standingConsentStore.loading"
 			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="false"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-view-toggle="false"
-			:show-add="true"
-			row-key="id"
-			:empty-text="emptyText"
+			:showEditAction="false"
+			:showCopyAction="false"
+			:showDeleteAction="false"
+			:showMassImport="false"
+			:showMassExport="false"
+			:showMassCopy="false"
+			:showMassDelete="false"
+			:showViewToggle="false"
+			:showAdd="true"
+			rowKey="id"
+			:emptyText="emptyText"
 			:refreshing="isRefreshing"
 			@refresh="handleRefresh"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
+			@pageChanged="onPageChanged"
+			@pageSizeChanged="onPageSizeChanged"
 			@add="openCreateDialog">
-			<template #above-table>
+			<!-- `below-header`, not `above-table` — CnIndexPage defines no
+			     `above-table` slot and Vue drops an unmatched named slot
+			     silently, so these stats rendered nothing at all. -->
+			<template #below-header>
 				<div class="policy-stats">
 					<CnStatsBlock
-						:title="t('docudesk', 'Total')"
+						:title="t('filinq', 'Total')"
 						:count="standingConsentStore.standingConsentStats.total"
-						:count-label="t('docudesk', 'rules')"
+						:countLabel="t('filinq', 'rules')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Active')"
+						:title="t('filinq', 'Active')"
 						:count="standingConsentStore.standingConsentStats.active"
-						:count-label="t('docudesk', 'active')"
+						:countLabel="t('filinq', 'active')"
 						variant="success"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 					<CnStatsBlock
-						:title="t('docudesk', 'Inactive')"
+						:title="t('filinq', 'Inactive')"
 						:count="standingConsentStore.standingConsentStats.inactive"
-						:count-label="t('docudesk', 'inactive')"
+						:countLabel="t('filinq', 'inactive')"
 						variant="default"
 						horizontal
-						show-zero-count />
+						showZeroCount />
 				</div>
 			</template>
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
-					:color-map="entityTypeColorMap" />
+					:label="row.entityType || t('filinq', 'Unknown')"
+					:colorMap="entityTypeColorMap" />
 			</template>
 
 			<template #column-consentMethod="{ row }">
 				<CnStatusBadge
 					:label="row.consentMethod || '-'"
-					:color-map="methodColorMap" />
+					:colorMap="methodColorMap" />
 			</template>
 
 			<template #column-active="{ row }">
 				<CnStatusBadge
-					:label="row.active === false ? t('docudesk', 'Inactive') : t('docudesk', 'Active')"
-					:color-map="activeColorMap" />
+					:label="
+						row.active === false
+							? t('filinq', 'Inactive')
+							: t('filinq', 'Active')
+					"
+					:colorMap="activeColorMap" />
 			</template>
 
 			<template #column-matchRules="{ row }">
@@ -84,144 +96,61 @@ import { standingConsentStore } from '../../store/store.js'
 					<template #icon>
 						<DotsHorizontal :size="20" />
 					</template>
-					<NcActionButton close-after-click @click="openEditDialog(row)">
+					<NcActionButton closeAfterClick @click="openEditDialog(row)">
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
-						{{ t('docudesk', 'Edit') }}
+						{{ t('filinq', 'Edit') }}
 					</NcActionButton>
-					<NcActionButton close-after-click @click="confirmDelete(row)">
+					<NcActionButton closeAfterClick @click="confirmDelete(row)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
-						{{ t('docudesk', 'Delete') }}
+						{{ t('filinq', 'Delete') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
 		</CnIndexPage>
 
-		<NcDialog
-			v-if="dialogOpen"
-			:name="dialogTitle"
+		<!--
+			ADR-004 gate-13: modal lives in its own component, not inline.
+			StandingConsentFormModal handles its own form state; we only own
+			the open flag, the record being edited, and the save outcome.
+			(Previously an inline NcDialog duplicated this exact form —
+			replaced here; openspec/changes/orphaned-surface-restoration.)
+		-->
+		<StandingConsentFormModal
 			:open="dialogOpen"
-			size="normal"
-			@update:open="dialogOpen = $event">
-			<div class="standing-consent-form">
-				<NcTextField
-					:value.sync="form.entityText"
-					:label="t('docudesk', 'Entity text (display name)')"
-					required />
-				<NcSelect
-					v-model="form.entityType"
-					:options="entityTypeOptions"
-					:input-label="t('docudesk', 'Entity type')"
-					:label="t('docudesk', 'Entity type')"
-					required />
-				<NcSelect
-					v-model="form.consentMethod"
-					:options="consentMethodOptions"
-					:input-label="t('docudesk', 'Consent method')"
-					:label="t('docudesk', 'Consent method')"
-					required />
-				<NcTextField
-					:value.sync="form.consentDocument"
-					:label="t('docudesk', 'Consent document (file id or URL)')" />
-				<NcTextField
-					:value.sync="form.consentScope"
-					:label="t('docudesk', 'Consent scope (e.g. \'2024-2025 municipal decisions\')')" />
-				<NcTextField
-					:value.sync="form.legalBasis"
-					:label="t('docudesk', 'Legal basis')" />
-				<NcTextField
-					:value.sync="form.validFrom"
-					:label="t('docudesk', 'Valid from (ISO 8601, optional)')" />
-				<NcTextField
-					:value.sync="form.validUntil"
-					:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
-				<NcCheckboxRadioSwitch
-					v-model="form.active"
-					type="switch">
-					{{ t('docudesk', 'Active') }}
-				</NcCheckboxRadioSwitch>
+			:editingRecord="editingRecord"
+			:saving="saving"
+			:formError="formError"
+			@update:open="dialogOpen = $event"
+			@submit="onModalSubmit"
+			@cancel="dialogOpen = false" />
 
-				<div v-if="!form.validUntil" class="form-warning">
-					{{ t('docudesk', 'No expiry set — this standing consent will remain in force indefinitely. Consider setting a "Valid until" date.') }}
-				</div>
-
-				<h4>{{ t('docudesk', 'Match rules') }}</h4>
-				<div v-if="!form.matchRules?.length" class="form-warning">
-					{{ t('docudesk', 'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.') }}
-				</div>
-				<div v-for="(rule, idx) in form.matchRules" :key="idx" class="match-rule-row">
-					<NcSelect
-						v-model="rule.type"
-						:options="matchTypeOptions"
-						:input-label="t('docudesk', 'Match type')"
-						:label="t('docudesk', 'Match type')" />
-					<NcTextField
-						:value.sync="rule.value"
-						:label="t('docudesk', 'Match value')" />
-					<NcButton type="tertiary" @click="removeRule(idx)">
-						<template #icon>
-							<Delete :size="20" />
-						</template>
-					</NcButton>
-				</div>
-				<NcButton type="secondary" @click="addRule">
-					{{ t('docudesk', 'Add match rule') }}
-				</NcButton>
-
-				<div v-if="formError" class="form-error">
-					{{ formError }}
-				</div>
-			</div>
-
-			<template #actions>
-				<NcButton type="tertiary" @click="dialogOpen = false">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="saving || !canSubmit" @click="submit">
-					<template v-if="saving" #icon>
-						<NcLoadingIcon :size="20" />
-					</template>
-					{{ editing ? t('docudesk', 'Save') : t('docudesk', 'Create') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<!--
+			Delete confirmation. Replaces window.confirm(): the deletion below
+			runs only from @confirm, so an explicit confirmation is still
+			required before anything is removed.
+		-->
+		<ConfirmActionDialog
+			v-if="deleteTarget"
+			:name="t('filinq', 'Delete standing consent')"
+			:message="deleteMessage"
+			:busy="deleting"
+			@confirm="executeDelete"
+			@cancel="cancelDelete" />
 	</div>
 </template>
 
 <script>
-import {
-	NcActions,
-	NcActionButton,
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcDialog,
-	NcLoadingIcon,
-	NcSelect,
-	NcTextField,
-} from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-
-const blankForm = () => ({
-	entityText: '',
-	entityType: 'PERSON',
-	consentMethod: '',
-	consentDocument: '',
-	consentScope: '',
-	legalBasis: '',
-	validFrom: '',
-	validUntil: '',
-	active: true,
-	matchRules: [],
-	consentStatus: 'consent_given',
-	publicationDecision: 'publish_with_consent',
-	notificationStatus: 'skipped',
-})
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import StandingConsentFormModal from '../../dialogs/StandingConsentFormModal.vue'
 
 export default {
 	name: 'StandingConsentIndex',
@@ -231,16 +160,13 @@ export default {
 		CnStatusBadge,
 		NcActions,
 		NcActionButton,
-		NcButton,
-		NcCheckboxRadioSwitch,
-		NcDialog,
-		NcLoadingIcon,
-		NcSelect,
-		NcTextField,
+		StandingConsentFormModal,
+		ConfirmActionDialog,
 		Delete,
 		DotsHorizontal,
 		Pencil,
 	},
+
 	data() {
 		return {
 			isRefreshing: false,
@@ -248,66 +174,97 @@ export default {
 			pageSize: 20,
 			dialogOpen: false,
 			saving: false,
-			editing: null,
-			form: blankForm(),
+			editing: null, // UUID of the record being edited, or null for create
+			editingRecord: null, // full record passed to the modal so it can hydrate its form
 			formError: '',
+			deleteTarget: null, // row awaiting delete confirmation, or null
+			deleting: false,
 			entityTypeColorMap: {
 				PERSON: 'warning',
 				ORGANIZATION: 'primary',
 				OTHER: 'default',
 			},
+
 			methodColorMap: {
 				paper: 'default',
 				digital_signature: 'primary',
 				verbal_recorded: 'warning',
 				opt_in_form: 'success',
 			},
+
 			activeColorMap: {
-				[t('docudesk', 'Active')]: 'success',
-				[t('docudesk', 'Inactive')]: 'default',
+				[t('filinq', 'Active')]: 'success',
+				[t('filinq', 'Inactive')]: 'default',
 			},
-			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
-			consentMethodOptions: ['paper', 'digital_signature', 'verbal_recorded', 'opt_in_form'],
-			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
+
 	computed: {
+		/**
+		 * CnDataTable column set for the Standing Publication Consents surface.
+		 *
+		 * @return {object[]}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		tableColumns() {
 			return [
-				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
-				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
-				{ key: 'matchRules', label: t('docudesk', 'Match rules') },
-				{ key: 'consentMethod', label: t('docudesk', 'Method'), sortable: true },
-				{ key: 'validUntil', label: t('docudesk', 'Valid until'), sortable: true },
-				{ key: 'active', label: t('docudesk', 'Status'), sortable: true },
+				{
+					key: 'entityText',
+					label: t('filinq', 'Entity'),
+					sortable: true,
+				},
+				{ key: 'entityType', label: t('filinq', 'Type'), sortable: true },
+				{ key: 'matchRules', label: t('filinq', 'Match rules') },
+				{
+					key: 'consentMethod',
+					label: t('filinq', 'Method'),
+					sortable: true,
+				},
+				{
+					key: 'validUntil',
+					label: t('filinq', 'Valid until'),
+					sortable: true,
+				},
+				{ key: 'active', label: t('filinq', 'Status'), sortable: true },
 			]
 		},
+
 		paginationData() {
 			const total = standingConsentStore.standingConsents.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
+
+		/**
+		 * Empty-state text for the Standing Publication Consents surface — the
+		 * store's error when loading failed, otherwise the no-records message.
+		 *
+		 * @return {string}
+		 * @spec openspec/specs/entity-publication-policies/spec.md#requirement-three-separate-admin-surfaces-must-exist
+		 */
 		emptyText() {
 			if (standingConsentStore.error) {
 				return standingConsentStore.error
 			}
-			return t('docudesk', 'No standing publication consents defined.')
+			return t('filinq', 'No standing publication consents defined.')
 		},
-		dialogTitle() {
-			return this.editing
-				? t('docudesk', 'Edit standing consent')
-				: t('docudesk', 'Add standing consent')
-		},
-		canSubmit() {
-			return this.form.entityText.trim() !== ''
-				&& this.form.consentMethod !== ''
-				&& this.form.matchRules.length > 0
-				&& this.form.matchRules.every(r => r.type && r.value !== '')
+
+		/**
+		 * Body text of the delete confirmation dialog.
+		 *
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		deleteMessage() {
+			const name =
+				this.deleteTarget?.entityText || t('filinq', 'this standing consent')
+			return t('filinq', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
+
 	mounted() {
 		standingConsentStore.fetchStandingConsents()
 	},
+
 	methods: {
 		async handleRefresh() {
 			this.isRefreshing = true
@@ -317,28 +274,44 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+
 		formatMatchRules(rules) {
 			if (!Array.isArray(rules) || rules.length === 0) {
 				return '-'
 			}
-			return rules.map(r => `${r.type}:${r.value}`).join(', ')
+			return rules.map((r) => `${r.type}:${r.value}`).join(', ')
 		},
+
+		/**
+		 * Open the extracted standing-consent modal in create mode.
+		 *
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
 		openCreateDialog() {
 			this.editing = null
-			this.form = blankForm()
+			this.editingRecord = null
 			this.formError = ''
 			this.dialogOpen = true
 		},
+
+		/**
+		 * Open the extracted standing-consent modal in edit mode for a row.
+		 *
+		 * @param {object} row The standing-consent object to edit.
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
 		openEditDialog(row) {
 			this.editing = row['@self']?.id || row.id || row.uuid
-			this.form = {
+			this.editingRecord = {
 				entityText: row.entityText || '',
 				entityType: row.entityType || 'PERSON',
 				consentMethod: row.consentMethod || '',
@@ -349,48 +322,91 @@ export default {
 				validUntil: row.validUntil || '',
 				active: row.active !== false,
 				matchRules: Array.isArray(row.matchRules)
-					? row.matchRules.map(r => ({ type: r.type, value: r.value }))
+					? row.matchRules.map((r) => ({ type: r.type, value: r.value }))
 					: [],
+
 				consentStatus: row.consentStatus || 'consent_given',
-				publicationDecision: row.publicationDecision || 'publish_with_consent',
+				publicationDecision:
+					row.publicationDecision || 'publish_with_consent',
+
 				notificationStatus: row.notificationStatus || 'skipped',
 			}
 			this.formError = ''
 			this.dialogOpen = true
 		},
-		addRule() {
-			this.form.matchRules.push({ type: 'exact', value: '' })
-		},
-		removeRule(idx) {
-			this.form.matchRules.splice(idx, 1)
-		},
-		async submit() {
+
+		/**
+		 * Persist the modal form via the standing-consent store (create or update).
+		 *
+		 * @param {object} formData The submitted standing-consent form payload.
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''
 			try {
 				if (this.editing) {
-					await standingConsentStore.updateStandingConsent(this.editing, this.form)
+					await standingConsentStore.updateStandingConsent(
+						this.editing,
+						formData,
+					)
 				} else {
-					await standingConsentStore.createStandingConsent(this.form)
+					await standingConsentStore.createStandingConsent(formData)
 				}
 				this.dialogOpen = false
 			} catch (err) {
-				this.formError = err.response?.data?.error || err.message || t('docudesk', 'Save failed')
+				this.formError =
+					err.response?.data?.error
+					|| err.message
+					|| t('filinq', 'Save failed')
 			} finally {
 				this.saving = false
 			}
 		},
-		async confirmDelete(row) {
-			const id = row['@self']?.id || row.id || row.uuid
-			const name = row.entityText || t('docudesk', 'this standing consent')
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('docudesk', 'Delete "{name}"? This cannot be undone.', { name }))) {
+
+		/**
+		 * Ask for confirmation before deleting a standing consent.
+		 *
+		 * Opens ConfirmActionDialog; nothing is removed here.
+		 *
+		 * @param {object} row - The standing consent row to delete.
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		confirmDelete(row) {
+			this.deleteTarget = row
+		},
+
+		/**
+		 * Dismiss the delete confirmation without deleting anything.
+		 *
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		cancelDelete() {
+			this.deleteTarget = null
+		},
+
+		/**
+		 * Delete the confirmed standing consent. Reachable only from the
+		 * dialog's @confirm, so the record is never removed without an
+		 * explicit confirmation.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		async executeDelete() {
+			const row = this.deleteTarget
+			if (!row) {
 				return
 			}
+			const id = row['@self']?.id || row.id || row.uuid
+			this.deleting = true
 			try {
 				await standingConsentStore.deleteStandingConsent(id)
+				this.deleteTarget = null
 			} catch (err) {
 				console.error('Failed to delete standing consent:', err)
+			} finally {
+				this.deleting = false
 			}
 		},
 	},

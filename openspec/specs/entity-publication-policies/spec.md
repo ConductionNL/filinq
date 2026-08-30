@@ -1,17 +1,21 @@
+---
+status: done
+---
+
 # entity-publication-policies Specification
 
 ## Purpose
-TBD - created by archiving change publication-prohibition-schema. Update Purpose after archive.
+Defines the `publicationProhibition` schema in the `filinq` register, an entity-level deny-list where each rule names a person or organisation that must always be anonymised when detected in a publication-bound document, regardless of any consent. Rules carry match criteria (exact, normalized, BSN, KVK), legal authority, severity, validity window, and active state, and are importable on app install and queryable via the OpenRegister API. This provides the policy data that anonymisation and publication-clearance flows match detected entities against.
 ## Requirements
 ### Requirement: A `publicationProhibition` schema MUST exist in the consent register
 
-The `publicationProhibition` schema MUST be defined in the consent register and MUST be importable on app install. It represents an entity-level deny-list rule: each record describes one real-world person or organization that MUST always be anonymized when detected in a publication-bound document, regardless of any per-document consent process or any standing consent that might otherwise apply. A prohibition is not a consent — it asserts the absence of permission to publish unredacted, with prohibition-specific metadata.
+The `publicationProhibition` schema MUST be defined in the `filinq` register and MUST be importable on app install. It represents an entity-level deny-list rule: each record describes one real-world person or organization that MUST always be anonymized when detected in a publication-bound document, regardless of any per-document consent process or any standing consent that might otherwise apply. A prohibition is not a consent — it asserts the absence of permission to publish unredacted, with prohibition-specific metadata.
 
 #### Scenario: Schema is registered on app install
 
-- **GIVEN** a fresh DocuDesk install
+- **GIVEN** a fresh Filinq install
 - **WHEN** the app's register configuration is imported
-- **THEN** the `consent` register contains a `publicationProhibition` schema with the documented properties: `primaryName`, `entityType`, `matchRules`, `reason`, `legalAuthority`, `caseReference`, `severity`, `jurisdiction`, `addedBy`, `validFrom`, `validUntil`, `active`, `notes`
+- **THEN** the `filinq` register contains a `publicationProhibition` schema with the documented properties: `primaryName`, `entityType`, `matchRules`, `reason`, `legalAuthority`, `caseReference`, `severity`, `jurisdiction`, `addedBy`, `validFrom`, `validUntil`, `active`, `notes`
 
 #### Scenario: Schema is queryable via OpenRegister API
 
@@ -103,6 +107,8 @@ When a detected entity matches BOTH a `publicationProhibition` rule and an activ
 
 The matching service MUST NOT issue a database query per detected entity. Instead, it MUST load all `active: true` `publicationProhibition` records and all `active: true` `scope: "entity"` `publicationConsent` records (with current time bounds open) into an in-memory lookup index at service init or on rule-mutation event. The lookup MUST be O(1) per `(matchType, entityType, value)` tuple.
 
+@e2e exclude In-memory rule-cache lifecycle (load, O(1) lookup, invalidation on rule mutation, scope-filtered publicationConsent events) has no rendered surface; asserted by PHPUnit tests/unit/Service/PolicyMatchServiceTest.php (testInvalidateCacheClearsLoadedRules, rulesCache seeding) and tests/unit/EventListener/FilinqEventHandlerTest.php (scope=entity vs scope=document event handling)
+
 #### Scenario: Page-level batch detection issues no per-entity rule queries
 
 - **GIVEN** a document with 30 detected entities and a combined prohibition + standing-consent set of 100 active records total
@@ -127,6 +133,8 @@ The matching service MUST NOT issue a database query per detected entity. Instea
 ### Requirement: Time bounds MUST be honored at match time
 
 A rule with `validFrom` in the future or `validUntil` in the past MUST NOT match, even if `active: true`. A rule with `active: false` MUST NOT match regardless of time bounds. This applies to both `publicationProhibition` records and `scope: "entity"` `publicationConsent` records.
+
+@e2e exclude Match-time evaluation of validFrom / validUntil / active; the outcome is a non-match inside the detector, never rendered (the Vue surfaces show the stored active flag, not the match decision). Asserted by PHPUnit tests/unit/Service/PolicyMatchServiceTest.php — testFutureValidFromDoesNotMatch, testExpiredValidUntilDoesNotMatch, testInactiveRulesAreSkipped
 
 #### Scenario: Rule with future validFrom does not match
 
@@ -275,27 +283,39 @@ The frontend MUST provide three distinct admin pages, each addressing one operat
 
 ### Requirement: RBAC MUST govern writes to both policy surfaces
 
-Writes to `publicationProhibition` records and to `scope: "entity"` `publicationConsent` records MUST be governed by OpenRegister's standard schema-level authorization, augmented by service-level enforcement for the scope-discriminated case. There MUST be no formal approval workflow at this version — privileged users MAY write directly. A separate change is tracked for adding two-eyes approval semantics.
+The system MUST govern writes to `publicationProhibition` records and to
+`scope: "entity"` `publicationConsent` records by OpenRegister's standard
+schema-level authorization, augmented by service-level enforcement for the
+scope-discriminated case. There MUST be no formal approval workflow at this
+version — privileged users MAY write directly.
 
-#### Scenario: Unprivileged user cannot write to prohibitions
-
-- **GIVEN** a user without write permission on the `publicationProhibition` schema
-- **WHEN** they attempt to POST a new record
-- **THEN** the request is rejected with a 403 (or equivalent) per existing OpenRegister RBAC behavior
-
-#### Scenario: Privileged user can write to prohibitions directly
-
-- **GIVEN** a user with write permission on the `publicationProhibition` schema
-- **WHEN** they POST a valid record
-- **THEN** the record is created
-- **AND** the rule cache is invalidated and rebuilt
+Standing-consent creation MUST flow through exactly one service entry point,
+`PolicyCrudService::createStandingConsent()` (reached over HTTP via
+`StandingConsentController::create`). There MUST NOT be a second,
+divergent create path for the same records: any superseded duplicate (e.g. a
+never-called `ConsentService::createEntityConsent()`) MUST be removed so the
+scope-write RBAC contract is enforced in exactly one place.
 
 #### Scenario: Standing-consent write requires standing-consent permission
 
-- **GIVEN** a user with write permission on `publicationConsent` for `scope: "document"` only (i.e., the consent-officer role) and NOT for `scope: "entity"`
-- **WHEN** they attempt to POST a `publicationConsent` record with `scope: "entity"`
-- **THEN** the consent service rejects the write with a 403-equivalent error citing missing standing-consent permission
+- **GIVEN** a user with write permission on `publicationConsent` for
+  `scope: "document"` only (i.e., the consent-officer role) and NOT for
+  `scope: "entity"`
+- **WHEN** they attempt to POST a `publicationConsent` record with
+  `scope: "entity"`
+- **THEN** the create path (`PolicyCrudService::createStandingConsent`) rejects
+  the write with a 403-equivalent error citing missing standing-consent
+  permission
 - **AND** the same user CAN still write `scope: "document"` records normally
+
+#### Scenario: No orphaned duplicate create path exists
+
+- **GIVEN** the filinq service layer
+- **WHEN** the codebase is scanned for scope=entity consent create methods
+- **THEN** exactly one wired create path exists
+  (`PolicyCrudService::createStandingConsent`)
+- **AND** no unreferenced duplicate create method (such as
+  `ConsentService::createEntityConsent`) remains in `lib/Service/`
 
 ### Requirement: Out-of-scope behaviors MUST remain unchanged
 

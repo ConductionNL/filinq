@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Template Request Handler
  *
@@ -7,12 +8,12 @@
  * to reduce class complexity.
  *
  * @category  Controller
- * @package   OCA\DocuDesk\Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ * @link      https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\DocuDesk\Controller;
+namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCP\AppFramework\Http\JSONResponse;
@@ -31,110 +32,105 @@ use Psr\Log\LoggerInterface;
  * Handles request parameter parsing and error responses for templates
  *
  * @category Controller
- * @package  OCA\DocuDesk\Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://www.filinq.app
  */
-class TemplateRequestHandler
-{
-    /**
-     * Constructor for TemplateRequestHandler
-     *
-     * @param LoggerInterface $logger Logger for error reporting
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger
-    ) {
+class TemplateRequestHandler {
+	/**
+	 * Constructor for TemplateRequestHandler
+	 *
+	 * @param LoggerInterface $logger Logger for error reporting
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Parse list request parameters from the request
-     *
-     * @param IRequest $request The request object
-     *
-     * @return array{filters: array, limit: int, offset: int} Parsed parameters
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-5
-     */
-    public function parseListParams(IRequest $request): array
-    {
-        $filters   = [];
-        $namespace = $request->getParam('namespace');
-        $search    = $request->getParam('_search');
-        $limit     = (int) $request->getParam('_limit', '20');
-        $offset    = (int) $request->getParam('_offset', '0');
+	/**
+	 * Parse list request parameters from the request
+	 *
+	 * @param IRequest $request The request object
+	 *
+	 * @return array{filters: array, limit: int, offset: int} Parsed parameters
+	 *
+	 * @spec openspec/specs/template-management/spec.md
+	 */
+	public function parseListParams(IRequest $request): array {
+		$filters = [];
+		$namespace = $request->getParam('namespace');
+		$search = $request->getParam('_search');
+		$limit = (int)$request->getParam('_limit', '20');
+		$offset = (int)$request->getParam('_offset', '0');
 
-        if (empty($namespace) === false) {
-            $filters['namespace'] = $namespace;
-        }
+		if (empty($namespace) === false) {
+			$filters['namespace'] = $namespace;
+		}
 
-        if (empty($search) === false) {
-            $filters['_search'] = $search;
-        }
+		if (empty($search) === false) {
+			$filters['_search'] = $search;
+		}
 
-        return [
-            'filters' => $filters,
-            'limit'   => $limit,
-            'offset'  => $offset,
-        ];
+		return [
+			'filters' => $filters,
+			'limit' => $limit,
+			'offset' => $offset,
+		];
 
-    }//end parseListParams()
+	}//end parseListParams()
 
-    /**
-     * Parse create/update request body and strip framework params
-     *
-     * @param IRequest      $request   The request object
-     * @param array<string> $stripKeys Keys to strip from params
-     *
-     * @return array<string, mixed> Cleaned request data
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-5
-     */
-    public function parseBodyParams(IRequest $request, array $stripKeys=[]): array
-    {
-        $data = $request->getParams();
-        unset($data['_route']);
+	/**
+	 * Parse create/update request body and strip framework params
+	 *
+	 * @param IRequest $request The request object
+	 * @param array<string> $stripKeys Keys to strip from params
+	 *
+	 * @return array<string, mixed> Cleaned request data
+	 *
+	 * @spec openspec/specs/template-management/spec.md
+	 */
+	public function parseBodyParams(IRequest $request, array $stripKeys = []): array {
+		$data = $request->getParams();
+		unset($data['_route']);
 
-        foreach ($stripKeys as $key) {
-            unset($data[$key]);
-        }
+		foreach ($stripKeys as $key) {
+			unset($data[$key]);
+		}
 
-        return $data;
+		return $data;
+	}//end parseBodyParams()
 
-    }//end parseBodyParams()
+	/**
+	 * Build a JSON error response from an exception
+	 *
+	 * @param Exception $exception The exception
+	 * @param string $logMessage The log message prefix
+	 *
+	 * @return JSONResponse The error response
+	 *
+	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+	 *
+	 * @spec openspec/specs/template-management/spec.md
+	 */
+	public function buildErrorResponse(Exception $exception, string $logMessage): JSONResponse {
+		$statusCode = 500;
+		if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
+			$statusCode = $exception->getCode();
+		}
 
-    /**
-     * Build a JSON error response from an exception
-     *
-     * @param Exception $exception  The exception
-     * @param string    $logMessage The log message prefix
-     *
-     * @return JSONResponse The error response
-     *
-     * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-5
-     */
-    public function buildErrorResponse(Exception $exception, string $logMessage): JSONResponse
-    {
-        $statusCode = 500;
-        if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
-            $statusCode = $exception->getCode();
-        }
+		$this->logger->error(
+			message: $logMessage . $exception->getMessage(),
+			context: ['exception' => $exception]
+		);
 
-        $this->logger->error(
-            message: $logMessage.$exception->getMessage(),
-            context: ['exception' => $exception]
-        );
+		return new JSONResponse(
+			data: ['error' => $exception->getMessage()],
+			statusCode: $statusCode
+		);
 
-        return new JSONResponse(
-            data: ['error' => $exception->getMessage()],
-            statusCode: $statusCode
-        );
-
-    }//end buildErrorResponse()
+	}//end buildErrorResponse()
 }//end class

@@ -1,12 +1,17 @@
 ---
-status: reviewed
+status: in-progress
 ---
 
 # OCR Document Scanning
 
+**Status**: in-progress
+**Scope**: filinq
+**OpenSpec changes**:
+- [ocr-trigger-surface](../../changes/ocr-trigger-surface/) _(active)_ — wires the engine: OCR API route + Run-OCR UI action + anonymisation-pipeline fallback; REQ-OCR-05 corrected from the file-listing MIME heuristic to persisted per-file `ocrResult` objects (kind: code)
+
 ## Purpose
 
-Provides OCR (Optical Character Recognition) text extraction from scanned and image-based documents using Tesseract OCR. Enables the anonymization pipeline to process scanned PDFs, TIFF, PNG, and JPG files by extracting text locally before entity detection. All processing runs 100% on the server with no external cloud dependencies, in compliance with DocuDesk's local processing standard.
+Provides OCR (Optical Character Recognition) text extraction from scanned and image-based documents using Tesseract OCR. Enables the anonymization pipeline to process scanned PDFs, TIFF, PNG, and JPG files by extracting text locally before entity detection. All processing runs 100% on the server with no external cloud dependencies, in compliance with Filinq's local processing standard.
 
 @e2e exclude pure backend OCR service (OcrService wraps Tesseract) — no dedicated UI surface; extraction, detection, configuration and degradation behavior verified by PHPUnit.
 
@@ -145,7 +150,7 @@ The system SHALL report OCR confidence scores and track an ocrProcessed flag per
 
 ## Architecture
 
-- **Service**: `OCA\DocuDesk\Service\OcrService` wraps Tesseract OCR via `thiagoalessio/tesseract_ocr`
+- **Service**: `OCA\Filinq\Service\OcrService` wraps Tesseract OCR via `thiagoalessio/tesseract_ocr`
 - **Integration**: Called by `AnonymizationService::extractAndDetectEntities()` as a pre-processing step before OpenRegister's TextExtractionService
 - **Config**: OCR settings stored in IAppConfig (`ocr_enabled`, `ocr_languages`, `ocr_dpi`)
 - **Dependencies**: Tesseract binary on system, PHP Imagick extension for PDF conversion

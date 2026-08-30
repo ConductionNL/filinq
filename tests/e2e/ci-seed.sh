@@ -1,0 +1,740 @@
+#!/usr/bin/env bash
+#
+# SPDX-FileCopyrightText: 2026 Filinq Contributors
+# SPDX-License-Identifier: EUPL-1.2
+#
+# Provision Filinq's OpenRegister registers + schemas, and the app-config
+# object-type bindings that depend on them, on a freshly installed Nextcloud
+# for the shared `E2E Tests (Playwright)` and `Integration Tests (Newman)` CI
+# jobs.
+#
+# Wired up as the workflow's `playwright-seed-command` / `newman-seed-command`.
+# Both steps run AFTER `php -S` is up and with cwd set to the Nextcloud server
+# root, so this is invoked as:
+#
+#     playwright-seed-command: 'bash apps/filinq/tests/e2e/ci-seed.sh'
+#     newman-seed-command:     'bash apps/filinq/tests/e2e/ci-seed.sh api'
+#
+# The optional first argument selects the MODE — see "Mode" below. Everything
+# that provisions state is shared; the only difference is the SPA bundle gate,
+# which is meaningless for an API-only suite that never renders a page.
+#
+# WHY THIS IS NEEDED — TWO SEPARATE GAPS
+# --------------------------------------
+# 1. THE REGISTER IMPORT IS NOT A RELIABLE FRESH-INSTALL PATH.
+#    Filinq imports `lib/Settings/filinq_register.json` from
+#    `Application::boot()` → `SettingsService::initialize()` →
+#    `SettingsInitializer::initialize()`. That path fails silently two ways:
+#
+#      a. `boot()` wraps the whole call in `catch (\Exception) {}` with an
+#         explicit "Silently fail" comment, and `initialize()` itself catches
+#         `Exception` and only appends to `$results['errors']`. Nothing that
+#         calls it ever inspects those errors, so a denied or broken import is
+#         indistinguishable from a successful one. During `occ app:enable`
+#         there is NO user session, so OpenRegister's RBAC can deny it outright.
+#      b. It calls `importFromApp()` on the version-guarded path: if the
+#         recorded `filinq/configuration_version` is already >= the file's
+#         version, it returns "up to date" and applies nothing.
+#
+#    Either way the app enables cleanly, the SPA boots, and the registers
+#    simply are not there. The e2e suite's failure mode in that state is a wall
+#    of 500s from the template/signing endpoints — messages that point at the
+#    fixtures, not at the missing import.
+#
+#    So the import is done EXPLICITLY here through OpenRegister's admin HTTP
+#    importer (which has a real session and passes RBAC), with `force=true` to
+#    defeat the version guard, and then VERIFIED.
+#
+# 2. THE OBJECT-TYPE BINDINGS ARE ADMIN-CONFIGURED, NOT AUTO-PROVISIONED.
+#    Importing the registers is NOT enough. Filinq resolves every write
+#    through app-config keys `<schemaSlug>_register` / `<schemaSlug>_schema`
+#    (see `OpenRegisterResolver::getRegisterAndSchema()`,
+#    `SigningService::createRequest()`, `SettingsService::WRITABLE_KEYS`).
+#    Those keys are populated by an administrator in Filinq's admin settings
+#    UI; the only one the app self-provisions is `templateVersion_*`
+#    (`SettingsInitializer::provisionTemplateVersionConfig()`). On a fresh
+#    install every other binding is empty, and e.g. `POST /api/templates`
+#    answers 500 `Template register/schema not configured`.
+#
+#    This script therefore performs the same binding an admin would, deriving
+#    the IDs from OpenRegister itself rather than hardcoding them (IDs are
+#    autoincrement and differ per install).
+#
+# A failed provision becomes ONE loud step failure here instead of a dozen
+# misleading spec failures later.
+#
+# The script is idempotent: the import is idempotent server-side, the config
+# writes are last-write-wins with the same values, and re-running only
+# re-verifies.
+
+set -euo pipefail
+
+# ── Mode ─────────────────────────────────────────────────────────────────────
+# `e2e` (default) — the Playwright job. Everything below runs, including the
+#                   final GATE that the Filinq frontend bundle serves as
+#                   JavaScript.
+# `api`           — the Newman job. Identical provisioning, but the SPA bundle
+#                   warm-up and its gate are skipped.
+#
+# The gate exists because a MISSING bundle does not 404 in Nextcloud: it serves
+# the HTML error page with HTTP 200, so a UI suite would fail later on selector
+# timeouts with a misleading cause. That reasoning is specific to a suite that
+# mounts the SPA. The Newman job never does — and, decisively, it never runs
+# `npm run build` either (the shared workflow's `newman` job has no frontend
+# build step at all, unlike `playwright`). Running the gate there would abort
+# the seed with `exit 1` on a bundle that was never meant to exist, turning a
+# fix for 19 failing assertions into a hard job failure. Skipping it removes no
+# coverage: no Newman assertion loads a page.
+SEED_MODE="${1:-e2e}"
+case "$SEED_MODE" in
+	e2e | api) ;;
+	*)
+		echo "::error::unknown seed mode '${SEED_MODE}' — expected 'e2e' or 'api'."
+		exit 1
+		;;
+esac
+
+# ── Locations ────────────────────────────────────────────────────────────────
+# Resolve from the script's own path so the script does not depend on the
+# caller's cwd (the workflow runs it from the Nextcloud server root).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REGISTER_JSON="${APP_ROOT}/lib/Settings/filinq_register.json"
+
+# Nextcloud server root: two levels above the app dir (server/apps/filinq or
+# server/custom_apps/filinq). Fall back to the cwd if that is not it.
+NC_ROOT="$(cd "${APP_ROOT}/../.." && pwd)"
+if [ ! -f "${NC_ROOT}/occ" ] && [ -f "${PWD}/occ" ]; then
+	NC_ROOT="${PWD}"
+fi
+
+if [ ! -f "$REGISTER_JSON" ]; then
+	echo "::error::Filinq register definition not found at ${REGISTER_JSON}."
+	exit 1
+fi
+
+# ── Target resolution ────────────────────────────────────────────────────────
+# The shared workflow's "Seed test data" step exports BASE_URL / NEXTCLOUD_URL /
+# NC_BASE_URL / ADMIN_USER / ADMIN_PASSWORD (ConductionNL/.github #124). Accept
+# any of them, and fall back to the CI runner's own `php -S 0.0.0.0:8080` only
+# when we are demonstrably on CI.
+#
+# That gate is load-bearing. On a developer box `localhost:8080` is the SHARED
+# dev container, and this script performs ADMIN WRITES — it must never import a
+# register or rewrite app config in somebody else's environment. Off CI, an
+# unset target is a hard error.
+BASE="${PLAYWRIGHT_BASE_URL:-${BASE_URL:-${NEXTCLOUD_URL:-${NC_BASE_URL:-}}}}"
+if [ -z "$BASE" ]; then
+	if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
+		BASE="http://localhost:8080"
+	else
+		echo "ERROR: no base URL set. Export PLAYWRIGHT_BASE_URL or BASE_URL." >&2
+		echo "       Refusing to default to http://localhost:8080 outside CI —" >&2
+		echo "       that is the SHARED dev container and this script writes to it." >&2
+		exit 1
+	fi
+fi
+BASE="${BASE%/}"
+
+USER_NAME="${ADMIN_USER:-${NC_ADMIN_USER:-admin}}"
+USER_PASS="${ADMIN_PASSWORD:-${NC_ADMIN_PASS:-admin}}"
+
+echo "[ci-seed] target:    ${BASE}"
+echo "[ci-seed] app root:  ${APP_ROOT}"
+echo "[ci-seed] nc root:   ${NC_ROOT}"
+
+# ── -1. Restart `php -S` behind a router so PATH_INFO entry points work ─────
+# The shared workflow starts `php -S 0.0.0.0:8080` with NO router script, and on
+# the GitHub runner that server does not perform the PATH_INFO dispatch
+# Nextcloud is built on: anything that is not an existing file is answered by
+# the document root's index.php. Measured on run 30807123258:
+#
+#     /status.php                     -> 200  (exact file)
+#     /remote.php                     -> 404 "Path not found"   (remote.php ran)
+#     /remote.php/dav/files/admin/x   -> 404 index.php's router page
+#     /ocs/v2.php/cloud/capabilities  -> 404 index.php's router page
+#
+# So WebDAV and OCS are both unreachable, and `/index.php/apps/...` works only
+# because index.php is the fallback. Two of Filinq's workflow specs seed a
+# real file node over WebDAV; they cannot be written around a server that does
+# not route to remote.php.
+#
+# ⚠️ THE REAL FIX BELONGS IN `ConductionNL/.github` — the `php -S` command lives
+# there and a caller cannot influence it, and every fleet app that touches files
+# or OCS has this problem. This block is a local stand-in; delete it and
+# tests/e2e/ci-router.php once the shared workflow ships its own router.
+#
+# Only on CI, and only when the symptom is actually present: off CI this script
+# must never restart somebody's server, and on a correctly-routing server there
+# is nothing to repair.
+CAPABILITIES_URL="${BASE}/ocs/v2.php/cloud/capabilities"
+ROUTING_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+	-H 'OCS-APIRequest: true' "$CAPABILITIES_URL" || echo 000)"
+echo "[ci-seed] PATH_INFO check ${CAPABILITIES_URL} -> ${ROUTING_CODE}"
+
+if { [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; } && [ "$ROUTING_CODE" != "200" ]; then
+	echo "[ci-seed] PATH_INFO dispatch is broken on this server; restarting php -S with a router."
+	if [ -f /tmp/php-server.pid ]; then
+		kill "$(cat /tmp/php-server.pid)" 2>/dev/null || true
+	fi
+	pkill -f 'php -S 0.0.0.0:8080' 2>/dev/null || true
+	sleep 1
+	(
+		cd "$NC_ROOT" || exit 1
+		PHP_CLI_SERVER_WORKERS=8 nohup php -S 0.0.0.0:8080 "${SCRIPT_DIR}/ci-router.php" \
+			> /tmp/php-server-router.log 2>&1 &
+		echo $! > /tmp/php-server.pid
+	)
+	# Poll rather than sleep: `curl -sf` fails instantly on connection refused,
+	# so a single probe races the bind.
+	if ! timeout 20 bash -c 'until curl -sf -o /dev/null http://localhost:8080/status.php; do sleep 0.5; done'; then
+		echo "::error::The routed php -S did not come up on :8080."
+		tail -20 /tmp/php-server-router.log || true
+		exit 1
+	fi
+	ROUTING_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+		-H 'OCS-APIRequest: true' "$CAPABILITIES_URL" || echo 000)"
+	echo "[ci-seed] PATH_INFO re-check ${CAPABILITIES_URL} -> ${ROUTING_CODE}"
+	if [ "$ROUTING_CODE" != "200" ]; then
+		echo "::error::PATH_INFO entry points are still unreachable after installing the router (OCS capabilities -> ${ROUTING_CODE})."
+		echo "::error::WebDAV and OCS would stay dead, so any spec that seeds a file or reads capabilities fails for an environment reason."
+		tail -20 /tmp/php-server-router.log || true
+		exit 1
+	fi
+fi
+
+# ── 0. Let Filinq's own boot-time import run once, first ───────────────────
+# `Application::boot()` calls `SettingsService::initialize()` on EVERY request
+# until `filinq/configuration_version` has been written, and that call
+# re-imports the whole definition (5 registers, 20 schemas, 46 objects).
+#
+# Order matters: if we bound the object-type config keys BEFORE that ran, the
+# boot import would fire afterwards against IDs we had already recorded. Firing
+# it here — before we import and bind — means it either succeeds and closes its
+# own version gate, or fails silently and our forced import below is what
+# actually provisions the instance. Either way nothing runs after the binding.
+#
+# Its outcome is deliberately not checked: it is unobservable by design (boot()
+# swallows every \Exception), which is exactly why the rest of this script
+# exists. No timeout either — this is the request that pays the whole import.
+echo "[ci-seed] priming Filinq boot-time initialization…"
+PRIME_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+	-H 'OCS-APIRequest: true' "${BASE}/index.php/apps/filinq/" || echo 000)"
+echo "[ci-seed] prime /index.php/apps/filinq/ -> ${PRIME_CODE}"
+
+# ── 1. Import the Filinq configuration into OpenRegister ───────────────────
+# Filinq has NO import route of its own — `appinfo/routes.php` registers only
+# `settings#index` (GET) and `settings#create` (POST) at `api/settings`. So the
+# import goes through OpenRegister's generic importer.
+#
+# `ConfigurationsController::import()` is admin-only and `@NoCSRFRequired`, so
+# basic auth suffices. It accepts EXACTLY three input shapes — a multipart file
+# under the literal key `file`, a `url` key, or a `json` key — and rejects a raw
+# JSON body with 400 "Missing required keys in POST body". We use the file
+# upload. `force` is compared `=== 'true' || === true`, so the multipart string
+# "true" is accepted here.
+IMPORT_URL="${BASE}/index.php/apps/openregister/api/configurations/import"
+echo "[ci-seed] POST ${IMPORT_URL} (force=true, appId=filinq)"
+
+IMPORT_BODY="$(mktemp)"
+IMPORT_CODE="$(
+	curl -sS -o "$IMPORT_BODY" -w '%{http_code}' \
+		-u "${USER_NAME}:${USER_PASS}" \
+		-X POST \
+		-H 'OCS-APIRequest: true' \
+		-F "file=@${REGISTER_JSON};type=application/json" \
+		-F 'force=true' \
+		-F 'appId=filinq' \
+		"$IMPORT_URL" || echo 000
+)"
+
+echo "[ci-seed] import HTTP ${IMPORT_CODE}"
+head -c 2000 "$IMPORT_BODY"; echo
+
+if [ "$IMPORT_CODE" != "200" ]; then
+	echo "::error::Filinq configuration import failed (HTTP ${IMPORT_CODE}). The e2e suite cannot exercise templates or signing without it."
+	exit 1
+fi
+
+# How many entities the importer itself claims to have written. This is the
+# POSITIVE CONTROL for the verification queries below: if the importer reports
+# N schemas and the schemas endpoint then reports zero, the fault is in the
+# QUERY, not in the data — and a bare "missing slugs" message would send us
+# hunting the wrong thing.
+IMPORT_COUNTS="$(
+	python3 - "$IMPORT_BODY" <<'PY'
+import json, sys
+try:
+    body = json.load(open(sys.argv[1]))
+except Exception:
+    print('0 0')
+    raise SystemExit(0)
+imported = body.get('imported') or {}
+print(len(imported.get('registers') or []), len(imported.get('schemas') or []))
+PY
+)"
+IMPORTED_REGISTERS="${IMPORT_COUNTS% *}"
+IMPORTED_SCHEMAS="${IMPORT_COUNTS#* }"
+echo "[ci-seed] importer reports ${IMPORTED_REGISTERS} register(s), ${IMPORTED_SCHEMAS} schema(s) written."
+
+# Surface per-entity import failures.
+#
+# OpenRegister's `ImportHandler` imports schemas one at a time and swallows a
+# per-schema `Exception` with "Continue with other schemas instead of failing
+# the entire import" — it logs the reason and moves on. So a partial import
+# still answers **HTTP 200 "Import successful"**, and the only record of WHY a
+# schema is missing lives in `data/nextcloud.log`. Without this, the verification
+# below can only say WHICH slugs are absent, never why.
+NC_LOG="${NC_ROOT}/data/nextcloud.log"
+if [ -f "$NC_LOG" ]; then
+	python3 - "$NC_LOG" <<'PY' || true
+import json, sys
+
+hits = []
+with open(sys.argv[1], errors='replace') as fh:
+    for line in fh:
+        line = line.strip()
+        if 'ImportHandler' not in line or 'Failed to' not in line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            hits.append(line[:400])
+            continue
+        message = entry.get('message')
+        if isinstance(message, dict):
+            text = message.get('message', '')
+            context = message
+        else:
+            text = str(message)
+            context = entry.get('data') or {}
+        key = context.get('schemaKey') or context.get('registerKey') or context.get('slug') or '?'
+        error = context.get('error') or ''
+        hits.append(f'{text} [{key}] {error}'[:400])
+
+if hits:
+    print(f'[ci-seed] OpenRegister reported {len(hits)} per-entity import failure(s):')
+    for hit in hits:
+        print(f'[ci-seed]   {hit}')
+else:
+    print('[ci-seed] no per-entity import failures logged by OpenRegister.')
+PY
+else
+	echo "[ci-seed] (no ${NC_LOG} to inspect for per-entity import failures)"
+fi
+
+# ── 2. Verify the registers and schemas are actually there ───────────────────
+# The importer reporting success is not the same as the registers existing.
+# Verify against OpenRegister directly, and require exactly the slugs declared
+# in `lib/Settings/filinq_register.json` — so this check cannot drift away
+# from what the app actually ships.
+REG_BODY="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/openregister/api/registers?_limit=300" -o "$REG_BODY"
+
+SCH_BODY="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/openregister/api/schemas?_limit=1000" -o "$SCH_BODY"
+
+# Emits `KEY<TAB>VALUE` lines for the app-config bindings, on stdout, after
+# verifying. Anything diagnostic goes to stderr so the two never mix.
+BINDINGS="$(mktemp)"
+python3 - "$REGISTER_JSON" "$REG_BODY" "$SCH_BODY" "$IMPORTED_REGISTERS" "$IMPORTED_SCHEMAS" > "$BINDINGS" <<'PY'
+import json, sys
+
+definition_path, reg_path, sch_path, n_reg_imported, n_sch_imported = sys.argv[1:6]
+
+
+def load(path, kind):
+    raw = open(path).read()
+    try:
+        body = json.loads(raw)
+    except json.JSONDecodeError:
+        print(f'::error::the {kind} endpoint did not return JSON. First 500 bytes:', file=sys.stderr)
+        print(raw[:500], file=sys.stderr)
+        sys.exit(1)
+    items = body if isinstance(body, list) else (body.get('results') or [])
+    return [i for i in items if isinstance(i, dict)]
+
+
+definition = json.load(open(definition_path))
+components = definition.get('components', {})
+want_registers = sorted({r.get('slug') for r in components.get('registers', {}).values() if r.get('slug')})
+want_schemas = sorted({s.get('slug') for s in components.get('schemas', {}).values() if s.get('slug')})
+
+registers = load(reg_path, 'registers')
+schemas = load(sch_path, 'schemas')
+
+# POSITIVE CONTROL. A query that cannot match returns the same empty list as a
+# genuinely empty instance. The importer just told us how much it wrote; if the
+# endpoint disagrees at the "nothing at all" level, the query is the suspect.
+if not registers or not schemas:
+    print(
+        f'::error::OpenRegister returned {len(registers)} register(s) and {len(schemas)} schema(s), '
+        f'but the importer reported writing {n_reg_imported} register(s) and {n_sch_imported} schema(s). '
+        'An empty result from a query that CANNOT match looks identical to a true zero — '
+        'check the endpoint/params before concluding the import failed.',
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+reg_by_slug = {r.get('slug'): r for r in registers if r.get('slug')}
+sch_by_slug = {s.get('slug'): s for s in schemas if s.get('slug')}
+
+missing_registers = [s for s in want_registers if s not in reg_by_slug]
+missing_schemas = [s for s in want_schemas if s not in sch_by_slug]
+
+print(f'[ci-seed] registers present: {sorted(reg_by_slug)}', file=sys.stderr)
+print(f'[ci-seed] schemas present:   {sorted(sch_by_slug)}', file=sys.stderr)
+
+if missing_registers or missing_schemas:
+    if missing_registers:
+        print(f'::error::Filinq registers missing after import: {missing_registers}', file=sys.stderr)
+    if missing_schemas:
+        print(f'::error::Filinq schemas missing after import: {missing_schemas}', file=sys.stderr)
+    sys.exit(1)
+
+print(
+    f'[ci-seed] register/schema verification OK '
+    f'({len(want_registers)} registers, {len(want_schemas)} schemas).',
+    file=sys.stderr,
+)
+
+# ── Derive the object-type bindings an administrator would set by hand. ──
+# For every schema Filinq ships, bind it to the register that actually holds
+# it. Prefer the register the definition file declares it in, so a schema slug
+# that also happens to exist in an unrelated register (another app's import)
+# cannot capture the binding.
+declared_home = {}
+for reg in components.get('registers', {}).values():
+    reg_slug = reg.get('slug')
+    for schema_slug in reg.get('schemas', []) or []:
+        declared_home.setdefault(schema_slug, reg_slug)
+
+for schema_slug in want_schemas:
+    schema_id = sch_by_slug[schema_slug].get('id')
+    home_slug = declared_home.get(schema_slug)
+    register = reg_by_slug.get(home_slug) if home_slug else None
+    if register is None:
+        # Fall back to whichever register lists this schema's id.
+        for candidate in registers:
+            if schema_id in (candidate.get('schemas') or []):
+                register = candidate
+                break
+    if register is None or schema_id in (None, ''):
+        print(
+            f'::error::could not resolve a register for schema "{schema_slug}" '
+            '— the app-config binding would be written empty, which surfaces later '
+            'as a 500 from the endpoint that uses it.',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    print(f'{schema_slug}_register\t{register.get("id")}')
+    print(f'{schema_slug}_schema\t{schema_id}')
+    print(f'{schema_slug}_source\topenregister')
+PY
+
+# ── 3. Bind the object types in Filinq's app config ────────────────────────
+# Written with `occ` rather than `POST /apps/filinq/api/settings`: that route
+# is `#[AuthorizedAdminSetting]` WITHOUT `@NoCSRFRequired`, so a basic-auth curl
+# is rejected before the controller runs, and harvesting a request-token in bash
+# would be a second, fragile session. `occ` is the documented administrative
+# path and needs no session at all. It also writes strictly more keys than the
+# settings endpoint allows (its `WRITABLE_KEYS` allowlist covers only
+# publicationConsent/template), and signing needs `signingRequest_*` /
+# `signerRecord_*`.
+if [ ! -f "${NC_ROOT}/occ" ]; then
+	echo "::error::occ not found at ${NC_ROOT}/occ — cannot bind Filinq's object types."
+	exit 1
+fi
+
+BOUND=0
+while IFS=$'\t' read -r key value; do
+	[ -z "$key" ] && continue
+	php "${NC_ROOT}/occ" config:app:set filinq "$key" --value="$value" --output=plain > /dev/null
+	BOUND=$((BOUND + 1))
+done < "$BINDINGS"
+echo "[ci-seed] bound ${BOUND} Filinq object-type config keys."
+
+# The native signing provider refuses to produce an SES artifact without a
+# verification secret — `NativeSigningProvider` throws 'Cannot produce a native
+# SES artifact: signing_verification_secret is unset. Configure the signing
+# secret in Filinq admin settings before enabling signing.' A fresh install
+# has no secret, so `POST /api/signing/requests/{id}/sign` answers 500 and the
+# signing journey cannot complete. This is an ADMIN SETUP step, exactly like
+# the register bindings above, so it belongs here.
+#
+# Deliberately NOT written through `POST /api/settings`: `SettingsService`'s
+# WRITABLE_KEYS allowlist excludes this key on purpose ('secret keys must be
+# managed through dedicated, separately-secured endpoints'), so occ is the
+# right channel. The value is throwaway — this instance is destroyed with the
+# runner — but it is generated rather than a literal, so nothing here can ever
+# become a copied-and-pasted production secret.
+SIGNING_SECRET="ci-$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+php "${NC_ROOT}/occ" config:app:set filinq signing_verification_secret \
+	--value="$SIGNING_SECRET" --output=plain > /dev/null
+echo "[ci-seed] provisioned signing_verification_secret (${#SIGNING_SECRET} chars, ephemeral)."
+
+# ── 4. Verify the bindings through the app's own settings endpoint ───────────
+# `SettingsController::index` is the exact read path `OpenRegisterResolver`
+# consumes, so verifying HERE proves the binding is visible to the code that
+# will use it — not merely present in `oc_appconfig`.
+SETTINGS_BODY="$(mktemp)"
+SETTINGS_CODE="$(
+	curl -sS -o "$SETTINGS_BODY" -w '%{http_code}' \
+		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		"${BASE}/index.php/apps/filinq/api/settings" || echo 000
+)"
+echo "[ci-seed] GET /api/settings -> ${SETTINGS_CODE}"
+
+if [ "$SETTINGS_CODE" != "200" ]; then
+	echo "::error::Filinq settings endpoint returned HTTP ${SETTINGS_CODE}; cannot verify the object-type bindings."
+	head -c 1000 "$SETTINGS_BODY"; echo
+	exit 1
+fi
+
+python3 - "$SETTINGS_BODY" <<'PY'
+import json, sys
+
+body = json.load(open(sys.argv[1]))
+configuration = body.get('configuration') or {}
+# These are the bindings the e2e workflow suite actually depends on:
+# templates-crud drives create/update (template_* + templateVersion_*).
+required = [
+    'template_register', 'template_schema',
+    'templateVersion_register', 'templateVersion_schema',
+    'publicationConsent_register', 'publicationConsent_schema',
+]
+missing = [k for k in required if not configuration.get(k)]
+print(f'[ci-seed] settings.configuration: {json.dumps(configuration, sort_keys=True)}')
+if missing:
+    print(f'::error::Filinq object-type bindings still empty after seeding: {missing}')
+    print('::error::Template/consent writes would 500 with "register/schema not configured".')
+    sys.exit(1)
+print('[ci-seed] object-type bindings OK.')
+PY
+
+echo "[ci-seed] Filinq registers, schemas and object-type bindings provisioned."
+
+# ── 4a-bis. Policy RBAC groups ─────────────────────────────────────────────
+# The policy surface is group-gated, not admin-gated, and THREE group names are
+# in play across two enforcement layers:
+#
+#   PolicyCrudService::PROHIBITION_GROUP      = docudesk-prohibition-admins
+#   PolicyCrudService::STANDING_CONSENT_GROUP = docudesk-standing-consent-admins
+#   filinq_register.json RBAC on publicationProhibition
+#                          (create/update/delete) = docudesk-policy-admins
+#
+# ⚠️ The first and third DISAGREE, and they gate the same operation at two
+# different layers. A member of `docudesk-policy-admins` clears OpenRegister's
+# schema RBAC and is then rejected by the service check; a member of
+# `docudesk-prohibition-admins` clears the service check and is then rejected by
+# OpenRegister. So NO non-admin group can write a prohibition today — only the
+# admin flag can, via the short-circuit in assertProhibitionPermission(). Which
+# name is canonical is a product decision, so this script seeds all three rather
+# than silently picking one; the mismatch is reported separately.
+#
+# None of these groups exists on a fresh install and nothing creates them, so
+# every prohibition / standing-consent WRITE by a non-admin answered 403.
+#
+# The Newman collection papered over exactly this: its seeding requests carried
+# `if (pm.response.code === 403 ...) { pm.test.skip(...); return; }`, which turns
+# a 403 into a NON-FAILING result and then skips the outcome assertions that
+# depended on the seed. The whole "Detection-time outcomes" folder could report
+# green having exercised nothing. Creating the groups here is what makes those
+# assertions able to run — and able to fail.
+for _dd_group in docudesk-policy-admins docudesk-prohibition-admins docudesk-standing-consent-admins; do
+	php "${NC_ROOT}/occ" group:add "${_dd_group}" 2>&1 | tail -1 || true
+	php "${NC_ROOT}/occ" group:adduser "${_dd_group}" "${USER_NAME}" 2>&1 | tail -1 || true
+done
+
+# Fail loudly if the memberships did not take: a silent 403 later reads like an
+# authorization bug in the app rather than an unseeded fixture.
+_dd_groups_actual=$(php "${NC_ROOT}/occ" user:info "${USER_NAME}" --output=json 2>/dev/null || echo '{}')
+for _dd_group in docudesk-policy-admins docudesk-prohibition-admins docudesk-standing-consent-admins; do
+	case "${_dd_groups_actual}" in
+		*"${_dd_group}"*) echo "[ci-seed] ${USER_NAME} is in ${_dd_group}." ;;
+		*) echo "::error::${USER_NAME} is NOT in ${_dd_group} — every policy write will 403."; exit 1 ;;
+	esac
+done
+
+# ── 4b. Materialise the admin user's home, then probe WebDAV ────────────────
+# `occ maintenance:install` creates the admin ACCOUNT but not its files home —
+# that is built lazily, the first time something initialises the user's mount
+# points. Until then WebDAV answers 404 for `/files/admin/...` (Sabre cannot
+# find the collection), which is exactly what the workflow fixtures' MKCOL got
+# on run 30801457803: a 404 that reads like a bad path rather than an
+# uninitialised account.
+#
+# `files:scan` initialises the mount points, so it creates the home as a side
+# effect. Non-fatal: the probe below is what reports the resulting state.
+echo "[ci-seed] initialising ${USER_NAME}'s files home (occ files:scan)…"
+php "${NC_ROOT}/occ" files:scan "${USER_NAME}" 2>&1 | tail -5 || echo "[ci-seed] files:scan returned non-zero (continuing)"
+
+# ── Probe WebDAV, which the file-backed workflow specs depend on ────────────
+# `tests/e2e/workflows/_fixtures.ts` seeds real Nextcloud files through
+# `/remote.php/dav/files/admin/...` for the signing and anonymisation journeys.
+# On run 30801457803 the MKCOL came back 404 with nothing in nextcloud.log, and
+# a 404 from DAV is ambiguous: it is what you get from a missing service
+# mapping, from a user whose home has not been initialised, AND from a genuinely
+# absent parent collection. Probing here — with the same admin credentials, at
+# the point the environment is being prepared — turns that into a printed fact
+# instead of a spec failure that accuses the fixture.
+#
+# Informational: it prints, it does not gate. The specs remain the authority on
+# whether the journeys work.
+DAV_ROOT="${BASE}/remote.php/dav/files/${USER_NAME}"
+DAV_PROBE="ci-seed-probe-$$"
+DAV_OUT="$(mktemp)"
+dav() {
+	local method="$1" path="$2" body="${3:-}" code
+	code="$(
+		curl -sS -o "$DAV_OUT" -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+			-X "$method" ${body:+--data-binary "$body"} "${DAV_ROOT}/${path}" || echo 000
+	)"
+	echo "[ci-seed] dav ${method} /${path} -> ${code}"
+	# The status code alone is ambiguous: Sabre answers 404 both for a missing
+	# parent collection and for a principal it will not admit to knowing. Print
+	# the body so the reason is in the log rather than inferred.
+	if [ "$code" != "201" ] && [ "$code" != "204" ] && [ "$code" != "207" ]; then
+		# Nextcloud's HTML error page carries the reason in an <h2>/hint; a Sabre
+		# XML fault carries it in <s:message>. Pull whichever is present instead
+		# of the first 400 bytes of boilerplate <head>.
+		echo "[ci-seed]   reason: $(grep -oE '<h2>[^<]*</h2>|<s:message>[^<]*|<p class=.hint.>[^<]*' "$DAV_OUT" | head -2 | tr '\n' ' ')"
+	fi
+}
+echo "[ci-seed] remote.php on disk: $(ls -l "${NC_ROOT}/remote.php" 2>&1 | head -1)"
+# WHICH ENTRY POINT ANSWERS? `/remote.php/<unknown-service>` is the crisp
+# discriminator: remote.php itself answers with printErrorPage('Path not
+# found', '', 404) — message, NO hint — while index.php's OC::handleRequest()
+# answers printErrorPage('404', 'The page could not be found on the server.',
+# 404) — message AND hint. core/templates/error.php renders the hint in
+# <p class='hint'>, so the presence of that element says which file ran.
+for probe in "/remote.php/zzz" "/remote.php" "/status.php" "/ocs/v2.php/cloud/capabilities"; do
+	code="$(curl -sS -o "$DAV_OUT" -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+		-H 'OCS-APIRequest: true' "${BASE}${probe}" || echo 000)"
+	echo "[ci-seed] entrypoint ${probe} -> ${code} :: $(grep -oE "<p>[^<]*</p>|<p class='hint'>[^<]*" "$DAV_OUT" | head -2 | tr '\n' ' ' | head -c 160)"
+done
+echo "[ci-seed] dav GET / -> $(curl -sS -o "$DAV_OUT" -w '%{http_code}' \
+	-u "${USER_NAME}:${USER_PASS}" "${DAV_ROOT}/" || echo 000)"
+echo "[ci-seed]   title: $(grep -oE '<h2>[^<]*</h2>|<p class=.hint.>[^<]*' "$DAV_OUT" | head -2 | tr '\n' ' ')"
+dav PROPFIND ""
+dav MKCOL "$DAV_PROBE"
+dav PUT "${DAV_PROBE}/x.txt" 'probe'
+dav DELETE "$DAV_PROBE"
+
+# ── 5. Warm the SPA so the first spec doesn't pay the cold start ─────────────
+# The runner serves Nextcloud with `php -S`. Even with PHP_CLI_SERVER_WORKERS=8
+# the first hit pays a cold opcache, the first parse of the webpack bundle, and
+# — specific to Filinq — `Application::boot()`'s own register import, which
+# runs on the FIRST request after enable and touches 5 registers, 20 schemas and
+# 46 objects. Paying that here, in the environment-preparation step, is where it
+# belongs; the alternative (raising the first spec's timeout) would hide a cold
+# start inside an assertion and keep drifting upward.
+#
+# Failures are ignored on purpose: this is a warm-up, not a gate. The real
+# checks are above and below.
+for path in \
+	"/index.php/apps/filinq/" \
+	"/index.php/apps/filinq/api/settings" \
+	"/index.php/apps/filinq/api/templates" \
+	"/index.php/apps/filinq/api/signing/requests" \
+	"/index.php/apps/openregister/api/registers?_limit=1"
+do
+	code="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+		-H 'OCS-APIRequest: true' "${BASE}${path}" || echo 000)"
+	echo "[ci-seed] warm ${path} -> ${code}"
+done
+
+if [ "$SEED_MODE" = "api" ]; then
+	echo "[ci-seed] api mode: skipping the SPA bundle warm-up and gate — the Newman"
+	echo "[ci-seed] suite is HTTP-only and its job never builds the frontend."
+	echo "[ci-seed] done."
+	exit 0
+fi
+
+# Pull the main webpack bundle once so it is in the page cache.
+#
+# Do NOT hardcode the URL. Nextcloud serves an app's assets from whichever apps
+# directory it was installed into — `/apps/filinq/js/...` on the CI runner,
+# `/custom_apps/filinq/js/...` in the docker dev images — and asking for the
+# wrong one does not 404. It returns **HTTP 200 with `text/html`**: the NC error
+# page, served through index.php. A status-code check therefore reports success
+# while fetching a 40 KB HTML page instead of a multi-MB bundle, so the warm-up
+# silently warms nothing.
+#
+# Read the real src out of the rendered app page instead, and verify the
+# response is actually JavaScript.
+APP_HTML="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/filinq/" -o "$APP_HTML" || true
+
+# `|| true` is load-bearing: grep exits 1 when it matches nothing, and under
+# `set -euo pipefail` that aborts the script right here — so the case the gate
+# below exists to explain (no bundle) would die with a bare non-zero exit and
+# none of the diagnosis. Let it fall through to the gate instead.
+BUNDLE_SRC="$(grep -oE 'src="[^"]*filinq-main[^"]*"' "$APP_HTML" \
+	| head -1 | sed 's/^src="//; s/"$//' || true)"
+
+if [ -n "$BUNDLE_SRC" ]; then
+	BUNDLE_INFO="$(curl -sS -o /dev/null \
+		-w '%{http_code} %{content_type} %{size_download}' \
+		-u "${USER_NAME}:${USER_PASS}" "${BASE}${BUNDLE_SRC}" || echo '000 - 0')"
+	echo "[ci-seed] warm bundle ${BUNDLE_SRC} -> ${BUNDLE_INFO}"
+else
+	echo "[ci-seed] could not locate the bundle src in the rendered app page."
+	BUNDLE_INFO=""
+fi
+
+# On CI this is a GATE, not a warm-up.
+#
+# The single most likely way this job "succeeds" dishonestly is by passing
+# without ever loading the app — and the environment hides it well: when the
+# bundle is absent, Nextcloud does not 404. It serves its HTML error page with
+# **HTTP 200 and Content-Type text/html**, so `npm run build` producing nothing
+# looks, to every status-code check in the pipeline, exactly like success.
+#
+# The specs are the honest signal; this check just makes the cause loud and
+# immediate instead of arriving as a wall of selector timeouts.
+if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
+	case "$BUNDLE_INFO" in
+		*javascript*)
+			echo "[ci-seed] bundle verified as JavaScript."
+			;;
+		*)
+			echo "::error::The Filinq frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
+			echo "::error::The SPA cannot mount, so every UI spec would fail on a selector timeout with a misleading cause."
+			echo "::error::Check the 'Build app frontend' step — a missing bundle returns HTTP 200 text/html, not 404."
+			exit 1
+			;;
+	esac
+fi
+
+echo "[ci-seed] done."
+
+# ── Settle the demo-data decision ────────────────────────────────────────────
+# 🔴 OR THE SETUP WIZARD MASKS EVERY CLICK. ADR-111 added an OPTIONAL
+# `demo-data` step, and CnAppRoot opens the non-gating wizard as a full modal
+# mask while ANY optional step that is not info/summary is reported not-done —
+# in every fresh browser context, so once per spec.
+#
+# Measured on this app's development at the ADR-111 merge: clicks failed with
+# "locator resolved to <button ...> - attempting click action", the call log
+# naming <ol class="cn-wizard-dialog__progress"> as the interceptor. The element
+# was found; the click never landed.
+#
+# SKIPPED, not installed: recording the decision is what closes the wizard.
+# Installing would push the app's whole demo dataset into every list the suite
+# asserts on. `demo-data-setup-step.spec.ts` exercises the install deliberately.
+#
+# Uses the workflow's own exported credentials rather than this script's, so it
+# does not depend on where in the file it sits.
+#
+# Tolerant on purpose: an app whose wizard has no demo-data step answers 400
+# here, and that is not a seeding failure.
+DEMO_BASE="${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}"
+DEMO_CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 \
+	-u "${ADMIN_USER:-admin}:${ADMIN_PASSWORD:-admin}" -X POST \
+	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' --data '{}' \
+	"${DEMO_BASE}/index.php/apps/filinq/api/setup/action/skip-demo-data" || echo 000)"
+echo "[ci-seed] POST setup/action/skip-demo-data -> HTTP ${DEMO_CODE}"

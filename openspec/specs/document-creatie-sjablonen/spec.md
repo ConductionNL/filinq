@@ -1,7 +1,20 @@
+---
+status: in-progress
+---
+
 # document-creatie-sjablonen Specification
 
+**Status**: in-progress
+**OpenSpec changes**:
+- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — wizard-driven generations validate `options.wizardContext` server-side and record the interview context (wizard id + version + answers) on the `generatedDocument` audit object (REQ-DDGDW-008) (kind: code)
+- [multi-format-output](../../changes/multi-format-output/) _(active)_ — `options.formats` produces multiple outputs from a single render pass with a JSON manifest; `docx` becomes a first-class editable generation format; every produced output is recorded on `generatedDocument.outputs` (REQ-DDMFO-001/003/006) (kind: code)
+- [document-generation-list-refs](../../changes/document-generation-list-refs/) _(active)_ — `options.listRefs` resolves an array of OpenRegister objects (via the slug-aware search path, including external DBAL registers) into the Twig context under a named key, alongside single-object `dataRefs`; scoped to generate/preview only (REQ-DDLR-001/002/003/004) (kind: code)
+
 ## Purpose
-TBD - created by archiving change document-creatie-sjablonen. Update Purpose after archive.
+Generates documents from templates by merging resolved data into a sandboxed Twig template. Merge data is resolved from OpenRegister objects by register, schema, and object UUID with nested resolution up to three levels deep, optional external data via OpenConnector, and ad-hoc JSON context, while rendering supports conditional sections, iteration, and per-field warnings for missing values. This enables automated creation of formal documents such as beschikkingen from structured case data.
+
+@e2e exclude API-only generation surface (POST /api/documents/generate, /generate/preview, /generate/bulk, GET /api/documents/jobs/{jobId}) reached by no Vue component; asserted below HTTP by PHPUnit — tests/unit/Controller/DocumentControllerTest.php, tests/unit/Service/DocumentServiceTest.php, tests/unit/BackgroundJob/BatchDocumentJobTest.php
+
 ## Requirements
 ### Requirement: REQ-DCS-01 Data Resolution from OpenRegister (Priority: Must)
 
@@ -56,7 +69,7 @@ The system MUST render templates by merging resolved data context using the exis
 - WHEN DocumentService::generateDocument() is called
 - THEN the Twig template is rendered with the merged data
 - AND conditional sections show/hide based on zaaktype
-- AND document metadata is stored in the document register
+- AND document metadata is stored in the `filinq` register
 
 #### Scenario: Conditional sections in template
 - GIVEN a template has `{% if zaaktype == 'omgevingsvergunning' %}` blocks
@@ -243,7 +256,7 @@ Generated documents MUST be linkable to cases in Procest and triggerable from wo
 - GIVEN a document is generated from a zaak's data
 - WHEN the generation completes
 - THEN the document can be automatically attached to the source zaak in Procest
-- AND document metadata is stored in the document register
+- AND document metadata is stored in the `filinq` register
 
 #### Scenario: Workflow-triggered generation
 - GIVEN an n8n workflow monitors zaak status changes
@@ -253,14 +266,14 @@ Generated documents MUST be linkable to cases in Procest and triggerable from wo
 
 #### Scenario: Audit trail
 - GIVEN a document is generated
-- WHEN the metadata is stored in the document register
+- WHEN the metadata is stored in the `filinq` register
 - THEN it includes: template ID, version, data sources, generation timestamp, generating user
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | DCS-070 | Generated documents can be attached to zaak in Procest | SHOULD | Planned |
 | DCS-071 | Document generation triggerable from n8n workflows | SHOULD | Planned |
-| DCS-072 | Generated document metadata stored in document register | MUST | Planned |
+| DCS-072 | Generated document metadata stored in the `filinq` register | MUST | Planned |
 
 ### Requirement: REQ-DCS-09 Mock Register Test Data (Priority: Should)
 

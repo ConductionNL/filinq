@@ -1,0 +1,62 @@
+name: Release
+
+# ONE release workflow for the whole fleet.
+#
+# Every app used to carry three caller files (`release-development.yml`,
+# `release-beta.yml`, `release-stable.yml`) pointing at two different shared
+# workflows. Those two drifted: the pair edited `appinfo/info.xml` in the
+# working tree only, so their tags named commits still showing the PREVIOUS
+# version — harmless for a timestamped dev build, wrong for a stable release,
+# because Nextcloud's release template asserts
+#     [ "$APP_VERSION" = "v$(xpath info.xml //version)" ]
+#
+# `release.yml` is the strict one and is now the only one. It commits the bump
+# to a `release/v<version>` branch, tags THAT commit, and opens a pull request
+# to bring the integration branch up — so the tag and the package agree without
+# anything pushing at a protected branch.
+
+on:
+  push:
+    branches: [main, beta, development]
+  workflow_dispatch:
+
+# Releases publish artifacts. A cancelled release is neither a success nor a
+# rollback — it is a half-published version — so queued runs wait rather than
+# cancelling the one in flight.
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+# `previous-app-id` is the App Store id this app shipped under before the
+# rename. The store keys everything on the id, so `filinq` is a brand new
+# entry starting from nothing -- without this the version line restarts
+# BELOW what the app already published as `docudesk`, and the store accepts
+# that with a 200 and then never offers it to anyone. Drop the input once
+# the `docudesk` entry is retired.
+jobs:
+  unstable:
+    if: github.ref == 'refs/heads/development'
+    uses: ConductionNL/.github/.github/workflows/release.yml@main
+    with:
+      release-type: unstable
+      app-name: filinq
+      previous-app-id: docudesk
+    secrets: inherit
+
+  beta:
+    if: github.ref == 'refs/heads/beta'
+    uses: ConductionNL/.github/.github/workflows/release.yml@main
+    with:
+      release-type: beta
+      app-name: filinq
+      previous-app-id: docudesk
+    secrets: inherit
+
+  stable:
+    if: github.ref == 'refs/heads/main'
+    uses: ConductionNL/.github/.github/workflows/release.yml@main
+    with:
+      release-type: stable
+      app-name: filinq
+      previous-app-id: docudesk
+    secrets: inherit

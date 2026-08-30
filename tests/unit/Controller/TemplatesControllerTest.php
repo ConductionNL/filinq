@@ -4,7 +4,7 @@
  * Unit tests for TemplatesController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -12,19 +12,19 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://www.DocuDesk.app
+ * @link https://www.filinq.app
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\DocuDesk\Tests\Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\DocuDesk\Controller\TemplateRequestHandler;
-use OCA\DocuDesk\Controller\TemplatesController;
-use OCA\DocuDesk\Service\TemplatePreviewService;
-use OCA\DocuDesk\Service\TemplateService;
-use OCA\DocuDesk\Service\TemplateVersionService;
+use OCA\Filinq\Controller\TemplateRequestHandler;
+use OCA\Filinq\Controller\TemplatesController;
+use OCA\Filinq\Service\TemplatePreviewService;
+use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Service\TemplateVersionService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -36,182 +36,173 @@ use Psr\Log\LoggerInterface;
  * Unit tests for TemplatesController
  *
  * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Controller
+ * @package  OCA\Filinq\Tests\Unit\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.filinq.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class TemplatesControllerTest extends TestCase
-{
+class TemplatesControllerTest extends TestCase {
 
-    /**
-     * @var TemplatesController
-     */
-    private TemplatesController $controller;
+	/**
+	 * @var TemplatesController
+	 */
+	private TemplatesController $controller;
 
-    /**
-     * @var IRequest|MockObject
-     */
-    private IRequest|MockObject $mockRequest;
+	/**
+	 * @var IRequest|MockObject
+	 */
+	private IRequest|MockObject $mockRequest;
 
-    /**
-     * @var TemplateService|MockObject
-     */
-    private TemplateService|MockObject $mockTemplateService;
+	/**
+	 * @var TemplateService|MockObject
+	 */
+	private TemplateService|MockObject $mockTemplateService;
 
-    /**
-     * @var TemplateRequestHandler|MockObject
-     */
-    private TemplateRequestHandler|MockObject $mockRequestHandler;
+	/**
+	 * @var TemplateRequestHandler|MockObject
+	 */
+	private TemplateRequestHandler|MockObject $mockRequestHandler;
 
-    /**
-     * @var TemplateVersionService|MockObject
-     */
-    private TemplateVersionService|MockObject $mockVersionService;
+	/**
+	 * @var TemplateVersionService|MockObject
+	 */
+	private TemplateVersionService|MockObject $mockVersionService;
 
-    /**
-     * @var TemplatePreviewService|MockObject
-     */
-    private TemplatePreviewService|MockObject $mockPreviewService;
+	/**
+	 * @var TemplatePreviewService|MockObject
+	 */
+	private TemplatePreviewService|MockObject $mockPreviewService;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $mockUserSession;
+	/**
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $mockUserSession;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->mockRequest         = $this->createMock(IRequest::class);
-        $this->mockTemplateService = $this->createMock(TemplateService::class);
-        $this->mockRequestHandler  = $this->createMock(TemplateRequestHandler::class);
-        $this->mockVersionService  = $this->createMock(TemplateVersionService::class);
-        $this->mockPreviewService  = $this->createMock(TemplatePreviewService::class);
-        $this->mockUserSession     = $this->createMock(IUserSession::class);
-        $this->mockLogger          = $this->createMock(LoggerInterface::class);
+		$this->mockRequest = $this->createMock(IRequest::class);
+		$this->mockTemplateService = $this->createMock(TemplateService::class);
+		$this->mockRequestHandler = $this->createMock(TemplateRequestHandler::class);
+		$this->mockVersionService = $this->createMock(TemplateVersionService::class);
+		$this->mockPreviewService = $this->createMock(TemplatePreviewService::class);
+		$this->mockUserSession = $this->createMock(IUserSession::class);
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
 
-        $mockUser = $this->createMock(\OCP\IUser::class);
-        $mockUser->method('getUID')->willReturn('testuser');
-        $this->mockUserSession->method('getUser')->willReturn($mockUser);
+		$mockUser = $this->createMock(\OCP\IUser::class);
+		$mockUser->method('getUID')->willReturn('testuser');
+		$this->mockUserSession->method('getUser')->willReturn($mockUser);
 
-        $this->controller = new TemplatesController(
-            'docudesk',
-            $this->mockRequest,
-            $this->mockTemplateService,
-            $this->mockRequestHandler,
-            $this->mockVersionService,
-            $this->mockPreviewService,
-            $this->mockUserSession,
-            $this->mockLogger
-        );
+		$this->controller = new TemplatesController(
+			'filinq',
+			$this->mockRequest,
+			$this->mockTemplateService,
+			$this->mockRequestHandler,
+			$this->mockUserSession,
+			$this->mockLogger
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test index returns template list
-     *
-     * @return void
-     */
-    public function testIndexReturnsTemplateList(): void
-    {
-        $this->mockRequestHandler->method('parseListParams')
-            ->willReturn(['filters' => [], 'limit' => 20, 'offset' => 0]);
-        $this->mockTemplateService->method('getTemplates')
-            ->willReturn(['results' => [], 'total' => 0]);
+	/**
+	 * Test index returns template list
+	 *
+	 * @return void
+	 */
+	public function testIndexReturnsTemplateList(): void {
+		$this->mockRequestHandler->method('parseListParams')
+			->willReturn(['filters' => [], 'limit' => 20, 'offset' => 0]);
+		$this->mockTemplateService->method('getTemplates')
+			->willReturn(['results' => [], 'total' => 0]);
 
-        $result = $this->controller->index();
+		$result = $this->controller->index();
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(200, $result->getStatus());
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(200, $result->getStatus());
 
-    }//end testIndexReturnsTemplateList()
+	}//end testIndexReturnsTemplateList()
 
-    /**
-     * Test show returns template
-     *
-     * @return void
-     */
-    public function testShowReturnsTemplate(): void
-    {
-        $this->mockTemplateService->method('getTemplate')
-            ->with('uuid-1')
-            ->willReturn(['id' => 'uuid-1', 'name' => 'Test']);
+	/**
+	 * Test show returns template
+	 *
+	 * @return void
+	 */
+	public function testShowReturnsTemplate(): void {
+		$this->mockTemplateService->method('getTemplate')
+			->with('uuid-1')
+			->willReturn(['id' => 'uuid-1', 'name' => 'Test']);
 
-        $result = $this->controller->show('uuid-1');
+		$result = $this->controller->show('uuid-1');
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(200, $result->getStatus());
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(200, $result->getStatus());
 
-    }//end testShowReturnsTemplate()
+	}//end testShowReturnsTemplate()
 
-    /**
-     * Test create returns created template
-     *
-     * @return void
-     */
-    public function testCreateReturnsCreatedTemplate(): void
-    {
-        $this->mockRequestHandler->method('parseBodyParams')
-            ->willReturn(['name' => 'New Template']);
-        $this->mockTemplateService->method('createTemplate')
-            ->willReturn(['id' => 'uuid-new', 'name' => 'New Template']);
+	/**
+	 * Test create returns created template
+	 *
+	 * @return void
+	 */
+	public function testCreateReturnsCreatedTemplate(): void {
+		$this->mockRequestHandler->method('parseBodyParams')
+			->willReturn(['name' => 'New Template']);
+		$this->mockTemplateService->method('createTemplate')
+			->willReturn(['id' => 'uuid-new', 'name' => 'New Template']);
 
-        $result = $this->controller->create();
+		$result = $this->controller->create();
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(200, $result->getStatus());
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(200, $result->getStatus());
 
-    }//end testCreateReturnsCreatedTemplate()
+	}//end testCreateReturnsCreatedTemplate()
 
-    /**
-     * Test destroy returns success
-     *
-     * @return void
-     */
-    public function testDestroyReturnsSuccess(): void
-    {
-        $this->mockTemplateService->expects($this->once())
-            ->method('deleteTemplate')
-            ->with('uuid-1');
+	/**
+	 * Test destroy returns success
+	 *
+	 * @return void
+	 */
+	public function testDestroyReturnsSuccess(): void {
+		$this->mockTemplateService->expects($this->once())
+			->method('deleteTemplate')
+			->with('uuid-1');
 
-        $result = $this->controller->destroy('uuid-1');
+		$result = $this->controller->destroy('uuid-1');
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(200, $result->getStatus());
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(200, $result->getStatus());
 
-    }//end testDestroyReturnsSuccess()
+	}//end testDestroyReturnsSuccess()
 
-    /**
-     * Test index returns error on exception
-     *
-     * @return void
-     */
-    public function testIndexReturnsErrorOnException(): void
-    {
-        $this->mockRequestHandler->method('parseListParams')
-            ->willReturn(['filters' => [], 'limit' => 20, 'offset' => 0]);
-        $this->mockTemplateService->method('getTemplates')
-            ->willThrowException(new \Exception('Error'));
-        $this->mockRequestHandler->method('buildErrorResponse')
-            ->willReturn(new JSONResponse(['error' => 'Error'], 500));
+	/**
+	 * Test index returns error on exception
+	 *
+	 * @return void
+	 */
+	public function testIndexReturnsErrorOnException(): void {
+		$this->mockRequestHandler->method('parseListParams')
+			->willReturn(['filters' => [], 'limit' => 20, 'offset' => 0]);
+		$this->mockTemplateService->method('getTemplates')
+			->willThrowException(new \Exception('Error'));
+		$this->mockRequestHandler->method('buildErrorResponse')
+			->willReturn(new JSONResponse(['error' => 'Error'], 500));
 
-        $result = $this->controller->index();
+		$result = $this->controller->index();
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(500, $result->getStatus());
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertEquals(500, $result->getStatus());
 
-    }//end testIndexReturnsErrorOnException()
+	}//end testIndexReturnsErrorOnException()
 }//end class

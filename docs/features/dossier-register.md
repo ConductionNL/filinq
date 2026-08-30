@@ -4,7 +4,7 @@ The dossier register binds a Nextcloud folder to its anonymisation context: whic
 
 ## Schemas
 
-Two schemas land via `docudesk_register.json` (added by the `add-dossier-schema` change). No new PHP code; folder binding and CRUD ride on OpenRegister's existing `@self.folder` pipeline and the generic `/api/objects/{register}` routes.
+Two schemas land via `filinq_register.json` (added by the `add-dossier-schema` change). No new PHP code; folder binding and CRUD ride on OpenRegister's existing `@self.folder` pipeline and the generic `/api/objects/{register}` routes.
 
 ### `dossier` schema
 
@@ -15,7 +15,7 @@ Two schemas land via `docudesk_register.json` (added by the `add-dossier-schema`
 | `bases` | `string[]` | no | Array of slug strings referencing `base` objects (the legal grondslagen). Consumer-side resolution against the `dossier/base` register — OR doesn't validate that slugs resolve, doesn't block deletion of a referenced base. v1 trade-off, see design D1. |
 | `checkedOn` | date-time | no | When the dossier was last reviewed by an operator. `null` until first review. |
 
-Folder binding: `@self.folder` is the Nextcloud folder node ID. CRUD inherits OpenRegister's existing validation + audit-trail; no DocuDesk-side controller is required. Operators interact via `POST /api/objects/dossier`, `GET /api/objects/dossier/{uuid}`, `PUT /api/objects/dossier/{uuid}`.
+Folder binding: `@self.folder` is the Nextcloud folder node ID. CRUD inherits OpenRegister's existing validation + audit-trail; no Filinq-side controller is required. Operators interact via `POST /api/objects/filinq/dossier`, `GET /api/objects/filinq/dossier/{uuid}`, `PUT /api/objects/filinq/dossier/{uuid}` — the register segment is `filinq` (the five registers were consolidated into one) and `dossier` is the schema.
 
 ### `base` schema
 
@@ -67,20 +67,20 @@ more valuable. Until `validate-self-folder-access` lands, dossier folder writes 
 the caller the same way every other `@self.folder` write does.
 
 Tracking: open an issue on the
-[OpenRegister repository](https://codeberg.org/Conduction/OpenRegister) titled
+[OpenRegister repository](https://github.com/ConductionNL/OpenRegister) titled
 "`validate-self-folder-access`: add caller-permission check for @self.folder writes,
-first consumer: DocuDesk add-dossier-schema (#10)".
+first consumer: Filinq add-dossier-schema (#10)".
 
 ## Relation to other changes
 
 - **`entity-relation-grondslagen`** (OpenRegister) — the `EntityRelation.bases` column stores UUID references to `base` objects from this register. Cross-register references are not validated by OpenRegister (consumer-owned vocabulary).
-- **`anonymisation-grondslagen-summary`** (DocuDesk) — renders per-document and per-dossier summaries that resolve `EntityRelation.bases` UUIDs back to `base.name` via this register.
-- **`anonymisation-output-folder-layout`** (DocuDesk) — anonymised outputs land in `<dossier-folder>/anonymised/`, where `<dossier-folder>` is the dossier's `@self.folder`.
-- **`validate-self-folder-access`** (OpenRegister, follow-up) — will add access-control for `@self.folder` writes. DocuDesk's dossier register is cited as the first consumer.
+- **`anonymisation-grondslagen-summary`** (Filinq) — renders per-document and per-dossier summaries that resolve `EntityRelation.bases` UUIDs back to `base.name` via this register.
+- **`anonymisation-output-folder-layout`** (Filinq) — anonymised outputs land in `<dossier-folder>/anonymised/`, where `<dossier-folder>` is the dossier's `@self.folder`.
+- **`validate-self-folder-access`** (OpenRegister, follow-up) — will add access-control for `@self.folder` writes. Filinq's dossier register is cited as the first consumer.
 
 ## Spec references
 
 - Capability: [`openspec/changes/add-dossier-schema/specs/dossier-register/spec.md`](../../openspec/changes/add-dossier-schema/specs/dossier-register/spec.md)
 - Design (D1–D9, seed data, migration plan, risks): [`openspec/changes/add-dossier-schema/design.md`](../../openspec/changes/add-dossier-schema/design.md)
-- ADR-013 (Loadable register templates) — the docudesk_register.json envelope
+- ADR-013 (Loadable register templates) — the filinq_register.json envelope
 - ADR-016 (Mandatory seed data) — covers personas + realistic seed values

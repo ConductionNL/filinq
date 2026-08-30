@@ -63,6 +63,17 @@
                 <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
                 <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrailMapper"/>
+                <!--
+                  GdprEntity is instantiated by FQCN string in
+                  AnonymizationService::lookupOrCreateCustomDictionaryEntity()
+                  precisely so this app stays loadable without OpenRegister
+                  installed. Same category (and same file) as the OR Db
+                  classes above; the real class lives in
+                  openregister/lib/Db/GdprEntity.php.
+                -->
+                <referencedClass name="OCA\OpenRegister\Db\GdprEntity"/>
                 <referencedClass name="OCA\OpenRegister\Event\DeepLinkRegistrationEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
@@ -70,27 +81,85 @@
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
+                <!--
+                  ADR-084's published contract. Services type-hint this interface
+                  rather than OR's concrete class, and the binding is stated in
+                  RegistrationBootstrap — but the interface itself lives in
+                  openregister, which this repo does not depend on, so psalm
+                  cannot resolve it. Same category as the classes around it.
+                -->
+                <referencedClass name="OCA\OpenRegister\Contract\ObjectServiceInterface"/>
                 <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
                 <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\File\PlaceholderIdTranslator"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!--
+                  ADR-063 chain 3/3. FilinqScannableServices implements this
+                  interface in production and the stub in tests/stubs; the app
+                  has no composer dependency on openregister, and must still be
+                  loadable when openregister is absent.
+                -->
+                <referencedClass name="OCA\OpenRegister\Mcp\IMcpScannableServices"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <!--
+                  Thrown by OpenRegister's ObjectService::deleteObject() for any
+                  user-driven delete on a schema declaring x-openregister-archival.
+                  PolicyController catches it to answer HTTP 409 instead of leaking a
+                  500; the real class lives in
+                  openregister/lib/Exception/ArchivalImmutableException.php.
+                -->
+                <referencedClass name="OCA\OpenRegister\Exception\ArchivalImmutableException"/>
+                <!-- OpenRegister DB types used in signing/approval events -->
+                <referencedClass name="OCA\OpenRegister\Db\ApprovalChain"/>
+                <referencedClass name="OCA\OpenRegister\Db\ApprovalStep"/>
+                <!-- OpenRegister AppHost controller base classes -->
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericDashboardController"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericHealthController"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericMetricsController"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericPreferencesController"/>
+                <!-- OpenRegister Observability classes (AppHost engine) -->
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\ManifestLoader"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\HealthCheckExecutor"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\MetricsEngine"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\PrometheusRenderer"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\ObjectMetricSource"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\TableMetricSource"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\AppConfigMetricSource"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\ProviderMetricSource"/>
+                <!-- OpenRegister Approval events -->
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepInitiatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepApprovedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepRejectedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepCompletedEvent"/>
+                <!-- OpenRegister Language service -->
+                <referencedClass name="OCA\OpenRegister\Service\LanguageService"/>
                 <!-- Additional OCP infrastructure types used across the fleet -->
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
                 <referencedClass name="OCP\AppFramework\Db\DoesNotExistException"/>
+                <referencedClass name="OCP\AppFramework\Middleware"/>
+                <referencedClass name="OCP\Constants"/>
+                <referencedClass name="OCP\Dashboard\IWidget"/>
                 <referencedClass name="OCP\DB\Exception"/>
+                <referencedClass name="OCP\Files\Conversion\IConversionManager"/>
+                <referencedClass name="OCP\ICache"/>
                 <referencedClass name="OCP\IGroup"/>
+                <referencedClass name="OCP\ITempManager"/>
                 <referencedClass name="OCP\IUser"/>
+                <referencedClass name="OCP\Lock\ILockingProvider"/>
+                <referencedClass name="OCP\Lock\LockedException"/>
                 <referencedClass name="OCP\Migration\IRepairStep"/>
+                <referencedClass name="OCP\Settings\IDelegatedSettings"/>
+                <referencedClass name="OCP\Settings\IIconSection"/>
                 <!-- Nextcloud server internals -->
                 <referencedClass name="OC"/>
                 <!-- GuzzleHttp (loaded via composer at runtime) -->
                 <referencedClass name="GuzzleHttp\Client"/>
                 <referencedClass name="GuzzleHttp\Exception\GuzzleException"/>
-                <!-- DocuDesk-specific runtime dependencies -->
+                <!-- Filinq-specific runtime dependencies -->
                 <referencedClass name="thiagoalessio\TesseractOCR\TesseractOCR"/>
                 <!--
                   PhpOffice\PhpWord — declared in composer.json as a
@@ -103,6 +172,15 @@
                 <referencedClass name="PhpOffice\PhpWord\IOFactory"/>
             </errorLevel>
         </UndefinedClass>
+        <!--
+          `#[McpTool]` is OpenRegister's attribute (ADR-063 chain 3/3). PHP only
+          resolves an attribute class when something reflects it, so an absent
+          openregister does not stop this app loading — but psalm resolves it
+          statically and cannot see a cross-app class this repo does not depend
+          on. Same category as the UndefinedClass suppressions above; unlike
+          those, psalm's attribute check takes no per-class filter.
+        -->
+        <UndefinedAttributeClass errorLevel="suppress"/>
         <UndefinedMagicMethod errorLevel="suppress"/>
         <UnusedClass errorLevel="suppress"/>
         <PossiblyUnusedMethod errorLevel="suppress"/>

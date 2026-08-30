@@ -19,7 +19,8 @@ vi.mock('@nextcloud/router', () => ({
 	generateUrl: (path) => `http://localhost/index.php${path}`,
 }))
 
-const { validateFile, verdictColor } = await import('../../src/services/validationService.js')
+const { validateFile, verdictColor } =
+	await import('../../src/services/validationService.js')
 
 describe('validateFile', () => {
 	beforeEach(() => postMock.mockReset())
@@ -31,7 +32,7 @@ describe('validateFile', () => {
 		const result = await validateFile(42, 'factuur')
 
 		const [url, body] = postMock.mock.calls[0]
-		expect(url).toContain('/apps/docudesk/api/validation/validate')
+		expect(url).toContain('/apps/filinq/api/validation/validate')
 		expect(body).toEqual({ fileId: 42, documentType: 'factuur' })
 		expect(result).toBe(payload)
 	})

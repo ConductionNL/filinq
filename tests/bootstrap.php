@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Bootstrap file for PHPUnit tests
  *
  * @category Test
- * @package  OCA\DocuDesk\Tests
+ * @package  OCA\Filinq\Tests
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2025 Conduction B.V.
@@ -11,7 +12,7 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://DocuDesk.app
+ * @link https://filinq.app
  */
 
 declare(strict_types=1);
@@ -24,22 +25,22 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 // Bootstrap Nextcloud if not already done.
 if (!defined('OC_CONSOLE')) {
-    // Try to include the main Nextcloud bootstrap.
-    if (file_exists(__DIR__ . '/../../../lib/base.php')) {
-        require_once __DIR__ . '/../../../lib/base.php';
-    }
+	// Try to include the main Nextcloud bootstrap.
+	if (file_exists(__DIR__ . '/../../../lib/base.php')) {
+		require_once __DIR__ . '/../../../lib/base.php';
+	}
 
-    // Load Test\TestCase and other NC test classes (NC convention).
-    if (file_exists(__DIR__ . '/../../../tests/autoload.php')) {
-        require_once __DIR__ . '/../../../tests/autoload.php';
-    }
+	// Load Test\TestCase and other NC test classes (NC convention).
+	if (file_exists(__DIR__ . '/../../../tests/autoload.php')) {
+		require_once __DIR__ . '/../../../tests/autoload.php';
+	}
 
-    // Load all enabled apps.
-    \OC_App::loadApps();
+	// Load all enabled apps.
+	\OC_App::loadApps();
 
-    // Load our specific app.
-    \OC_App::loadApp('docudesk');
+	// Load our specific app.
+	\OC_App::loadApp('filinq');
 
-    // Clear hooks for testing.
-    OC_Hook::clear();
+	// Clear hooks for testing.
+	OC_Hook::clear();
 }
