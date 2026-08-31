@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Filinq",
-        "version": "0.1.7-unstable.20260831114832",
+        "version": "0.1.8-unstable.20260831162729",
         "description": "Filinq",
         "license": {
             "name": "EUPL-1.2"
