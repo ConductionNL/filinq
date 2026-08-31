@@ -110,7 +110,7 @@
     "cipher-base": "^1.0.7",
     "elliptic": "^6.6.1",
     "pbkdf2": "^3.1.5",
-    "terser-webpack-plugin": "^5.6.1",
+    "terser-webpack-plugin": "$terser-webpack-plugin",
     "cross-spawn": "^7.0.6",
     "body-parser": "^1.20.4",
     "express": "^4.22.1",
