@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: "weekly"
     target-branch: "development"
+    ignore:
+      # @nextcloud/webpack-vue-config pins this to EXACTLY "4.0.0" (not a
+      # range), so 4.1.0 can never resolve: npm ci dies with ERESOLVE before
+      # a single check runs. Dependabot proposes it anyway because it only
+      # sees a newer version, not the exact pin holding it down.
+      - dependency-name: "node-polyfill-webpack-plugin"
     open-pull-requests-limit: 10
     # HELD BACK DELIBERATELY, not out of caution. Each of these is blocked by a
     # package we do not control, and dependabot cannot see that, so it proposes
