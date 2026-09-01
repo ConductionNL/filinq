@@ -3,10 +3,13 @@
 /**
  * Filinq Signer Event Translator
  *
- * Translates OpenRegister ApprovalStep events into Filinq's own typed signer
- * events and notifies the configured signing provider when a step becomes
- * pending. Extracted from `ApprovalStepListener`, which keeps only the
- * chain-ownership filter and the event routing.
+ * Translates task-sequence transitions — already reduced to scalars by
+ * `SigningTaskListener` — into Filinq's own typed signer events, and
+ * notifies the configured signing provider when a position becomes enabled.
+ * The listener keeps the OR event surface and the ownership filter; this
+ * class is pure filinq: scalars in, `Signer*Event`s out. That split is what
+ * keeps every OpenRegister type out of this file, so it loads with OR
+ * older, newer or absent (openregister#3302, flow-approval-consolidation).
  *
  * @category  EventListener
  * @package   OCA\Filinq\EventListener
@@ -16,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/specs/document-signing/spec.md
+ * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,22 +34,20 @@ use OCA\Filinq\Event\SignerStepApprovedEvent;
 use OCA\Filinq\Event\SignerStepPendingEvent;
 use OCA\Filinq\Event\SignerStepRejectedEvent;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
-use OCA\OpenRegister\Event\ApprovalStepApprovedEvent;
-use OCA\OpenRegister\Event\ApprovalStepCompletedEvent;
-use OCA\OpenRegister\Event\ApprovalStepInitiatedEvent;
-use OCA\OpenRegister\Event\ApprovalStepRejectedEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Re-emits OR approval-step transitions as Filinq signer events.
+ * Re-emits task-sequence transitions as Filinq signer events.
  *
  * @category EventListener
  * @package  OCA\Filinq\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
  */
 class SignerEventTranslator {
 	/**
@@ -54,12 +55,14 @@ class SignerEventTranslator {
 	 *
 	 * @param SigningProviderFactory $providerFactory Provider factory for invoking
 	 *                                                the configured provider on
-	 *                                                step-pending transitions.
+	 *                                                position-enabled transitions.
 	 * @param IEventDispatcher $dispatcher Dispatcher used to re-emit
 	 *                                     typed filinq-side events.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
 	public function __construct(
 		private readonly SigningProviderFactory $providerFactory,
@@ -70,136 +73,166 @@ class SignerEventTranslator {
 	}//end __construct()
 
 	/**
-	 * Handle a step-initiated event (a step has become `pending`).
+	 * Handle a sequence position becoming enabled (a signer's turn).
 	 *
-	 * @param ApprovalStepInitiatedEvent $event OR initiated event.
+	 * Re-emits the typed pending event and invokes the configured provider.
+	 * Both the first position (sequence provisioned) and every next position
+	 * (previous position approved) arrive here: OR enables the next position
+	 * in the same request as the approving decision, so no separate
+	 * "next step" payload exists.
+	 *
+	 * @param string $sequenceUuid UUID of the OR task sequence.
+	 * @param string $taskUuid UUID of the now-enabled task.
+	 * @param int $position Ordinal of the position (1-based).
+	 * @param string|null $role The position's signer group, when one is set.
+	 * @param string $objectUuid Signing-request UUID.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/document-signing/spec.md
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function onInitiated(ApprovalStepInitiatedEvent $event): void {
+	public function onPositionEnabled(
+		string $sequenceUuid,
+		string $taskUuid,
+		int $position,
+		?string $role,
+		string $objectUuid,
+	): void {
 		$this->dispatcher->dispatchTyped(
 			new SignerStepPendingEvent(
-				chain: $event->getChain(),
-				step: $event->getStep(),
-				objectUuid: $event->getObjectUuid()
-			)
-		);
-
-		$this->invokeProviderForPendingStep(
-			objectUuid: $event->getObjectUuid(),
-			stepOrder: $event->getStep()->getStepOrder()
-		);
-
-	}//end onInitiated()
-
-	/**
-	 * Handle a step-approved event.
-	 *
-	 * Re-emits the typed approved event and, if the next step is pending,
-	 * invokes the configured provider for that next step's signer. When the
-	 * chain has no next step the corresponding `ApprovalStepCompletedEvent`
-	 * is what closes the chain (handled separately).
-	 *
-	 * @param ApprovalStepApprovedEvent $event OR approved event.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/document-signing/spec.md
-	 */
-	public function onApproved(ApprovalStepApprovedEvent $event): void {
-		$objectUuid = $event->getObjectUuid();
-		$nextStep = $event->getNextStep();
-
-		$this->dispatcher->dispatchTyped(
-			new SignerStepApprovedEvent(
-				chain: $event->getChain(),
-				step: $event->getStep(),
-				userId: $event->getUserId(),
-				nextStep: $nextStep,
+				sequenceUuid: $sequenceUuid,
+				taskUuid: $taskUuid,
+				position: $position,
+				role: $role,
 				objectUuid: $objectUuid
 			)
 		);
 
-		if ($nextStep !== null) {
-			$this->invokeProviderForPendingStep(
-				objectUuid: $objectUuid,
-				stepOrder: $nextStep->getStepOrder()
+		$this->invokeProviderForEnabledPosition(
+			objectUuid: $objectUuid,
+			position: $position
+		);
+
+	}//end onPositionEnabled()
+
+	/**
+	 * Handle a sequence task completing with a decision.
+	 *
+	 * Approving outcomes re-emit the typed approved event; rejecting
+	 * outcomes the typed rejected event. When an approval was not the final
+	 * position, the next position's own enabled transition follows through
+	 * {@see onPositionEnabled()}; the final approval additionally arrives
+	 * through {@see onSequenceCompleted()}.
+	 *
+	 * @param string $sequenceUuid UUID of the OR task sequence.
+	 * @param string $taskUuid UUID of the completed task.
+	 * @param int $position Ordinal of the position (1-based).
+	 * @param string|null $userId The completing identity.
+	 * @param string|null $comment The completion comment, when one was given.
+	 * @param string $objectUuid Signing-request UUID.
+	 * @param bool $isRejecting TRUE when the outcome is in the rejecting
+	 *                          vocabulary.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
+	 */
+	public function onTaskDecided(
+		string $sequenceUuid,
+		string $taskUuid,
+		int $position,
+		?string $userId,
+		?string $comment,
+		string $objectUuid,
+		bool $isRejecting,
+	): void {
+		if ($isRejecting === true) {
+			$this->dispatcher->dispatchTyped(
+				new SignerStepRejectedEvent(
+					sequenceUuid: $sequenceUuid,
+					taskUuid: $taskUuid,
+					position: $position,
+					userId: $userId,
+					comment: $comment,
+					objectUuid: $objectUuid
+				)
 			);
+			return;
 		}
 
-	}//end onApproved()
-
-	/**
-	 * Handle a step-rejected event.
-	 *
-	 * @param ApprovalStepRejectedEvent $event OR rejected event.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/document-signing/spec.md
-	 */
-	public function onRejected(ApprovalStepRejectedEvent $event): void {
 		$this->dispatcher->dispatchTyped(
-			new SignerStepRejectedEvent(
-				chain: $event->getChain(),
-				step: $event->getStep(),
-				userId: $event->getUserId(),
-				objectUuid: $event->getObjectUuid()
+			new SignerStepApprovedEvent(
+				sequenceUuid: $sequenceUuid,
+				taskUuid: $taskUuid,
+				position: $position,
+				userId: $userId,
+				comment: $comment,
+				objectUuid: $objectUuid
 			)
 		);
 
-	}//end onRejected()
+	}//end onTaskDecided()
 
 	/**
-	 * Handle a chain-completed event (final step approved).
+	 * Handle a sequence completing (final position approved).
 	 *
-	 * @param ApprovalStepCompletedEvent $event OR completed event.
+	 * @param string $sequenceUuid UUID of the completed OR task sequence.
+	 * @param string $finalTaskUuid UUID of the final position's task.
+	 * @param string|null $userId The identity that decided the final position.
+	 * @param string $statusOnApprove The resolved approving status.
+	 * @param string $objectUuid Signing-request UUID.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/document-signing/spec.md
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function onCompleted(ApprovalStepCompletedEvent $event): void {
+	public function onSequenceCompleted(
+		string $sequenceUuid,
+		string $finalTaskUuid,
+		?string $userId,
+		string $statusOnApprove,
+		string $objectUuid,
+	): void {
 		$this->dispatcher->dispatchTyped(
 			new SignerChainCompletedEvent(
-				chain: $event->getChain(),
-				finalStep: $event->getFinalStep(),
-				userId: $event->getUserId(),
-				objectUuid: $event->getObjectUuid()
+				sequenceUuid: $sequenceUuid,
+				finalTaskUuid: $finalTaskUuid,
+				userId: $userId,
+				statusOnApprove: $statusOnApprove,
+				objectUuid: $objectUuid
 			)
 		);
 
-	}//end onCompleted()
+	}//end onSequenceCompleted()
 
 	/**
-	 * Resolve the active provider and ask it to handle a now-pending step.
+	 * Resolve the active provider and ask it to handle an enabled position.
 	 *
-	 * The `NativeSigningProvider` is a no-op for this call today: it waits for
-	 * the filinq UI signer-action endpoint, which translates to OR's
-	 * `ApprovalService::approveStep`. External providers (`ValidSignProvider`
-	 * and future plugins) may use this hook to push a signing-request to the
-	 * external service or send the signer email.
+	 * The `NativeSigningProvider` is a no-op for this call today: it waits
+	 * for the filinq UI signer-action endpoint, whose reply path (once the
+	 * deferred write-path rewrite lands) is `TaskService::complete()` with
+	 * an approving or rejecting outcome. External providers
+	 * (`ValidSignProvider` and future plugins) may use this hook to push a
+	 * signing-request to the external service or send the signer email.
 	 *
 	 * @param string $objectUuid Signing-request UUID.
-	 * @param int $stepOrder Step order (1-based).
+	 * @param int $position Position ordinal (1-based).
 	 *
 	 * @return void
 	 */
-	private function invokeProviderForPendingStep(string $objectUuid, int $stepOrder): void {
+	private function invokeProviderForEnabledPosition(string $objectUuid, int $position): void {
 		try {
 			$provider = $this->providerFactory->getActiveProvider();
 			$this->logger->debug(
-				'ApprovalStepListener: provider ' . $provider->getIdentifier()
-				. ' notified that step ' . $stepOrder . ' is pending for sign-request ' . $objectUuid
+				'SigningTaskListener: provider ' . $provider->getIdentifier()
+				. ' notified that position ' . $position . ' is enabled for sign-request ' . $objectUuid
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
-				'ApprovalStepListener: failed to resolve signing provider for ' . $objectUuid . ': ' . $e->getMessage(),
+				'SigningTaskListener: failed to resolve signing provider for ' . $objectUuid . ': ' . $e->getMessage(),
 				['exception' => $e]
 			);
 		}
 
-	}//end invokeProviderForPendingStep()
+	}//end invokeProviderForEnabledPosition()
 }//end class

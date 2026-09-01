@@ -3110,7 +3110,7 @@
       "signingRequest": {
         "deprecated": true,
         "deprecatedSince": "5.6.0",
-        "deprecationNote": "The bespoke signing approval-chain (signingRequest + signerRecord step state) is being migrated to OpenRegister's canonical ApprovalChain / ApprovalStep abstraction per openspec/changes/migrate-signing-to-or-approval-workflow. Existing rows remain readable for the transition window; new sign-requests go through OR's ApprovalService and react to ApprovalStep*Event via lib/EventListener/ApprovalStepListener.php. Do not introduce new write-path callers — extend the ApprovalChain side instead.",
+        "deprecationNote": "The bespoke signing approval-chain (signingRequest + signerRecord step state) is being migrated to OpenRegister's ordered task sequences per openspec/changes/migrate-signing-to-or-tasks. Existing rows remain readable for the transition window; new sign-requests will provision an OR task sequence, drive decisions through TaskService::complete(), and react to the task lifecycle events via lib/EventListener/SigningTaskListener.php. Do not introduce new write-path callers — extend the task-sequence side instead.",
         "x-openregister-notifications": {
           "signingCompleted": {
             "trigger": {
@@ -3139,7 +3139,7 @@
         "uri": null,
         "slug": "signingRequest",
         "title": "Signing Request",
-        "description": "Ondertekeningsverzoek voor een document. DEPRECATED v1.2.0: bespoke signing approval-chain superseded by OR ApprovalChain/Step abstractions per openspec/changes/migrate-signing-to-or-approval-workflow.",
+        "description": "Ondertekeningsverzoek voor een document. DEPRECATED v1.2.0: bespoke signing approval-chain superseded by OR task sequences per openspec/changes/migrate-signing-to-or-tasks.",
         "version": "1.2.0",
         "summary": "",
         "icon": "FileSign",

@@ -3,18 +3,18 @@
 /**
  * SignerStepPendingEvent
  *
- * Typed filinq-side event fired whenever an OR ApprovalStep becomes `pending`
- * for a filinq signing-request — either the first step (chain initiated) or a
- * subsequent step (previous step approved). Bridges OR's
- * `ApprovalStepInitiatedEvent` and the "next step now pending" branch of
- * `ApprovalStepApprovedEvent` into a single filinq-shaped event so
- * `SigningProviderInterface` implementations (and any other filinq
- * subscriber) can react without depending on OR's event surface directly.
+ * Typed filinq-side event fired whenever a position of an OR task sequence
+ * belonging to a filinq signing-request becomes `enabled` — the first
+ * position at provisioning, or the next position after an approving
+ * decision (OR enables it in the same request as that decision). Bridges
+ * OR's committed `TaskTransitionedEvent` (state `enabled`) into a
+ * filinq-shaped event so `SigningProviderInterface` implementations (and any
+ * other filinq subscriber) can react without depending on OR's event surface
+ * directly.
  *
- * Per ADR-022 filinq consumes OR abstractions; this event is the typed
- * filinq wrapper that internal filinq components subscribe to in place of
- * the bespoke provider-invocation calls the legacy `SigningService` made
- * inline.
+ * Carries scalars only, on purpose: the payload survives with OpenRegister
+ * older, newer or absent, which is what lets filinq load on either side of
+ * openregister#3302 (flow-approval-consolidation).
  *
  * @category  Event
  * @package   OCA\Filinq\Event
@@ -27,39 +27,45 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#D2-1
+ * @spec openspec/changes/migrate-signing-to-or-tasks/tasks.md#2-1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
-use OCA\OpenRegister\Db\ApprovalChain;
-use OCA\OpenRegister\Db\ApprovalStep;
 use OCP\EventDispatcher\Event;
 
 /**
- * Fired when an approval step linked to a filinq sign-request becomes pending.
+ * Fired when a sequence position linked to a filinq sign-request becomes enabled.
  *
  * @category Event
  * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
  */
 class SignerStepPendingEvent extends Event {
 	/**
 	 * Constructor.
 	 *
-	 * @param ApprovalChain $chain The OR approval chain.
-	 * @param ApprovalStep $step The OR approval step now in `pending`.
+	 * @param string $sequenceUuid UUID of the OR task sequence.
+	 * @param string $taskUuid UUID of the now-enabled task.
+	 * @param int $position Ordinal of the position (1-based).
+	 * @param string|null $role The position's signer group, when one is set.
 	 * @param string $objectUuid UUID of the filinq signing request.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
 	public function __construct(
-		private readonly ApprovalChain $chain,
-		private readonly ApprovalStep $step,
+		private readonly string $sequenceUuid,
+		private readonly string $taskUuid,
+		private readonly int $position,
+		private readonly ?string $role,
 		private readonly string $objectUuid,
 	) {
 		parent::__construct();
@@ -67,29 +73,57 @@ class SignerStepPendingEvent extends Event {
 	}//end __construct()
 
 	/**
-	 * Get the approval chain the step belongs to.
+	 * Get the sequence UUID.
 	 *
-	 * @return ApprovalChain The OR approval chain.
+	 * @return string UUID of the OR task sequence.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getChain(): ApprovalChain {
-		return $this->chain;
-	}//end getChain()
+	public function getSequenceUuid(): string {
+		return $this->sequenceUuid;
+	}//end getSequenceUuid()
 
 	/**
-	 * Get the now-pending approval step.
+	 * Get the enabled task's UUID.
 	 *
-	 * @return ApprovalStep The OR approval step.
+	 * @return string UUID of the now-enabled task.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getStep(): ApprovalStep {
-		return $this->step;
-	}//end getStep()
+	public function getTaskUuid(): string {
+		return $this->taskUuid;
+	}//end getTaskUuid()
 
 	/**
-	 * Get the filinq signing-request UUID this step relates to.
+	 * Get the position ordinal.
 	 *
-	 * @return string Signing-request UUID.
+	 * @return int Ordinal of the position (1-based).
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getSigningRequestUuid(): string {
+	public function getPosition(): int {
+		return $this->position;
+	}//end getPosition()
+
+	/**
+	 * Get the position's signer group.
+	 *
+	 * @return string|null The signer group, or null when none is set.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
+	 */
+	public function getRole(): ?string {
+		return $this->role;
+	}//end getRole()
+
+	/**
+	 * Get the signing-request object UUID.
+	 *
+	 * @return string UUID of the filinq signing request.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
+	 */
+	public function getObjectUuid(): string {
 		return $this->objectUuid;
-	}//end getSigningRequestUuid()
+	}//end getObjectUuid()
 }//end class
