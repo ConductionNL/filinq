@@ -1,6 +1,6 @@
 <?php
 
-namespace Unit\Controller;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SetupController;
 use OCA\Filinq\Service\DemoDataService;
