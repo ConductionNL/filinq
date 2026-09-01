@@ -30,9 +30,11 @@
  * bottom of this file. Their anchors have been removed rather than repointed.
  */
 
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
-import { appUrl, go, waitForAppReady } from './_helpers'
-import { harvestToken, jsonHeaders, API } from '../workflows/_fixtures'
+import type { APIRequestContext, Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { API, harvestToken, jsonHeaders } from '../workflows/_fixtures.ts'
+import { appUrl, go, waitForAppReady } from './_helpers.ts'
 
 const P = `g19cdr-${Date.now()}`
 const SEEDED_LABEL = 'Projectnamen' // shipped by lib/Settings/filinq_register.json
@@ -102,7 +104,6 @@ test.describe('custom-dictionary-recognition — dictionaries admin UI', () => {
 				})
 				.catch(() => null)
 			if (res && res.status() >= 400) {
-				// eslint-disable-next-line no-console
 				console.warn(
 					`[teardown] dictionary ${fixtureId} -> ${res.status()} (leaked)`,
 				)

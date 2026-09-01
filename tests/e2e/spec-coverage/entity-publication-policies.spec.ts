@@ -39,9 +39,11 @@
  * poison the next one's negative assertions.
  */
 
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
-import { go, waitForAppReady } from './_helpers'
-import { harvestToken, jsonHeaders, API } from '../workflows/_fixtures'
+import type { APIRequestContext, Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { API, harvestToken, jsonHeaders } from '../workflows/_fixtures.ts'
+import { go, waitForAppReady } from './_helpers.ts'
 
 /** Unique per run — the negative assertions depend on no stale twin existing. */
 const P = `g19epp-${Date.now()}`
@@ -193,7 +195,6 @@ test.describe('entity-publication-policies — three separate admin surfaces', (
 			})
 			.catch(() => null)
 		if (res && res.status() >= 400) {
-			// eslint-disable-next-line no-console
 			console.warn(
 				`[teardown] standing consent ${created.standing} -> ${res.status()} (leaked)`,
 			)

@@ -12,11 +12,13 @@
  * from decidesk's journeydoc setup.
  */
 
-import { chromium, request, type FullConfig } from '@playwright/test'
+import type { FullConfig } from '@playwright/test'
+
+import { chromium, request } from '@playwright/test'
 import { execSync } from 'child_process'
-import * as path from 'path'
 import * as fs from 'fs'
-import { resolveBaseUrl } from './base-url'
+import * as path from 'path'
+import { resolveBaseUrl } from './base-url.ts'
 
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
@@ -56,7 +58,7 @@ function ensureBundleBuilt(): void {
 				+ 'check that step rather than rebuilding here, because a rebuild would hide it.',
 		)
 	}
-	// eslint-disable-next-line no-console
+
 	console.log(
 		`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`,
 	)
@@ -107,7 +109,7 @@ async function ensureNextcloudReachable(baseURL: string): Promise<void> {
 			} catch (err) {
 				last = `request failed: ${(err as Error).message}`
 			}
-			// eslint-disable-next-line no-await-in-loop
+
 			await new Promise((resolve) => setTimeout(resolve, 5_000))
 		}
 		throw new Error(
@@ -235,7 +237,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	await page.evaluate(() => {
 		try {
 			window.localStorage.setItem('cn-support-dialog-shown:filinq', '1')
-		} catch (e) {
+		} catch {
 			/* private mode / quota — the dismissOverlays fallback still applies */
 		}
 	})
@@ -266,7 +268,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 		await page.evaluate(() => {
 			try {
 				window.localStorage.setItem('cn-walkthrough-seen:filinq', '999.0.0')
-			} catch (e) {
+			} catch {
 				// localStorage unavailable — specs fall back to dismissing by hand.
 			}
 		})

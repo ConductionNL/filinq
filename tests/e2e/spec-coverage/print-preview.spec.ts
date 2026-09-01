@@ -12,8 +12,8 @@
 
 // @e2e openspec/specs/print-preview/spec.md#preview-with-inline-template
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, go } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, go } from './_helpers.ts'
 
 // The view under test, named after the component file it covers. The route
 // is unchanged — this makes the spec-to-component link readable in executable

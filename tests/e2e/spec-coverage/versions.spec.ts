@@ -18,8 +18,8 @@
 // @e2e openspec/specs/document-versions/spec.md#compare-a-version-with-the-current-document
 // @e2e openspec/specs/document-versions/spec.md#compare-is-not-offered-for-non-extractable-versions
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, go } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, go } from './_helpers.ts'
 
 // The view under test, named after the component file it covers. The route
 // is unchanged — this makes the spec-to-component link readable in executable

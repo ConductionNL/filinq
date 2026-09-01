@@ -36,22 +36,22 @@
  * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-folder-batch-initiation-from-existing-nextcloud-folder
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
 	APP,
 	appUrl,
 	dismissOverlays,
 	waitForAppReady,
-} from '../spec-coverage/_helpers'
+} from '../spec-coverage/_helpers.ts'
 import {
+	API,
+	createDavFile,
+	createDavFolder,
 	harvestToken,
 	jsonHeaders,
-	API,
-	TEST_PREFIX,
 	TEST_FAMILY,
-	createDavFolder,
-	createDavFile,
-} from './_fixtures'
+	TEST_PREFIX,
+} from './_fixtures.ts'
 
 test.describe.configure({ mode: 'serial' })
 

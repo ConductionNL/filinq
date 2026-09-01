@@ -19,8 +19,8 @@
  * are all on markup that only this widget's template produces.
  */
 
-import { test, expect } from '@playwright/test'
-import { harvestToken } from './_fixtures'
+import { expect, test } from '@playwright/test'
+import { harvestToken } from './_fixtures.ts'
 
 /**
  * Widget id — `FileEntitiesWidget::getId()` in lib/Dashboard/.

@@ -12,8 +12,8 @@
 
 // @e2e openspec/specs/dashboard/spec.md#navigation-items-and-icons
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, go, navClick } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, go, navClick } from './_helpers.ts'
 
 test.describe('dashboard — features & roadmap page', () => {
 	test('Features & roadmap page renders its heading and actions', async ({

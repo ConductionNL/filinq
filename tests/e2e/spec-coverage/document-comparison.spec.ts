@@ -15,8 +15,8 @@
 // @e2e openspec/specs/document-comparison/spec.md#operator-picks-two-versions
 // @e2e openspec/specs/document-comparison/spec.md#advisory-panel-for-unredacted-entities
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, go } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, go } from './_helpers.ts'
 
 test.describe('document-comparison — side-by-side view', () => {
 	test('comparison view renders its heading, pickers and Compare action', async ({

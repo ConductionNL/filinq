@@ -50,17 +50,23 @@
  * rather than cleaned up.
  */
 
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
-import { appUrl, dismissOverlays, waitForAppReady } from '../spec-coverage/_helpers'
+import type { APIRequestContext, Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import {
+	appUrl,
+	dismissOverlays,
+	waitForAppReady,
+} from '../spec-coverage/_helpers.ts'
+import {
+	API,
+	createDavFile,
+	createDavFolder,
 	harvestToken,
 	jsonHeaders,
-	API,
-	TEST_PREFIX,
 	TEST_FAMILY,
-	createDavFolder,
-	createDavFile,
-} from './_fixtures'
+	TEST_PREFIX,
+} from './_fixtures.ts'
 
 test.describe.configure({ mode: 'serial' })
 

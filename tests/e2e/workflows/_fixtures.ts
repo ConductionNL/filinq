@@ -31,7 +31,9 @@
  * concurrent runs never collide.
  */
 
-import { type APIRequestContext, type Page, expect } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
+
+import { expect } from '@playwright/test'
 
 /** Shared family prefix for ALL workflow-test artefacts (every run). */
 export const TEST_FAMILY = 'e2eflow-'
@@ -85,7 +87,6 @@ export async function harvestToken(page: Page): Promise<string> {
 	// naming the token, instead of failing later as a mysterious 412 on the
 	// first write request.
 	await page.waitForFunction(
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		() =>
 			Boolean(
 				(window as any).OC?.requestToken
@@ -95,7 +96,6 @@ export async function harvestToken(page: Page): Promise<string> {
 		{ timeout: 30_000 },
 	)
 	const token = await page.evaluate(
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		() =>
 			(window as any).OC?.requestToken
 			|| document.head.dataset.requesttoken

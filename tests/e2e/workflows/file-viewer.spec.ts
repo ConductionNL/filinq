@@ -16,15 +16,15 @@
  * wrote — an assertion the SPA shell cannot satisfy by accident.
  */
 
-import { test, expect } from '@playwright/test'
-import { go } from '../spec-coverage/_helpers'
+import { expect, test } from '@playwright/test'
+import { go } from '../spec-coverage/_helpers.ts'
 import {
-	harvestToken,
-	TEST_PREFIX,
 	createDavFile,
 	createDavFolder,
 	deleteDavPath,
-} from './_fixtures'
+	harvestToken,
+	TEST_PREFIX,
+} from './_fixtures.ts'
 
 /** The folder MyDocumentsIndex lists by default (`myDocumentsStore.currentPath`). */
 const DOCS_FOLDER = 'DocuDesk'

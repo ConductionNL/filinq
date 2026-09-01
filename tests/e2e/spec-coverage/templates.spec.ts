@@ -12,8 +12,8 @@
 // @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
 // @e2e openspec/specs/template-management/spec.md#create-a-template
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers.ts'
 
 // The view under test, named after the component file it covers. The route
 // is unchanged — this makes the spec-to-component link readable in executable
