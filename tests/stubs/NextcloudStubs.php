@@ -498,6 +498,17 @@ interface IRegistrationContext {
 	 * @return void
 	 */
 	public function registerParameter(string $name, mixed $value): void;
+
+	/**
+	 * Register an event listener.
+	 *
+	 * @param string $event Event class name
+	 * @param string $listener Listener class name
+	 * @param int $priority Listener priority
+	 *
+	 * @return void
+	 */
+	public function registerEventListener(string $event, string $listener, int $priority = 0): void;
 }//end interface
 
 /**
