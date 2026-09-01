@@ -3,10 +3,17 @@
 /**
  * SignerStepApprovedEvent
  *
- * Typed filinq-side event fired when a `pending` OR approval step linked to
- * a filinq signing-request is approved (i.e. a signer signed). Bridges OR's
- * `ApprovalStepApprovedEvent`; carries the next step (if any) so internal
- * filinq subscribers can decide whether the chain has advanced or stalled.
+ * Typed filinq-side event fired when a position of an OR task sequence
+ * belonging to a filinq signing-request completes with an approving outcome.
+ * Bridges OR's committed `TaskTerminalEvent` (state `completed`, outcome not
+ * in the rejecting vocabulary). The retired `nextStep` payload is gone by
+ * design: OR enables the next position in the same request as the approving
+ * decision, and that position's own enabled transition arrives as a
+ * `SignerStepPendingEvent`.
+ *
+ * Carries scalars only, on purpose: the payload survives with OpenRegister
+ * older, newer or absent, which is what lets filinq load on either side of
+ * openregister#3302 (flow-approval-consolidation).
  *
  * @category  Event
  * @package   OCA\Filinq\Event
@@ -19,43 +26,47 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#D2-1
+ * @spec openspec/changes/migrate-signing-to-or-tasks/tasks.md#2-1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
-use OCA\OpenRegister\Db\ApprovalChain;
-use OCA\OpenRegister\Db\ApprovalStep;
 use OCP\EventDispatcher\Event;
 
 /**
- * Fired after an approval step linked to a filinq sign-request is approved.
+ * Fired when a sequence position linked to a filinq sign-request is approved.
  *
  * @category Event
  * @package  OCA\Filinq\Event
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
  */
 class SignerStepApprovedEvent extends Event {
 	/**
 	 * Constructor.
 	 *
-	 * @param ApprovalChain $chain The OR approval chain.
-	 * @param ApprovalStep $step The approved OR approval step.
-	 * @param string $userId UID of the user who approved.
-	 * @param ApprovalStep|null $nextStep Next step now pending (null = final).
-	 * @param string $objectUuid Signing-request UUID.
+	 * @param string $sequenceUuid UUID of the OR task sequence.
+	 * @param string $taskUuid UUID of the completed task.
+	 * @param int $position Ordinal of the position (1-based).
+	 * @param string|null $userId The completing identity (`task.completedBy`).
+	 * @param string|null $comment The completion comment, when one was given.
+	 * @param string $objectUuid UUID of the filinq signing request.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
 	public function __construct(
-		private readonly ApprovalChain $chain,
-		private readonly ApprovalStep $step,
-		private readonly string $userId,
-		private readonly ?ApprovalStep $nextStep,
+		private readonly string $sequenceUuid,
+		private readonly string $taskUuid,
+		private readonly int $position,
+		private readonly ?string $userId,
+		private readonly ?string $comment,
 		private readonly string $objectUuid,
 	) {
 		parent::__construct();
@@ -63,56 +74,68 @@ class SignerStepApprovedEvent extends Event {
 	}//end __construct()
 
 	/**
-	 * Get the approval chain.
+	 * Get the sequence UUID.
 	 *
-	 * @return ApprovalChain The OR approval chain.
+	 * @return string UUID of the OR task sequence.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getChain(): ApprovalChain {
-		return $this->chain;
-	}//end getChain()
+	public function getSequenceUuid(): string {
+		return $this->sequenceUuid;
+	}//end getSequenceUuid()
 
 	/**
-	 * Get the approved step.
+	 * Get the completed task's UUID.
 	 *
-	 * @return ApprovalStep The OR approval step.
+	 * @return string UUID of the completed task.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getStep(): ApprovalStep {
-		return $this->step;
-	}//end getStep()
+	public function getTaskUuid(): string {
+		return $this->taskUuid;
+	}//end getTaskUuid()
 
 	/**
-	 * Get the UID of the user who approved this step.
+	 * Get the position ordinal.
 	 *
-	 * @return string Nextcloud user ID.
+	 * @return int Ordinal of the position (1-based).
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getUserId(): string {
+	public function getPosition(): int {
+		return $this->position;
+	}//end getPosition()
+
+	/**
+	 * Get the completing identity.
+	 *
+	 * @return string|null Who completed the position, when known.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
+	 */
+	public function getUserId(): ?string {
 		return $this->userId;
 	}//end getUserId()
 
 	/**
-	 * Get the next step now pending, or null when this was the final step.
+	 * Get the completion comment.
 	 *
-	 * @return ApprovalStep|null Next pending step, or null.
+	 * @return string|null The comment, or null when none was given.
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getNextStep(): ?ApprovalStep {
-		return $this->nextStep;
-	}//end getNextStep()
+	public function getComment(): ?string {
+		return $this->comment;
+	}//end getComment()
 
 	/**
-	 * Convenience: is this the final step?
+	 * Get the signing-request object UUID.
 	 *
-	 * @return bool True when no next step is pending.
-	 */
-	public function isFinalStep(): bool {
-		return $this->nextStep === null;
-	}//end isFinalStep()
-
-	/**
-	 * Get the filinq signing-request UUID this step relates to.
+	 * @return string UUID of the filinq signing request.
 	 *
-	 * @return string Signing-request UUID.
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
-	public function getSigningRequestUuid(): string {
+	public function getObjectUuid(): string {
 		return $this->objectUuid;
-	}//end getSigningRequestUuid()
+	}//end getObjectUuid()
 }//end class
