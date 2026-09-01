@@ -343,8 +343,35 @@ function routesFromManifest(manifest) {
 	return routes
 }
 
+/**
+ * The router base for THIS page load.
+ *
+ * ⚠️ `generateUrl('/apps/filinq')` alone is not enough. Nextcloud serves the
+ * app under BOTH `/apps/filinq/...` and `/index.php/apps/filinq/...`, but
+ * `generateUrl()` returns only the form the instance is configured for. A
+ * visitor arriving on the other form — a bookmark, an emailed deep link, an
+ * integration that hardcodes `/index.php` — has a pathname the router cannot
+ * strip its base from. No route matches, the catch-all takes over, and they
+ * land on the dashboard with no error at all: the deep link is silently
+ * swallowed.
+ *
+ * Measured on a live instance for learniq, across all 282 of its routes:
+ * `/apps/learniq/courses` resolved to Courses, `/index.php/apps/learniq/courses`
+ * resolved to the dashboard. Every route behaved the same way, so this is not
+ * one broken page but every deep link in that URL form.
+ *
+ * Deriving the base from the pathname makes both forms resolve, because the
+ * base then always matches the URL the visitor actually arrived on.
+ *
+ * @return {string} The base path vue-router should strip from the URL.
+ */
+function routerBase() {
+	const match = window.location.pathname.match(/^(.*\/apps\/filinq)(?:\/|$)/)
+	return match ? match[1] : generateUrl('/apps/filinq')
+}
+
 const router = createRouter({
-	history: createWebHistory(generateUrl('/apps/filinq')),
+	history: createWebHistory(routerBase()),
 	routes: routesFromManifest(manifest),
 })
 
