@@ -1,6 +1,6 @@
 <?php
 
-namespace Unit\Service;
+namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\DemoDataService;
 use OCP\App\IAppManager;

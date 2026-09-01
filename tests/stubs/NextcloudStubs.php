@@ -1426,6 +1426,22 @@ interface IAppManager {
 	 * @return array<int, string>
 	 */
 	public function getInstalledApps(): array;
+
+	/**
+	 * Absolute path to an app's directory on disk.
+	 *
+	 * Signature mirrors OCP\App\IAppManager::getAppPath(). A stub that omits a
+	 * method the production interface declares does not fail loudly: PHPUnit
+	 * refuses to configure it ("Trying to configure method ... which cannot be
+	 * configured because it does not exist"), so the test errors somewhere far
+	 * from the omission, and reads as a broken test rather than a short stub.
+	 *
+	 * @param string $appId App identifier
+	 * @param bool $ignoreCache Whether to bypass the path cache
+	 *
+	 * @return string
+	 */
+	public function getAppPath(string $appId, bool $ignoreCache = false): string;
 }//end interface
 
 namespace OCP\Notification;
