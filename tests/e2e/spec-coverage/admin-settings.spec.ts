@@ -23,8 +23,10 @@
 // @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-filinq
 // @e2e openspec/specs/processing-activity-export/spec.md#unconfigured-identity-prompts-not-blocks
 
-import { test, expect, type Page } from '@playwright/test'
-import { waitForNcContentReady } from './_helpers'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { waitForNcContentReady } from './_helpers.ts'
 
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')

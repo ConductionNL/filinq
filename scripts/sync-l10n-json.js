@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable jsdoc/require-param */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable no-console */
-/* eslint-disable n/shebang */
+
 /**
  * l10n .js → .json synchroniser.
  *
@@ -24,7 +21,6 @@
 
 const fs = require('fs')
 const path = require('path')
-
 const {
 	loadJsTranslations,
 	serializeJson,
@@ -48,6 +44,9 @@ const apply = args.has('--apply')
 
 // ---------- Main ----------
 
+/**
+ *
+ */
 function main() {
 	if (!fs.existsSync(L10N_DIR)) {
 		console.error(`l10n directory not found: ${L10N_DIR}`)

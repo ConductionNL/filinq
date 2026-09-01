@@ -33,8 +33,8 @@
  * `.github#345` describes.
  */
 
-import { test, expect } from '@playwright/test'
-import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures'
+import { expect, test } from '@playwright/test'
+import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 
 // `filinq`, not `consent`: the five registers were consolidated into one.
 const OR = '/index.php/apps/openregister/api/objects/filinq'

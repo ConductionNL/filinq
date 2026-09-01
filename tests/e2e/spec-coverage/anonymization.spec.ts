@@ -14,8 +14,10 @@
 // @e2e openspec/specs/anonymization/spec.md#error-during-anonymization
 // @e2e openspec/specs/anonymization/spec.md#anonymize-another-document
 
-import { test, expect, type Page } from '@playwright/test'
-import { appUrl, waitForAppReady } from './_helpers'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { appUrl, waitForAppReady } from './_helpers.ts'
 
 // The local `const APP = '/index.php/apps/filinq'` that used to live here is
 // gone — navigation now goes through `appUrl()`, which reads the base from the

@@ -93,7 +93,7 @@ function loadAjv() {
 	// entry point. Prefer Ajv 8 (`ajv/dist/2020`) when available; otherwise
 	// fall back to whichever ajv resolves first.
 	let Ajv2020 = null
-	let addFormats = null
+	let addFormats
 	const ajvCandidates = [
 		'ajv/dist/2020',
 		path.join(

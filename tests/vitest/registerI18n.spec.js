@@ -13,7 +13,7 @@
  * @spec openspec/specs/register-i18n/spec.md
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@nextcloud/l10n', () => ({
 	getLanguage: () => 'en',

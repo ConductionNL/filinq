@@ -31,9 +31,10 @@
  * provider; it is not automatable here because it needs a live LLM credential.
  */
 
-import { test, expect, type APIRequestContext } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 
-import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures'
+import { expect, test } from '@playwright/test'
+import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 
 /** OpenRegister's MCP JSON-RPC endpoint — the tool surface under test. */
 const MCP = '/index.php/apps/openregister/api/mcp'
@@ -159,7 +160,7 @@ async function callTool(
 	).toBeTruthy()
 
 	const text = String(body.result.content?.[0]?.text ?? '')
-	let payload: Record<string, unknown> = {}
+	let payload: Record<string, unknown>
 	try {
 		payload = JSON.parse(text)
 	} catch {

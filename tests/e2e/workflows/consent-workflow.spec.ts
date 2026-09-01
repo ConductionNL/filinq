@@ -29,18 +29,20 @@
  * ------------------------------------------------------------------
  */
 
-import { test, expect, type APIRequestContext } from '@playwright/test'
-import { go, waitForAppReady } from '../spec-coverage/_helpers'
+import type { APIRequestContext } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { go, waitForAppReady } from '../spec-coverage/_helpers.ts'
 import {
 	API,
-	POLICY_PREFIX,
 	createProhibition,
 	createStandingConsent,
 	getConsent,
 	harvestToken,
 	jsonHeaders,
+	POLICY_PREFIX,
 	seedPolicyMatchedConsent,
-} from './_fixtures'
+} from './_fixtures.ts'
 
 /** Harvested once in `beforeAll`; every request helper needs it. */
 let token = ''

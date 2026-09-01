@@ -12,7 +12,7 @@
  * unauthenticated guard. @nextcloud/auth + router are stubbed.
  */
 
-import { describe, it, expect, afterEach } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { buildWebdavUrl } from '../../src/services/fileViewerService.js'
 import { __setCurrentUser } from '../../tests/vitest/stubs/nextcloud-auth.js'
 

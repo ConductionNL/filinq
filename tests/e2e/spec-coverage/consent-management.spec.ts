@@ -13,9 +13,11 @@
 // @e2e openspec/specs/consent-management/spec.md#click-consent-to-view-details
 // @e2e openspec/specs/consent-management/spec.md#empty-consent-list
 
-import { test, expect, type Page } from '@playwright/test'
-import { appUrl, waitForAppReady } from './_helpers'
-import { API } from '../workflows/_fixtures'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { API } from '../workflows/_fixtures.ts'
+import { appUrl, waitForAppReady } from './_helpers.ts'
 
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits

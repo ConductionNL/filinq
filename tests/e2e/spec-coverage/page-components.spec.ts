@@ -33,8 +33,8 @@
  * over the route-specific markup.
  */
 
-import { test, expect } from '@playwright/test'
-import { go, waitForNcContentReady, dismissOverlays } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { dismissOverlays, go, waitForNcContentReady } from './_helpers.ts'
 
 /**
  * A syntactically valid UUID that no Filinq object can have.

@@ -14,8 +14,8 @@
  * scope.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { useAnonymizationStore } from '../../src/store/modules/anonymization.js'
 
 beforeEach(() => {

@@ -45,8 +45,10 @@
  * on the individual `test.fixme` blocks below.
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers.ts'
 
 // The views under test, named after the component files they cover. Routes are
 // unchanged — this makes the spec-to-component link readable in executable code

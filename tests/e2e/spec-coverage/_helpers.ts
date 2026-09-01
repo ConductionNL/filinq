@@ -15,7 +15,7 @@
  * defects, and must not make a page-render assertion flap.
  */
 
-import { type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 const IGNORE = [
 	'user_status',
@@ -241,7 +241,6 @@ async function resolveAppBase(page: Page): Promise<string> {
 	await page.goto(APP, { waitUntil: 'domcontentloaded' })
 	await waitForAppReady(page)
 	cachedAppBase = await page.evaluate(() => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const oc = (window as any).OC
 		return (oc?.generateUrl?.('/apps/filinq') as string) || ''
 	})

@@ -12,7 +12,7 @@
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
-    "lint": "eslint src",
+    "lint": "eslint src tests scripts",
     "lint-fix": "npm run lint -- --fix && npm run format:fix",
     "test": "jest --silent",
     "test-coverage": "jest --silent --coverage",

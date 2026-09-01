@@ -42,9 +42,11 @@
  * `CUSTOM_DICTIONARY` card disappears while everything else still renders.
  */
 
-import { test, expect, type APIRequestContext } from '@playwright/test'
-import { go, waitForAppReady } from './_helpers'
-import { harvestToken, jsonHeaders, API } from '../workflows/_fixtures'
+import type { APIRequestContext } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { API, harvestToken, jsonHeaders } from '../workflows/_fixtures.ts'
+import { go, waitForAppReady } from './_helpers.ts'
 
 /** Unique per run — the whole point of the assertion is that only WE seeded it. */
 const RUN = `g19cdd-${Date.now()}`
@@ -180,7 +182,6 @@ test.describe('custom-dictionary-recognition — a dictionary hit is detected, r
 			})
 			.catch(() => null)
 		if (res && res.status() >= 400) {
-			// eslint-disable-next-line no-console
 			console.warn(
 				`[teardown] dictionary ${dictionaryId} -> ${res.status()} (leaked)`,
 			)
