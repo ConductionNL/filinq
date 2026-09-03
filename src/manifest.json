@@ -102,12 +102,20 @@
 			"order": 90
 		},
 		{
+			"id": "ReportsMenu",
+			"label": "Reports",
+			"icon": "ChartBoxOutline",
+			"route": "Reports",
+			"section": "footer",
+			"order": 95
+		},
+		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
 			"icon": "MapMarkerPath",
 			"route": "FeaturesRoadmap",
 			"section": "footer",
-			"order": 91
+			"order": 100
 		},
 		{
 			"id": "FlowsMenu",
@@ -327,6 +335,733 @@
 			"title": "Publish always",
 			"component": "StandingConsentIndex",
 			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Deep-link reachable, no menu entry — owned by publication-policy-labels-and-nav (see Prohibitions note). This change (orphaned-surface-restoration, REQ-DDOSR-005) only restores reachability. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
+		},
+		{
+			"id": "Reports",
+			"_note": "ADR-112 / ADR-114 Decision 3. All three are declarative type:dashboard pages over filinq's own register — no bespoke component and no per-app controller. Nothing moves here: filinq had no report surface at all before this, so these are new readings rather than relocated menu entries.",
+			"route": "/reports",
+			"type": "reports",
+			"title": "Reports",
+			"config": {
+				"description": "Pick a report to open it.",
+				"categories": {
+					"signing": "Signing",
+					"documents": "Documents"
+				},
+				"cards": [
+					{
+						"id": "SigningReport",
+						"label": "Signing",
+						"description": "Where each signing request stands, and what signers did with it.",
+						"icon": "SignatureFreehand",
+						"category": "signing",
+						"route": "SigningReport"
+					},
+					{
+						"id": "AnonymizationReport",
+						"label": "Anonymisation",
+						"description": "What is being anonymised, from where, and what failed.",
+						"icon": "EyeOffOutline",
+						"category": "documents",
+						"route": "AnonymizationReport"
+					},
+					{
+						"id": "ProducedDocumentsReport",
+						"label": "Documents produced",
+						"description": "What the templates generated, in which format, and what went out as correspondence.",
+						"icon": "FileDocumentMultipleOutline",
+						"category": "documents",
+						"route": "ProducedDocumentsReport"
+					}
+				]
+			}
+		},
+		{
+			"id": "SigningReport",
+			"route": "/reports/signing",
+			"type": "dashboard",
+			"title": "Signing",
+			"_note": "The status enums here are UPPERCASE on signingRequest and signerRecord (DRAFT/PENDING/…), lowercase on anonymizationBatch and generatedDocument. Every filter is scalar equality, the only kind OpenRegister's aggregation endpoint can evaluate, and it does not fold case: a filter of \"completed\" against COMPLETED counts zero and reports it as zero.",
+			"config": {
+				"widgets": [
+					{
+						"id": "signing-open",
+						"title": "Awaiting signature",
+						"type": "stat",
+						"content": {
+							"label": "Awaiting signature",
+							"icon": "SignatureFreehand",
+							"route": {
+								"name": "SigningRequests"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "signingRequest",
+								"metric": "count",
+								"filter": {
+									"status": "PENDING"
+								}
+							}
+						}
+					},
+					{
+						"id": "signing-in-progress",
+						"title": "Part-signed",
+						"type": "stat",
+						"content": {
+							"label": "Part-signed",
+							"icon": "AccountEdit",
+							"route": {
+								"name": "SigningRequests"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "signingRequest",
+								"metric": "count",
+								"filter": {
+									"status": "IN_PROGRESS"
+								}
+							}
+						}
+					},
+					{
+						"id": "signing-completed",
+						"title": "Completed",
+						"type": "stat",
+						"content": {
+							"label": "Completed",
+							"icon": "FileDocumentCheck",
+							"route": {
+								"name": "SigningRequests"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "signingRequest",
+								"metric": "count",
+								"filter": {
+									"status": "COMPLETED"
+								}
+							}
+						}
+					},
+					{
+						"id": "signing-by-status",
+						"title": "By status",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No signing requests yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "signingRequest",
+								"aggregate": {
+									"groupBy": "status",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "signing-by-level",
+						"title": "By assurance level",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No signing requests yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "signingRequest",
+								"aggregate": {
+									"groupBy": "signatureLevel",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "signers-by-status",
+						"title": "What signers did",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "Nobody has been asked to sign yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "signerRecord",
+								"aggregate": {
+									"groupBy": "status",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "signing-audit",
+						"title": "Most recent activity",
+						"type": "object-table",
+						"content": {
+							"register": "filinq",
+							"schema": "signingAuditEntry",
+							"filter": {},
+							"sort": {
+								"field": "timestamp",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"hideHeader": true,
+							"emptyText": "Nothing has happened yet",
+							"viewAllRoute": {
+								"name": "SigningRequests"
+							},
+							"viewAllLabel": "View all signing requests",
+							"columns": [
+								{
+									"key": "timestamp",
+									"label": "When"
+								},
+								{
+									"key": "action",
+									"label": "Action"
+								},
+								{
+									"key": "actorDisplayName",
+									"label": "Who"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "signing-open",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "signing-in-progress",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "signing-completed",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "signing-by-status",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "5",
+						"widgetId": "signing-by-level",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "6",
+						"widgetId": "signers-by-status",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "7",
+						"widgetId": "signing-audit",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"showTitle": true
+					}
+				]
+			}
+		},
+		{
+			"id": "AnonymizationReport",
+			"route": "/reports/anonymization",
+			"type": "dashboard",
+			"title": "Anonymisation",
+			"config": {
+				"widgets": [
+					{
+						"id": "anon-in-review",
+						"title": "Waiting for review",
+						"type": "stat",
+						"content": {
+							"label": "Waiting for review",
+							"icon": "ClipboardCheckOutline",
+							"route": {
+								"name": "Anonymization"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "anonymizationBatch",
+								"metric": "count",
+								"filter": {
+									"status": "review"
+								}
+							}
+						}
+					},
+					{
+						"id": "anon-completed",
+						"title": "Completed",
+						"type": "stat",
+						"content": {
+							"label": "Completed",
+							"icon": "ShieldCheck",
+							"route": {
+								"name": "Anonymization"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "anonymizationBatch",
+								"metric": "count",
+								"filter": {
+									"status": "completed"
+								}
+							}
+						}
+					},
+					{
+						"id": "anon-error",
+						"title": "Failed",
+						"type": "stat",
+						"content": {
+							"label": "Failed",
+							"icon": "History",
+							"route": {
+								"name": "Anonymization"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "anonymizationBatch",
+								"metric": "count",
+								"filter": {
+									"status": "error"
+								}
+							}
+						}
+					},
+					{
+						"id": "anon-by-status",
+						"title": "By status",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "Nothing has been anonymised yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "anonymizationBatch",
+								"aggregate": {
+									"groupBy": "status",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "anon-by-source",
+						"title": "Uploaded or from a folder",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "Nothing has been anonymised yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "anonymizationBatch",
+								"aggregate": {
+									"groupBy": "sourceType",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "anon-recent",
+						"title": "Most recent",
+						"type": "object-table",
+						"content": {
+							"register": "filinq",
+							"schema": "anonymizationBatch",
+							"filter": {},
+							"sort": {
+								"field": "createdAt",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"hideHeader": true,
+							"emptyText": "Nothing has been anonymised yet",
+							"viewAllRoute": {
+								"name": "Anonymization"
+							},
+							"viewAllLabel": "Open anonymisation",
+							"columns": [
+								{
+									"key": "createdAt",
+									"label": "When"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "sourceType",
+									"label": "Source"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "anon-in-review",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "anon-completed",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "anon-error",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "anon-by-status",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "5",
+						"widgetId": "anon-by-source",
+						"gridX": 6,
+						"gridY": 2,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "6",
+						"widgetId": "anon-recent",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"showTitle": true
+					}
+				]
+			}
+		},
+		{
+			"id": "ProducedDocumentsReport",
+			"route": "/reports/documents",
+			"type": "dashboard",
+			"title": "Documents produced",
+			"_note": "Two schemas, deliberately on one page: a generatedDocument is a template rendered, a correspondence is one sent to somebody. Splitting them would make the reader open two pages to answer one question.",
+			"config": {
+				"widgets": [
+					{
+						"id": "docs-generated",
+						"title": "Documents generated",
+						"type": "stat",
+						"content": {
+							"label": "Documents generated",
+							"icon": "FileDocument",
+							"route": {
+								"name": "Templates"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "generatedDocument",
+								"metric": "count",
+								"filter": {
+									"status": "generated"
+								}
+							}
+						}
+					},
+					{
+						"id": "docs-failed",
+						"title": "Failed to generate",
+						"type": "stat",
+						"content": {
+							"label": "Failed to generate",
+							"icon": "History",
+							"route": {
+								"name": "Templates"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "generatedDocument",
+								"metric": "count",
+								"filter": {
+									"status": "failed"
+								}
+							}
+						}
+					},
+					{
+						"id": "letters-generated",
+						"title": "Letters generated",
+						"type": "stat",
+						"content": {
+							"label": "Letters generated",
+							"icon": "EmailMultipleOutline",
+							"route": {
+								"name": "Correspondence"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "filinq",
+								"schema": "correspondence",
+								"metric": "count",
+								"filter": {
+									"status": "generated"
+								}
+							}
+						}
+					},
+					{
+						"id": "docs-by-format",
+						"title": "By format",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "Nothing has been generated yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "generatedDocument",
+								"aggregate": {
+									"groupBy": "format",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "letters-by-format",
+						"title": "Letters by format",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No letters yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "correspondence",
+								"aggregate": {
+									"groupBy": "format",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "letters-by-recipient",
+						"title": "Letters by recipient",
+						"type": "chart",
+						"content": {
+							"chartKind": "donut",
+							"legendPosition": "bottom",
+							"emptyLabel": "No letters yet",
+							"dataSource": {
+								"register": "filinq",
+								"schema": "correspondence",
+								"aggregate": {
+									"groupBy": "recipientType",
+									"metric": "count"
+								}
+							}
+						}
+					},
+					{
+						"id": "docs-recent",
+						"title": "Most recent",
+						"type": "object-table",
+						"content": {
+							"register": "filinq",
+							"schema": "generatedDocument",
+							"filter": {},
+							"sort": {
+								"field": "generatedAt",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"hideHeader": true,
+							"emptyText": "Nothing has been generated yet",
+							"viewAllRoute": {
+								"name": "Templates"
+							},
+							"viewAllLabel": "View all templates",
+							"columns": [
+								{
+									"key": "generatedAt",
+									"label": "When"
+								},
+								{
+									"key": "templateName",
+									"label": "Template"
+								},
+								{
+									"key": "format",
+									"label": "Format"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "docs-generated",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "docs-failed",
+						"gridX": 4,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "letters-generated",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "docs-by-format",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "5",
+						"widgetId": "letters-by-format",
+						"gridX": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "6",
+						"widgetId": "letters-by-recipient",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "7",
+						"widgetId": "docs-recent",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 12,
+						"gridHeight": 4,
+						"showTitle": true
+					}
+				]
+			}
 		},
 		{
 			"id": "FeaturesRoadmap",
