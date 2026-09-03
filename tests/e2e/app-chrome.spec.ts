@@ -42,12 +42,18 @@ test.describe('app chrome (ADR-114)', () => {
 		})
 	})
 
-	test('the footer reads Documentation, Reports, Features & roadmap, each with a glyph', async ({ page }) => {
-		const footer = page.locator('[data-testid="cn-nav"] .cn-app-nav__footer-list')
+	test('the footer reads Documentation, Reports, Features & roadmap, each with a glyph', async ({
+		page,
+	}) => {
+		const footer = page.locator(
+			'[data-testid="cn-nav"] .cn-app-nav__footer-list',
+		)
 		await expect(footer).toBeAttached({ timeout: 15_000 })
 
 		const rows = footer.locator('li')
-		const texts = (await rows.allInnerTexts()).map((t) => t.trim()).filter(Boolean)
+		const texts = (await rows.allInnerTexts())
+			.map((t) => t.trim())
+			.filter(Boolean)
 
 		// ORDER is the rule, not the numbers. This app ran Documentation at 90
 		// and Features & roadmap at 91, which left no room between them, so the
@@ -62,52 +68,90 @@ test.describe('app chrome (ADR-114)', () => {
 		// for the Reports entry; without it the row renders a blank space where
 		// the icon belongs and nothing complains.
 		for (const row of await rows.all()) {
-			await expect(row.locator('svg, .material-design-icon').first()).toBeAttached()
+			await expect(
+				row.locator('svg, .material-design-icon').first(),
+			).toBeAttached()
 		}
 	})
 
 	test('Reports lists the three reports', async ({ page }) => {
 		const nav = page.locator('[data-testid="cn-nav"]')
 		await nav.locator('[data-testid="cn-nav-entry-ReportsMenu"]').click()
-		await expect(page).toHaveURL(/\/apps\/filinq\/reports(\?|$)/, { timeout: 15_000 })
+		await expect(page).toHaveURL(/\/apps\/filinq\/reports(\?|$)/, {
+			timeout: 15_000,
+		})
 
 		for (const label of ['Signing', 'Anonymisation', 'Documents produced']) {
-			await expect(page.getByText(label, { exact: false }).first()).toBeVisible({ timeout: 15_000 })
+			await expect(
+				page.getByText(label, { exact: false }).first(),
+			).toBeVisible({ timeout: 15_000 })
 		}
 	})
 
-	test('the signing report renders real numbers, not empty cards', async ({ page }) => {
+	test('the signing report renders real numbers, not empty cards', async ({
+		page,
+	}) => {
 		// The point of this test. The three stats filter on PENDING,
 		// IN_PROGRESS and COMPLETED — upper case, because that is how
 		// signingRequest spells them. A lower-case filter would count zero and
 		// the card would render a confident 0.
 		await page.goto(`${APP_BASE}/reports/signing`)
-		await expect(page.locator('[data-testid="cn-nav"]')).toBeVisible({ timeout: 30_000 })
-		await expect(page.getByText('Awaiting signature', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
-		await expect(page.locator('main, .app-content').first()).toContainText(/\d/, { timeout: 30_000 })
+		await expect(page.locator('[data-testid="cn-nav"]')).toBeVisible({
+			timeout: 30_000,
+		})
+		await expect(
+			page.getByText('Awaiting signature', { exact: false }).first(),
+		).toBeVisible({ timeout: 30_000 })
+		await expect(page.locator('main, .app-content').first()).toContainText(
+			/\d/,
+			{ timeout: 30_000 },
+		)
 	})
 
-	test('the anonymisation report renders real numbers, not empty cards', async ({ page }) => {
+	test('the anonymisation report renders real numbers, not empty cards', async ({
+		page,
+	}) => {
 		// Same shape, opposite case: anonymizationBatch spells its statuses in
 		// lower case (review, completed, error).
 		await page.goto(`${APP_BASE}/reports/anonymization`)
-		await expect(page.locator('[data-testid="cn-nav"]')).toBeVisible({ timeout: 30_000 })
-		await expect(page.getByText('Waiting for review', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
-		await expect(page.locator('main, .app-content').first()).toContainText(/\d/, { timeout: 30_000 })
+		await expect(page.locator('[data-testid="cn-nav"]')).toBeVisible({
+			timeout: 30_000,
+		})
+		await expect(
+			page.getByText('Waiting for review', { exact: false }).first(),
+		).toBeVisible({ timeout: 30_000 })
+		await expect(page.locator('main, .app-content').first()).toContainText(
+			/\d/,
+			{ timeout: 30_000 },
+		)
 	})
 
-	test('the produced-documents report is reachable and titled', async ({ page }) => {
+	test('the produced-documents report is reachable and titled', async ({
+		page,
+	}) => {
 		await page.goto(`${APP_BASE}/reports/documents`)
-		await expect(page).toHaveURL(/\/reports\/documents(\?|$)/, { timeout: 15_000 })
-		await expect(page.getByText('Documents generated', { exact: false }).first()).toBeVisible({ timeout: 30_000 })
+		await expect(page).toHaveURL(/\/reports\/documents(\?|$)/, {
+			timeout: 15_000,
+		})
+		await expect(
+			page.getByText('Documents generated', { exact: false }).first(),
+		).toBeVisible({ timeout: 30_000 })
 	})
 
-	test('the settings foldout carries Personal settings, Admin settings and Flows', async ({ page }) => {
+	test('the settings foldout carries Personal settings, Admin settings and Flows', async ({
+		page,
+	}) => {
 		const nav = page.locator('[data-testid="cn-nav"]')
 
-		await expect(nav.locator('[data-testid="cn-nav-settings"]')).toBeAttached({ timeout: 15_000 })
-		await expect(nav.locator('[data-testid="cn-nav-personal-settings"]')).toBeAttached()
-		await expect(nav.locator('[data-testid="cn-nav-entry-FlowsMenu"]')).toBeAttached()
+		await expect(nav.locator('[data-testid="cn-nav-settings"]')).toBeAttached({
+			timeout: 15_000,
+		})
+		await expect(
+			nav.locator('[data-testid="cn-nav-personal-settings"]'),
+		).toBeAttached()
+		await expect(
+			nav.locator('[data-testid="cn-nav-entry-FlowsMenu"]'),
+		).toBeAttached()
 
 		const admin = nav.locator('[data-testid="cn-nav-admin-settings"]')
 		await expect(admin).toBeAttached()
