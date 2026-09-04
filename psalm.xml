@@ -21,6 +21,11 @@
         <UndefinedDocblockClass errorLevel="suppress"/>
         <UndefinedClass>
             <errorLevel type="suppress">
+                <!-- Nextcloud's legacy bootstrap class. There is no OCP interface for
+                     registering another app's autoloader, so the ADR-040 AppHost prelude
+                     in AppInfo\OpenRegisterAutoloader calls OC_App::registerAutoloading()
+                     directly. It is server-private, so absent from nextcloud/ocp. -->
+                <referencedClass name="OC_App"/>
                 <!-- Nextcloud OCP Classes -->
                 <referencedClass name="OCP\AppFramework\App"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootstrap"/>

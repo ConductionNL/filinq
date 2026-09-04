@@ -27,6 +27,7 @@ use Exception;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Container\ContainerInterface;
@@ -39,6 +40,13 @@ use Psr\Container\ContainerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) This IS the composition
+ * root: its whole job is to name every class the app wires together, so the
+ * coupling count measures the size of the app rather than a design fault.
+ * Splitting it to satisfy the metric would scatter the wiring across files
+ * that each know part of the answer, which is what the registrars it calls
+ * already do one layer down.
  */
 class RegistrationBootstrap {
 	/**
@@ -160,34 +168,39 @@ class RegistrationBootstrap {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OCA\OpenRegister\AppHost\Bootstrap
+	 * is a cross-app static entry point in a SIBLING app that may be absent or
+	 * unloadable here — the call is guarded by class_exists() and wrapped in a
+	 * catch(\Throwable) for exactly that reason. It cannot be injected: this
+	 * runs at the composition root, so there is no container to resolve an
+	 * adapter from. OpenRegisterAutoloader::register() is static for the same
+	 * reason.
 	 */
 	private function bindStoreController(IRegistrationContext $context): void {
-		// ⚠️ THE AUTOLOAD PRELUDE IS NOT OPTIONAL HERE. `filinq` sorts before
+		// ⚠️ THE PRELUDE IS NOT OPTIONAL HERE. `filinq` sorts before
 		// `openregister`, and Nextcloud registers apps one at a time in sorted
-		// order, so `OCA\OpenRegister\` is NOT on the autoloader when this
-		// runs. Without it the class_exists() below answers false on a
-		// perfectly healthy instance and the binding is skipped in silence.
-		try {
-			$orPath = \OCP\Server::get(\OCP\App\IAppManager::class)->getAppPath('openregister');
-			\OC_App::registerAutoloading('openregister', $orPath);
-		} catch (\Throwable) {
-			// OpenRegister absent or disabled: the engine that serves this
-			// route is not there, so leaving it unbound is the honest outcome.
-			return;
-		}
+		// order, so OCA\OpenRegister\ is NOT on the autoloader yet. Without
+		// this the class_exists() below answers false on a perfectly healthy
+		// instance and the binding is skipped in silence.
+		OpenRegisterAutoloader::register();
 
-		$bootstrap = 'OCA\\OpenRegister\\AppHost\\Bootstrap';
-		if (class_exists($bootstrap) === false || method_exists($bootstrap, 'aliasStoreController') === false) {
-			// An OpenRegister older than the helper. The route is no worse off
-			// than it is today.
-			return;
+		// The class_exists() guard MUST stay in this method: it is also the
+		// assertion psalm relies on to accept the Bootstrap call below, and
+		// psalm does not carry that narrowing across a call.
+		if (class_exists(Bootstrap::class) === true) {
+			try {
+				Bootstrap::aliasStoreController(
+					context: $context,
+					appId: 'filinq',
+					controllerNs: 'OCA\\Filinq\\Controller'
+				);
+			} catch (\Throwable) {
+				// An OpenRegister older than the helper, or present but
+				// unloadable. The store route is then no worse off than it is
+				// today, and every registration around this one still runs.
+			}
 		}
-
-		$bootstrap::aliasStoreController(
-			context: $context,
-			appId: 'filinq',
-			controllerNs: 'OCA\\Filinq\\Controller'
-		);
 
 	}//end bindStoreController()
 
