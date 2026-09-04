@@ -43,6 +43,7 @@ import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
+import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
@@ -81,6 +82,7 @@ export default {
 	ShieldLockOutline,
 	SignatureFreehand,
 	Sitemap,
+	StoreOutline,
 	TagMultiple,
 	ViewDashboardOutline,
 }

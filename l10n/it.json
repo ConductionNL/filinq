@@ -511,7 +511,9 @@
         "Where each signing request stands, and what signers did with it.": "A che punto è ogni richiesta di firma e cosa ne hanno fatto i firmatari.",
         "What is being anonymised, from where, and what failed.": "Cosa viene anonimizzato, da dove, e cosa non è riuscito.",
         "What the templates generated, in which format, and what went out as correspondence.": "Cosa hanno generato i modelli, in quale formato, e cosa è uscito come corrispondenza.",
-        "Template": "Modello"
+        "Template": "Modello",
+        "Store": "Store",
+        "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature.": "Installa registri, schemi e flussi pubblicati da altre organizzazioni."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
