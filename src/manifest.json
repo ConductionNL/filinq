@@ -29,6 +29,14 @@
 	"dependencies": [
 		"openregister"
 	],
+	"store": {
+	  "_note": "Configuration exchange, not rows. A configuration set carries the registers, schemas, objects, views, flows, sources and mappings that make one way of working hold together. There is deliberately NO `installable` allowlist: a set exists to introduce schemas the instance does not have YET, so listing schemas this app already owns would refuse exactly the sets worth installing. The trust boundary for a bundle is its publisher, enforced by the engine's source allowlist and trusted-key check. \u26a0\ufe0f An EMPTY `installable` means install NOTHING, not install anything \u2014 omitting the key and declaring an empty list are different things.",
+	  "types": [
+	    "openregister.configset",
+	    "openregister.flows"
+	  ],
+	  "localRegister": "filinq"
+	},
 	"menu": [
 		{
 			"id": "Dashboard",
@@ -102,6 +110,14 @@
 			"order": 90
 		},
 		{
+		  "id": "StoreMenu",
+		  "label": "Store",
+		  "icon": "StoreOutline",
+		  "route": "Store",
+		  "section": "footer",
+		  "order": 92
+		},
+		{
 			"id": "ReportsMenu",
 			"label": "Reports",
 			"icon": "ChartBoxOutline",
@@ -141,6 +157,18 @@
 		}
 	],
 	"pages": [
+		{
+		  "id": "Store",
+		  "route": "/store",
+		  "type": "store",
+		  "title": "Store",
+		  "config": {
+		    "app": "filinq",
+		    "title": "Store",
+		    "description": "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature."
+		  },
+		  "_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
+		},
 		{
 			"id": "Dashboard",
 			"route": "/",

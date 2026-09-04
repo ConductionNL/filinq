@@ -972,7 +972,9 @@ OC.L10N.register(
         "Where each signing request stands, and what signers did with it.": "Waar elk ondertekenverzoek staat, en wat ondertekenaars ermee deden.",
         "What is being anonymised, from where, and what failed.": "Wat er geanonimiseerd wordt, waarvandaan, en wat mislukte.",
         "What the templates generated, in which format, and what went out as correspondence.": "Wat de sjablonen genereerden, in welk formaat, en wat als correspondentie uitging.",
-        "Template": "Sjabloon"
+        "Template": "Sjabloon",
+        "Store": "Store",
+        "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature.": "Installeer registers, schema's en flows die andere organisaties hebben gepubliceerd."
     },
     "nplurals=2; plural=(n != 1);"
 )

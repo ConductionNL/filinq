@@ -511,6 +511,8 @@
         "Where each signing request stands, and what signers did with it.": "En qué punto está cada solicitud de firma y qué hicieron los firmantes con ella.",
         "What is being anonymised, from where, and what failed.": "Qué se está anonimizando, desde dónde, y qué falló.",
         "What the templates generated, in which format, and what went out as correspondence.": "Qué generaron las plantillas, en qué formato, y qué salió como correspondencia.",
-        "Template": "Plantilla"
+        "Template": "Plantilla",
+        "Store": "Tienda",
+        "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature.": "Instale registros, esquemas y flujos publicados por otras organizaciones."
     }
 }

@@ -512,7 +512,9 @@ OC.L10N.register(
         "Where each signing request stands, and what signers did with it.": "Wo jede Signaturanfrage steht und was die Unterzeichnenden damit taten.",
         "What is being anonymised, from where, and what failed.": "Was anonymisiert wird, woher, und was fehlschlug.",
         "What the templates generated, in which format, and what went out as correspondence.": "Was die Vorlagen erzeugten, in welchem Format, und was als Korrespondenz herausging.",
-        "Template": "Vorlage"
+        "Template": "Vorlage",
+        "Store": "Store",
+        "Install document configurations that other organisations have published: a template set, an anonymisation policy, or the flows behind a signature.": "Installieren Sie Register, Schemata und Flows, die andere Organisationen veröffentlicht haben."
     },
     "nplurals=2; plural=(n != 1);"
 )
