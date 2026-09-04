@@ -78,7 +78,7 @@ final class OpenRegisterAutoloader {
 	 * autoloader, and this runs at the composition root where no container is
 	 * available to resolve an adapter from.
 	 *
-	 * @spec openspec/specs/apphost-adoption/spec.md
+	 * @spec openspec/specs/adopt-apphost/spec.md
 	 */
 	public static function register(): bool {
 		try {

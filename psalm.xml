@@ -16,6 +16,23 @@
     </projectFiles>
     <stubs>
         <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+        <!--
+            OpenRegister's AppHost composition-root entry point. `openregister`
+            is a sibling Nextcloud app, not a composer dependency, so
+            `OCA\OpenRegister\AppHost\Bootstrap` is genuinely absent here.
+
+            Without it psalm cannot resolve the class named in
+            `RegistrationBootstrap::bindStoreController()`'s `class_exists()`
+            guard, concludes the guarded block is dead, and reports
+            `UnusedParam - Param context is never referenced in this method`
+            about a parameter passed on the very next line. The stub answers the
+            question instead of suppressing the answer, so the next genuinely
+            unused parameter in that method still fails the build.
+
+            Shared, not vendored per app: decidiq and planninq adopted the same
+            route table and carry the same call.
+        -->
+        <file name="vendor/conduction/hydra-gates/hydra-gates/stubs/openregister-apphost-bootstrap.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
