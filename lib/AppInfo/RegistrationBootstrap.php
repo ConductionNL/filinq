@@ -53,6 +53,8 @@ class RegistrationBootstrap {
 		(new SigningEventRegistrar())->register(context: $context);
 		(new PdfConversionRegistrar())->register(context: $context);
 
+		$this->bindStoreController(context: $context);
+
 		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never
 		// its concrete class, so a leaf app's unit tests can mock a type they
 		// are able to load. Nextcloud autowires concrete classes across apps but
@@ -140,4 +142,53 @@ class RegistrationBootstrap {
 		}
 
 	}//end boot()
+	/**
+	 * Bind the store controller the adopted route table already declares.
+	 *
+	 * 🔴 THIS ROUTE ARRIVES WHETHER THE APP WANTS IT OR NOT.
+	 *
+	 * `Routes::standard()`, which appinfo/routes.php adopts, declares
+	 * `/api/store/items`. The binding normally comes from
+	 * `Bootstrap::register()`, and filinq does not call that: it composes its
+	 * own registrars and keeps its own settings, signing and conversion
+	 * classes. The store controller was simply never bound.
+	 *
+	 * So the route matched a controller class that does not exist, and every
+	 * request to it returned HTTP 500 rather than 404. Measured on a running
+	 * instance 2026-09-03, alongside decidiq and planninq.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 */
+	private function bindStoreController(IRegistrationContext $context): void {
+		// ⚠️ THE AUTOLOAD PRELUDE IS NOT OPTIONAL HERE. `filinq` sorts before
+		// `openregister`, and Nextcloud registers apps one at a time in sorted
+		// order, so `OCA\OpenRegister\` is NOT on the autoloader when this
+		// runs. Without it the class_exists() below answers false on a
+		// perfectly healthy instance and the binding is skipped in silence.
+		try {
+			$orPath = \OCP\Server::get(\OCP\App\IAppManager::class)->getAppPath('openregister');
+			\OC_App::registerAutoloading('openregister', $orPath);
+		} catch (\Throwable) {
+			// OpenRegister absent or disabled: the engine that serves this
+			// route is not there, so leaving it unbound is the honest outcome.
+			return;
+		}
+
+		$bootstrap = 'OCA\\OpenRegister\\AppHost\\Bootstrap';
+		if (class_exists($bootstrap) === false || method_exists($bootstrap, 'aliasStoreController') === false) {
+			// An OpenRegister older than the helper. The route is no worse off
+			// than it is today.
+			return;
+		}
+
+		$bootstrap::aliasStoreController(
+			context: $context,
+			appId: 'filinq',
+			controllerNs: 'OCA\\Filinq\\Controller'
+		);
+
+	}//end bindStoreController()
+
 }//end class
