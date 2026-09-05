@@ -116,6 +116,17 @@ class DemoDataServiceTest extends TestCase {
 		$this->assertDoesNotMatchRegularExpression('/\d/', $demo['description']);
 	}
 
+	public function testADescriptorWithNoObjectsBlockOffersTheSetWithNoCount(): void {
+		// A descriptor can ship schemas and no objects. That is a real dataset
+		// with nothing to count, not a broken file, so it stays on offer.
+		file_put_contents($this->descriptor(), json_encode(['components' => ['schemas' => []]]));
+
+		$choices = $this->service()->listChoices();
+
+		$this->assertSame(['none', 'demo'], array_column($choices, 'id'));
+		$this->assertSame(0, $choices[1]['objectCount']);
+	}
+
 	public function testInstallThrowsWhenNoDatasetShips(): void {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessageMatches('/No demo dataset/');

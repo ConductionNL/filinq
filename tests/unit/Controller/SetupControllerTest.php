@@ -128,6 +128,66 @@ class SetupControllerTest extends TestCase {
 		$this->assertFalse($response->getData()['success']);
 	}
 
+	public function testPostingNothingIsNotAnAnswerAndStoresNothing(): void {
+		// The wizard posts the whole config patch, so a step that has not been
+		// answered posts no key at all. That is not an error and it is not a
+		// choice either.
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturn(null);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$data = $controller->saveConfig()->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertSame([], $data['config']);
+	}
+
+	public function testAListIsAcceptedBecauseTheWizardContractAllowsOne(): void {
+		// The step is not `multiple`, but the same endpoint serves steps that
+		// are, so an array must not reach `(string)` and become "Array".
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturn(['demo']);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$this->demoData->method('listChoices')->willReturn([
+			['id' => 'demo', 'label' => 'Example data', 'description' => '', 'objectCount' => 1, 'icon' => ''],
+		]);
+
+		$this->appConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'demo_dataset', 'demo');
+
+		$this->assertTrue($controller->saveConfig()->getData()['success']);
+	}
+
+	public function testAValueThatIsNotAStringIsRefused(): void {
+		// The body is whatever the browser posted. A nested array would
+		// otherwise reach `(string)` and raise a fatal.
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturn([['demo']]);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+
+		$this->appConfig->expects($this->never())->method('setValueString');
+
+		$this->assertSame(400, $controller->saveConfig()->getStatus());
+	}
+
+	public function testChoosingNoneAndThenRunningImportsNothing(): void {
+		// 🔴 THE LOAD STEP STILL RUNS AFTER "None". It must record the decision
+		// and import nothing, rather than refusing: refusing would leave the
+		// step open and reopen the wizard.
+		$this->appConfig->method('getValueString')
+			->willReturnCallback(static fn (string $app, string $key): string
+				=> ($key === 'demo_dataset' ? 'none' : ''));
+		$this->demoData->expects($this->never())->method('install');
+
+		$data = $this->controller->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertStringContainsString('No example data', $data['message']);
+	}
+
 	public function testLoadingWithoutAChoiceRefusesRatherThanGuessing(): void {
 		// 🔴 NO SILENT DEFAULT. Importing because the operator clicked Run one
 		// step early would plant example objects nobody asked for.
