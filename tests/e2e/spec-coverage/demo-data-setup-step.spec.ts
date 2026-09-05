@@ -100,10 +100,81 @@ test.describe('ADR-111 demo data', () => {
 		// no operator action can clear it, and CnAppRoot then covers the app with
 		// the wizard in every fresh browser context. Absence is the defect here,
 		// not "not done".
+		const steps = Object.keys(res.json?.steps ?? {})
+		expect(steps, 'setup/status must report the choice step').toContain(
+			'demo-data',
+		)
+		expect(steps, 'setup/status must report the load step').toContain(
+			'load-demo-data',
+		)
+	})
+
+	test('setup status carries the datasets the choice step offers', async ({
+		page,
+	}) => {
+		// 🔴 THIS RESPONSE *IS* THE OPTION LIST. The step declares
+		// `optionsSource: datasets` and carries no options of its own, so a
+		// dataset missing here is a dataset nobody can pick — there is no second
+		// copy in the manifest to fall back on.
+		const res = await api(page, 'GET', `${BASE}/api/setup/status`)
+
+		const datasets = res.json?.datasets ?? []
+		const ids = datasets.map((d: any) => d.id)
+
 		expect(
-			Object.keys(res.json?.steps ?? {}),
-			'setup/status must report a demo-data step',
-		).toContain('demo-data')
+			ids,
+			'declining must be offerable, or "no thanks" is unsayable',
+		).toContain('none')
+		expect(ids, 'the shipped dataset must be offered').toContain('demo')
+
+		// A card renders a label, a description and an icon. An entry missing one
+		// renders a blank card, which is worse than the Run button it replaced.
+		for (const dataset of datasets) {
+			expect(
+				String(dataset.label ?? ''),
+				`${dataset.id} has no label`,
+			).not.toBe('')
+			expect(
+				String(dataset.description ?? ''),
+				`${dataset.id} has no description`,
+			).not.toBe('')
+			expect(String(dataset.icon ?? ''), `${dataset.id} has no icon`).not.toBe(
+				'',
+			)
+		}
+
+		// The card promises a number, so it has to be the number the descriptor
+		// actually carries.
+		const demo = datasets.find((d: any) => d.id === 'demo')
+		expect(demo.objectCount).toBeGreaterThan(0)
+	})
+
+	test('declining closes both steps, so the wizard stops covering the app', async ({
+		page,
+	}) => {
+		// 🔴 THE DEFECT THIS FIXES. This app implemented `skip-demo-data` and no
+		// manifest step could reach it, so declining was unsayable: the step
+		// stayed `done: false` and CnAppRoot reopened the wizard over every page
+		// unless the operator imported data they did not want.
+		const saved = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			demo_dataset: 'none',
+		})
+		expect(saved.status, JSON.stringify(saved.json)).toBe(200)
+
+		const status = await api(page, 'GET', `${BASE}/api/setup/status`)
+		expect(status.json?.steps?.['demo-data']?.done).toBe(true)
+		expect(status.json?.steps?.['load-demo-data']?.done).toBe(true)
+	})
+
+	test('a dataset that does not exist is refused rather than stored', async ({
+		page,
+	}) => {
+		const res = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			demo_dataset: 'atlantis',
+		})
+
+		expect(res.status).toBe(400)
+		expect(res.json?.success).toBe(false)
 	})
 
 	test('installing the demo data reports HOW MUCH landed, not just success', async ({
@@ -116,10 +187,15 @@ test.describe('ADR-111 demo data', () => {
 		// WROTE something.
 		test.slow()
 
+		const chosen = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			demo_dataset: 'demo',
+		})
+		expect(chosen.json?.success, JSON.stringify(chosen.json)).toBe(true)
+
 		const res = await api(
 			page,
 			'POST',
-			`${BASE}/api/setup/action/install-demo-data`,
+			`${BASE}/api/setup/action/load-demo-data`,
 		)
 
 		expect(res.status, 'the action must pass the admin middleware').toBe(200)
@@ -151,7 +227,7 @@ test.describe('ADR-111 demo data', () => {
 		const again = await api(
 			page,
 			'POST',
-			`${BASE}/api/setup/action/install-demo-data`,
+			`${BASE}/api/setup/action/load-demo-data`,
 		)
 
 		expect(again.status).toBe(200)
