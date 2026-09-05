@@ -14,8 +14,8 @@
 // @e2e openspec/specs/document-signing/spec.md#list-all-signing-requests
 // @e2e openspec/specs/document-signing/spec.md#view-signing-request-status
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, go, navClick } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, go, navClick } from './_helpers.ts'
 
 test.describe('document-signing — signing requests list UI', () => {
 	test('Signing Requests page renders heading and a list or empty-state', async ({

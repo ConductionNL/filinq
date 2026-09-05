@@ -1749,7 +1749,11 @@ interface IRootFolder {
 namespace OCA\OpenRegister\Db;
 
 /**
- * Stub for ApprovalChain entity.
+ * Stub for the Task entity (flow-task-entity).
+ *
+ * The real class is an NC Entity whose getters are served by
+ * `Entity::__call` from `@method` docblocks; the stub declares the ones the
+ * signing bridge reads explicitly, with the same nullable shapes.
  *
  * @category Tests
  * @package  OCA\OpenRegister\Db
@@ -1757,156 +1761,65 @@ namespace OCA\OpenRegister\Db;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class ApprovalChain {
-	private ?int $id = null;
-	private ?string $uuid = null;
-	private ?string $name = null;
-	private ?string $registerSlug = null;
-	private ?string $schemaSlug = null;
-	/** @var array<int, array<string, mixed>>|null */
-	private ?array $steps = null;
-
-	public function getId(): ?int {
-		return $this->id;
-	}
-
-	public function setId(?int $id): void {
-		$this->id = $id;
+class Task {
+	/**
+	 * @param array<int, string>|null $candidateGroups
+	 */
+	public function __construct(
+		private readonly ?string $uuid = null,
+		private readonly ?string $state = null,
+		private readonly ?string $outcome = null,
+		private readonly ?array $candidateGroups = null,
+		private readonly ?string $objectUuid = null,
+		private readonly ?string $sequenceUuid = null,
+		private readonly ?int $sequencePosition = null,
+		private readonly ?string $completedBy = null,
+		private readonly ?string $comment = null,
+	) {
 	}
 
 	public function getUuid(): ?string {
 		return $this->uuid;
 	}
 
-	public function setUuid(?string $uuid): void {
-		$this->uuid = $uuid;
+	public function getState(): ?string {
+		return $this->state;
 	}
 
-	public function getName(): ?string {
-		return $this->name;
-	}
-
-	public function setName(?string $name): void {
-		$this->name = $name;
-	}
-
-	public function getRegisterSlug(): ?string {
-		return $this->registerSlug;
-	}
-
-	public function setRegisterSlug(?string $slug): void {
-		$this->registerSlug = $slug;
-	}
-
-	public function getSchemaSlug(): ?string {
-		return $this->schemaSlug;
-	}
-
-	public function setSchemaSlug(?string $slug): void {
-		$this->schemaSlug = $slug;
+	public function getOutcome(): ?string {
+		return $this->outcome;
 	}
 
 	/**
-	 * @return array<int, array<string, mixed>>|null
+	 * @return array<int, string>|null
 	 */
-	public function getSteps(): ?array {
-		return $this->steps;
-	}
-
-	/**
-	 * @param array<int, array<string, mixed>>|null $steps
-	 */
-	public function setSteps(?array $steps): void {
-		$this->steps = $steps;
-	}
-}//end class
-
-/**
- * Stub for ApprovalStep entity.
- *
- * @category Tests
- * @package  OCA\OpenRegister\Db
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
-class ApprovalStep {
-	private ?string $uuid = null;
-	private ?int $chainId = null;
-	private ?string $objectUuid = null;
-	private int $stepOrder = 0;
-	private ?string $role = null;
-	private ?string $status = 'pending';
-	private ?string $decidedBy = null;
-	private ?string $comment = null;
-
-	public function getUuid(): ?string {
-		return $this->uuid;
-	}
-
-	public function setUuid(?string $uuid): void {
-		$this->uuid = $uuid;
-	}
-
-	public function getChainId(): ?int {
-		return $this->chainId;
-	}
-
-	public function setChainId(?int $chainId): void {
-		$this->chainId = $chainId;
+	public function getCandidateGroups(): ?array {
+		return $this->candidateGroups;
 	}
 
 	public function getObjectUuid(): ?string {
 		return $this->objectUuid;
 	}
 
-	public function setObjectUuid(?string $uuid): void {
-		$this->objectUuid = $uuid;
+	public function getSequenceUuid(): ?string {
+		return $this->sequenceUuid;
 	}
 
-	public function getStepOrder(): int {
-		return $this->stepOrder;
+	public function getSequencePosition(): ?int {
+		return $this->sequencePosition;
 	}
 
-	public function setStepOrder(int $order): void {
-		$this->stepOrder = $order;
-	}
-
-	public function getRole(): ?string {
-		return $this->role;
-	}
-
-	public function setRole(?string $role): void {
-		$this->role = $role;
-	}
-
-	public function getStatus(): ?string {
-		return $this->status;
-	}
-
-	public function setStatus(?string $status): void {
-		$this->status = $status;
-	}
-
-	public function getDecidedBy(): ?string {
-		return $this->decidedBy;
-	}
-
-	public function setDecidedBy(?string $decidedBy): void {
-		$this->decidedBy = $decidedBy;
+	public function getCompletedBy(): ?string {
+		return $this->completedBy;
 	}
 
 	public function getComment(): ?string {
 		return $this->comment;
 	}
-
-	public function setComment(?string $comment): void {
-		$this->comment = $comment;
-	}
 }//end class
 
 /**
- * Stub for ApprovalChainMapper.
+ * Stub for the TaskSequence entity (flow-approval-consolidation).
  *
  * @category Tests
  * @package  OCA\OpenRegister\Db
@@ -1914,35 +1827,29 @@ class ApprovalStep {
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class ApprovalChainMapper {
-	public function insert(ApprovalChain $chain): ApprovalChain {
-		return $chain;
+class TaskSequence {
+	public function __construct(
+		private readonly ?string $uuid = null,
+		private readonly ?string $anchorObjectUuid = null,
+		private readonly ?string $outcome = null,
+		private readonly ?string $chainKey = null,
+	) {
 	}
 
-	public function find(int $id): ApprovalChain {
-		return new ApprovalChain();
-	}
-}//end class
-
-/**
- * Stub for ApprovalStepMapper.
- *
- * @category Tests
- * @package  OCA\OpenRegister\Db
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
-class ApprovalStepMapper {
-	public function insert(ApprovalStep $step): ApprovalStep {
-		return $step;
+	public function getUuid(): ?string {
+		return $this->uuid;
 	}
 
-	/**
-	 * @return array<int, ApprovalStep>
-	 */
-	public function findByChain(int $chainId): array {
-		return [];
+	public function getAnchorObjectUuid(): ?string {
+		return $this->anchorObjectUuid;
+	}
+
+	public function getOutcome(): ?string {
+		return $this->outcome;
+	}
+
+	public function getChainKey(): ?string {
+		return $this->chainKey;
 	}
 }//end class
 
@@ -2010,13 +1917,17 @@ class ArchivalImmutableException extends \Exception {
 
 namespace OCA\OpenRegister\Event;
 
-use OCA\OpenRegister\Db\ApprovalChain;
-use OCA\OpenRegister\Db\ApprovalStep;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Task;
+use OCA\OpenRegister\Db\TaskSequence;
 use OCP\EventDispatcher\Event;
 
 /**
- * Stub for ApprovalStepInitiatedEvent.
+ * Stub for TaskTransitionedEvent.
+ *
+ * Mirrors openregister lib/Event/TaskTransitionedEvent.php on the
+ * flow-approval-consolidation branch: a committed task lifecycle
+ * transition, carrying the task, its previous holder/state and the actor.
  *
  * @category Tests
  * @package  OCA\OpenRegister\Event
@@ -2024,30 +1935,39 @@ use OCP\EventDispatcher\Event;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class ApprovalStepInitiatedEvent extends Event {
+class TaskTransitionedEvent extends Event {
 	public function __construct(
-		private readonly ApprovalChain $chain,
-		private readonly ApprovalStep $step,
-		private readonly string $objectUuid,
+		private readonly Task $task,
+		private readonly ?string $previousAssignee = null,
+		private readonly ?string $previousState = null,
+		private readonly ?string $actor = null,
 	) {
 		parent::__construct();
 	}
 
-	public function getChain(): ApprovalChain {
-		return $this->chain;
+	public function getTask(): Task {
+		return $this->task;
 	}
 
-	public function getStep(): ApprovalStep {
-		return $this->step;
+	public function getPreviousAssignee(): ?string {
+		return $this->previousAssignee;
 	}
 
-	public function getObjectUuid(): string {
-		return $this->objectUuid;
+	public function getPreviousState(): ?string {
+		return $this->previousState;
+	}
+
+	public function getActor(): ?string {
+		return $this->actor;
 	}
 }//end class
 
 /**
- * Stub for ApprovalStepApprovedEvent.
+ * Stub for TaskTerminalEvent.
+ *
+ * Mirrors openregister lib/Event/TaskTerminalEvent.php: a task persisted in
+ * a terminal state, with `committed` telling the after-commit dispatch
+ * (TaskService) apart from the in-transaction one (TaskMapper).
  *
  * @category Tests
  * @package  OCA\OpenRegister\Event
@@ -2055,48 +1975,42 @@ class ApprovalStepInitiatedEvent extends Event {
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class ApprovalStepApprovedEvent extends Event {
+class TaskTerminalEvent extends Event {
 	public function __construct(
-		private readonly ApprovalChain $chain,
-		private readonly ApprovalStep $step,
-		private readonly string $userId,
-		private readonly string $statusOnApprove,
-		private readonly ?ApprovalStep $nextStep,
+		private readonly Task $task,
+		private readonly bool $committed = true,
 	) {
 		parent::__construct();
 	}
 
-	public function getChain(): ApprovalChain {
-		return $this->chain;
+	public function getTask(): Task {
+		return $this->task;
 	}
 
-	public function getStep(): ApprovalStep {
-		return $this->step;
+	public function isCommitted(): bool {
+		return $this->committed;
 	}
 
-	public function getUserId(): string {
-		return $this->userId;
+	public function getTaskUuid(): string {
+		return (string) $this->task->getUuid();
 	}
 
-	public function getStatusOnApprove(): string {
-		return $this->statusOnApprove;
+	public function getState(): string {
+		return (string) $this->task->getState();
 	}
 
-	public function getNextStep(): ?ApprovalStep {
-		return $this->nextStep;
-	}
-
-	public function isFinalStep(): bool {
-		return $this->nextStep === null;
-	}
-
-	public function getObjectUuid(): string {
-		return $this->step->getObjectUuid() ?? '';
+	public function getOutcome(): ?string {
+		return $this->task->getOutcome();
 	}
 }//end class
 
 /**
- * Stub for ApprovalStepRejectedEvent.
+ * Stub for TaskSequenceCompletedEvent.
+ *
+ * Mirrors openregister lib/Event/TaskSequenceCompletedEvent.php
+ * (flow-approval-consolidation): the final position completed with an
+ * approving outcome; carries the sequence, the final task, the decider and
+ * the resolved approving status.
  *
  * @category Tests
  * @package  OCA\OpenRegister\Event
@@ -2104,74 +2018,30 @@ class ApprovalStepApprovedEvent extends Event {
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class ApprovalStepRejectedEvent extends Event {
+class TaskSequenceCompletedEvent extends Event {
 	public function __construct(
-		private readonly ApprovalChain $chain,
-		private readonly ApprovalStep $step,
-		private readonly string $userId,
-		private readonly string $statusOnReject,
-	) {
-		parent::__construct();
-	}
-
-	public function getChain(): ApprovalChain {
-		return $this->chain;
-	}
-
-	public function getStep(): ApprovalStep {
-		return $this->step;
-	}
-
-	public function getUserId(): string {
-		return $this->userId;
-	}
-
-	public function getStatusOnReject(): string {
-		return $this->statusOnReject;
-	}
-
-	public function getObjectUuid(): string {
-		return $this->step->getObjectUuid() ?? '';
-	}
-}//end class
-
-/**
- * Stub for ApprovalStepCompletedEvent.
- *
- * @category Tests
- * @package  OCA\OpenRegister\Event
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
-class ApprovalStepCompletedEvent extends Event {
-	public function __construct(
-		private readonly ApprovalChain $chain,
-		private readonly ApprovalStep $finalStep,
-		private readonly string $userId,
+		private readonly TaskSequence $sequence,
+		private readonly Task $finalTask,
+		private readonly ?string $decider,
 		private readonly string $statusOnApprove,
 	) {
 		parent::__construct();
 	}
 
-	public function getChain(): ApprovalChain {
-		return $this->chain;
+	public function getSequence(): TaskSequence {
+		return $this->sequence;
 	}
 
-	public function getFinalStep(): ApprovalStep {
-		return $this->finalStep;
+	public function getFinalTask(): Task {
+		return $this->finalTask;
 	}
 
-	public function getUserId(): string {
-		return $this->userId;
+	public function getDecider(): ?string {
+		return $this->decider;
 	}
 
 	public function getStatusOnApprove(): string {
 		return $this->statusOnApprove;
-	}
-
-	public function getObjectUuid(): string {
-		return $this->finalStep->getObjectUuid() ?? '';
 	}
 }//end class
 
@@ -2520,3 +2390,29 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 		public function getObject(): ?ObjectEntityInterface;
 	}//end interface
 }//end if
+
+namespace OCA\OpenRegister\Service\Task;
+
+/**
+ * Stub for TaskState (flow-task-entity): the published outcome vocabulary.
+ *
+ * Mirrors `TaskState::REJECTING_OUTCOMES` and `isRejectingOutcome()` on the
+ * flow-approval-consolidation branch.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Task
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class TaskState {
+	public const REJECTING_OUTCOMES = ['rejected', 'returned', 'declined', 'denied'];
+
+	public static function isRejectingOutcome(?string $outcome): bool {
+		if ($outcome === null) {
+			return false;
+		}
+
+		return in_array(strtolower(trim($outcome)), self::REJECTING_OUTCOMES, true);
+	}
+}//end class

@@ -15,8 +15,8 @@
 // @e2e openspec/specs/document-validation-checks/spec.md#operator-sees-why-a-document-failed
 // @e2e openspec/specs/document-validation-checks/spec.md#scan-only-document-offers-the-ocr-path
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, go } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, go } from './_helpers.ts'
 
 test.describe('document-validation-checks — verdict + findings UI', () => {
 	test('My documents exposes a Validate action that opens the findings panel', async ({

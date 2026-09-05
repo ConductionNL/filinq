@@ -24,8 +24,10 @@
 // @e2e openspec/specs/dashboard/spec.md#dashboard-widget-icon
 // @e2e openspec/specs/dashboard/spec.md#admin-settings-section-icon
 
-import { test, expect, type Page } from '@playwright/test'
-import { waitForAppReady, waitForNcContentReady } from './_helpers'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { waitForAppReady, waitForNcContentReady } from './_helpers.ts'
 
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits

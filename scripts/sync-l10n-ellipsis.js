@@ -18,6 +18,10 @@ const path = require('path')
 
 const ELLIPSIS_RE = /(?<!\.)\.{3}(?!\.)/g
 
+/**
+ *
+ * @param file
+ */
 function processFile(file) {
 	const original = fs.readFileSync(file, 'utf8')
 	const rewritten = original.replace(ELLIPSIS_RE, '…')

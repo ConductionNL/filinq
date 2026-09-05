@@ -98,8 +98,10 @@
  * `TEST_PREFIX` and every assertion names only this run's strings.
  */
 
-import { test, expect, type APIRequestContext } from '@playwright/test'
-import { harvestToken, jsonHeaders, API, TEST_PREFIX } from './_fixtures'
+import type { APIRequestContext } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { API, harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 
 // Deliberately NOT `test.describe.configure({ mode: 'serial' })`, unlike most
 // files in this directory. The two tests below share no state — each seeds its

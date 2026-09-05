@@ -24,8 +24,8 @@
 // @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-by-folder-path-existing-behavior
 // @e2e openspec/specs/folder-batch-analysis/spec.md#folder-path-does-not-exist
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers.ts'
 
 test.describe('folder-batch-analysis — folder analysis UI', () => {
 	test('Folder Analysis page renders heading, path input and Analyze action', async ({

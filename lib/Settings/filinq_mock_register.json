@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "filinq demo data",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
@@ -2025,119 +2025,7 @@
         },
         "searchable": false
       },
-      "product": {
-        "uri": null,
-        "slug": "product",
-        "title": "Product or Service",
-        "description": "Priced products and services with their unit rate — the rate card a quotation is built from. Exists so an agent asked to quote \"5 hours of dev work\" resolves a real rate instead of supplying a plausible-sounding one: an hourly rate is exactly the fact a model will invent unprompted, and on a quotation that is the failure that costs money. Read-only to agents; writing the rate card is a commercial act, not an agent one.",
-        "version": "1.0.0",
-        "summary": "",
-        "icon": "Cash",
-        "required": [
-          "name",
-          "unit",
-          "unitPrice"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Short commercial name of the product or service, as it should appear on a quotation line."
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "What the client is buying. Written to be pasted onto a quotation without rewriting."
-          },
-          "unit": {
-            "type": "string",
-            "title": "Unit",
-            "description": "The unit the price is per.",
-            "enum": [
-              "hour",
-              "day",
-              "piece",
-              "month"
-            ],
-            "default": "hour"
-          },
-          "unitPrice": {
-            "type": "number",
-            "title": "Unit price",
-            "description": "Price per unit, excluding VAT, in the currency below."
-          },
-          "currency": {
-            "type": "string",
-            "title": "Currency",
-            "description": "ISO 4217 currency code.",
-            "default": "EUR"
-          },
-          "category": {
-            "type": "string",
-            "title": "Category",
-            "description": "Grouping used to narrow a search, e.g. development, design, advies."
-          },
-          "active": {
-            "type": "boolean",
-            "title": "Active",
-            "description": "Whether this may still be quoted. Inactive rows are kept for historical quotations.",
-            "default": true
-          }
-        },
-        "archive": [],
-        "source": "internal",
-        "hardValidation": false,
-        "immutable": false,
-        "updated": "2026-08-17T12:00:00+00:00",
-        "created": "2026-08-17T12:00:00+00:00",
-        "maxDepth": 0,
-        "owner": null,
-        "application": null,
-        "organisation": null,
-        "groups": null,
-        "authorization": {
-          "read": [
-            "authenticated"
-          ],
-          "create": [
-            "docudesk-template-editors"
-          ],
-          "update": [
-            "docudesk-template-editors"
-          ],
-          "delete": [
-            "docudesk-template-editors"
-          ]
-        },
-        "deleted": null,
-        "configuration": {
-          "objectNameField": "name",
-          "objectDescriptionField": "description",
-          "autoPublish": false,
-          "x-openregister-mcp": {
-            "enabled": true,
-            "tools": {
-              "search": {
-                "description": "Search the rate card for priced products and services. Use this BEFORE quoting any amount. Returns ALL candidates with their unit and unit price — it does not choose for you: \"dev work\" may match several roles at different rates, and picking one silently is how a quotation goes out at the wrong price. If it returns nothing, ASK THE USER for the rate. Never estimate a price.",
-                "scope": "read",
-                "readOnlyHint": true,
-                "filters": [
-                  "name",
-                  "category",
-                  "unit",
-                  "active"
-                ]
-              },
-              "get": {
-                "description": "Get one product or service from the rate card by id, including its description, unit and unit price.",
-                "scope": "read",
-                "readOnlyHint": true
-              }
-            }
-          }
-        },
-        "searchable": false
-      },
+
       "prohibitionOverrideAudit": {
         "uri": null,
         "slug": "prohibitionOverrideAudit",
@@ -3222,7 +3110,7 @@
       "signingRequest": {
         "deprecated": true,
         "deprecatedSince": "5.6.0",
-        "deprecationNote": "The bespoke signing approval-chain (signingRequest + signerRecord step state) is being migrated to OpenRegister's canonical ApprovalChain / ApprovalStep abstraction per openspec/changes/migrate-signing-to-or-approval-workflow. Existing rows remain readable for the transition window; new sign-requests go through OR's ApprovalService and react to ApprovalStep*Event via lib/EventListener/ApprovalStepListener.php. Do not introduce new write-path callers — extend the ApprovalChain side instead.",
+        "deprecationNote": "The bespoke signing approval-chain (signingRequest + signerRecord step state) is being migrated to OpenRegister's ordered task sequences per openspec/changes/migrate-signing-to-or-tasks. Existing rows remain readable for the transition window; new sign-requests will provision an OR task sequence, drive decisions through TaskService::complete(), and react to the task lifecycle events via lib/EventListener/SigningTaskListener.php. Do not introduce new write-path callers — extend the task-sequence side instead.",
         "x-openregister-notifications": {
           "signingCompleted": {
             "trigger": {
@@ -3251,7 +3139,7 @@
         "uri": null,
         "slug": "signingRequest",
         "title": "Signing Request",
-        "description": "Ondertekeningsverzoek voor een document. DEPRECATED v1.2.0: bespoke signing approval-chain superseded by OR ApprovalChain/Step abstractions per openspec/changes/migrate-signing-to-or-approval-workflow.",
+        "description": "Ondertekeningsverzoek voor een document. DEPRECATED v1.2.0: bespoke signing approval-chain superseded by OR task sequences per openspec/changes/migrate-signing-to-or-tasks.",
         "version": "1.2.0",
         "summary": "",
         "icon": "FileSign",
@@ -4639,48 +4527,6 @@
         "headerHtml": "Voorbeeld html 2",
         "footerHtml": "Voorbeeld html 2",
         "defaultMargins": {}
-      },
-      {
-        "@self": {
-          "register": "filinq",
-          "schema": "product",
-          "slug": "product-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "unit": "hour",
-        "unitPrice": 1.0,
-        "description": "Voorbeeld Description 1",
-        "currency": "EUR",
-        "category": "Voorbeeld Category 1",
-        "active": true
-      },
-      {
-        "@self": {
-          "register": "filinq",
-          "schema": "product",
-          "slug": "product-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "unit": "day",
-        "unitPrice": 2.0,
-        "description": "Voorbeeld Description 2",
-        "currency": "EUR",
-        "category": "Voorbeeld Category 2",
-        "active": true
-      },
-      {
-        "@self": {
-          "register": "filinq",
-          "schema": "product",
-          "slug": "product-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "unit": "piece",
-        "unitPrice": 3.0,
-        "description": "Voorbeeld Description 3",
-        "currency": "EUR",
-        "category": "Voorbeeld Category 3",
-        "active": true
       },
       {
         "@self": {

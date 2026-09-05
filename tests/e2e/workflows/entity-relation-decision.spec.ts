@@ -27,15 +27,17 @@
  * @e2e consent-management::reversal-event-does-not-trigger-consent-creation
  */
 
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import {
+	API,
+	createDavFile,
+	createDavFolder,
 	harvestToken,
 	jsonHeaders,
-	API,
 	TEST_PREFIX,
-	createDavFolder,
-	createDavFile,
-} from './_fixtures'
+} from './_fixtures.ts'
 
 const FOLDER = `${TEST_PREFIX}-reldecision`
 const TERM = `Beslissing Roerdomp ${TEST_PREFIX}`

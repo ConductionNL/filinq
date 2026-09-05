@@ -33,16 +33,16 @@
  * @spec openspec/specs/document-signing/spec.md#view-signing-request-status
  */
 
-import { test, expect } from '@playwright/test'
-import { go } from '../spec-coverage/_helpers'
+import { expect, test } from '@playwright/test'
+import { go } from '../spec-coverage/_helpers.ts'
 import {
+	API,
+	createDavFile,
 	harvestToken,
 	jsonHeaders,
-	API,
-	TEST_PREFIX,
 	TEST_FAMILY,
-	createDavFile,
-} from './_fixtures'
+	TEST_PREFIX,
+} from './_fixtures.ts'
 
 // The views under test, named after the component files they cover. Routes are
 // unchanged — this makes the spec-to-component link readable in executable code

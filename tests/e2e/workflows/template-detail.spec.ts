@@ -53,18 +53,24 @@
  * that level.
  */
 
-import { test, expect, type APIRequestContext } from '@playwright/test'
-import { appUrl, dismissOverlays, waitForAppReady } from '../spec-coverage/_helpers'
+import type { APIRequestContext } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import {
-	harvestToken,
-	jsonHeaders,
+	appUrl,
+	dismissOverlays,
+	waitForAppReady,
+} from '../spec-coverage/_helpers.ts'
+import {
 	API,
 	createTemplate,
-	getTemplate,
 	deleteTemplate,
-	TEST_PREFIX,
+	getTemplate,
+	harvestToken,
+	jsonHeaders,
 	TEST_FAMILY,
-} from './_fixtures'
+	TEST_PREFIX,
+} from './_fixtures.ts'
 
 // Deliberately NOT `test.describe.configure({ mode: 'serial' })`. The two
 // tests seed and delete their own run-stamped templates and share no state,

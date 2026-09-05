@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 /* eslint-disable jsdoc/require-param */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable no-console */
-/* eslint-disable n/shebang */
+
 /**
  * AI-focused l10n CRUD tool. Designed to be invoked one subcommand at a time
  * by Claude (or other automation) so individual operations stay cheap in
@@ -31,7 +29,6 @@
 
 const fs = require('fs')
 const path = require('path')
-
 const {
 	loadJsTranslations,
 	serializeJs,
@@ -138,6 +135,9 @@ function parsePluralPairs(pairs) {
 
 // ---------- file helpers ----------
 
+/**
+ *
+ */
 function loadAll() {
 	const files = listJsLocaleFiles(L10N_DIR)
 	if (!files.length) {
@@ -150,6 +150,9 @@ function loadAll() {
 	}))
 }
 
+/**
+ *
+ */
 function writeAll(entries) {
 	const written = []
 	for (const e of entries) {
@@ -166,17 +169,26 @@ function writeAll(entries) {
 	runEslintFix(written, { rootDir: ROOT, log: (m) => console.error(m) })
 }
 
+/**
+ *
+ */
 function fail(msg, code = 1) {
 	console.error(msg)
 	process.exit(code)
 }
 
+/**
+ *
+ */
 function rel(p) {
 	return path.relative(ROOT, p)
 }
 
 // ---------- subcommands ----------
 
+/**
+ *
+ */
 function cmdHas(args) {
 	const { positionals, flags } = parseArgs(args)
 	const [key] = positionals
@@ -206,6 +218,9 @@ function cmdHas(args) {
 	}
 }
 
+/**
+ *
+ */
 function cmdGet(args) {
 	const { positionals } = parseArgs(args)
 	const [key] = positionals
@@ -214,7 +229,7 @@ function cmdGet(args) {
 	const entries = loadAll()
 	let any = false
 	for (const e of entries) {
-		if (Object.prototype.hasOwnProperty.call(e.translations, key)) {
+		if (Object.hasOwn(e.translations, key)) {
 			any = true
 			const v = e.translations[key]
 			const out = Array.isArray(v) ? JSON.stringify(v) : v
@@ -227,6 +242,9 @@ function cmdGet(args) {
 	}
 }
 
+/**
+ *
+ */
 function cmdFind(args) {
 	const { positionals } = parseArgs(args)
 	const [substring] = positionals
@@ -251,6 +269,9 @@ function cmdFind(args) {
 	}
 }
 
+/**
+ *
+ */
 function cmdAdd(args) {
 	const { positionals, opts, flags } = parseArgs(args, {
 		repeatable: new Set(['value', 'plural']),
@@ -336,7 +357,7 @@ function cmdAdd(args) {
 	const existing = []
 	for (const e of entries) {
 		if (!targetLocales.has(e.locale)) continue
-		if (Object.prototype.hasOwnProperty.call(e.translations, key)) {
+		if (Object.hasOwn(e.translations, key)) {
 			existing.push(e.locale)
 		}
 	}
@@ -363,6 +384,9 @@ function cmdAdd(args) {
 	}
 }
 
+/**
+ *
+ */
 function cmdSet(args) {
 	const { positionals, opts } = parseArgs(args, {
 		repeatable: new Set(['plural']),
@@ -380,7 +404,7 @@ function cmdSet(args) {
 			`set: locale '${opts.locale}' has no l10n/${opts.locale}.js (known: ${entries.map((e) => e.locale).join(', ')})`,
 		)
 	}
-	if (!Object.prototype.hasOwnProperty.call(target.translations, key)) {
+	if (!Object.hasOwn(target.translations, key)) {
 		fail(`set: key '${key}' not present in ${opts.locale}.js. Use 'add' first.`)
 	}
 
@@ -406,15 +430,16 @@ function cmdSet(args) {
 	)
 }
 
+/**
+ *
+ */
 function cmdRm(args) {
 	const { positionals, flags } = parseArgs(args)
 	const [key] = positionals
 	if (!key) fail('usage: rm <key> [--force]')
 
 	const entries = loadAll()
-	const present = entries.filter((e) =>
-		Object.prototype.hasOwnProperty.call(e.translations, key),
-	)
+	const present = entries.filter((e) => Object.hasOwn(e.translations, key))
 	if (!present.length) {
 		fail(`rm: key '${key}' not found in any locale .js file`)
 	}
@@ -444,6 +469,9 @@ function cmdRm(args) {
 	for (const e of toWrite) console.log(`${e.locale}.js\tremoved`)
 }
 
+/**
+ *
+ */
 function cmdRename(args) {
 	const { positionals, flags } = parseArgs(args)
 	const [oldKey, newKey] = positionals
@@ -451,15 +479,11 @@ function cmdRename(args) {
 	if (oldKey === newKey) fail('rename: old and new keys are identical')
 
 	const entries = loadAll()
-	const present = entries.filter((e) =>
-		Object.prototype.hasOwnProperty.call(e.translations, oldKey),
-	)
+	const present = entries.filter((e) => Object.hasOwn(e.translations, oldKey))
 	if (!present.length) {
 		fail(`rename: key '${oldKey}' not found in any locale .js file`)
 	}
-	const collisions = entries.filter((e) =>
-		Object.prototype.hasOwnProperty.call(e.translations, newKey),
-	)
+	const collisions = entries.filter((e) => Object.hasOwn(e.translations, newKey))
 	if (collisions.length && !flags.force) {
 		fail(
 			`rename: target key '${newKey}' already exists in ${collisions.map((e) => e.locale + '.js').join(', ')}. Pass --force to overwrite.`,
@@ -468,7 +492,7 @@ function cmdRename(args) {
 
 	const toWrite = []
 	for (const e of entries) {
-		if (!Object.prototype.hasOwnProperty.call(e.translations, oldKey)) continue
+		if (!Object.hasOwn(e.translations, oldKey)) continue
 		const next = { ...e.translations }
 		next[newKey] = next[oldKey]
 		delete next[oldKey]
@@ -478,12 +502,18 @@ function cmdRename(args) {
 	for (const e of toWrite) console.log(`${e.locale}.js\trenamed`)
 }
 
+/**
+ *
+ */
 function cmdListLocales() {
 	const files = listJsLocaleFiles(L10N_DIR)
 	if (!files.length) fail('list-locales: no l10n/*.js files found')
 	for (const f of files) console.log(localeNameOf(f))
 }
 
+/**
+ *
+ */
 function cmdHelp() {
 	const text = [
 		'Usage: node scripts/l10n-ai.js <subcommand> [args...]',
@@ -509,6 +539,9 @@ function cmdHelp() {
 
 // ---------- main ----------
 
+/**
+ *
+ */
 function main() {
 	const [, , sub, ...rest] = process.argv
 	if (!sub || sub === '--help' || sub === '-h') {

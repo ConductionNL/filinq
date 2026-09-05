@@ -18,6 +18,7 @@ import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
+import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
@@ -42,6 +43,7 @@ import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
+import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
@@ -55,6 +57,7 @@ export default {
 	Cash,
 	BookOpenVariant,
 	BookOpenVariantOutline,
+	ChartBoxOutline,
 	ClipboardCheckOutline,
 	Domain,
 	EmailMultipleOutline,
@@ -79,6 +82,7 @@ export default {
 	ShieldLockOutline,
 	SignatureFreehand,
 	Sitemap,
+	StoreOutline,
 	TagMultiple,
 	ViewDashboardOutline,
 }

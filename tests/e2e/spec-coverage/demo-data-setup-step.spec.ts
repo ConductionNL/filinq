@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 /*
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +36,7 @@
  *
  * @spec exclude ADR-042/ADR-111 setup contract; no per-app behavioural spec.
  */
-import { test, expect, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import * as path from 'path'
 
 const STORAGE_STATE = path.resolve(__dirname, '../.auth/admin.json')
@@ -46,19 +48,21 @@ async function api(
 	page: Page,
 	method: string,
 	apiPath: string,
+	body?: unknown,
 ): Promise<{ status: number; json: any }> {
 	return await page.evaluate(
-		async ({ method, apiPath }) => {
+		async ({ method, apiPath, body }) => {
 			const res = await fetch(apiPath, {
 				method,
 				headers: {
 					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
+
 					requesttoken: (window as any).OC?.requestToken || '',
 					'OCS-APIREQUEST': 'true',
 				},
+				body: body === undefined ? undefined : JSON.stringify(body),
 			})
-			let json: any = null
+			let json: any
 			try {
 				json = await res.json()
 			} catch {
@@ -66,8 +70,39 @@ async function api(
 			}
 			return { status: res.status, json }
 		},
-		{ method, apiPath },
+		{ method, apiPath, body },
 	)
+}
+
+/**
+ * Choose the shipped dataset, and answer with the id that was chosen.
+ *
+ * 🔴 THE TEST HAS TO MAKE THE DECISION IT ASSERTS AGAINST. The demo-data step
+ * is a choice followed by a load step now, and the CI seed settles the optional
+ * steps by posting `skip-demo-data` — which records "none". A load that follows
+ * correctly imports nothing, so an install test that skips this arranges no
+ * precondition and measures the seed instead of the app.
+ *
+ * The id comes from `/api/setup/status` rather than a literal: the choice step
+ * reads its options from exactly that list, so a hardcoded id can pass while
+ * the list an operator sees is empty.
+ */
+async function pickShippedDataset(page: Page): Promise<string> {
+	const status = await api(page, 'GET', `${BASE}/api/setup/status`)
+	const shipped = (status.json?.datasets ?? []).find(
+		(d: any) => d?.id && d.id !== 'none',
+	)
+	expect(
+		shipped,
+		`setup/status offers no dataset to load: ${JSON.stringify(status.json?.datasets)}`,
+	).toBeTruthy()
+
+	const saved = await api(page, 'POST', `${BASE}/api/setup/config`, {
+		demo_dataset: shipped.id,
+	})
+	expect(saved.status, JSON.stringify(saved.json)).toBe(200)
+
+	return shipped.id
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -98,10 +133,81 @@ test.describe('ADR-111 demo data', () => {
 		// no operator action can clear it, and CnAppRoot then covers the app with
 		// the wizard in every fresh browser context. Absence is the defect here,
 		// not "not done".
+		const steps = Object.keys(res.json?.steps ?? {})
+		expect(steps, 'setup/status must report the choice step').toContain(
+			'demo-data',
+		)
+		expect(steps, 'setup/status must report the load step').toContain(
+			'load-demo-data',
+		)
+	})
+
+	test('setup status carries the datasets the choice step offers', async ({
+		page,
+	}) => {
+		// 🔴 THIS RESPONSE *IS* THE OPTION LIST. The step declares
+		// `optionsSource: datasets` and carries no options of its own, so a
+		// dataset missing here is a dataset nobody can pick — there is no second
+		// copy in the manifest to fall back on.
+		const res = await api(page, 'GET', `${BASE}/api/setup/status`)
+
+		const datasets = res.json?.datasets ?? []
+		const ids = datasets.map((d: any) => d.id)
+
 		expect(
-			Object.keys(res.json?.steps ?? {}),
-			'setup/status must report a demo-data step',
-		).toContain('demo-data')
+			ids,
+			'declining must be offerable, or "no thanks" is unsayable',
+		).toContain('none')
+		expect(ids, 'the shipped dataset must be offered').toContain('demo')
+
+		// A card renders a label, a description and an icon. An entry missing one
+		// renders a blank card, which is worse than the Run button it replaced.
+		for (const dataset of datasets) {
+			expect(
+				String(dataset.label ?? ''),
+				`${dataset.id} has no label`,
+			).not.toBe('')
+			expect(
+				String(dataset.description ?? ''),
+				`${dataset.id} has no description`,
+			).not.toBe('')
+			expect(String(dataset.icon ?? ''), `${dataset.id} has no icon`).not.toBe(
+				'',
+			)
+		}
+
+		// The card promises a number, so it has to be the number the descriptor
+		// actually carries.
+		const demo = datasets.find((d: any) => d.id === 'demo')
+		expect(demo.objectCount).toBeGreaterThan(0)
+	})
+
+	test('declining closes both steps, so the wizard stops covering the app', async ({
+		page,
+	}) => {
+		// 🔴 THE DEFECT THIS FIXES. This app implemented `skip-demo-data` and no
+		// manifest step could reach it, so declining was unsayable: the step
+		// stayed `done: false` and CnAppRoot reopened the wizard over every page
+		// unless the operator imported data they did not want.
+		const saved = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			demo_dataset: 'none',
+		})
+		expect(saved.status, JSON.stringify(saved.json)).toBe(200)
+
+		const status = await api(page, 'GET', `${BASE}/api/setup/status`)
+		expect(status.json?.steps?.['demo-data']?.done).toBe(true)
+		expect(status.json?.steps?.['load-demo-data']?.done).toBe(true)
+	})
+
+	test('a dataset that does not exist is refused rather than stored', async ({
+		page,
+	}) => {
+		const res = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			demo_dataset: 'atlantis',
+		})
+
+		expect(res.status).toBe(400)
+		expect(res.json?.success).toBe(false)
 	})
 
 	test('installing the demo data reports HOW MUCH landed, not just success', async ({
@@ -114,10 +220,17 @@ test.describe('ADR-111 demo data', () => {
 		// WROTE something.
 		test.slow()
 
+		const chosen = await api(page, 'POST', `${BASE}/api/setup/config`, {
+			demo_dataset: 'demo',
+		})
+		expect(chosen.json?.success, JSON.stringify(chosen.json)).toBe(true)
+
+		await pickShippedDataset(page)
+
 		const res = await api(
 			page,
 			'POST',
-			`${BASE}/api/setup/action/install-demo-data`,
+			`${BASE}/api/setup/action/load-demo-data`,
 		)
 
 		expect(res.status, 'the action must pass the admin middleware').toBe(200)
@@ -146,10 +259,12 @@ test.describe('ADR-111 demo data', () => {
 		// The step body tells the operator it is "safe to run more than once".
 		// That sentence is a contract; this asserts the server keeps it rather
 		// than erroring or reporting failure on a second pass.
+		await pickShippedDataset(page)
+
 		const again = await api(
 			page,
 			'POST',
-			`${BASE}/api/setup/action/install-demo-data`,
+			`${BASE}/api/setup/action/load-demo-data`,
 		)
 
 		expect(again.status).toBe(200)

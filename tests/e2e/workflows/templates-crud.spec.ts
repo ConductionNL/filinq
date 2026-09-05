@@ -46,20 +46,20 @@
  * @spec openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
  */
 
-import { test, expect } from '@playwright/test'
-import { go } from '../spec-coverage/_helpers'
+import { expect, test } from '@playwright/test'
+import { go } from '../spec-coverage/_helpers.ts'
 import {
+	API,
+	cleanupTemplates,
+	createTemplate,
+	deleteTemplate,
+	getTemplate,
 	harvestToken,
 	jsonHeaders,
-	API,
-	createTemplate,
-	getTemplate,
 	listTemplates,
-	deleteTemplate,
-	cleanupTemplates,
-	TEST_PREFIX,
 	TEST_FAMILY,
-} from './_fixtures'
+	TEST_PREFIX,
+} from './_fixtures.ts'
 
 // The views under test, named after the component files they cover. Routes are
 // unchanged — this makes the spec-to-component link readable in executable code

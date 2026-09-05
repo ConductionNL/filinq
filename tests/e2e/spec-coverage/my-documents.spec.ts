@@ -17,8 +17,8 @@
 
 // @e2e openspec/specs/document-register/spec.md#generated-correspondence-lifecycle
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers.ts'
 
 test.describe('document-register — my documents UI', () => {
 	test('My Documents page renders the Documents header and view toggle', async ({

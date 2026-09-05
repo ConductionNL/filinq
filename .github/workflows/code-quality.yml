@@ -142,6 +142,7 @@ permissions:
 
 jobs:
   quality:
+    if: (github.event_name != 'pull_request' || github.head_ref != 'development')
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: filinq

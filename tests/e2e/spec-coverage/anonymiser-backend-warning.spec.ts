@@ -32,8 +32,10 @@
  * (see the long comment in orphaned-surface-restoration.spec.ts).
  */
 
-import { test, expect, type Page, type APIRequestContext } from '@playwright/test'
-import { waitForNcContentReady, dismissOverlays, go } from './_helpers'
+import type { APIRequestContext, Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { dismissOverlays, go, waitForNcContentReady } from './_helpers.ts'
 
 const SETTINGS = '/index.php/settings/admin/filinq'
 const API_SETTINGS = '/index.php/apps/filinq/api/settings'

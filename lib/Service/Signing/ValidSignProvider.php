@@ -108,7 +108,7 @@ class ValidSignProvider implements SigningProviderInterface {
 	 * an authorization guard. No native caller — this is the external-provider
 	 * status-poll extension point (SigningProviderInterface::checkStatus),
 	 * currently a stub pending ValidSign integration; the live status surface
-	 * is OR's ApprovalChain via `SigningController::showRequest`. Classified as
+	 * is the signing request read via `SigningController::showRequest`. Classified as
 	 * a legit plugin seam in openspec/changes/orphan-auth-remediation/design.md.
 	 *
 	 * @param string $externalId The ValidSign package identifier

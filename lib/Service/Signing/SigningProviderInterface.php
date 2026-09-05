@@ -38,6 +38,8 @@ interface SigningProviderInterface {
 	 * Get the unique identifier for this provider
 	 *
 	 * @return string The provider identifier
+	 *
+	 * @spec openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md
 	 */
 	public function getIdentifier(): string;
 
@@ -69,7 +71,7 @@ interface SigningProviderInterface {
 	 * *read*, not an authorization guard. It intentionally has no native
 	 * caller — the async external-provider status-poll leg is a pluggable
 	 * extension point implemented by external providers (e.g. ValidSign) and
-	 * invoked through the provider flow, not the live OR-ApprovalChain status
+	 * invoked through the provider flow, not the live signing-request status
 	 * path (`SigningController::showRequest`). Classified as a legit plugin
 	 * seam in openspec/changes/orphan-auth-remediation/design.md.
 	 *

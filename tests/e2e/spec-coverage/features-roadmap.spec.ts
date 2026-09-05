@@ -12,8 +12,8 @@
 
 // @e2e openspec/specs/dashboard/spec.md#navigation-items-and-icons
 
-import { test, expect } from '@playwright/test'
-import { attachConsoleGuard, go, navClick } from './_helpers'
+import { expect, test } from '@playwright/test'
+import { attachConsoleGuard, go, navClick } from './_helpers.ts'
 
 test.describe('dashboard — features & roadmap page', () => {
 	test('Features & roadmap page renders its heading and actions', async ({
@@ -29,7 +29,11 @@ test.describe('dashboard — features & roadmap page', () => {
 			page.getByRole('button', { name: 'Show roadmap' }),
 		).toBeVisible()
 		await expect(
-			page.getByRole('button', { name: 'Suggest feature' }),
+			// A LINK, not a button. nextcloud-vue 2.36.4 removed the in-product
+			// suggestion modal (team decision 2026-09-04: the forge is where the
+			// conversation happens), and the CTA is an anchor to the forge's
+			// feature-request issue form now. An `<a href>` has role `link`.
+			page.getByRole('link', { name: 'Suggest feature' }),
 		).toBeVisible()
 
 		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual(
