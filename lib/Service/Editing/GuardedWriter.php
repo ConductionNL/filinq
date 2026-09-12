@@ -85,6 +85,47 @@ class GuardedWriter {
 	}//end __construct()
 
 	/**
+	 * The version token for a package.
+	 *
+	 * 🔴 WHY THIS IS NOT THE ETAG, and why it lives on the writer. The guard
+	 * below used `$file->getEtag()`, and built on it the guard was inert.
+	 * Measured in CI on 2026-09-07: a docx was read at etag
+	 * `e6748d599be5c05c06532bf4588bfc31`, edited successfully, and re-read in a
+	 * fresh request with visibly different text under the SAME etag. The next
+	 * edit then presented the original etag, the comparison found them equal,
+	 * and an edit built on text that no longer existed landed on top of the
+	 * intervening write. Nextcloud's etag is a cache-validity token derived
+	 * from the storage's metadata; a write inside one mtime tick need not move
+	 * it, and on that storage it did not.
+	 *
+	 * A version that only sometimes changes is worse than none, and the unit
+	 * tests were green throughout: each fed the comparison two different
+	 * literals and asserted it refused, which is a test of `!==`.
+	 *
+	 * A content hash cannot fail that way. Two packages that hash the same ARE
+	 * the same bytes, so a token that still matches means nothing was
+	 * overwritten, which is exactly what the caller is asserting.
+	 *
+	 * It is public and lives here rather than in a helper of its own because
+	 * this class is what CHECKS the token, so it is what gets to say what one
+	 * is. The read side asks for it through the same object.
+	 *
+	 * The `sha256:` prefix keeps an etag a stale client may still be holding
+	 * from matching: it is refused with "read it again", which is the safe
+	 * answer, rather than being compared against a hash.
+	 *
+	 * @param string $packageBytes The document package, exactly as read.
+	 *
+	 * @return string The version token.
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
+	 */
+	public function versionOf(string $packageBytes): string {
+		return 'sha256:' . hash('sha256', $packageBytes);
+
+	}//end versionOf()
+
+	/**
 	 * Hold the lock across the whole read-modify-write, and release it on every exit path.
 	 *
 	 * @param string $uid The acting user id.
@@ -122,7 +163,13 @@ class GuardedWriter {
 			// another editing SESSION; this closes the remaining window in which
 			// the file changed outside one. Refusing is correct -- this codec
 			// cannot merge, and guessing would be worse than stopping.
-			$current = $file->getEtag();
+			//
+			// The comparison is over the BYTES this session just read, not over
+			// the file's etag. An etag that fails to move after a write makes
+			// this check compare equal on a document that changed underneath
+			// the caller, and CI caught it doing exactly that. See
+			// versionOf() above for the measurement.
+			$current = $this->versionOf(packageBytes: $bytes);
 			if ($current !== $version) {
 				throw new RuntimeException(
 					'This document changed since you read it, so it was not edited. '
@@ -192,7 +239,12 @@ class GuardedWriter {
 			'fileId' => $target->getId(),
 			'name' => $target->getName(),
 			'path' => $this->userPath(uid: $uid, file: $target),
-			'version' => $target->getEtag(),
+			// The version of what was WRITTEN, taken from the bytes rather than
+			// re-read from the node: `putContent()` does not refresh the
+			// in-memory FileInfo, so the etag here was the pre-write one and
+			// the caller was handed a token for a document that no longer
+			// existed.
+			'version' => $this->versionOf(packageBytes: $bytes),
 		];
 
 	}//end write()

@@ -78,6 +78,16 @@ $extra = [
         // Dossier anonymization routes.
         ['name' => 'dossier#generateGrondslagenSummary', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
 
+        // Dossier management: index, detail, membership and lifecycle.
+        ['name' => 'dossierManagement#index', 'url' => 'api/dossiers', 'verb' => 'GET'],
+        ['name' => 'dossierManagement#create', 'url' => 'api/dossiers', 'verb' => 'POST'],
+        ['name' => 'dossierManagement#show', 'url' => 'api/dossiers/{dossierId}', 'verb' => 'GET'],
+        ['name' => 'dossierManagement#rename', 'url' => 'api/dossiers/{dossierId}/name', 'verb' => 'PUT'],
+        ['name' => 'dossierManagement#transition', 'url' => 'api/dossiers/{dossierId}/status', 'verb' => 'PUT'],
+        ['name' => 'dossierManagement#linkDocument', 'url' => 'api/dossiers/{dossierId}/documents', 'verb' => 'POST'],
+        ['name' => 'dossierManagement#removeDocument', 'url' => 'api/dossiers/{dossierId}/documents/{fileId}', 'verb' => 'DELETE'],
+        ['name' => 'dossierManagement#removalMode', 'url' => 'api/dossiers/{dossierId}/documents/{fileId}/removal-mode', 'verb' => 'GET'],
+
         // Batch anonymization routes.
         ['name' => 'batchAnonymization#folderBatch', 'url' => 'api/anonymization/batch/folder', 'verb' => 'POST'],
         ['name' => 'batchAnonymization#batchUpload', 'url' => 'api/anonymization/batch/upload', 'verb' => 'POST'],

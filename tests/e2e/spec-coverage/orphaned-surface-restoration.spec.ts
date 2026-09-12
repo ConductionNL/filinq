@@ -11,8 +11,8 @@
  * tests/unit/reachability.spec.js): Correspondence from the menu, the
  * signer-chain create form from the Signing Requests index primary
  * action, the verify page from a request detail, and the two policy
- * pages via deep link. Also asserts no policy menu entry exists yet
- * (menu ownership is deferred to publication-policy-labels-and-nav).
+ * pages via deep link, and both policy pages from the menu (that last
+ * assertion was inverted on 2026-09-06 — see the note above the test).
  *
  * ⚠️ WHY EVERY `@e2e` ANCHOR IN THIS FILE MOVED (and nothing else did)
  * --------------------------------------------------------------------
@@ -352,17 +352,52 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 		).toBeVisible()
 	})
 
-	test('no policy menu entry is introduced by this change', async ({ page }) => {
-		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#no-policy-menu-label-is-introduced-here
+	// ⚠️ THIS TEST WAS INVERTED, NOT DELETED (2026-09-06).
+	//
+	// It used to assert that NO policy menu entry existed, because menu
+	// ownership was deferred to `publication-policy-labels-and-nav`. That change
+	// was then ticked complete without delivering the nav half — its tasks edited
+	// `MainMenu.vue`, a file the manifest migration (ADR-037) had already
+	// removed — so the deferral never ended. The result was two fully built
+	// governance surfaces, with views, stores, modals, routes and translations,
+	// that a user could reach only by typing the URL, and a green e2e suite that
+	// depended on them staying that way.
+	//
+	// Inverting the assertion rather than removing the test keeps the surface
+	// under guard from the other side: if either entry is dropped again, this
+	// fails instead of quietly passing.
+	test('both policy surfaces are reachable from the navigation', async ({
+		page,
+	}) => {
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#the-policy-pages-are-reachable-from-the-menu
+		const guard = attachConsoleGuard(page)
 		await go(page, '')
-		const prohibitionsLink = page.locator(
-			'#app-navigation a[title="Publish never"], .app-navigation a[title="Publish never"]',
-		)
-		const standingConsentsLink = page.locator(
-			'#app-navigation a[title="Publish always"], .app-navigation a[title="Publish always"]',
-		)
-		await expect(prohibitionsLink).toHaveCount(0)
-		await expect(standingConsentsLink).toHaveCount(0)
+
+		await navClick(page, 'Publish always')
+		await expect(page).toHaveURL(/\/apps\/filinq\/policy\/standing-consents/)
+		await expect(
+			page.getByRole('heading', { name: 'Publish always' }),
+		).toBeVisible()
+
+		await go(page, '')
+		await navClick(page, 'Publish never')
+		await expect(page).toHaveURL(/\/apps\/filinq\/policy\/prohibitions/)
+		await expect(
+			page.getByRole('heading', { name: 'Publish never' }),
+		).toBeVisible()
+
+		// The Dashboard this navigation passes through fetches consents, and on
+		// an instance whose `publicationConsent_register` / `_schema` bindings
+		// are unset that endpoint answers 400 "PublicationConsent
+		// register/schema not configured". That is an unconfigured instance, not
+		// a defect in these surfaces, so it is filtered BY MESSAGE — a new
+		// console error on this route still fails this test.
+		const unconfiguredConsents = /Failed to fetch consents/
+		expect(
+			guard.errors.filter((e) => unconfiguredConsents.test(e) === false),
+			`console errors: ${guard.errors.join(' | ')}`,
+		).toEqual([])
+		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 })
 

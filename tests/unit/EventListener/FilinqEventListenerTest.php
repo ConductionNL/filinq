@@ -3,11 +3,11 @@
 /**
  * Unit tests for FilinqEventListener
  *
- * The listener is a service-locator shim: it resolves its collaborators from
- * the server container, logs the dispatch, routes the event to the matching
- * FilinqEventHandler method, and then runs the validation fallback. These
- * tests drive it through a fake container and assert the routing by observing
- * the effect on the injected PolicyRetroactiveService.
+ * The listener resolves its collaborators from the container it is given, logs
+ * the dispatch, routes the event to the matching FilinqEventHandler method, and
+ * then runs the validation fallback. These tests drive it through a per-test
+ * container mock and assert the routing by observing the effect on the
+ * PolicyRetroactiveService the container hands back.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener
@@ -54,6 +54,7 @@ use Psr\Log\LoggerInterface;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class FilinqEventListenerTest extends TestCase {
+	use RegistersContainerServices;
 
 	/**
 	 * The listener under test.
@@ -63,21 +64,21 @@ class FilinqEventListenerTest extends TestCase {
 	private FilinqEventListener $listener;
 
 	/**
-	 * Mock logger resolved from the fake container.
+	 * Mock logger resolved from the container mock.
 	 *
 	 * @var MockObject&LoggerInterface
 	 */
 	private MockObject $logger;
 
 	/**
-	 * Mock metadata service resolved from the fake container.
+	 * Mock metadata service resolved from the container mock.
 	 *
 	 * @var MockObject&MetadataService
 	 */
 	private MockObject $metadataService;
 
 	/**
-	 * Mock settings service resolved from the fake container.
+	 * Mock settings service resolved from the container mock.
 	 *
 	 * @var MockObject&SettingsService
 	 */
@@ -89,13 +90,6 @@ class FilinqEventListenerTest extends TestCase {
 	 * @var MockObject&PolicyRetroactiveService
 	 */
 	private MockObject $retroactive;
-
-	/**
-	 * The previous \OC::$server value, restored in tearDown().
-	 *
-	 * @var object|null
-	 */
-	private ?object $previousServer = null;
 
 	/**
 	 * Set up test environment
@@ -120,27 +114,14 @@ class FilinqEventListenerTest extends TestCase {
 			]
 		);
 
-		$this->previousServer = \OC::$server;
 		$this->installContainer();
 
-		$this->listener = new FilinqEventListener();
+		$this->listener = new FilinqEventListener(container: $this->containerMock());
 
 	}//end setUp()
 
 	/**
-	 * Restore the global service locator so tests stay independent.
-	 *
-	 * @return void
-	 */
-	protected function tearDown(): void {
-		\OC::$server = $this->previousServer;
-
-		parent::tearDown();
-
-	}//end tearDown()
-
-	/**
-	 * Install a fake service locator over this test's mocks.
+	 * Register this test's mocks on the per-test container.
 	 *
 	 * Anything the listener does not itself resolve — notably the services the
 	 * ValidationRunner fallback asks for — throws, which is exactly what an
@@ -149,62 +130,20 @@ class FilinqEventListenerTest extends TestCase {
 	 * @return void
 	 */
 	private function installContainer(): void {
-		$services = [
-			LoggerInterface::class => $this->logger,
-			MetadataService::class => $this->metadataService,
-			SettingsService::class => $this->settingsService,
-			PolicyRetroactiveService::class => $this->retroactive,
-		];
-
-		\OC::$server = new class($services) {
-
-			/**
-			 * Constructor.
-			 *
-			 * @param array<string, object> $services The resolvable services.
-			 */
-			public function __construct(
-				private readonly array $services,
-			) {
-			}
-
-			/**
-			 * Resolve a service.
-			 *
-			 * @param string $id The requested class name.
-			 *
-			 * @return object
-			 */
-			public function get(string $id): object {
-				if (isset($this->services[$id]) === false) {
-					throw new \Exception('Service not registered: ' . $id);
-				}
-
-				return $this->services[$id];
-			}
-		};
+		$this->registerService(LoggerInterface::class, fn (): object => $this->logger);
+		$this->registerService(MetadataService::class, fn (): object => $this->metadataService);
+		$this->registerService(SettingsService::class, fn (): object => $this->settingsService);
+		$this->registerService(PolicyRetroactiveService::class, fn (): object => $this->retroactive);
 
 	}//end installContainer()
 
 	/**
-	 * Install a fake service locator whose every lookup fails.
+	 * Leave the container resolving nothing at all.
 	 *
 	 * @return void
 	 */
 	private function installFailingContainer(): void {
-		\OC::$server = new class {
-
-			/**
-			 * Resolve a service — always fails.
-			 *
-			 * @param string $id The requested class name.
-			 *
-			 * @return object
-			 */
-			public function get(string $id): object {
-				throw new \Exception('Container unavailable for ' . $id);
-			}
-		};
+		$this->forgetServices();
 
 	}//end installFailingContainer()
 
@@ -389,34 +328,8 @@ class FilinqEventListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testHandleLogsAnErrorWhenAServiceCannotBeResolved(): void {
-		$logger = $this->logger;
-		\OC::$server = new class($logger) {
-
-			/**
-			 * Constructor.
-			 *
-			 * @param LoggerInterface $logger The only resolvable service.
-			 */
-			public function __construct(
-				private readonly LoggerInterface $logger,
-			) {
-			}
-
-			/**
-			 * Resolve a service — only the logger is available.
-			 *
-			 * @param string $id The requested class name.
-			 *
-			 * @return object
-			 */
-			public function get(string $id): object {
-				if ($id === LoggerInterface::class) {
-					return $this->logger;
-				}
-
-				throw new \Exception('Service not registered: ' . $id);
-			}
-		};
+		$this->forgetServices();
+		$this->registerService(LoggerInterface::class, fn (): object => $this->logger);
 
 		$captured = [];
 		$this->logger->expects($this->once())

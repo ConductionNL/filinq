@@ -30,6 +30,7 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -44,8 +45,12 @@ use Psr\Log\LoggerInterface;
 class FilinqEventListener implements IEventListener {
 	/**
 	 * Constructor for FilinqEventListener
+	 *
+	 * @param ContainerInterface $container App container this listener's collaborators are resolved from.
 	 */
-	public function __construct() {
+	public function __construct(
+		private readonly ContainerInterface $container,
+	) {
 
 	}//end __construct()
 
@@ -58,11 +63,11 @@ class FilinqEventListener implements IEventListener {
 	 */
 	public function handle(Event $event): void {
 		try {
-			$logger = \OC::$server->get(LoggerInterface::class);
-			$metadataService = \OC::$server->get(MetadataService::class);
-			$settingsService = \OC::$server->get(SettingsService::class);
-			$retroactive = \OC::$server->get(PolicyRetroactiveService::class);
-			$eventHandler = new FilinqEventHandler();
+			$logger = $this->container->get(LoggerInterface::class);
+			$metadataService = $this->container->get(MetadataService::class);
+			$settingsService = $this->container->get(SettingsService::class);
+			$retroactive = $this->container->get(PolicyRetroactiveService::class);
+			$eventHandler = new FilinqEventHandler(container: $this->container);
 
 			$logger->info(
 				'Filinq: Processing event',
@@ -86,7 +91,7 @@ class FilinqEventListener implements IEventListener {
 			// directly, compute + store the verdict here. The listener only
 			// resolves services and delegates; all validation logic lives in
 			// DocumentValidationService, all orchestration in ValidationRunner.
-			(new ValidationRunner())->runFallbackForEvent(
+			(new ValidationRunner(container: $this->container))->runFallbackForEvent(
 				event: $event,
 				metadataService: $metadataService,
 				logger: $logger
@@ -173,11 +178,11 @@ class FilinqEventListener implements IEventListener {
 	 * @return void
 	 *
 	 * @psalm-suppress UnusedParam $exception and $event are passed to the runtime-resolved logger,
-	 *                             but Psalm cannot see the call because \OC::$server->get() is mixed.
+	 *                             but Psalm cannot see the call because the container returns mixed.
 	 */
 	private function logHandlerError(\Throwable $exception, Event $event): void {
 		try {
-			$logger = \OC::$server->get(LoggerInterface::class);
+			$logger = $this->container->get(LoggerInterface::class);
 			$logger->error(
 				'Filinq: Error in event handler',
 				[

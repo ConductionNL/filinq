@@ -170,4 +170,80 @@ class GuardedWriterTest extends TestCase {
 		$this->assertSame('original bytes', $seen['bytes']);
 		$this->assertSame('odt', $seen['ext']);
 	}//end testTheTransformSeesTheCurrentBytesAndExtension()
+	/**
+	 * 🔴 THE CASE THE OLD GUARD COULD NOT SEE. The etag is unchanged and the
+	 * CONTENT is not, and the write must still be refused.
+	 *
+	 * This is what happened in CI on 2026-09-07. A docx was read at etag
+	 * `e6748d59…`, edited, and re-read in a fresh request with visibly
+	 * different text under the SAME etag. The next edit presented the original
+	 * etag, `$file->getEtag() !== $version` compared equal, and an edit built
+	 * on text that no longer existed overwrote the intervening one.
+	 *
+	 * Every existing test above passed throughout, because each hands the
+	 * comparison two literally different strings. That is a test of `!==`, not
+	 * of the property, and it is why the guard could be inert for as long as it
+	 * was. This one pins the property: the token names the BYTES.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
+	 */
+	public function testAnUnchangedEtagOverChangedContentStillRefuses(): void {
+		$writer = $this->writer();
+
+		// What the caller read, and what it will present.
+		$read = $writer->versionOf(packageBytes: 'original bytes');
+
+		// The file now holds different bytes under an etag that never moved.
+		// The etag is set to the token the caller presents, which is what an
+		// etag-based guard compares and finds equal: without that, this double
+		// would refuse for the wrong reason and the test would pass against
+		// the defect it is here to catch.
+		$file = $this->createMock(File::class);
+		$file->method('getEtag')->willReturn($read);
+		$file->method('getExtension')->willReturn('odt');
+		$file->method('getContent')->willReturn('somebody else wrote this');
+		$file->method('getId')->willReturn(42);
+		$file->method('getName')->willReturn('report.odt');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('/changed since you read it/');
+
+		$writer->runSession(
+			uid: 'alice',
+			file: $file,
+			transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited', 'applied' => []],
+			version: $read,
+			mode: 'inplace'
+		);
+
+	}//end testAnUnchangedEtagOverChangedContentStillRefuses()
+
+	/**
+	 * The matching case, so the test above is not green merely because the
+	 * guard refuses everything: a token that names the current bytes is
+	 * accepted, and the answer carries a token for what was written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-an-in-place-write-is-guarded-by-the-lock-and-a-version-precondition
+	 */
+	public function testACurrentVersionIsAcceptedAndAnswersWithTheNewOne(): void {
+		$writer = $this->writer();
+
+		$result = $writer->runSession(
+			uid: 'alice',
+			file: $this->file('etag-now'),
+			transform: static fn (string $bytes, string $ext): array => ['bytes' => 'edited bytes', 'applied' => []],
+			version: $writer->versionOf(packageBytes: 'original bytes'),
+			mode: 'inplace'
+		);
+
+		// The token answers for the bytes that were WRITTEN. It used to be
+		// re-read from the node, which `putContent()` does not refresh, so the
+		// caller was handed the version of the document it had just replaced.
+		$this->assertSame($writer->versionOf(packageBytes: 'edited bytes'), $result['version']);
+
+	}//end testACurrentVersionIsAcceptedAndAnswersWithTheNewOne()
 }//end class

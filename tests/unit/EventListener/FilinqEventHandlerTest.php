@@ -53,6 +53,7 @@ use Psr\Log\LoggerInterface;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class FilinqEventHandlerTest extends TestCase {
+	use RegistersContainerServices;
 
 	/**
 	 * The handler under test.
@@ -97,13 +98,6 @@ class FilinqEventHandlerTest extends TestCase {
 	private MockObject $retroactive;
 
 	/**
-	 * The previous \OC::$server value, restored in tearDown().
-	 *
-	 * @var object|null
-	 */
-	private ?object $previousServer = null;
-
-	/**
 	 * Set up test environment
 	 *
 	 * @return void
@@ -117,23 +111,12 @@ class FilinqEventHandlerTest extends TestCase {
 		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$this->retroactive = $this->createMock(originalClassName: PolicyRetroactiveService::class);
 
-		$this->handler = new FilinqEventHandler(enrichmentRunner: $this->enrichmentRunner);
-
-		$this->previousServer = \OC::$server;
+		$this->handler = new FilinqEventHandler(
+			container: $this->containerMock(),
+			enrichmentRunner: $this->enrichmentRunner
+		);
 
 	}//end setUp()
-
-	/**
-	 * Restore the global service locator so tests stay independent.
-	 *
-	 * @return void
-	 */
-	protected function tearDown(): void {
-		\OC::$server = $this->previousServer;
-
-		parent::tearDown();
-
-	}//end tearDown()
 
 	/**
 	 * Build an ObjectEntity carrying the supplied payload.
@@ -161,7 +144,10 @@ class FilinqEventHandlerTest extends TestCase {
 	}//end makeObject()
 
 	/**
-	 * Install a fake service locator resolving exactly one class.
+	 * Register exactly one class on the per-test container.
+	 *
+	 * Anything else the handler asks for throws, which is what a real container
+	 * does for a service the instance does not have.
 	 *
 	 * @param string $class The class the container answers for.
 	 * @param object $service The instance to return.
@@ -169,35 +155,8 @@ class FilinqEventHandlerTest extends TestCase {
 	 * @return void
 	 */
 	private function installContainer(string $class, object $service): void {
-		\OC::$server = new class($class, $service) {
-
-			/**
-			 * Constructor.
-			 *
-			 * @param string $class The resolvable class name.
-			 * @param object $service The instance to hand back.
-			 */
-			public function __construct(
-				private readonly string $class,
-				private readonly object $service,
-			) {
-			}
-
-			/**
-			 * Resolve a service.
-			 *
-			 * @param string $id The requested class name.
-			 *
-			 * @return object
-			 */
-			public function get(string $id): object {
-				if ($id !== $this->class) {
-					throw new \Exception('Unexpected service requested: ' . $id);
-				}
-
-				return $this->service;
-			}
-		};
+		$this->forgetServices();
+		$this->registerService($class, static fn (): object => $service);
 
 	}//end installContainer()
 
@@ -240,7 +199,10 @@ class FilinqEventHandlerTest extends TestCase {
 	 * @return void
 	 */
 	public function testHandlerUsesADefaultEnrichmentRunner(): void {
-		$this->assertInstanceOf(expected: FilinqEventHandler::class, actual: new FilinqEventHandler());
+		$this->assertInstanceOf(
+			expected: FilinqEventHandler::class,
+			actual: new FilinqEventHandler(container: $this->containerMock())
+		);
 
 	}//end testHandlerUsesADefaultEnrichmentRunner()
 
