@@ -107,7 +107,25 @@ class UnifiedSearchConsistencyTest extends TestCase {
 	}//end deepLinksBySchema()
 
 	/**
-	 * Only navigable schemas stay searchable: exactly template + signingRequest.
+	 * Only navigable schemas stay searchable.
+	 *
+	 * The set grew from two to five on 2026-09-07. `searchable` and `deepLinks`
+	 * are two halves of one property — being NAVIGABLE — and the invariant below
+	 * is what keeps them from drifting: a searchable schema with no deep link is
+	 * a dead search result, and a deep link on a non-searchable schema is a route
+	 * nothing reaches.
+	 *
+	 * `dossier` became navigable when the dossier surface was built (it had a
+	 * schema, a spec and a controller but no page). `publicationConsent` and
+	 * `customDictionary` already HAD detail pages; they simply had no deep link,
+	 * so an OpenRegister object of either type had no route back to the app that
+	 * owns it.
+	 *
+	 * ⚠️ `publicationConsent` holds GDPR records about identified people, and
+	 * making it searchable is a deliberate decision, not a consequence. Results
+	 * are scoped by the schema's own authorization cascade, which restricts
+	 * `read` (register v7.9.0). Widening this list again is the same decision
+	 * and deserves the same thought.
 	 *
 	 * @return void
 	 */
@@ -115,9 +133,10 @@ class UnifiedSearchConsistencyTest extends TestCase {
 		$searchable = $this->searchableSchemas();
 		sort($searchable);
 		$this->assertSame(
-			['signingRequest', 'template'],
+			['customDictionary', 'dossier', 'publicationConsent', 'signingRequest', 'template'],
 			$searchable,
-			'Only template + signingRequest may remain searchable (every other schema must be searchable:false to avoid dead Unified Search results)'
+			'Only navigable schemas may be searchable — every other schema must be '
+			. 'searchable:false to avoid dead Unified Search results'
 		);
 
 	}//end testOnlyNavigableSchemasAreSearchable()

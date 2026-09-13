@@ -32,6 +32,7 @@ use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -47,6 +48,7 @@ class FilinqEventHandler {
 	/**
 	 * Constructor for FilinqEventHandler
 	 *
+	 * @param ContainerInterface $container App container the legal-bases summary service is resolved from.
 	 * @param EnrichmentRunner $enrichmentRunner The enrichment runner. Defaults to a
 	 *                                           fresh stateless instance; injectable
 	 *                                           so tests can substitute a double.
@@ -54,6 +56,7 @@ class FilinqEventHandler {
 	 * @return void
 	 */
 	public function __construct(
+		private readonly ContainerInterface $container,
 		private readonly EnrichmentRunner $enrichmentRunner = new EnrichmentRunner(),
 	) {
 
@@ -223,7 +226,7 @@ class FilinqEventHandler {
 		}
 
 		try {
-			$service = \OC::$server->get(LegalBasesSummaryService::class);
+			$service = $this->container->get(LegalBasesSummaryService::class);
 			$service->renderDossierSummary(dossierUuid: $dossierUuid);
 		} catch (\Throwable $e) {
 			$logger->warning(

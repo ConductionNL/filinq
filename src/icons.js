@@ -39,6 +39,8 @@ import History from 'vue-material-design-icons/History.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Publish from 'vue-material-design-icons/Publish.vue'
+import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
@@ -78,6 +80,12 @@ export default {
 	MapMarkerPath,
 	Palette,
 	Plus,
+	// The two publication-policy menu entries. Both pages existed and were
+	// routable for months with no way in: an unregistered icon renders NOTHING
+	// in the navigation (rule 3 above), so adding the menu entry without these
+	// two lines would have put a nameless blank row where each entry belongs.
+	Publish,
+	PublishOff,
 	ShieldCheck,
 	ShieldLockOutline,
 	SignatureFreehand,

@@ -158,6 +158,114 @@ class DossierRegisterConfigTest extends TestCase {
 		$this->assertSame('string', $dossier['properties']['bases']['items']['type']);
 	}
 
+	/**
+	 * `status` and `documents` are OPTIONAL and additive.
+	 *
+	 * Both were added for the dossier-management surface and existing objects
+	 * were deliberately not migrated. Making either required would refuse every
+	 * dossier already stored, on a schema with `hardValidation: true`.
+	 *
+	 * @return void
+	 */
+	public function testStatusAndDocumentsAreOptionalAndAdditive(): void {
+		$dossier = $this->config['components']['schemas']['dossier'];
+
+		$this->assertArrayHasKey('status', $dossier['properties']);
+		$this->assertArrayHasKey('documents', $dossier['properties']);
+		$this->assertNotContains('status', $dossier['required'] ?? []);
+		$this->assertNotContains('documents', $dossier['required'] ?? []);
+
+		$this->assertSame('array', $dossier['properties']['documents']['type']);
+		$this->assertSame('string', $dossier['properties']['documents']['items']['type']);
+		$this->assertArrayNotHasKey(
+			'minItems',
+			$dossier['properties']['documents'],
+			'A dossier with no explicit members is valid — membership can come from the bound folder alone.'
+		);
+	}
+
+	/**
+	 * The lifecycle declares exactly the six transitions the UI offers.
+	 *
+	 * OpenRegister's guard is the authority; DossierManagementService mirrors
+	 * this map so it can offer only the legal targets. The two drifting apart
+	 * is how a UI comes to offer a transition the server then refuses, so the
+	 * declaration is pinned here.
+	 *
+	 * @return void
+	 */
+	public function testDossierLifecycleDeclaresTheCanonicalTransitions(): void {
+		$dossier = $this->config['components']['schemas']['dossier'];
+		$this->assertArrayHasKey('x-openregister-lifecycle', $dossier);
+
+		$lifecycle = $dossier['x-openregister-lifecycle'];
+		$this->assertSame('status', $lifecycle['field']);
+		$this->assertSame('open', $lifecycle['initialState'], 'A new dossier starts open.');
+
+		$this->assertSame(
+			['open', 'in-review', 'processed', 'published', 'closed'],
+			array_keys($lifecycle['states'])
+		);
+
+		$edges = [];
+		foreach ($lifecycle['transitions'] as $transition) {
+			$edges[] = $transition['from'] . '->' . $transition['to'];
+		}
+
+		sort($edges);
+		$this->assertSame(
+			[
+				'in-review->open',
+				'in-review->processed',
+				'open->in-review',
+				'processed->closed',
+				'processed->published',
+				'published->closed',
+			],
+			$edges
+		);
+	}
+
+	/**
+	 * Every declared status is one the enum admits, and vice versa.
+	 *
+	 * A state the enum rejects can never be written; an enum value with no
+	 * state is a status the lifecycle cannot reason about. Either mismatch is
+	 * silent until someone tries the transition.
+	 *
+	 * @return void
+	 */
+	public function testStatusEnumAndLifecycleStatesAgree(): void {
+		$dossier = $this->config['components']['schemas']['dossier'];
+
+		$enum = $dossier['properties']['status']['enum'];
+		$states = array_keys($dossier['x-openregister-lifecycle']['states']);
+
+		sort($enum);
+		sort($states);
+		$this->assertSame($states, $enum);
+	}
+
+	/**
+	 * The register version was bumped, or nothing reaches an existing install.
+	 *
+	 * SettingsInitializer gates the import on `info.version` against the stored
+	 * configuration_version, strictly greater. A schema change shipped without a
+	 * bump is inert on every install that already has the register — no error
+	 * anywhere, the new properties simply never arrive.
+	 *
+	 * @return void
+	 */
+	public function testRegisterVersionCoversTheLifecycleAddition(): void {
+		$version = $this->config['info']['version'];
+
+		$this->assertTrue(
+			version_compare($version, '8.2.0', '>='),
+			'The dossier lifecycle + membership properties shipped in register v8.2.0; '
+			. 'a lower version means they never reach an existing install. Found: ' . $version
+		);
+	}
+
 	public function testBaseSchemaHasRequiredNameAndDescription(): void {
 		$schemas = $this->config['components']['schemas'] ?? [];
 		$this->assertArrayHasKey('base', $schemas);

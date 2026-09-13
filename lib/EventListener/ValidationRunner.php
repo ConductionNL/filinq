@@ -35,6 +35,7 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -50,6 +51,17 @@ use Throwable;
  * @spec openspec/specs/document-validation-checks/spec.md
  */
 class ValidationRunner {
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container App container the validation service and root folder are resolved from.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+	) {
+
+	}//end __construct()
+
 	/**
 	 * Run the validation-verdict fallback for an object create/update event.
 	 *
@@ -82,9 +94,9 @@ class ValidationRunner {
 		try {
 			$this->validateObject(
 				object: $object,
-				validationService: \OC::$server->get(DocumentValidationService::class),
+				validationService: $this->container->get(DocumentValidationService::class),
 				metadataService: $metadataService,
-				rootFolder: \OC::$server->get(IRootFolder::class),
+				rootFolder: $this->container->get(IRootFolder::class),
 				logger: $logger,
 				logContext: 'validation fallback'
 			);

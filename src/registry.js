@@ -60,6 +60,7 @@
  */
 
 import PrintPreview from './components/PrintPreview.vue'
+import DossierFormModal from './dialogs/DossierFormModal.vue'
 import ProhibitionFormModal from './dialogs/ProhibitionFormModal.vue'
 import StandingConsentFormModal from './dialogs/StandingConsentFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
@@ -71,6 +72,8 @@ import CorrespondenceIndex from './views/correspondence/CorrespondenceIndex.vue'
 import CustomDictionaryDetail from './views/customDictionary/CustomDictionaryDetail.vue'
 import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryIndex.vue'
 import DashboardIndex from './views/dashboard/DashboardIndex.vue'
+import DossierDetail from './views/dossier/DossierDetail.vue'
+import DossierIndex from './views/dossier/DossierIndex.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
@@ -109,5 +112,8 @@ export default {
 	StandingConsentIndex: { kind: 'page', component: StandingConsentIndex },
 	StandingConsentFormModal: { kind: 'modal', component: StandingConsentFormModal },
 	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },
+	DossierIndex: { kind: 'page', component: DossierIndex },
+	DossierDetail: { kind: 'page', component: DossierDetail },
+	DossierFormModal: { kind: 'modal', component: DossierFormModal },
 	CustomDictionaryDetail: { kind: 'page', component: CustomDictionaryDetail },
 }

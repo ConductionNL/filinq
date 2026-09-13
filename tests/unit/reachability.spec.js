@@ -93,11 +93,6 @@ const KNOWN_HEADLESS = [
 	},
 	{
 		kind: 'orphaned-view',
-		file: 'src/views/consent/StandingConsentIndex.vue',
-		reason: 'legacy-duplicate: a second, incompatible StandingConsentIndex (consentStore/scope=entity model + its own exclusive src/modals/CreateStandingConsentModal.vue) superseded by the PolicyController-backed src/views/policy/StandingConsentIndex.vue this change registers. Was orphaned even under the old dead router. Not deleted (minimal-touch restoration, not a cleanup pass) and not registered (would collide with the canonical policy/ page of the same component name) — tracked for a follow-up cleanup decision.',
-	},
-	{
-		kind: 'orphaned-view',
 		file: 'src/views/templates/TemplateIndex.vue',
 		reason: 'legacy-dangling-registration: superseded by the type:"index" Templates page (Phase 8 decomposition — see that page\'s _note in src/manifest.json); owned-by:office-template-authoring, which plans further changes to this exact file. Not registered (would be a dangling registry entry again) or deleted (another active change depends on it) here.',
 	},

@@ -1639,6 +1639,23 @@ interface Folder extends Node {
 }//end interface
 
 /**
+ * Stub for OCP\Files\FileInfo
+ *
+ * Only the two type constants, which are what `Node::getType()` answers with.
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+interface FileInfo {
+	public const TYPE_FILE = 'file';
+
+	public const TYPE_FOLDER = 'dir';
+}//end interface
+
+/**
  * Stub for OCP\Files\Node
  *
  * @category Tests
@@ -1649,6 +1666,43 @@ interface Folder extends Node {
  */
 interface Node {
 	public function getName(): string;
+
+	/**
+	 * `FileInfo::TYPE_FILE` or `FileInfo::TYPE_FOLDER`.
+	 *
+	 * Declared here rather than only on File because the real OCP declares it
+	 * here, and DossierFileService::enumerateFolder() asks a Folder's
+	 * DIRECTORY LISTING for it: the listing is Nodes, and telling a file from
+	 * a subfolder is the whole point of that filter. A stub that narrows the
+	 * real interface makes such a test unwritable, which is how the method
+	 * stayed untested.
+	 *
+	 * @return string
+	 */
+	public function getType(): string;
+
+	/**
+	 * The node's parent folder.
+	 *
+	 * @return \OCP\Files\Folder
+	 */
+	public function getParent(): \OCP\Files\Folder;
+
+	/**
+	 * Move this node to a new absolute path.
+	 *
+	 * @param string $targetPath The absolute target path.
+	 *
+	 * @return \OCP\Files\Node The moved node.
+	 */
+	public function move(string $targetPath): \OCP\Files\Node;
+
+	/**
+	 * Remove this node, through the trashbin when one is enabled.
+	 *
+	 * @return void
+	 */
+	public function delete(): void;
 
 	public function getPath(): string;
 

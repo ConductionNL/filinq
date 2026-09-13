@@ -138,10 +138,19 @@ makes the pages resolve and be reachable.
 - THEN the prohibition list and standing-consent list render against the live `PolicyController` routes, with their form modals functional
 - @e2e tests/e2e/spec-coverage/orphaned-surface-restoration.spec.ts
 
-#### Scenario: No policy menu label is introduced here
+#### Scenario: The policy pages are reachable from the menu
 
-- GIVEN this change is applied without `publication-policy-labels-and-nav`
-- WHEN the navigation menu is inspected
-- THEN no policy menu entry is added by this change (menu ownership belongs to the labels/nav change), while the pages remain deep-link reachable and guard-clean
-- @e2e exclude negative navigation assertion (absence of a menu entry) — covered by a manifest unit assertion in the reachability guard test
+- GIVEN the restored policy registrations and their manifest menu entries
+- WHEN a user opens the navigation
+- THEN "Publish always" and "Publish never" are listed beside Consent Management, and each opens its list page guard-clean
+- @e2e tests/e2e/spec-coverage/orphaned-surface-restoration.spec.ts
+
+> Superseded the earlier "No policy menu label is introduced here" scenario on
+> 2026-09-06. Menu ownership had been deferred to
+> `publication-policy-labels-and-nav`, which was then ticked complete without
+> delivering it — its navigation tasks edited `MainMenu.vue`, a file the
+> manifest migration (ADR-037) had already removed. The deferral therefore never
+> ended, and the negative assertion above turned a temporary gap into a
+> guarded one: two fully built governance surfaces stayed reachable by
+> hand-typed URL only, with the e2e suite green because of it.
 

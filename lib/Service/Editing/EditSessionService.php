@@ -154,8 +154,9 @@ class EditSessionService {
 	 */
 	public function openForAgent(string $uid, int $fileId): array {
 		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
+		$bytes = $this->readBytes(file: $file);
 		$read = $this->codecs->text->readBlocks(
-			packageBytes: $this->readBytes(file: $file),
+			packageBytes: $bytes,
 			extension: $file->getExtension()
 		);
 
@@ -165,6 +166,7 @@ class EditSessionService {
 			items: $read['blocks'],
 			countKey: 'blockCount',
 			itemsKey: 'blocks',
+			packageBytes: $bytes,
 			extra: ['format' => $read['format']]
 		);
 	}//end openForAgent()
@@ -181,6 +183,7 @@ class EditSessionService {
 	 * @param array<int, mixed> $items Everything the codec read.
 	 * @param string $countKey The envelope key for the total count.
 	 * @param string $itemsKey The envelope key for the items.
+	 * @param string $packageBytes The bytes the items were read from.
 	 * @param array<string, mixed> $extra Format-specific additions.
 	 *
 	 * @return array<string, mixed> The envelope.
@@ -191,6 +194,7 @@ class EditSessionService {
 		array $items,
 		string $countKey,
 		string $itemsKey,
+		string $packageBytes,
 		array $extra = [],
 	): array {
 		$total = count($items);
@@ -203,7 +207,11 @@ class EditSessionService {
 			'fileId' => $file->getId(),
 			'name' => $file->getName(),
 			'path' => $this->userPath(uid: $uid, file: $file),
-			'version' => $file->getEtag(),
+			// The token is minted from the BYTES that produced these items, so
+			// what the caller hands back names the document it actually read.
+			// It was the etag, which does not always move on a write — see
+			// GuardedWriter::versionOf().
+			'version' => $this->writer->versionOf(packageBytes: $packageBytes),
 			$countKey => $total,
 			'truncated' => $truncated,
 			$itemsKey => $items,
@@ -276,15 +284,18 @@ class EditSessionService {
 			formats: 'ods, xlsx'
 		);
 
+		$bytes = $this->readBytes(file: $file);
+
 		return $this->openEnvelope(
 			uid: $uid,
 			file: $file,
 			items: $this->codecs->spreadsheet->readCells(
-				packageBytes: $this->readBytes(file: $file),
+				packageBytes: $bytes,
 				extension: $file->getExtension()
 			),
 			countKey: 'cellCount',
-			itemsKey: 'cells'
+			itemsKey: 'cells',
+			packageBytes: $bytes
 		);
 	}//end openSpreadsheetForAgent()
 
@@ -364,15 +375,18 @@ class EditSessionService {
 			formats: 'pptx, odp'
 		);
 
+		$bytes = $this->readBytes(file: $file);
+
 		return $this->openEnvelope(
 			uid: $uid,
 			file: $file,
 			items: $this->codecs->presentation->readShapes(
-				packageBytes: $this->readBytes(file: $file),
+				packageBytes: $bytes,
 				extension: $file->getExtension()
 			),
 			countKey: 'shapeCount',
-			itemsKey: 'shapes'
+			itemsKey: 'shapes',
+			packageBytes: $bytes
 		);
 	}//end openPresentationForAgent()
 
@@ -427,15 +441,16 @@ class EditSessionService {
 	 */
 	public function readMetadataForAgent(string $uid, int $fileId): array {
 		$file = $this->resolveFile(uid: $uid, fileId: $fileId);
+		$bytes = $this->readBytes(file: $file);
 
 		return [
 			'fileId' => $file->getId(),
 			'name' => $file->getName(),
 			'path' => $this->userPath(uid: $uid, file: $file),
-			'version' => $file->getEtag(),
+			'version' => $this->writer->versionOf(packageBytes: $bytes),
 			'editable' => ($file->isUpdateable() === true),
 			'metadata' => $this->metadata->readMetadata(
-				packageBytes: $this->readBytes(file: $file),
+				packageBytes: $bytes,
 				extension: $file->getExtension()
 			),
 		];

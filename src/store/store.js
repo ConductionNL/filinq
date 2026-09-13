@@ -19,6 +19,7 @@ import pinia from '../pinia.js'
 import { useAnonymizationStore } from './modules/anonymization.js'
 import { useConsentStore } from './modules/consent.js'
 import { useCustomDictionaryStore } from './modules/customDictionary.js'
+import { useDossierStore } from './modules/dossier.js'
 import { useFileViewerStore } from './modules/fileViewer.js'
 import { useFolderAnonymizationStore } from './modules/folderAnonymization.js'
 import { useMyDocumentsStore } from './modules/myDocuments.js'
@@ -57,6 +58,7 @@ const fileViewerStore = useFileViewerStore(pinia)
 const prohibitionStore = useProhibitionStore(pinia)
 const standingConsentStore = useStandingConsentStore(pinia)
 const customDictionaryStore = useCustomDictionaryStore(pinia)
+const dossierStore = useDossierStore(pinia)
 
 // OR-backed object types declared by lib/Settings/filinq_register.json.
 // Triple is (consumer-facing slug, OR schema slug, OR register slug).
@@ -116,6 +118,7 @@ export {
 	anonymizationStore,
 	consentStore,
 	customDictionaryStore,
+	dossierStore,
 	fileViewerStore,
 	folderAnonymizationStore,
 	initializeStores,

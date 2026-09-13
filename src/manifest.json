@@ -63,6 +63,20 @@
 			"order": 20
 		},
 		{
+			"id": "StandingConsents",
+			"label": "Publish always",
+			"icon": "Publish",
+			"route": "StandingConsents",
+			"order": 22
+		},
+		{
+			"id": "Prohibitions",
+			"label": "Publish never",
+			"icon": "PublishOff",
+			"route": "Prohibitions",
+			"order": 24
+		},
+		{
 			"id": "Anonymization",
 			"label": "Anonymization",
 			"icon": "EyeOffOutline",
@@ -82,6 +96,13 @@
 			"icon": "FolderOutline",
 			"route": "FolderAnonymization",
 			"order": 40
+		},
+		{
+			"id": "Dossiers",
+			"label": "Dossiers",
+			"icon": "FolderAccount",
+			"route": "Dossiers",
+			"order": 45
 		},
 		{
 			"id": "Templates",
@@ -164,6 +185,24 @@
 			"schemaSlug": "signingRequest",
 			"urlTemplate": "/apps/filinq/signing/{uuid}",
 			"displayName": "Signing request"
+		},
+		{
+			"registerSlug": "filinq",
+			"schemaSlug": "publicationConsent",
+			"urlTemplate": "/apps/filinq/consent/{uuid}",
+			"displayName": "Publication consent"
+		},
+		{
+			"registerSlug": "filinq",
+			"schemaSlug": "dossier",
+			"urlTemplate": "/apps/filinq/dossiers/{uuid}",
+			"displayName": "Dossier"
+		},
+		{
+			"registerSlug": "filinq",
+			"schemaSlug": "customDictionary",
+			"urlTemplate": "/apps/filinq/custom-dictionaries/{uuid}",
+			"displayName": "Custom dictionary"
 		}
 	],
 	"pages": [
@@ -237,6 +276,22 @@
 			"title": "Folder Analysis",
 			"component": "FolderAnonymizationView",
 			"_note": "Folder-level anonymization scan; fetches via folderAnonymizationStore (filinq API); type:custom preserves the existing data path."
+		},
+		{
+			"id": "Dossiers",
+			"route": "/dossiers",
+			"type": "custom",
+			"title": "Dossiers",
+			"component": "DossierIndex",
+			"_note": "The dossier is Filinq's unit of municipal work \u2014 folder batches run on it, the legal-bases summary reports on it \u2014 and until 2026-09-07 it had a schema, a spec and a controller but NO surface: a user could not create or open one anywhere in the app. type:custom rather than type:index because the row context (document count as home-folder \u222a documents[], resolved legal-basis chips, lifecycle status) is aggregated by DossierManagementController, not readable from a plain OR index."
+		},
+		{
+			"id": "DossierDetail",
+			"route": "/dossiers/:id",
+			"type": "custom",
+			"title": "Dossier",
+			"component": "DossierDetail",
+			"_note": "Aggregates documents, legal bases, anonymisation runs and publication state. Selecting a document swaps the inline viewer through store state, never a route push, so switching causes no reload. Every dossier-level action calls the endpoint that already owns it \u2014 nothing here reimplements batch, report or publication logic."
 		},
 		{
 			"id": "Templates",
@@ -364,7 +419,7 @@
 			"type": "custom",
 			"title": "Publish never",
 			"component": "ProhibitionIndex",
-			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Deep-link reachable, no menu entry — the policy menu label/placement is owned by openspec/changes/publication-policy-labels-and-nav; this change (orphaned-surface-restoration, REQ-DDOSR-005) only restores the page's reachability. Modal is ProhibitionFormModal (registry kind:modal), its own file per ADR-004."
+			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Reachable from the menu as \"Publish never\", beside Consent Management. It carried no menu entry until 2026-09-06: publication-policy-labels-and-nav was ticked complete, but its navigation tasks edited MainMenu.vue, which no longer exists since the app moved to manifest-driven nav (ADR-037), so only the label half of that change survived and the page was reachable by hand-typed URL alone. Modal is ProhibitionFormModal (registry kind:modal), its own file per ADR-004."
 		},
 		{
 			"id": "StandingConsents",
@@ -372,7 +427,7 @@
 			"type": "custom",
 			"title": "Publish always",
 			"component": "StandingConsentIndex",
-			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Deep-link reachable, no menu entry — owned by publication-policy-labels-and-nav (see Prohibitions note). This change (orphaned-surface-restoration, REQ-DDOSR-005) only restores reachability. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
+			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Reachable from the menu as \"Publish always\", beside Consent Management — see the Prohibitions note for why it had no entry until 2026-09-06. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
 		},
 		{
 			"id": "Reports",

@@ -198,11 +198,13 @@ test.describe('page components — consent', () => {
 		//    API payload` in ./consent-management.spec.ts, which is what
 		//    carries the `#view-consent-statistics` tag.
 		//
-		//    A FOURTH view, views/consent/StandingConsentIndex, still carries
-		//    the dead `#above-table` name and was deliberately left alone: it
-		//    is an orphaned legacy duplicate that no registry entry mounts (see
-		//    the `orphaned-view` record for it in tests/unit/reachability.spec.js),
-		//    so there is no route on which the rename could be verified.
+		//    A FOURTH view, views/consent/StandingConsentIndex, carried the
+		//    dead `#above-table` name and was left alone at the time as an
+		//    orphaned legacy duplicate that no registry entry mounted. It was
+		//    DELETED on 2026-09-06 along with its exclusive
+		//    src/modals/CreateStandingConsentModal.vue — the follow-up cleanup
+		//    decision its `orphaned-view` record was waiting on. Nothing is
+		//    outstanding here now.
 		//
 		// 2. STILL OPEN. The h1 reads "Consent Management" (the manifest page
 		//    title), not the "Consent Workflow" this component binds to
@@ -251,6 +253,65 @@ test.describe('page components — custom dictionaries', () => {
 		await expect(detail.getByRole('button', { name: 'Add term' })).toBeVisible()
 		// No dictionary resolved, so the terms panel shows its empty state.
 		await expect(detail.getByText('No terms yet')).toBeVisible()
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Dossiers
+// ---------------------------------------------------------------------------
+
+test.describe('page components — dossiers', () => {
+	test('DossierIndex paints its grouping description at /dossiers', async ({
+		page,
+	}) => {
+		await go(page, 'dossiers')
+		// CnIndexPage's description, written in this template and nowhere
+		// else in the app. The SPA shell renders no such text, so this cannot
+		// pass on a route that resolves to the shell.
+		await expect(
+			page.getByText(
+				/A dossier groups the documents that are anonymised together/,
+			),
+		).toBeVisible()
+		// The column headers are this component's own table definition. Legal
+		// bases in particular appears in no other index.
+		await expect(
+			page.getByRole('columnheader', { name: 'Legal bases' }),
+		).toBeVisible()
+		await expect(
+			page.getByRole('columnheader', { name: 'Last reviewed' }),
+		).toBeVisible()
+	})
+
+	test('DossierDetail paints its not-found state at /dossiers/<absent-id>', async ({
+		page,
+	}) => {
+		await go(page, `dossiers/${ABSENT_ID}`)
+		// The component mounts and paints its OWN empty state: the store
+		// catches the failed read and leaves `dossier` null, which is the
+		// branch under test. A seeded dossier would exercise the index that
+		// created it rather than this page.
+		const detail = page.locator('.dossier-detail')
+		await expect(detail).toBeVisible()
+
+		// ASSERT THE HEADING, NOT THE DESCRIPTION. The empty state's
+		// description is `dossierStore.error || <fallback copy>`, and an absent
+		// id is exactly the case where the store HAS an error — so the fallback
+		// this used to pin is the branch that does not run. It failed on the
+		// only page it was written for.
+		//
+		// The name is unconditional, so it is what proves this component
+		// painted rather than the SPA shell, which is the whole job of a
+		// gate-26 page test.
+		await expect(
+			detail.getByText('Dossier not found', { exact: true }),
+		).toBeVisible()
+
+		// A reason is always given, whichever branch supplies it. Empty copy
+		// under a "not found" heading is the state this page must never reach.
+		// `.empty-content__description` is NcEmptyContent's own class, checked
+		// against the installed @nextcloud/vue rather than guessed.
+		await expect(detail.locator('.empty-content__description')).not.toBeEmpty()
 	})
 })
 

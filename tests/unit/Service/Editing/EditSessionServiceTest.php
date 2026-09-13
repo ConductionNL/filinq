@@ -198,6 +198,47 @@ class EditSessionServiceTest extends TestCase {
 	}//end docx()
 
 	/**
+	 * The bytes of the file most recently built.
+	 *
+	 * @var string
+	 */
+	private string $attached = '';
+
+	/**
+	 * The version token a read of that file hands out.
+	 *
+	 * Derived rather than hard-coded: the token is a hash of the package, so a
+	 * literal would say nothing about the read and the write agreeing. It used
+	 * to be the mock's etag, which is the value the real defect showed cannot
+	 * be trusted.
+	 *
+	 * @return string The token.
+	 */
+	/**
+	 * The guarded writer the service writes through.
+	 *
+	 * Hoisted out of service() so the version token can be asked of the same
+	 * object that checks it. A token minted any other way would only prove the
+	 * test agrees with itself.
+	 *
+	 * @return GuardedWriter The writer.
+	 */
+	private function writer(): GuardedWriter {
+		return new GuardedWriter(
+				$this->lockManager,
+				$this->marker,
+				$this->createMock(LoggerInterface::class),
+				$this->rootFolder
+		);
+
+	}//end writer()
+
+	private function attachedVersion(): string {
+		return $this->writer()->versionOf(packageBytes: $this->attached);
+
+	}//end attachedVersion()
+
+	/**
 	 * Build a file mock.
 	 *
 	 * @param string $bytes The file contents.
@@ -208,6 +249,7 @@ class EditSessionServiceTest extends TestCase {
 	 * @return MockObject&File The file mock.
 	 */
 	private function file(string $bytes, string $etag, string $name = 'letter.docx', int $id = self::FILE_ID) {
+		$this->attached = $bytes;
 		$file = $this->createMock(File::class);
 		$file->method('getId')->willReturn($id);
 		$file->method('getName')->willReturn($name);
@@ -261,12 +303,7 @@ class EditSessionServiceTest extends TestCase {
 				new SpreadsheetCodec(new PackagePartIo()),
 				new PresentationCodec(new PackagePartIo())
 			),
-			new GuardedWriter(
-				$this->lockManager,
-				$this->marker,
-				$this->createMock(LoggerInterface::class),
-				$this->rootFolder
-			),
+			$this->writer(),
 			$this->guard,
 			$this->appConfig
 		);
@@ -300,7 +337,7 @@ class EditSessionServiceTest extends TestCase {
 	public function testReadReturnsAnchorsAndTheVersionAnEditWillNeed(): void {
 		$outline = $this->service()->openForAgent(uid: self::UID, fileId: self::FILE_ID);
 
-		$this->assertSame('v1', $outline['version']);
+		$this->assertSame($this->attachedVersion(), $outline['version']);
 		$this->assertSame(2, $outline['blockCount']);
 		$this->assertFalse($outline['truncated']);
 		$this->assertTrue($outline['editable']);
@@ -341,7 +378,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 		$this->assertSame(EditSessionService::MODE_IN_PLACE, $result['outputMode']);
@@ -438,7 +475,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 	}//end testAnotherOwnersLockIsARefusalNotAWait()
@@ -458,7 +495,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 		$this->assertNotEmpty($result['warnings']);
@@ -483,7 +520,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 	}//end testAFileThatCannotBeMarkedIsNotWritten()
@@ -508,7 +545,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 	}//end testAMarkIsRolledBackWhenTheWriteFails()
@@ -533,7 +570,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1',
+			version: $this->attachedVersion(),
 			requestedMode: EditSessionService::MODE_SIBLING
 		);
 
@@ -566,7 +603,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1',
+			version: $this->attachedVersion(),
 			requestedMode: EditSessionService::MODE_IN_PLACE
 		);
 
@@ -587,7 +624,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1',
+			version: $this->attachedVersion(),
 			requestedMode: 'overwriteEverything'
 		);
 
@@ -611,7 +648,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 	}//end testADocumentUnderSignatureIsRefusedBeforeAnythingIsTouched()
@@ -633,7 +670,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 	}//end testAnonymisationOutputIsRefused()
@@ -678,7 +715,7 @@ class EditSessionServiceTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: $this->edit(),
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 	}//end testAReadOnlyFileIsRefusedForInPlaceOutput()

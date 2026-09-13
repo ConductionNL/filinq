@@ -275,6 +275,48 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	}//end partOf()
 
 	/**
+	 * The bytes of the file most recently attached.
+	 *
+	 * @var string
+	 */
+	private string $attached = '';
+
+	/**
+	 * The version token a read of the attached file hands out.
+	 *
+	 * Derived rather than hard-coded: the token is a hash of the package, so
+	 * a literal here would have to be updated whenever a fixture changes and
+	 * would say nothing about the two sides agreeing. It used to be the file
+	 * mock's etag, which is exactly the value the real defect showed cannot be
+	 * trusted.
+	 *
+	 * @return string The token.
+	 */
+	/**
+	 * The guarded writer the service writes through.
+	 *
+	 * Hoisted out of service() so the version token can be asked of the same
+	 * object that checks it. A token minted any other way would only prove the
+	 * test agrees with itself.
+	 *
+	 * @return GuardedWriter The writer.
+	 */
+	private function writer(): GuardedWriter {
+		return new GuardedWriter(
+				$this->lockManager,
+				$this->createMock(AgentArtefactMarker::class),
+				$this->createMock(LoggerInterface::class),
+				$this->rootFolder
+		);
+
+	}//end writer()
+
+	private function attachedVersion(): string {
+		return $this->writer()->versionOf(packageBytes: $this->attached);
+
+	}//end attachedVersion()
+
+	/**
 	 * Put a file of the given name and bytes behind Alice's folder.
 	 *
 	 * @param string $name The file name, whose extension selects the codec.
@@ -283,6 +325,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	 * @return MockObject&File The file mock.
 	 */
 	private function attach(string $name, string $bytes) {
+		$this->attached = $bytes;
 		$file = $this->createMock(File::class);
 		$file->method('getId')->willReturn(self::FILE_ID);
 		$file->method('getName')->willReturn($name);
@@ -290,7 +333,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$file->method('getExtension')->willReturn(pathinfo($name, PATHINFO_EXTENSION));
 		$file->method('getSize')->willReturn(strlen($bytes));
 		$file->method('getContent')->willReturn($bytes);
-		$file->method('getEtag')->willReturn('v1');
+		
 		$file->method('isUpdateable')->willReturn(true);
 		$file->method('putContent')->willReturnCallback(
 			function (mixed $data): void {
@@ -321,12 +364,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 				new SpreadsheetCodec(new PackagePartIo()),
 				new PresentationCodec(new PackagePartIo())
 			),
-			new GuardedWriter(
-				$this->lockManager,
-				$this->createMock(AgentArtefactMarker::class),
-				$this->createMock(LoggerInterface::class),
-				$this->rootFolder
-			),
+			$this->writer(),
 			$this->guard,
 			$this->appConfig
 		);
@@ -343,7 +381,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 
 		$outline = $this->service()->openSpreadsheetForAgent(uid: self::UID, fileId: self::FILE_ID);
 
-		$this->assertSame('v1', $outline['version']);
+		$this->assertSame($this->attachedVersion(), $outline['version']);
 		$this->assertSame(2, $outline['cellCount']);
 		$this->assertTrue($outline['editable']);
 		$this->assertContains('Sheet1!A1', array_column($outline['cells'], 'cell'));
@@ -386,7 +424,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: [['cell' => 'Sheet1!A2', 'value' => '110']],
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 		$this->assertArrayHasKey('staleDependents', $result);
@@ -436,7 +474,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 				uid: self::UID,
 				fileId: self::FILE_ID,
 				edits: [['cell' => 'Sheet1!A2', 'value' => '110']],
-				version: 'v1'
+				version: $this->attachedVersion()
 			);
 			$this->fail('a document out for signature must not be editable');
 		} catch (RuntimeException $e) {
@@ -471,7 +509,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 
 		$outline = $this->service()->openPresentationForAgent(uid: self::UID, fileId: self::FILE_ID);
 
-		$this->assertSame('v1', $outline['version']);
+		$this->assertSame($this->attachedVersion(), $outline['version']);
 		$this->assertSame(1, $outline['shapeCount']);
 		$this->assertSame('Intro', $outline['shapes'][0]['slide']);
 		$this->assertSame('Welcome', $outline['shapes'][0]['text']);
@@ -490,7 +528,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			edits: [['slide' => 'Intro', 'shape' => 'Title', 'text' => 'Welcome back']],
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 		$this->assertNotSame('', $this->written, 'the write must actually reach the file');
@@ -528,7 +566,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 		$read = $this->service()->readMetadataForAgent(uid: self::UID, fileId: self::FILE_ID);
 
 		$this->assertSame('letter.docx', $read['name']);
-		$this->assertSame('v1', $read['version']);
+		$this->assertSame($this->attachedVersion(), $read['version']);
 		$this->assertTrue($read['editable']);
 		$this->assertSame('Quarterly report', $read['metadata']['title']);
 
@@ -546,7 +584,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			values: ['title' => 'Revised quarterly report'],
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 		// ⚠️ Read the PART back, not the package bytes. A package is compressed,
@@ -577,7 +615,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 				uid: self::UID,
 				fileId: self::FILE_ID,
 				values: ['title' => 'Revised quarterly report'],
-				version: 'v1'
+				version: $this->attachedVersion()
 			);
 			$this->fail('a guarded document must refuse a metadata write');
 		} catch (RuntimeException $e) {
@@ -602,7 +640,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 			uid: self::UID,
 			fileId: self::FILE_ID,
 			values: ['title' => 'Anything'],
-			version: 'v1',
+			version: $this->attachedVersion(),
 			requestedMode: 'sideways'
 		);
 
@@ -629,7 +667,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 				'categories' => ['Q1', 'Q2'],
 				'series' => [['name' => 'Revenue', 'values' => [10, 20]]],
 			],
-			version: 'v1'
+			version: $this->attachedVersion()
 		);
 
 		$this->assertNotSame('', $this->written, 'the chart write must reach the file');
