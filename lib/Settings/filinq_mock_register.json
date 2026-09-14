@@ -2025,7 +2025,6 @@
         },
         "searchable": false
       },
-
       "prohibitionOverrideAudit": {
         "uri": null,
         "slug": "prohibitionOverrideAudit",
@@ -3934,6 +3933,349 @@
           "autoPublish": false
         },
         "searchable": false
+      },
+      "documentVersion": {
+        "uri": null,
+        "slug": "documentVersion",
+        "title": "Document version",
+        "description": "The finalisation record of one version of a document. A version is draft or final. Final records who made it final, when, why, and the checksum of the file at that moment. This schema holds no file content and no version history: the bytes stay in Nextcloud files_versions, which document-versions keeps as the only version store.",
+        "version": "1.0.0",
+        "summary": "",
+        "icon": "FileLock",
+        "required": [
+          "fileId",
+          "status"
+        ],
+        "properties": {
+          "fileId": {
+            "description": "Nextcloud file id of the document this version belongs to.",
+            "type": "integer",
+            "required": true,
+            "visible": true,
+            "order": 1,
+            "facetable": true,
+            "title": "File ID"
+          },
+          "versionLabel": {
+            "description": "The files_versions label this record is about. Empty means the current content.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 2,
+            "facetable": true,
+            "title": "Version label",
+            "maxLength": 128
+          },
+          "documentName": {
+            "description": "Name of the document when the record was written.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 3,
+            "facetable": false,
+            "title": "Document name",
+            "maxLength": 255,
+            "translatable": true
+          },
+          "status": {
+            "description": "Draft or final. Final is terminal: a final version accepts no write and no way back.",
+            "type": "string",
+            "required": true,
+            "visible": true,
+            "order": 4,
+            "facetable": true,
+            "title": "Status",
+            "enum": [
+              "draft",
+              "final"
+            ],
+            "default": "draft"
+          },
+          "finalisedBy": {
+            "description": "User id of the person who made this version final.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 5,
+            "facetable": true,
+            "title": "Finalised by",
+            "maxLength": 64
+          },
+          "finalisedByName": {
+            "description": "Display name of that person at the moment of finalisation.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 6,
+            "facetable": false,
+            "title": "Finalised by name",
+            "maxLength": 255
+          },
+          "finalisedAt": {
+            "description": "When this version became final (ISO 8601).",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 7,
+            "facetable": false,
+            "title": "Finalised at",
+            "format": "date-time"
+          },
+          "finalReason": {
+            "description": "The reason or the act that made this version final, such as the decision that was taken.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 8,
+            "facetable": false,
+            "title": "Reason",
+            "maxLength": 1024,
+            "translatable": true
+          },
+          "supersedes": {
+            "description": "UUID of the final version this one corrects. The superseded version stays readable and stays final.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 9,
+            "facetable": true,
+            "title": "Supersedes",
+            "maxLength": 64
+          },
+          "supersededBy": {
+            "description": "UUID of the version that corrects this one, written on the predecessor so a reader of either sees the chain.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 10,
+            "facetable": true,
+            "title": "Superseded by",
+            "maxLength": 64
+          },
+          "fileChecksum": {
+            "description": "sha256 of the file at the moment it became final. A later mismatch means the file changed outside Filinq.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 11,
+            "facetable": false,
+            "title": "File checksum",
+            "maxLength": 128
+          },
+          "unfrozen": {
+            "description": "True once an administrator has unfrozen this version. The mark is permanent and cannot be cleared.",
+            "type": "boolean",
+            "required": false,
+            "visible": true,
+            "order": 12,
+            "facetable": true,
+            "title": "Unfrozen",
+            "default": false
+          },
+          "unfrozenBy": {
+            "description": "User id of the administrator who unfroze this version.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 13,
+            "facetable": false,
+            "title": "Unfrozen by",
+            "maxLength": 64
+          },
+          "unfrozenAt": {
+            "description": "When the version was unfrozen (ISO 8601).",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 14,
+            "facetable": false,
+            "title": "Unfrozen at",
+            "format": "date-time"
+          },
+          "unfrozenReason": {
+            "description": "Why the administrator unfroze this version. Required when unfreezing.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 15,
+            "facetable": false,
+            "title": "Unfreeze reason",
+            "maxLength": 1024,
+            "translatable": true
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "updated": "2026-09-14T12:00:00+00:00",
+        "created": "2026-09-14T12:00:00+00:00",
+        "maxDepth": 0,
+        "owner": null,
+        "application": null,
+        "organisation": null,
+        "groups": null,
+        "authorization": {
+          "read": [
+            "authenticated"
+          ],
+          "create": [
+            "authenticated"
+          ],
+          "update": [
+            "authenticated"
+          ],
+          "delete": [
+            "docudesk-final-document-admins"
+          ]
+        },
+        "deleted": null,
+        "configuration": {
+          "objectNameField": "documentName",
+          "objectDescriptionField": "status",
+          "autoPublish": false
+        },
+        "searchable": false,
+        "x-openregister-lifecycle": {
+          "field": "status",
+          "initial": "draft",
+          "states": {
+            "draft": {
+              "label": "Concept",
+              "terminal": false
+            },
+            "final": {
+              "label": "Definitief",
+              "terminal": true
+            }
+          },
+          "transitions": {
+            "finalise": {
+              "from": "draft",
+              "to": "final",
+              "label": "Definitief maken",
+              "description": "De versie is definitief. Wie, wanneer, waarom en de checksum worden vastgelegd. Er is geen overgang terug: een correctie is een nieuwe versie."
+            }
+          }
+        }
+      },
+      "documentFinalityRule": {
+        "uri": null,
+        "slug": "documentFinalityRule",
+        "title": "Document finality rule",
+        "description": "A declaration by a consuming app that certain states of one of its record types make that type's documents final. Filinq stores the declaration against the type reference and applies it when the state changes. Filinq does not define the record type vocabulary: dossiq owns its case types and result types, and this schema only records what that app declared.",
+        "version": "1.0.0",
+        "summary": "",
+        "icon": "FileCertificate",
+        "required": [
+          "declaringApp",
+          "typeReference",
+          "finalStates"
+        ],
+        "properties": {
+          "declaringApp": {
+            "description": "App id of the consuming app that made the declaration, such as dossiq.",
+            "type": "string",
+            "required": true,
+            "visible": true,
+            "order": 1,
+            "facetable": true,
+            "title": "Declaring app",
+            "maxLength": 64
+          },
+          "typeReference": {
+            "description": "The consuming app's own reference for the record type, such as a case type or result type id.",
+            "type": "string",
+            "required": true,
+            "visible": true,
+            "order": 2,
+            "facetable": true,
+            "title": "Type reference",
+            "maxLength": 255
+          },
+          "finalStates": {
+            "description": "The states of that record type that make its documents final.",
+            "type": "array",
+            "required": true,
+            "visible": true,
+            "order": 3,
+            "facetable": false,
+            "title": "Final states"
+          },
+          "documentRole": {
+            "description": "Which document of the record the rule applies to, such as besluit. Empty means every document of the record.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 4,
+            "facetable": true,
+            "title": "Document role",
+            "maxLength": 128
+          },
+          "reasonTemplate": {
+            "description": "The reason written on the version when this rule fires. Empty means the transition itself is the reason.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 5,
+            "facetable": false,
+            "title": "Reason template",
+            "maxLength": 1024,
+            "translatable": true
+          },
+          "declaredBy": {
+            "description": "User id that stored the declaration.",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 6,
+            "facetable": false,
+            "title": "Declared by",
+            "maxLength": 64
+          },
+          "declaredAt": {
+            "description": "When the declaration was stored (ISO 8601).",
+            "type": "string",
+            "required": false,
+            "visible": true,
+            "order": 7,
+            "facetable": false,
+            "title": "Declared at",
+            "format": "date-time"
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "updated": "2026-09-14T12:00:00+00:00",
+        "created": "2026-09-14T12:00:00+00:00",
+        "maxDepth": 0,
+        "owner": null,
+        "application": null,
+        "organisation": null,
+        "groups": null,
+        "authorization": {
+          "read": [
+            "authenticated"
+          ],
+          "create": [
+            "docudesk-final-document-admins"
+          ],
+          "update": [
+            "docudesk-final-document-admins"
+          ],
+          "delete": [
+            "docudesk-final-document-admins"
+          ]
+        },
+        "deleted": null,
+        "configuration": {
+          "objectNameField": "typeReference",
+          "objectDescriptionField": "declaringApp",
+          "autoPublish": false
+        },
+        "searchable": false
       }
     },
     "objects": [
@@ -5073,6 +5415,120 @@
         "format": "A4",
         "orientation": "P",
         "changelog": "Voorbeeld Changelog 3"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentFinalityRule",
+          "slug": "documentfinalityrule-documentfinalityrule-1-1"
+        },
+        "declaringApp": "Voorbeeld Declaringapp 1",
+        "typeReference": "Voorbeeld Typereference 1",
+        "finalStates": [
+          "Voorbeeld Finalstates 1"
+        ],
+        "documentRole": "Voorbeeld Documentrole 1",
+        "reasonTemplate": "Voorbeeld Reasontemplate 1",
+        "declaredBy": "Voorbeeld Declaredby 1",
+        "declaredAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentFinalityRule",
+          "slug": "documentfinalityrule-documentfinalityrule-2-2"
+        },
+        "declaringApp": "Voorbeeld Declaringapp 2",
+        "typeReference": "Voorbeeld Typereference 2",
+        "finalStates": [
+          "Voorbeeld Finalstates 2"
+        ],
+        "documentRole": "Voorbeeld Documentrole 2",
+        "reasonTemplate": "Voorbeeld Reasontemplate 2",
+        "declaredBy": "Voorbeeld Declaredby 2",
+        "declaredAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentFinalityRule",
+          "slug": "documentfinalityrule-documentfinalityrule-3-3"
+        },
+        "declaringApp": "Voorbeeld Declaringapp 3",
+        "typeReference": "Voorbeeld Typereference 3",
+        "finalStates": [
+          "Voorbeeld Finalstates 3"
+        ],
+        "documentRole": "Voorbeeld Documentrole 3",
+        "reasonTemplate": "Voorbeeld Reasontemplate 3",
+        "declaredBy": "Voorbeeld Declaredby 3",
+        "declaredAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentVersion",
+          "slug": "documentversion-documentversion-1-1"
+        },
+        "fileId": 1,
+        "status": "draft",
+        "versionLabel": "Voorbeeld Versionlabel 1",
+        "documentName": "Voorbeeld Documentname 1",
+        "finalisedBy": "Voorbeeld Finalisedby 1",
+        "finalisedByName": "Voorbeeld Finalisedbyname 1",
+        "finalisedAt": "2026-03-01T09:00:00+00:00",
+        "finalReason": "Voorbeeld Finalreason 1",
+        "supersedes": "Voorbeeld Supersedes 1",
+        "supersededBy": "Voorbeeld Supersededby 1",
+        "fileChecksum": "Voorbeeld Filechecksum 1",
+        "unfrozen": false,
+        "unfrozenBy": "Voorbeeld Unfrozenby 1",
+        "unfrozenAt": "2026-03-01T09:00:00+00:00",
+        "unfrozenReason": "Voorbeeld Unfrozenreason 1"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentVersion",
+          "slug": "documentversion-documentversion-2-2"
+        },
+        "fileId": 2,
+        "status": "final",
+        "versionLabel": "Voorbeeld Versionlabel 2",
+        "documentName": "Voorbeeld Documentname 2",
+        "finalisedBy": "Voorbeeld Finalisedby 2",
+        "finalisedByName": "Voorbeeld Finalisedbyname 2",
+        "finalisedAt": "2026-03-02T09:00:00+00:00",
+        "finalReason": "Voorbeeld Finalreason 2",
+        "supersedes": "Voorbeeld Supersedes 2",
+        "supersededBy": "Voorbeeld Supersededby 2",
+        "fileChecksum": "Voorbeeld Filechecksum 2",
+        "unfrozen": false,
+        "unfrozenBy": "Voorbeeld Unfrozenby 2",
+        "unfrozenAt": "2026-03-02T09:00:00+00:00",
+        "unfrozenReason": "Voorbeeld Unfrozenreason 2"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentVersion",
+          "slug": "documentversion-documentversion-3-3"
+        },
+        "fileId": 3,
+        "status": "draft",
+        "versionLabel": "Voorbeeld Versionlabel 3",
+        "documentName": "Voorbeeld Documentname 3",
+        "finalisedBy": "Voorbeeld Finalisedby 3",
+        "finalisedByName": "Voorbeeld Finalisedbyname 3",
+        "finalisedAt": "2026-03-03T09:00:00+00:00",
+        "finalReason": "Voorbeeld Finalreason 3",
+        "supersedes": "Voorbeeld Supersedes 3",
+        "supersededBy": "Voorbeeld Supersededby 3",
+        "fileChecksum": "Voorbeeld Filechecksum 3",
+        "unfrozen": false,
+        "unfrozenBy": "Voorbeeld Unfrozenby 3",
+        "unfrozenAt": "2026-03-03T09:00:00+00:00",
+        "unfrozenReason": "Voorbeeld Unfrozenreason 3"
       }
     ]
   }

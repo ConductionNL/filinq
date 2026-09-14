@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Exception\DocumentFinalException;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
@@ -80,12 +81,14 @@ class DocumentStorageService {
 	 *
 	 * @param IRootFolder $rootFolder Root folder for per-user file operations
 	 * @param LoggerInterface $logger Logger for error reporting
+	 * @param FinalDocumentService $finalDocuments The final-document guard
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly IRootFolder $rootFolder,
 		private readonly LoggerInterface $logger,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
@@ -160,10 +163,12 @@ class DocumentStorageService {
 	 *
 	 * @return array{fileId: int, path: string, name: string, size: int}
 	 *
+	 * @throws DocumentFinalException When a document of this name is already final here
 	 * @throws Exception Code 400 for an invalid targetPath, code 507 for a
 	 *                   storage-layer execution failure
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/tasks.md#task-1
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function store(
 		string $userId,
@@ -172,6 +177,8 @@ class DocumentStorageService {
 		string $content,
 	): array {
 		$this->validateTargetPath(targetPath: $targetPath);
+
+		$this->refuseWhenTargetIsFinal(userId: $userId, targetPath: $targetPath, filename: $filename);
 
 		try {
 			$folder = $this->resolveFolder(userId: $userId, targetPath: $targetPath);
@@ -250,4 +257,59 @@ class DocumentStorageService {
 
 		return $folder;
 	}//end resolveFolder()
+
+	/**
+	 * Refuse a generation that would land beside a final document of the same name.
+	 *
+	 * This is the guard on the merge and the batch correspondence path, which
+	 * reach Files through this one method. Without it a regeneration writes
+	 * `besluit (2).docx` next to a frozen `besluit.docx`: nothing is
+	 * overwritten, and nothing links the two either, so the folder grows a
+	 * second document that looks like the besluit and is not it. A correction
+	 * supersedes the final version instead, which keeps the chain readable.
+	 *
+	 * A caller with no acting session is normal here: the async bulk job has
+	 * only a captured user id. The check reads the finalisation record by file
+	 * id, so it needs no session.
+	 *
+	 * @param string $userId The Nextcloud user id to store the file for.
+	 * @param string $targetPath Relative folder path within the user's Files.
+	 * @param string $filename The desired filename (extension included).
+	 *
+	 * @return void
+	 *
+	 * @throws DocumentFinalException When a document of this name is already final here.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 */
+	private function refuseWhenTargetIsFinal(string $userId, string $targetPath, string $filename): void {
+		try {
+			$folder = $this->rootFolder->getUserFolder($userId);
+			if ($folder->nodeExists($targetPath) === false) {
+				return;
+			}
+
+			$target = $folder->get($targetPath);
+			if (($target instanceof Folder) === false || $target->nodeExists($filename) === false) {
+				return;
+			}
+
+			$existing = $target->get($filename);
+		} catch (DocumentFinalException $e) {
+			throw $e;
+		} catch (Throwable $e) {
+			$this->logger->debug(
+				message: '[DocumentStorageService] could not look up the target document before storing',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'targetPath' => $targetPath, 'error' => $e->getMessage()]
+			);
+
+			return;
+		}//end try
+
+		$this->finalDocuments->assertWritable(
+			fileId: $existing->getId(),
+			action: 'store a generated document over ' . $filename
+		);
+
+	}//end refuseWhenTargetIsFinal()
 }//end class
