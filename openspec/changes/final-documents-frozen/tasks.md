@@ -8,7 +8,7 @@
 
 ## 2. The guard
 
-- [ ] 2.1 Refuse content, meaning-changing metadata and file replacement on a final version, in the document service every write path resolves through (REQ-FDF-02)
+- [x] 2.1 Refuse content, meaning-changing metadata and file replacement on a final version, in the document service every write path resolves through (REQ-FDF-02)
 - [ ] 2.2 The refusal names the version, its state, who made it final and when; assert it on the API, both editors, the batch path, the merge and the anonymisation output (REQ-FDF-02)
 
 ## 3. Correction and declaration

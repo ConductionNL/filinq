@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\DocumentVersionService;
 use OCP\App\IAppManager;
 use OCP\Constants;
@@ -74,6 +75,11 @@ class DocumentVersionServiceTest extends TestCase {
 	private $container;
 
 	/**
+	 * @var FinalDocumentService|\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $finalDocuments;
+
+	/**
 	 * Set up shared mocks.
 	 *
 	 * @return void
@@ -86,6 +92,7 @@ class DocumentVersionServiceTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->appManager = $this->createMock(IAppManager::class);
 		$this->container = $this->createMock(ContainerInterface::class);
+		$this->finalDocuments = $this->createMock(FinalDocumentService::class);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
@@ -104,7 +111,8 @@ class DocumentVersionServiceTest extends TestCase {
 			rootFolder: $this->rootFolder,
 			userSession: $this->userSession,
 			appManager: $this->appManager,
-			container: $this->container
+			container: $this->container,
+			finalDocuments: $this->finalDocuments
 		);
 
 	}//end buildService()

@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Exception\DocumentFinalException;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;
@@ -66,6 +67,7 @@ class DocumentVersionService {
 	 * @param IUserSession $userSession Current user session.
 	 * @param IAppManager $appManager App manager (files_versions availability).
 	 * @param ContainerInterface $container DI container for lazy IVersionManager resolution.
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
 	 *
 	 * @return void
 	 */
@@ -75,6 +77,7 @@ class DocumentVersionService {
 		private readonly IUserSession $userSession,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
@@ -183,11 +186,21 @@ class DocumentVersionService {
 	 *
 	 * @return void
 	 *
+	 * @throws DocumentFinalException When the document's current version is final.
 	 * @throws ComparisonException 404 (not writeable) / 422 / 404 (unknown version).
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function restoreVersion(int $fileId, int $versionTimestamp): void {
+		// Restoring replaces the file's content, which is a write like any
+		// other. It is the API's file-replacement path, so it asks the same
+		// service the editors ask.
+		$this->finalDocuments->assertWritable(
+			fileId: $fileId,
+			action: 'restore an earlier version of this document'
+		);
+
 		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
 		$versionManager = $this->resolveVersionManager();
 		$user = $this->requireUser();

@@ -20,6 +20,7 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -65,6 +66,13 @@ class DocumentStorageServiceTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * Mock final-document guard.
+	 *
+	 * @var FinalDocumentService&MockObject
+	 */
+	private FinalDocumentService $finalDocuments;
+
+	/**
 	 * Set up test fixtures.
 	 *
 	 * @return void
@@ -75,9 +83,12 @@ class DocumentStorageServiceTest extends TestCase {
 		$this->rootFolder = $this->createMock(IRootFolder::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
+		$this->finalDocuments = $this->createMock(FinalDocumentService::class);
+
 		$this->service = new DocumentStorageService(
 			$this->rootFolder,
-			$this->logger
+			$this->logger,
+			$this->finalDocuments
 		);
 
 	}//end setUp()
