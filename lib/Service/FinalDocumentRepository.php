@@ -189,7 +189,7 @@ class FinalDocumentRepository {
 		}
 
 		try {
-			// find(), not getObject(): OpenRegister's getObject() takes no
+			// Find, not getObject: OpenRegister's getObject() takes no
 			// arguments and answers with the service's current object context,
 			// so the named arguments below would have thrown and this method
 			// would have answered null for every record that exists.

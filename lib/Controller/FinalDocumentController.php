@@ -65,6 +65,7 @@ class FinalDocumentController extends Controller {
 	 * @param FinalDocumentCorrectionService $corrections The correction service.
 	 * @param FinalDocumentUnfreezeService $unfreeze The recorded exception.
 	 * @param DocumentFinalityRuleService $rules The declaration store.
+	 * @param FinalDocumentFailureMapper $failures Failure shaping shared by every method here.
 	 * @param IUserSession $userSession The current user session.
 	 * @param IL10N $l10n Localisation.
 	 *
