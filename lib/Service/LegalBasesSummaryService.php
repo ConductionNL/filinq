@@ -113,15 +113,15 @@ class LegalBasesSummaryService {
 	/**
 	 * Constructor.
 	 *
-	 * The two collaborators are injected; the null defaults keep the
-	 * historical six/seven-argument signature usable, in which case equivalent
-	 * collaborators are wired from the same dependencies.
+	 * The writer is injected rather than built here. It used to be wired from a
+	 * PdfService this class held only to pass on, and once the writer also needed
+	 * the final-document guard that arrangement meant carrying two dependencies
+	 * this class never uses. Nextcloud's container builds the writer, and the
+	 * data source keeps its null default because it is wired from dependencies
+	 * this class does use.
 	 *
 	 * @param LoggerInterface $logger Structured logger.
-	 * @param PdfService $pdfService Twig + mPDF renderer.
-	 * @param FinalDocumentService $finalDocuments The final-document guard, handed to the
-	 *                                             writer so an append to a final document
-	 *                                             is refused rather than performed.
+	 * @param GrondslagenPdfWriter $pdfWriter PDF rendering and persistence, guard included.
 	 * @param IRootFolder $rootFolder Nextcloud file API entry point.
 	 * @param IUserSession $userSession Session-user lookup for the "operator" header field.
 	 * @param IAppManager $appManager App-availability check for OpenRegister.
@@ -133,19 +133,16 @@ class LegalBasesSummaryService {
 	 *                         labels OpenRegister wrote into the redacted document.
 	 *                         Nullable: when absent the raw English label is used.
 	 * @param DossierSummaryDataService|null $data Report data source; wired from the above when null.
-	 * @param GrondslagenPdfWriter|null $pdfWriter PDF rendering + persistence; wired when null.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		PdfService $pdfService,
-		FinalDocumentService $finalDocuments,
+		GrondslagenPdfWriter $pdfWriter,
 		IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		IAppManager $appManager,
 		ContainerInterface $container,
 		private readonly ?IL10N $l10n = null,
 		?DossierSummaryDataService $data = null,
-		?GrondslagenPdfWriter $pdfWriter = null,
 	) {
 		$this->data = ($data ?? new DossierSummaryDataService(
 			$rootFolder,
@@ -155,7 +152,7 @@ class LegalBasesSummaryService {
 			$this->logger
 		));
 
-		$this->pdfWriter = ($pdfWriter ?? new GrondslagenPdfWriter($pdfService, $finalDocuments));
+		$this->pdfWriter = $pdfWriter;
 
 	}//end __construct()
 
