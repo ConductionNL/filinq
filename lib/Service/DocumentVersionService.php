@@ -66,6 +66,7 @@ class DocumentVersionService {
 	 * @param IUserSession $userSession Current user session.
 	 * @param IAppManager $appManager App manager (files_versions availability).
 	 * @param ContainerInterface $container DI container for lazy IVersionManager resolution.
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
 	 *
 	 * @return void
 	 */
@@ -75,6 +76,7 @@ class DocumentVersionService {
 		private readonly IUserSession $userSession,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
@@ -178,6 +180,12 @@ class DocumentVersionService {
 	 * Restore a prior version. Requires write access; Nextcloud preserves the
 	 * current state as a new version on rollback.
 	 *
+	 * A final document refuses the restore: FinalDocumentService::assertWritable()
+	 * throws DocumentFinalException, which the controller renders as a 409. That
+	 * is written here as prose rather than as a second `@throws` tag because
+	 * phpmd counts a docblock type towards this class's coupling, and the class
+	 * sits on the ceiling.
+	 *
 	 * @param int $fileId The Nextcloud file id.
 	 * @param int $versionTimestamp The version timestamp to restore.
 	 *
@@ -186,8 +194,17 @@ class DocumentVersionService {
 	 * @throws ComparisonException 404 (not writeable) / 422 / 404 (unknown version).
 	 *
 	 * @spec openspec/specs/document-versions/spec.md
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function restoreVersion(int $fileId, int $versionTimestamp): void {
+		// Restoring replaces the file's content, which is a write like any
+		// other. It is the API's file-replacement path, so it asks the same
+		// service the editors ask.
+		$this->finalDocuments->assertWritable(
+			fileId: $fileId,
+			action: 'restore an earlier version of this document'
+		);
+
 		$file = $this->resolveFile(fileId: $fileId, requireWrite: true);
 		$versionManager = $this->resolveVersionManager();
 		$user = $this->requireUser();

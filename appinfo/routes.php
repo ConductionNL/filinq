@@ -65,6 +65,14 @@ $extra = [
         ['name' => 'version#download', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/download', 'verb' => 'GET'],
         ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
 
+        // Final document routes (final-documents-frozen).
+        ['name' => 'finalDocument#show', 'url' => 'api/documents/{fileId}/final', 'verb' => 'GET'],
+        ['name' => 'finalDocument#finalise', 'url' => 'api/documents/{fileId}/final', 'verb' => 'POST'],
+        ['name' => 'finalDocument#correct', 'url' => 'api/documents/{fileId}/final/correction', 'verb' => 'POST'],
+        ['name' => 'finalDocument#unfreeze', 'url' => 'api/documents/{fileId}/final', 'verb' => 'DELETE'],
+        ['name' => 'finalDocument#declareRule', 'url' => 'api/document-finality-rules', 'verb' => 'POST'],
+        ['name' => 'finalDocument#applyStateChange', 'url' => 'api/document-finality-rules/apply', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],

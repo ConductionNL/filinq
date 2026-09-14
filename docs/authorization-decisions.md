@@ -72,7 +72,7 @@ schema**.
 
 ## Groups
 
-Four groups are named. OpenRegister provisions declared groups create-only on import,
+Five groups are named. OpenRegister provisions declared groups create-only on import,
 ahead of the content-hash skip, so they exist on every instance.
 
 | Group | Owns |
@@ -81,6 +81,7 @@ ahead of the content-hash skip, so they exist on every instance.
 | `docudesk-policy-admins` | Woo Art. 5 grounds, anonymisation recognisers, consent, prohibition overrides, dossiers |
 | `docudesk-financial-admins` | invoice/receipt extraction and GL-account mapping |
 | `docudesk-signing-admins` | signing requests, signers, sessions, signing audit |
+| `docudesk-final-document-admins` | unfreezing a final document, and declaring which record-type states freeze one |
 
 **They ship empty on purpose.** An empty group denies everyone except admins and
 object owners. That is the correct default and it is immediately visible, which is
@@ -113,6 +114,8 @@ deliberately.
 | `signerRecord` | **signing-admins** | authenticated | signing-admins | Identifies an individual signer. Same portal reasoning. |
 | `signingAuditEntry` | **signing-admins** | authenticated | signing-admins | Deprecated, retained read-only history. |
 | `signingSession` | **signing-admins** | authenticated | authenticated / signing-admins | `update` stays open because the session is advanced by the signer themselves as they progress. |
+| `documentVersion` | authenticated | authenticated | authenticated / final-document-admins | The record says whether a version is final, and everyone who can open the document needs to read that. `update` stays open because making a document final is an ordinary handler's act, and the service refuses a second write to a version that is already final. Only a final-document admin may delete the record, because deleting it is how a freeze would otherwise be undone without a trace. |
+| `documentFinalityRule` | authenticated | **final-document-admins** | final-document-admins | The rule says which record-type states freeze a document, so it is applied on every state change and must be readable. Declaring one is an administrative act: a wrong rule freezes documents nobody meant to freeze. |
 
 ## Deliberate RBAC bypasses
 

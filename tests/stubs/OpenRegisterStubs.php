@@ -1572,6 +1572,19 @@ interface IUser {
  */
 interface IGroupManager {
 	public function isAdmin(string $userId): bool;
+
+	/**
+	 * Signature pinned to OCP\IGroupManager::isInGroup($userId, $group) at
+	 * HEAD. A stub that omits a method the real interface has cannot be
+	 * configured on a mock, so the test fails at setup rather than reporting
+	 * a guard that was never exercised.
+	 *
+	 * @param string $userId The user id.
+	 * @param string $group The group id.
+	 *
+	 * @return bool Whether the user is in the group.
+	 */
+	public function isInGroup(string $userId, string $group): bool;
 }//end interface
 
 namespace OCP\Files;
