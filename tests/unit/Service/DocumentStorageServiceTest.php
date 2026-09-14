@@ -20,8 +20,8 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
-use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;

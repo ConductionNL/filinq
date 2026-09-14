@@ -23,8 +23,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
-use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\DocumentVersionService;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;

@@ -24,8 +24,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Event\SigningConcludedEventFactory;
-use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\FinalDocumentService;
+use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningActorResolver;

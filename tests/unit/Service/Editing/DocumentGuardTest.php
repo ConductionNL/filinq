@@ -17,9 +17,9 @@
 
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
-use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
