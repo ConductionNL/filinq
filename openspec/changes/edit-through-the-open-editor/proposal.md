@@ -48,7 +48,7 @@ the editor, and write through it.**
 
 ## Impact
 
-- **Code**: docudesk — an editor-session probe, a force-save step, and a per-suite
+- **Code**: filinq — an editor-session probe, a force-save step, and a per-suite
   adapter for delivering an edit.
 - **UI**: `@conduction/nextcloud-vue` — the companion relays the edit to the editor
   on the page it is mounted on.

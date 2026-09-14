@@ -7,7 +7,7 @@
 
 Acceptance criteria:
 - The existing in-process path, lock included, MUST be untouched for the no-editor case. It was always correct there.
-- ⚠️ Do NOT make `docudesk`'s lock compatible with the editor's, and do not break it. The lock is not the obstacle — the second writer is. `EditSessionService` documents why: the editor holds the authoritative copy, so a write underneath it is discarded on its next save, which LOOKS LIKE SUCCESS (agent reports done, bytes briefly correct, change gone).
+- ⚠️ Do NOT make `filinq`'s lock compatible with the editor's, and do not break it. The lock is not the obstacle — the second writer is. `EditSessionService` documents why: the editor holds the authoritative copy, so a write underneath it is discarded on its next save, which LOOKS LIKE SUCCESS (agent reports done, bytes briefly correct, change gone).
 
 ## 2. Make the document current before reading it
 

@@ -7,7 +7,7 @@ the page context now reaching it correctly:
   of "Zaanstad", and proposed the exact replacement.
 - It then refused to write, because the file is locked by the open editor.
 - The refusal is correct. `EditSessionService` takes an `ILockManager` lock under
-  the owner `docudesk`, which conflicts with the editor's own — deliberately, and
+  the owner `filinq`, which conflicts with the editor's own — deliberately, and
   for a documented reason: the editor holds the authoritative copy, so a write
   underneath it is discarded on its next save.
 
@@ -30,7 +30,7 @@ So the agent is right, the lock is right, and the user is still stuck.
 
 ### D1 — Do NOT take the lock. The lock is not the obstacle; the second writer is.
 
-The tempting fix is to make `docudesk`'s lock compatible with the editor's, or to
+The tempting fix is to make `filinq`'s lock compatible with the editor's, or to
 break it. Both produce the same outcome: two writers, the editor's in-memory copy
 wins on its next save, and the user's change silently disappears.
 
