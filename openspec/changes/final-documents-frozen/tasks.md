@@ -13,12 +13,12 @@
 
 ## 3. Correction and declaration
 
-- [ ] 3.1 Correcting a final version creates a new version referencing it through `supersedes`; the superseded version stays readable and stays final (REQ-FDF-03)
-- [ ] 3.2 A consuming app declares which record-type states make a document final; filinq stores it against the type reference and applies it on the state change (REQ-FDF-04)
+- [x] 3.1 Correcting a final version creates a new version referencing it through `supersedes`; the superseded version stays readable and stays final (REQ-FDF-03)
+- [x] 3.2 A consuming app declares which record-type states make a document final; filinq stores it against the type reference and applies it on the state change (REQ-FDF-04)
 
 ## 4. The exception
 
-- [ ] 4.1 An administrator may unfreeze, writing an audit entry with person, moment and reason, and marking the document permanently as unfrozen (REQ-FDF-05)
+- [x] 4.1 An administrator may unfreeze, writing an audit entry with person, moment and reason, and marking the document permanently as unfrozen (REQ-FDF-05)
 
 ## 5. Quality
 
