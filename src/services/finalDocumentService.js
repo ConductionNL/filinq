@@ -1,5 +1,5 @@
 /**
- * Final document service — thin client over the Filinq final-document
+ * Final document service, a thin client over the Filinq final-document
  * endpoints. A final document refuses edits, new versions and deletion; a
  * correction supersedes it instead of overwriting it.
  *
