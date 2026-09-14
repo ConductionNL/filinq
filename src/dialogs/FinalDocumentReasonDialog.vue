@@ -10,7 +10,7 @@ SPDX-License-Identifier: EUPL-1.2
 		<template #default>
 			<p>{{ explanation }}</p>
 			<NcTextField
-				:value.sync="reason"
+				v-model="reason"
 				:label="t('filinq', 'Reason')"
 				:placeholder="placeholder"
 				data-testid="final-reason-input" />

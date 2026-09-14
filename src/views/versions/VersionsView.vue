@@ -161,6 +161,8 @@ export default {
 		textExtractable: { type: Boolean, default: true },
 	},
 
+	emits: ['corrected'],
+
 	data() {
 		return {
 			fileId: Number(
@@ -421,7 +423,9 @@ export default {
 		async loadFinalState() {
 			try {
 				this.finalState = await readFinalState(this.fileId)
-			} catch (e) {
+			} catch {
+				// A document nobody ever finalised has no record, and that is
+				// not an error: the panel simply offers to make it final.
 				this.finalState = { final: false, version: null, checksum: null, mayUnfreeze: false }
 			}
 		},
