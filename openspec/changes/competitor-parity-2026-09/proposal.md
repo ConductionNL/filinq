@@ -48,6 +48,25 @@ is a handful of tasks, L is a new mechanism.
 Thirty-six candidates. The remaining fourteen of filinq's fifty are
 cluster 43, which moves out; see below.
 
+## Wave 3, the pending proposals
+
+The pending-proposals half of the gap register: rows entered under
+decision D1 out of `dossiq#2314`, listed in
+`procest/_round4/compare/proposed-rows-dossiq-2026-09-10.md`. Four are
+filinq's. Every competitor column on these rows is `unread`, so no
+proposal below names a passer and none claims one.
+
+| change | register rows | size | dossiq consumer |
+|---|---|---|---|
+| `documents-in-and-out-of-the-building` | 4.26, 4.28, 13.39 | M | reads the registration number and direction on the informatieobject, places the open post list leaf, offers the plain-language rendition beside the beschikking, declares who watches a case |
+| `signing-folder-across-cases` | 4.27 | M | places the folder leaf on its signing surface and declares the mandate rule per case type |
+
+Four rows, two changes, nothing matched to an existing change. The
+registration number itself is openregister's, through its open change
+`generated-identifier`; filinq's half is the registration act, the
+direction, the unit scope and the discharge of an inbound entry by an
+outbound one.
+
 ## What moved out: the archiving process
 
 Cluster 43, "The archiving process, from nomination to destruction or
@@ -96,6 +115,12 @@ Two notes for whoever writes cluster 43 in openregister.
    both open.
 6. `erase-a-person-while-the-records-stay`. Reads the final state from 3
    and the mapping from `reversible-pseudonymization`.
+7. `signing-folder-across-cases`. Waits on nothing; it is a query in
+   front of the signing path that already exists.
+8. `documents-in-and-out-of-the-building`. Last, because the
+   registration number waits on openregister's `generated-identifier`,
+   and the plain-language rendition reads the generation path
+   `documents-from-a-template` extends.
 
 Nothing in this list blocks anything outside filinq.
 
