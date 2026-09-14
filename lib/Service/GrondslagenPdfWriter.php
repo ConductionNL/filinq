@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Exception\DocumentFinalException;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use RuntimeException;
@@ -67,11 +68,13 @@ class GrondslagenPdfWriter {
 	 * Constructor.
 	 *
 	 * @param PdfService $pdfService Twig + mPDF renderer.
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly PdfService $pdfService,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
@@ -139,9 +142,17 @@ class GrondslagenPdfWriter {
 	 *
 	 * @return void
 	 *
+	 * @throws DocumentFinalException When the anonymised file's current version is final.
 	 * @throws RuntimeException When FPDI merging or the file write fails.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function appendToPdf(File $anonymisedFile, string $summaryBytes): void {
+		$this->finalDocuments->assertWritable(
+			fileId: $anonymisedFile->getId(),
+			action: 'append the grondslagen summary to this document'
+		);
+
 		$combinedBytes = $this->mergeSummaryIntoPdf(
 			originalPdfBytes: (string)$anonymisedFile->getContent(),
 			summaryPdfBytes: $summaryBytes
@@ -170,7 +181,10 @@ class GrondslagenPdfWriter {
 	 *
 	 * @return array{file: File, refreshed: bool} The written file and whether it already existed.
 	 *
+	 * @throws DocumentFinalException When the existing summary's current version is final.
 	 * @throws RuntimeException When the write fails.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function writeBesideFile(File $anonymisedFile, string $summaryFileName, string $summaryBytes): array {
 		$parent = $anonymisedFile->getParent();
@@ -179,12 +193,21 @@ class GrondslagenPdfWriter {
 			if ($parent->nodeExists($summaryFileName) === true) {
 				$existing = $parent->get($summaryFileName);
 				if ($existing instanceof File) {
+					$this->finalDocuments->assertWritable(
+						fileId: $existing->getId(),
+						action: 'refresh this grondslagen summary'
+					);
 					$existing->putContent($summaryBytes);
 					return ['file' => $existing, 'refreshed' => true];
 				}
 			}
 
 			$newFile = $parent->newFile(path: $summaryFileName, content: $summaryBytes);
+		} catch (DocumentFinalException $e) {
+			// The refusal carries the sentence the caller shows. Wrapping it in a
+			// write-failure would turn "this document is final" into "the write
+			// failed", which is the one thing the reader must not conclude.
+			throw $e;
 		} catch (Exception $e) {
 			throw new RuntimeException(
 				'Grondslagen summary write failed: ' . $summaryFileName . ' — ' . $e->getMessage(),
@@ -209,7 +232,10 @@ class GrondslagenPdfWriter {
 	 *
 	 * @return File The newly-written / refreshed summary file.
 	 *
+	 * @throws DocumentFinalException When the existing report's current version is final.
 	 * @throws RuntimeException On write failure.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function saveDossierSummary(Folder $folder, string $pdfBytes): File {
 		$name = self::DOSSIER_SUMMARY_NAME;
@@ -218,12 +244,19 @@ class GrondslagenPdfWriter {
 			if ($folder->nodeExists($name) === true) {
 				$existing = $folder->get($name);
 				if ($existing instanceof File) {
+					$this->finalDocuments->assertWritable(
+						fileId: $existing->getId(),
+						action: 'refresh this grondslagen report'
+					);
 					$existing->putContent($pdfBytes);
 					return $existing;
 				}
 			}
 
 			$newFile = $folder->newFile(path: $name, content: $pdfBytes);
+		} catch (DocumentFinalException $e) {
+			// See writeBesideFile(): the refusal keeps its own type and sentence.
+			throw $e;
 		} catch (Exception $e) {
 			throw new RuntimeException(
 				'Grondslagen summary: failed to write ' . $name . ' to dossier folder: ' . $e->getMessage(),

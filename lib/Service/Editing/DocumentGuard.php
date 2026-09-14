@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -67,15 +68,42 @@ class DocumentGuard {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * Refuse to edit a version somebody has made final.
+	 *
+	 * A final version is the record of what was published. Editing it does not
+	 * correct the document, it destroys the only proof of what the document
+	 * said. The correction is a new version, and the refusal says so.
+	 *
+	 * FAILS CLOSED, like the signature check and for the same reason: an
+	 * unreachable register is exactly when an unnoticed edit to a besluit is
+	 * most likely.
+	 *
+	 * @param File $file The file to check.
+	 *
+	 * @return string|null A refusal message, or null when the version is not final.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 */
+	public function finalRefusal(File $file): ?string {
+		return $this->finalDocuments->refusalFor(
+			fileId: $file->getId(),
+			action: 'edit this document'
+		);
+
+	}//end finalRefusal()
 
 	/**
 	 * Refuse to edit a file that is under a live signature process.

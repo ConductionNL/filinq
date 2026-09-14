@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
@@ -74,7 +75,11 @@ class DocumentGuardTest extends TestCase {
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);
 
-		return new DocumentGuard($resolver, $this->createMock(LoggerInterface::class));
+		return new DocumentGuard(
+			$resolver,
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(FinalDocumentService::class)
+		);
 	}//end guard()
 
 	/**
