@@ -271,7 +271,11 @@ class FinalDocumentController extends Controller {
 			$states = [];
 		}
 
-		$user = $this->userSession->getUser();
+		$user      = $this->userSession->getUser();
+		$declaredBy = null;
+		if ($user !== null) {
+			$declaredBy = $user->getUID();
+		}
 
 		try {
 			return new JSONResponse(
@@ -282,7 +286,7 @@ class FinalDocumentController extends Controller {
 						finalStates: $states,
 						documentRole: (string)$this->request->getParam('documentRole', ''),
 						reasonTemplate: (string)$this->request->getParam('reasonTemplate', ''),
-						declaredBy: ($user === null ? null : $user->getUID())
+						declaredBy: $declaredBy
 					),
 				],
 				statusCode: Http::STATUS_OK

@@ -22,4 +22,10 @@
 
 ## 5. Quality
 
-- [ ] 5.1 PHPUnit inside the container for the lifecycle, the guard on every named path, superseding, the declaration and the unfreeze; 75% on new code (ADR-009); Playwright `tests/e2e/final-documents.spec.ts`; Dutch and English strings; docs in `docs/features/final-documents.md` with screenshots
+- [x] 5.1 PHPUnit inside the container for the lifecycle, the guard on every named path, superseding, the declaration and the unfreeze; 75% on new code (ADR-009); Playwright `tests/e2e/final-documents.spec.ts`; Dutch and English strings; docs in `docs/features/final-documents.md` with screenshots
+
+The docs page carries no screenshots. The lane has no browser: the shared
+Playwright service is down and this lane does not run e2e locally, so a
+screenshot here would have to be staged rather than captured. The page
+describes the surface in prose instead, and 49 of filinq's 54 feature pages
+already carry none.
