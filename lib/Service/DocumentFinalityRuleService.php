@@ -140,20 +140,16 @@ class DocumentFinalityRuleService {
 		try {
 			$objectService = $this->objectResolver->resolve();
 			$uuid = (string)($existing['uuid'] ?? '');
-			if ($uuid === '') {
-				$stored = $objectService->saveObject(
-					object: $record,
-					register: self::REGISTER,
-					schema: self::SCHEMA
-				);
-			} else {
-				$stored = $objectService->saveObject(
-					object: $record,
-					register: self::REGISTER,
-					schema: self::SCHEMA,
-					uuid: $uuid
-				);
+			$arguments = [
+				'object'   => $record,
+				'register' => self::REGISTER,
+				'schema'   => self::SCHEMA,
+			];
+			if ($uuid !== '') {
+				$arguments['uuid'] = $uuid;
 			}
+
+			$stored = $objectService->saveObject(...$arguments);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the finality declaration: ' . $e->getMessage(),

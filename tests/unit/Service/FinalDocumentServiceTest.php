@@ -152,7 +152,7 @@ class FinalDocumentServiceTest extends TestCase {
 	 * @return array<string, mixed> The record.
 	 */
 	private function finalRecord(array $overrides = []): array {
-		return ([
+		return array_merge([
 			'uuid' => 'version-1',
 			'fileId' => 4711,
 			'versionLabel' => '',
@@ -164,7 +164,7 @@ class FinalDocumentServiceTest extends TestCase {
 			'finalReason' => 'Het besluit is genomen',
 			'fileChecksum' => hash('sha256', 'besluit'),
 			'unfrozen' => false,
-		] + $overrides);
+		], $overrides);
 
 	}//end finalRecord()
 

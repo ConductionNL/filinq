@@ -119,6 +119,9 @@ class LegalBasesSummaryService {
 	 *
 	 * @param LoggerInterface $logger Structured logger.
 	 * @param PdfService $pdfService Twig + mPDF renderer.
+	 * @param FinalDocumentService $finalDocuments The final-document guard, handed to the
+	 *                                             writer so an append to a final document
+	 *                                             is refused rather than performed.
 	 * @param IRootFolder $rootFolder Nextcloud file API entry point.
 	 * @param IUserSession $userSession Session-user lookup for the "operator" header field.
 	 * @param IAppManager $appManager App-availability check for OpenRegister.
@@ -135,6 +138,7 @@ class LegalBasesSummaryService {
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		PdfService $pdfService,
+		FinalDocumentService $finalDocuments,
 		IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		IAppManager $appManager,
@@ -151,7 +155,7 @@ class LegalBasesSummaryService {
 			$this->logger
 		));
 
-		$this->pdfWriter = ($pdfWriter ?? new GrondslagenPdfWriter($pdfService));
+		$this->pdfWriter = ($pdfWriter ?? new GrondslagenPdfWriter($pdfService, $finalDocuments));
 
 	}//end __construct()
 

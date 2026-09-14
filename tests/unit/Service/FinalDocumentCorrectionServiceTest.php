@@ -100,7 +100,7 @@ class FinalDocumentCorrectionServiceTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjects')->willReturn($rows);
-		$objectService->method('getObject')->willReturnCallback(
+		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($rows): ?array {
 				$id = (string)($arguments[0] ?? '');
 				foreach ($rows as $row) {

@@ -125,9 +125,11 @@ class FinalDocumentService {
 			}
 		}
 
-		$uuid = null;
-		if ($existing !== null && (string)($existing['uuid'] ?? '') !== '') {
-			$uuid = (string)$existing['uuid'];
+		// Null means "create"; an empty uuid would be a uuid, so it is folded
+		// back to null in one step rather than guarded twice.
+		$uuid = (string)($existing['uuid'] ?? '');
+		if ($uuid === '') {
+			$uuid = null;
 		}
 
 		return $this->repository->save(record: $record, uuid: $uuid);
@@ -426,11 +428,11 @@ class FinalDocumentService {
 		}
 
 		$nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
-		if ($nodes === []) {
-			throw new RuntimeException(message: 'Document not found.');
-		}
 
-		$node = $nodes[0];
+		// One check, not two: no node and a node that is not a file are the
+		// same answer to the caller, and saying it once keeps this class under
+		// the complexity ceiling phpmd holds it to.
+		$node = ($nodes[0] ?? null);
 		if (($node instanceof File) === false) {
 			throw new RuntimeException(message: 'Document not found.');
 		}

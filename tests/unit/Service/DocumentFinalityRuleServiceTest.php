@@ -56,14 +56,14 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 	 * @return array<string, mixed> The declaration.
 	 */
 	private function declaration(array $overrides = []): array {
-		return ([
+		return array_merge([
 			'uuid' => 'rule-1',
 			'declaringApp' => 'dossiq',
 			'typeReference' => 'bezwaarschrift',
 			'finalStates' => ['besluit genomen'],
 			'documentRole' => 'besluit',
 			'reasonTemplate' => '',
-		] + $overrides);
+		], $overrides);
 
 	}//end declaration()
 

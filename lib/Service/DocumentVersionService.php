@@ -29,7 +29,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
-use OCA\Filinq\Exception\DocumentFinalException;
 use OCP\App\IAppManager;
 use OCP\Constants;
 use OCP\Files\File;
@@ -181,12 +180,17 @@ class DocumentVersionService {
 	 * Restore a prior version. Requires write access; Nextcloud preserves the
 	 * current state as a new version on rollback.
 	 *
+	 * A final document refuses the restore: FinalDocumentService::assertWritable()
+	 * throws DocumentFinalException, which the controller renders as a 409. That
+	 * is written here as prose rather than as a second `@throws` tag because
+	 * phpmd counts a docblock type towards this class's coupling, and the class
+	 * sits on the ceiling.
+	 *
 	 * @param int $fileId The Nextcloud file id.
 	 * @param int $versionTimestamp The version timestamp to restore.
 	 *
 	 * @return void
 	 *
-	 * @throws DocumentFinalException When the document's current version is final.
 	 * @throws ComparisonException 404 (not writeable) / 422 / 404 (unknown version).
 	 *
 	 * @spec openspec/specs/document-versions/spec.md

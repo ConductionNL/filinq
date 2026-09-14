@@ -24,6 +24,7 @@ use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\FinalDocumentUnfreezeService;
 use OCA\OpenRegister\Service\ObjectService;
+use OCP\Files\IRootFolder;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -115,9 +116,19 @@ class FinalDocumentUnfreezeServiceTest extends TestCase {
 		$groupManager->method('isAdmin')->willReturn(false);
 		$groupManager->method('isInGroup')->willReturn($holdsRight);
 
+		// The real guard, not a double: `isFinal()` is the rule this service
+		// asks before it unfreezes anything, and a double would answer whatever
+		// the test told it to rather than what the record says.
+		$finalDocuments = new FinalDocumentService(
+			$repository,
+			$this->createMock(IRootFolder::class),
+			$session,
+			$this->createMock(LoggerInterface::class)
+		);
+
 		return new FinalDocumentUnfreezeService(
 			$repository,
-			$this->createMock(FinalDocumentService::class),
+			$finalDocuments,
 			$session,
 			$groupManager,
 			$this->createMock(LoggerInterface::class)

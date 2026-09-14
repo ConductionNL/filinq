@@ -189,7 +189,11 @@ class FinalDocumentRepository {
 		}
 
 		try {
-			$object = $this->objectResolver->resolve()->getObject(
+			// find(), not getObject(): OpenRegister's getObject() takes no
+			// arguments and answers with the service's current object context,
+			// so the named arguments below would have thrown and this method
+			// would have answered null for every record that exists.
+			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
 				register: self::REGISTER,
 				schema: self::SCHEMA
@@ -228,20 +232,16 @@ class FinalDocumentRepository {
 
 		try {
 			$objectService = $this->objectResolver->resolve();
-			if ($uuid === null) {
-				$stored = $objectService->saveObject(
-					object: $record,
-					register: self::REGISTER,
-					schema: self::SCHEMA
-				);
-			} else {
-				$stored = $objectService->saveObject(
-					object: $record,
-					register: self::REGISTER,
-					schema: self::SCHEMA,
-					uuid: $uuid
-				);
+			$arguments = [
+				'object'   => $record,
+				'register' => self::REGISTER,
+				'schema'   => self::SCHEMA,
+			];
+			if ($uuid !== null) {
+				$arguments['uuid'] = $uuid;
 			}
+
+			$stored = $objectService->saveObject(...$arguments);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				message: '[FinalDocumentRepository] could not store a finalisation record',

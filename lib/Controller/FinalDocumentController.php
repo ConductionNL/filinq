@@ -29,9 +29,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\DocumentFinalityRuleService;
 use OCA\Filinq\Service\FinalDocumentCorrectionService;
+use OCA\Filinq\Service\FinalDocumentFailureMapper;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\FinalDocumentUnfreezeService;
 use OCP\AppFramework\Controller;
@@ -41,8 +41,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -69,7 +67,6 @@ class FinalDocumentController extends Controller {
 	 * @param DocumentFinalityRuleService $rules The declaration store.
 	 * @param IUserSession $userSession The current user session.
 	 * @param IL10N $l10n Localisation.
-	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
 	 */
@@ -80,9 +77,9 @@ class FinalDocumentController extends Controller {
 		private readonly FinalDocumentCorrectionService $corrections,
 		private readonly FinalDocumentUnfreezeService $unfreeze,
 		private readonly DocumentFinalityRuleService $rules,
+		private readonly FinalDocumentFailureMapper $failures,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
-		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -370,41 +367,9 @@ class FinalDocumentController extends Controller {
 	 * @spec exclude Error shaping shared by every method here; ADR-105.
 	 */
 	private function failure(Throwable $exception, string $fallback): JSONResponse {
-		if ($exception instanceof DocumentFinalException) {
-			return new JSONResponse(
-				data: [
-					'error' => $exception->getMessage(),
-					'reason' => 'document-final',
-					'version' => $exception->getVersion(),
-				],
-				statusCode: Http::STATUS_CONFLICT
-			);
-		}
+		$shape = $this->failures->shape(exception: $exception, fallback: $fallback);
 
-		if ($exception instanceof RuntimeException) {
-			$message = $exception->getMessage();
-			if ($message === 'Document not found.') {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Document not found'), 'reason' => 'not-found'],
-					statusCode: Http::STATUS_NOT_FOUND
-				);
-			}
-
-			return new JSONResponse(
-				data: ['error' => $message, 'reason' => 'refused'],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		$this->logger->error(
-			message: '[FinalDocumentController] a final-document request failed',
-			context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $exception->getMessage()]
-		);
-
-		return new JSONResponse(
-			data: ['error' => $fallback],
-			statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
-		);
+		return new JSONResponse(data: $shape['body'], statusCode: $shape['status']);
 
 	}//end failure()
 }//end class

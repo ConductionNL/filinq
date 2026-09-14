@@ -46,7 +46,9 @@
                     "customDictionaryTerm",
                     "anonymizationBatch",
                     "dossier",
-                    "base"
+                    "base",
+                    "documentVersion",
+                    "documentFinalityRule"
                 ]
             }
         },

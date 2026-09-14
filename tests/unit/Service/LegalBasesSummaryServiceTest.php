@@ -17,6 +17,7 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\LegalBasesSummaryService;
 use OCA\Filinq\Service\PdfService;
 use OCP\App\IAppManager;
@@ -116,6 +117,7 @@ class LegalBasesSummaryServiceTest extends TestCase {
 		$this->service = new LegalBasesSummaryService(
 			logger: $this->mockLogger,
 			pdfService: $this->mockPdfService,
+			finalDocuments: $this->createMock(originalClassName: FinalDocumentService::class),
 			rootFolder: $this->mockRootFolder,
 			userSession: $this->mockUserSession,
 			appManager: $this->mockAppManager,
@@ -297,6 +299,7 @@ class LegalBasesSummaryServiceTest extends TestCase {
 		$service = new LegalBasesSummaryService(
 			logger: $this->mockLogger,
 			pdfService: $this->mockPdfService,
+			finalDocuments: $this->createMock(originalClassName: FinalDocumentService::class),
 			rootFolder: $this->mockRootFolder,
 			userSession: $this->mockUserSession,
 			appManager: $this->mockAppManager,
