@@ -4,7 +4,7 @@
 
 ## 1. Schema
 
-- [ ] 1.1 Declare `x-openregister-lifecycle` on the document version with `draft` and terminal `final`, plus `finalisedBy`, `finalisedAt`, `finalReason`, `supersedes`, `fileChecksum` and `unfrozen`, in the `filinq` register with a descriptor version bump (REQ-FDF-01)
+- [x] 1.1 Declare `x-openregister-lifecycle` on the document version with `draft` and terminal `final`, plus `finalisedBy`, `finalisedAt`, `finalReason`, `supersedes`, `fileChecksum` and `unfrozen`, in the `filinq` register with a descriptor version bump (REQ-FDF-01)
 
 ## 2. The guard
 
