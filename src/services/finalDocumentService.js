@@ -48,7 +48,9 @@ export async function finaliseDocument(fileId, reason) {
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
 export async function correctDocument(fileId, reason) {
-	const url = generateUrl('/apps/filinq/api/documents/{fileId}/final/correction', { fileId })
+	const url = generateUrl('/apps/filinq/api/documents/{fileId}/final/correction', {
+		fileId,
+	})
 	const { data } = await axios.post(url, { reason })
 	return data
 }

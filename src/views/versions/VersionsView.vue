@@ -175,7 +175,13 @@ export default {
 			unavailable: false,
 			restoreTarget: null,
 
-			finalState: { final: false, version: null, checksum: null, mayUnfreeze: false },
+			finalState: {
+				final: false,
+				version: null,
+				checksum: null,
+				mayUnfreeze: false,
+			},
+
 			prompt: '',
 		}
 	},
@@ -223,9 +229,16 @@ export default {
 				return ''
 			}
 
-			const who = version.finalisedByName || version.finalisedBy || t('filinq', 'someone whose name was not recorded')
+			const who =
+				version.finalisedByName
+				|| version.finalisedBy
+				|| t('filinq', 'someone whose name was not recorded')
 			const when = this.formatMoment(version.finalisedAt)
-			const opening = t('filinq', 'This document is final. {who} made it final on {when}.', { who, when })
+			const opening = t(
+				'filinq',
+				'This document is final. {who} made it final on {when}.',
+				{ who, when },
+			)
 
 			if (version.finalReason) {
 				return `${opening} ${t('filinq', 'Reason: {reason}', { reason: version.finalReason })}`
@@ -246,11 +259,15 @@ export default {
 				return ''
 			}
 
-			return t('filinq', 'This document was unfrozen by {who} on {when}. Reason: {reason}', {
-				who: version.unfrozenBy || t('filinq', 'an administrator'),
-				when: this.formatMoment(version.unfrozenAt),
-				reason: version.unfrozenReason || t('filinq', 'none recorded'),
-			})
+			return t(
+				'filinq',
+				'This document was unfrozen by {who} on {when}. Reason: {reason}',
+				{
+					who: version.unfrozenBy || t('filinq', 'an administrator'),
+					when: this.formatMoment(version.unfrozenAt),
+					reason: version.unfrozenReason || t('filinq', 'none recorded'),
+				},
+			)
 		},
 
 		/**
@@ -265,7 +282,13 @@ export default {
 				return ''
 			}
 
-			return checksum.message || t('filinq', 'The file behind this final version has changed on the storage.')
+			return (
+				checksum.message
+				|| t(
+					'filinq',
+					'The file behind this final version has changed on the storage.',
+				)
+			)
 		},
 
 		/**
@@ -278,7 +301,11 @@ export default {
 			if (this.prompt === 'correct') {
 				return {
 					name: t('filinq', 'Issue a correction'),
-					explanation: t('filinq', 'The final version stays readable and stays final. The correction is a new document that says which version it supersedes.'),
+					explanation: t(
+						'filinq',
+						'The final version stays readable and stays final. The correction is a new document that says which version it supersedes.',
+					),
+
 					placeholder: t('filinq', 'What does this correction change?'),
 					confirmLabel: t('filinq', 'Issue a correction'),
 				}
@@ -287,15 +314,27 @@ export default {
 			if (this.prompt === 'unfreeze') {
 				return {
 					name: t('filinq', 'Unfreeze this document'),
-					explanation: t('filinq', 'The document becomes editable again, and it carries a permanent mark that it was unfrozen. Your name, the moment and this reason stay on the record.'),
-					placeholder: t('filinq', 'Why are you unfreezing this document?'),
+					explanation: t(
+						'filinq',
+						'The document becomes editable again, and it carries a permanent mark that it was unfrozen. Your name, the moment and this reason stay on the record.',
+					),
+
+					placeholder: t(
+						'filinq',
+						'Why are you unfreezing this document?',
+					),
+
 					confirmLabel: t('filinq', 'Unfreeze'),
 				}
 			}
 
 			return {
 				name: t('filinq', 'Make this document final'),
-				explanation: t('filinq', 'A final document refuses every edit, and there is no way back. Correct it later by issuing a correction.'),
+				explanation: t(
+					'filinq',
+					'A final document refuses every edit, and there is no way back. Correct it later by issuing a correction.',
+				),
+
 				placeholder: t('filinq', 'What makes this document final?'),
 				confirmLabel: t('filinq', 'Make final'),
 			}
@@ -426,7 +465,12 @@ export default {
 			} catch {
 				// A document nobody ever finalised has no record, and that is
 				// not an error: the panel simply offers to make it final.
-				this.finalState = { final: false, version: null, checksum: null, mayUnfreeze: false }
+				this.finalState = {
+					final: false,
+					version: null,
+					checksum: null,
+					mayUnfreeze: false,
+				}
 			}
 		},
 

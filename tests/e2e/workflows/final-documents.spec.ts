@@ -53,8 +53,11 @@ const TYPE_REFERENCE = `${TEST_PREFIX}-bezwaarschrift`
  */
 async function openVersionsTab(page: Page, fileId: string): Promise<void> {
 	await page.goto(`/index.php/apps/filinq/versions?fileId=${fileId}`)
-	await expect(page.getByTestId('versions-table').or(page.getByTestId('versions-unavailable')))
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		page
+			.getByTestId('versions-table')
+			.or(page.getByTestId('versions-unavailable')),
+	).toBeVisible({ timeout: 15000 })
 }
 
 /**
@@ -72,7 +75,12 @@ async function seedDocument(
 	name: string,
 	contents: string,
 ): Promise<string> {
-	const { status, fileId } = await createDavFile(req, token, `${FOLDER}/${name}`, contents)
+	const { status, fileId } = await createDavFile(
+		req,
+		token,
+		`${FOLDER}/${name}`,
+		contents,
+	)
 	expect(status, `seeding ${name} must succeed`).toBeLessThan(300)
 	expect(fileId, `seeding ${name} must yield a file id`).not.toBe('')
 	return fileId
@@ -99,12 +107,22 @@ test.describe('Final documents are frozen against change', () => {
 
 	// @e2e openspec/changes/final-documents-frozen/specs/document-versions/spec.md#a-besluit-becomes-final
 	// @e2e openspec/specs/document-versions/spec.md#a-besluit-becomes-final
-	test('a besluit becomes final, naming the person, the moment, the reason and the checksum', async ({ page }) => {
-		const fileId = await seedDocument(page.request, token, 'besluit-wordt-definitief.txt', 'Het besluit.')
+	test('a besluit becomes final, naming the person, the moment, the reason and the checksum', async ({
+		page,
+	}) => {
+		const fileId = await seedDocument(
+			page.request,
+			token,
+			'besluit-wordt-definitief.txt',
+			'Het besluit.',
+		)
 
 		await openVersionsTab(page, fileId)
 		await page.getByTestId('document-finalise').click()
-		await page.getByTestId('final-reason-input').locator('input').fill('Het besluit is genomen')
+		await page
+			.getByTestId('final-reason-input')
+			.locator('input')
+			.fill('Het besluit is genomen')
 		await page.getByTestId('final-reason-confirm').click()
 
 		const panel = page.getByTestId('document-final')
@@ -127,8 +145,15 @@ test.describe('Final documents are frozen against change', () => {
 
 	// @e2e openspec/changes/final-documents-frozen/specs/document-versions/spec.md#the-editor-refuses-and-explains
 	// @e2e openspec/specs/document-versions/spec.md#the-editor-refuses-and-explains
-	test('the editor refuses to save a change to a final besluit, and explains', async ({ page }) => {
-		const fileId = await seedDocument(page.request, token, 'editor-weigert.txt', 'Het besluit.')
+	test('the editor refuses to save a change to a final besluit, and explains', async ({
+		page,
+	}) => {
+		const fileId = await seedDocument(
+			page.request,
+			token,
+			'editor-weigert.txt',
+			'Het besluit.',
+		)
 
 		const made = await page.request.post(`${API}/documents/${fileId}/final`, {
 			headers: jsonHeaders(token),
@@ -140,10 +165,13 @@ test.describe('Final documents are frozen against change', () => {
 		// The editor's save resolves through the same service the version
 		// endpoint does, so the refusal it receives is the refusal the handler
 		// reads: a 409 naming who froze the document and when.
-		const save = await page.request.post(`${API}/documents/${fileId}/versions/0/restore`, {
-			headers: jsonHeaders(token),
-			data: {},
-		})
+		const save = await page.request.post(
+			`${API}/documents/${fileId}/versions/0/restore`,
+			{
+				headers: jsonHeaders(token),
+				data: {},
+			},
+		)
 		expect(save.status()).toBe(409)
 		const refusal = await save.json()
 		expect(refusal.reason).toBe('document-final')
@@ -159,7 +187,9 @@ test.describe('Final documents are frozen against change', () => {
 
 	// @e2e openspec/changes/final-documents-frozen/specs/document-versions/spec.md#a-file-changed-outside-the-product-is-reported
 	// @e2e openspec/specs/document-versions/spec.md#a-file-changed-outside-the-product-is-reported
-	test('a final version whose file changed on the storage reports the mismatch', async ({ page }) => {
+	test('a final version whose file changed on the storage reports the mismatch', async ({
+		page,
+	}) => {
 		const name = 'checksum-verandert.txt'
 		const fileId = await seedDocument(page.request, token, name, 'Het besluit.')
 
@@ -171,10 +201,13 @@ test.describe('Final documents are frozen against change', () => {
 
 		// WebDAV writes the file directly, which is what "changed outside the
 		// product" means: Filinq's own paths all refuse it by now.
-		const overwritten = await page.request.put(`/remote.php/dav/files/admin/${FOLDER}/${name}`, {
-			headers: { requesttoken: token },
-			data: 'Het besluit, met een andere straatnaam.',
-		})
+		const overwritten = await page.request.put(
+			`/remote.php/dav/files/admin/${FOLDER}/${name}`,
+			{
+				headers: { requesttoken: token },
+				data: 'Het besluit, met een andere straatnaam.',
+			},
+		)
 		expect(overwritten.status()).toBeLessThan(300)
 
 		await openVersionsTab(page, fileId)
@@ -185,8 +218,15 @@ test.describe('Final documents are frozen against change', () => {
 
 	// @e2e openspec/changes/final-documents-frozen/specs/document-versions/spec.md#a-corrected-besluit-keeps-its-predecessor
 	// @e2e openspec/specs/document-versions/spec.md#a-corrected-besluit-keeps-its-predecessor
-	test('a corrected besluit keeps its predecessor, readable and still final', async ({ page }) => {
-		const fileId = await seedDocument(page.request, token, 'correctie.txt', 'Het besluit.')
+	test('a corrected besluit keeps its predecessor, readable and still final', async ({
+		page,
+	}) => {
+		const fileId = await seedDocument(
+			page.request,
+			token,
+			'correctie.txt',
+			'Het besluit.',
+		)
 
 		const made = await page.request.post(`${API}/documents/${fileId}/final`, {
 			headers: jsonHeaders(token),
@@ -196,14 +236,22 @@ test.describe('Final documents are frozen against change', () => {
 
 		await openVersionsTab(page, fileId)
 		await page.getByTestId('document-correct').click()
-		await page.getByTestId('final-reason-input').locator('input').fill('De straatnaam klopte niet')
+		await page
+			.getByTestId('final-reason-input')
+			.locator('input')
+			.fill('De straatnaam klopte niet')
 		await page.getByTestId('final-reason-confirm').click()
-		await expect(page.getByTestId('document-final')).toBeVisible({ timeout: 15000 })
+		await expect(page.getByTestId('document-final')).toBeVisible({
+			timeout: 15000,
+		})
 
 		// The predecessor is untouched: still readable, still final.
-		const predecessor = await page.request.get(`${API}/documents/${fileId}/final`, {
-			headers: jsonHeaders(token),
-		})
+		const predecessor = await page.request.get(
+			`${API}/documents/${fileId}/final`,
+			{
+				headers: jsonHeaders(token),
+			},
+		)
 		expect(predecessor.status()).toBe(200)
 		const predecessorBody = await predecessor.json()
 		expect(predecessorBody.final).toBe(true)
@@ -213,9 +261,12 @@ test.describe('Final documents are frozen against change', () => {
 		// And the correction names what it supersedes, from its own end.
 		const correctionFileId = predecessorBody.supersededBy.fileId
 		expect(String(correctionFileId)).not.toBe(String(fileId))
-		const correction = await page.request.get(`${API}/documents/${correctionFileId}/final`, {
-			headers: jsonHeaders(token),
-		})
+		const correction = await page.request.get(
+			`${API}/documents/${correctionFileId}/final`,
+			{
+				headers: jsonHeaders(token),
+			},
+		)
 		expect(correction.status()).toBe(200)
 		const correctionBody = await correction.json()
 		expect(correctionBody.final).toBe(false)
@@ -224,8 +275,15 @@ test.describe('Final documents are frozen against change', () => {
 
 	// @e2e openspec/changes/final-documents-frozen/specs/document-versions/spec.md#the-decision-freezes-the-besluit
 	// @e2e openspec/specs/document-versions/spec.md#the-decision-freezes-the-besluit
-	test('the declared status freezes the besluit when the case reaches it', async ({ page }) => {
-		const fileId = await seedDocument(page.request, token, 'verklaard-besluit.txt', 'Het besluit.')
+	test('the declared status freezes the besluit when the case reaches it', async ({
+		page,
+	}) => {
+		const fileId = await seedDocument(
+			page.request,
+			token,
+			'verklaard-besluit.txt',
+			'Het besluit.',
+		)
 
 		const declared = await page.request.post(`${API}/document-finality-rules`, {
 			headers: jsonHeaders(token),
@@ -238,16 +296,19 @@ test.describe('Final documents are frozen against change', () => {
 		})
 		expect(declared.status()).toBe(200)
 
-		const applied = await page.request.post(`${API}/document-finality-rules/apply`, {
-			headers: jsonHeaders(token),
-			data: {
-				declaringApp: DECLARING_APP,
-				typeReference: TYPE_REFERENCE,
-				state: 'besluit genomen',
-				documentRole: 'besluit',
-				fileIds: [Number(fileId)],
+		const applied = await page.request.post(
+			`${API}/document-finality-rules/apply`,
+			{
+				headers: jsonHeaders(token),
+				data: {
+					declaringApp: DECLARING_APP,
+					typeReference: TYPE_REFERENCE,
+					state: 'besluit genomen',
+					documentRole: 'besluit',
+					fileIds: [Number(fileId)],
+				},
 			},
-		})
+		)
 		expect(applied.status()).toBe(200)
 		expect((await applied.json()).count).toBe(1)
 
@@ -259,18 +320,28 @@ test.describe('Final documents are frozen against change', () => {
 
 	// @e2e openspec/changes/final-documents-frozen/specs/document-versions/spec.md#no-declaration-no-automatic-freeze
 	// @e2e openspec/specs/document-versions/spec.md#no-declaration-no-automatic-freeze
-	test('a record type with no declaration freezes nothing when its state changes', async ({ page }) => {
-		const fileId = await seedDocument(page.request, token, 'geen-verklaring.txt', 'Een melding.')
+	test('a record type with no declaration freezes nothing when its state changes', async ({
+		page,
+	}) => {
+		const fileId = await seedDocument(
+			page.request,
+			token,
+			'geen-verklaring.txt',
+			'Een melding.',
+		)
 
-		const applied = await page.request.post(`${API}/document-finality-rules/apply`, {
-			headers: jsonHeaders(token),
-			data: {
-				declaringApp: DECLARING_APP,
-				typeReference: `${TYPE_REFERENCE}-undeclared`,
-				state: 'afgehandeld',
-				fileIds: [Number(fileId)],
+		const applied = await page.request.post(
+			`${API}/document-finality-rules/apply`,
+			{
+				headers: jsonHeaders(token),
+				data: {
+					declaringApp: DECLARING_APP,
+					typeReference: `${TYPE_REFERENCE}-undeclared`,
+					state: 'afgehandeld',
+					fileIds: [Number(fileId)],
+				},
 			},
-		})
+		)
 		expect(applied.status()).toBe(200)
 		expect((await applied.json()).count).toBe(0)
 
@@ -281,8 +352,15 @@ test.describe('Final documents are frozen against change', () => {
 
 	// @e2e openspec/changes/final-documents-frozen/specs/document-versions/spec.md#an-unfreeze-leaves-a-scar
 	// @e2e openspec/specs/document-versions/spec.md#an-unfreeze-leaves-a-scar
-	test('an unfreeze leaves a scar anybody opening the document afterwards can see', async ({ page }) => {
-		const fileId = await seedDocument(page.request, token, 'vrijgegeven.txt', 'Het besluit.')
+	test('an unfreeze leaves a scar anybody opening the document afterwards can see', async ({
+		page,
+	}) => {
+		const fileId = await seedDocument(
+			page.request,
+			token,
+			'vrijgegeven.txt',
+			'Het besluit.',
+		)
 
 		const made = await page.request.post(`${API}/documents/${fileId}/final`, {
 			headers: jsonHeaders(token),
@@ -291,10 +369,13 @@ test.describe('Final documents are frozen against change', () => {
 		expect(made.status()).toBe(200)
 
 		// The E2E session runs as admin, who holds the right by definition.
-		const unfrozen = await page.request.delete(`${API}/documents/${fileId}/final`, {
-			headers: jsonHeaders(token),
-			data: { reason: 'Het besluit noemde de verkeerde straat' },
-		})
+		const unfrozen = await page.request.delete(
+			`${API}/documents/${fileId}/final`,
+			{
+				headers: jsonHeaders(token),
+				data: { reason: 'Het besluit noemde de verkeerde straat' },
+			},
+		)
 		expect(unfrozen.status()).toBe(200)
 
 		await openVersionsTab(page, fileId)
