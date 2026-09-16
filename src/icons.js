@@ -24,11 +24,13 @@ import Domain from 'vue-material-design-icons/Domain.vue'
 import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
+import FileCertificate from 'vue-material-design-icons/FileCertificate.vue'
 import FileCheckOutline from 'vue-material-design-icons/FileCheckOutline.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import FileDocumentCheck from 'vue-material-design-icons/FileDocumentCheck.vue'
 import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
 import FileLinkOutline from 'vue-material-design-icons/FileLinkOutline.vue'
+import FileLock from 'vue-material-design-icons/FileLock.vue'
 import FileReplaceOutline from 'vue-material-design-icons/FileReplaceOutline.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
@@ -65,11 +67,17 @@ export default {
 	EmailMultipleOutline,
 	EmailOutline,
 	EyeOffOutline,
+	// The `documentFinalityRule` and `documentVersion` schemas in
+	// lib/Settings/filinq_register.json. PR #1090 added both icons to the
+	// register without adding them here, so both headers rendered with no icon
+	// at all (rule 3 above).
+	FileCertificate,
 	FileCheckOutline,
 	FileDocument,
 	FileDocumentCheck,
 	FileDocumentMultipleOutline,
 	FileLinkOutline,
+	FileLock,
 	FileReplaceOutline,
 	FileSign,
 	FolderAccount,
