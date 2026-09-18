@@ -280,6 +280,43 @@ class RegisterService {
 }//end class
 
 /**
+ * Stub for ViewService (saved views).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class ViewService {
+	/**
+	 * Find one saved view.
+	 *
+	 * Loosely typed (vs. the real `View`) so the stub does not need to know
+	 * OpenRegister's entity class beyond the getters filinq reads.
+	 *
+	 * @param int|string $id The view id or slug.
+	 * @param string $owner The user asking.
+	 *
+	 * @return mixed The view.
+	 */
+	public function find($id, string $owner) {
+		return null;
+	}//end find()
+
+	/**
+	 * Every view one user can see.
+	 *
+	 * @param string $owner The user asking.
+	 *
+	 * @return array The views.
+	 */
+	public function findAll(string $owner): array {
+		return [];
+	}//end findAll()
+}//end class
+
+/**
  * Stub for ConfigurationService
  *
  * @category Tests
@@ -581,6 +618,44 @@ class Schema {
 	public function jsonSerialize(): array {
 		return [];
 	}//end jsonSerialize()
+}//end class
+
+/**
+ * Stub for the View entity.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class View {
+	/**
+	 * The stored query: registers, schemas and filters.
+	 *
+	 * @return array The query.
+	 */
+	public function getQuery(): array {
+		return [];
+	}//end getQuery()
+
+	/**
+	 * The view's name.
+	 *
+	 * @return string The name.
+	 */
+	public function getName(): string {
+		return '';
+	}//end getName()
+
+	/**
+	 * The view's id.
+	 *
+	 * @return int|null The id.
+	 */
+	public function getId() {
+		return null;
+	}//end getId()
 }//end class
 
 /**

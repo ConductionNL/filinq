@@ -17,6 +17,7 @@ import AccountEdit from 'vue-material-design-icons/AccountEdit.vue'
 import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import CalendarSync from 'vue-material-design-icons/CalendarSync.vue'
 import CallSplit from 'vue-material-design-icons/CallSplit.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
@@ -36,7 +37,9 @@ import FileReplaceOutline from 'vue-material-design-icons/FileReplaceOutline.vue
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import FolderZip from 'vue-material-design-icons/FolderZip.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import FormatPageBreak from 'vue-material-design-icons/FormatPageBreak.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
 import History from 'vue-material-design-icons/History.vue'
 import InboxArrowDown from 'vue-material-design-icons/InboxArrowDown.vue'
@@ -88,6 +91,9 @@ export default {
 	FolderOutline,
 	FormatListBulleted,
 	Gavel,
+	CalendarSync,
+	FolderZip,
+	FormatPageBreak,
 	History,
 	InboxArrowDown,
 	Stamper,
