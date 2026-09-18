@@ -146,13 +146,21 @@ test.describe('Case documents and the flat list', () => {
 
 		const list = await page.request.get(`${API}/case-documents/files`, {
 			headers: jsonHeaders(token),
-			params: { register: CASE.register, schema: CASE.schema, id: CASE.id, limit: 50 },
+			params: {
+				register: CASE.register,
+				schema: CASE.schema,
+				id: CASE.id,
+				limit: 50,
+			},
 		})
 		expect(list.status()).toBe(200)
 		const body = await list.json()
 		expect(body.total).toBeGreaterThanOrEqual(3)
 		for (const row of body.results) {
-			expect(row.record?.uuid, 'every row names the record it belongs to').not.toBe('')
+			expect(
+				row.record?.uuid,
+				'every row names the record it belongs to',
+			).not.toBe('')
 		}
 	})
 
@@ -187,21 +195,32 @@ test.describe('Case documents and the flat list', () => {
 			'een advies',
 		)
 		expect(status).toBeLessThan(300)
-		const uuid = await seedRecord(page.request, token, fileId, 'advies-voor-drie.txt')
+		const uuid = await seedRecord(
+			page.request,
+			token,
+			fileId,
+			'advies-voor-drie.txt',
+		)
 
-		const second = await page.request.post(`${API}/case-documents/${uuid}/domains`, {
-			headers: jsonHeaders(token),
-			data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
-		})
+		const second = await page.request.post(
+			`${API}/case-documents/${uuid}/domains`,
+			{
+				headers: jsonHeaders(token),
+				data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
+			},
+		)
 		expect(second.status()).toBe(200)
 		const linked = await second.json()
 		expect(Array.isArray(linked.domains)).toBe(true)
 		expect(linked.domains.length, 'the same domain twice stays one link').toBe(1)
 
-		const unlinked = await page.request.delete(`${API}/case-documents/${uuid}/domains`, {
-			headers: jsonHeaders(token),
-			data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
-		})
+		const unlinked = await page.request.delete(
+			`${API}/case-documents/${uuid}/domains`,
+			{
+				headers: jsonHeaders(token),
+				data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
+			},
+		)
 		expect(unlinked.status()).toBe(200)
 
 		// The record itself survives the unlink, which is the whole point.
@@ -228,10 +247,15 @@ test.describe('Case documents and the flat list', () => {
 
 	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#an-executable-is-refused
 	// @e2e openspec/specs/document-register/spec.md#an-executable-is-refused
-	test('the upload policy is readable, and says what it allows', async ({ page }) => {
-		const response = await page.request.get(`${API}/case-documents/upload-policy`, {
-			headers: jsonHeaders(token),
-		})
+	test('the upload policy is readable, and says what it allows', async ({
+		page,
+	}) => {
+		const response = await page.request.get(
+			`${API}/case-documents/upload-policy`,
+			{
+				headers: jsonHeaders(token),
+			},
+		)
 		expect(response.status()).toBe(200)
 		const body = await response.json()
 

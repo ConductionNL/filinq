@@ -58,9 +58,12 @@ describe('the signing folder store', () => {
 		const store = useSigningStore()
 		await store.fetchSigningFolder()
 
-		expect(get).toHaveBeenCalledWith('/index.php/apps/filinq/api/signing/folder', {
-			params: { limit: 50, offset: 0 },
-		})
+		expect(get).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/signing/folder',
+			{
+				params: { limit: 50, offset: 0 },
+			},
+		)
 		expect(store.folderEntries).toHaveLength(2)
 		expect(store.folderTotal).toBe(40)
 		expect(store.loading).toBe(false)
@@ -72,9 +75,12 @@ describe('the signing folder store', () => {
 		const store = useSigningStore()
 		await store.fetchSigningFolder(10, 30)
 
-		expect(get).toHaveBeenCalledWith('/index.php/apps/filinq/api/signing/folder', {
-			params: { limit: 10, offset: 30 },
-		})
+		expect(get).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/signing/folder',
+			{
+				params: { limit: 10, offset: 30 },
+			},
+		)
 	})
 
 	it('reports a folder it could not read instead of showing an empty one', async () => {
@@ -96,7 +102,11 @@ describe('the signing folder store', () => {
 				refused: 1,
 				results: [
 					{ requestId: 'a', signed: true },
-					{ requestId: 'b', signed: false, reason: 'Outside your mandate' },
+					{
+						requestId: 'b',
+						signed: false,
+						reason: 'Outside your mandate',
+					},
 				],
 			},
 		})
@@ -104,9 +114,12 @@ describe('the signing folder store', () => {
 		const store = useSigningStore()
 		const outcome = await store.signFolderSelection(['a', 'b'])
 
-		expect(post).toHaveBeenCalledWith('/index.php/apps/filinq/api/signing/folder/sign', {
-			requestIds: ['a', 'b'],
-		})
+		expect(post).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/signing/folder/sign',
+			{
+				requestIds: ['a', 'b'],
+			},
+		)
 		expect(outcome.signed).toBe(1)
 		expect(outcome.results[1].reason).toBe('Outside your mandate')
 	})

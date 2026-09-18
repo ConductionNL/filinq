@@ -37,7 +37,10 @@ copy of that judgement.
 				:inputLabel="t('filinq', 'Record')"
 				:placeholder="recordPlaceholder"
 				data-testid="intake-assign-record" />
-			<p v-if="error" class="intake-assign__error" data-testid="intake-assign-error">
+			<p
+				v-if="error"
+				class="intake-assign__error"
+				data-testid="intake-assign-error">
 				{{ error }}
 			</p>
 		</template>
@@ -95,7 +98,9 @@ export default {
 	computed: {
 		explanation() {
 			const subject = this.document?.subject || t('filinq', 'this document')
-			return t('filinq', 'Pick the record "{subject}" belongs to.', { subject })
+			return t('filinq', 'Pick the record "{subject}" belongs to.', {
+				subject,
+			})
 		},
 
 		recordOptions() {

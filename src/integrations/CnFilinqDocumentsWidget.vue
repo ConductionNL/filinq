@@ -7,16 +7,25 @@
 		<p v-if="loading" class="filinq-documents-leaf__state">
 			{{ t('filinq', 'Looking up documents') }}
 		</p>
-		<p v-else-if="error" class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
+		<p
+			v-else-if="error"
+			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
 			{{ t('filinq', 'The documents could not be loaded') }}
 		</p>
 		<p v-else-if="rows.length === 0" class="filinq-documents-leaf__state">
 			{{ t('filinq', 'No documents yet') }}
 		</p>
 		<ul v-else class="filinq-documents-leaf__list">
-			<li v-for="row in rows" :key="row.fileId" class="filinq-documents-leaf__item">
-				<a class="filinq-documents-leaf__link" :href="fileLink(row)">{{ row.name }}</a>
-				<span v-if="row.record && row.record.status" class="filinq-documents-leaf__status">
+			<li
+				v-for="row in rows"
+				:key="row.fileId"
+				class="filinq-documents-leaf__item">
+				<a class="filinq-documents-leaf__link" :href="fileLink(row)">{{
+					row.name
+				}}</a>
+				<span
+					v-if="row.record && row.record.status"
+					class="filinq-documents-leaf__status">
 					{{ row.record.status }}
 				</span>
 			</li>
@@ -95,8 +104,15 @@ export default {
 
 			try {
 				const response = await fetch(
-					generateUrl('/apps/filinq/api/case-documents/files') + '?' + query.toString(),
-					{ headers: { requesttoken: this.requestToken(), Accept: 'application/json' } },
+					generateUrl('/apps/filinq/api/case-documents/files')
+						+ '?'
+						+ query.toString(),
+					{
+						headers: {
+							requesttoken: this.requestToken(),
+							Accept: 'application/json',
+						},
+					},
 				)
 				if (response.ok === false) {
 					this.error = true

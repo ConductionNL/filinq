@@ -6,11 +6,7 @@ SPDX-License-Identifier: EUPL-1.2
 -->
 
 <template>
-	<NcModal
-		:show="show"
-		:title="documentName"
-		size="large"
-		@close="$emit('close')">
+	<NcModal :show="show" :title="documentName" size="large" @close="$emit('close')">
 		<div class="signing-folder-document">
 			<p class="signing-folder-document__context">
 				{{ recordLabel }}

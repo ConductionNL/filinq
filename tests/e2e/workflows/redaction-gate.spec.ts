@@ -59,13 +59,21 @@ test.describe('what leaves the building', () => {
 			headers: jsonHeaders(token),
 			data: {
 				entities: [
-					{ entityType: 'PERSON', text: 'Fatima El-Amrani', start: 10, end: 26 },
+					{
+						entityType: 'PERSON',
+						text: 'Fatima El-Amrani',
+						start: 10,
+						end: 26,
+					},
 				],
 			},
 		})
 
 		// 4xx or 5xx: what matters is that it is not a success carrying a file.
-		expect(refused.status(), 'an unchecked document must not anonymise').toBeGreaterThanOrEqual(400)
+		expect(
+			refused.status(),
+			'an unchecked document must not anonymise',
+		).toBeGreaterThanOrEqual(400)
 
 		const body = await refused.text()
 		expect(
@@ -92,8 +100,14 @@ test.describe('what leaves the building', () => {
 		// run rather than merely exist.
 		if (marked.status() < 300) {
 			const mark = await marked.json()
-			expect(mark.detectionRun, 'a mark that names no run covers everything').not.toBe('')
-			expect(mark.checkedBy, 'a check nobody signed is a check nobody can be asked about').not.toBe('')
+			expect(
+				mark.detectionRun,
+				'a mark that names no run covers everything',
+			).not.toBe('')
+			expect(
+				mark.checkedBy,
+				'a check nobody signed is a check nobody can be asked about',
+			).not.toBe('')
 		} else {
 			expect(marked.status()).toBeGreaterThanOrEqual(400)
 		}
@@ -116,7 +130,9 @@ test.describe('what leaves the building', () => {
 			// resolve or holds a record with no redacted copy. What must not
 			// happen is a list produced anyway.
 			expect(body).toMatch(/no_such_view|not_ready/)
-			expect(body, 'a refused composition produces no entries').not.toContain('"entries"')
+			expect(body, 'a refused composition produces no entries').not.toContain(
+				'"entries"',
+			)
 			return
 		}
 
@@ -147,7 +163,9 @@ test.describe('what leaves the building', () => {
 				locale: 'nl',
 			},
 		})
-		expect(declared.status(), 'the conditions must be declarable').toBeLessThan(300)
+		expect(declared.status(), 'the conditions must be declarable').toBeLessThan(
+			300,
+		)
 
 		const before = await page.request.get(
 			`${REDACTION}/agreement?document=${encodeURIComponent(document)}`,
@@ -155,7 +173,10 @@ test.describe('what leaves the building', () => {
 		)
 		expect(before.status()).toBe(200)
 		const first = await before.json()
-		expect(first.mayDownload, 'nothing is served before the conditions are accepted').toBe(false)
+		expect(
+			first.mayDownload,
+			'nothing is served before the conditions are accepted',
+		).toBe(false)
 		expect(first.agreement.text).toContain('bronvermelding')
 
 		const accepted = await page.request.post(`${REDACTION}/agreement/accept`, {

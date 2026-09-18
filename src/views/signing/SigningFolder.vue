@@ -9,10 +9,17 @@ SPDX-License-Identifier: EUPL-1.2
 	<div class="signing-folder">
 		<h2>{{ t('filinq', 'Signing folder') }}</h2>
 		<p class="signing-folder__lead">
-			{{ t('filinq', 'Everything still waiting for your signature, from every case.') }}
+			{{
+				t(
+					'filinq',
+					'Everything still waiting for your signature, from every case.',
+				)
+			}}
 		</p>
 
-		<NcLoadingIcon v-if="signingStore.loading && entries.length === 0" :size="44" />
+		<NcLoadingIcon
+			v-if="signingStore.loading && entries.length === 0"
+			:size="44" />
 
 		<NcNoteCard v-if="signingStore.error" type="error">
 			{{ signingStore.error }}
@@ -21,7 +28,12 @@ SPDX-License-Identifier: EUPL-1.2
 		<NcEmptyContent
 			v-else-if="entries.length === 0 && !signingStore.loading"
 			:name="t('filinq', 'Nothing is waiting for your signature')"
-			:description="t('filinq', 'Documents appear here as soon as somebody asks you to sign one.')" />
+			:description="
+				t(
+					'filinq',
+					'Documents appear here as soon as somebody asks you to sign one.',
+				)
+			" />
 
 		<template v-else>
 			<div class="signing-folder__actions">
@@ -32,7 +44,12 @@ SPDX-License-Identifier: EUPL-1.2
 					{{ t('filinq', 'Sign selected') }} ({{ selected.length }})
 				</NcButton>
 				<span class="signing-folder__count">
-					{{ t('filinq', '{shown} of {total} shown', { shown: entries.length, total: signingStore.folderTotal }) }}
+					{{
+						t('filinq', '{shown} of {total} shown', {
+							shown: entries.length,
+							total: signingStore.folderTotal,
+						})
+					}}
 				</span>
 			</div>
 
@@ -55,12 +72,18 @@ SPDX-License-Identifier: EUPL-1.2
 						<td>
 							<input
 								type="checkbox"
-								:aria-label="t('filinq', 'Select {document}', { document: entry.documentName })"
+								:aria-label="
+									t('filinq', 'Select {document}', {
+										document: entry.documentName,
+									})
+								"
 								:checked="selected.includes(entry.requestId)"
-								@change="toggle(entry.requestId)">
+								@change="toggle(entry.requestId)" />
 						</td>
 						<td>
-							<NcButton variant="tertiary" @click="readDocument(entry)">
+							<NcButton
+								variant="tertiary"
+								@click="readDocument(entry)">
 								{{ entry.documentName }}
 							</NcButton>
 						</td>
@@ -79,10 +102,18 @@ SPDX-License-Identifier: EUPL-1.2
 			<ul>
 				<li v-for="result in results" :key="result.requestId">
 					<span v-if="result.signed">
-						{{ t('filinq', 'Signed: {document}', { document: result.documentName || result.requestId }) }}
+						{{
+							t('filinq', 'Signed: {document}', {
+								document: result.documentName || result.requestId,
+							})
+						}}
 					</span>
 					<span v-else>
-						{{ t('filinq', 'Not signed: {reason}', { reason: result.reason }) }}
+						{{
+							t('filinq', 'Not signed: {reason}', {
+								reason: result.reason,
+							})
+						}}
 					</span>
 				</li>
 			</ul>
@@ -171,7 +202,9 @@ export default {
 		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		async signSelection() {
-			const outcome = await this.signingStore.signFolderSelection(this.selected)
+			const outcome = await this.signingStore.signFolderSelection(
+				this.selected,
+			)
 			this.results = outcome?.results ?? []
 			this.selected = []
 			await this.signingStore.fetchSigningFolder()

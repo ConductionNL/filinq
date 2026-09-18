@@ -82,9 +82,7 @@ test.afterAll(async ({ request }) => {
 				.catch(() => {})
 		}
 	}
-	await request
-		.delete(`${API}/signing/mandates/dossiq/besluit`)
-		.catch(() => {})
+	await request.delete(`${API}/signing/mandates/dossiq/besluit`).catch(() => {})
 })
 
 test('the folder gathers what is pending across cases, soonest deadline first', async ({
@@ -95,8 +93,18 @@ test('the folder gathers what is pending across cases, soonest deadline first', 
 	// @e2e openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md#the-signer-knows-what-they-are-signing
 	// @e2e openspec/specs/document-signing/spec.md#the-signer-knows-what-they-are-signing
 	const token = await harvestToken(page)
-	await seedRequest(page.request, token, `${TEST_PREFIX}-late`, '2026-12-01T00:00:00+00:00')
-	await seedRequest(page.request, token, `${TEST_PREFIX}-soon`, '2026-10-01T00:00:00+00:00')
+	await seedRequest(
+		page.request,
+		token,
+		`${TEST_PREFIX}-late`,
+		'2026-12-01T00:00:00+00:00',
+	)
+	await seedRequest(
+		page.request,
+		token,
+		`${TEST_PREFIX}-soon`,
+		'2026-10-01T00:00:00+00:00',
+	)
 
 	await go(page, SigningFolder)
 	await expect(page.getByRole('heading', { name: 'Signing folder' })).toBeVisible()

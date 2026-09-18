@@ -48,17 +48,26 @@ test.describe('Leaf integrations', () => {
 			'/index.php/apps/openregister/api/schemas?limit=200',
 			{ headers: { Accept: 'application/json' } },
 		)
-		expect(response.status(), 'the schema list must be readable').toBeLessThan(300)
+		expect(response.status(), 'the schema list must be readable').toBeLessThan(
+			300,
+		)
 
 		const body = await response.json()
-		const rows: Array<Record<string, unknown>> = body?.results || body?.schemas || []
-		expect(rows.length, 'the instance must have imported schemas').toBeGreaterThan(0)
+		const rows: Array<Record<string, unknown>> =
+			body?.results || body?.schemas || []
+		expect(
+			rows.length,
+			'the instance must have imported schemas',
+		).toBeGreaterThan(0)
 
 		for (const [slug, leaves] of DECLARED) {
 			const row = rows.find((candidate) => candidate.slug === slug)
 			expect(row, `${slug} must exist after the import`).toBeTruthy()
 
-			const configuration = (row?.configuration || {}) as Record<string, unknown>
+			const configuration = (row?.configuration || {}) as Record<
+				string,
+				unknown
+			>
 			expect(
 				configuration.linkedTypes,
 				`${slug} must carry its leaves after the import, not only in the descriptor`,
@@ -87,7 +96,10 @@ test.describe('Leaf integrations', () => {
 			const row = (body?.results || [])[0]
 			expect(row, `${slug} must exist`).toBeTruthy()
 
-			const template = (row.configuration?.mailObjectTemplate || {}) as Record<string, unknown>
+			const template = (row.configuration?.mailObjectTemplate || {}) as Record<
+				string,
+				unknown
+			>
 			expect(
 				Object.keys(template).sort(),
 				`${slug} must offer create-from-email`,
@@ -111,7 +123,9 @@ test.describe('Leaf integrations', () => {
 	}) => {
 		await page.goto('/index.php/apps/filinq/')
 
-		const bundle = await page.request.get('/custom_apps/filinq/js/filinq-leaves.js')
+		const bundle = await page.request.get(
+			'/custom_apps/filinq/js/filinq-leaves.js',
+		)
 		expect(bundle.status(), 'the leaf bundle must be served').toBe(200)
 
 		// 🔴 A missing app path answers 200 with Nextcloud's error page, so the
@@ -126,7 +140,9 @@ test.describe('Leaf integrations', () => {
 
 	// @e2e openspec/changes/leaf-integrations/specs/document-signing/spec.md#mail-app-absent
 	// @e2e openspec/specs/document-signing/spec.md#mail-app-absent
-	test('a record surface renders when the leaf apps are absent', async ({ page }) => {
+	test('a record surface renders when the leaf apps are absent', async ({
+		page,
+	}) => {
 		const errors: string[] = []
 		page.on('pageerror', (error) => errors.push(error.message))
 
@@ -136,7 +152,10 @@ test.describe('Leaf integrations', () => {
 		await page.goto('/index.php/apps/filinq/consent')
 		await expect(page.locator('#filinq-app')).toBeVisible()
 
-		expect(errors, 'an absent leaf app must hide its leaf, never break the page').toEqual([])
+		expect(
+			errors,
+			'an absent leaf app must hide its leaf, never break the page',
+		).toEqual([])
 	})
 
 	// @e2e openspec/changes/leaf-integrations/specs/publication-consent/spec.md#agent-still-cannot-enumerate-consent-records
@@ -154,14 +173,20 @@ test.describe('Leaf integrations', () => {
 		)
 		// An instance whose OpenRegister predates the MCP surface answers 404,
 		// and then there is no agent surface to widen.
-		test.skip(response.status() === 404, 'this OpenRegister exposes no MCP tool list')
+		test.skip(
+			response.status() === 404,
+			'this OpenRegister exposes no MCP tool list',
+		)
 		expect(response.status()).toBeLessThan(300)
 
 		const listed = JSON.stringify(await response.json())
-		expect(listed, 'signerRecord stays off the agent surface').not.toContain('signerRecord')
-		expect(listed, 'publicationConsent stays off the agent surface').not.toContain(
-			'publicationConsent',
+		expect(listed, 'signerRecord stays off the agent surface').not.toContain(
+			'signerRecord',
 		)
+		expect(
+			listed,
+			'publicationConsent stays off the agent surface',
+		).not.toContain('publicationConsent')
 	})
 
 	// The least privileged principal that should be refused: nobody at all. The
@@ -171,8 +196,12 @@ test.describe('Leaf integrations', () => {
 	//
 	// @e2e openspec/changes/leaf-integrations/specs/document-register/spec.md#dossier-files-are-linked-on-the-dossier-record
 	// @e2e openspec/specs/document-register/spec.md#dossier-files-are-linked-on-the-dossier-record
-	test('the list the leaf reads refuses a caller with no session', async ({ browser }) => {
-		const anonymous = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+	test('the list the leaf reads refuses a caller with no session', async ({
+		browser,
+	}) => {
+		const anonymous = await browser.newContext({
+			storageState: { cookies: [], origins: [] },
+		})
 		const response = await anonymous.request.get(
 			'/index.php/apps/filinq/api/case-documents/files?register=filinq&schema=dossier&id=1',
 			{ headers: { Accept: 'application/json' }, maxRedirects: 0 },

@@ -44,7 +44,9 @@ test.describe('the post register', () => {
 		// POSITIVE CONTROL FIRST. Without it a 404 below cannot be told apart
 		// from a register that was never seeded, which is a different failure
 		// with the same status code.
-		const sibling = await request.get(`${OR}/uploadPolicy`, { headers: jsonHeaders(token) })
+		const sibling = await request.get(`${OR}/uploadPolicy`, {
+			headers: jsonHeaders(token),
+		})
 		expect(
 			sibling.status(),
 			`positive control — GET ${OR}/uploadPolicy must answer 200 before anything below means anything`,
@@ -101,7 +103,9 @@ test.describe('the post register', () => {
 
 		const inboundBody = await inbound.json()
 		const inboundEntry = inboundBody.object ?? inboundBody
-		const inboundId = String(inboundBody.id ?? inboundBody.uuid ?? inboundEntry.id ?? '')
+		const inboundId = String(
+			inboundBody.id ?? inboundBody.uuid ?? inboundEntry.id ?? '',
+		)
 
 		expect(
 			inboundEntry.answered,
@@ -109,7 +113,10 @@ test.describe('the post register', () => {
 		).toBeUndefined()
 		expect(inboundEntry.dischargedAt).toBeUndefined()
 
-		expect(inboundId, 'the inbound entry must come back with an id to be answered by uuid').not.toBe('')
+		expect(
+			inboundId,
+			'the inbound entry must come back with an id to be answered by uuid',
+		).not.toBe('')
 
 		const outbound = await request.post(`${OR}/documentRegistration`, {
 			headers: jsonHeaders(token),
@@ -203,7 +210,9 @@ test.describe('the plain-language counterpart', () => {
 		// The plain letter names the formal document it explains. Somebody
 		// receives two letters about one decision; without this they hold two
 		// documents and no relation between them.
-		expect(record.plainRenditionExplains).toBe(`DocuDesk/${TEST_PREFIX}/besluit.pdf`)
+		expect(record.plainRenditionExplains).toBe(
+			`DocuDesk/${TEST_PREFIX}/besluit.pdf`,
+		)
 		expect(record.plainRenditionSource).toBe('template')
 	})
 })
