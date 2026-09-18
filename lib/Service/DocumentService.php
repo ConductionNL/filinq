@@ -112,6 +112,7 @@ class DocumentService {
 	 * @param ContainerInterface $container Container for dependency injection
 	 * @param IJobList $jobList Nextcloud job list for async processing
 	 * @param LoggerInterface $logger Logger for error reporting
+	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 *
 	 * @return void
 	 */
@@ -124,6 +125,7 @@ class DocumentService {
 		private readonly ContainerInterface $container,
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
+		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 	) {
 
 	}//end __construct()
@@ -182,6 +184,18 @@ class DocumentService {
 			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
 		}
 
+		// 🔴 THE PLAIN RENDITION IS PLANNED BEFORE ANYTHING IS FILED. REQ-DIO-04's
+		// fourth scenario asks a refused generation to leave NEITHER rendition
+		// behind, and a check made after the formal document is stored cannot
+		// give that: the formal letter would already be in the folder by the
+		// time the plain one turned out to be impossible. A template declaring
+		// no counterpart plans nothing, and this line costs it one null.
+		$plainPlan = $this->plainRendition?->plan(
+			template: $template,
+			data: $data,
+			acceptance: (array)($options['plainRenditionAcceptance'] ?? [])
+		);
+
 		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
 		$pdfOptions = $this->renderPipeline->buildPdfOptions(
 			template: $template,
@@ -213,6 +227,18 @@ class DocumentService {
 		);
 		$warnings = $stored['warnings'];
 
+		$plain = $this->producePlainRendition(
+			plan: $plainPlan,
+			data: $data,
+			format: $format,
+			huisstijl: $huisstijl,
+			pdfOptions: $pdfOptions,
+			options: $options,
+			outputMode: $outputMode,
+			formal: $stored
+		);
+		$warnings = array_merge($warnings, $plain['warnings']);
+
 		$metadata = $this->documentLogger->log(
 			template: [
 				'id' => $templateId,
@@ -229,13 +255,15 @@ class DocumentService {
 				'fileId' => $stored['fileId'],
 				'filePath' => $stored['path'],
 			],
-			userId: (string)($options['userId'] ?? '')
+			userId: (string)($options['userId'] ?? ''),
+			extra: $plain['record']
 		);
 
 		return [
 			'content' => $content,
 			'format' => $format,
 			'metadata' => $metadata,
+			'plainRendition' => $plain['rendition'],
 			'warnings' => $warnings,
 			'output' => [
 				'mode' => $outputMode,
@@ -585,6 +613,102 @@ class DocumentService {
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-003
 	 */
+	/**
+	 * Produce the plain-language rendition, when the template declared one.
+	 *
+	 * 🔴 BOTH RENDITIONS COME OUT OF ONE GENERATION, which is what makes
+	 * REQ-DIO-04's fifth scenario true by construction: regenerating the formal
+	 * letter after a correction regenerates the plain one in the same act,
+	 * because there is no path that produces one without the other. A separate
+	 * "regenerate the plain version" call would be a path somebody can forget,
+	 * and a stale plain letter beside a corrected formal one is the failure the
+	 * scenario names.
+	 *
+	 * 🔑 IT RENDERS FROM THE SAME DATA AND THE SAME HUISSTIJL. Rendering the
+	 * plain counterpart from anything else would let the two letters disagree
+	 * about a date while both claim to describe one decision.
+	 *
+	 * 🔑 A PLAIN RENDITION THAT COULD NOT BE STORED IS A WARNING, NOT A THROW,
+	 * and only once the formal document is already filed. Everything that can
+	 * refuse the pair has refused before this point; failing here would mean
+	 * losing a formal letter that is already on disk over its companion.
+	 *
+	 * @param array<string, mixed>|null $plan       The plan, or null when no counterpart is declared.
+	 * @param array<string, mixed>      $data       The resolved generation data.
+	 * @param string                    $format     The output format.
+	 * @param array<string, mixed>|null $huisstijl  The huisstijl the formal letter used.
+	 * @param array<string, mixed>      $pdfOptions The PDF options the formal letter used.
+	 * @param array<string, mixed>      $options    The generation options.
+	 * @param string                    $outputMode Where the output goes.
+	 * @param array<string, mixed>      $formal     The formal document as it was filed.
+	 *
+	 * @return array{rendition: array<string, mixed>|null, record: array<string, mixed>, warnings: array<int, string>} The rendition, its record fields and any warnings.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 */
+	private function producePlainRendition(
+		?array $plan,
+		array $data,
+		string $format,
+		?array $huisstijl,
+		array $pdfOptions,
+		array $options,
+		string $outputMode,
+		array $formal,
+	): array {
+		if ($plan === null || $this->plainRendition === null) {
+			return ['rendition' => null, 'record' => [], 'warnings' => []];
+		}
+
+		$rendered = $this->renderPipeline->renderWithHuisstijl(
+			templateContent: $plan['content'],
+			data: $data,
+			huisstijl: $huisstijl
+		);
+
+		$content = $this->renderPipeline->produceOutput(
+			htmlContent: $rendered['html'],
+			format: $format,
+			pdfOptions: $pdfOptions
+		);
+
+		$plainOptions = $options;
+		$plainOptions['filename'] = ((string)($options['filename'] ?? 'document')) . '-in-gewone-taal';
+
+		$stored = $this->storeOutputIfRequested(
+			mode: $outputMode,
+			templateId: $plan['templateId'],
+			template: ['namespace' => ($options['namespace'] ?? '')],
+			format: $format,
+			content: $content,
+			options: $plainOptions,
+			warnings: []
+		);
+
+		$record = $this->plainRendition->recordFields(
+			plan: $plan,
+			formal: $formal,
+			plainFile: $stored,
+			moment: date('c')
+		);
+
+		return [
+			'rendition' => [
+				'content' => $content,
+				'format' => $format,
+				'templateId' => $plan['templateId'],
+				'explains' => $record['plainRenditionExplains'],
+				'source' => $plan['source'],
+				'acceptedBy' => $plan['acceptedBy'],
+				'acceptedAt' => $plan['acceptedAt'],
+				'fileId' => $stored['fileId'],
+				'path' => $stored['path'],
+			],
+			'record' => $record,
+			'warnings' => array_merge($rendered['warnings'], $stored['warnings']),
+		];
+	}//end producePlainRendition()
+
 	private function storeOutputIfRequested(
 		string $mode,
 		string $templateId,

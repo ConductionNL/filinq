@@ -115,7 +115,14 @@ class DocumentProductionSchemaTest extends TestCase {
 			$this->assertArrayHasKey($name, $document['properties'], $name . ' is missing from generatedDocument.');
 		}
 
-		$this->assertSame('1.1.0', $document['version']);
+		// 1.2.0 since `documents-in-and-out-of-the-building`: the record gained
+		// the plain-language rendition's file, the formal document it explains,
+		// its source and the acceptance behind a machine draft. The version is
+		// pinned here on purpose — an importer will skip a schema whose
+		// `properties`, `required` and `authorization` are all unchanged, so a
+		// number that never moves is how a property edit lands on one instance
+		// and not on the next.
+		$this->assertSame('1.2.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],
@@ -123,6 +130,57 @@ class DocumentProductionSchemaTest extends TestCase {
 		);
 
 	}//end testAGeneratedDocumentRecordsWhatMadeItAndWhenItComesBack()
+
+	/**
+	 * A template can declare a plain-language counterpart, and the record can carry it.
+	 *
+	 * 🔴 AN UNDECLARED PROPERTY IS DROPPED IN SILENCE. If the descriptor stopped
+	 * carrying `plainLanguage`, every template would come back without its
+	 * counterpart and every generation would quietly produce the formal letter
+	 * only. No error, no warning, and the first person to notice would be
+	 * somebody who could not read their besluit. So the declaration is pinned
+	 * by name, along with the three parts of it that carry meaning.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 */
+	public function testATemplateCanDeclareItsPlainLanguageCounterpart(): void {
+		$schemas = $this->descriptor()['components']['schemas'];
+
+		$declaration = $schemas['template']['properties']['plainLanguage'] ?? null;
+		$this->assertIsArray($declaration, 'a template must be able to declare a plain-language counterpart.');
+		$this->assertSame('1.3.0', $schemas['template']['version']);
+
+		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
+			$this->assertArrayHasKey(
+				$part,
+				$declaration['properties'],
+				$part . ' is missing from the plain-language declaration.'
+			);
+		}
+
+		// The source is a CLOSED set. A third value would be a plain rendition
+		// whose provenance nobody can reason about, and the acceptance gate
+		// decides what to hold back by reading exactly this field.
+		$this->assertSame(['template', 'machine'], $declaration['properties']['source']['enum']);
+
+		$document = $schemas['generatedDocument']['properties'];
+		foreach (
+			[
+				'plainRenditionFileId',
+				'plainRenditionFilePath',
+				'plainRenditionExplains',
+				'plainRenditionSource',
+				'plainRenditionAcceptedBy',
+				'plainRenditionAcceptedAt',
+				'plainRenditionGeneratedAt',
+			] as $name
+		) {
+			$this->assertArrayHasKey($name, $document, $name . ' is missing from generatedDocument.');
+		}
+
+	}//end testATemplateCanDeclareItsPlainLanguageCounterpart()
 
 	/**
 	 * An archive job records the ceiling, both counts and the manifest.
