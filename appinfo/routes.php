@@ -106,6 +106,13 @@ $extra = [
         ['name' => 'merge#create', 'url' => 'api/merge', 'verb' => 'POST'],
         ['name' => 'merge#show', 'url' => 'api/merge/{id}', 'verb' => 'GET'],
 
+        // Paper intake: separator sheets, scan profiles and batch splitting
+        // (scan-intake-with-separator-sheets).
+        ['name' => 'scanIntake#separators', 'url' => 'api/scan/separators', 'verb' => 'POST'],
+        ['name' => 'scanIntake#listProfiles', 'url' => 'api/scan/profiles', 'verb' => 'GET'],
+        ['name' => 'scanIntake#declareProfiles', 'url' => 'api/scan/profiles', 'verb' => 'POST'],
+        ['name' => 'scanIntake#split', 'url' => 'api/scan/batches/{fileId}/split', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
