@@ -25,6 +25,7 @@
                 "version": "1.0.0",
                 "description": "Eén register voor alle Filinq-objecten: GDPR/Woo publicatie-instemmingen en -verboden, digitale ondertekeningsverzoeken en -sessies, herbruikbare document templates met versiebeheer en rate card, correspondentie- en documentlogging, huisstijl, financiële veldextractie en grootboekrekening-suggesties, organisatie-woordenlijsten, anonimiseringsbatches, en dossiers met hun Woo Art. 5 grondslagen. VERVANGT de vijf registers `consent`, `signing`, `templates`, `document` en `dossier`; de bestaande objecten worden door de repair step OCA\\Filinq\\Repair\\ConsolidateRegisters fysiek naar dit register verplaatst (insert-verify-delete per shard-tabel). De slug MOET gelijk blijven aan `x-openregister.app`: voor een `type: application` configuratie leest ImportHandler `$slug = $xOpenregister['app'] ?? $appId` en dat veld IS een register-slug, geen attributielabel.",
                 "schemas": [
+                    "documentRegistration",
                     "publicationConsent",
                     "publicationProhibition",
                     "prohibitionOverrideAudit",
@@ -77,6 +78,20 @@
                     "unit",
                     "document"
                 ],
+                "authorization": {
+                    "read": [
+                        "authenticated"
+                    ],
+                    "create": [
+                        "docudesk-policy-admins"
+                    ],
+                    "update": [
+                        "docudesk-policy-admins"
+                    ],
+                    "delete": [
+                        "docudesk-policy-admins"
+                    ]
+                },
                 "properties": {
                     "direction": {
                         "type": "string",
