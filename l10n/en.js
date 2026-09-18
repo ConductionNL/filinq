@@ -1003,7 +1003,10 @@ OC.L10N.register(
         "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.": "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.",
         "The conditions changed while you were reading them. Read them again and accept.": "The conditions changed while you were reading them. Read them again and accept.",
         "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.": "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.",
-        "Intake": "Intake"
+        "Intake": "Intake",
+        "Linked elsewhere": "Linked elsewhere",
+        "Nothing linked to this document yet": "Nothing linked to this document yet",
+        "This integration is not available on this server.": "This integration is not available on this server."
     },
     "nplurals=2; plural=(n != 1);"
 )

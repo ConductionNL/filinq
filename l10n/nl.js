@@ -1128,7 +1128,10 @@ OC.L10N.register(
         "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.": "De voorwaarden zijn gewijzigd sinds je ze hebt aanvaard. Je aanvaardde versie %s en dit is versie %s. Lees ze en aanvaard opnieuw.",
         "The conditions changed while you were reading them. Read them again and accept.": "De voorwaarden zijn gewijzigd terwijl je ze las. Lees ze opnieuw en aanvaard ze.",
         "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.": "Je aanvaarding kon niet worden vastgelegd, dus het bestand is niet gedownload. Probeer het zo meteen opnieuw.",
-        "Intake": "Intake"
+        "Intake": "Intake",
+        "Linked elsewhere": "Elders gekoppeld",
+        "Nothing linked to this document yet": "Nog niets aan dit document gekoppeld",
+        "This integration is not available on this server.": "Deze integratie is niet beschikbaar op deze server."
     },
     "nplurals=2; plural=(n != 1);"
 )
