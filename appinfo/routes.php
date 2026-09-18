@@ -231,6 +231,16 @@ $extra = [
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
+        // Signing folder routes (signing-folder-across-cases): everything
+        // pending for one signer across every record, and the pass that signs
+        // a selection of it through the per-request path above. The mandate
+        // declarations are instance configuration, so they are admin-only.
+        ['name' => 'signingFolder#folder', 'url' => 'api/signing/folder', 'verb' => 'GET'],
+        ['name' => 'signingFolder#signFolder', 'url' => 'api/signing/folder/sign', 'verb' => 'POST'],
+        ['name' => 'signingFolder#mandates', 'url' => 'api/signing/mandates', 'verb' => 'GET'],
+        ['name' => 'signingFolder#declareMandate', 'url' => 'api/signing/mandates', 'verb' => 'POST'],
+        ['name' => 'signingFolder#withdrawMandate', 'url' => 'api/signing/mandates/{typeApp}/{typeSchema}', 'verb' => 'DELETE'],
+
         // Portal signing receiver routes (portal-signing-actions,
         // portal-signing-surface): the A6 endpoint-forward targets portaliq
         // calls server-to-server on behalf of an external, accountless
