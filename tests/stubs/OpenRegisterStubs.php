@@ -2252,6 +2252,57 @@ class ObjectCreatedEvent extends Event {
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
+/**
+ * Stub for OCA\OpenRegister\Event\ObjectUpdatingEvent.
+ *
+ * The PRE-write event. Mirrors the real class, verified against
+ * openregister/lib/Event/ObjectUpdatingEvent.php on 2026-09-18: the same
+ * constructor, `getNewObject()`, `getOldObject()`, `setErrors()`,
+ * `stopPropagation()` and `isPropagationStopped()`.
+ *
+ * 🔑 THE REFUSAL IS REAL, NOT DECORATIVE, and that was checked rather than
+ * assumed: `MagicMapper` dispatches this event before an update and throws
+ * `HookStoppedException` carrying the listener's own errors when propagation
+ * was stopped. A stub that merely recorded the call would let a guard pass its
+ * tests while refusing nothing in production.
+ */
+class ObjectUpdatingEvent extends Event {
+	private array $errors = [];
+
+	private bool $stopped = false;
+
+	public function __construct(
+		private readonly ?ObjectEntity $newObject = null,
+		private readonly ?ObjectEntity $oldObject = null,
+	) {
+		parent::__construct();
+	}//end __construct()
+
+	public function getNewObject(): ?ObjectEntity {
+		return $this->newObject;
+	}//end getNewObject()
+
+	public function getOldObject(): ?ObjectEntity {
+		return $this->oldObject;
+	}//end getOldObject()
+
+	public function setErrors(array $errors): void {
+		$this->errors = $errors;
+	}//end setErrors()
+
+	public function getErrors(): array {
+		return $this->errors;
+	}//end getErrors()
+
+	public function stopPropagation(): void {
+		$this->stopped = true;
+	}//end stopPropagation()
+
+	public function isPropagationStopped(): bool {
+		return $this->stopped;
+	}//end isPropagationStopped()
+}//end class
+
 class ObjectUpdatedEvent extends Event {
 	public function __construct(
 		private readonly ?ObjectEntity $newObject = null,
