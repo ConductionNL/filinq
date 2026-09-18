@@ -92,6 +92,14 @@ $extra = [
         ['name' => 'caseDocuments#mine', 'url' => 'api/case-documents/mine', 'verb' => 'GET'],
         ['name' => 'caseDocuments#uploadPolicy', 'url' => 'api/case-documents/upload-policy', 'verb' => 'GET'],
 
+        // The post register's derived reads. The open post list is offered here
+        // rather than as an ADR-066 leaf because filinq ships no `leaves`
+        // webpack entry yet; a leaf registered without one is DARK, and the
+        // list is real behaviour that should not wait for the surface.
+        ['name' => 'postRegister#openPost', 'url' => 'api/post-register/open', 'verb' => 'GET'],
+        ['name' => 'postRegister#answers', 'url' => 'api/post-register/answers', 'verb' => 'GET'],
+        ['name' => 'postRegister#series', 'url' => 'api/post-register/series', 'verb' => 'GET'],
+
         // Layouts, bundles, periodic documents and reviews
         // (documents-from-a-template).
         ['name' => 'documentProduction#layoutVersions', 'url' => 'api/page-layouts', 'verb' => 'GET'],

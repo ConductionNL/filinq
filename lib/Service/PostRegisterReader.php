@@ -207,6 +207,63 @@ class PostRegisterReader {
 	}//end openPostFor()
 
 	/**
+	 * A unit's series, read from the register and accounted for end to end.
+	 *
+	 * 🔑 THE FETCH LIVES BESIDE `series()` RATHER THAN IN THE CALLER. A
+	 * controller that built this query itself would be a second place the
+	 * objects endpoint's bare-key spelling has to be got right, and the wrong
+	 * spelling there answers the EMPTY SET rather than an error: the series
+	 * would read as a unit with no post at all.
+	 *
+	 * @param string $unit The organisational unit.
+	 *
+	 * @return array<int, array<string, mixed>> The series, ordered by number.
+	 *
+	 * @throws Throwable When the register could not be read.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 */
+	public function seriesFor(string $unit): array {
+		$unitId = trim($unit);
+		if ($unitId === '') {
+			return [];
+		}
+
+		try {
+			$results = $this->objectResolver->resolve()->searchObjects(
+				query: [
+					'@self' => [
+						'register' => self::REGISTER,
+						'schema' => self::SCHEMA,
+					],
+					'unit' => $unitId,
+				]
+			);
+		} catch (Throwable $e) {
+			// 🔴 A FAILED READ IS RAISED, NOT AN EMPTY SERIES. An empty series
+			// reads as "this unit has registered nothing", which is the one
+			// answer an auditor must never be given by accident: it looks
+			// exactly like a unit that never sent a letter.
+			$this->logger->warning(
+				'filinq.post-register.series-read-failed',
+				['unit' => $unitId, 'error' => $e->getMessage()]
+			);
+
+			throw $e;
+		}
+
+		$entries = [];
+		foreach ((array)$results as $row) {
+			$entry = $this->plain(row: $row);
+			if ($entry !== null) {
+				$entries[] = $entry;
+			}
+		}
+
+		return $this->series(registrations: $entries);
+	}//end seriesFor()
+
+	/**
 	 * Order two entries oldest first, with an undated entry last.
 	 *
 	 * @param array<string, mixed> $left  One entry.
