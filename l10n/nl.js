@@ -1115,7 +1115,16 @@ OC.L10N.register(
         "Signed: {document}": "Ondertekend: {document}",
         "Not signed: {reason}": "Niet ondertekend: {reason}",
         "Document you are about to sign": "Document dat je gaat ondertekenen",
-        "This request carries no document": "Bij dit verzoek hoort geen document"
+        "This request carries no document": "Bij dit verzoek hoort geen document",
+        "This document has no detection run to publish. Run the detection, check the result, and try again.": "Er is nog geen detectie voor dit document. Voer de detectie uit, bekijk het resultaat en probeer het opnieuw.",
+        "Nobody has checked this document yet. Open it, look at what the detection marked, and confirm it before the redacted copy is written.": "Niemand heeft dit document gecontroleerd. Open het, bekijk wat de detectie heeft gemarkeerd en bevestig het voordat de geredigeerde kopie wordt geschreven.",
+        "This document was checked, but the detection has been run again since. The earlier check was about a different set of findings, so it does not cover this one. Look at the new result and confirm it again.%s": "Dit document is gecontroleerd, maar de detectie is daarna opnieuw uitgevoerd. Die controle ging over andere bevindingen en geldt dus niet voor deze. Bekijk het nieuwe resultaat en bevestig het opnieuw.%s",
+        "This document is marked as checked, but the mark does not say who checked it. Confirm it again so the record names a person.": "Dit document staat als gecontroleerd genoteerd, maar er staat niet bij wie het heeft gecontroleerd. Bevestig het opnieuw, zodat er een naam bij staat.",
+        " The earlier check was by %s on %s.": " De eerdere controle was door %s op %s.",
+        "Read the conditions and accept them before this file is downloaded.": "Lees de voorwaarden en aanvaard ze voordat je dit bestand downloadt.",
+        "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.": "De voorwaarden zijn gewijzigd sinds je ze hebt aanvaard. Je aanvaardde versie %s en dit is versie %s. Lees ze en aanvaard opnieuw.",
+        "The conditions changed while you were reading them. Read them again and accept.": "De voorwaarden zijn gewijzigd terwijl je ze las. Lees ze opnieuw en aanvaard ze.",
+        "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.": "Je aanvaarding kon niet worden vastgelegd, dus het bestand is niet gedownload. Probeer het zo meteen opnieuw."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -10,7 +10,7 @@
 
 - [x] 2.1 `RedactionIrreversibilityVerifier`: check the produced bytes for text under the mark, embedded previews, XMP and EXIF, incremental updates, annotations and form fields, and embedded attachments (REQ-RWB-01)
 - [x] 2.2 Run the verifier on every output mode including PDF/A and PDF/UA; a new output mode with no verification entry fails the suite (REQ-RWB-01)
-- [ ] 2.3 Record the verification result on the `anonymizationLink` so a published copy can be shown to have been checked (REQ-RWB-01)
+- [x] 2.3 Record the verification result on the `anonymizationLink` so a published copy can be shown to have been checked (REQ-RWB-01)
 
 ## 3. The review gate
 
@@ -26,7 +26,7 @@
 ## 5. Quality
 
 - [x] 5.1 PHPUnit inside the container for every verification route, the gate on all three paths, the composition and the agreement; 75% on new code (ADR-009)
-- [~] 5.2 Playwright `tests/e2e/redaction-gate.spec.ts`; Dutch and English strings; docs in `docs/features/redaction.md` with screenshots; tell dossiq the review leaf id
+- [x] 5.2 Playwright `tests/e2e/redaction-gate.spec.ts`; Dutch and English strings; docs in `docs/features/redaction.md` with screenshots; tell dossiq the review leaf id
 
 ## Status, 2026-09-18
 
@@ -61,3 +61,34 @@ an operator is not trained to click through a refusal.
   and telling dossiq the review leaf id are not done.
 - The review surface itself stays with `anonymization-review-workbench`, which
   is where this change assumed it.
+
+## Closing pass, 2026-09-18
+
+**2.3 is done.** `RedactionVerdictRecorder` runs the verifier on the bytes that
+were actually written, last, after the grondslagen summary has appended its
+page, and the verdict goes onto the `anonymizationLink` with the output mode it
+holds for and the routes that were walked. `unverifiable` is recorded like any
+other verdict: an empty field and a clean verdict are the same value to anything
+filtering on whether a copy was checked.
+
+The register descriptor goes to 8.15.0 and `anonymizationLink` to 1.1.0. The
+bump is load-bearing rather than cosmetic: the schema is `hardValidation: true`,
+so on an install that has not re-imported, the five new fields are undeclared
+and OpenRegister refuses the **whole** link write. That loses the source to copy
+pairing, not only the verdict.
+
+**5.2 is done except for the screenshots.** `tests/e2e/workflows/redaction-gate.spec.ts`
+is tagged to six scenarios. `docs/features/redaction.md` is written and linked
+from the features README. The nine reader-facing strings the two gates produce
+are translatable through `IL10N` and carry Dutch entries;
+`RedactionMessagesAreTranslatedTest` reads the `say()` calls out of the source
+rather than checking today's nine, so a message added later fails instead of
+rendering in English.
+
+No screenshots: the surfaces this change ships are the API and the refusal
+messages. There is no screen of its own to capture.
+
+**Not done, and it is not this change's to do.** Telling dossiq the review leaf
+id needs a review leaf, and the review surface belongs to
+`anonymization-review-workbench`, which is still open. Naming an id now would
+name one that nothing answers to.

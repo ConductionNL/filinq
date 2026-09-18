@@ -990,7 +990,16 @@ OC.L10N.register(
         "Signed: {document}": "Signed: {document}",
         "Not signed: {reason}": "Not signed: {reason}",
         "Document you are about to sign": "Document you are about to sign",
-        "This request carries no document": "This request carries no document"
+        "This request carries no document": "This request carries no document",
+        "This document has no detection run to publish. Run the detection, check the result, and try again.": "This document has no detection run to publish. Run the detection, check the result, and try again.",
+        "Nobody has checked this document yet. Open it, look at what the detection marked, and confirm it before the redacted copy is written.": "Nobody has checked this document yet. Open it, look at what the detection marked, and confirm it before the redacted copy is written.",
+        "This document was checked, but the detection has been run again since. The earlier check was about a different set of findings, so it does not cover this one. Look at the new result and confirm it again.%s": "This document was checked, but the detection has been run again since. The earlier check was about a different set of findings, so it does not cover this one. Look at the new result and confirm it again.%s",
+        "This document is marked as checked, but the mark does not say who checked it. Confirm it again so the record names a person.": "This document is marked as checked, but the mark does not say who checked it. Confirm it again so the record names a person.",
+        " The earlier check was by %s on %s.": " The earlier check was by %s on %s.",
+        "Read the conditions and accept them before this file is downloaded.": "Read the conditions and accept them before this file is downloaded.",
+        "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.": "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.",
+        "The conditions changed while you were reading them. Read them again and accept.": "The conditions changed while you were reading them. Read them again and accept.",
+        "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.": "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment."
     },
     "nplurals=2; plural=(n != 1);"
 )
