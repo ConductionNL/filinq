@@ -49,6 +49,7 @@ import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
+import Scanner from 'vue-material-design-icons/Scanner.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
@@ -97,6 +98,7 @@ export default {
 	FolderZip,
 	FormatPageBreak,
 	History,
+	Scanner,
 	InboxArrowDown,
 	Stamper,
 	MapMarkerPath,
