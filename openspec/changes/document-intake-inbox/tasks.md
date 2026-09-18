@@ -19,6 +19,10 @@
 
 - [x] 3.1 Add the `intake` manifest page with preview, assign dialog and reject dialog (REQ-DII-04)
 - [ ] 3.2 Register the `filinq-document-intake` leaf: `RegisterLeafProvidersEvent` listener plus `registerIntegration()` with tab and widget (REQ-DII-05)
+  - BLOCKED, MEASURED 2026-09-18: filinq consumes no `RegisterLeafProvidersEvent`
+    and `webpack.config.js` declares no `leaves` entry. A leaf registered without
+    that entry is DARK: the host renders nothing while the registration reports
+    success. Both leaf tasks in this repo wait on the same groundwork.
 
 ## 4. Quality
 
