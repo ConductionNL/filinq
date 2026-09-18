@@ -26,6 +26,8 @@ namespace OCA\Filinq\AppInfo;
 use Exception;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
+use OCA\Filinq\Service\MountCapabilityProbe;
+use OCA\Filinq\Service\NextcloudMountCapabilityProbe;
 use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -78,6 +80,16 @@ class RegistrationBootstrap {
 		$context->registerServiceAlias(
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
+		);
+
+		// REQ-CDF-06: the one probe that talks to a real mount. Nextcloud
+		// autowires concrete classes but not interfaces, so without this binding
+		// anything asking for ExternalMountValidator fails to resolve -- and the
+		// validator is read from the setup wizard, so that would be a 500 on the
+		// first screen an administrator opens rather than a quiet gap.
+		$context->registerServiceAlias(
+			MountCapabilityProbe::class,
+			NextcloudMountCapabilityProbe::class
 		);
 
 		// ADR-063 chain 3/3: the per-app opt-in telling OpenRegister which of our
