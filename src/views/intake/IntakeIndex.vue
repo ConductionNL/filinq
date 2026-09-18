@@ -12,13 +12,8 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 <template>
 	<div>
 		<CnIndexPage
-			:title="t('filinq', 'Intake')"
-			:description="
-				t(
-					'filinq',
-					'Documents that arrived before anyone knew which record they belong to. Assign one to a record, or reject it with a reason.',
-				)
-			"
+			:title="title"
+			:description="description"
 			:showTitle="true"
 			:objects="documents"
 			:columns="tableColumns"
@@ -37,6 +32,23 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			:refreshing="refreshing"
 			data-testid="intake-index"
 			@refresh="refresh">
+			<template #below-header>
+				<div class="intake-modes">
+					<NcButton
+						:variant="mode === 'waiting' ? 'primary' : 'secondary'"
+						data-testid="intake-mode-waiting"
+						@click="setMode('waiting')">
+						{{ t('filinq', 'Waiting') }}
+					</NcButton>
+					<NcButton
+						:variant="mode === 'detached' ? 'primary' : 'secondary'"
+						data-testid="intake-mode-detached"
+						@click="setMode('detached')">
+						{{ t('filinq', 'Taken off a record') }}
+					</NcButton>
+				</div>
+			</template>
+
 			<template #column-channel="{ row }">
 				<CnStatusBadge :label="channelLabel(row.channel)" :colorMap="channelColorMap" />
 			</template>
@@ -86,7 +98,7 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 </template>
 
 <script>
-import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnIndexPage, CnStatusBadge, NcButton } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
@@ -96,6 +108,7 @@ import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.v
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import {
 	assignIntakeDocument,
+	listDetachedDocuments,
 	listWaitingDocuments,
 	rejectIntakeDocument,
 } from '../../services/intakeService.js'
@@ -105,6 +118,7 @@ export default {
 	components: {
 		CnIndexPage,
 		CnStatusBadge,
+		NcButton,
 		Delete,
 		DotsHorizontal,
 		FinalDocumentReasonDialog,
@@ -117,6 +131,7 @@ export default {
 	data() {
 		return {
 			documents: [],
+			mode: 'waiting',
 			loading: false,
 			refreshing: false,
 			saving: false,
@@ -133,18 +148,45 @@ export default {
 	},
 
 	computed: {
+		title() {
+			return this.mode === 'detached'
+				? t('filinq', 'Taken off a record')
+				: t('filinq', 'Intake')
+		},
+
+		description() {
+			if (this.mode === 'detached') {
+				return t(
+					'filinq',
+					'Documents somebody took off the record they were filed on, with the reason they gave. They are waiting again.',
+				)
+			}
+			return t(
+				'filinq',
+				'Documents that arrived before anyone knew which record they belong to. Assign one to a record, or reject it with a reason.',
+			)
+		},
+
 		tableColumns() {
-			return [
+			const columns = [
 				{ key: 'channel', label: t('filinq', 'Channel'), sortable: true },
 				{ key: 'sender', label: t('filinq', 'Sender'), sortable: true },
 				{ key: 'subject', label: t('filinq', 'Subject'), sortable: true },
 				{ key: 'receivedAt', label: t('filinq', 'Received'), sortable: true },
 			]
+			if (this.mode === 'detached') {
+				columns.push({ key: 'detachReason', label: t('filinq', 'Reason') })
+				columns.push({ key: 'detachedBy', label: t('filinq', 'Taken off by') })
+			}
+			return columns
 		},
 
 		emptyText() {
 			if (this.loadError) {
 				return this.loadError
+			}
+			if (this.mode === 'detached') {
+				return t('filinq', 'No document has been taken off a record.')
 			}
 			return t('filinq', 'Nothing is waiting. Every document that arrived has a record.')
 		},
@@ -165,6 +207,19 @@ export default {
 
 	methods: {
 		t,
+
+		/**
+		 * Switch between what is waiting and what came back off a record.
+		 *
+		 * @param {string} mode Either 'waiting' or 'detached'.
+		 * @return {Promise<void>} Resolves once the list has settled.
+		 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+		 */
+		async setMode(mode) {
+			this.mode = mode
+			this.closeDialogs()
+			await this.load()
+		},
 
 		channelLabel(channel) {
 			const labels = {
@@ -196,7 +251,10 @@ export default {
 			this.loading = true
 			this.loadError = ''
 			try {
-				this.documents = await listWaitingDocuments()
+				this.documents =
+					this.mode === 'detached'
+						? await listDetachedDocuments()
+						: await listWaitingDocuments()
 			} catch {
 				this.documents = []
 				this.loadError = t('filinq', 'The intake inbox could not be read.')
@@ -287,3 +345,11 @@ export default {
 	},
 }
 </script>
+
+<style scoped>
+.intake-modes {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+</style>

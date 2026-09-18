@@ -108,6 +108,70 @@ class IntakeRepository {
 	}//end findWaiting()
 
 	/**
+	 * Taken back off a record, waiting on the worklist.
+	 *
+	 * @var string
+	 */
+	public const STATUS_DETACHED = 'detached';
+
+	/**
+	 * Every document in one state, newest first.
+	 *
+	 * @param string $status The state to list.
+	 *
+	 * @return array<int, array<string, mixed>> The documents in that state.
+	 *
+	 * @throws RuntimeException When the register could not be read.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function findByStatus(string $status): array {
+		return $this->search(filters: ['status' => $status]);
+
+	}//end findByStatus()
+
+	/**
+	 * Everything that arrived with one message.
+	 *
+	 * @param string $uuid The message's intake document.
+	 *
+	 * @return array<int, array<string, mixed>> The attachments.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function findArrivedWith(string $uuid): array {
+		if ($uuid === '') {
+			return [];
+		}
+
+		return $this->search(filters: ['arrivedWith' => $uuid]);
+
+	}//end findArrivedWith()
+
+	/**
+	 * Find the intake document that belongs to one file, whatever its state.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed>|null The document, or null when the file never had one.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function findByFile(int $fileId): ?array {
+		if ($fileId <= 0) {
+			return null;
+		}
+
+		$rows = $this->search(filters: ['file' => $fileId]);
+		if ($rows === []) {
+			return null;
+		}
+
+		return $rows[0];
+
+	}//end findByFile()
+
+	/**
 	 * Find the intake document a channel already delivered under this reference.
 	 *
 	 * A channel that delivers the same message twice must not produce two rows

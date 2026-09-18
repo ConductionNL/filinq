@@ -84,6 +84,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 * @param string $sender Who sent it.
 	 * @param string $sourceRef The channel's own reference for this delivery.
 	 * @param string|null $receivedAt When it arrived, ISO 8601, or null for now.
+	 * @param string $arrivedWith The intake document of the message this file came as an attachment of.
 	 *
 	 * @return void
 	 */
@@ -95,6 +96,7 @@ class IntakeDocumentReceivedEvent extends Event {
 		private readonly string $sender = '',
 		private readonly string $sourceRef = '',
 		private readonly ?string $receivedAt = null,
+		private readonly string $arrivedWith = '',
 	) {
 		parent::__construct();
 
@@ -169,4 +171,19 @@ class IntakeDocumentReceivedEvent extends Event {
 		return $this->receivedAt;
 
 	}//end getReceivedAt()
+
+	/**
+	 * The message this file arrived as an attachment of.
+	 *
+	 * An attachment is a record of its own, and it names its message rather
+	 * than being folded into it: one attachment often belongs to a different
+	 * case from the letter it came with, and a folded attachment has no way to
+	 * say so.
+	 *
+	 * @return string The intake document uuid of the message, or an empty string.
+	 */
+	public function getArrivedWith(): string {
+		return $this->arrivedWith;
+
+	}//end getArrivedWith()
 }//end class

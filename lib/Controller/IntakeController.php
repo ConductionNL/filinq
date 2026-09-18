@@ -27,7 +27,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Service\IntakeDetachmentService;
+use OCA\Filinq\Service\IntakeRoutingService;
 use OCA\Filinq\Service\IntakeService;
+use OCA\Filinq\Service\PartySuggestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -55,6 +58,9 @@ class IntakeController extends Controller {
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param IntakeService $intake The intake inbox.
+	 * @param IntakeDetachmentService $detachment Returns a filed document to the worklist.
+	 * @param IntakeRoutingService $routing What a consuming app declared per record type.
+	 * @param PartySuggestionService $parties Party suggestions and the corrections corpus.
 	 * @param IUserSession $userSession The current session.
 	 *
 	 * @return void
@@ -63,6 +69,9 @@ class IntakeController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly IntakeService $intake,
+		private readonly IntakeDetachmentService $detachment,
+		private readonly IntakeRoutingService $routing,
+		private readonly PartySuggestionService $parties,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -109,7 +118,15 @@ class IntakeController extends Controller {
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
-	public function assign(string $uuid, string $register = '', string $schema = '', string $id = ''): JSONResponse {
+	public function assign(
+		string $uuid,
+		string $register = '',
+		string $schema = '',
+		string $id = '',
+		string $declaringApp = '',
+		string $typeReference = '',
+		bool $withAttachments = false,
+	): JSONResponse {
 		$unauthenticated = $this->requireUser();
 		if ($unauthenticated !== null) {
 			return $unauthenticated;
@@ -118,7 +135,14 @@ class IntakeController extends Controller {
 		try {
 			$document = $this->intake->assign(
 				uuid: $uuid,
-				target: ['register' => $register, 'schema' => $schema, 'id' => $id]
+				target: [
+					'register' => $register,
+					'schema' => $schema,
+					'id' => $id,
+					'declaringApp' => $declaringApp,
+					'typeReference' => $typeReference,
+				],
+				withAttachments: $withAttachments
 			);
 
 			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
@@ -154,6 +178,153 @@ class IntakeController extends Controller {
 		}
 
 	}//end reject()
+
+	/**
+	 * List the documents taken back off a record.
+	 *
+	 * @return JSONResponse The worklist.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	#[NoAdminRequired]
+	public function detached(): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		try {
+			$worklist = $this->intake->listDetached();
+
+			return new JSONResponse(
+				data: ['results' => $worklist, 'total' => count($worklist)],
+				statusCode: Http::STATUS_OK
+			);
+		} catch (Throwable $e) {
+			return $this->failure(error: $e);
+		}
+
+	}//end detached()
+
+	/**
+	 * Take one document off the record it is filed on.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 * @param string $reason Why it does not belong there.
+	 * @param string $documentName The document's name, for a file that never had an intake record.
+	 *
+	 * @return JSONResponse The intake document, now on the worklist.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	#[NoAdminRequired]
+	public function detach(int $fileId, string $reason = '', string $documentName = ''): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		try {
+			$document = $this->detachment->detach(
+				fileId: $fileId,
+				reason: $reason,
+				documentName: $documentName
+			);
+
+			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
+		} catch (Throwable $e) {
+			return $this->failure(error: $e);
+		}
+
+	}//end detach()
+
+	/**
+	 * Record what a clerk did with a party suggestion.
+	 *
+	 * @param string $sender The sender the suggestion was made for.
+	 * @param string $decision One of `accepted`, `edited`, `rejected`.
+	 * @param array<string, mixed> $suggested What was proposed.
+	 * @param array<string, mixed> $accepted What was filed, empty on a rejection.
+	 * @param string $intakeDocument The intake document it was shown on.
+	 *
+	 * @return JSONResponse The stored correction.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	#[NoAdminRequired]
+	public function decideParty(
+		string $sender = '',
+		string $decision = '',
+		array $suggested = [],
+		array $accepted = [],
+		string $intakeDocument = '',
+	): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		if (in_array($decision, ['accepted', 'edited', 'rejected'], true) === false) {
+			return new JSONResponse(
+				data: ['error' => 'A party decision is accepted, edited or rejected.'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		try {
+			$correction = $this->parties->recordDecision(
+				sender: $sender,
+				decision: $decision,
+				suggested: $suggested,
+				accepted: $accepted,
+				intakeDocument: $intakeDocument
+			);
+
+			return new JSONResponse(data: $correction, statusCode: Http::STATUS_OK);
+		} catch (Throwable $e) {
+			return $this->failure(error: $e);
+		}
+
+	}//end decideParty()
+
+	/**
+	 * Store what a consuming app declares about one of its record types.
+	 *
+	 * @param string $declaringApp The app making the declaration.
+	 * @param string $typeReference The record type, in that app's vocabulary.
+	 * @param string $routeTo The group inbound documents go to.
+	 * @param bool $requiresAcceptance Whether that group has to accept them.
+	 *
+	 * @return JSONResponse The stored declaration.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	#[NoAdminRequired]
+	public function declareRouting(
+		string $declaringApp = '',
+		string $typeReference = '',
+		string $routeTo = '',
+		bool $requiresAcceptance = false,
+	): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		try {
+			$declaration = $this->routing->declare(
+				declaringApp: $declaringApp,
+				typeReference: $typeReference,
+				routeTo: $routeTo,
+				requiresAcceptance: $requiresAcceptance
+			);
+
+			return new JSONResponse(data: $declaration, statusCode: Http::STATUS_OK);
+		} catch (Throwable $e) {
+			return $this->failure(error: $e);
+		}
+
+	}//end declareRouting()
 
 	/**
 	 * Refuse an anonymous caller.

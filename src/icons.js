@@ -17,6 +17,7 @@ import AccountEdit from 'vue-material-design-icons/AccountEdit.vue'
 import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import CallSplit from 'vue-material-design-icons/CallSplit.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
@@ -48,6 +49,7 @@ import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
+import Stamper from 'vue-material-design-icons/Stamper.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
@@ -73,6 +75,7 @@ export default {
 	// register without adding them here, so both headers rendered with no icon
 	// at all (rule 3 above).
 	FileCertificate,
+	CallSplit,
 	FileCheckOutline,
 	FileDocument,
 	FileDocumentCheck,
@@ -87,6 +90,7 @@ export default {
 	Gavel,
 	History,
 	InboxArrowDown,
+	Stamper,
 	MapMarkerPath,
 	Palette,
 	Plus,
