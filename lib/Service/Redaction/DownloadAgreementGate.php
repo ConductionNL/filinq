@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Redaction;
 
+use OCP\IL10N;
 use RuntimeException;
 
 /**
@@ -64,11 +65,17 @@ class DownloadAgreementGate {
 	 * Constructor.
 	 *
 	 * @param DownloadAgreementRepository $agreements Where the terms and the acceptances live.
+	 * @param IL10N|null                  $l10n       The reader's language, when there is one. The
+	 *                                                reader of a gated download is often a member
+	 *                                                of the public rather than an operator, so
+	 *                                                these strings are the ones that most need a
+	 *                                                translation.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DownloadAgreementRepository $agreements,
+		private readonly ?IL10N $l10n = null,
 	) {
 
 	}//end __construct()
@@ -103,7 +110,7 @@ class DownloadAgreementGate {
 				'mayDownload' => false,
 				'gated' => true,
 				'reason' => self::NOT_ACCEPTED,
-				'message' => 'Read the conditions and accept them before this file is downloaded.',
+				'message' => $this->say(message: 'Read the conditions and accept them before this file is downloaded.'),
 				'agreement' => $this->shownTerms(agreement: $agreement),
 			];
 		}
@@ -114,8 +121,10 @@ class DownloadAgreementGate {
 				'gated' => true,
 				'reason' => self::VERSION_MOVED_ON,
 				'message' => sprintf(
-					'The conditions have changed since you accepted them. You accepted version %s and these '
-					.'are version %s. Read them and accept again.',
+					$this->say(
+						message: 'The conditions have changed since you accepted them. You accepted version '
+							.'%s and these are version %s. Read them and accept again.'
+					),
 					$acceptedVersion,
 					$version
 				),
@@ -156,7 +165,9 @@ class DownloadAgreementGate {
 				'mayDownload' => false,
 				'gated' => true,
 				'reason' => self::VERSION_MOVED_ON,
-				'message' => 'The conditions changed while you were reading them. Read them again and accept.',
+				'message' => $this->say(
+					message: 'The conditions changed while you were reading them. Read them again and accept.'
+				),
 				'agreement' => $this->shownTerms(agreement: $agreement),
 			];
 		}
@@ -173,8 +184,10 @@ class DownloadAgreementGate {
 				'mayDownload' => false,
 				'gated' => true,
 				'reason' => self::NOT_RECORDED,
-				'message' => 'Your acceptance could not be recorded, so the file was not downloaded. '
-					.'Try again in a moment.',
+				'message' => $this->say(
+					message: 'Your acceptance could not be recorded, so the file was not downloaded. '
+						.'Try again in a moment.'
+				),
 				'error' => $e->getMessage(),
 			];
 		}
@@ -182,6 +195,24 @@ class DownloadAgreementGate {
 		return ['mayDownload' => true, 'gated' => true, 'acceptedVersion' => $current];
 
 	}//end accept()
+
+	/**
+	 * One message in the reader's language, or in English when there is none.
+	 *
+	 * @param string $message The English source string.
+	 *
+	 * @return string The message.
+	 *
+	 * @spec exclude Localisation helper behind check() and accept().
+	 */
+	private function say(string $message): string {
+		if ($this->l10n === null) {
+			return $message;
+		}
+
+		return $this->l10n->t($message);
+
+	}//end say()
 
 	/**
 	 * The agreement as a reader sees it.

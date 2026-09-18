@@ -39,10 +39,31 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Redaction;
 
+use OCP\IL10N;
+
 /**
  * Decides whether a redacted copy may be written yet.
  */
 class RedactionReviewGate {
+
+	/**
+	 * Constructor.
+	 *
+	 * 🔴 THE REFUSAL IS THE ONLY THING A USER EVER SEES OF THIS CLASS, so it
+	 * is translated. `IL10N` is nullable and defaults to null, the pattern
+	 * `LegalBasesSummaryService` already uses here: dependency injection always
+	 * supplies it, and where it is absent the English source string is
+	 * returned, which is a correct message rather than a placeholder.
+	 *
+	 * @param IL10N|null $l10n The acting user's language, when there is one.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly ?IL10N $l10n = null,
+	) {
+
+	}//end __construct()
 
 	/**
 	 * Nobody has checked this document at all.
@@ -79,16 +100,20 @@ class RedactionReviewGate {
 			// is the shape that lets a stale approval through, so it refuses.
 			return $this->refusal(
 				reason: self::NEVER_CHECKED,
-				message: 'This document has no detection run to publish. Run the detection, check the result, '
-					.'and try again.'
+				message: $this->say(
+					message: 'This document has no detection run to publish. Run the detection, check the '
+						.'result, and try again.'
+				)
 			);
 		}
 
 		if ($mark === null || $mark === []) {
 			return $this->refusal(
 				reason: self::NEVER_CHECKED,
-				message: 'Nobody has checked this document yet. Open it, look at what the detection marked, '
-					.'and confirm it before the redacted copy is written.'
+				message: $this->say(
+					message: 'Nobody has checked this document yet. Open it, look at what the detection '
+						.'marked, and confirm it before the redacted copy is written.'
+				)
 			);
 		}
 
@@ -98,9 +123,11 @@ class RedactionReviewGate {
 			return $this->refusal(
 				reason: self::CHECKED_AN_OLDER_RUN,
 				message: sprintf(
-					'This document was checked, but the detection has been run again since. The earlier check '
-					.'was about a different set of findings, so it does not cover this one. Look at the new '
-					.'result and confirm it again.%s',
+					$this->say(
+						message: 'This document was checked, but the detection has been run again since. '
+							.'The earlier check was about a different set of findings, so it does not cover '
+							.'this one. Look at the new result and confirm it again.%s'
+					),
 					$this->checkedByClause(mark: $mark)
 				)
 			);
@@ -111,8 +138,10 @@ class RedactionReviewGate {
 			// is the thing an accountability record exists to prevent.
 			return $this->refusal(
 				reason: self::UNATTRIBUTED,
-				message: 'This document is marked as checked, but the mark does not say who checked it. '
-					.'Confirm it again so the record names a person.'
+				message: $this->say(
+					message: 'This document is marked as checked, but the mark does not say who checked it. '
+						.'Confirm it again so the record names a person.'
+				)
 			);
 		}
 
@@ -192,7 +221,7 @@ class RedactionReviewGate {
 			return '';
 		}
 
-		return sprintf(' The earlier check was by %s on %s.', $who, $when);
+		return sprintf($this->say(message: ' The earlier check was by %s on %s.'), $who, $when);
 	}//end checkedByClause()
 
 	/**
@@ -206,4 +235,19 @@ class RedactionReviewGate {
 	private function refusal(string $reason, string $message): array {
 		return ['reason' => $reason, 'message' => $message];
 	}//end refusal()
+
+	/**
+	 * One message in the reader's language, or in English when there is none.
+	 *
+	 * @param string $message The English source string.
+	 *
+	 * @return string The message.
+	 */
+	private function say(string $message): string {
+		if ($this->l10n === null) {
+			return $message;
+		}
+
+		return $this->l10n->t($message);
+	}//end say()
 }//end class

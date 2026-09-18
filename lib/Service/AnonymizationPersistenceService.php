@@ -286,6 +286,21 @@ class AnonymizationPersistenceService {
 			$object['outputFormat'] = $extension;
 		}
 
+		// 🔴 THE VERDICT IS WRITTEN EVEN WHEN IT IS `unverifiable`. An empty
+		// field and a clean verdict look the same to anything that filters on
+		// "was this copy checked", and one of them means nobody looked.
+		$verification = ($resultInfo['redactionVerification'] ?? null);
+		if (is_array($verification) === true) {
+			$object['verificationVerdict'] = (string)($verification['verdict'] ?? '');
+			$object['verificationOutputMode'] = (string)($verification['outputMode'] ?? '');
+			$object['verificationRoutes'] = implode(',', (array)($verification['routesChecked'] ?? []));
+			$object['verificationLeakRoutes'] = implode(
+				',',
+				array_column((array)($verification['findings'] ?? []), 'route')
+			);
+			$object['verifiedAt'] = date(format: 'c');
+		}
+
 		return $object;
 	}//end buildLinkObject()
 

@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -64,6 +65,11 @@ class DocumentAnonymizeRunner {
 	 * @param GrondslagenSummaryAttacher $summaryAttacher Renders and attaches the per-document
 	 *                                                    grondslagen summary.
 	 *
+	 * @param RedactionVerdictRecorder $verdictRecorder Verifies the bytes that were actually
+	 *                                                  written and records the verdict on the
+	 *                                                  link, so a published copy can be shown
+	 *                                                  to have been checked.
+	 *
 	 * @return void
 	 */
 	public function __construct(
@@ -75,6 +81,7 @@ class DocumentAnonymizeRunner {
 		private readonly ReplacementVerificationService $replacementVerifier,
 		private readonly AnonymizationPersistenceService $persistence,
 		private readonly GrondslagenSummaryAttacher $summaryAttacher,
+		private readonly RedactionVerdictRecorder $verdictRecorder,
 	) {
 
 	}//end __construct()
@@ -132,6 +139,8 @@ class DocumentAnonymizeRunner {
 				'appendBasisSummary' => $options['appendBasisSummary'],
 				'sourceNode' => $node,
 				'fileId' => $fileId,
+				'redactedValues' => $mappedEntities,
+				'outputMode' => (string)($options['outputFormat'] ?? ''),
 			];
 
 			// EML branch (eml-pdf-assembly): OR's anonymizeDocument() THROWS on
@@ -316,6 +325,16 @@ class DocumentAnonymizeRunner {
 				placeholderMap: $context['placeholderMap']
 			);
 		}
+
+		// 🔴 LAST, AND ON THE BYTES THAT WERE ACTUALLY WRITTEN. The grondslagen
+		// summary above appends a page after the redaction, so verifying any
+		// earlier would record a verdict about a file that no longer exists.
+		$resultInfo = $this->verdictRecorder->record(
+			resultInfo: $resultInfo,
+			anonymisedNode: $context['anonymisedNode'],
+			redactedValues: ($context['redactedValues'] ?? []),
+			outputMode: (string)($context['outputMode'] ?? '')
+		);
 
 		if (empty($resultInfo['anonymizedFileId']) === false) {
 			$resultInfo = $this->persistence->recordAnonymizationLink(
