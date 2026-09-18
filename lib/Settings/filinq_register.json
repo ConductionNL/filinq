@@ -542,7 +542,7 @@
                 "slug": "template",
                 "title": "Document Template",
                 "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.2.0",
+                "version": "1.3.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -660,6 +660,39 @@
                         "order": 10,
                         "facetable": false,
                         "title": "Locked at"
+                    },
+                    "plainLanguage": {
+                        "description": "The plain-language counterpart of this template. A template that declares one produces both renditions from the same data in one generation; a template that declares none produces the formal rendition only and nothing is invented in its place. `requiredStatements` are the things the plain rendition must resolve before the generation may proceed, typically the decision, the term and where to object. `source` says whether the plain text comes from the counterpart template or from a machine draft: a machine draft is a suggestion and does not leave the building until a named person has accepted it.",
+                        "type": "object",
+                        "required": false,
+                        "visible": true,
+                        "order": 11,
+                        "facetable": false,
+                        "title": "Plain-language counterpart",
+                        "properties": {
+                            "templateId": {
+                                "description": "The template the plain rendition is rendered from.",
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            "requiredStatements": {
+                                "description": "The statements the plain rendition must resolve, by key. A statement that cannot be resolved from the data refuses the whole generation rather than leaving a plain letter with a hole where the term should be.",
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "maxLength": 64
+                                }
+                            },
+                            "source": {
+                                "description": "Where the plain text comes from. `template` renders the counterpart template; `machine` marks it as a draft a person must accept.",
+                                "type": "string",
+                                "enum": [
+                                    "template",
+                                    "machine"
+                                ],
+                                "default": "template"
+                            }
+                        }
                     }
                 },
                 "archive": [],
@@ -1118,7 +1151,7 @@
                 "title": "Generated Document",
                 "description": "Audit trail voor documenten gegenereerd via DocumentService. Bevat metadata inclusief template UUID, versie, databronnen en resultaat, plus (optioneel) het Nextcloud bestand-ID en -pad wanneer het document is opgeslagen in Files.",
                 "x-schema-org": "schema:DigitalDocument",
-                "version": "1.1.0",
+                "version": "1.2.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -1336,6 +1369,78 @@
                         "facetable": true,
                         "title": "Owner",
                         "maxLength": 64
+                    },
+                    "plainRenditionFileId": {
+                        "description": "Nextcloud file id of the plain-language rendition produced in the same generation as the formal document.",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 28,
+                        "facetable": false,
+                        "title": "plainRenditionFileId"
+                    },
+                    "plainRenditionFilePath": {
+                        "description": "Where the plain-language rendition was filed.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 29,
+                        "facetable": false,
+                        "title": "plainRenditionFilePath",
+                        "maxLength": 1024
+                    },
+                    "plainRenditionExplains": {
+                        "description": "The formal document this plain rendition explains, named on the rendition itself. A plain letter that does not say which decision it is about cannot be matched back to it by the person who received both.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 30,
+                        "facetable": false,
+                        "title": "plainRenditionExplains",
+                        "maxLength": 1024
+                    },
+                    "plainRenditionSource": {
+                        "description": "Where the plain text came from: the counterpart template, or a machine draft.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 31,
+                        "facetable": false,
+                        "title": "plainRenditionSource",
+                        "enum": [
+                            "template",
+                            "machine"
+                        ]
+                    },
+                    "plainRenditionAcceptedBy": {
+                        "description": "The person who accepted the machine-drafted plain rendition. Empty on a rendition rendered from a template, which needs no acceptance.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 32,
+                        "facetable": false,
+                        "title": "plainRenditionAcceptedBy",
+                        "maxLength": 64
+                    },
+                    "plainRenditionAcceptedAt": {
+                        "description": "When that person accepted it (ISO 8601).",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 33,
+                        "facetable": false,
+                        "title": "plainRenditionAcceptedAt",
+                        "format": "date-time"
+                    },
+                    "plainRenditionGeneratedAt": {
+                        "description": "When the plain rendition was produced (ISO 8601). It is compared against the formal document's own moment, so a plain rendition left behind by a correction reads as stale rather than as current.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 34,
+                        "facetable": false,
+                        "title": "plainRenditionGeneratedAt",
+                        "format": "date-time"
                     }
                 },
                 "archive": [],

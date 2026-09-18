@@ -66,11 +66,16 @@ class GeneratedDocumentLogger {
 	 * @param array $outcome The generation outcome: {status: string, warnings: string[],
 	 *                       zaakId: ?string, errorMessage: ?string, fileId: ?int, filePath: ?string}
 	 * @param string $userId The generating user's UID
+	 * @param array $extra Extra fields to carry on the entry, such as the plain-language
+	 *                     rendition a template declared. Merged over the entry, so a
+	 *                     caller cannot quietly overwrite the template identity or the
+	 *                     outcome: those are written after the merge.
 	 *
 	 * @return array The created document register entry
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-004
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function log(
 		array $template,
@@ -78,10 +83,16 @@ class GeneratedDocumentLogger {
 		string $format,
 		array $outcome,
 		string $userId,
+		array $extra = [],
 	): array {
 		try {
 			$objectService = $this->objectResolver->resolve();
 
+			// 🔑 THE CANONICAL FIELDS WIN OVER THE EXTRA ONES. `+` keeps the LEFT
+			// operand's keys, so a caller passing `templateId` or `status` in
+			// `extra` adds nothing and overwrites nothing: the audit trail's own
+			// account of what was generated is the one thing this entry exists
+			// to be trusted about, and it is not a caller's to rewrite.
 			$entry = [
 				'templateId' => $template['id'],
 				'templateVersion' => $template['version'],
@@ -96,7 +107,7 @@ class GeneratedDocumentLogger {
 				'errorMessage' => $outcome['errorMessage'],
 				'fileId' => ($outcome['fileId'] ?? null),
 				'filePath' => ($outcome['filePath'] ?? null),
-			];
+			] + $extra;
 
 			$result = $objectService->saveObject(
 				object: $entry,

@@ -96,7 +96,31 @@
   - 🔴 A FAILED READ IS RAISED, NOT REPORTED AS "NO ANSWERS". An empty list
     would say the letter is still open when it may have been answered a month
     ago, which is the reading that gets a second reply sent.
-- [ ] 2.2 The open post list per unit, oldest first, offered as a leaf per ADR-066 (REQ-DIO-02)
+- [~] 2.2 The open post list per unit, oldest first, offered as a leaf per ADR-066 (REQ-DIO-02)
+  - BUILT: `PostRegisterReader::openPostFor()`, the undischarged inbound entries
+    of a unit, oldest first.
+  - 🔴 "OPEN" IS NOT A STORED FIELD, FOR THE SAME REASON `answered` IS NOT. The
+    list is built from the same read as the discharge: an entry is open when
+    nothing names it. A cached `open` column would be the identical lie one step
+    further from where anybody would look for it.
+  - 🔴 AN ENTRY WHOSE DISCHARGE COULD NOT BE READ IS RAISED, NOT LISTED AS OPEN.
+    Listing it puts a letter somebody answered a month ago at the top of a work
+    list ordered oldest first, and it gets answered again. Dropping it silently
+    is worse: a letter nobody answered would vanish from the only list that
+    would have caught it. `answersFor()` already raises, and that raise is
+    deliberately not caught.
+  - THE QUERY USES BARE KEYS BESIDE `@self`, pinned by a test that refuses a
+    `filter` key. Written the other way this method reports a unit with no post
+    at all, confidently and with nothing in the log.
+  - AN UNDATED ENTRY SORTS LAST, NOT FIRST. An unknown date is not evidence of
+    age, and sorting it first would put it above letters that really have been
+    waiting.
+  - 🔑 STILL BLOCKED: the leaf. Same blocker as `case-documents-and-the-flat-list`
+    2.2, measured again on 2026-09-18: filinq consumes no
+    `RegisterLeafProvidersEvent` and `webpack.config.js` declares no `leaves`
+    entry, so a leaf registered here would be DARK while its registration
+    reported success. The list is an endpoint's worth of behaviour now; the leaf
+    is a change of its own.
 - [x] 2.3 Record a withdrawn allocation with its reason and moment when a numbered registration is not written, and expose the series so it reads end to end (REQ-DIO-03)
   - `withdrawnAt` ADDED: the schema shipped with `withdrawnReason` alone, and
     the task asks for the reason AND the moment. A withdrawal with only one of
@@ -116,9 +140,73 @@
 
 ## 3. The plain-language rendition
 
-- [ ] 3.1 A template declares a plain-language counterpart and its required statements; generation produces both renditions from one generation record, and the plain one names the formal document (REQ-DIO-04)
-- [ ] 3.2 Refuse the generation on an unresolved required statement, and regenerate the plain rendition whenever the formal one is regenerated (REQ-DIO-04)
-- [ ] 3.3 A machine-drafted plain rendition is a suggestion: not filed and not sent until a named person accepts it, with the acceptance recorded (REQ-DIO-05)
+- [x] 3.1 A template declares a plain-language counterpart and its required statements; generation produces both renditions from one generation record, and the plain one names the formal document (REQ-DIO-04)
+  - `template.plainLanguage` (counterpart template, `requiredStatements`,
+    `source`), schema 1.2.0 → 1.3.0; the plain rendition's fields on
+    `generatedDocument`, 1.1.0 → 1.2.0. `PlainLanguageRenditionService` reads
+    the declaration and `DocumentService::producePlainRendition()` renders it.
+  - 🔴 BOTH RENDITIONS COME OUT OF ONE GENERATION, from the same data and the
+    same huisstijl. There is no second call that produces the plain one, which
+    is what stops the two letters disagreeing about a date while both claim to
+    describe one decision.
+  - 🔴 NO COUNTERPART MEANS NO RENDITION, AND NOTHING IS INVENTED IN ITS PLACE.
+    Generated plain text reads fluently whether or not the organisation ever
+    approved it, which is exactly why nobody would catch it. A declaration
+    naming no template is not a counterpart either: treating it as one would
+    refuse every generation over a rendition nothing can render.
+  - THE PLAIN RENDITION NAMES THE FORMAL DOCUMENT, on the record and in the
+    result. Somebody receives two letters about one decision; a plain letter
+    that does not say which decision it explains leaves them holding two
+    documents and no relation between them.
+  - THE FORMAL RENDITION IS UNTOUCHED. Nothing in this change reads or rewrites
+    it; it is passed in so it can be named.
+- [x] 3.2 Refuse the generation on an unresolved required statement, and regenerate the plain rendition whenever the formal one is regenerated (REQ-DIO-04)
+  - 🔴 THE REFUSAL HAPPENS BEFORE ANYTHING IS FILED, AND THAT IS A PROPERTY OF
+    WHERE IT IS CALLED, NOT OF THE SERVICE. `plan()` runs before
+    `storeOutputIfRequested()`, so a refusal leaves NEITHER rendition behind.
+    Mutation-checked by moving the call after the store: the assertion that
+    reddens is `$this->storage->expects(self::never())->method('store')` in
+    `DocumentServicePlainRenditionTest`, which is the only place that ordering
+    is visible at all.
+  - THE REFUSAL NAMES THE UNRESOLVED STATEMENT. "The generation failed" sends a
+    handler looking through a template for a hole they cannot see.
+  - AN EMPTY STRING IS UNRESOLVED; `0` AND `false` ARE ANSWERS. A blank where
+    the term should be reads as "there is no term" to the person holding the
+    letter, while a term of zero days is a strange decision that is still a
+    decision, and refusing it would make the letter impossible to send.
+  - A COUNTERPART TEMPLATE THAT CANNOT BE READ REFUSES THE GENERATION. Filing
+    the formal letter alone would drop a rendition the template says every
+    reader gets, and nobody would notice until somebody complained they could
+    not read their besluit.
+  - REGENERATION NEEDS NO SEPARATE CALL: one generation produces both, so a
+    correction takes the twin with it by construction rather than by anybody
+    remembering. `stale()` exists for records written before that was true and
+    for any path that ever files one without the other; an unreadable formal
+    moment reads as stale, because the cheap error is regenerating something
+    current and the expensive one is sending a plain letter about a decision
+    that has since been corrected.
+- [~] 3.3 A machine-drafted plain rendition is a suggestion: not filed and not sent until a named person accepts it, with the acceptance recorded (REQ-DIO-05)
+  - BUILT: `PlainRenditionAcceptanceGate`, one chokepoint asked the same
+    question by every path, wired into the generation path through
+    `PlainLanguageRenditionService::plan()`.
+  - 🔴 ACCEPTANCE IS A PERSON AND A MOMENT, BOTH OR NEITHER. "Accepted: true"
+    can be written by the same machine that drafted the text, and it is exactly
+    the flag this requirement exists to refuse. A name with no moment cannot be
+    placed in time when somebody asks a year later whether the draft was read
+    before or after the correction, so half an acceptance is refused AS an
+    acceptance rather than accepted as half.
+  - TEXT FROM THE COUNTERPART TEMPLATE NEEDS NO ACCEPTANCE: it is the
+    organisation's own, reviewed when the template was written. Demanding one
+    there would make every ordinary besluit wait for a click nobody was told to
+    make, which is how a gate takes down the feature it guards.
+  - 🔑 WHAT WAITS: the correspondence and portal paths. The requirement names
+    three ways out and only generation calls the gate today. That is a MISSING
+    CALL, which somebody can grep for, rather than a second rule written
+    slightly differently in two more places, which nobody can see. Naming it
+    here rather than writing two more copies of the decision.
+  - ALSO NOT BUILT: a store for the draft itself, and the surface a person
+    accepts it on. Filinq drafts nothing with machine assistance yet, so an
+    acceptance UI would be a screen for a thing that does not exist.
 
 ## 4. The download notification
 
@@ -168,4 +256,16 @@
 
 ## 5. Quality
 
-- [ ] 5.1 PHPUnit inside the container for the numbering, the discharge, the withdrawal, both renditions, the suggestion gate and every download route; 75% on new code (ADR-009); Playwright `tests/e2e/documents-in-and-out.spec.ts`; Dutch and English strings; docs in `docs/features/documents-in-and-out.md` with screenshots
+- [~] 5.1 PHPUnit inside the container for the numbering, the discharge, the withdrawal, both renditions, the suggestion gate and every download route; 75% on new code (ADR-009); Playwright `tests/e2e/documents-in-and-out.spec.ts`; Dutch and English strings; docs in `docs/features/documents-in-and-out.md` with screenshots
+  - DONE: PHPUnit for the numbering, the discharge, the withdrawal, the open
+    post list, both renditions and the suggestion gate, plus the ordering test
+    on `DocumentService` that no other suite can see.
+  - DONE: `tests/e2e/workflows/documents-in-and-out.spec.ts`, anchored to three
+    scenarios. It drives the STORE rather than a screen, deliberately: the leaf
+    is blocked, so what is reachable is that the schemas resolve, accept the
+    shape the services write, and DROP `answered` and `dischargedAt` in
+    silence. That silence is the assertion, not a detail.
+  - STILL OPEN: the download-route half of the tests, which waits on 4.1's
+    wiring; the Dutch and English strings, because nothing in this change puts
+    a word on a screen yet; and `docs/features/documents-in-and-out.md` with
+    screenshots, which waits on there being a screen to photograph.

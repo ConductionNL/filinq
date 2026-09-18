@@ -57,6 +57,11 @@ class PostRegisterReader {
 	public const SCHEMA = 'documentRegistration';
 
 	/**
+	 * The direction of a document that came in.
+	 */
+	public const DIRECTION_INCOMING = 'incoming';
+
+	/**
 	 * Collaborators.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolves OpenRegister's ObjectService.
@@ -113,6 +118,158 @@ class PostRegisterReader {
 
 		return (is_array($results) === true ? array_values($results) : []);
 	}//end answersFor()
+
+	/**
+	 * The undischarged inbound entries of a unit, oldest first.
+	 *
+	 * 🔴 IT IS BUILT FROM THE SAME READ AS THE DISCHARGE, NOT FROM A FLAG.
+	 * REQ-DIO-02 says the discharge is read from the link and never written as a
+	 * status, so "open" cannot be a stored field either: an entry is open when
+	 * nothing names it, which is a question asked of the outbound entries. A
+	 * cached `open` column would be the same lie as an `answered` flag, one step
+	 * further away from where anybody would look for it.
+	 *
+	 * 🔴 AN ENTRY WHOSE DISCHARGE COULD NOT BE READ IS RAISED, NOT LISTED AS
+	 * OPEN. Listing it would put a letter somebody answered a month ago at the
+	 * top of the work list, oldest first, and the handler would answer it again.
+	 * Leaving it out silently is worse still: a letter nobody answered would
+	 * vanish from the only list that would have caught it.
+	 *
+	 * 🔑 OLDEST FIRST IS THE POINT OF THE LIST. It is a work list, and the order
+	 * is what makes it one. An entry with no registration date sorts LAST rather
+	 * than first: an unknown date is not evidence of age, and sorting it first
+	 * would put it above letters that really have been waiting.
+	 *
+	 * @param string $unit The organisational unit.
+	 *
+	 * @return array<int, array<string, mixed>> The undischarged inbound entries, oldest first.
+	 *
+	 * @throws Throwable When the register could not be read.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 */
+	public function openPostFor(string $unit): array {
+		$unitId = trim($unit);
+		if ($unitId === '') {
+			return [];
+		}
+
+		try {
+			$results = $this->objectResolver->resolve()->searchObjects(
+				query: [
+					'@self' => [
+						'register' => self::REGISTER,
+						'schema' => self::SCHEMA,
+					],
+					// BARE keys, beside the `@self` block. The sibling
+					// aggregations endpoint spells the same filter as
+					// `filter[unit]`, and the objects endpoint reads that
+					// wrapper as the EMPTY SET: written that way this method
+					// would report a unit with no post at all, confidently and
+					// with nothing in the log.
+					'unit' => $unitId,
+					'direction' => self::DIRECTION_INCOMING,
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'filinq.post-register.open-post-read-failed',
+				['unit' => $unitId, 'error' => $e->getMessage()]
+			);
+
+			throw $e;
+		}
+
+		$open = [];
+		foreach ((array)$results as $entry) {
+			$entry = $this->plain(row: $entry);
+			if ($entry === null) {
+				continue;
+			}
+
+			$uuid = trim((string)($entry['id'] ?? $entry['uuid'] ?? ''));
+			if ($uuid === '') {
+				continue;
+			}
+
+			// answersFor() raises rather than reporting "no answers" on a failed
+			// read, and that raise is deliberately not caught here.
+			if ($this->answersFor(inboundUuid: $uuid) !== []) {
+				continue;
+			}
+
+			$open[] = $entry;
+		}
+
+		usort($open, [$this, 'oldestFirst']);
+
+		return $open;
+	}//end openPostFor()
+
+	/**
+	 * Order two entries oldest first, with an undated entry last.
+	 *
+	 * @param array<string, mixed> $left  One entry.
+	 * @param array<string, mixed> $right The other.
+	 *
+	 * @return int The comparison.
+	 *
+	 * @spec exclude Comparison helper; the ordering rule it implements is documented on openPostFor().
+	 */
+	private function oldestFirst(array $left, array $right): int {
+		$a = trim((string)($left['registeredAt'] ?? ''));
+		$b = trim((string)($right['registeredAt'] ?? ''));
+
+		if ($a === '' && $b === '') {
+			return 0;
+		}
+
+		if ($a === '') {
+			return 1;
+		}
+
+		if ($b === '') {
+			return -1;
+		}
+
+		return strcmp($a, $b);
+	}//end oldestFirst()
+
+	/**
+	 * One search result as a plain array.
+	 *
+	 * @param mixed $row The row as the object service returned it.
+	 *
+	 * @return array<string, mixed>|null The entry.
+	 *
+	 * @spec exclude Shape adapter over a search result; no behaviour of its own.
+	 */
+	private function plain(mixed $row): ?array {
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			$row = $row->jsonSerialize();
+		}
+
+		if (is_array($row) === false) {
+			return null;
+		}
+
+		$identifier = trim((string)($row['id'] ?? $row['uuid'] ?? ''));
+
+		if (isset($row['object']) === true && is_array($row['object']) === true) {
+			$object = $row['object'];
+			if ($identifier === '') {
+				$identifier = trim((string)($object['id'] ?? $object['uuid'] ?? ''));
+			}
+
+			$row = $object;
+		}
+
+		if ($identifier !== '') {
+			$row['id'] = $identifier;
+		}
+
+		return $row;
+	}//end plain()
 
 	/**
 	 * Whether a number in the series was withdrawn, and why.
