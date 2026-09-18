@@ -122,8 +122,49 @@
 
 ## 4. The download notification
 
-- [ ] 4.1 Register a download listener that records file, version, moment, route and identity, names the link instead of a person on a public link, and enqueues the notification rather than delivering it on the download path (REQ-DIO-06)
-- [ ] 4.2 Declare the notification in the `x-openregister-notifications` dialect with steward and watcher recipients, staff only, and collapse repeats inside a declared window (REQ-DIO-07)
+- [~] 4.1 Record file, version, moment, route and identity; name the link instead of a person on a public link; enqueue the notification rather than delivering it on the download path (REQ-DIO-06)
+  - `DocumentDownloadRecorder` builds the record and decides whether to notify.
+  - 🔴 "EVERY DOWNLOAD ROUTE" IS NOT REACHABLE FROM A PLATFORM LISTENER, checked
+    end to end. The only download event Nextcloud exposes is
+    `BeforeDirectFileDownloadEvent`, and it carries a PATH and a success flag —
+    no version, no route, no identity. Worse, only ONE thing dispatches it:
+    `apps/dav/lib/Controller/DirectController.php`, the DAV direct-link feature.
+    `files_sharing` merely listens. So the web UI, WebDAV GET and public share
+    downloads never raise it.
+  - A listener there would have recorded a FRACTION of downloads while the audit
+    read as complete, which is the failure this whole change is about. So the
+    recorder is wired to filinq's OWN routes, which are enumerable
+    (`version#download`, `printJob#download` and two print routes), and the
+    platform routes are named here as not covered rather than silently missed.
+  - A PUBLIC LINK NAMES THE LINK, NOT A PERSON. Whoever opened it is
+    unauthenticated, so any name is a guess, and a guessed name in an audit
+    record is read as fact by whoever reads it next. The link is what was used
+    and what can be revoked. Mutation-checked.
+  - THE NOTIFICATION IS ENQUEUED, NEVER DELIVERED ON THE DOWNLOAD PATH. A slow
+    mail server would make the download slow; a dead one would make it fail, and
+    the document would then not leave the building because a notification could
+    not be sent.
+  - WHAT WAITS: wiring the recorder into the four controllers, and the audit
+    write itself. Named rather than half-done.
+- [~] 4.2 Declare the notification in the `x-openregister-notifications` dialect with steward and watcher recipients, staff only, and collapse repeats inside a declared window (REQ-DIO-07)
+  - 🔴 THE DIALECT CANNOT COLLAPSE AN EVENT-DRIVEN NOTIFICATION, measured not
+    assumed. It supports `trigger.dedupeFields`, and that key is honoured by
+    exactly two things: `ScheduledNotificationJob` and
+    `TaskScheduledNotificationJob`, both SCHEDULED paths. Nothing collapses an
+    event-driven notification, and the dialect has no time-WINDOW concept at
+    all — `dedupeFields` is field-based, per scheduled run.
+  - So declaring a window there would be a key nobody reads: stored, validated
+    by the annotation validator, and never once honoured. The collapse is
+    implemented in `DocumentDownloadRecorder` instead, where it runs.
+  - THE COLLAPSE IS PER FILE AND PER IDENTITY, not per file alone. Two different
+    people downloading the same document inside the window are two facts, and
+    collapsing them would hide the second person entirely — which on a
+    confidential document is the one you most want to know about.
+  - AN UNREADABLE TIMESTAMP NOTIFIES rather than swallowing the download. A
+    missing notification about a document leaving is the failure this
+    requirement exists to prevent; noise is the cheaper error.
+  - WHAT WAITS: the declaration itself, once somebody decides whether to add a
+    window to the dialect or leave collapsing to the app. Not guessed at here.
 
 ## 5. Quality
 
