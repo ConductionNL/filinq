@@ -71,6 +71,10 @@ class DomainFolderReconciliationJob extends TimedJob {
 	 *
 	 * @param mixed $argument Job arguments. The job is registered bare and takes none.
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's
+	 * TimedJob signature, not a parameter this job chose. Dropping it changes the
+	 * override into a different method and the job stops running.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md

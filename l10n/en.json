@@ -1022,7 +1022,8 @@
         "Read the conditions and accept them before this file is downloaded.": "Read the conditions and accept them before this file is downloaded.",
         "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.": "The conditions have changed since you accepted them. You accepted version %s and these are version %s. Read them and accept again.",
         "The conditions changed while you were reading them. Read them again and accept.": "The conditions changed while you were reading them. Read them again and accept.",
-        "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.": "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment."
+        "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.": "Your acceptance could not be recorded, so the file was not downloaded. Try again in a moment.",
+        "Intake": "Intake"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

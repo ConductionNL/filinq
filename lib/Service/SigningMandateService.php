@@ -193,7 +193,7 @@ class SigningMandateService {
 
 		$declarations = $this->declarations();
 		$declarations[$typeReference] = $declaration;
-		$this->store($declarations);
+		$this->store(declarations: $declarations);
 
 		return $declaration;
 
@@ -215,7 +215,7 @@ class SigningMandateService {
 		}
 
 		unset($declarations[$typeReference]);
-		$this->store($declarations);
+		$this->store(declarations: $declarations);
 
 		return true;
 
@@ -232,7 +232,9 @@ class SigningMandateService {
 	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function maySign(array $request, string $userId): bool {
-		$declaration = $this->declarationFor($this->typeReference($request));
+		$declaration = $this->declarationFor(
+			typeReference: $this->typeReference(request: $request)
+		);
 		if ($declaration === null) {
 			return true;
 		}
@@ -264,12 +266,12 @@ class SigningMandateService {
 	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function assertMaySign(array $request, string $userId): void {
-		if ($this->maySign($request, $userId) === true) {
+		if ($this->maySign(request: $request, userId: $userId) === true) {
 			return;
 		}
 
-		$typeReference = $this->typeReference($request);
-		$declaration = $this->declarationFor($typeReference);
+		$typeReference = $this->typeReference(request: $request);
+		$declaration = $this->declarationFor(typeReference: $typeReference);
 		$rule = (string)($declaration['rule'] ?? '');
 
 		// A refusal that says only "not allowed" sends the signer to an

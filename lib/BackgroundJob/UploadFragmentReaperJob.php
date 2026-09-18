@@ -137,6 +137,10 @@ class UploadFragmentReaperJob extends TimedJob {
 	 *
 	 * @param mixed $argument Job arguments. The job is registered bare and takes none.
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's
+	 * TimedJob signature, not a parameter this job chose. Dropping it changes the
+	 * override into a different method and the job stops running.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
@@ -149,16 +153,21 @@ class UploadFragmentReaperJob extends TimedJob {
 		$refused = 0;
 
 		$this->userManager->callForSeenUsers(
-			function (IUser $user) use ($maxAge, $now, &$removed, &$bytes, &$refused): void {
+			// The closure answers `true` rather than nothing: callForSeenUsers()
+			// reads a falsy answer as "stop walking", so a void closure would end
+			// the sweep after the first user on a strict reading of the contract.
+			function (IUser $user) use ($maxAge, $now, &$removed, &$bytes, &$refused): bool {
 				$folder = $this->documentsFolder(userId: $user->getUID());
 				if ($folder === null) {
-					return;
+					return true;
 				}
 
 				$outcome = $this->reaper->reap(folder: $folder, maxAgeSeconds: $maxAge, now: $now);
 				$removed += (int)$outcome['removed'];
 				$bytes += (int)$outcome['bytes'];
 				$refused += count($outcome['refused']);
+
+				return true;
 			}
 		);
 

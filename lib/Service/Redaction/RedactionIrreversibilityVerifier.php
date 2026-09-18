@@ -36,7 +36,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-and-what-leaves-the-building/spec.md
+ * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
  */
 
 declare(strict_types=1);
@@ -77,6 +77,8 @@ class RedactionIrreversibilityVerifier {
 	 * @param string   $outputMode      The mode that produced it, for the record.
 	 *
 	 * @return array<string, mixed> The verdict, the routes checked, and every finding.
+	 *
+	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	public function verify(string $bytes, array $redactedValues, string $outputMode = ''): array {
 		if (trim($bytes) === '') {
@@ -139,6 +141,8 @@ class RedactionIrreversibilityVerifier {
 	 * @param array<string, mixed> $result The verification result.
 	 *
 	 * @return bool True only when the document was examined and found clean.
+	 *
+	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	public function mayBePublished(array $result): bool {
 		return (($result['verdict'] ?? '') === self::CLEAN && ($result['mayBePublished'] ?? false) === true);

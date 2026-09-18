@@ -56,6 +56,8 @@ interface MountCapabilityProbe {
 	 * @param string $path The folder the domain would live in.
 	 *
 	 * @return bool|null True, false, or null when it could not be found out.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function supportsPerGroupPermissions(string $path): ?bool;
 
@@ -65,6 +67,8 @@ interface MountCapabilityProbe {
 	 * @param string $path The folder the domain would live in.
 	 *
 	 * @return bool|null True, false, or null when it could not be found out.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function writesPassThroughFilinq(string $path): ?bool;
 
@@ -74,6 +78,8 @@ interface MountCapabilityProbe {
 	 * @param string $path The folder the domain would live in.
 	 *
 	 * @return bool|null True, false, or null when it could not be found out.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function supportsVersions(string $path): ?bool;
 

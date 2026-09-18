@@ -45,6 +45,7 @@ export default {
 		/** The host object's id. */
 		objectId: { type: String, default: '' },
 	},
+
 	data() {
 		return {
 			rows: [],
@@ -52,23 +53,30 @@ export default {
 			error: false,
 		}
 	},
+
 	mounted() {
 		this.load()
 	},
+
 	methods: {
 		/**
 		 * The Files deep link for one row.
 		 *
 		 * @param {object} row One flat-list row.
 		 * @return {string} A link to the file in Files.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
 		 */
 		fileLink(row) {
 			return generateUrl('/f/{fileId}', { fileId: row.fileId })
 		},
+
 		/**
 		 * Read the flat list for the host object.
 		 *
 		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
 		 */
 		async load() {
 			// Without an object there is nothing to list, and asking anyway
@@ -96,12 +104,13 @@ export default {
 				}
 				const body = await response.json()
 				this.rows = Array.isArray(body.results) ? body.results : []
-			} catch (e) {
+			} catch {
 				this.error = true
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * The current page's request token.
 		 *
@@ -110,6 +119,8 @@ export default {
 		 * host bundled the same helper.
 		 *
 		 * @return {string} The token, or an empty string when there is none.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
 		 */
 		requestToken() {
 			const head = document.getElementsByTagName('head')[0]

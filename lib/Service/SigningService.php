@@ -39,8 +39,14 @@ use RuntimeException;
  * SignedArtifactProducer and SigningRequestValidator were extracted earlier;
  * SigningActorResolver (who is acting, and may they act as this signer) and
  * SigningConclusionEmitter (the cross-app conclusion contract) followed, so
- * the class now meets the length, coupling, complexity and parameter-list
- * thresholds on its own — no suppressions.
+ * the class now meets the length, complexity and parameter-list thresholds on
+ * its own. Coupling went back over the line with the signing folder's mandate
+ * service, which is a collaborator rather than work this class does itself.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth collaborator is
+ * SigningMandateService, added so a direct signing attempt is refused by the
+ * same rule that leaves the document out of the folder. Inlining that rule here
+ * would be the second copy of it.
  *
  * @spec openspec/specs/document-signing/spec.md
  */
@@ -394,7 +400,7 @@ class SigningService {
 			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
 		}
 
-		// signing-folder-across-cases REQ-SFC-04: the folder leaves out what
+		// Change signing-folder-across-cases, REQ-SFC-04: the folder leaves out what
 		// the signer has no mandate for, and the direct attempt on the same
 		// document is refused here, naming the rule. The guard applies to the
 		// in-app actor: a mandate is declared in Nextcloud groups, which an

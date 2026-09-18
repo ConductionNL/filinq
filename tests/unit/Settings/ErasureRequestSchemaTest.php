@@ -17,7 +17,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/erase-a-person-while-the-records-stay/spec.md
+ * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;

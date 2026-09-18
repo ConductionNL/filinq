@@ -99,10 +99,10 @@ class DownloadAgreementRepository {
 				continue;
 			}
 
-			$at = (string)($row['acceptedAt'] ?? '');
-			if ($latest === null || $at > $latestAt) {
+			$moment = (string)($row['acceptedAt'] ?? '');
+			if ($latest === null || $moment > $latestAt) {
 				$latest = $row;
-				$latestAt = $at;
+				$latestAt = $moment;
 			}
 		}
 

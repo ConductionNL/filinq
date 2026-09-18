@@ -45,7 +45,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/erase-a-person-while-the-records-stay/spec.md
+ * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
  */
 
 declare(strict_types=1);
@@ -90,6 +90,8 @@ class SubjectErasureJob {
 	 * @param array<string, mixed> $progress  What the last run recorded.
 	 *
 	 * @return array<int, string> The documents still to do.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function resumeFrom(array $documents, array $progress): array {
 		$last = trim((string)($progress['lastDocument'] ?? ''));
@@ -97,15 +99,15 @@ class SubjectErasureJob {
 			return $documents;
 		}
 
-		$at = array_search($last, $documents, true);
-		if ($at === false) {
+		$position = array_search($last, $documents, true);
+		if ($position === false) {
 			// The resume point is not in scope any more: the scope changed
 			// between runs. Starting over is the safe reading, because the
 			// alternative silently skips whatever moved.
 			return $documents;
 		}
 
-		return array_values(array_slice($documents, (int)$at));
+		return array_values(array_slice($documents, (int)$position));
 	}//end resumeFrom()
 
 	/**
@@ -115,6 +117,8 @@ class SubjectErasureJob {
 	 * @param int $done  How many were completed.
 	 *
 	 * @return string The status.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function statusFor(int $total, int $done): string {
 		if ($total <= 0 || $done >= $total) {
@@ -135,6 +139,8 @@ class SubjectErasureJob {
 	 * @param string               $dueAt    When the request is due.
 	 *
 	 * @return array<string, mixed> The account of the stopped run.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function accountOf(array $progress, string $dueAt = ''): array {
 		$total = (int)($progress['documentsTotal'] ?? 0);

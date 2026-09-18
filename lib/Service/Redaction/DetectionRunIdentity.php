@@ -49,6 +49,10 @@ final class DetectionRunIdentity {
 	 * @return string The run name, or an empty string when there is no file to name.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 *
+	 * @SuppressWarnings(PHPMD.ShortMethodName) `DetectionRunIdentity::of($fileId,
+	 * ...)` reads as the sentence it is at every call site. A longer name would
+	 * repeat the class, which is the thing that already says what is being named.
 	 */
 	public function of(int $fileId, array $entities, string $etag = ''): string {
 		if ($fileId <= 0) {

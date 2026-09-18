@@ -94,7 +94,9 @@ class ExternalMountValidator {
 	 *
 	 * @param string $path The folder the domain would live in.
 	 *
-	 * @return array{path: string, ok: bool, findings: array<int, array{requirement: string, verdict: string, message: string}>} What it can and cannot keep.
+	 * @return array{path: string, ok: bool,
+	 *               findings: array<int, array{requirement: string, verdict: string, message: string}>}
+	 *               What it can and cannot keep.
 	 *
 	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
@@ -113,7 +115,8 @@ class ExternalMountValidator {
 			findings: $findings,
 			answer: $this->probe->supportsPerGroupPermissions(path: $path),
 			requirement: 'reconcile the folder to the domain',
-			cannot: 'This store cannot hold a permission per group, so the nightly reconciliation will report a refusal every night and a group removed from the domain keeps its access.',
+			cannot: 'This store cannot hold a permission per group, so the nightly reconciliation will report '
+				.'a refusal every night and a group removed from the domain keeps its access.',
 			unknown: 'Whether this store holds a permission per group could not be found out, so reconciliation may silently do nothing.'
 		);
 

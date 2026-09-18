@@ -159,6 +159,11 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) The plain-language rendition
+	 * step pushed this past the threshold. It belongs in the same method because
+	 * the formal document and its plain counterpart are filed together or not at
+	 * all; splitting the step out would make a half-filed pair reachable.
 	 */
 	public function generateDocument(
 		string $templateId,
@@ -642,7 +647,8 @@ class DocumentService {
 	 * @param string                    $outputMode Where the output goes.
 	 * @param array<string, mixed>      $formal     The formal document as it was filed.
 	 *
-	 * @return array{rendition: array<string, mixed>|null, record: array<string, mixed>, warnings: array<int, string>} The rendition, its record fields and any warnings.
+	 * @return array{rendition: array<string, mixed>|null, record: array<string, mixed>,
+	 *               warnings: array<int, string>} The rendition, its record fields and any warnings.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
@@ -709,6 +715,22 @@ class DocumentService {
 		];
 	}//end producePlainRendition()
 
+	/**
+	 * File the rendered bytes when the caller asked for them to be stored.
+	 *
+	 * @param string               $mode       `return` to hand the bytes back unfiled, anything else to file them.
+	 * @param string               $templateId The template's identifier, for the record.
+	 * @param array<string, mixed> $template   The template the bytes came from.
+	 * @param string               $format     The output format the bytes are in.
+	 * @param string               $content    The rendered bytes.
+	 * @param array<string, mixed> $options    The generation options, carrying `userId` and the target.
+	 * @param array<int, string>   $warnings   The warnings collected so far, carried through.
+	 *
+	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
+	 *         What was filed, or nulls when the mode was `return`.
+	 *
+	 * @spec exclude Private helper of generateDocument(); the storing rule is specified there.
+	 */
 	private function storeOutputIfRequested(
 		string $mode,
 		string $templateId,

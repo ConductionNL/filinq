@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/post-register/spec.md
+ * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use DateTimeImmutable;
  * notification and no time-window concept in the dialect at all. Declaring a
  * window there would be a key nobody reads.
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/post-register/spec.md
+ * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 class DocumentDownloadRecorder {
 
@@ -76,6 +76,8 @@ class DocumentDownloadRecorder {
 	 * @param DateTimeImmutable   $moment   When.
 	 *
 	 * @return array<string, mixed> The record.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function record(
 		int $fileId,
@@ -89,7 +91,11 @@ class DocumentDownloadRecorder {
 
 		if ($identity === '') {
 			// Named by the link, or by nothing at all. Never by a guess.
-			$identity = (trim((string)$linkId) !== '' ? 'link:' . trim((string)$linkId) : self::ANONYMOUS);
+			$link     = trim((string)$linkId);
+			$identity = self::ANONYMOUS;
+			if ($link !== '') {
+				$identity = 'link:' . $link;
+			}
 		}
 
 		return [
@@ -113,6 +119,8 @@ class DocumentDownloadRecorder {
 	 * @param array<string, mixed>|null $last   The last notified download of that file, or null.
 	 *
 	 * @return bool Whether to enqueue a notification.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function shouldNotify(array $record, ?array $last): bool {
 		if ($last === null) {

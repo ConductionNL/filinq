@@ -33,6 +33,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IRequest;
@@ -49,6 +50,11 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
+ * OCP\Files\File, named so the batch id is checked to be a file before it
+ * reaches the reader. Without that check a folder id passes as a batch with no
+ * pages, which is the silent version of this refusal.
  */
 class ScanIntakeController extends Controller {
 
@@ -147,6 +153,12 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @return JSONResponse What was stored, or the refusal.
 	 *
+	 * @auth admin-only a profile decides which folder a scanner writes into and how
+	 *       everything landing there is cut, for the whole instance; the admin posture
+	 *       is the absence of NoAdminRequired, and adding that attribute to satisfy a
+	 *       gate would hand every authenticated user the setting this method exists to
+	 *       keep administrative.
+	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function declareProfiles(array $profiles = []): JSONResponse {
@@ -195,6 +207,16 @@ class ScanIntakeController extends Controller {
 			}
 
 			$file = $nodes[0];
+			if (($file instanceof File) === false) {
+				// The id answers with whatever node carries it, and a folder id
+				// is as valid an int as a file id. Passing a folder on would
+				// reach the reader as a batch with no pages.
+				return new JSONResponse(
+					data: ['error' => 'That id is not a scanned batch.'],
+					statusCode: Http::STATUS_BAD_REQUEST
+				);
+			}
+
 			$profile = $this->resolveProfile(profileId: $profileId, path: $file->getPath());
 			if ($profile === null) {
 				return new JSONResponse(
@@ -236,6 +258,10 @@ class ScanIntakeController extends Controller {
 	 * @param string $path The path the batch sits at.
 	 *
 	 * @return array<string, mixed>|null The profile, or null when nobody watches this folder.
+	 *
+	 * @throws Throwable When the profile store cannot be read. The caller, split(),
+	 *                   catches it and answers the refusal, so a store that is down
+	 *                   is reported rather than read as "nobody watches this folder".
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */

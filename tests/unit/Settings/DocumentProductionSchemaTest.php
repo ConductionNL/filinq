@@ -117,12 +117,14 @@ class DocumentProductionSchemaTest extends TestCase {
 
 		// 1.2.0 since `documents-in-and-out-of-the-building`: the record gained
 		// the plain-language rendition's file, the formal document it explains,
-		// its source and the acceptance behind a machine draft. The version is
-		// pinned here on purpose — an importer will skip a schema whose
-		// `properties`, `required` and `authorization` are all unchanged, so a
-		// number that never moves is how a property edit lands on one instance
-		// and not on the next.
-		$this->assertSame('1.2.0', $document['version']);
+		// its source and the acceptance behind a machine draft. 1.3.0 since
+		// `leaf-integrations`, which added the leaf declarations that make this
+		// record visible on another app's page. The version is pinned here on
+		// purpose — an importer will skip a schema whose `properties`,
+		// `required` and `authorization` are all unchanged, so a number that
+		// never moves is how a property edit lands on one instance and not on
+		// the next.
+		$this->assertSame('1.3.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],

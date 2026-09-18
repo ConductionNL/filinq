@@ -36,7 +36,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-documents-and-the-worklist/spec.md
+ * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 
 declare(strict_types=1);
@@ -86,13 +86,15 @@ class IntakeReadingProgress {
 	/**
 	 * The progress to record when a reading step ends.
 	 *
-	 * @param string $state The state reached.
-	 * @param string $error What went wrong, when it did.
-	 * @param string $at    When, as an ATOM timestamp.
+	 * @param string $state  The state reached.
+	 * @param string $error  What went wrong, when it did.
+	 * @param string $moment When, as an ATOM timestamp.
 	 *
 	 * @return array<string, mixed> The progress to store on the intake record.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
-	public function progressFor(string $state, string $error = '', string $at = ''): array {
+	public function progressFor(string $state, string $error = '', string $moment = ''): array {
 		$reached = $state;
 		$why = $error;
 
@@ -106,7 +108,7 @@ class IntakeReadingProgress {
 			}
 		}
 
-		$progress = ['readingState' => $reached, 'readingUpdatedAt' => $at];
+		$progress = ['readingState' => $reached, 'readingUpdatedAt' => $moment];
 
 		if ($reached !== self::FAILED) {
 			$progress['readingError'] = null;
@@ -137,6 +139,8 @@ class IntakeReadingProgress {
 	 * @param array<string, mixed> $document The intake document.
 	 *
 	 * @return bool True, always.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function showsInInbox(array $document): bool {
 		unset($document);
@@ -154,6 +158,8 @@ class IntakeReadingProgress {
 	 * @param array<int, array<string, mixed>> $documents The inbox contents.
 	 *
 	 * @return array<string, mixed> The counts and what they mean.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function summarise(array $documents): array {
 		$counts = array_fill_keys(self::STATES, 0);

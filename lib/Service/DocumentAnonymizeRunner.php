@@ -64,7 +64,6 @@ class DocumentAnonymizeRunner {
 	 *                                                     publication consents.
 	 * @param GrondslagenSummaryAttacher $summaryAttacher Renders and attaches the per-document
 	 *                                                    grondslagen summary.
-	 *
 	 * @param RedactionVerdictRecorder $verdictRecorder Verifies the bytes that were actually
 	 *                                                  written and records the verdict on the
 	 *                                                  link, so a published copy can be shown

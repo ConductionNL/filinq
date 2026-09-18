@@ -101,6 +101,8 @@ final class ScanFolderIntakeFeeder {
 	 * @param string $reason     Why, in words, when it was refused.
 	 *
 	 * @return array<string, mixed> What happened and what must happen next.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function outcomeFor(string $outcome, string $fileName, string $reason = ''): array {
 		if ($outcome === self::RECEIVED) {
@@ -157,6 +159,8 @@ final class ScanFolderIntakeFeeder {
 	 * @param array<string, mixed> $outcome The outcome.
 	 *
 	 * @return bool True when the file may leave the watched folder.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function mayMoveOn(array $outcome): bool {
 		return (($outcome['disposition'] ?? self::LEAVE_FOR_A_PERSON) === self::MOVE_TO_PROCESSED);
@@ -172,6 +176,8 @@ final class ScanFolderIntakeFeeder {
 	 * @param array<int, array<string, mixed>> $outcomes Every file's outcome.
 	 *
 	 * @return array<string, mixed> The summary.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function summarise(array $outcomes): array {
 		$received = 0;

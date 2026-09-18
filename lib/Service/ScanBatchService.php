@@ -50,6 +50,12 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Cutting a batch needs the
+ * profile, the separator reader, the page reader, the store and the file tree,
+ * and each is already its own class. The coupling is the composition, not a
+ * class doing several jobs; splitting it further would only move the same five
+ * collaborators behind a sixth.
  */
 class ScanBatchService {
 

@@ -174,9 +174,12 @@ class PlainLanguageRenditionService {
 	 * @param array<string, mixed> $data       The resolved generation data.
 	 * @param array<string, mixed> $acceptance The acceptance a caller offers for a machine draft.
 	 *
-	 * @return array{templateId: string, content: string, statements: array<int, string>, source: string, acceptedBy: string, acceptedAt: string}|null The plan, or null when no counterpart is declared.
+	 * @return array{templateId: string, content: string, statements: array<int, string>, source: string,
+	 *               acceptedBy: string, acceptedAt: string}|null The plan, or null when no counterpart
+	 *               is declared.
 	 *
-	 * @throws PlainRenditionRefusedException When a statement is unresolved, the acceptance is missing, or the counterpart template cannot be read.
+	 * @throws PlainRenditionRefusedException When a statement is unresolved, the acceptance is missing,
+	 *                                        or the counterpart template cannot be read.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
@@ -188,8 +191,14 @@ class PlainLanguageRenditionService {
 
 		$missing = $this->unresolved(required: $counterpart['requiredStatements'], data: $data);
 		if ($missing !== []) {
+			$them = 'them';
+			if (count($missing) === 1) {
+				$them = 'it';
+			}
+
 			throw new PlainRenditionRefusedException(
-				message: 'The plain-language version of this letter needs ' . implode(', ', $missing) . ', and the data does not answer ' . (count($missing) === 1 ? 'it' : 'them') . '. Neither version was filed.',
+				message: 'The plain-language version of this letter needs ' . implode(', ', $missing)
+					.', and the data does not answer ' . $them . '. Neither version was filed.',
 				unresolved: $missing
 			);
 		}

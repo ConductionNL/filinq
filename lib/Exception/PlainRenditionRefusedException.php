@@ -59,7 +59,7 @@ class PlainRenditionRefusedException extends RuntimeException {
 		// controllers map a 4xx exception code straight onto the HTTP status, so
 		// a refusal carrying 0 would answer 500 and read as a broken server
 		// rather than as a letter that is not ready to leave.
-		parent::__construct($message, 400, $previous);
+		parent::__construct(message: $message, code: 400, previous: $previous);
 
 	}//end __construct()
 

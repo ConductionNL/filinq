@@ -68,6 +68,8 @@ class IntakeNotificationReach {
 	 * @param int  $groupMembers How many people are in the notified group.
 	 *
 	 * @return array<string, mixed> What to show.
+	 *
+	 * @spec openspec/changes/intake-failure-reaches-someone/specs/filinq-notifications/spec.md
 	 */
 	public function describe(int $failureCount, int $groupMembers): array {
 		$staffed = ($groupMembers > 0);

@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/post-register/spec.md
+ * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  * wrapper here would be read as the empty set and this method would report every
  * inbound entry as undischarged, confidently and silently.
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/post-register/spec.md
+ * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 class PostRegisterReader {
 
@@ -85,6 +85,8 @@ class PostRegisterReader {
 	 * @param string $inboundUuid The inbound registration.
 	 *
 	 * @return array<int, array<string, mixed>> The outbound entries naming it, possibly empty.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function answersFor(string $inboundUuid): array {
 		$uuid = trim($inboundUuid);
@@ -116,7 +118,11 @@ class PostRegisterReader {
 			throw $e;
 		}
 
-		return (is_array($results) === true ? array_values($results) : []);
+		if (is_array($results) === false) {
+			return [];
+		}
+
+		return array_values($results);
 	}//end answersFor()
 
 	/**
@@ -192,8 +198,8 @@ class PostRegisterReader {
 				continue;
 			}
 
-			// answersFor() raises rather than reporting "no answers" on a failed
-			// read, and that raise is deliberately not caught here.
+			// A failed read raises inside answersFor() rather than reporting "no
+			// answers", and that raise is deliberately not caught here.
 			if ($this->answersFor(inboundUuid: $uuid) !== []) {
 				continue;
 			}
@@ -271,6 +277,14 @@ class PostRegisterReader {
 	 *
 	 * @return int The comparison.
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called as the callable array
+	 * `[$this, 'oldestFirst']` from usort() at line 204. PHPMD resolves only
+	 * direct `$this->method()` calls, so a callable-array reference reads to it
+	 * as no caller at all — a false positive, verified by grep.
+	 *
+	 * @psalm-suppress UnusedReturnValue usort() consumes the comparison; psalm
+	 * reads the callable array no better than PHPMD does.
+	 *
 	 * @spec exclude Comparison helper; the ordering rule it implements is documented on openPostFor().
 	 */
 	private function oldestFirst(array $left, array $right): int {
@@ -339,20 +353,22 @@ class PostRegisterReader {
 	 * @param array<string, mixed> $registration The registration.
 	 *
 	 * @return array{withdrawn: bool, complete: bool, reason: string, at: string} The withdrawal state.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function withdrawalOf(array $registration): array {
 		$reason = trim((string)($registration['withdrawnReason'] ?? ''));
-		$at = trim((string)($registration['withdrawnAt'] ?? ''));
+		$moment = trim((string)($registration['withdrawnAt'] ?? ''));
 
-		if ($reason === '' && $at === '') {
+		if ($reason === '' && $moment === '') {
 			return ['withdrawn' => false, 'complete' => true, 'reason' => '', 'at' => ''];
 		}
 
 		return [
 			'withdrawn' => true,
-			'complete' => ($reason !== '' && $at !== ''),
+			'complete' => ($reason !== '' && $moment !== ''),
 			'reason' => $reason,
-			'at' => $at,
+			'at' => $moment,
 		];
 	}//end withdrawalOf()
 
@@ -369,6 +385,8 @@ class PostRegisterReader {
 	 * @param array<int, array<string, mixed>> $registrations The entries.
 	 *
 	 * @return array<int, array<string, mixed>> The series, ordered by number.
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function series(array $registrations): array {
 		$rows = [];

@@ -135,9 +135,14 @@ class PublicationListComposer {
 			];
 		}
 
+		$heading = $title;
+		if ($title === '') {
+			$heading = $view;
+		}
+
 		return [
 			'view' => $view,
-			'title' => ($title !== '' ? $title : $view),
+			'title' => $heading,
 			'count' => count($entries),
 			'composedAt' => gmdate(format: 'c'),
 			'entries' => $entries,
@@ -188,7 +193,11 @@ class PublicationListComposer {
 			return $label;
 		}
 
-		return ($sourceFileId > 0 ? 'Document '.$sourceFileId : 'Unnamed record');
+		if ($sourceFileId > 0) {
+			return 'Document '.$sourceFileId;
+		}
+
+		return 'Unnamed record';
 
 	}//end labelOf()
 }//end class

@@ -99,27 +99,33 @@ class PlainRenditionAcceptanceGate {
 			return ['acceptedBy' => '', 'acceptedAt' => ''];
 		}
 
-		$by = trim((string)($acceptance['acceptedBy'] ?? ''));
-		$at = trim((string)($acceptance['acceptedAt'] ?? ''));
+		$acceptedBy = trim((string)($acceptance['acceptedBy'] ?? ''));
+		$acceptedAt = trim((string)($acceptance['acceptedAt'] ?? ''));
 
-		if ($by === '' && $at === '') {
+		if ($acceptedBy === '' && $acceptedAt === '') {
 			throw new PlainRenditionRefusedException(
 				message: 'This plain-language text was drafted by a machine and nobody has accepted it yet, so it stays here. The draft is still waiting.',
 				unresolved: ['acceptance']
 			);
 		}
 
-		if ($by === '' || $at === '') {
+		if ($acceptedBy === '' || $acceptedAt === '') {
 			// Half an acceptance is refused AS an acceptance. Taking the half
 			// that is there and filling in the rest would put a name on a
 			// moment nobody recorded, or a moment against nobody.
+			$half = 'a person and no moment';
+			if ($acceptedBy === '') {
+				$half = 'a moment and no person';
+			}
+
 			throw new PlainRenditionRefusedException(
-				message: 'The acceptance of this plain-language text records only ' . ($by === '' ? 'a moment and no person' : 'a person and no moment') . ', so it cannot be read as an acceptance.',
+				message: 'The acceptance of this plain-language text records only ' . $half
+					.', so it cannot be read as an acceptance.',
 				unresolved: ['acceptance']
 			);
 		}
 
-		return ['acceptedBy' => $by, 'acceptedAt' => $at];
+		return ['acceptedBy' => $acceptedBy, 'acceptedAt' => $acceptedAt];
 
 	}//end require()
 }//end class

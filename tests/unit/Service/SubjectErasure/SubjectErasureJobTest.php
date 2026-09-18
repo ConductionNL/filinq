@@ -25,7 +25,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/erase-a-person-while-the-records-stay/spec.md
+ * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
  */
 
 declare(strict_types=1);

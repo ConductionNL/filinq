@@ -22,7 +22,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-documents-and-the-worklist/spec.md
+ * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 
 declare(strict_types=1);

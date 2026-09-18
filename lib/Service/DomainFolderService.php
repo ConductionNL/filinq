@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/case-documents-and-the-flat-list/spec.md
+ * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -24,8 +24,6 @@ namespace OCA\Filinq\Service;
 
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
-use OCP\Files\NotFoundException;
-use OCP\Files\NotPermittedException;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -46,7 +44,7 @@ use Throwable;
  * reconciliation is reported as pinned, with the reason, rather than quietly
  * omitted: the whole point of pinning is that the next person reads why.
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/case-documents-and-the-flat-list/spec.md
+ * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class DomainFolderService {
 
@@ -100,6 +98,8 @@ class DomainFolderService {
 	 * @param array<string, mixed> $domain The domain.
 	 *
 	 * @return string The path.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function pathFor(array $domain): string {
 		$id = trim((string)($domain['id'] ?? $domain['uuid'] ?? ''));
@@ -114,6 +114,8 @@ class DomainFolderService {
 	 * @param string               $owner  The user whose storage holds it.
 	 *
 	 * @return array{created: bool, path: string, error: ?string} What happened.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function ensureFolder(array $domain, string $owner): array {
 		$path = $this->pathFor(domain: $domain);
@@ -128,7 +130,7 @@ class DomainFolderService {
 			$userFolder->newFolder($path);
 
 			return ['created' => true, 'path' => $path, 'error' => null];
-		} catch (NotPermittedException | NotFoundException | Throwable $e) {
+		} catch (Throwable $e) {
 			// 🔑 A FOLDER THAT COULD NOT BE MADE IS REPORTED, NOT THROWN. The
 			// caller is usually a domain create, and failing that write because
 			// the file storage refused would lose the domain over something the
@@ -149,7 +151,19 @@ class DomainFolderService {
 	 * @param array<string, mixed> $domain The domain, carrying `groups`.
 	 * @param string               $owner  The user whose storage holds it.
 	 *
-	 * @return array{state: string, path: string, granted: array<int, string>, revoked: array<int, string>, refused: array<int, array{group: string, action: string, reason: string}>, pinnedReason: ?string} The outcome.
+	 * @return array{state: string, path: string, granted: array<int, string>, revoked: array<int, string>,
+	 *               refused: array<int, array{group: string, action: string, reason: string}>,
+	 *               pinnedReason: ?string} The outcome.
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch here is one of the
+	 * outcomes REQ-CDF-02 names: pinned, unreadable, granted, revoked, refused,
+	 * already in step. Collapsing any two of them is exactly the "partly
+	 * reconciled reported as reconciled" this method exists to refuse.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity) Same reason: the paths are the
+	 * outcome matrix, not nesting that could be flattened.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function reconcile(array $domain, string $owner): array {
 		$path = $this->pathFor(domain: $domain);
@@ -235,7 +249,12 @@ class DomainFolderService {
 	private function declaredGroups(array $domain): array {
 		$groups = [];
 		foreach ((array)($domain['groups'] ?? []) as $group) {
-			$id = trim((string)(is_array($group) === true ? ($group['id'] ?? '') : $group));
+			$candidate = $group;
+			if (is_array($group) === true) {
+				$candidate = ($group['id'] ?? '');
+			}
+
+			$id = trim((string)$candidate);
 			if ($id !== '') {
 				$groups[] = $id;
 			}
@@ -247,8 +266,8 @@ class DomainFolderService {
 	/**
 	 * One outcome, in the one shape every caller reads.
 	 *
-	 * @param string                                                        $path         The folder.
 	 * @param string                                                        $state        One of the STATE_ constants.
+	 * @param string                                                        $path         The folder.
 	 * @param array<int, string>                                            $granted      Groups given access.
 	 * @param array<int, string>                                            $revoked      Groups whose access was removed.
 	 * @param array<int, array{group: string, action: string, reason: string}> $refused    What could not be done, and why.

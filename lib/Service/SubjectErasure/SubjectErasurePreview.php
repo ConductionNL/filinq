@@ -34,7 +34,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/erase-a-person-while-the-records-stay/spec.md
+ * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
  */
 
 declare(strict_types=1);
@@ -70,6 +70,8 @@ class SubjectErasurePreview {
 	 * @param int                              $cap       How many to list.
 	 *
 	 * @return array<string, mixed> The preview.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function build(array $documents, int $cap = self::CAP): array {
 		$listed = [];
@@ -95,7 +97,9 @@ class SubjectErasurePreview {
 			$obligations = $this->rules->refusals(document: $document);
 			if ($obligations === []) {
 				$erasable++;
-			} else {
+			}
+
+			if ($obligations !== []) {
 				$refused++;
 			}
 
@@ -139,6 +143,8 @@ class SubjectErasurePreview {
 	 * @param array<int, array<string, mixed>> $exclusions The exclusions asked for.
 	 *
 	 * @return string[] The refusals, empty when every exclusion carries a reason.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function refuseExclusions(array $exclusions): array {
 		$refusals = [];

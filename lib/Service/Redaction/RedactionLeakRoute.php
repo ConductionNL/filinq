@@ -32,7 +32,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-and-what-leaves-the-building/spec.md
+ * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
  */
 
 declare(strict_types=1);

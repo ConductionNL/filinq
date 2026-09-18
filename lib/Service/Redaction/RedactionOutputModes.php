@@ -23,7 +23,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-and-what-leaves-the-building/spec.md
+ * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
  */
 
 declare(strict_types=1);
@@ -105,6 +105,8 @@ final class RedactionOutputModes {
 	 * Modes that write a copy and are not verified.
 	 *
 	 * @return string[] The gaps, empty when every mode is covered.
+	 *
+	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	public static function unverified(): array {
 		return array_values(array_diff(self::ALL, self::VERIFIED));

@@ -339,6 +339,14 @@ class SigningFolderService {
 	 *
 	 * @return int
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called as the callable array
+	 * `[$this, 'compareEntries']` from usort() at line 109. PHPMD resolves only
+	 * direct `$this->method()` calls, so a callable-array reference reads to it
+	 * as no caller at all — a false positive, verified by grep.
+	 *
+	 * @psalm-suppress UnusedReturnValue usort() consumes the comparison; psalm
+	 * reads the callable array no better than PHPMD does.
+	 *
 	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function compareEntries(array $left, array $right): int {

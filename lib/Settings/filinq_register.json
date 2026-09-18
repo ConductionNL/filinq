@@ -680,11 +680,13 @@
                         "title": "Plain-language counterpart",
                         "properties": {
                             "templateId": {
+                                "title": "Plain-language template",
                                 "description": "The template the plain rendition is rendered from.",
                                 "type": "string",
                                 "maxLength": 64
                             },
                             "requiredStatements": {
+                                "title": "Statements that must be resolved",
                                 "description": "The statements the plain rendition must resolve, by key. A statement that cannot be resolved from the data refuses the whole generation rather than leaving a plain letter with a hole where the term should be.",
                                 "type": "array",
                                 "items": {
@@ -693,6 +695,7 @@
                                 }
                             },
                             "source": {
+                                "title": "Where the plain text comes from",
                                 "description": "Where the plain text comes from. `template` renders the counterpart template; `machine` marks it as a draft a person must accept.",
                                 "type": "string",
                                 "enum": [

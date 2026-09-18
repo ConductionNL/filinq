@@ -43,6 +43,14 @@ export default {
 	},
 
 	emits: ['close'],
+
+	/**
+	 * Hand the translator to the template.
+	 *
+	 * @return {object} The bindings the template reads.
+	 *
+	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 */
 	setup() {
 		return { t }
 	},
@@ -56,6 +64,8 @@ export default {
 		 * the folder they were working through.
 		 *
 		 * @return {string} The file URL.
+		 *
+		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		documentUrl() {
 			return generateUrl(`/f/${this.fileId}`)

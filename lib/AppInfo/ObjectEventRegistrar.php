@@ -47,6 +47,11 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) This class IS the list of
+ * listeners the app registers, so its coupling is the count of them. The
+ * fourteenth is DocumentRegistrationWriteGuard, which refuses a change to a
+ * registration number before the write lands.
  */
 class ObjectEventRegistrar {
 	/**

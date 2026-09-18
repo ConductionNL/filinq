@@ -204,6 +204,12 @@ class DomainFolderReconciler {
 	 * @return array<string, mixed> The report.
 	 *
 	 * @spec exclude Shape helper; the behaviour is in run().
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$skipped` names the one report
+	 * that has no folders in it, because the run never started. It is a private
+	 * shape helper with one caller per branch, not a switch on behaviour, and a
+	 * second method would duplicate the eight-key shape this exists to keep in
+	 * one place.
 	 */
 	private function report(
 		bool $skipped = false,

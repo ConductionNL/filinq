@@ -57,6 +57,16 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The collaborator that took this
+ * over the line is RedactionOutputGuard: nothing may be written until a person
+ * has checked the detection run. The guard is asked here because this is the
+ * class that writes; asking it anywhere else would leave a write path that does
+ * not ask.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList) Same collaborator, same
+ * constructor. Every parameter is an injected service, and grouping them behind
+ * a bag would hide which of them a given instance actually needs.
  */
 class AnonymizationService {
 	/**

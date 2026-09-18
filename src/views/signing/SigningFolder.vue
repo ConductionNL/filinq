@@ -119,6 +119,8 @@ export default {
 	 * a request cancelled elsewhere is simply gone.
 	 *
 	 * @return {object} The store and the translator.
+	 *
+	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	setup() {
 		const signingStore = useSigningStore()
@@ -139,6 +141,8 @@ export default {
 		 * The entries of the folder page currently held.
 		 *
 		 * @return {Array} The folder entries.
+		 *
+		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		entries() {
 			return this.signingStore.folderEntries
@@ -150,6 +154,8 @@ export default {
 		 * Add or remove one document from the selection.
 		 *
 		 * @param {string} requestId The signing request.
+		 *
+		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		toggle(requestId) {
 			if (this.selected.includes(requestId)) {
@@ -161,6 +167,8 @@ export default {
 
 		/**
 		 * Sign the selection in one pass and show what happened per document.
+		 *
+		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		async signSelection() {
 			const outcome = await this.signingStore.signFolderSelection(this.selected)
@@ -173,6 +181,8 @@ export default {
 		 * Read one document without leaving the folder.
 		 *
 		 * @param {object} entry The folder entry.
+		 *
+		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		readDocument(entry) {
 			this.reading = entry
@@ -183,6 +193,8 @@ export default {
 		 *
 		 * @param {object} entry The folder entry.
 		 * @return {string} The label, or the reference when there is none.
+		 *
+		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		caseOf(entry) {
 			const record = entry?.record ?? {}
@@ -194,6 +206,8 @@ export default {
 		 *
 		 * @param {string} value An ISO 8601 timestamp.
 		 * @return {string} The formatted date.
+		 *
+		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		asDate(value) {
 			if (!value) {

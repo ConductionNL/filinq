@@ -49,7 +49,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/erase-a-person-while-the-records-stay/spec.md
+ * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
  */
 
 declare(strict_types=1);
@@ -111,6 +111,8 @@ class SubjectErasureRules {
 	 * @param array<string, mixed> $document The document's obligations.
 	 *
 	 * @return array<int, array<string, mixed>> The refusals, empty when it may be erased.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function refusals(array $document): array {
 		$refusals = [];
@@ -143,6 +145,8 @@ class SubjectErasureRules {
 	 * @param array<int, array<string, mixed>> $documents Each with its obligations.
 	 *
 	 * @return array{erase: array<int, string>, refused: array<int, array<string, mixed>>}
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function screen(array $documents): array {
 		$erase = [];
@@ -174,6 +178,8 @@ class SubjectErasureRules {
 	 * @param string $treatment The anonymisation treatment.
 	 *
 	 * @return bool True when it genuinely removes the person.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function treatmentErases(string $treatment): bool {
 		return in_array($treatment, ['remove', 'fixed'], true);
@@ -193,6 +199,8 @@ class SubjectErasureRules {
 	 * @param array<int, string>   $republish Anything already published that now differs.
 	 *
 	 * @return array<string, mixed> The certificate.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function certificate(array $request, array $erased, array $refused, array $republish = []): array {
 		return [
