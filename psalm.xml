@@ -111,6 +111,12 @@
                   object events above.
                 -->
                 <referencedClass name="OCA\OpenRegister\Event\RegisterLeafProvidersEvent"/>
+                <!--
+                  The descriptor a leaf provider hands back on that event. Same
+                  package, same absence, and the listener returns before it
+                  constructs one when openregister is not installed.
+                -->
+                <referencedClass name="OCA\OpenRegister\Service\Integration\LeafDescriptor"/>
                 <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
                 <!--
                   ADR-084's published contract. Services type-hint this interface
