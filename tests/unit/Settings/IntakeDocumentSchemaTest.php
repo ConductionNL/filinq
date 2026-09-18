@@ -84,7 +84,7 @@ class IntakeDocumentSchemaTest extends TestCase {
 			$descriptor['components']['registers']['filinq']['schemas'],
 			'A schema the register does not list is never imported.'
 		);
-		$this->assertSame('8.6.0', $descriptor['info']['version']);
+		$this->assertSame('8.7.0', $descriptor['info']['version']);
 
 	}//end testTheRegisterListsTheIntakeSchema()
 

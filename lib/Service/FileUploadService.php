@@ -53,6 +53,7 @@ class FileUploadService {
 		private readonly LoggerInterface $logger,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
+		private readonly UploadPolicyService $uploadPolicy,
 	) {
 
 	}//end __construct()
@@ -143,10 +144,19 @@ class FileUploadService {
 	 * @return array<string, mixed> Upload result with fileId, filePath, fileName, fileSize
 	 *
 	 * @throws Exception If the upload fails
+	 * @throws \OCA\Filinq\Exception\UploadRefusedException If the administered policy refuses the file
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function uploadFile(string $fileName, string $fileContent): array {
+		// CHECKED BEFORE THE BYTES ARE STORED, and before the name is even
+		// resolved. A policy that refuses a file after writing it has already
+		// put the file on the instance, which is the thing the policy exists
+		// to prevent. The refusal travels as UploadRefusedException so every
+		// write path answers it the same way.
+		$this->uploadPolicy->check(fileName: $fileName, contents: $fileContent);
+
 		try {
 			$filinqFolder = $this->getFilinqFolder();
 			$targetName = $this->resolveUniqueFileName(folder: $filinqFolder, fileName: $fileName);
