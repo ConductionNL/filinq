@@ -129,6 +129,8 @@ deliberately.
 
 | `mergeJob` | authenticated | authenticated | admins | A merge is an ordinary handler's act, so `create` and `update` are theirs; the job records who asked because every input is read as that person and the result holds only what they could read. Only an admin may delete one: the job is the trace of what was bundled and handed over. |
 
+| `scanBatch` | authenticated | authenticated | admins | The batch is created by the watched-folder job on behalf of the instance and read by the clerk who sorts out what came off the scanner, so both are open. Only an admin deletes one: the batch is the trace that says which documents a delivered PDF was cut into, and a missing segment is only findable through it. |
+
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
