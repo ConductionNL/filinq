@@ -191,6 +191,12 @@ class SigningVerificationService {
 						'ip' => $decoded['ip'] ?? '',
 						'status' => $verification['status'],
 						'reason' => $verification['reason'],
+						// What was checked, against which key, and what the
+						// verdict proves — so a result on a screen is readable
+						// by the person it is shown to.
+						'checked' => $verification['checked'],
+						'keyId' => $verification['keyId'],
+						'means' => $verification['means'],
 						// Derived boolean kept for response-shape
 						// compatibility (REQ-DDSTR-005).
 						'valid' => ($verification['status'] === 'verified'),
@@ -213,6 +219,10 @@ class SigningVerificationService {
 					'ip' => '',
 					'status' => 'unverifiable',
 					'reason' => 'external-signature-unsupported',
+					'checked' => 'nothing',
+					'keyId' => null,
+					'means' => 'A signature this instance did not produce. Check it with the tool that '
+						. 'made it; nothing here says whether it is good.',
 					'valid' => false,
 				];
 			}
@@ -238,7 +248,7 @@ class SigningVerificationService {
 	 * @param array<string, mixed> $assertion The decoded signature blob
 	 * @param string $pdfContent The full PDF content
 	 *
-	 * @return array{status: string, reason: string} The tri-state verification result.
+	 * @return array{status: string, reason: string, checked: string, keyId: ?string, means: string} The result and its account of itself.
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
@@ -246,7 +256,7 @@ class SigningVerificationService {
 		$mac = $assertion['mac'] ?? '';
 		if (is_string($mac) === false || $mac === '') {
 			// No server-issued MAC present: legacy/malformed, never trusted.
-			return ['status' => 'unverifiable', 'reason' => 'legacy-assertion-v1'];
+			return $this->account(status: 'unverifiable', reason: 'legacy-assertion-v1', checked: 'nothing');
 		}
 
 		if ((int)($assertion['v'] ?? 0) !== 2) {
@@ -255,13 +265,13 @@ class SigningVerificationService {
 			// `verified` would resurrect the #284 forgery for old artifacts;
 			// reporting it `invalid` would mislabel a merely-unverifiable
 			// legacy artifact as tampered. Fail-closed to `unverifiable`.
-			return ['status' => 'unverifiable', 'reason' => 'legacy-assertion-v1'];
+			return $this->account(status: 'unverifiable', reason: 'legacy-assertion-v1', checked: 'nothing');
 		}
 
 		$secret = $this->getSigningSecret();
 		if ($secret === null) {
 			// No server secret configured: nothing can be verified.
-			return ['status' => 'unverifiable', 'reason' => 'signing-secret-not-configured'];
+			return $this->account(status: 'unverifiable', reason: 'signing-secret-not-configured', checked: 'nothing');
 		}
 
 		// Recompute the MAC over the *canonical* form of the document — the
@@ -289,12 +299,82 @@ class SigningVerificationService {
 
 		$expected = hash_hmac('sha256', $contentHash . "\n" . $payloadCore, $secret);
 
+		$checked = 'the document bytes and the assertion fields';
 		if (hash_equals($expected, $mac) === false) {
-			return ['status' => 'invalid', 'reason' => 'mac-mismatch'];
+			return $this->account(status: 'invalid', reason: 'mac-mismatch', checked: $checked, secret: $secret);
 		}
 
-		return ['status' => 'verified', 'reason' => 'ok'];
+		return $this->account(status: 'verified', reason: 'ok', checked: $checked, secret: $secret);
 	}//end verifyAssertion()
+
+	/**
+	 * Say what was checked, against which key, and what that proves.
+	 *
+	 * 🔴 `reason` IS A SLUG, AND A SLUG IS NOT AN ANSWER. `mac-mismatch` on a
+	 * screen tells a person nothing they can act on, and the one thing they
+	 * actually need to know is what a green tick does NOT mean. A verified MAC
+	 * proves this server produced the artifact and that nobody has changed the
+	 * bytes since. It does not prove who the signer is, and it is not a
+	 * qualified electronic signature.
+	 *
+	 * 🔴 THE KEY IS NAMED, NEVER SHOWN. "Verified" is meaningless without
+	 * saying against WHAT — an instance whose secret was rotated will report
+	 * `invalid` for every older artifact, and without a key id that reads as
+	 * mass tampering. The id is an HMAC of a fixed label under the secret,
+	 * truncated: it changes when the secret changes, identifies nothing else,
+	 * and cannot be turned back into the secret.
+	 *
+	 * @param string      $status  The tri-state status.
+	 * @param string      $reason  The machine-readable reason slug.
+	 * @param string      $checked What was covered by the check.
+	 * @param string|null $secret  The signing secret, when there was one.
+	 *
+	 * @return array{status: string, reason: string, checked: string, keyId: ?string, means: string} The account.
+	 *
+	 * @spec openspec/changes/documents-from-a-template/specs/documents-from-a-template/spec.md
+	 */
+	private function account(string $status, string $reason, string $checked, ?string $secret = null): array {
+		$means = match ($reason) {
+			'ok' => 'This server produced the document and its bytes have not changed since. '
+				. 'It does not prove who the signer is, and it is not a qualified electronic signature.',
+			'mac-mismatch' => 'The document or its signature block changed after this server signed it, '
+				. 'or it was signed by a server holding a different key.',
+			'signing-secret-not-configured' => 'This instance holds no signing key, so nothing about this '
+				. 'signature can be checked here. It is not evidence that anything is wrong.',
+			'legacy-assertion-v1' => 'This signature predates the current format, whose guarantee covers the '
+				. 'signer fields as well. It cannot be checked, which is not the same as being wrong.',
+			'external-signature-unsupported' => 'A signature this instance did not produce. Check it with the '
+				. 'tool that made it; nothing here says whether it is good.',
+			default => 'Nothing about this signature could be established.',
+		};
+
+		return [
+			'status' => $status,
+			'reason' => $reason,
+			'checked' => $checked,
+			'keyId' => $this->keyId(secret: $secret),
+			'means' => $means,
+		];
+	}//end account()
+
+	/**
+	 * A stable, non-reversible name for the key a check ran against.
+	 *
+	 * @param string|null $secret The signing secret, or null when there is none.
+	 *
+	 * @return string|null The key id, or null when no key was involved.
+	 */
+	private function keyId(?string $secret): ?string {
+		if ($secret === null || $secret === '') {
+			return null;
+		}
+
+		// A MAC of a FIXED label under the secret, truncated. Hashing the
+		// secret directly would still be a hash of the secret; this is a value
+		// derived with it, which is the same thing every key-id scheme does and
+		// the reason it can be shown on a screen.
+		return substr(hash_hmac('sha256', 'filinq:signing-key-id:v1', $secret), 0, 16);
+	}//end keyId()
 
 	/**
 	 * Blank every Filinq signature marker payload to recover the canonical form
