@@ -20,7 +20,8 @@
 
 ## 4. Inbox
 
-- [ ] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
+- [~] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
+  - The intake dialog pre-selects; the leaf still does not.
 
 ## 5. Quality
 
@@ -68,3 +69,16 @@ one document too long, which a person notices immediately.
   half.
 - **5.2**, the Playwright specs, the Dutch and English strings, and
   `docs/features/scan-intake.md`.
+
+## Salvage, 2026-09-18
+
+Two test files and one frontend edit were written for this change and left
+unlanded when a lane was cut off: `ScanBatchServiceTest`,
+`SeparatorSheetServiceTest` and the `sourceRef` pre-select in
+`IntakeAssignDialog.vue`. They are not duplicates of what #1120 merged. #1120
+landed `ScanBatchSegmentationTest`, which drives `segmentsOf()` only;
+`ScanBatchServiceTest` drives `split()` end to end, so the write of each
+segment as its own file and the refusal of a batch whose pages cannot be read
+are now covered. `SeparatorSheetService` had no test at all.
+
+`receive()` remains uncovered, so 5.1 stays partial.
