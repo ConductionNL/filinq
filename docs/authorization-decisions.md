@@ -123,6 +123,10 @@ deliberately.
 | `intakePartyCorrection` | authenticated | authenticated | admins | Accept, edit and reject are recorded by the clerk who decided, so `create` is open to them. The corpus is what the next suggestion is ranked against, so an entry is not edited afterwards and only an admin may remove one. |
 | `uploadPolicy` | authenticated | **admins** | admins | Every write path reads the policy to decide whether a file may be stored, so it must be readable. Writing one changes what the whole instance accepts, including what it refuses to accept. |
 
+| `pageLayout` | authenticated | **admins** | admins | Every generated document renders through a layout, so it is read on every render. A layout is the paper the organisation goes out on; editing one is administrative, and an edit makes a new version rather than changing the one existing documents name. |
+| `periodicDocument` | authenticated | **admins** | admins | The schedule says which template renders over which saved view, on what cadence. It is read by the run and by anyone looking at what the list is made of; changing it changes a document the whole organisation reads. |
+| `archiveJob` | authenticated | authenticated | admins | A bundle is asked for by an ordinary handler, so `create` is theirs, and the job records who asked because the archive holds what THAT person may read. The job is the evidence of what was handed over, so only an admin may remove one. |
+
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and

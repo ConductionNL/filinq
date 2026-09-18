@@ -114,7 +114,11 @@ class CaseDocumentSchemaTest extends TestCase {
 	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testTheDescriptorVersionMoved(): void {
-		$this->assertSame('8.7.0', $this->descriptor()['info']['version']);
+		// At least, not exactly: see the note in IntakeDocumentSchemaTest.
+		$this->assertTrue(
+			version_compare((string)$this->descriptor()['info']['version'], '8.7.0', '>='),
+			'The descriptor version must be at least the one that added the document domains.'
+		);
 
 	}//end testTheDescriptorVersionMoved()
 }//end class

@@ -114,6 +114,25 @@ class FlatFileListService {
 	}//end listFor()
 
 	/**
+	 * Every document record of one object, readable file or not.
+	 *
+	 * The flat list leaves out a record whose file this reader cannot see,
+	 * which is right for a list. A MANIFEST needs the other half: it has to say
+	 * that something was left out, or a filtered bundle is indistinguishable
+	 * from a complete one.
+	 *
+	 * @param array<string, mixed> $domain The object, as register, schema and id.
+	 *
+	 * @return array<int, array<string, mixed>> The records.
+	 *
+	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function recordsFor(array $domain): array {
+		return $this->repository->findByDomain(domain: $domain);
+
+	}//end recordsFor()
+
+	/**
 	 * One row of the flat list: the file, and the record it belongs to.
 	 *
 	 * A record whose file the reader cannot see is LEFT OUT rather than listed
