@@ -18,6 +18,31 @@
  *
  * ⚠️ The `@e2e` anchors name BOTH the change's delta spec and the canonical
  * spec it is synced into at archive time. Gate 19 scans `openspec/specs/` only.
+ *
+ * WHAT THIS FILE DELIBERATELY DOES NOT COVER, AND WHERE IT IS COVERED INSTEAD
+ * -------------------------------------------------------------------------
+ * Three members of this change run on the scheduler or before any document
+ * exists, and none of them has a surface a browser can reach:
+ *
+ *   - the nightly domain-folder reconciliation (REQ-CDF-02). Its whole point is
+ *     the report on drift it could NOT correct, and reddening that here would
+ *     mean a mount rigged to refuse a permission change, which is a fixture no
+ *     instance will hold still for. Covered by DomainFolderReconcilerTest,
+ *     including the partly-reconciled case that must report refused rather
+ *     than corrected.
+ *   - the nightly upload-fragment reaper (REQ-CDF-05). A fragment has to be
+ *     older than the declared age, and the floor under that age is one hour, so
+ *     an honest run of it takes an hour of wall clock. Covered by
+ *     UploadFragmentReaperTest, where the assertions that matter are the ones
+ *     about what it LEAVES.
+ *   - validating an external mount before it is used (REQ-CDF-06). The
+ *     validator is built and tested; the probe that asks a real mount what it
+ *     supports is not, because OCP\Files\Mount\IMountPoint and
+ *     OCP\Files\Storage\IStorage do not exist in this repository's test
+ *     environment. Covered by ExternalMountValidatorTest.
+ *
+ * Each of those scenarios carries its own `@e2e exclude` in the spec, so the
+ * gate sees the reason rather than a gap.
  */
 
 import type { APIRequestContext } from '@playwright/test'
