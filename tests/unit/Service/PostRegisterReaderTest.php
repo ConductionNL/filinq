@@ -222,4 +222,132 @@ class PostRegisterReaderTest extends TestCase {
 
 		$this->assertCount(1, $series);
 	}//end testAnUnnumberedEntryIsNotInTheSeries()
+
+	/**
+	 * A reader whose register answers the inbound list and each discharge read.
+	 *
+	 * The two reads are told apart by the query, not by call order: a reader
+	 * built on call order would keep passing after somebody reorders the loop,
+	 * while answering the wrong question in production.
+	 *
+	 * @param array<int, array<string, mixed>>      $inbound  The unit's inbound entries.
+	 * @param array<string, array<int, mixed>>      $answers  The answers per inbound uuid.
+	 * @param string                                $throwsOn A uuid whose discharge read fails, or ''.
+	 *
+	 * @return PostRegisterReader The reader.
+	 */
+	private function readerWithPost(array $inbound, array $answers, string $throwsOn = ''): PostRegisterReader {
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use ($inbound, $answers, $throwsOn): array {
+				$this->lastQuery = $query;
+
+				if (isset($query['answers']) === true) {
+					$uuid = (string)$query['answers'];
+					if ($uuid === $throwsOn) {
+						throw new RuntimeException('register unreachable');
+					}
+
+					return ($answers[$uuid] ?? []);
+				}
+
+				return $inbound;
+			}
+		);
+
+		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objectService);
+
+		return new PostRegisterReader($resolver, new NullLogger());
+	}//end readerWithPost()
+
+	/**
+	 * The open post list holds exactly the undischarged entries, oldest first.
+	 *
+	 * @return void
+	 */
+	public function testTheOpenPostListHoldsTheUndischargedEntriesOldestFirst(): void {
+		$reader = $this->readerWithPost(
+			[
+				['id' => 'in-2', 'registeredAt' => '2026-03-01', 'unit' => 'burgerzaken'],
+				['id' => 'in-1', 'registeredAt' => '2026-01-15', 'unit' => 'burgerzaken'],
+				['id' => 'in-3', 'registeredAt' => '2026-05-20', 'unit' => 'burgerzaken'],
+			],
+			['in-3' => [['registrationNumber' => '2026-00099']]]
+		);
+
+		$open = $reader->openPostFor('burgerzaken');
+
+		// in-3 is discharged and drops out; the rest come oldest first, which is
+		// what makes this a work list rather than a dump.
+		$this->assertSame(['in-1', 'in-2'], array_column($open, 'id'));
+	}//end testTheOpenPostListHoldsTheUndischargedEntriesOldestFirst()
+
+	/**
+	 * The open post query uses the objects endpoint's bare-key spelling.
+	 *
+	 * A `filter[unit]` wrapper is read as the EMPTY SET by that endpoint, so
+	 * this method would report a unit with no post at all, confidently and with
+	 * nothing in the log.
+	 *
+	 * @return void
+	 */
+	public function testTheOpenPostQueryUsesTheObjectsEndpointsSpelling(): void {
+		$reader = $this->readerWithPost([['id' => 'in-1', 'registeredAt' => '2026-01-15']], []);
+		$reader->openPostFor('burgerzaken');
+
+		// The LAST query is the discharge read; the inbound one is asserted by
+		// the entry actually coming back above.
+		$this->assertArrayNotHasKey('filter', $this->lastQuery);
+		$this->assertSame('filinq', $this->lastQuery['@self']['register']);
+	}//end testTheOpenPostQueryUsesTheObjectsEndpointsSpelling()
+
+	/**
+	 * An entry whose discharge could not be read is raised, not listed as open.
+	 *
+	 * Listing it would put a letter somebody answered a month ago at the top of
+	 * the work list, and the handler would answer it again.
+	 *
+	 * @return void
+	 */
+	public function testAFailedDischargeReadIsRaisedRatherThanListedAsOpen(): void {
+		$reader = $this->readerWithPost(
+			[['id' => 'in-1', 'registeredAt' => '2026-01-15']],
+			[],
+			'in-1'
+		);
+
+		$this->expectException(RuntimeException::class);
+
+		$reader->openPostFor('burgerzaken');
+	}//end testAFailedDischargeReadIsRaisedRatherThanListedAsOpen()
+
+	/**
+	 * An entry with no registration date sorts last, never first.
+	 *
+	 * An unknown date is not evidence of age, and sorting it first would put it
+	 * above letters that really have been waiting.
+	 *
+	 * @return void
+	 */
+	public function testAnUndatedEntrySortsLast(): void {
+		$reader = $this->readerWithPost(
+			[
+				['id' => 'in-undated'],
+				['id' => 'in-old', 'registeredAt' => '2026-01-15'],
+			],
+			[]
+		);
+
+		$this->assertSame(['in-old', 'in-undated'], array_column($reader->openPostFor('burgerzaken'), 'id'));
+	}//end testAnUndatedEntrySortsLast()
+
+	/**
+	 * A unit nobody named reads as no post, without touching the register.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyUnitReadsAsNoPost(): void {
+		$this->assertSame([], $this->readerWithPost([['id' => 'in-1']], [])->openPostFor('   '));
+	}//end testAnEmptyUnitReadsAsNoPost()
 }//end class
