@@ -67,8 +67,8 @@ trait BuildsAnonymizationService {
 	 * Recognised `$deps` keys: logger, container, appManager, appConfig,
 	 * entityDetection, consentCrud, consentService, grondslagenSummary,
 	 * fileEntityStats, pdfConversion, emlAssembly, confidentialityLabel,
-	 * dictionaryRunner, userSession, rootFolder. Anything omitted gets a
-	 * permissive mock.
+	 * dictionaryRunner, userSession, rootFolder, reviewGuard, anonymizeRunner.
+	 * Anything omitted gets a permissive mock.
 	 *
 	 * NOTE on `userSession` / `rootFolder`: the DEFAULT mocks deny — an
 	 * IUserSession mock returns null from getUser(), so the relation
@@ -108,31 +108,34 @@ trait BuildsAnonymizationService {
 			)
 		);
 
-		$anonymizeRunner = new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: $entityDetection,
-			emlAnonymizer: new EmlAnonymizationService(
-				logger: $logger,
-				entityDetection: $entityDetection,
-				emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
-			),
-			pdfOutput: new AnonymisedPdfOutputService(
-				logger: $logger,
-				pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
-			),
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: new AnonymizationPersistenceService(
+		$anonymizeRunner = ($deps['anonymizeRunner'] ?? null);
+		if ($anonymizeRunner === null) {
+			$anonymizeRunner = new DocumentAnonymizeRunner(
 				logger: $logger,
 				locator: $locator,
-				consentCrud: ($deps['consentCrud'] ?? $this->createMock(ConsentCrudService::class)),
-				consentService: ($deps['consentService'] ?? $this->createMock(ConsentService::class))
-			),
-			summaryAttacher: new GrondslagenSummaryAttacher(
-				logger: $logger,
-				grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
-			)
-		);
+				entityDetection: $entityDetection,
+				emlAnonymizer: new EmlAnonymizationService(
+					logger: $logger,
+					entityDetection: $entityDetection,
+					emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
+				),
+				pdfOutput: new AnonymisedPdfOutputService(
+					logger: $logger,
+					pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
+				),
+				replacementVerifier: new ReplacementVerificationService(logger: $logger),
+				persistence: new AnonymizationPersistenceService(
+					logger: $logger,
+					locator: $locator,
+					consentCrud: ($deps['consentCrud'] ?? $this->createMock(ConsentCrudService::class)),
+					consentService: ($deps['consentService'] ?? $this->createMock(ConsentService::class))
+				),
+				summaryAttacher: new GrondslagenSummaryAttacher(
+					logger: $logger,
+					grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
+				)
+			);
+		}
 
 		return new AnonymizationService(
 			logger: $logger,
