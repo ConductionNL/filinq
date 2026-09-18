@@ -25,6 +25,7 @@
                 "version": "1.0.0",
                 "description": "Eén register voor alle Filinq-objecten: GDPR/Woo publicatie-instemmingen en -verboden, digitale ondertekeningsverzoeken en -sessies, herbruikbare document templates met versiebeheer en rate card, correspondentie- en documentlogging, huisstijl, financiële veldextractie en grootboekrekening-suggesties, organisatie-woordenlijsten, anonimiseringsbatches, en dossiers met hun Woo Art. 5 grondslagen. VERVANGT de vijf registers `consent`, `signing`, `templates`, `document` en `dossier`; de bestaande objecten worden door de repair step OCA\\Filinq\\Repair\\ConsolidateRegisters fysiek naar dit register verplaatst (insert-verify-delete per shard-tabel). De slug MOET gelijk blijven aan `x-openregister.app`: voor een `type: application` configuratie leest ImportHandler `$slug = $xOpenregister['app'] ?? $appId` en dat veld IS een register-slug, geen attributielabel.",
                 "schemas": [
+                    "documentRegistration",
                     "publicationConsent",
                     "publicationProhibition",
                     "prohibitionOverrideAudit",
@@ -65,6 +66,86 @@
             }
         },
         "schemas": {
+            "documentRegistration": {
+                "uri": null,
+                "slug": "documentRegistration",
+                "title": "Document Registration",
+                "description": "One entry in the post register: a document that entered or left the building, the unit that registered it, and the number it was given. The number comes from a platform sequence, never from a counter in filinq, so two registrations made at the same moment cannot receive the same one.",
+                "version": "1.0.0",
+                "required": [
+                    "direction",
+                    "registeredAt",
+                    "unit",
+                    "document"
+                ],
+                "authorization": {
+                    "read": [
+                        "authenticated"
+                    ],
+                    "create": [
+                        "docudesk-policy-admins"
+                    ],
+                    "update": [
+                        "docudesk-policy-admins"
+                    ],
+                    "delete": [
+                        "docudesk-policy-admins"
+                    ]
+                },
+                "properties": {
+                    "direction": {
+                        "type": "string",
+                        "description": "Whether the document came in or went out. There is no third value: a document that never left is not registered here at all.",
+                        "enum": [
+                            "inbound",
+                            "outbound"
+                        ],
+                        "title": "Direction",
+                        "facetable": true
+                    },
+                    "registeredAt": {
+                        "type": "string",
+                        "description": "When the registration was made. This is the moment of registering, not the date printed on the document, and the two differ often enough that conflating them loses the post register's whole point.",
+                        "format": "date-time",
+                        "title": "Registered At",
+                        "facetable": true
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "The unit that registered it. The number series runs per unit, so this is what decides which sequence the number is drawn from.",
+                        "title": "Unit",
+                        "facetable": true
+                    },
+                    "document": {
+                        "type": "string",
+                        "description": "The document this entry registers.",
+                        "format": "uuid",
+                        "title": "Document"
+                    },
+                    "registrationNumber": {
+                        "type": "string",
+                        "description": "The number this registration was given, drawn from a platform sequence and reset each year. Filinq keeps no counter: two registrations made in the same second would otherwise race for one number and one would silently reuse it. NOTE: the series is instance-wide, not per unit. OpenRegister builds the sequence scope as the literal sequence name plus the period, with no placeholder substitution, so a name like filinq-post-{unit} would create one shared series literally called that rather than one per unit. Per-unit series need platform support that does not exist yet.",
+                        "title": "Registration Number",
+                        "facetable": true,
+                        "x-openregister-generated": {
+                            "sequence": "filinq-post",
+                            "format": "{year}-{seq:5}",
+                            "resetOn": "year"
+                        }
+                    },
+                    "answers": {
+                        "type": "string",
+                        "description": "For an outbound registration, the inbound one it answers. The discharge is READ FROM THIS LINK and is never written as a status on the inbound entry, so an inbound entry cannot be marked answered by anything except an actual answer existing.",
+                        "format": "uuid",
+                        "title": "Answers"
+                    },
+                    "withdrawnReason": {
+                        "type": "string",
+                        "description": "Why a number that was allocated was never used. An unexplained gap in a numbered series reads as a lost document; a gap with a reason reads as a decision, and the series stays legible end to end.",
+                        "title": "Withdrawn Reason"
+                    }
+                }
+            },
             "publicationConsent": {
                 "x-openregister-notifications": {
                     "objectionDeadline": {

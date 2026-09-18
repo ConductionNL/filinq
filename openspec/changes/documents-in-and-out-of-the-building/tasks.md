@@ -4,8 +4,36 @@
 
 ## 1. The registration entry
 
-- [ ] 1.1 Add a `documentRegistration` schema to the `filinq` register with `direction`, `registeredAt`, `unit`, `document`, `registrationNumber`, `answers` and `withdrawnReason`, with a descriptor version bump (REQ-DIO-01)
-- [ ] 1.2 Declare `x-openregister-generated` on `registrationNumber`: a sequence named per unit, a format carrying the year and the position, and a yearly reset; no counter in filinq (REQ-DIO-01)
+- [x] 1.1 Add a `documentRegistration` schema to the `filinq` register with `direction`, `registeredAt`, `unit`, `document`, `registrationNumber`, `answers` and `withdrawnReason`, with a descriptor version bump (REQ-DIO-01)
+  - `direction` is a closed enum: a document either came in or went out, and a
+    third value would be a document that never left, which is not a post
+    register entry at all.
+  - `registeredAt` is the moment of REGISTERING, not the date printed on the
+    document. The two differ often enough that conflating them loses the point
+    of a post register.
+  - The discharge is a LINK (`answers`) and there is no `answered` flag on the
+    inbound entry. A flag can be set without an answer existing; a link cannot.
+    Asserted by name, including the absence of `answered` and `dischargedAt`.
+- [~] 1.2 Declare `x-openregister-generated` on `registrationNumber`: a format carrying the year and the position, and a yearly reset; no counter in filinq (REQ-DIO-01)
+  - DECLARED AND VERIFIED AGAINST THE REAL VALIDATOR, not just written:
+    OpenRegister's own `GeneratedIdentifierDeclaration::fromProperty()` accepts
+    it and renders `2026-00042` for sequence value 42. No counter in filinq, so
+    two registrations in the same second cannot race for one number and silently
+    reuse it.
+  - 🔴 "A SEQUENCE NAMED PER UNIT" IS NOT POSSIBLE TODAY, AND SHIPPING IT WOULD
+    HAVE BEEN SILENT. `GeneratedIdentifierListener::scopeKey()` builds the scope
+    as `'gen:' . $declaration->sequence() . '|' . $period`, substituting NOTHING.
+    So `filinq-post-{unit}` creates ONE series literally named that, shared by
+    every unit, while reading in the schema as though each unit had its own. Two
+    units' numbers would interleave in one pool and nothing would report it.
+  - So the sequence is the literal `filinq-post` and the series is
+    INSTANCE-WIDE. Said in the property's own description and asserted by a test
+    that refuses a `{` in the sequence name, so it cannot be added back as an
+    apparent improvement.
+  - WHAT WAITS, named rather than guessed: per-unit series need OpenRegister to
+    resolve placeholders in a sequence name against the object being saved. That
+    is a platform change and belongs in openregister's `generated-identifier`
+    change, not here.
 - [ ] 1.3 Refuse an update that changes a set registration number, in the service every write path resolves through (REQ-DIO-01)
 - [ ] 1.4 Refuse the registration, naming the missing sequence, when the register declares no generated identifier (REQ-DIO-01)
 
