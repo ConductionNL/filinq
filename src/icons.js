@@ -33,6 +33,7 @@ import FileDocumentCheck from 'vue-material-design-icons/FileDocumentCheck.vue'
 import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
 import FileLinkOutline from 'vue-material-design-icons/FileLinkOutline.vue'
 import FileLock from 'vue-material-design-icons/FileLock.vue'
+import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileReplaceOutline from 'vue-material-design-icons/FileReplaceOutline.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
@@ -83,6 +84,7 @@ export default {
 	FileDocument,
 	FileDocumentCheck,
 	FileDocumentMultipleOutline,
+	FilePdfBox,
 	FileLinkOutline,
 	FileLock,
 	FileReplaceOutline,

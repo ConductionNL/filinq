@@ -102,6 +102,10 @@ $extra = [
         ['name' => 'documentProduction#dueForReview', 'url' => 'api/documents/due-for-review', 'verb' => 'GET'],
         ['name' => 'documentProduction#markReviewed', 'url' => 'api/documents/{uuid}/reviewed', 'verb' => 'POST'],
 
+        // Merge to PDF (merge-documents-to-pdf).
+        ['name' => 'merge#create', 'url' => 'api/merge', 'verb' => 'POST'],
+        ['name' => 'merge#show', 'url' => 'api/merge/{id}', 'verb' => 'GET'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
