@@ -1100,7 +1100,22 @@ OC.L10N.register(
         "When this version became final (ISO 8601).": "Wanneer deze versie definitief is geworden (ISO 8601).",
         "Which document of the record the rule applies to, such as besluit. Empty means every document of the record.": "Op welk document van het record de regel van toepassing is, zoals besluit. Leeg betekent elk document van het record.",
         "Why the administrator unfroze this version. Required when unfreezing.": "Waarom de beheerder deze versie heeft vrijgegeven. Verplicht bij vrijgeven.",
-        "sha256 of the file at the moment it became final. A later mismatch means the file changed outside Filinq.": "sha256 van het bestand op het moment dat het definitief werd. Een latere afwijking betekent dat het bestand buiten Filinq om is gewijzigd."
+        "sha256 of the file at the moment it became final. A later mismatch means the file changed outside Filinq.": "sha256 van het bestand op het moment dat het definitief werd. Een latere afwijking betekent dat het bestand buiten Filinq om is gewijzigd.",
+        "Signing folder": "Ondertekenmap",
+        "Everything still waiting for your signature, from every case.": "Alles wat nog op je handtekening wacht, uit elke zaak.",
+        "Nothing is waiting for your signature": "Er wacht niets op je handtekening",
+        "Documents appear here as soon as somebody asks you to sign one.": "Documenten verschijnen hier zodra iemand je vraagt te ondertekenen.",
+        "Sign selected": "Selectie ondertekenen",
+        "{shown} of {total} shown": "{shown} van {total} getoond",
+        "Case": "Zaak",
+        "Asked by": "Gevraagd door",
+        "Asked on": "Gevraagd op",
+        "Select {document}": "Selecteer {document}",
+        "What the last pass did": "Wat de vorige ronde deed",
+        "Signed: {document}": "Ondertekend: {document}",
+        "Not signed: {reason}": "Niet ondertekend: {reason}",
+        "Document you are about to sign": "Document dat je gaat ondertekenen",
+        "This request carries no document": "Bij dit verzoek hoort geen document"
     },
     "nplurals=2; plural=(n != 1);"
 )

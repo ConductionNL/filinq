@@ -976,7 +976,21 @@ OC.L10N.register(
         "When this version became final (ISO 8601).": "When this version became final (ISO 8601).",
         "Which document of the record the rule applies to, such as besluit. Empty means every document of the record.": "Which document of the record the rule applies to, such as besluit. Empty means every document of the record.",
         "Why the administrator unfroze this version. Required when unfreezing.": "Why the administrator unfroze this version. Required when unfreezing.",
-        "sha256 of the file at the moment it became final. A later mismatch means the file changed outside Filinq.": "sha256 of the file at the moment it became final. A later mismatch means the file changed outside Filinq."
+        "sha256 of the file at the moment it became final. A later mismatch means the file changed outside Filinq.": "sha256 of the file at the moment it became final. A later mismatch means the file changed outside Filinq.",
+        "Signing folder": "Signing folder",
+        "Everything still waiting for your signature, from every case.": "Everything still waiting for your signature, from every case.",
+        "Nothing is waiting for your signature": "Nothing is waiting for your signature",
+        "Documents appear here as soon as somebody asks you to sign one.": "Documents appear here as soon as somebody asks you to sign one.",
+        "Sign selected": "Sign selected",
+        "{shown} of {total} shown": "{shown} of {total} shown",
+        "Case": "Case",
+        "Asked by": "Asked by",
+        "Asked on": "Asked on",
+        "What the last pass did": "What the last pass did",
+        "Signed: {document}": "Signed: {document}",
+        "Not signed: {reason}": "Not signed: {reason}",
+        "Document you are about to sign": "Document you are about to sign",
+        "This request carries no document": "This request carries no document"
     },
     "nplurals=2; plural=(n != 1);"
 )
