@@ -34,8 +34,44 @@
     resolve placeholders in a sequence name against the object being saved. That
     is a platform change and belongs in openregister's `generated-identifier`
     change, not here.
-- [ ] 1.3 Refuse an update that changes a set registration number, in the service every write path resolves through (REQ-DIO-01)
-- [ ] 1.4 Refuse the registration, naming the missing sequence, when the register declares no generated identifier (REQ-DIO-01)
+- [x] 1.3 Refuse an update that changes a set registration number (REQ-DIO-01)
+  - 🔑 THE TASK ASSUMED A SERVICE FILINQ DOES NOT HAVE, and the platform was
+    checked rather than trusted. Registrations are written through
+    OpenRegister's objects API, so a guard in a filinq service would be bypassed
+    by every ordinary write.
+  - What filinq does have is the platform's PRE-WRITE event, verified end to
+    end: `MagicMapper` dispatches `ObjectUpdatingEvent` before an update with
+    both the new and the old object, and throws `HookStoppedException` carrying
+    the listener's own errors when propagation is stopped. So the refusal lands
+    on every path through the mapper, which is all of them.
+  - The past-tense `ObjectUpdatedEvent` filinq already listens to could NOT have
+    done this: by the time it fires the number has already changed.
+  - `DocumentRegistrationWriteGuard`. It matches on the schema SLUG, not the
+    numeric id, which differs per instance and would make the guard silently
+    inert everywhere but the instance it was written on.
+  - A FIRST number may still land: the platform writes it on create, and an
+    entry saved before it had one may legitimately gain one. Refusing that would
+    make the ordinary path impossible, which is how an over-eager guard takes
+    down the feature it protects. Mutation-checked in both directions.
+- [~] 1.4 Refuse the registration, naming the missing sequence, when the register declares no generated identifier (REQ-DIO-01)
+  - 🔑 MOSTLY THE PLATFORM'S ALREADY, MEASURED NOT ASSUMED.
+    `GeneratedIdentifierListener` already refuses when a DECLARED sequence
+    cannot issue: it sets `generated-identifier-unavailable` naming the property
+    AND the sequence, stops propagation, and the object is not created. Building
+    a second refusal for that case would be a second answer to one question.
+  - THE REAL GAP IS THE OTHER CASE: when a schema declares NO generated
+    identifier at all, that listener's loop finds nothing and the object is
+    created with no number, silently. Filinq closes that by SHIPPING the
+    declaration and pinning it with a test, rather than at runtime.
+  - 🔴 AND A RUNTIME GUARD HERE WOULD BE ORDERING-DEPENDENT, which is why it is
+    not built. A create-time check for "a number is present" runs against
+    whatever the listener order happens to be: if filinq's guard runs before the
+    platform issues the number, it refuses every legitimate create. That is a
+    guard whose correctness depends on something neither app declares, and it
+    would fail in the direction that blocks the feature entirely.
+  - What would make it sound is the platform guaranteeing issuance ordering, or
+    exposing "this schema declares an identifier" as a question filinq can ask
+    before the write. Named rather than guessed.
 
 ## 2. Discharge and the open post list
 
