@@ -77,6 +77,13 @@
 			"order": 24
 		},
 		{
+			"id": "Intake",
+			"label": "Intake",
+			"icon": "InboxArrowDown",
+			"route": "Intake",
+			"order": 26
+		},
+		{
 			"id": "Anonymization",
 			"label": "Anonymization",
 			"icon": "EyeOffOutline",
@@ -1155,6 +1162,14 @@
 					}
 				]
 			}
+		},
+		{
+			"id": "Intake",
+			"route": "/intake",
+			"type": "custom",
+			"title": "Intake",
+			"component": "IntakeIndex",
+			"_note": "The inbox between a channel and a record. type:custom rather than type:index because the two verbs on a waiting document, assign and reject, both write through filinq's own endpoints: assigning checks write rights on BOTH the intake schema and the record the clerk aims at, which a declarative object-op cannot express."
 		},
 		{
 			"id": "FeaturesRoadmap",

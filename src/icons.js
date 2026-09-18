@@ -38,6 +38,7 @@ import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
 import History from 'vue-material-design-icons/History.vue'
+import InboxArrowDown from 'vue-material-design-icons/InboxArrowDown.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -85,6 +86,7 @@ export default {
 	FormatListBulleted,
 	Gavel,
 	History,
+	InboxArrowDown,
 	MapMarkerPath,
 	Palette,
 	Plus,

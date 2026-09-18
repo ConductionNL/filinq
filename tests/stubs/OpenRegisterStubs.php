@@ -204,6 +204,21 @@ class ObjectService {
 	}//end setSchema()
 
 	/**
+	 * Get the Schema entity of the current schema context.
+	 *
+	 * Loosely typed (vs. the real `?Schema`) for the same reason as
+	 * `setSchema()`: the stub does not know OpenRegister's entity classes.
+	 * The intake gate reads the schema's `authorization.update` declaration
+	 * off this entity, so a double that could not answer it would have no way
+	 * to express "this schema is restricted".
+	 *
+	 * @return mixed The Schema entity, or null when no schema is set.
+	 */
+	public function getCurrentSchemaEntity() {
+		return null;
+	}//end getCurrentSchemaEntity()
+
+	/**
 	 * Get the current register context's resolved numeric ID.
 	 *
 	 * @return int|null

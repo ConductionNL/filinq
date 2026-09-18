@@ -76,6 +76,7 @@ import DossierDetail from './views/dossier/DossierDetail.vue'
 import DossierIndex from './views/dossier/DossierIndex.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
+import IntakeIndex from './views/intake/IntakeIndex.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
 import StandingConsentIndex from './views/policy/StandingConsentIndex.vue'
@@ -115,5 +116,6 @@ export default {
 	DossierIndex: { kind: 'page', component: DossierIndex },
 	DossierDetail: { kind: 'page', component: DossierDetail },
 	DossierFormModal: { kind: 'modal', component: DossierFormModal },
+	IntakeIndex: { kind: 'page', component: IntakeIndex },
 	CustomDictionaryDetail: { kind: 'page', component: CustomDictionaryDetail },
 }

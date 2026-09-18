@@ -66,6 +66,13 @@ class ObjectEventRegistrar {
 		$context->registerDashboardWidget(AnonymizationWidget::class);
 		$context->registerDashboardWidget(FileEntitiesWidget::class);
 
+		// The intake inbox listens to its own event. A channel says a document
+		// arrived; only this app turns that into a document waiting for a clerk.
+		$context->registerEventListener(
+			'OCA\\Filinq\\Event\\IntakeDocumentReceivedEvent',
+			'OCA\\Filinq\\EventListener\\IntakeDocumentReceivedListener'
+		);
+
 		// Register event listeners for OpenRegister events.
 		// When documents are created/updated/deleted in OpenRegister,
 		// Filinq will enrich metadata and manage consent tracking.
