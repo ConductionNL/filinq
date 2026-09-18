@@ -1837,6 +1837,19 @@ interface Node {
 	 * @return bool
 	 */
 	public function isUpdateable();
+
+	/**
+	 * Whether the acting user may create a new node inside this one.
+	 *
+	 * Declared here because the REAL `OCP\Files\Folder` declares it
+	 * (`vendor/nextcloud/ocp/OCP/Files/Folder.php`) and this stub shadows that
+	 * interface. A stub that is missing a method the real class has makes a
+	 * double refuse to answer a call production makes every day, which is the
+	 * mirror of a double inventing one.
+	 *
+	 * @return bool
+	 */
+	public function isCreatable();
 }//end interface
 
 /**
