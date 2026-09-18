@@ -20,6 +20,7 @@ import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
+import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
@@ -442,3 +443,11 @@ app.mixin({ methods: { t, n } })
 app.use(pinia)
 app.use(router)
 app.mount('#filinq-app')
+
+// Register Filinq's own OpenRegister leaves on Filinq's pages.
+//
+// On OTHER apps' pages the same registration arrives through the separate
+// `filinq-leaves` bundle, which OpenRegister enqueues. Here it rides along with
+// the SPA, because this bundle is already on the page and a second script would
+// register the id twice.
+registerDocumentsLeaf()
