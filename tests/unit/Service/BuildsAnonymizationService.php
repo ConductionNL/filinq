@@ -47,6 +47,7 @@ use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\ProhibitionGateService;
 use OCA\Filinq\Service\ProhibitionPolicyService;
+use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
 use OCP\App\IAppManager;
@@ -142,8 +143,33 @@ trait BuildsAnonymizationService {
 			fileEntityStats: ($deps['fileEntityStats'] ?? $this->createMock(FileEntityStatsService::class)),
 			confidentialityLabel: ($deps['confidentialityLabel'] ?? $this->createMock(ConfidentialityLabelService::class)),
 			prohibitionPolicy: $prohibitionPolicy,
-			anonymizeRunner: $anonymizeRunner
+			anonymizeRunner: $anonymizeRunner,
+			reviewGuard: ($deps['reviewGuard'] ?? $this->reviewingGuardThatAllows())
 		);
 
 	}//end makeAnonymizationServiceFrom()
+
+	/**
+	 * A review guard that lets every document through.
+	 *
+	 * The suites that use this trait are about the anonymise pipeline, not about
+	 * the human gate, so they say so here rather than each one growing a review
+	 * mark it does not care about. The gate's own behaviour, and the fact that
+	 * the service really asks it, are asserted in
+	 * {@see \OCA\Filinq\Tests\Unit\Service\Redaction\RedactionOutputGuardTest}
+	 * and
+	 * {@see \OCA\Filinq\Tests\Unit\Service\Redaction\AnonymizationServiceReviewGateTest},
+	 * which pass a refusing one.
+	 *
+	 * @return RedactionOutputGuard The permissive guard.
+	 */
+	private function reviewingGuardThatAllows(): RedactionOutputGuard {
+		$guard = $this->getMockBuilder(RedactionOutputGuard::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['assertMayWrite'])
+			->getMock();
+
+		return $guard;
+
+	}//end reviewingGuardThatAllows()
 }//end trait

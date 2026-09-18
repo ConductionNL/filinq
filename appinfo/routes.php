@@ -113,6 +113,14 @@ $extra = [
         ['name' => 'scanIntake#declareProfiles', 'url' => 'api/scan/profiles', 'verb' => 'POST'],
         ['name' => 'scanIntake#split', 'url' => 'api/scan/batches/{fileId}/split', 'verb' => 'POST'],
 
+        // What leaves the building: the review mark, the composed publication
+        // list and the conditions a gated download waits on
+        // (redaction-and-what-leaves-the-building).
+        ['name' => 'redactionOutput#markChecked', 'url' => 'api/redaction/documents/{fileId}/checked', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'redactionOutput#composeList', 'url' => 'api/redaction/publication-list', 'verb' => 'POST'],
+        ['name' => 'redactionOutput#agreement', 'url' => 'api/redaction/agreement', 'verb' => 'GET'],
+        ['name' => 'redactionOutput#acceptAgreement', 'url' => 'api/redaction/agreement/accept', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
