@@ -62,6 +62,7 @@ class RegistrationBootstrap {
 		(new ObjectEventRegistrar())->register(context: $context);
 		(new SigningEventRegistrar())->register(context: $context);
 		(new PdfConversionRegistrar())->register(context: $context);
+		(new IntegrationLeafRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
 
