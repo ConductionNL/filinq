@@ -54,6 +54,8 @@ export const DOCUMENT_LEAF_IDS = ['contacts', 'activity', 'shares']
  * @param {string}        [binding.objectId] The OpenRegister object id, '' when the document has no record.
  *
  * @return {Array<object>} The descriptors to render, in DOCUMENT_LEAF_IDS order.
+ *
+ * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
  */
 export function visibleLeafTabs(integrations, binding = {}) {
 	const objectId = String(binding.objectId ?? '').trim()
@@ -92,6 +94,8 @@ export function visibleLeafTabs(integrations, binding = {}) {
  * @param {number|string} fileId The source file the viewer has open.
  *
  * @return {string} The record id, or '' when this document has none.
+ *
+ * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
  */
 export function documentRecordIdFor(links, fileId) {
 	const source = Number(fileId)
@@ -120,6 +124,8 @@ export function documentRecordIdFor(links, fileId) {
  * @param {object}        binding      The record the tabs would be about.
  *
  * @return {boolean} True when at least one leaf renders.
+ *
+ * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
  */
 export function hasLeafTabs(integrations, binding = {}) {
 	return visibleLeafTabs(integrations, binding).length > 0

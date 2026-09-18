@@ -52,6 +52,15 @@ export default {
 		objectId: { type: String, default: '' },
 	},
 
+	/**
+	 * The leaf tabs to render, recomputed as the registry changes.
+	 *
+	 * @param {object} props This component's props.
+	 *
+	 * @return {object} The bindings the template reads.
+	 *
+	 * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
+	 */
 	setup(props) {
 		const { integrations, resolveTab } = useIntegrationRegistry()
 
@@ -69,6 +78,8 @@ export default {
 		 * @param {string} id The integration id.
 		 *
 		 * @return {?object} The leaf's own tab component, or null for the generic host.
+		 *
+		 * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
 		 */
 		tabComponent(id) {
 			return this.resolveTab(id) || null
