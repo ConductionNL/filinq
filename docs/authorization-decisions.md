@@ -117,6 +117,12 @@ deliberately.
 | `documentVersion` | authenticated | authenticated | authenticated / final-document-admins | The record says whether a version is final, and everyone who can open the document needs to read that. `update` stays open because making a document final is an ordinary handler's act, and the service refuses a second write to a version that is already final. Only a final-document admin may delete the record, because deleting it is how a freeze would otherwise be undone without a trace. |
 | `documentFinalityRule` | authenticated | **final-document-admins** | final-document-admins | The rule says which record-type states freeze a document, so it is applied on every state change and must be readable. Declaring one is an administrative act: a wrong rule freezes documents nobody meant to freeze. |
 
+| `intakeDocument` | authenticated | authenticated | authenticated / admins | A document waiting for a record is read by every clerk who might assign it, and assigning or rejecting it is an ordinary clerk's act. The service checks write rights on BOTH this schema and the record the clerk aims at, so the cascade here is the floor and not the whole check. Only an admin deletes one, because deleting a waiting document is how an arrival disappears with nobody having decided to reject it. |
+| `intakeDefaultRule` | authenticated | **admins** | admins | The rule stamps metadata on everything that arrives, so it is read on every arrival. Writing one is administrative: a wrong rule mislabels every document from a channel, and the stamped values look like somebody's decision. |
+| `intakeRoutingRule` | authenticated | **admins** | admins | The declaration says who inbound documents on a record type go to. It is read at every assignment; changing it redirects other people's work, which is not an ordinary handler's act. |
+| `intakePartyCorrection` | authenticated | authenticated | admins | Accept, edit and reject are recorded by the clerk who decided, so `create` is open to them. The corpus is what the next suggestion is ranked against, so an entry is not edited afterwards and only an admin may remove one. |
+| `uploadPolicy` | authenticated | **admins** | admins | Every write path reads the policy to decide whether a file may be stored, so it must be readable. Writing one changes what the whole instance accepts, including what it refuses to accept. |
+
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and

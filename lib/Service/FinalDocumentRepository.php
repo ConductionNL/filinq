@@ -175,6 +175,131 @@ class FinalDocumentRepository {
 	}//end findCurrent()
 
 	/**
+	 * Every document record one person created.
+	 *
+	 * @param string $userId The user id.
+	 *
+	 * @return array<int, array<string, mixed>> Their records.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function findByCreator(string $userId): array {
+		if ($userId === '') {
+			return [];
+		}
+
+		try {
+			$results = $this->objectResolver->resolve()->searchObjects(
+				query: [
+					'@self' => [
+						'register' => self::REGISTER,
+						'schema' => self::SCHEMA,
+					],
+					'createdByUser' => $userId,
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[FinalDocumentRepository] could not read one person\'s document records',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'userId' => $userId, 'error' => $e->getMessage()]
+			);
+
+			return [];
+		}
+
+		if (is_array($results) === false) {
+			return [];
+		}
+
+		$records = [];
+		foreach ($results as $result) {
+			$records[] = $this->normalise(row: $result);
+		}
+
+		return $records;
+
+	}//end findByCreator()
+
+	/**
+	 * Every document record linked to one domain.
+	 *
+	 * 🔴 The domain filter is applied in the READING, not in the query.
+	 * OpenRegister's object filters are scalar equality: a filter on `domains`
+	 * would be compared against an ARRAY of references and would answer the
+	 * empty set with a confident zero rather than an error. Reading the rows
+	 * and matching here is slower and correct.
+	 *
+	 * @param array<string, mixed> $domain The domain, as register, schema and id.
+	 *
+	 * @return array<int, array<string, mixed>> The records on that domain.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function findByDomain(array $domain): array {
+		$reference = [
+			'register' => (string)($domain['register'] ?? ''),
+			'schema' => (string)($domain['schema'] ?? ''),
+			'id' => (string)($domain['id'] ?? ''),
+		];
+
+		if ($reference['register'] === '' || $reference['schema'] === '' || $reference['id'] === '') {
+			return [];
+		}
+
+		try {
+			$results = $this->objectResolver->resolve()->searchObjects(
+				query: [
+					'@self' => [
+						'register' => self::REGISTER,
+						'schema' => self::SCHEMA,
+					],
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[FinalDocumentRepository] could not read the document records of a domain',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
+			);
+
+			return [];
+		}
+
+		if (is_array($results) === false) {
+			return [];
+		}
+
+		$records = [];
+		foreach ($results as $result) {
+			$record = $this->normalise(row: $result);
+			$domains = [];
+			if (isset($record['domains']) === true && is_array($record['domains']) === true) {
+				$domains = $record['domains'];
+			}
+
+			foreach ($domains as $candidate) {
+				if (is_array($candidate) === false) {
+					continue;
+				}
+
+				$same = true;
+				foreach ($reference as $key => $value) {
+					if ((string)($candidate[$key] ?? '') !== $value) {
+						$same = false;
+					}
+				}
+
+				if ($same === true) {
+					$records[] = $record;
+					break;
+				}
+			}
+		}//end foreach
+
+		return $records;
+
+	}//end findByDomain()
+
+	/**
 	 * Find one record by its uuid.
 	 *
 	 * @param string $uuid The record uuid.
