@@ -127,6 +127,8 @@ deliberately.
 | `periodicDocument` | authenticated | **admins** | admins | The schedule says which template renders over which saved view, on what cadence. It is read by the run and by anyone looking at what the list is made of; changing it changes a document the whole organisation reads. |
 | `archiveJob` | authenticated | authenticated | admins | A bundle is asked for by an ordinary handler, so `create` is theirs, and the job records who asked because the archive holds what THAT person may read. The job is the evidence of what was handed over, so only an admin may remove one. |
 
+| `mergeJob` | authenticated | authenticated | admins | A merge is an ordinary handler's act, so `create` and `update` are theirs; the job records who asked because every input is read as that person and the result holds only what they could read. Only an admin may delete one: the job is the trace of what was bundled and handed over. |
+
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
