@@ -75,9 +75,44 @@
 
 ## 2. Discharge and the open post list
 
-- [ ] 2.1 An outbound registration names the inbound one it answers; the discharge is read from the link and never written as a status on the inbound entry (REQ-DIO-02)
+- [x] 2.1 An outbound registration names the inbound one it answers; the discharge is read from the link and never written as a status on the inbound entry (REQ-DIO-02)
+  - `PostRegisterReader::answersFor()`. The inbound entry carries NO `answered`
+    flag and never will: a flag can be set by anybody at any time without an
+    answer existing, and then the register reports a letter as dealt with
+    because somebody ticked a box. Reading it from the outbound entry that NAMES
+    the inbound one means the register can only claim a discharge with a
+    document behind it. The schema's lack of `answered`/`dischargedAt` is
+    asserted by name.
+  - 🔑 THE SEARCH CONTRACT WAS CHECKED, NOT ASSUMED, and it is the sharp edge
+    here. OpenRegister's objects search takes BARE property keys beside a
+    `@self` block; the sibling aggregations endpoint spells the same filter as
+    `filter[...]`, and the objects endpoint reads that wrapper as the EMPTY SET.
+    Written the wrong way this reader would report every inbound entry as
+    undischarged, confidently and with no error anywhere. The query shape is
+    pinned by a test and mutation-checked.
+  - IT RETURNS THE ANSWERS, NOT A BOOLEAN. "Discharged: yes" loses which
+    document did it, which is what a reader a year later actually wants, and a
+    caller given a boolean cannot get the list back.
+  - 🔴 A FAILED READ IS RAISED, NOT REPORTED AS "NO ANSWERS". An empty list
+    would say the letter is still open when it may have been answered a month
+    ago, which is the reading that gets a second reply sent.
 - [ ] 2.2 The open post list per unit, oldest first, offered as a leaf per ADR-066 (REQ-DIO-02)
-- [ ] 2.3 Record a withdrawn allocation with its reason and moment when a numbered registration is not written, and expose the series so it reads end to end (REQ-DIO-03)
+- [x] 2.3 Record a withdrawn allocation with its reason and moment when a numbered registration is not written, and expose the series so it reads end to end (REQ-DIO-03)
+  - `withdrawnAt` ADDED: the schema shipped with `withdrawnReason` alone, and
+    the task asks for the reason AND the moment. A withdrawal with only one of
+    the two is half a record, because an auditor reading the series a year later
+    needs to place the gap in time as well as explain it. Schema version moved
+    with it.
+  - A HALF-RECORDED WITHDRAWAL IS REPORTED INCOMPLETE rather than quietly
+    treated as either withdrawn or not. Smoothing it over is how a gap stops
+    being legible.
+  - `PostRegisterReader::series()` returns the entries in number order with each
+    one's withdrawal state attached, so an unexplained hole is visible as one. An
+    entry with no number is left out: including it would put a row with no
+    position among rows ordered by position.
+  - WHAT IS NOT BUILT HERE: the surface that shows the series, which is 2.2's
+    leaf and is blocked on the missing `leaves` webpack entry already recorded
+    in `case-documents-and-the-flat-list`.
 
 ## 3. The plain-language rendition
 

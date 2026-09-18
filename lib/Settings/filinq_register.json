@@ -73,7 +73,7 @@
                 "slug": "documentRegistration",
                 "title": "Document Registration",
                 "description": "One entry in the post register: a document that entered or left the building, the unit that registered it, and the number it was given. The number comes from a platform sequence, never from a counter in filinq, so two registrations made at the same moment cannot receive the same one.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "required": [
                     "direction",
                     "registeredAt",
@@ -145,6 +145,12 @@
                         "type": "string",
                         "description": "Why a number that was allocated was never used. An unexplained gap in a numbered series reads as a lost document; a gap with a reason reads as a decision, and the series stays legible end to end.",
                         "title": "Withdrawn Reason"
+                    },
+                    "withdrawnAt": {
+                        "type": "string",
+                        "description": "When the allocation was withdrawn. The reason says why and this says when, and a withdrawal with only one of the two is half a record: an auditor reading the series a year later needs to place the gap in time as well as explain it.",
+                        "format": "date-time",
+                        "title": "Withdrawn At"
                     }
                 }
             },
