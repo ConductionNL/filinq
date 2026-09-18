@@ -53,6 +53,9 @@ class IntakeService {
 	 * @param IntakeRepository $repository The intake document store.
 	 * @param IntakeAuthorizationGate $gate The write-rights gate.
 	 * @param IntakeFilePlacement $placement Moves an assigned file into the record's folder.
+	 * @param IntakeDefaultRuleService $defaults Stamps the declared defaults at creation.
+	 * @param IntakeRoutingService $routing Applies what a consuming app declared per record type.
+	 * @param PartySuggestionService $parties Reads a party out of the document, and never files one.
 	 * @param IUserSession $userSession The current session.
 	 * @param LoggerInterface $logger Logger for diagnostics.
 	 *
@@ -62,6 +65,9 @@ class IntakeService {
 		private readonly IntakeRepository $repository,
 		private readonly IntakeAuthorizationGate $gate,
 		private readonly IntakeFilePlacement $placement,
+		private readonly IntakeDefaultRuleService $defaults,
+		private readonly IntakeRoutingService $routing,
+		private readonly PartySuggestionService $parties,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -123,9 +129,94 @@ class IntakeService {
 			$document['file'] = $fileId;
 		}
 
+		if ($event->getArrivedWith() !== '') {
+			$document['arrivedWith'] = $event->getArrivedWith();
+		}
+
+		// STAMPED BEFORE ANYTHING ELSE LOOKS AT IT. The defaults are a decision
+		// somebody wrote down; a classifier's guess arrives later and is offered
+		// beside the stamped value, never over it.
+		$document = $this->defaults->stamp(
+			document: $document,
+			channel: $channel,
+			sender: $event->getSender()
+		);
+
+		if ($fileId !== null) {
+			$document['partySuggestion'] = $this->parties->suggestFor(fileId: $fileId);
+		}
+
 		return $this->repository->save(document: $document);
 
 	}//end receive()
+
+	/**
+	 * Take in a message and everything that came attached to it.
+	 *
+	 * Each attachment is an intake document of its own naming the message it
+	 * arrived with. Folding attachments into the message would lose exactly the
+	 * case that matters: one attachment often belongs to a different record
+	 * from the letter it came with, and a folded attachment has no way to say
+	 * so.
+	 *
+	 * @param IntakeDocumentReceivedEvent $message What the channel delivered as the message.
+	 * @param array<int, IntakeDocumentReceivedEvent> $attachments What came with it.
+	 *
+	 * @return array<int, array<string, mixed>> The message first, then its attachments.
+	 *
+	 * @throws IntakeRefusedException When a channel is not one this app accepts.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function receiveMessage(IntakeDocumentReceivedEvent $message, array $attachments = []): array {
+		$stored = $this->receive(event: $message);
+		$documents = [$stored];
+		$messageUuid = (string)($stored['uuid'] ?? '');
+
+		foreach ($attachments as $attachment) {
+			$documents[] = $this->receive(
+				event: new IntakeDocumentReceivedEvent(
+					channel: $attachment->getChannel(),
+					fileId: $attachment->getFileId(),
+					fileName: $attachment->getFileName(),
+					subject: $attachment->getSubject(),
+					sender: $attachment->getSender(),
+					sourceRef: $attachment->getSourceRef(),
+					receivedAt: $attachment->getReceivedAt(),
+					arrivedWith: $messageUuid
+				)
+			);
+		}
+
+		return $documents;
+
+	}//end receiveMessage()
+
+	/**
+	 * Everything that arrived with one message, the message excluded.
+	 *
+	 * @param string $uuid The message's intake document.
+	 *
+	 * @return array<int, array<string, mixed>> The attachments.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function attachmentsOf(string $uuid): array {
+		return $this->repository->findArrivedWith(uuid: $uuid);
+
+	}//end attachmentsOf()
+
+	/**
+	 * The worklist of documents taken back off a record.
+	 *
+	 * @return array<int, array<string, mixed>> The detached documents.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function listDetached(): array {
+		return $this->repository->findByStatus(status: IntakeRepository::STATUS_DETACHED);
+
+	}//end listDetached()
 
 	/**
 	 * Everything waiting for a clerk.
@@ -143,7 +234,10 @@ class IntakeService {
 	 * Assign one waiting document to a record.
 	 *
 	 * @param string $uuid The intake document.
-	 * @param array<string, mixed> $target The record, as `register`, `schema` and `id`.
+	 * @param array<string, mixed> $target The record, as `register`, `schema` and `id`,
+	 *                                     optionally with the `declaringApp` and
+	 *                                     `typeReference` the routing is declared against.
+	 * @param bool $withAttachments Also assign everything that arrived with this message.
 	 *
 	 * @return array<string, mixed> The assigned document.
 	 *
@@ -152,8 +246,9 @@ class IntakeService {
 	 *                                not write one of the two schemas.
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
-	public function assign(string $uuid, array $target): array {
+	public function assign(string $uuid, array $target, bool $withAttachments = false): array {
 		$register = trim((string)($target['register'] ?? ''));
 		$schema = trim((string)($target['schema'] ?? ''));
 		$id = trim((string)($target['id'] ?? ''));
@@ -184,9 +279,75 @@ class IntakeService {
 			$document['filePath'] = $placedAt;
 		}
 
-		return $this->repository->save(document: $document, uuid: $uuid);
+		$document = $this->routing->apply(
+			document: $document,
+			declaringApp: trim((string)($target['declaringApp'] ?? '')),
+			typeReference: trim((string)($target['typeReference'] ?? ''))
+		);
+
+		$assigned = $this->repository->save(document: $document, uuid: $uuid);
+
+		if ($withAttachments === true) {
+			foreach ($this->repository->findArrivedWith(uuid: $uuid) as $attachment) {
+				$attachmentUuid = (string)($attachment['uuid'] ?? '');
+				if ($attachmentUuid === '' || (string)($attachment['status'] ?? '') !== IntakeRepository::STATUS_RECEIVED) {
+					continue;
+				}
+
+				$this->assign(uuid: $attachmentUuid, target: $target);
+			}
+		}
+
+		$arrivedWith = trim((string)($document['arrivedWith'] ?? ''));
+		if ($arrivedWith !== '') {
+			$this->noteOnMessage(messageUuid: $arrivedWith, attachmentUuid: $uuid, target: $target);
+		}
+
+		return $assigned;
 
 	}//end assign()
+
+	/**
+	 * Note on a message that one of its attachments went somewhere.
+	 *
+	 * An attachment assigned on its own is the interesting case: the letter
+	 * goes to one record and one of its bijlagen to another. Both records say
+	 * so, because a reader of either one would otherwise have to guess.
+	 *
+	 * @param string $messageUuid The message's intake document.
+	 * @param string $attachmentUuid The attachment's intake document.
+	 * @param array<string, mixed> $target Where the attachment went.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	private function noteOnMessage(string $messageUuid, string $attachmentUuid, array $target): void {
+		$message = $this->repository->findByUuid(uuid: $messageUuid);
+		if ($message === null) {
+			return;
+		}
+
+		$notes = [];
+		if (isset($message['attachmentNotes']) === true && is_array($message['attachmentNotes']) === true) {
+			$notes = $message['attachmentNotes'];
+		}
+
+		$notes[] = [
+			'attachment' => $attachmentUuid,
+			'assignedTo' => [
+				'register' => (string)($target['register'] ?? ''),
+				'schema' => (string)($target['schema'] ?? ''),
+				'id' => (string)($target['id'] ?? ''),
+			],
+			'assignedBy' => $this->currentUserId(),
+			'assignedAt' => $this->now(),
+		];
+
+		$message['attachmentNotes'] = $notes;
+		$this->repository->save(document: $message, uuid: $messageUuid);
+
+	}//end noteOnMessage()
 
 	/**
 	 * Reject one waiting document, with the reason it was rejected for.
@@ -244,7 +405,10 @@ class IntakeService {
 		}
 
 		$status = (string)($document['status'] ?? '');
-		if ($status !== IntakeRepository::STATUS_RECEIVED) {
+		// A DETACHED document is waiting again. It came back off a record with
+		// a reason, and the whole point of the worklist is that a clerk can act
+		// on it, so treating it as "already left the inbox" would strand it.
+		if (in_array($status, [IntakeRepository::STATUS_RECEIVED, IntakeRepository::STATUS_DETACHED], true) === false) {
 			throw new IntakeRefusedException(
 				message: 'This document has already left the inbox: it is ' . $status . '.',
 				status: 409

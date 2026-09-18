@@ -23,6 +23,9 @@ use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeAuthorizationGate;
+use OCA\Filinq\Service\IntakeDefaultRuleService;
+use OCA\Filinq\Service\IntakeRoutingService;
+use OCA\Filinq\Service\PartySuggestionService;
 use OCA\Filinq\Service\IntakeFilePlacement;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\IntakeService;
@@ -148,10 +151,36 @@ class IntakeServiceTest extends TestCase {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
+		$defaults = $this->createMock(IntakeDefaultRuleService::class);
+		$defaults->method('stamp')->willReturnCallback(
+			static function (array $document): array {
+				$document['stampedDefaults'] = [];
+				$document['defaultRule'] = '';
+
+				return $document;
+			}
+		);
+
+		$routing = $this->createMock(IntakeRoutingService::class);
+		$routing->method('apply')->willReturnCallback(
+			static function (array $document): array {
+				$document['routing'] = '';
+				$document['acceptance'] = ['required' => false];
+
+				return $document;
+			}
+		);
+
+		$parties = $this->createMock(PartySuggestionService::class);
+		$parties->method('suggestFor')->willReturn([]);
+
 		return new IntakeService(
 			$repository,
 			$gate,
 			$placement,
+			$defaults,
+			$routing,
+			$parties,
 			$session,
 			$this->createMock(LoggerInterface::class)
 		);
@@ -425,6 +454,140 @@ class IntakeServiceTest extends TestCase {
 		$this->assertSame('intake-1', $waiting[0]['uuid']);
 
 	}//end testTheInboxListsOnlyWhatIsWaiting()
+
+	/**
+	 * An aanvraag with three bijlagen becomes four records that stay together.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testAMessageWithThreeAttachmentsBecomesFourLinkedRecords(): void {
+		$service = $this->service(rows: []);
+
+		$documents = $service->receiveMessage(
+			message: new IntakeDocumentReceivedEvent(
+				channel: 'mail',
+				fileId: 100,
+				subject: 'Aanvraag',
+				sender: 'jan@voorbeeld.nl',
+				sourceRef: 'mail-1'
+			),
+			attachments: [
+				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 101, sourceRef: 'mail-1-a1'),
+				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 102, sourceRef: 'mail-1-a2'),
+				new IntakeDocumentReceivedEvent(channel: 'mail', fileId: 103, sourceRef: 'mail-1-a3'),
+			]
+		);
+
+		$this->assertCount(4, $documents);
+		$this->assertArrayNotHasKey('arrivedWith', $documents[0], 'The message itself arrived with nothing.');
+		foreach (array_slice($documents, 1) as $attachment) {
+			$this->assertSame(
+				'intake-new',
+				$attachment['arrivedWith'],
+				'Every attachment names the message it arrived with.'
+			);
+		}
+
+	}//end testAMessageWithThreeAttachmentsBecomesFourLinkedRecords()
+
+	/**
+	 * An attachment assigned on its own is noted on the message too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testAnAttachmentAssignedElsewhereIsNotedOnItsMessage(): void {
+		$message = $this->waitingRow();
+		$message['uuid'] = 'intake-message';
+		$attachment = $this->waitingRow();
+		$attachment['uuid'] = 'intake-attachment';
+		$attachment['arrivedWith'] = 'intake-message';
+
+		$service = $this->service(rows: [$message, $attachment]);
+
+		$service->assign(
+			uuid: 'intake-attachment',
+			target: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-9']
+		);
+
+		$this->assertSame(['intake-attachment', 'intake-message'], $this->writtenTo);
+		$note = $this->written[1]['attachmentNotes'][0];
+		$this->assertSame('intake-attachment', $note['attachment']);
+		$this->assertSame('zaak-9', $note['assignedTo']['id']);
+
+	}//end testAnAttachmentAssignedElsewhereIsNotedOnItsMessage()
+
+	/**
+	 * Assigning a message can take everything that arrived with it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testAssigningAMessageCanTakeItsAttachmentsAlong(): void {
+		$message = $this->waitingRow();
+		$message['uuid'] = 'intake-message';
+		$attachment = $this->waitingRow();
+		$attachment['uuid'] = 'intake-attachment';
+		$attachment['arrivedWith'] = 'intake-message';
+
+		$service = $this->service(rows: [$message, $attachment]);
+
+		$service->assign(
+			uuid: 'intake-message',
+			target: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-9'],
+			withAttachments: true
+		);
+
+		$this->assertContains('intake-attachment', $this->writtenTo);
+
+	}//end testAssigningAMessageCanTakeItsAttachmentsAlong()
+
+	/**
+	 * A detached document is waiting again, and can be assigned.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testADetachedDocumentCanBeAssignedAgain(): void {
+		$row = $this->waitingRow();
+		$row['status'] = 'detached';
+		$row['detachReason'] = 'verkeerde zaak';
+		$service = $this->service(rows: [$row]);
+
+		$assigned = $service->assign(
+			uuid: 'intake-1',
+			target: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-8']
+		);
+
+		$this->assertSame('assigned', $assigned['status']);
+
+	}//end testADetachedDocumentCanBeAssignedAgain()
+
+	/**
+	 * The worklist holds the detached documents, not the waiting ones.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testTheWorklistHoldsTheDetachedDocuments(): void {
+		$detached = $this->waitingRow();
+		$detached['uuid'] = 'intake-2';
+		$detached['status'] = 'detached';
+
+		$service = $this->service(rows: [$this->waitingRow(), $detached]);
+
+		$worklist = $service->listDetached();
+
+		$this->assertCount(1, $worklist);
+		$this->assertSame('intake-2', $worklist[0]['uuid']);
+
+	}//end testTheWorklistHoldsTheDetachedDocuments()
 
 	/**
 	 * A document that is not in the inbox at all answers 404.

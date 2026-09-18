@@ -55,3 +55,43 @@ export async function rejectIntakeDocument(uuid, reason) {
 	const { data } = await axios.post(url, { reason })
 	return data
 }
+
+/**
+ * Read the documents taken back off a record.
+ *
+ * @return {Promise<object[]>} The worklist.
+ * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ */
+export async function listDetachedDocuments() {
+	const url = generateUrl('/apps/filinq/api/intake/detached')
+	const { data } = await axios.get(url)
+	return Array.isArray(data?.results) ? data.results : []
+}
+
+/**
+ * Take one document off the record it is filed on.
+ *
+ * @param {number} fileId The Nextcloud file id.
+ * @param {string} reason Why it does not belong there.
+ * @param {string} documentName The document name, for a file that never had an intake record.
+ * @return {Promise<object>} The intake document, now on the worklist.
+ * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ */
+export async function detachDocument(fileId, reason, documentName = '') {
+	const url = generateUrl('/apps/filinq/api/intake/documents/detach')
+	const { data } = await axios.post(url, { fileId, reason, documentName })
+	return data
+}
+
+/**
+ * Record what a clerk did with a party suggestion.
+ *
+ * @param {object} decision The decision: sender, decision, suggested, accepted, intakeDocument.
+ * @return {Promise<object>} The stored correction.
+ * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ */
+export async function decidePartySuggestion(decision) {
+	const url = generateUrl('/apps/filinq/api/intake/party-decisions')
+	const { data } = await axios.post(url, decision)
+	return data
+}

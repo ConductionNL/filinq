@@ -84,35 +84,123 @@ class IntakeDocumentSchemaTest extends TestCase {
 			$descriptor['components']['registers']['filinq']['schemas'],
 			'A schema the register does not list is never imported.'
 		);
-		$this->assertSame('8.5.0', $descriptor['info']['version']);
+		$this->assertSame('8.6.0', $descriptor['info']['version']);
 
 	}//end testTheRegisterListsTheIntakeSchema()
 
 	/**
-	 * A document arrives `received` and leaves for good.
+	 * A document arrives `received`, and a rejection is the end of it.
+	 *
+	 * `assigned` stopped being terminal when the worklist arrived: a document
+	 * filed on the wrong record is detached and comes back, which is exactly
+	 * what the worklist is for. A REJECTION is still the end: it says the
+	 * document does not belong in this organisation at all.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
-	public function testAssignedAndRejectedAreBothTerminal(): void {
+	public function testARejectionIsTerminalAndADetachmentIsNot(): void {
 		$lifecycle = $this->intakeDocument()['x-openregister-lifecycle'];
 
 		$this->assertSame('status', $lifecycle['field']);
 		$this->assertSame('received', $lifecycle['initial']);
 		$this->assertFalse($lifecycle['states']['received']['terminal']);
-		$this->assertTrue($lifecycle['states']['assigned']['terminal']);
+		$this->assertFalse($lifecycle['states']['assigned']['terminal']);
 		$this->assertTrue($lifecycle['states']['rejected']['terminal']);
+		$this->assertFalse($lifecycle['states']['detached']['terminal']);
 
 		foreach ($lifecycle['transitions'] as $name => $transition) {
-			$this->assertSame(
-				'received',
+			$this->assertNotSame(
+				'rejected',
 				$transition['from'],
-				'Transition ' . $name . ' leaves a terminal state; a document that left the inbox must stay left.'
+				'Transition ' . $name . ' leaves the rejected state; a rejection must stay the end.'
 			);
 		}
 
-	}//end testAssignedAndRejectedAreBothTerminal()
+		$this->assertSame('assigned', $lifecycle['transitions']['detach']['from']);
+		$this->assertSame('detached', $lifecycle['transitions']['detach']['to']);
+		$this->assertSame('detached', $lifecycle['transitions']['reassign']['from']);
+
+	}//end testARejectionIsTerminalAndADetachmentIsNot()
+
+	/**
+	 * Everything the worklist change added is declared.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testTheWorklistFieldsAreDeclared(): void {
+		$properties = $this->intakeDocument()['properties'];
+
+		foreach (
+			[
+				'arrivedWith',
+				'stampedDefaults',
+				'defaultRule',
+				'partySuggestion',
+				'routing',
+				'acceptance',
+				'classificationProgress',
+				'detachReason',
+				'detachedBy',
+				'attachmentNotes',
+			] as $name
+		) {
+			$this->assertArrayHasKey($name, $properties, $name . ' is missing from intakeDocument.');
+		}
+
+		$this->assertContains('detached', $properties['status']['enum']);
+
+	}//end testTheWorklistFieldsAreDeclared()
+
+	/**
+	 * Party extraction is declared as its own processing activity.
+	 *
+	 * The suggestion reads a name and an address out of somebody's letter, so
+	 * it is a processing activity in its own right, with a purpose, a legal
+	 * basis, the categories it touches and a retention. An activity nobody
+	 * declared is one no register of processing activities can report.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testPartyExtractionIsItsOwnProcessingActivity(): void {
+		$activity = $this->intakeDocument()['x-openregister-processing'];
+
+		$this->assertSame('docudesk-party-extraction', $activity['code']);
+		$this->assertNotSame('', $activity['doelbinding']);
+		$this->assertSame('public-task', $activity['rechtsgrond']);
+		$this->assertContains('PERSON', $activity['dataCategories']);
+		$this->assertStringContainsString('P1Y', $activity['retentionReference']);
+
+	}//end testPartyExtractionIsItsOwnProcessingActivity()
+
+	/**
+	 * The two rule schemas and the corrections corpus are in the register.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function testTheRuleSchemasAndTheCorpusAreRegistered(): void {
+		$descriptor = $this->descriptor();
+		$listed = $descriptor['components']['registers']['filinq']['schemas'];
+
+		foreach (['intakeDefaultRule', 'intakeRoutingRule', 'intakePartyCorrection'] as $slug) {
+			$this->assertArrayHasKey($slug, $descriptor['components']['schemas']);
+			$this->assertContains($slug, $listed);
+		}
+
+		$this->assertSame(
+			['accepted', 'edited', 'rejected'],
+			$descriptor['components']['schemas']['intakePartyCorrection']['properties']['decision']['enum']
+		);
+
+	}//end testTheRuleSchemasAndTheCorpusAreRegistered()
 
 	/**
 	 * The three channels, and only those three.

@@ -78,6 +78,12 @@ $extra = [
         ['name' => 'intake#assign', 'url' => 'api/intake/documents/{uuid}/assign', 'verb' => 'POST'],
         ['name' => 'intake#reject', 'url' => 'api/intake/documents/{uuid}/reject', 'verb' => 'POST'],
 
+        // Inbound worklist, party suggestions and routing (inbound-documents-and-the-worklist).
+        ['name' => 'intake#detached', 'url' => 'api/intake/detached', 'verb' => 'GET'],
+        ['name' => 'intake#detach', 'url' => 'api/intake/documents/detach', 'verb' => 'POST'],
+        ['name' => 'intake#decideParty', 'url' => 'api/intake/party-decisions', 'verb' => 'POST'],
+        ['name' => 'intake#declareRouting', 'url' => 'api/intake/routing-rules', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
