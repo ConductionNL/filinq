@@ -5952,6 +5952,20 @@
                             "failed"
                         ],
                         "default": "queued"
+                    },
+                    "conformance": {
+                        "description": "What the result actually is: `pdfa-3b` when the archival conversion ran, `pdf` when it was not available on this instance. Said out loud rather than assumed, because a plain PDF that everybody believes is PDF/A-3b is the failure this field exists to prevent.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 10,
+                        "facetable": true,
+                        "title": "Conformance",
+                        "enum": [
+                            "pdfa-3b",
+                            "pdf"
+                        ],
+                        "default": "pdf"
                     }
                 },
                 "archive": [],
