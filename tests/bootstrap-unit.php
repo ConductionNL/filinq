@@ -137,6 +137,20 @@ if (is_dir($ocpBruteforceDir) === true) {
 // ILockManager lock so a document open in Collabora refuses the edit rather
 // than losing the human's changes) — same "real file, not classmapped"
 // situation as the SystemTag/EventDispatcher contracts above.
+// Load OCP's user-manager contract (the nightly upload-fragment reaper sweeps
+// every seen user's documents folder, so it type-hints IUserManager) — same
+// "real file, not classmapped" situation as the EventDispatcher/SystemTag
+// contracts above. UserInterface comes first because IUserManager's docblocks
+// and signatures reference it, and without it createMock(IUserManager::class)
+// raises UnknownTypeException and every test in the job's class errors out.
+$ocpUserDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP';
+foreach (['UserInterface.php', 'IUserManager.php'] as $ocpUserFile) {
+	$ocpUserPath = $ocpUserDir . '/' . $ocpUserFile;
+	if (is_file($ocpUserPath) === true && interface_exists('\\OCP\\IUserManager') === false) {
+		require_once $ocpUserPath;
+	}
+}
+
 // `OCP\Lock\LockedException` — which OwnerLockedException extends — is already
 // declared in NextcloudStubs.php above, so it is deliberately NOT required from
 // vendor here: doing so is a fatal redeclare, not a no-op.
