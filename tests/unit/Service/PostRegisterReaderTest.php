@@ -350,4 +350,41 @@ class PostRegisterReaderTest extends TestCase {
 	public function testAnEmptyUnitReadsAsNoPost(): void {
 		$this->assertSame([], $this->readerWithPost([['id' => 'in-1']], [])->openPostFor('   '));
 	}//end testAnEmptyUnitReadsAsNoPost()
+
+	/**
+	 * A unit's series is read from the register and ordered by number.
+	 *
+	 * The fetch lives beside `series()` rather than in the controller: a caller
+	 * that built this query itself would be a second place the objects
+	 * endpoint's bare-key spelling has to be right, and the wrong spelling
+	 * answers the EMPTY SET rather than an error.
+	 *
+	 * @return void
+	 */
+	public function testTheUnitsSeriesIsReadAndOrdered(): void {
+		$reader = $this->readerReturning(
+			[
+				['registrationNumber' => '2026-00042', 'direction' => 'outgoing'],
+				['registrationNumber' => '2026-00041', 'direction' => 'incoming', 'withdrawnReason' => 'verkeerd geadresseerd', 'withdrawnAt' => '2026-02-01'],
+			]
+		);
+
+		$series = $reader->seriesFor('burgerzaken');
+
+		$this->assertSame(['2026-00041', '2026-00042'], array_column($series, 'registrationNumber'));
+		$this->assertTrue($series[0]['withdrawal']['withdrawn']);
+		$this->assertArrayNotHasKey('filter', $this->lastQuery);
+	}//end testTheUnitsSeriesIsReadAndOrdered()
+
+	/**
+	 * A register that could not be read raises rather than reading as a unit
+	 * that has registered nothing.
+	 *
+	 * @return void
+	 */
+	public function testAFailedSeriesReadIsRaised(): void {
+		$this->expectException(RuntimeException::class);
+
+		$this->readerReturning(null)->seriesFor('burgerzaken');
+	}//end testAFailedSeriesReadIsRaised()
 }//end class
