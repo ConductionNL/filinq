@@ -158,10 +158,38 @@ export default {
 				)
 				const { data } = await axios.get(url, { params: { _limit: 100 } })
 				this.records = Array.isArray(data?.results) ? data.results : []
+				this.preselectFromSourceRef()
 			} catch {
 				this.records = []
 			} finally {
 				this.loadingRecords = false
+			}
+		},
+
+		/**
+		 * Pre-select the record the separator sheet named.
+		 *
+		 * A scanned document carries the case number from the sheet that
+		 * separated it, as a source reference. It is a suggestion: the clerk
+		 * still confirms, and the server still checks the write rights, so a
+		 * number somebody mistyped on a sheet costs one glance rather than a
+		 * document filed on the wrong case.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+		 */
+		preselectFromSourceRef() {
+			const reference = String(this.document?.sourceRef || '').trim()
+			if (reference === '' || this.selected) {
+				return
+			}
+			const match = this.recordOptions.find(
+				(option) =>
+					String(option.label).includes(reference)
+					|| String(option.id) === reference,
+			)
+			if (match) {
+				this.selected = match
 			}
 		},
 
