@@ -5,13 +5,13 @@
 <template>
 	<div class="filinq-documents-leaf">
 		<p v-if="loading" class="filinq-documents-leaf__state">
-			{{ t('filinq', 'Reading the documents') }}
+			{{ t('filinq', 'Looking up documents') }}
 		</p>
 		<p v-else-if="error" class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
-			{{ t('filinq', 'The documents could not be read') }}
+			{{ t('filinq', 'The documents could not be loaded') }}
 		</p>
 		<p v-else-if="rows.length === 0" class="filinq-documents-leaf__state">
-			{{ t('filinq', 'No documents on this record yet') }}
+			{{ t('filinq', 'No documents yet') }}
 		</p>
 		<ul v-else class="filinq-documents-leaf__list">
 			<li v-for="row in rows" :key="row.fileId" class="filinq-documents-leaf__item">
