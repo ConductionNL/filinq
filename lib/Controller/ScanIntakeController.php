@@ -94,6 +94,14 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @return DataDownloadResponse|JSONResponse The sheets, or the refusal.
 	 *
+	 * @no-admin-idor-exempt this endpoint reads no stored object, so there is
+	 *       nothing to scope to the caller. `render()` encodes the profile id and
+	 *       the case numbers the caller typed into a barcode payload and renders
+	 *       them to a PDF; the profile is instance-wide configuration that every
+	 *       clerk may print a sheet for, and no record, folder or file is looked
+	 *       up from either argument. Verified by reading SeparatorSheetService::
+	 *       render(), which touches the profile store and the PDF writer only.
+	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	#[NoAdminRequired]
