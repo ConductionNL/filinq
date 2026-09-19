@@ -14,13 +14,16 @@
 
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import AccountEdit from 'vue-material-design-icons/AccountEdit.vue'
+import AccountRemove from 'vue-material-design-icons/AccountRemove.vue'
 import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import CalendarSync from 'vue-material-design-icons/CalendarSync.vue'
 import CallSplit from 'vue-material-design-icons/CallSplit.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
+import CertificateOutline from 'vue-material-design-icons/CertificateOutline.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
+import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
@@ -62,6 +65,7 @@ import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline
 export default {
 	AccountCheck,
 	AccountEdit,
+	AccountRemove,
 	BookAlphabet,
 	// Used by the `product` schema's rate card in the register. Unregistered,
 	// it rendered as NOTHING — not a fallback glyph, just an empty cell where
@@ -69,7 +73,9 @@ export default {
 	Cash,
 	BookOpenVariant,
 	BookOpenVariantOutline,
+	CertificateOutline,
 	ChartBoxOutline,
+	CheckDecagram,
 	ClipboardCheckOutline,
 	Domain,
 	EmailMultipleOutline,
