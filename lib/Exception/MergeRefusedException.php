@@ -59,7 +59,7 @@ class MergeRefusedException extends RuntimeException {
 		private readonly int $status = 403,
 		?Throwable $previous = null,
 	) {
-		parent::__construct($message, $status, $previous);
+		parent::__construct(message: $message, code: $status, previous: $previous);
 
 	}//end __construct()
 

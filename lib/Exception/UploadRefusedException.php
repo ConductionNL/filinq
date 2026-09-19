@@ -66,7 +66,7 @@ class UploadRefusedException extends RuntimeException {
 		// code in the 4xx range straight onto the HTTP status, so a refusal
 		// that carried 0 would answer 500 and read as a broken server rather
 		// than as a file the policy does not allow.
-		parent::__construct($message, 400, $previous);
+		parent::__construct(message: $message, code: 400, previous: $previous);
 
 	}//end __construct()
 

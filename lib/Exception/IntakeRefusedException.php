@@ -59,7 +59,7 @@ class IntakeRefusedException extends RuntimeException {
 		private readonly int $status = 403,
 		?Throwable $previous = null,
 	) {
-		parent::__construct($message, 0, $previous);
+		parent::__construct(message: $message, code: 0, previous: $previous);
 
 	}//end __construct()
 

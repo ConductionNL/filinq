@@ -77,8 +77,8 @@ class MergeDocumentsJob extends TimedJob {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct($time);
-		$this->setInterval(self::INTERVAL);
+		parent::__construct(time: $time);
+		$this->setInterval(seconds: self::INTERVAL);
 
 	}//end __construct()
 

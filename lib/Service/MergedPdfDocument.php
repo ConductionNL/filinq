@@ -44,6 +44,25 @@ use setasign\Fpdi\Fpdi;
  * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
  */
 class MergedPdfDocument extends Fpdi {
+	// 🔴 TWO SNIFFS ARE OFF FOR THIS FILE, AND ONLY FOR THIS FILE.
+	//
+	// PSR2.Methods.MethodDeclaration.Underscore: `_putresources()` and
+	// `_putcatalog()` are FPDF's own hook names. The whole point of this class is
+	// that FPDF calls them during the write pass, so renaming them does not
+	// rename anything - it stops the override happening and the merged file loses
+	// its bookmarks, silently, with no error and a valid PDF.
+	//
+	// CustomSniffs.Functions.NamedParameters.RequireNamedParameters: `_put()`,
+	// `_newobj()` and `_textstring()` are undocumented internals of
+	// setasign/fpdf, and their parameter is called `$s`. A named argument would
+	// bind this app to that name, so a vendor release that renames it turns every
+	// merge into an "Unknown named parameter" fatal. Positional is the stable
+	// call here, and the sniff's intent - readable call sites for OUR code - is
+	// not served by pinning someone else's private signature.
+	//
+	// phpcs:disable PSR2.Methods.MethodDeclaration.Underscore
+	// phpcs:disable CustomSniffs.Functions.NamedParameters.RequireNamedParameters
+
 
 	/**
 	 * The outline entries, in document order.

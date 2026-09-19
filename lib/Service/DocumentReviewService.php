@@ -99,7 +99,10 @@ class DocumentReviewService {
 		}
 
 		try {
-			$start = ($from === '' ? new DateTimeImmutable() : new DateTimeImmutable($from));
+			$start = new DateTimeImmutable();
+			if ($from !== '') {
+				$start = new DateTimeImmutable($from);
+			}
 		} catch (Exception $e) {
 			throw new RuntimeException(
 				message: 'The release moment is not a date: "' . $from . '".',
@@ -157,7 +160,10 @@ class DocumentReviewService {
 
 		try {
 			$due = new DateTimeImmutable($date);
-			$moment = ($on === '' ? new DateTimeImmutable() : new DateTimeImmutable($on));
+			$moment = new DateTimeImmutable();
+			if ($on !== '') {
+				$moment = new DateTimeImmutable($on);
+			}
 		} catch (Exception $e) {
 			return false;
 		}

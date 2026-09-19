@@ -46,6 +46,7 @@ class FileUploadService {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IRootFolder $rootFolder Root folder for file operations
 	 * @param IUserSession $userSession User session for getting current user
+	 * @param UploadPolicyService $uploadPolicy The policy an upload is checked against
 	 *
 	 * @return void
 	 */

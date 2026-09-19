@@ -95,7 +95,8 @@ class UploadPolicyService {
 		$maximum = (int)($policy['maxSizeBytes'] ?? 0);
 		if ($maximum > 0 && $size > $maximum) {
 			throw new UploadRefusedException(
-				message: 'This file is ' . $this->megabytes($size) . ' and the policy allows ' . $this->megabytes($maximum) . '.',
+				message: 'This file is ' . $this->megabytes(bytes: $size)
+					. ' and the policy allows ' . $this->megabytes(bytes: $maximum) . '.',
 				detectedType: '',
 				policy: $name
 			);
@@ -104,8 +105,13 @@ class UploadPolicyService {
 		$extensions = $this->stringList(value: ($policy['allowedExtensions'] ?? []));
 		$extension = strtolower((string)pathinfo($fileName, PATHINFO_EXTENSION));
 		if ($extensions !== [] && in_array($extension, $extensions, true) === false) {
+			$named = '.' . $extension;
+			if ($extension === '') {
+				$named = 'a file without an extension';
+			}
+
 			throw new UploadRefusedException(
-				message: 'The policy does not allow ' . ($extension === '' ? 'a file without an extension' : '.' . $extension) . '.',
+				message: 'The policy does not allow ' . $named . '.',
 				detectedType: '',
 				policy: $name
 			);
