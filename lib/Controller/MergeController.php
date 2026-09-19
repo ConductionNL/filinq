@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use OCA\Filinq\Exception\MergeRefusedException;
 use OCA\Filinq\Service\DocumentMergeService;
 use OCA\Filinq\Service\MergeJobRepository;
@@ -131,9 +132,16 @@ class MergeController extends Controller {
 	/**
 	 * How a merge is getting on.
 	 *
+	 * A read that failed answers 503, not 404. The two are the same shape from
+	 * here and opposite in meaning: 404 tells the caller the merge is gone and
+	 * ends the polling, while the merge is still in the queue. 503 says the
+	 * answer is not available yet, which is both true and worth retrying.
+	 *
 	 * @param string $id The job's uuid.
 	 *
-	 * @return JSONResponse The job, or 404.
+	 * @return JSONResponse The job, 404 when there is no such merge, or 503 when the store could not be read.
+	 *
+	 * @throws MergeJobStoreUnreadableException Never: it is caught here and translated to 503.
 	 *
 	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
 	 */
@@ -144,7 +152,18 @@ class MergeController extends Controller {
 			return $unauthenticated;
 		}
 
-		$job = $this->jobs->find(uuid: $id);
+		try {
+			$job = $this->jobs->find(uuid: $id);
+		} catch (MergeJobStoreUnreadableException $e) {
+			return new JSONResponse(
+				data: [
+					'error' => 'The merge could not be looked up right now. It is still queued, so try again in a moment.',
+					'retryable' => true,
+				],
+				statusCode: Http::STATUS_SERVICE_UNAVAILABLE
+			);
+		}
+
 		if ($job === null) {
 			return new JSONResponse(
 				data: ['error' => 'There is no merge with that id.'],
