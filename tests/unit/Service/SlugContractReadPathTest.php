@@ -41,6 +41,7 @@ use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\UploadPolicyService;
 use OCA\OpenRegister\Service\ObjectService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -80,8 +81,24 @@ class SlugContractReadPathTest extends TestCase {
 	 *
 	 * @return DocumentObjectServiceResolver The resolver.
 	 */
-	private function resolver(array $rows): DocumentObjectServiceResolver {
+	private function resolver(array $rows, bool $schemaAbsent = false): DocumentObjectServiceResolver {
 		$objectService = $this->createMock(ObjectService::class);
+
+		if ($schemaAbsent === true) {
+			// What the real service does when the register or the schema is
+			// not on this instance: it raises, where the numeric-id call used
+			// to answer an empty set. Every site that moved gained this path,
+			// and each one has to answer "there are none" rather than "could
+			// not read" - otherwise a feature nobody enabled would freeze
+			// every document or 500 the worklist.
+			$objectService->method('searchObjectsBySlug')
+				->willThrowException(new DoesNotExistException('no such schema'));
+
+			$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+			$resolver->method('resolve')->willReturn($objectService);
+
+			return $resolver;
+		}
 
 		$objectService->method('searchObjects')->willReturnCallback(
 			function (array $query = []) use ($rows): array {
@@ -282,6 +299,88 @@ class SlugContractReadPathTest extends TestCase {
 		$this->assertStringContainsString('signing request', $refusal);
 
 	}//end testADocumentUnderSignatureIsRefused()
+
+	/**
+	 * An instance without the documentVersion schema freezes nothing.
+	 *
+	 * searchObjectsBySlug raises where searchObjects answered an empty set,
+	 * so this path is new. It must read as "there are none", not as "could
+	 * not read": null here makes FinalDocumentService refuse every write.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 */
+	public function testAnInstanceWithoutTheVersionSchemaFreezesNothing(): void {
+		$repository = new FinalDocumentRepository($this->resolver(rows: [], schemaAbsent: true), new NullLogger());
+
+		$this->assertSame(
+			[],
+			$repository->findForFile(fileId: 4711),
+			'an absent schema means nothing was ever finalised, which is [] and not null: null makes the guard refuse every write'
+		);
+
+	}//end testAnInstanceWithoutTheVersionSchemaFreezesNothing()
+
+	/**
+	 * An instance without the signing schema still lets documents be edited.
+	 *
+	 * DocumentGuard treats null as "could not read" and refuses. An absent
+	 * schema is not a failed read, so it must arrive as an empty list.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-editing/spec.md#requirement-documents-under-signature-or-produced-by-anonymisation-are-not-editable
+	 */
+	public function testAnInstanceWithoutTheSigningSchemaStillAllowsEditing(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(4711);
+
+		$guard = new DocumentGuard(
+			$this->resolver(rows: [], schemaAbsent: true),
+			new NullLogger(),
+			$this->createMock(FinalDocumentService::class)
+		);
+
+		$this->assertNull(
+			$guard->signatureRefusal($file),
+			'an instance that never imported signingRequest has no signing requests, so editing is not refused'
+		);
+
+	}//end testAnInstanceWithoutTheSigningSchemaStillAllowsEditing()
+
+	/**
+	 * An instance without the intake schema answers an empty inbox, not a 500.
+	 *
+	 * IntakeRepository::search raises RuntimeException on a failed read, and
+	 * the worklist endpoint turns that into an error. An absent schema is not
+	 * a failed read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 */
+	public function testAnInstanceWithoutTheIntakeSchemaHasAnEmptyInbox(): void {
+		$repository = new IntakeRepository($this->resolver(rows: [], schemaAbsent: true), new NullLogger());
+
+		$this->assertSame([], $repository->findWaiting(), 'an absent schema is an empty inbox, not a 500');
+		$this->assertNull($repository->findBySourceRef('msg-7'));
+
+	}//end testAnInstanceWithoutTheIntakeSchemaHasAnEmptyInbox()
+
+	/**
+	 * An instance without the upload policy schema does not block uploads.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function testAnInstanceWithoutTheUploadPolicySchemaDeclaresNoPolicy(): void {
+		$service = new UploadPolicyService($this->resolver(rows: [], schemaAbsent: true), new NullLogger());
+
+		$this->assertNull($service->activePolicy(), 'no policy schema means no policy, not a refusal');
+
+	}//end testAnInstanceWithoutTheUploadPolicySchemaDeclaresNoPolicy()
 
 	/**
 	 * The intake inbox finds the row a channel already delivered.
