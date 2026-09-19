@@ -54,7 +54,7 @@ class IntakeDefaultRuleServiceTest extends TestCase {
 			$resolver->method('resolve')->willThrowException(new RuntimeException('no register'));
 		} else {
 			$objectService = $this->createMock(ObjectService::class);
-			$objectService->method('searchObjects')->willReturn($rules);
+			$objectService->method('searchObjectsBySlug')->willReturn($rules);
 			$resolver->method('resolve')->willReturn($objectService);
 		}
 

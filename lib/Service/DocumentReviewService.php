@@ -190,13 +190,14 @@ class DocumentReviewService {
 	 */
 	public function listDue(string $on = ''): array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// the review-due screen reported `total: 0` forever and a
+			// document past its review date reached nobody.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: []
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

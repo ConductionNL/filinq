@@ -56,6 +56,20 @@ class PostRegisterReaderTest extends TestCase {
 	private array $lastQuery = [];
 
 	/**
+	 * The register slug the last read asked for.
+	 *
+	 * @var string
+	 */
+	private string $lastRegisterSlug = '';
+
+	/**
+	 * The schema slug the last read asked for.
+	 *
+	 * @var string
+	 */
+	private string $lastSchemaSlug = '';
+
+	/**
 	 * A reader whose search returns the given rows.
 	 *
 	 * @param array<int, array<string, mixed>>|null $rows What the search returns, or null to throw.
@@ -69,9 +83,16 @@ class PostRegisterReaderTest extends TestCase {
 		// the same protection that stops a test passing against a shape
 		// production never returns.
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturnCallback(
-			function (array $query) use ($rows): array {
-				$this->lastQuery = $query;
+		// 🔴 `searchObjectsBySlug`, not `searchObjects`. The reader passes the
+		// slugs `filinq` and `documentRegistration`, and `searchObjects` has a
+		// numeric-id contract: handed a slug it answers zero rows and no
+		// error. Doubling `searchObjects` here is what let every assertion in
+		// this file pass while production read nothing at all.
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			function (string $registerSlug, string $schemaSlug, array $filters) use ($rows): array {
+				$this->lastRegisterSlug = $registerSlug;
+				$this->lastSchemaSlug   = $schemaSlug;
+				$this->lastQuery        = $filters;
 
 				if ($rows === null) {
 					throw new RuntimeException('register unreachable');
@@ -115,7 +136,9 @@ class PostRegisterReaderTest extends TestCase {
 
 		$this->assertSame('inbound-1', ($this->lastQuery['answers'] ?? null));
 		$this->assertArrayNotHasKey('filter', $this->lastQuery);
-		$this->assertSame('documentRegistration', ($this->lastQuery['@self']['schema'] ?? null));
+		$this->assertArrayNotHasKey('@self', $this->lastQuery);
+		$this->assertSame('filinq', $this->lastRegisterSlug);
+		$this->assertSame('documentRegistration', $this->lastSchemaSlug);
 	}//end testTheQueryUsesTheObjectsEndpointsSpelling()
 
 	/**
@@ -238,12 +261,14 @@ class PostRegisterReaderTest extends TestCase {
 	 */
 	private function readerWithPost(array $inbound, array $answers, string $throwsOn = ''): PostRegisterReader {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturnCallback(
-			function (array $query) use ($inbound, $answers, $throwsOn): array {
-				$this->lastQuery = $query;
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			function (string $registerSlug, string $schemaSlug, array $filters) use ($inbound, $answers, $throwsOn): array {
+				$this->lastRegisterSlug = $registerSlug;
+				$this->lastSchemaSlug   = $schemaSlug;
+				$this->lastQuery        = $filters;
 
-				if (isset($query['answers']) === true) {
-					$uuid = (string)$query['answers'];
+				if (isset($filters['answers']) === true) {
+					$uuid = (string)$filters['answers'];
 					if ($uuid === $throwsOn) {
 						throw new RuntimeException('register unreachable');
 					}
@@ -299,7 +324,8 @@ class PostRegisterReaderTest extends TestCase {
 		// The LAST query is the discharge read; the inbound one is asserted by
 		// the entry actually coming back above.
 		$this->assertArrayNotHasKey('filter', $this->lastQuery);
-		$this->assertSame('filinq', $this->lastQuery['@self']['register']);
+		$this->assertArrayNotHasKey('@self', $this->lastQuery);
+		$this->assertSame('filinq', $this->lastRegisterSlug);
 	}//end testTheOpenPostQueryUsesTheObjectsEndpointsSpelling()
 
 	/**
@@ -316,10 +342,10 @@ class PostRegisterReaderTest extends TestCase {
 	public function testTheOpenPostQueryFiltersOnTheSchemasDirectionValue(): void {
 		$directions = [];
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturnCallback(
-			static function (array $query) use (&$directions): array {
-				if (isset($query['direction']) === true) {
-					$directions[] = (string)$query['direction'];
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			static function (string $registerSlug, string $schemaSlug, array $filters) use (&$directions): array {
+				if (isset($filters['direction']) === true) {
+					$directions[] = (string)$filters['direction'];
 				}
 
 				return [];

@@ -151,14 +151,15 @@ class UploadPolicyService {
 	 */
 	public function activePolicy(): ?array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'active' => true,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// activePolicy() was always null, check() returned
+			// `checked: false` and every upload passed unexamined on an
+			// instance that had declared a policy.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['active' => true]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

@@ -87,7 +87,7 @@ class FinalDocumentUnfreezeServiceTest extends TestCase {
 		$this->written = [];
 
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($rows);
+		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
 				$object = ($arguments[0] ?? []);

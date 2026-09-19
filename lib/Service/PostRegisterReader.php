@@ -101,14 +101,16 @@ class PostRegisterReader {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'answers' => $uuid,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` reads `@self.register` and `@self.schema` as
+			// numeric ids and answers a slug with zero rows and no error, so
+			// every letter read as unanswered: the controller reported
+			// `discharged: false` on every one, and openPostFor() never
+			// skipped a letter somebody had already replied to.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['answers' => $uuid]
 			);
 		} catch (Throwable $e) {
 			// 🔴 A FAILED READ IS NOT "NO ANSWERS". Reporting an empty list here
@@ -167,18 +169,19 @@ class PostRegisterReader {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					// BARE keys, beside the `@self` block. The sibling
-					// aggregations endpoint spells the same filter as
-					// `filter[unit]`, and the objects endpoint reads that
-					// wrapper as the EMPTY SET: written that way this method
-					// would report a unit with no post at all, confidently and
-					// with nothing in the log.
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// Slugs handed to `searchObjects` come back as zero rows and no
+			// error, so every unit's open post list was empty.
+			//
+			// The filters stay BARE keys. The sibling aggregations endpoint
+			// spells the same filter as `filter[unit]`, and the objects path
+			// reads that wrapper as the EMPTY SET: written that way this
+			// method would report a unit with no post at all, confidently and
+			// with nothing in the log.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: [
 					'unit' => $unitId,
 					'direction' => self::DIRECTION_INBOUND,
 				]
@@ -242,14 +245,15 @@ class PostRegisterReader {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'unit' => $unitId,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// Handed slugs, `searchObjects` returns zero rows and no error,
+			// so this method gave every auditor an empty series with a clean
+			// HTTP 200, which is exactly the answer the comment below says
+			// must never be given by accident.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['unit' => $unitId]
 			);
 		} catch (Throwable $e) {
 			// 🔴 A FAILED READ IS RAISED, NOT AN EMPTY SERIES. An empty series

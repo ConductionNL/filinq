@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -199,13 +200,18 @@ class DocumentGuard {
 	 */
 	private function query(string $schema, array $filter): ?array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: ([
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => $schema,
-					],
-				] + $filter)
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `self::REGISTER` is `filinq` and `$schema` is a slug too, and
+			// `searchObjects` reads both as numeric ids: it answered every
+			// call here with zero rows and no error. Because zero rows arrive
+			// as `[]` and not as `null`, signatureRefusal() walked an empty
+			// list and returned no refusal, so a document under a live signing
+			// request was editable. The docblock above it says FAILS CLOSED;
+			// with the slug call it failed open.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: $schema,
+				filters: $filter
 			);
 
 			if (is_array($results) === false) {
@@ -213,6 +219,19 @@ class DocumentGuard {
 			}
 
 			return $results;
+		} catch (DoesNotExistException $e) {
+			// 🔴 AN ABSENT SCHEMA IS `[]`, NOT `null`. `null` means "could not
+			// read" and makes signatureRefusal() refuse every edit. A schema
+			// this instance never imported holds no rows, which is a real
+			// answer: there is no signing request and no anonymisation output,
+			// so the edit is free to proceed. Returning `null` here would take
+			// editing down on every instance that never enabled signing.
+			$this->logger->warning(
+				'Filinq document guard found no ' . $schema . ' schema on this instance, so nothing is guarded by it',
+				['schema' => $schema, 'error' => $e->getMessage()]
+			);
+
+			return [];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Filinq document guard could not query ' . $schema . ': ' . $e->getMessage(),

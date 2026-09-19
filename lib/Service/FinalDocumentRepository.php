@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -110,15 +111,30 @@ class FinalDocumentRepository {
 	 */
 	public function findForFile(int $fileId): ?array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'fileId' => $fileId,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` has a numeric-id contract on `@self.register`
+			// and `@self.schema`; handed `filinq` and `documentVersion` it
+			// returns ZERO ROWS AND NO ERROR. Zero rows arrive here as `[]`
+			// rather than `null`, so FinalDocumentService::refusalFor() walks
+			// an empty list, returns no refusal, and assertWritable() lets the
+			// write through. Every final document was writable.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['fileId' => $fileId]
 			);
+		} catch (DoesNotExistException $e) {
+			// The register or the schema is not on this instance, so nothing
+			// was ever finalised. That is an answer, not a failed read: an
+			// instance that never imported `documentVersion` has no frozen
+			// documents, and refusing every write over it would take editing
+			// down for a feature nobody enabled.
+			$this->logger->warning(
+				message: '[FinalDocumentRepository] no documentVersion schema on this instance, so nothing is final',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+
+			return [];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[FinalDocumentRepository] could not read the finalisation records',
@@ -189,14 +205,11 @@ class FinalDocumentRepository {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'createdByUser' => $userId,
-				]
+			// Slugs, so `searchObjectsBySlug`. See findForFile() above.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['createdByUser' => $userId]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -247,13 +260,12 @@ class FinalDocumentRepository {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-				]
+			// Slugs, so `searchObjectsBySlug`. See findForFile() above. No
+			// filter: the domain match is done in PHP below, deliberately.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: []
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

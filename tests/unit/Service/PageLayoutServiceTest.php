@@ -63,9 +63,11 @@ class PageLayoutServiceTest extends TestCase {
 	 */
 	private function service(array $versions): PageLayoutService {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturnCallback(
-			static function (array $query) use ($versions): array {
-				$name = (string)($query['name'] ?? '');
+		// 🔴 `searchObjectsBySlug`, not `searchObjects`: the service passes the
+		// slugs `filinq` and `pageLayout`.
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			static function (string $registerSlug, string $schemaSlug, array $filters) use ($versions): array {
+				$name = (string)($filters['name'] ?? '');
 
 				return array_values(
 					array_filter(

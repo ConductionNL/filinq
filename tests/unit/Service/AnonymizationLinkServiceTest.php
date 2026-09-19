@@ -111,6 +111,27 @@ class AnonymizationLinkServiceTest extends TestCase {
 			}//end searchObjects()
 
 			/**
+			 * The slug-aware read. AnonymizationPersistenceService asks for
+			 * the register and schema by slug, because `searchObjects` has a
+			 * numeric-id contract and answers a slug with zero rows and no
+			 * error. This fake answers both so the suite fails if the service
+			 * ever goes back to the numeric-only call.
+			 *
+			 * @param string $registerSlug The register slug.
+			 * @param string $schemaSlug The schema slug.
+			 * @param array<string, mixed> $filters Field filters.
+			 *
+			 * @return array<int, mixed>
+			 */
+			public function searchObjectsBySlug(string $registerSlug = '', string $schemaSlug = '', array $filters = []): array {
+				if ($this->searchThrows === true) {
+					throw new \RuntimeException('search boom');
+				}
+
+				return $this->searchResult;
+			}//end searchObjectsBySlug()
+
+			/**
 			 * Capture the object and return the configured value, or throw when armed.
 			 *
 			 * @param array<string, mixed> $object Object data.

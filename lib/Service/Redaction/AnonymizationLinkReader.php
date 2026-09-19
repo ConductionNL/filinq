@@ -71,14 +71,16 @@ class AnonymizationLinkReader {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'sourceFileId' => $sourceFileId,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// every source file read as having no redacted copy and
+			// PublicationListComposer refused the whole list with
+			// "N of N records have no redacted copy yet" even when every one
+			// had been redacted.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['sourceFileId' => $sourceFileId]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

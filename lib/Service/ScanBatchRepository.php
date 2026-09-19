@@ -150,14 +150,15 @@ class ScanBatchRepository {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => ScanBatchService::SCHEMA,
-					],
-					'file' => $fileId,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// ScanIntakeController never found the existing batch and
+			// re-splitting the same scanned PDF created a second one every
+			// time instead of resuming.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: ScanBatchService::SCHEMA,
+				filters: ['file' => $fileId]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

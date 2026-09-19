@@ -223,14 +223,14 @@ class PageLayoutService {
 	 */
 	public function versionsOf(string $name): array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'name' => $name,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// resolve() found no version, stamp() stamped no layout, and the
+			// layout list rendered empty.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['name' => $name]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

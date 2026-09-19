@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -300,18 +301,29 @@ class IntakeRepository {
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	private function search(array $filters): array {
-		$query = array_merge(
-			[
-				'@self' => [
-					'register' => self::REGISTER,
-					'schema' => self::SCHEMA,
-				],
-			],
-			$filters
-		);
-
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(query: $query);
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `self::REGISTER` is `filinq` and `self::SCHEMA` is
+			// `intakeDocument`; `searchObjects` reads both as numeric ids and
+			// answered every call here with zero rows and no error. The whole
+			// inbox read as empty, and worse, findBySourceRef() never found
+			// the row it exists to find, so a channel redelivering a message
+			// wrote a second inbox document every time.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: $filters
+			);
+		} catch (DoesNotExistException $e) {
+			// The schema is not on this instance, so the inbox holds nothing.
+			// That is an answer, not a failed read, and raising here would 500
+			// the worklist on an instance that never imported the schema.
+			$this->logger->warning(
+				message: '[IntakeRepository] no intakeDocument schema on this instance, so the inbox is empty',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
+			);
+
+			return [];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[IntakeRepository] could not read the intake inbox',

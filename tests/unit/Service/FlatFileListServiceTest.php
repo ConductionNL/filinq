@@ -56,7 +56,7 @@ class FlatFileListServiceTest extends TestCase {
 	 */
 	private function service(array $records, array $files): FlatFileListService {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($records);
+		$objectService->method('searchObjectsBySlug')->willReturn($records);
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);
 
