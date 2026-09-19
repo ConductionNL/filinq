@@ -73,14 +73,18 @@ class RedactionReviewMarkRepository {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'document' => $document,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// OpenRegister's `searchObjects` has a numeric-ID contract on
+			// `@self.register` and `@self.schema` and answers a slug with zero
+			// rows and no error. Here that failed in the safe direction and so
+			// stayed invisible: every mark read as absent, so every document
+			// was refused output forever, including the ones somebody had
+			// checked. The sibling `DownloadAgreementRepository` had the same
+			// call and failed the other way, which is how it was found.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['document' => $document]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

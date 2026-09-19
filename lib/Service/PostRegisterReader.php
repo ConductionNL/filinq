@@ -58,8 +58,14 @@ class PostRegisterReader {
 
 	/**
 	 * The direction of a document that came in.
+	 *
+	 * 🔴 THE VALUE IS THE SCHEMA'S, NOT THE PROSE'S. `documentRegistration`
+	 * declares `enum: [inbound, outbound]`, and OpenRegister refuses anything
+	 * else on save, so no row can ever carry `incoming`. Filtering on the word
+	 * the proposal uses returned an empty open-post list on every unit, with
+	 * no error and nothing in the log to say the filter matched nothing.
 	 */
-	public const DIRECTION_INCOMING = 'incoming';
+	public const DIRECTION_INBOUND = 'inbound';
 
 	/**
 	 * Collaborators.
@@ -174,7 +180,7 @@ class PostRegisterReader {
 					// would report a unit with no post at all, confidently and
 					// with nothing in the log.
 					'unit' => $unitId,
-					'direction' => self::DIRECTION_INCOMING,
+					'direction' => self::DIRECTION_INBOUND,
 				]
 			);
 		} catch (Throwable $e) {

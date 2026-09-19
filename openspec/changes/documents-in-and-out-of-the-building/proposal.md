@@ -125,7 +125,7 @@ Opened and read at
 ## What filinq builds
 
 - **A registration act with a direction and a number.** Registering a
-  document records its direction, incoming, outgoing or internal, the
+  document records its direction, inbound or outbound, the
   registration date, the organisational unit, and a registration number
   rendered from a sequence scoped to that unit and that year. The number
   is set once and refused afterwards.

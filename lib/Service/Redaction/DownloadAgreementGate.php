@@ -15,6 +15,17 @@
  * different text. Comparing on the agreement's identity rather than its version
  * would let the terms be rewritten under everybody who already agreed.
  *
+ * 🔴 "NO TERMS WERE DECLARED" AND "I COULD NOT READ THE TERMS" ARE DIFFERENT
+ * ANSWERS, AND CONFLATING THEM IS HOW THIS GATE FAILED OPEN. Measured on a live
+ * instance on 2026-09-19: a document with a declared agreement nobody had
+ * accepted and a document nobody had ever declared anything about both answered
+ * `{"mayDownload":true,"gated":false}`, because the store swallowed its read
+ * failure into an empty list and the empty list means ungated. The rule below
+ * was right the whole time; it was never asked about a real agreement. The
+ * three answers are now distinct: no terms is `gated:false`, terms not accepted
+ * is `gated:true` with `not_accepted`, and a store that cannot be read is
+ * `gated:true` with `not_known`. Only the first serves the file.
+ *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
@@ -32,6 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Redaction;
 
+use OCA\Filinq\Exception\AgreementStoreUnreadableException;
 use OCP\IL10N;
 use RuntimeException;
 
@@ -60,6 +72,13 @@ class DownloadAgreementGate {
 	 * @var string
 	 */
 	public const NOT_RECORDED = 'not_recorded';
+
+	/**
+	 * The conditions could not be read, so it is not known whether any apply.
+	 *
+	 * @var string
+	 */
+	public const NOT_KNOWN = 'not_known';
 
 	/**
 	 * Constructor.
@@ -91,15 +110,27 @@ class DownloadAgreementGate {
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	public function check(string $document, string $person): array {
-		$agreement = $this->agreements->forDocument(document: $document);
+		try {
+			$agreement = $this->agreements->forDocument(document: $document);
+		} catch (AgreementStoreUnreadableException $e) {
+			return $this->cannotTell(error: $e);
+		}
+
 		if ($agreement === null) {
 			// Nothing gates this file. An ungated file downloads as it always
 			// did: the gate applies where terms were declared, not everywhere.
+			// This is reached only after a read that SUCCEEDED and found no
+			// terms; a read that failed raises and is refused above.
 			return ['mayDownload' => true, 'gated' => false];
 		}
 
 		$version = trim((string)($agreement['version'] ?? ''));
-		$accepted = $this->agreements->acceptanceOf(document: $document, person: $person);
+		try {
+			$accepted = $this->agreements->acceptanceOf(document: $document, person: $person);
+		} catch (AgreementStoreUnreadableException $e) {
+			return $this->cannotTell(error: $e);
+		}
+
 		$acceptedVersion = '';
 		if ($accepted !== null) {
 			$acceptedVersion = trim((string)($accepted['acceptedVersion'] ?? ''));
@@ -152,7 +183,12 @@ class DownloadAgreementGate {
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	public function accept(string $document, string $person, string $version): array {
-		$agreement = $this->agreements->forDocument(document: $document);
+		try {
+			$agreement = $this->agreements->forDocument(document: $document);
+		} catch (AgreementStoreUnreadableException $e) {
+			return $this->cannotTell(error: $e);
+		}
+
 		if ($agreement === null) {
 			return ['mayDownload' => true, 'gated' => false];
 		}
@@ -195,6 +231,34 @@ class DownloadAgreementGate {
 		return ['mayDownload' => true, 'gated' => true, 'acceptedVersion' => $current];
 
 	}//end accept()
+
+	/**
+	 * The answer when the store could not be read at all.
+	 *
+	 * 🔴 NOT KNOWING IS NOT PERMISSION. The store used to answer a failed read
+	 * with an empty result, which reads as "no terms were declared", which
+	 * serves the file. The reader is told the conditions could not be read
+	 * rather than being handed something nobody agreed to.
+	 *
+	 * @param AgreementStoreUnreadableException $error What went wrong.
+	 *
+	 * @return array<string, mixed> The refusal.
+	 *
+	 * @spec exclude Refusal helper behind check() and accept().
+	 */
+	private function cannotTell(AgreementStoreUnreadableException $error): array {
+		return [
+			'mayDownload' => false,
+			'gated' => true,
+			'reason' => self::NOT_KNOWN,
+			'message' => $this->say(
+				message: 'The conditions on this file could not be read, so it was not downloaded. '
+					.'Try again in a moment.'
+			),
+			'error' => $error->getMessage(),
+		];
+
+	}//end cannotTell()
 
 	/**
 	 * One message in the reader's language, or in English when there is none.
