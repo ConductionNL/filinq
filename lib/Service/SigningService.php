@@ -39,8 +39,14 @@ use RuntimeException;
  * SignedArtifactProducer and SigningRequestValidator were extracted earlier;
  * SigningActorResolver (who is acting, and may they act as this signer) and
  * SigningConclusionEmitter (the cross-app conclusion contract) followed, so
- * the class now meets the length, coupling, complexity and parameter-list
- * thresholds on its own — no suppressions.
+ * the class now meets the length, complexity and parameter-list thresholds on
+ * its own. Coupling went back over the line with the signing folder's mandate
+ * service, which is a collaborator rather than work this class does itself.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth collaborator is
+ * SigningMandateService, added so a direct signing attempt is refused by the
+ * same rule that leaves the document out of the folder. Inlining that rule here
+ * would be the second copy of it.
  *
  * @spec openspec/specs/document-signing/spec.md
  */
@@ -70,6 +76,14 @@ class SigningService {
 	 * @param SigningRequestValidator $validator Validates request data + the provider/level pair
 	 * @param SigningActorResolver $actorResolver Resolves the acting identity + authorises it
 	 * @param SigningConclusionEmitter $emitter Emits the cross-app SigningConcludedEvent
+	 * @param SigningMandateService|null $mandateService Applies the consuming app's per-type
+	 *                                                   mandate declaration to a direct signing
+	 *                                                   attempt (signing-folder-across-cases
+	 *                                                   REQ-SFC-04). An ADDITIVE seam: null
+	 *                                                   behaves exactly as before, so callers
+	 *                                                   constructing this service by hand are
+	 *                                                   unchanged, while the DI container
+	 *                                                   resolves the real one.
 	 *
 	 * @return void
 	 */
@@ -80,6 +94,7 @@ class SigningService {
 		private readonly SigningRequestValidator $validator,
 		private readonly SigningActorResolver $actorResolver,
 		private readonly SigningConclusionEmitter $emitter,
+		private readonly ?SigningMandateService $mandateService = null,
 	) {
 
 	}//end __construct()
@@ -383,6 +398,16 @@ class SigningService {
 
 		if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
 			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
+		}
+
+		// Change signing-folder-across-cases, REQ-SFC-04: the folder leaves out what
+		// the signer has no mandate for, and the direct attempt on the same
+		// document is refused here, naming the rule. The guard applies to the
+		// in-app actor: a mandate is declared in Nextcloud groups, which an
+		// invited external portal signer is not a member of, and the portal
+		// path has its own verified-assertion gate.
+		if ($this->mandateService !== null && $verifiedActor === null) {
+			$this->mandateService->assertMaySign(request: $request, userId: $actorUserId);
 		}
 
 		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();

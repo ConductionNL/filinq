@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Event\SigningConcludedEventFactory;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
@@ -186,7 +187,8 @@ class SigningServiceTest extends TestCase {
 				providerFactory: $this->providerFactory,
 				userSession: $this->userSession,
 				request: $this->request,
-				rootFolder: $this->rootFolder
+				rootFolder: $this->rootFolder,
+				finalDocuments: $this->createMock(FinalDocumentService::class)
 			),
 			validator: new SigningRequestValidator(providerFactory: $this->providerFactory),
 			actorResolver: new SigningActorResolver(

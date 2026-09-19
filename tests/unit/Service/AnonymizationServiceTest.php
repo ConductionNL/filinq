@@ -37,6 +37,8 @@ use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\Filinq\Service\ProhibitionGateService;
 use OCA\Filinq\Service\ProhibitionPolicyService;
+use OCA\Filinq\Service\Redaction\RedactionIrreversibilityVerifier;
+use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\ProhibitionSkipTier;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
@@ -1059,6 +1061,10 @@ class AnonymizationServiceTest extends TestCase {
 			summaryAttacher: new GrondslagenSummaryAttacher(
 				logger: $logger,
 				grondslagenSummary: $this->createMock(LegalBasesSummaryService::class)
+			),
+			verdictRecorder: new RedactionVerdictRecorder(
+				verifier: new RedactionIrreversibilityVerifier(),
+				logger: $logger
 			)
 		);
 

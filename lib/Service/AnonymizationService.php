@@ -40,6 +40,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\ProhibitionGateException;
+use OCA\Filinq\Exception\RedactionNotReviewedException;
+use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -55,6 +57,16 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The collaborator that took this
+ * over the line is RedactionOutputGuard: nothing may be written until a person
+ * has checked the detection run. The guard is asked here because this is the
+ * class that writes; asking it anywhere else would leave a write path that does
+ * not ask.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList) Same collaborator, same
+ * constructor. Every parameter is an injected service, and grouping them behind
+ * a bag would hide which of them a given instance actually needs.
  */
 class AnonymizationService {
 	/**
@@ -83,6 +95,10 @@ class AnonymizationService {
 	 *                                                    entities and skip requests, plus the
 	 *                                                    pre-anonymise prohibition gate.
 	 * @param DocumentAnonymizeRunner $anonymizeRunner The per-document anonymise pipeline.
+	 * @param RedactionOutputGuard $reviewGuard The human review gate. It sits in the service
+	 *                                          rather than on the screen, so the API, the batch
+	 *                                          path and the folder job all reach the same
+	 *                                          refusal.
 	 *
 	 * @return void
 	 */
@@ -96,6 +112,7 @@ class AnonymizationService {
 		private readonly ConfidentialityLabelService $confidentialityLabel,
 		private readonly ProhibitionPolicyService $prohibitionPolicy,
 		private readonly DocumentAnonymizeRunner $anonymizeRunner,
+		private readonly RedactionOutputGuard $reviewGuard,
 	) {
 
 	}//end __construct()
@@ -455,6 +472,7 @@ class AnonymizationService {
 	 *                                   is deleted (best-effort) before the exception propagates.
 	 * @throws ProhibitionGateException When the prohibition gate fires (high-confidence matches
 	 *                                  missing or invalid overrides for high-confidence matches).
+	 * @throws RedactionNotReviewedException When nobody has checked this detection run yet.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
@@ -517,6 +535,7 @@ class AnonymizationService {
 	 * @throws Exception If anonymization fails.
 	 * @throws ConversionFailedException When the PDF cascade is exhausted.
 	 * @throws ProhibitionGateException When the prohibition gate fires.
+	 * @throws RedactionNotReviewedException When nobody has checked this detection run yet.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/specs/anonymization/spec.md
@@ -566,9 +585,11 @@ class AnonymizationService {
 	 * @throws Exception If anonymization fails.
 	 * @throws ConversionFailedException When the PDF cascade is exhausted.
 	 * @throws ProhibitionGateException When the prohibition gate fires.
+	 * @throws RedactionNotReviewedException When nobody has checked this detection run yet.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	private function runAnonymize(
 		int $fileId,
@@ -585,6 +606,14 @@ class AnonymizationService {
 			overrides: $overrides,
 			userId: $userId
 		);
+
+		// 🔴 THE HUMAN GATE, IN THE SERVICE RATHER THAN ON THE SCREEN. Both
+		// public entry points come through here, and so do the API, the batch
+		// path and the folder job behind them, so a copy is written only after
+		// somebody has looked at THIS detection run and said so. It throws
+		// before the runner, which means a refused document produces no file
+		// at all rather than one nobody checked.
+		$this->reviewGuard->assertMayWrite(fileId: $fileId, entities: $entities);
 
 		return $this->anonymizeRunner->run(
 			fileId: $fileId,

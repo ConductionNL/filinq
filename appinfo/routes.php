@@ -65,6 +65,70 @@ $extra = [
         ['name' => 'version#download', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/download', 'verb' => 'GET'],
         ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
 
+        // Final document routes (final-documents-frozen).
+        ['name' => 'finalDocument#show', 'url' => 'api/documents/{fileId}/final', 'verb' => 'GET'],
+        ['name' => 'finalDocument#finalise', 'url' => 'api/documents/{fileId}/final', 'verb' => 'POST'],
+        ['name' => 'finalDocument#correct', 'url' => 'api/documents/{fileId}/final/correction', 'verb' => 'POST'],
+        ['name' => 'finalDocument#unfreeze', 'url' => 'api/documents/{fileId}/final', 'verb' => 'DELETE'],
+        ['name' => 'finalDocument#declareRule', 'url' => 'api/document-finality-rules', 'verb' => 'POST'],
+        ['name' => 'finalDocument#applyStateChange', 'url' => 'api/document-finality-rules/apply', 'verb' => 'POST'],
+
+        // Document intake inbox routes (document-intake-inbox).
+        ['name' => 'intake#index', 'url' => 'api/intake/documents', 'verb' => 'GET'],
+        ['name' => 'intake#assign', 'url' => 'api/intake/documents/{uuid}/assign', 'verb' => 'POST'],
+        ['name' => 'intake#reject', 'url' => 'api/intake/documents/{uuid}/reject', 'verb' => 'POST'],
+
+        // Inbound worklist, party suggestions and routing (inbound-documents-and-the-worklist).
+        ['name' => 'intake#detached', 'url' => 'api/intake/detached', 'verb' => 'GET'],
+        ['name' => 'intake#detach', 'url' => 'api/intake/documents/detach', 'verb' => 'POST'],
+        ['name' => 'intake#decideParty', 'url' => 'api/intake/party-decisions', 'verb' => 'POST'],
+        ['name' => 'intake#declareRouting', 'url' => 'api/intake/routing-rules', 'verb' => 'POST'],
+
+        // Case documents: the flat list, the domains and the upload policy
+        // (case-documents-and-the-flat-list).
+        ['name' => 'caseDocuments#files', 'url' => 'api/case-documents/files', 'verb' => 'GET'],
+        ['name' => 'caseDocuments#linkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'POST'],
+        ['name' => 'caseDocuments#unlinkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'DELETE'],
+        ['name' => 'caseDocuments#mine', 'url' => 'api/case-documents/mine', 'verb' => 'GET'],
+        ['name' => 'caseDocuments#uploadPolicy', 'url' => 'api/case-documents/upload-policy', 'verb' => 'GET'],
+
+        // The post register's derived reads. The open post list is offered here
+        // rather than as an ADR-066 leaf because filinq ships no `leaves`
+        // webpack entry yet; a leaf registered without one is DARK, and the
+        // list is real behaviour that should not wait for the surface.
+        ['name' => 'postRegister#openPost', 'url' => 'api/post-register/open', 'verb' => 'GET'],
+        ['name' => 'postRegister#answers', 'url' => 'api/post-register/answers', 'verb' => 'GET'],
+        ['name' => 'postRegister#series', 'url' => 'api/post-register/series', 'verb' => 'GET'],
+
+        // Layouts, bundles, periodic documents and reviews
+        // (documents-from-a-template).
+        ['name' => 'documentProduction#layoutVersions', 'url' => 'api/page-layouts', 'verb' => 'GET'],
+        ['name' => 'documentProduction#editLayout', 'url' => 'api/page-layouts', 'verb' => 'POST'],
+        ['name' => 'documentProduction#archivePreflight', 'url' => 'api/case-archive/preflight', 'verb' => 'GET'],
+        ['name' => 'documentProduction#archiveManifest', 'url' => 'api/case-archive/manifest', 'verb' => 'POST'],
+        ['name' => 'documentProduction#runPeriodic', 'url' => 'api/periodic-documents/run', 'verb' => 'POST'],
+        ['name' => 'documentProduction#dueForReview', 'url' => 'api/documents/due-for-review', 'verb' => 'GET'],
+        ['name' => 'documentProduction#markReviewed', 'url' => 'api/documents/{uuid}/reviewed', 'verb' => 'POST'],
+
+        // Merge to PDF (merge-documents-to-pdf).
+        ['name' => 'merge#create', 'url' => 'api/merge', 'verb' => 'POST'],
+        ['name' => 'merge#show', 'url' => 'api/merge/{id}', 'verb' => 'GET'],
+
+        // Paper intake: separator sheets, scan profiles and batch splitting
+        // (scan-intake-with-separator-sheets).
+        ['name' => 'scanIntake#separators', 'url' => 'api/scan/separators', 'verb' => 'POST'],
+        ['name' => 'scanIntake#listProfiles', 'url' => 'api/scan/profiles', 'verb' => 'GET'],
+        ['name' => 'scanIntake#declareProfiles', 'url' => 'api/scan/profiles', 'verb' => 'POST'],
+        ['name' => 'scanIntake#split', 'url' => 'api/scan/batches/{fileId}/split', 'verb' => 'POST'],
+
+        // What leaves the building: the review mark, the composed publication
+        // list and the conditions a gated download waits on
+        // (redaction-and-what-leaves-the-building).
+        ['name' => 'redactionOutput#markChecked', 'url' => 'api/redaction/documents/{fileId}/checked', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'redactionOutput#composeList', 'url' => 'api/redaction/publication-list', 'verb' => 'POST'],
+        ['name' => 'redactionOutput#agreement', 'url' => 'api/redaction/agreement', 'verb' => 'GET'],
+        ['name' => 'redactionOutput#acceptAgreement', 'url' => 'api/redaction/agreement/accept', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
@@ -182,6 +246,16 @@ $extra = [
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
+
+        // Signing folder routes (signing-folder-across-cases): everything
+        // pending for one signer across every record, and the pass that signs
+        // a selection of it through the per-request path above. The mandate
+        // declarations are instance configuration, so they are admin-only.
+        ['name' => 'signingFolder#folder', 'url' => 'api/signing/folder', 'verb' => 'GET'],
+        ['name' => 'signingFolder#signFolder', 'url' => 'api/signing/folder/sign', 'verb' => 'POST'],
+        ['name' => 'signingFolder#mandates', 'url' => 'api/signing/mandates', 'verb' => 'GET'],
+        ['name' => 'signingFolder#declareMandate', 'url' => 'api/signing/mandates', 'verb' => 'POST'],
+        ['name' => 'signingFolder#withdrawMandate', 'url' => 'api/signing/mandates/{typeApp}/{typeSchema}', 'verb' => 'DELETE'],
 
         // Portal signing receiver routes (portal-signing-actions,
         // portal-signing-surface): the A6 endpoint-forward targets portaliq

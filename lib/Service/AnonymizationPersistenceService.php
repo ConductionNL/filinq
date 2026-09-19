@@ -242,14 +242,18 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function buildLinkObject(mixed $objectService, int $fileId, array $resultInfo): array {
-		$results = $objectService->searchObjects(
-			query: [
-				'@self' => [
-					'register' => 'filinq',
-					'schema' => 'anonymizationLink',
-				],
-				'sourceFileId' => $fileId,
-			]
+		// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+		// `searchObjects` answers `filinq` / `anonymizationLink` with zero
+		// rows and no error, so `$existing` was always empty: `runCount`
+		// stayed 1 and re-anonymising the same source file wrote a new link
+		// row every time instead of updating the one already there.
+		//
+		// Only this read moves. The identical `@self` literal further down
+		// belongs to the SAVED OBJECT, not to a query, and must stay.
+		$results = $objectService->searchObjectsBySlug(
+			registerSlug: 'filinq',
+			schemaSlug: 'anonymizationLink',
+			filters: ['sourceFileId' => $fileId]
 		);
 
 		$existing = [];
@@ -284,6 +288,21 @@ class AnonymizationPersistenceService {
 		$extension = strtolower(pathinfo($anonymizedName, PATHINFO_EXTENSION));
 		if (in_array($extension, ['pdf', 'docx', 'odt', 'txt', 'html'], true) === true) {
 			$object['outputFormat'] = $extension;
+		}
+
+		// 🔴 THE VERDICT IS WRITTEN EVEN WHEN IT IS `unverifiable`. An empty
+		// field and a clean verdict look the same to anything that filters on
+		// "was this copy checked", and one of them means nobody looked.
+		$verification = ($resultInfo['redactionVerification'] ?? null);
+		if (is_array($verification) === true) {
+			$object['verificationVerdict'] = (string)($verification['verdict'] ?? '');
+			$object['verificationOutputMode'] = (string)($verification['outputMode'] ?? '');
+			$object['verificationRoutes'] = implode(',', (array)($verification['routesChecked'] ?? []));
+			$object['verificationLeakRoutes'] = implode(
+				',',
+				array_column((array)($verification['findings'] ?? []), 'route')
+			);
+			$object['verifiedAt'] = date(format: 'c');
 		}
 
 		return $object;

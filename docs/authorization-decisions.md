@@ -72,7 +72,7 @@ schema**.
 
 ## Groups
 
-Four groups are named. OpenRegister provisions declared groups create-only on import,
+Five groups are named. OpenRegister provisions declared groups create-only on import,
 ahead of the content-hash skip, so they exist on every instance.
 
 | Group | Owns |
@@ -81,6 +81,9 @@ ahead of the content-hash skip, so they exist on every instance.
 | `docudesk-policy-admins` | Woo Art. 5 grounds, anonymisation recognisers, consent, prohibition overrides, dossiers |
 | `docudesk-financial-admins` | invoice/receipt extraction and GL-account mapping |
 | `docudesk-signing-admins` | signing requests, signers, sessions, signing audit |
+| `docudesk-privacy-officer` | subject erasure requests and the certificates that close them. Introduced by the erasure change (#1128). |
+| `docudesk-woo-officers` | Woo redaction review: confirming a human looked at the detected entities before a redacted copy may be written. Introduced by the redaction change (#1124); recorded here because a misspelt group denies everyone and logs nothing, so it is indistinguishable from a working access control. |
+| `docudesk-final-document-admins` | unfreezing a final document, and declaring which record-type states freeze one |
 
 **They ship empty on purpose.** An empty group denies everyone except admins and
 object owners. That is the correct default and it is immediately visible, which is
@@ -106,6 +109,11 @@ deliberately.
 | `dossier` | authenticated | authenticated | policy-admins | A dossier points at a Nextcloud folder; Nextcloud's own share permissions govern the contents. |
 | `anonymizationLink` | authenticated | authenticated | policy-admins | Written by the anonymiser running as the acting user. |
 | `anonymizationBatch` | **policy-admins** | authenticated | policy-admins | Working state of one multi-file anonymisation run. `read` is restricted because the record lists the filenames of a user's private documents, and the batch owner reaches their own batch through the owner bypass. Filinq's own reads and writes go through `BatchStateRepository` with `_rbac: false` (recorded below) and are ownership-checked in `BatchStateService::getBatch()` instead, so this cascade governs only direct OpenRegister API access. Added with the schema in register v7.10.0 rather than omitted — an omitted cascade is OPEN, so shipping a new schema without one re-opens exactly the hole v7.9.0 closed. |
+| `documentRegistration` | authenticated | **policy-admins** | policy-admins | The post register is a shared record: colleagues across the organisation need to see what came in and what went out, so `read` stays open to authenticated users. Writing is restricted, because a registration is a numbered claim about an official act and its number is drawn from a shared sequence: a number allocated and then abandoned leaves a gap in a series meant to read end to end, and an unexplained gap reads as a lost document. `delete` is restricted for the same reason, and `withdrawnReason` exists so a gap can be explained rather than hidden. |
+| `subjectErasureRequest` | **privacy-officer + policy-admins** | privacy-officer + policy-admins | policy-admins | A request names a person and what they asked to have erased, so reading it is reading a subject-access matter: restricted to the officers who handle them. `delete` is narrower than `update` on purpose — a request may be corrected while it is handled, but removing the fact that somebody asked is a different act. |
+| `erasureCertificate` | **privacy-officer + policy-admins** | privacy-officer + policy-admins | **nobody** | ⚠️ `update` and `delete` are declared as EMPTY LISTS deliberately, which OpenRegister reads as denied for everyone but admins and object owners (`MagicRbacHandler::hasPermission()` returns false on an empty rule list). That is the point: the change is titled "a certificate cannot be amended", and a certificate that can be edited afterwards is not evidence of what was erased. Naming a group here to satisfy a coverage check would GRANT the action the schema exists to forbid. |
+| `redactionReviewMark` | authenticated | **woo-officers + policy-admins** | policy-admins | The mark is the evidence a person looked at the detected entities before a redacted copy was written, so `create` is the act being evidenced and belongs to the officers who perform it. `read` stays open because the mark is what lets anybody else trust the redacted copy, and a review nobody can see proves nothing. |
+| `downloadAgreement` | authenticated | authenticated | policy-admins | `create` is deliberately open: the agreement records that THIS person accepted these terms, so the person accepting has to be able to write it. Restricting it would mean somebody else recording an acceptance on their behalf, which is the one thing the record exists to rule out. `update` and `delete` are restricted, because an acceptance that can be edited afterwards is not evidence of anything. |
 | `publicationConsent` | **policy-admins** | authenticated | policy-admins | GDPR consent records about identified people. `create` stays open because a data subject records their own consent and then owns it. |
 | `publicationProhibition` | `consent` group | policy-admins | policy-admins | **Unchanged** — decided before this change. |
 | `prohibitionOverrideAudit` | **policy-admins** | **authenticated** | policy-admins | ⚠️ `create` is deliberately open. Register v7.7.0 records that restricting it re-breaks the fail-closed override path for the ordinary operator who performs the anonymise: the write is explicitly "if the audit write fails we MUST NOT proceed", so a denied create raises 500 on every acknowledged override and no override can ever be committed. |
@@ -113,6 +121,22 @@ deliberately.
 | `signerRecord` | **signing-admins** | authenticated | signing-admins | Identifies an individual signer. Same portal reasoning. |
 | `signingAuditEntry` | **signing-admins** | authenticated | signing-admins | Deprecated, retained read-only history. |
 | `signingSession` | **signing-admins** | authenticated | authenticated / signing-admins | `update` stays open because the session is advanced by the signer themselves as they progress. |
+| `documentVersion` | authenticated | authenticated | authenticated / final-document-admins | The record says whether a version is final, and everyone who can open the document needs to read that. `update` stays open because making a document final is an ordinary handler's act, and the service refuses a second write to a version that is already final. Only a final-document admin may delete the record, because deleting it is how a freeze would otherwise be undone without a trace. |
+| `documentFinalityRule` | authenticated | **final-document-admins** | final-document-admins | The rule says which record-type states freeze a document, so it is applied on every state change and must be readable. Declaring one is an administrative act: a wrong rule freezes documents nobody meant to freeze. |
+
+| `intakeDocument` | authenticated | authenticated | authenticated / admins | A document waiting for a record is read by every clerk who might assign it, and assigning or rejecting it is an ordinary clerk's act. The service checks write rights on BOTH this schema and the record the clerk aims at, so the cascade here is the floor and not the whole check. Only an admin deletes one, because deleting a waiting document is how an arrival disappears with nobody having decided to reject it. |
+| `intakeDefaultRule` | authenticated | **admins** | admins | The rule stamps metadata on everything that arrives, so it is read on every arrival. Writing one is administrative: a wrong rule mislabels every document from a channel, and the stamped values look like somebody's decision. |
+| `intakeRoutingRule` | authenticated | **admins** | admins | The declaration says who inbound documents on a record type go to. It is read at every assignment; changing it redirects other people's work, which is not an ordinary handler's act. |
+| `intakePartyCorrection` | authenticated | authenticated | admins | Accept, edit and reject are recorded by the clerk who decided, so `create` is open to them. The corpus is what the next suggestion is ranked against, so an entry is not edited afterwards and only an admin may remove one. |
+| `uploadPolicy` | authenticated | **admins** | admins | Every write path reads the policy to decide whether a file may be stored, so it must be readable. Writing one changes what the whole instance accepts, including what it refuses to accept. |
+
+| `pageLayout` | authenticated | **admins** | admins | Every generated document renders through a layout, so it is read on every render. A layout is the paper the organisation goes out on; editing one is administrative, and an edit makes a new version rather than changing the one existing documents name. |
+| `periodicDocument` | authenticated | **admins** | admins | The schedule says which template renders over which saved view, on what cadence. It is read by the run and by anyone looking at what the list is made of; changing it changes a document the whole organisation reads. |
+| `archiveJob` | authenticated | authenticated | admins | A bundle is asked for by an ordinary handler, so `create` is theirs, and the job records who asked because the archive holds what THAT person may read. The job is the evidence of what was handed over, so only an admin may remove one. |
+
+| `mergeJob` | authenticated | authenticated | admins | A merge is an ordinary handler's act, so `create` and `update` are theirs; the job records who asked because every input is read as that person and the result holds only what they could read. Only an admin may delete one: the job is the trace of what was bundled and handed over. |
+
+| `scanBatch` | authenticated | authenticated | admins | The batch is created by the watched-folder job on behalf of the instance and read by the clerk who sorts out what came off the scanner, so both are open. Only an admin deletes one: the batch is the trace that says which documents a delivered PDF was cut into, and a missing segment is only findable through it. |
 
 ## Deliberate RBAC bypasses
 
