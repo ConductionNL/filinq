@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
+use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use OCA\Filinq\Service\DocumentMergeService;
 use OCA\Filinq\Service\MergeJobRepository;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -89,9 +90,15 @@ class MergeDocumentsJob extends TimedJob {
 	 * at the first bad input would leave every later merge waiting with nothing
 	 * saying why.
 	 *
+	 * A queue that could not be READ is the other case, and it is deliberately
+	 * not caught. Swallowing it would end the run looking exactly like a run
+	 * over an empty queue, which is what hid an unreachable store here before.
+	 *
 	 * @param mixed $argument The job argument, unused.
 	 *
 	 * @return void
+	 *
+	 * @throws MergeJobStoreUnreadableException When the queue could not be read at all.
 	 *
 	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
 	 */

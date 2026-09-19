@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Exception\MergeJobStoreUnreadableException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -101,6 +102,8 @@ class MergeJobRepository {
 	 *
 	 * @return array<string, mixed>|null The job, or null when there is none.
 	 *
+	 * @throws MergeJobStoreUnreadableException When the read failed, as opposed to finding nothing.
+	 *
 	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
 	 */
 	public function find(string $uuid): ?array {
@@ -115,13 +118,22 @@ class MergeJobRepository {
 				schema: DocumentMergeService::SCHEMA
 			);
 		} catch (Throwable $e) {
+			// 🔴 A FAILED READ IS NOT "NO SUCH MERGE". Returning null here is
+			// what told a polling caller their queued merge did not exist:
+			// `show()` cannot tell it apart from an id nobody queued, so it
+			// answered 404 and the client stopped polling a job that was
+			// still in the queue. Raising keeps the two apart.
 			$this->logger->warning(
 				message: '[MergeJobRepository] could not read one merge job',
 				context: ['file' => __FILE__, 'line' => __LINE__, 'uuid' => $uuid, 'error' => $e->getMessage()]
 			);
 
-			return null;
-		}
+			throw new MergeJobStoreUnreadableException(
+				message: 'The merge job could not be read: '.$e->getMessage(),
+				code: 0,
+				previous: $e
+			);
+		}//end try
 
 		if ($object === null) {
 			return null;
@@ -135,6 +147,8 @@ class MergeJobRepository {
 	 * Every job still queued, oldest first.
 	 *
 	 * @return array<int, array<string, mixed>> The queued jobs.
+	 *
+	 * @throws MergeJobStoreUnreadableException When the read failed, as opposed to finding nothing.
 	 *
 	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
 	 */
@@ -150,13 +164,21 @@ class MergeJobRepository {
 				filters: ['status' => DocumentMergeService::STATUS_QUEUED]
 			);
 		} catch (Throwable $e) {
+			// 🔴 AN UNREADABLE QUEUE IS NOT AN EMPTY QUEUE. Returning an empty
+			// list here let MergeDocumentsJob finish, log nothing and report a
+			// clean run over a queue it never read. Raising makes the run fail
+			// where the scheduler can see it.
 			$this->logger->warning(
 				message: '[MergeJobRepository] could not read the merge queue',
 				context: ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
 			);
 
-			return [];
-		}
+			throw new MergeJobStoreUnreadableException(
+				message: 'The merge queue could not be read: '.$e->getMessage(),
+				code: 0,
+				previous: $e
+			);
+		}//end try
 
 		if (is_array($results) === false) {
 			return [];
