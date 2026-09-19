@@ -25,7 +25,8 @@ import { API, harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 const OR_LAYOUTS = '/index.php/apps/openregister/api/objects/filinq/pageLayout'
 
 /** The OpenRegister objects endpoint for the generated documents. */
-const OR_DOCUMENTS = '/index.php/apps/openregister/api/objects/filinq/generatedDocument'
+const OR_DOCUMENTS =
+	'/index.php/apps/openregister/api/objects/filinq/generatedDocument'
 
 test.describe('Documents from a template', () => {
 	let token = ''
@@ -52,7 +53,9 @@ test.describe('Documents from a template', () => {
 				active: true,
 			},
 		})
-		expect(created.status(), 'the suite needs a layout to edit').toBeLessThan(300)
+		expect(created.status(), 'the suite needs a layout to edit').toBeLessThan(
+			300,
+		)
 		await page.close()
 	})
 
@@ -63,7 +66,10 @@ test.describe('Documents from a template', () => {
 	}) => {
 		const edited = await page.request.post(`${API}/page-layouts`, {
 			headers: jsonHeaders(token),
-			data: { name: layoutName, changes: { footer: 'Pagina {{page}} van {{pages}}' } },
+			data: {
+				name: layoutName,
+				changes: { footer: 'Pagina {{page}} van {{pages}}' },
+			},
 		})
 		expect(edited.status()).toBe(200)
 		const next = await edited.json()
@@ -103,7 +109,10 @@ test.describe('Documents from a template', () => {
 	}) => {
 		const dossier = await page.request.post(
 			'/index.php/apps/openregister/api/objects/filinq/dossier',
-			{ headers: jsonHeaders(token), data: { title: `${TEST_PREFIX}-bundel` } },
+			{
+				headers: jsonHeaders(token),
+				data: { title: `${TEST_PREFIX}-bundel` },
+			},
 		)
 		expect(dossier.status()).toBeLessThan(300)
 		const created = await dossier.json()
@@ -134,7 +143,9 @@ test.describe('Documents from a template', () => {
 
 	// @e2e openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md#a-deleted-view-fails-loudly
 	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-deleted-view-fails-loudly
-	test('a run against a view nobody has fails, naming the view', async ({ page }) => {
+	test('a run against a view nobody has fails, naming the view', async ({
+		page,
+	}) => {
 		const failed = await page.request.post(`${API}/periodic-documents/run`, {
 			headers: jsonHeaders(token),
 			data: {
@@ -181,9 +192,12 @@ test.describe('Documents from a template', () => {
 			'a document past its date is on the list',
 		).toBe(true)
 
-		const reviewed = await page.request.post(`${API}/documents/${uuid}/reviewed`, {
-			headers: jsonHeaders(token),
-		})
+		const reviewed = await page.request.post(
+			`${API}/documents/${uuid}/reviewed`,
+			{
+				headers: jsonHeaders(token),
+			},
+		)
 		expect(reviewed.status()).toBe(200)
 		const after = await reviewed.json()
 		expect(after.reviewedAt).not.toBe('')

@@ -33,7 +33,9 @@ export async function listWaitingDocuments() {
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 export async function assignIntakeDocument(uuid, target) {
-	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/assign', { uuid })
+	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/assign', {
+		uuid,
+	})
 	const { data } = await axios.post(url, {
 		register: target?.register || '',
 		schema: target?.schema || '',
@@ -51,7 +53,9 @@ export async function assignIntakeDocument(uuid, target) {
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 export async function rejectIntakeDocument(uuid, reason) {
-	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/reject', { uuid })
+	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/reject', {
+		uuid,
+	})
 	const { data } = await axios.post(url, { reason })
 	return data
 }

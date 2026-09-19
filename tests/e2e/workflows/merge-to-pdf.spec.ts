@@ -103,7 +103,9 @@ test.describe('Merge documents to one PDF', () => {
 			expect(['pdf', 'pdfa-3b']).toContain(job.conformance)
 		} else if (job.status === 'failed') {
 			expect(job.lastError, 'a failed merge says what went wrong').not.toBe('')
-			expect(job.resultFileId ?? 0, 'a failed merge has no result file').toBe(0)
+			expect(job.resultFileId ?? 0, 'a failed merge has no result file').toBe(
+				0,
+			)
 		}
 	})
 
@@ -162,7 +164,11 @@ test.describe('Merge documents to one PDF', () => {
 			headers: jsonHeaders(token),
 			data: {
 				inputs: [
-					{ fileId: Number(seeded['aanvraag.txt']), label: 'Aanvraag', pages: 500 },
+					{
+						fileId: Number(seeded['aanvraag.txt']),
+						label: 'Aanvraag',
+						pages: 500,
+					},
 				],
 				options: { name: `${TEST_PREFIX}-groot`, targetFolder: FOLDER },
 			},
