@@ -283,33 +283,69 @@ class FinalDocumentRepository {
 		$records = [];
 		foreach ($results as $result) {
 			$record = $this->normalise(row: $result);
-			$domains = [];
-			if (isset($record['domains']) === true && is_array($record['domains']) === true) {
-				$domains = $record['domains'];
+			if ($this->sitsIn(record: $record, reference: $reference) === true) {
+				$records[] = $record;
 			}
-
-			foreach ($domains as $candidate) {
-				if (is_array($candidate) === false) {
-					continue;
-				}
-
-				$same = true;
-				foreach ($reference as $key => $value) {
-					if ((string)($candidate[$key] ?? '') !== $value) {
-						$same = false;
-					}
-				}
-
-				if ($same === true) {
-					$records[] = $record;
-					break;
-				}
-			}
-		}//end foreach
+		}
 
 		return $records;
 
 	}//end findByDomain()
+
+	/**
+	 * Whether one record names the given domain among its own.
+	 *
+	 * A domain is matched on all three of register, schema and id. Matching on
+	 * fewer would put a record in a domain it only half belongs to, and the
+	 * domains are what decides who may read it.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 * @param array<string, string> $reference The domain, as register, schema and id.
+	 *
+	 * @return bool True when the record names it.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function sitsIn(array $record, array $reference): bool {
+		$domains = ($record['domains'] ?? []);
+		if (is_array($domains) === false) {
+			return false;
+		}
+
+		foreach ($domains as $candidate) {
+			if (is_array($candidate) === false) {
+				continue;
+			}
+
+			if ($this->sameDomain(candidate: $candidate, reference: $reference) === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end sitsIn()
+
+	/**
+	 * Whether one domain entry is the domain asked for.
+	 *
+	 * @param array<string, mixed> $candidate The entry on the record.
+	 * @param array<string, string> $reference The domain asked for.
+	 *
+	 * @return bool True when all three fields match.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function sameDomain(array $candidate, array $reference): bool {
+		foreach ($reference as $key => $value) {
+			if ((string)($candidate[$key] ?? '') !== $value) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}//end sameDomain()
 
 	/**
 	 * Find one record by its uuid.

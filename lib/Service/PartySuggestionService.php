@@ -123,30 +123,16 @@ class PartySuggestionService {
 		}
 
 		$party = [];
-		$spans = [];
 		foreach ($relations as $relation) {
-			$type = '';
-			if (method_exists($relation, 'getType') === true) {
-				$type = strtoupper((string)$relation->getType());
-			}
-
-			$value = '';
-			if (method_exists($relation, 'getValue') === true) {
-				$value = trim((string)$relation->getValue());
-			}
-
-			if (isset(self::FIELDS[$type]) === false || $value === '') {
+			$field = $this->fieldOf(relation: $relation);
+			if ($field === null || isset($party[$field['name']]) === true) {
 				continue;
 			}
 
-			$field = self::FIELDS[$type];
-			if (isset($party[$field]) === true) {
-				continue;
-			}
+			$party[$field['name']] = $field['value'];
+		}
 
-			$party[$field] = $value;
-			$spans[$field] = $value;
-		}//end foreach
+		$spans = $party;
 
 		if ($party === []) {
 			return [];
@@ -164,6 +150,38 @@ class PartySuggestionService {
 		];
 
 	}//end suggestFor()
+
+	/**
+	 * The party field one detected entity fills, and with what.
+	 *
+	 * A relation whose type is not one this app maps, or that carries no text,
+	 * fills nothing. It is skipped rather than suggested empty: a suggestion
+	 * with a blank name is worse than no suggestion, because a clerk accepts it.
+	 *
+	 * @param mixed $relation The entity relation, as OpenRegister returned it.
+	 *
+	 * @return array{name: string, value: string}|null The field and its value, or null.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	private function fieldOf(mixed $relation): ?array {
+		$type = '';
+		if (method_exists($relation, 'getType') === true) {
+			$type = strtoupper((string)$relation->getType());
+		}
+
+		$value = '';
+		if (method_exists($relation, 'getValue') === true) {
+			$value = trim((string)$relation->getValue());
+		}
+
+		if (isset(self::FIELDS[$type]) === false || $value === '') {
+			return null;
+		}
+
+		return ['name' => self::FIELDS[$type], 'value' => $value];
+
+	}//end fieldOf()
 
 	/**
 	 * Record what a clerk did with a suggestion.

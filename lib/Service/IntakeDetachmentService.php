@@ -103,29 +103,15 @@ class IntakeDetachmentService {
 		}
 
 		$existing = $this->repository->findByFile(fileId: $fileId);
-		$uuid = null;
 		if ($existing === null) {
 			$this->logger->info(
 				message: '[IntakeDetachmentService] the document never passed through the inbox, giving it a record now',
 				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId]
 			);
-
-			$document = [
-				'channel' => 'scan',
-				'subject' => $documentName,
-				'sender' => '',
-				'receivedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
-				'file' => $fileId,
-				'fileName' => $documentName,
-				'sourceRef' => 'detached-' . $fileId,
-			];
-		} else {
-			$document = $existing;
-			$uuid = (string)($existing['uuid'] ?? '');
-			if ($uuid === '') {
-				$uuid = null;
-			}
 		}
+
+		$document = ($existing ?? $this->recordFor(fileId: $fileId, documentName: $documentName));
+		$uuid = $this->uuidOf(document: $existing);
 
 		$document['status'] = IntakeRepository::STATUS_DETACHED;
 		$document['detachReason'] = $reason;
@@ -135,6 +121,51 @@ class IntakeDetachmentService {
 		return $this->repository->save(document: $document, uuid: $uuid);
 
 	}//end detach()
+
+	/**
+	 * The intake record for a document that never passed through the inbox.
+	 *
+	 * @param int $fileId The Nextcloud file id of the document.
+	 * @param string $documentName The document's name.
+	 *
+	 * @return array<string, mixed> The record, before the detachment is stamped on it.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	private function recordFor(int $fileId, string $documentName): array {
+		return [
+			'channel' => 'scan',
+			'subject' => $documentName,
+			'sender' => '',
+			'receivedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+			'file' => $fileId,
+			'fileName' => $documentName,
+			'sourceRef' => 'detached-' . $fileId,
+		];
+
+	}//end recordFor()
+
+	/**
+	 * The uuid to write under: the existing record's, or null to create one.
+	 *
+	 * An existing record with a blank uuid is written as a create, not as an
+	 * update against the empty string.
+	 *
+	 * @param array<string, mixed>|null $document The record found, or null when there was none.
+	 *
+	 * @return string|null The uuid, or null.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	private function uuidOf(?array $document): ?string {
+		$uuid = trim((string)($document['uuid'] ?? ''));
+		if ($uuid === '') {
+			return null;
+		}
+
+		return $uuid;
+
+	}//end uuidOf()
 
 	/**
 	 * The user id of the person at the keyboard.

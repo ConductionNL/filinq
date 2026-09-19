@@ -121,7 +121,7 @@ class PeriodicDocumentService {
 		$document = $this->layouts->stamp(document: $document, layout: $layout);
 
 		$stored = $this->write(document: $document);
-		$this->recordRun(schedule: $schedule, at: $now, records: count($records), document: $stored);
+		$this->recordRun(schedule: $schedule, ranAt: $now, records: count($records), document: $stored);
 
 		return $stored;
 
@@ -187,7 +187,7 @@ class PeriodicDocumentService {
 	 * record of that run, which is why nothing here edits an earlier one.
 	 *
 	 * @param array<string, mixed> $schedule The schedule.
-	 * @param string $at When the run happened.
+	 * @param string $ranAt When the run happened.
 	 * @param int $records How many records the view returned.
 	 * @param array<string, mixed> $document The document produced.
 	 *
@@ -195,13 +195,13 @@ class PeriodicDocumentService {
 	 *
 	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
 	 */
-	private function recordRun(array $schedule, string $at, int $records, array $document): void {
+	private function recordRun(array $schedule, string $ranAt, int $records, array $document): void {
 		$uuid = (string)($schedule['uuid'] ?? '');
 		if ($uuid === '') {
 			return;
 		}
 
-		$schedule['lastRunAt'] = $at;
+		$schedule['lastRunAt'] = $ranAt;
 		$schedule['lastRunRecords'] = $records;
 		$schedule['lastRunDocument'] = (string)($document['uuid'] ?? '');
 		unset($schedule['uuid']);

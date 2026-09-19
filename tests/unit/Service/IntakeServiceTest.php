@@ -536,10 +536,9 @@ class IntakeServiceTest extends TestCase {
 
 		$service = $this->service(rows: [$message, $attachment]);
 
-		$service->assign(
+		$service->assignWithAttachments(
 			uuid: 'intake-message',
-			target: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-9'],
-			withAttachments: true
+			target: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-9']
 		);
 
 		$this->assertContains('intake-attachment', $this->writtenTo);

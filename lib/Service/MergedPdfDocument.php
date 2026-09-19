@@ -156,6 +156,13 @@ class MergedPdfDocument extends Fpdi {
 	/**
 	 * Hook the outline objects into the document's resource pass.
 	 *
+	 * @SuppressWarnings(PHPMD.CamelCaseMethodName) The name is FPDF's, not ours.
+	 * `_putresources` is the method FPDF calls during output, and this class
+	 * exists to override it. Renaming it to `putResources` does not rename the
+	 * call inside the parent: FPDF would go on calling its own `_putresources`,
+	 * this body would never run, and every merged bundle would come out with no
+	 * bookmarks and no error. The lowercase name IS the contract.
+	 *
 	 * @return void
 	 */
 	protected function _putresources(): void {
@@ -169,6 +176,10 @@ class MergedPdfDocument extends Fpdi {
 	 *
 	 * Writing the outline objects without this line produces a file that HAS
 	 * bookmarks and shows none: the objects exist and nothing points at them.
+	 *
+	 * @SuppressWarnings(PHPMD.CamelCaseMethodName) The name is FPDF's, not ours.
+	 * See `_putresources()` above: renaming an override FPDF calls by name
+	 * silently stops it being called.
 	 *
 	 * @return void
 	 */

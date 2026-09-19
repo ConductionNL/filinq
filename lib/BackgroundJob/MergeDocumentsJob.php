@@ -94,7 +94,11 @@ class MergeDocumentsJob extends TimedJob {
 	 * not caught. Swallowing it would end the run looking exactly like a run
 	 * over an empty queue, which is what hid an unreachable store here before.
 	 *
-	 * @param mixed $argument The job argument, unused.
+	 * @param mixed $argument Job arguments. The job is registered bare and takes none.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's
+	 * TimedJob signature, not a parameter this job chose. Dropping it changes the
+	 * override into a different method and the job stops running.
 	 *
 	 * @return void
 	 *
@@ -102,7 +106,7 @@ class MergeDocumentsJob extends TimedJob {
 	 *
 	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
 	 */
-	protected function run($argument): void {
+	protected function run(mixed $argument): void {
 		foreach ($this->jobs->findQueued() as $job) {
 			$uuid = (string)($job['uuid'] ?? '');
 			if ($uuid === '') {

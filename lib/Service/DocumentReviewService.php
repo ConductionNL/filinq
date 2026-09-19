@@ -146,13 +146,13 @@ class DocumentReviewService {
 	 * done last year clear a date that has come round again.
 	 *
 	 * @param array<string, mixed> $document The document.
-	 * @param string $on The day to ask about, ISO 8601, or an empty string for today.
+	 * @param string $day The day to ask about, ISO 8601, or an empty string for today.
 	 *
 	 * @return bool True when it is due.
 	 *
 	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
 	 */
-	public function isDue(array $document, string $on = ''): bool {
+	public function isDue(array $document, string $day = ''): bool {
 		$date = trim((string)($document['reviewDate'] ?? ''));
 		if ($date === '') {
 			return false;
@@ -161,8 +161,8 @@ class DocumentReviewService {
 		try {
 			$due = new DateTimeImmutable($date);
 			$moment = new DateTimeImmutable();
-			if ($on !== '') {
-				$moment = new DateTimeImmutable($on);
+			if ($day !== '') {
+				$moment = new DateTimeImmutable($day);
 			}
 		} catch (Exception $e) {
 			return false;
@@ -188,13 +188,13 @@ class DocumentReviewService {
 	/**
 	 * Every document due for review.
 	 *
-	 * @param string $on The day to ask about, or an empty string for today.
+	 * @param string $day The day to ask about, or an empty string for today.
 	 *
 	 * @return array<int, array<string, mixed>> The due documents.
 	 *
 	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
 	 */
-	public function listDue(string $on = ''): array {
+	public function listDue(string $day = ''): array {
 		try {
 			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
 			// `searchObjects` answers a slug with zero rows and no error, so
@@ -221,7 +221,7 @@ class DocumentReviewService {
 		$due = [];
 		foreach ($results as $result) {
 			$document = $this->normalise(row: $result);
-			if ($this->isDue(document: $document, on: $on) === true) {
+			if ($this->isDue(document: $document, day: $day) === true) {
 				$due[] = $document;
 			}
 		}

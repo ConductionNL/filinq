@@ -280,7 +280,10 @@ class DocumentMergeService {
 		$coverRef = trim((string)($options['coverTemplateRef'] ?? ''));
 		if ($coverRef !== '') {
 			try {
-				$pages += $this->documents->appendPages(
+				// The bookmark goes on with the pages, in the factory that owns
+				// the document. Deciding it here as well would put a second
+				// branch in a method already at its complexity ceiling.
+				$pages += $this->documents->appendCover(
 					document: $document,
 					pdf: $this->cover->render(
 						templateRef: $coverRef,
@@ -289,7 +292,8 @@ class DocumentMergeService {
 							'requestedBy' => $this->currentUserId(),
 							'documentCount' => count($resolved),
 						]
-					)
+					),
+					withBookmark: $wantsBookmarks
 				);
 			} catch (Throwable $e) {
 				// A bundle whose cover did not render says nothing about what
@@ -299,10 +303,6 @@ class DocumentMergeService {
 					job: $job,
 					reason: 'Could not render the cover page: ' . $e->getMessage()
 				);
-			}
-
-			if ($wantsBookmarks === true) {
-				$document->addBookmark('Voorblad', 1);
 			}
 		}//end if
 

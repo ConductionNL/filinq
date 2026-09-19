@@ -118,6 +118,13 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The assigned document, or the refusal.
 	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$withAttachments` is a field
+	 * of the request body, not a mode this code chose. Nextcloud binds a
+	 * controller parameter to the JSON key of the same name, so the SRP split
+	 * phpmd asks for is a split into two ROUTES for one thing a clerk does:
+	 * "file this letter, and the bijlagen that came with it". The service
+	 * behind it carries no flag, see IntakeService::assignWithAttachments().
+	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
@@ -135,20 +142,26 @@ class IntakeController extends Controller {
 			return $unauthenticated;
 		}
 
-		try {
-			$document = $this->intake->assign(
-				uuid: $uuid,
-				target: [
-					'register' => $register,
-					'schema' => $schema,
-					'id' => $id,
-					'declaringApp' => $declaringApp,
-					'typeReference' => $typeReference,
-				],
-				withAttachments: $withAttachments
-			);
+		$target = [
+			'register' => $register,
+			'schema' => $schema,
+			'id' => $id,
+			'declaringApp' => $declaringApp,
+			'typeReference' => $typeReference,
+		];
 
-			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
+		try {
+			if ($withAttachments === true) {
+				return new JSONResponse(
+					data: $this->intake->assignWithAttachments(uuid: $uuid, target: $target),
+					statusCode: Http::STATUS_OK
+				);
+			}
+
+			return new JSONResponse(
+				data: $this->intake->assign(uuid: $uuid, target: $target),
+				statusCode: Http::STATUS_OK
+			);
 		} catch (Throwable $e) {
 			return $this->failure(error: $e);
 		}
@@ -299,6 +312,12 @@ class IntakeController extends Controller {
 	 * @param bool $requiresAcceptance Whether that group has to accept them.
 	 *
 	 * @return JSONResponse The stored declaration.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$requiresAcceptance` is a
+	 * field of the declaration the consuming app posts, not a mode this code
+	 * chose. It is stored on the routing rule and read back from there; it does
+	 * not branch this method at all, so there is no second responsibility here
+	 * to split off.
 	 *
 	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
