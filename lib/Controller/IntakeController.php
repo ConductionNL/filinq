@@ -112,6 +112,9 @@ class IntakeController extends Controller {
 	 * @param string $register The target register slug.
 	 * @param string $schema The target schema slug.
 	 * @param string $id The target object id.
+	 * @param string $declaringApp App id of the app that owns the record type.
+	 * @param string $typeReference That app's reference for the record type.
+	 * @param bool $withAttachments Whether everything that arrived with the message goes along.
 	 *
 	 * @return JSONResponse The assigned document, or the refusal.
 	 *

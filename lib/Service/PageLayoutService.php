@@ -164,9 +164,14 @@ class PageLayoutService {
 	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function pdfOptions(array $layout): array {
+		$orientation = 'P';
+		if (((string)($layout['orientation'] ?? 'portrait')) === 'landscape') {
+			$orientation = 'L';
+		}
+
 		$options = [
 			'format' => (string)($layout['paperSize'] ?? 'A4'),
-			'orientation' => (((string)($layout['orientation'] ?? 'portrait')) === 'landscape' ? 'L' : 'P'),
+			'orientation' => $orientation,
 			'header' => (string)($layout['header'] ?? ''),
 			'footer' => (string)($layout['footer'] ?? ''),
 		];
