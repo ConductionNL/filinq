@@ -78,7 +78,14 @@ class PlainRenditionAcceptanceGate {
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function needsAcceptance(string $source): bool {
-		return $source === self::SOURCE_MACHINE;
+		// 🔑 THE TRUSTED VALUE IS NAMED, AND EVERYTHING ELSE IS A DRAFT. Asking
+		// `=== 'machine'` reads as the same rule and is not: it makes every
+		// value the gate does not recognise, including a typo and any third
+		// source added later, go out unaccepted. The schema's enum is
+		// `template|machine` with `template` as the default, so this changes
+		// nothing a declaration can actually carry today; it changes which way
+		// the gate falls when it is handed something it does not know.
+		return $source !== self::SOURCE_TEMPLATE;
 
 	}//end needsAcceptance()
 

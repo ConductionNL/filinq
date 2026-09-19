@@ -303,6 +303,42 @@ class PostRegisterReaderTest extends TestCase {
 	}//end testTheOpenPostQueryUsesTheObjectsEndpointsSpelling()
 
 	/**
+	 * The open post query filters on the direction the schema actually stores.
+	 *
+	 * 🔴 THE VOCABULARY IS THE SCHEMA'S. `documentRegistration` declares
+	 * `enum: [inbound, outbound]` and OpenRegister refuses anything else on
+	 * save, so filtering on `incoming` matched no row ever written and this
+	 * list came back empty for every unit, with no error anywhere. The value
+	 * was only in the proposal's prose, and nothing compared the two.
+	 *
+	 * @return void
+	 */
+	public function testTheOpenPostQueryFiltersOnTheSchemasDirectionValue(): void {
+		$directions = [];
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('searchObjects')->willReturnCallback(
+			static function (array $query) use (&$directions): array {
+				if (isset($query['direction']) === true) {
+					$directions[] = (string)$query['direction'];
+				}
+
+				return [];
+			}
+		);
+
+		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objectService);
+
+		(new PostRegisterReader($resolver, new NullLogger()))->openPostFor('burgerzaken');
+
+		$this->assertSame(
+			['inbound'],
+			$directions,
+			'the open post list asks for the direction value the schema allows, not the one the prose uses'
+		);
+	}//end testTheOpenPostQueryFiltersOnTheSchemasDirectionValue()
+
+	/**
 	 * An entry whose discharge could not be read is raised, not listed as open.
 	 *
 	 * Listing it would put a letter somebody answered a month ago at the top of

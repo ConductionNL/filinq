@@ -55,6 +55,33 @@ class PlainRenditionAcceptanceGateTest extends TestCase {
 	}//end testTemplateTextNeedsNoAcceptance()
 
 	/**
+	 * A source the gate does not recognise is treated as a draft, not as ours.
+	 *
+	 * 🔴 THE TRUSTED VALUE IS NAMED, AND EVERYTHING ELSE FALLS THE OTHER WAY.
+	 * Asking `=== 'machine'` reads as the same rule and is not: a typo, or any
+	 * third source added to the enum later, would go out with nobody having
+	 * read it. The schema's default is `template`, so a declaration that omits
+	 * the field is normalised before it gets here and is unaffected.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownSourceIsTreatedAsADraft(): void {
+		$gate = new PlainRenditionAcceptanceGate();
+
+		self::assertTrue(
+			$gate->needsAcceptance(source: 'llm-draft'),
+			'a source the gate does not recognise must wait for a person, not pass as our own text'
+		);
+		self::assertTrue(
+			$gate->needsAcceptance(source: ''),
+			'no source named is not the same as the template, and must not be read as it'
+		);
+
+		$this->expectException(PlainRenditionRefusedException::class);
+		$gate->require(source: 'llm-draft', acceptance: []);
+	}//end testAnUnknownSourceIsTreatedAsADraft()
+
+	/**
 	 * A machine draft with a complete acceptance passes, and it is recorded.
 	 *
 	 * @return void

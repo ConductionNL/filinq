@@ -55,7 +55,7 @@ test.describe('the post register', () => {
 		const created = await request.post(`${OR}/documentRegistration`, {
 			headers: jsonHeaders(token),
 			data: {
-				direction: 'outgoing',
+				direction: 'outbound',
 				registeredAt: new Date().toISOString(),
 				unit: `${TEST_PREFIX}-burgerzaken`,
 				document: `${TEST_PREFIX}-besluit`,
@@ -67,7 +67,7 @@ test.describe('the post register', () => {
 		const body = await created.json()
 		const entry = body.object ?? body
 
-		expect(entry.direction).toBe('outgoing')
+		expect(entry.direction).toBe('outbound')
 		expect(entry.unit).toBe(`${TEST_PREFIX}-burgerzaken`)
 
 		// The number comes from OpenRegister's generated identifier, not from a
@@ -87,7 +87,7 @@ test.describe('the post register', () => {
 		const inbound = await request.post(`${OR}/documentRegistration`, {
 			headers: jsonHeaders(token),
 			data: {
-				direction: 'incoming',
+				direction: 'inbound',
 				registeredAt: new Date().toISOString(),
 				unit: `${TEST_PREFIX}-burgerzaken`,
 				document: `${TEST_PREFIX}-aanvraag`,
@@ -121,7 +121,7 @@ test.describe('the post register', () => {
 		const outbound = await request.post(`${OR}/documentRegistration`, {
 			headers: jsonHeaders(token),
 			data: {
-				direction: 'outgoing',
+				direction: 'outbound',
 				registeredAt: new Date().toISOString(),
 				unit: `${TEST_PREFIX}-burgerzaken`,
 				document: `${TEST_PREFIX}-besluit-antwoord`,

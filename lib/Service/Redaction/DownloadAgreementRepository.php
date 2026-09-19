@@ -20,8 +20,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Redaction;
 
+use OCA\Filinq\Exception\AgreementStoreUnreadableException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -60,20 +62,35 @@ class DownloadAgreementRepository {
 	 *
 	 * @return array<string, mixed>|null The agreement.
 	 *
+	 * @throws AgreementStoreUnreadableException When the store could not be read.
+	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
 	public function forDocument(string $document): ?array {
 		$rows = $this->rowsFor(document: $document);
 
+		$inForce = null;
 		foreach ($rows as $row) {
 			// The terms themselves carry no acceptance. A row that names an
 			// acceptor is somebody's acceptance of them, not the terms.
-			if (trim((string)($row['acceptedBy'] ?? '')) === '' && trim((string)($row['text'] ?? '')) !== '') {
-				return $row;
+			if (trim((string)($row['acceptedBy'] ?? '')) !== '' || trim((string)($row['text'] ?? '')) === '') {
+				continue;
+			}
+
+			// 🔴 THE TERMS IN FORCE ARE THE NEWEST ONES, NEVER THE FIRST ROW
+			// BACK. Republishing the agreement adds a row beside the old one,
+			// and taking whichever the store happened to list first would hand
+			// a reader who accepted version 1 the file after version 2 was
+			// published, which is the exact case "a new version asks again"
+			// exists to stop.
+			if ($inForce === null
+				|| version_compare((string)($row['version'] ?? ''), (string)($inForce['version'] ?? '')) >= 0
+			) {
+				$inForce = $row;
 			}
 		}
 
-		return null;
+		return $inForce;
 
 	}//end forDocument()
 
@@ -84,6 +101,8 @@ class DownloadAgreementRepository {
 	 * @param string $person   Who is asking.
 	 *
 	 * @return array<string, mixed>|null The acceptance.
+	 *
+	 * @throws AgreementStoreUnreadableException When the store could not be read.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
@@ -157,6 +176,8 @@ class DownloadAgreementRepository {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
+	 * @throws AgreementStoreUnreadableException When the read failed, as opposed to finding nothing.
+	 *
 	 * @spec exclude Read helper behind the public methods.
 	 */
 	private function rowsFor(string $document): array {
@@ -165,18 +186,28 @@ class DownloadAgreementRepository {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-					'document' => $document,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// OpenRegister's `searchObjects` has a numeric-ID contract on
+			// `@self.register` and `@self.schema`: handed the slugs `filinq`
+			// and `downloadAgreement` it returns ZERO ROWS and no error. Every
+			// agreement then read as "no agreement was declared", every gated
+			// file answered `mayDownload: true`, and the endpoint could not
+			// tell a gated document from one nobody had ever declared anything
+			// about. The document filter stays a BARE key beside the `@self`
+			// block, which is the spelling the objects path reads.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['document' => $document]
 			);
-		} catch (Throwable $e) {
+		} catch (DoesNotExistException $e) {
+			// The register or the schema is not on this instance, so nothing
+			// here is gated. That is an answer, not a failure: an instance that
+			// never imported `downloadAgreement` has no agreements to honour,
+			// and refusing every download over it would take the download
+			// surface down for a feature nobody enabled.
 			$this->logger->warning(
-				message: '[DownloadAgreementRepository] could not read the agreement rows',
+				message: '[DownloadAgreementRepository] no downloadAgreement schema on this instance, so nothing is gated',
 				context: [
 					'file' => __FILE__,
 					'line' => __LINE__,
@@ -186,7 +217,27 @@ class DownloadAgreementRepository {
 			);
 
 			return [];
-		}
+		} catch (Throwable $e) {
+			// 🔴 A FAILED READ IS NOT "NOT GATED". Returning an empty list here
+			// is what made this gate fail open: the caller cannot tell it apart
+			// from a document with no terms, so it serves the file. Raising
+			// keeps the two apart and lets the gate refuse.
+			$this->logger->warning(
+				message: '[DownloadAgreementRepository] could not read the agreement rows, so nothing is served',
+				context: [
+					'file' => __FILE__,
+					'line' => __LINE__,
+					'document' => $document,
+					'error' => $e->getMessage(),
+				]
+			);
+
+			throw new AgreementStoreUnreadableException(
+				message: 'The download conditions could not be read: '.$e->getMessage(),
+				code: 0,
+				previous: $e
+			);
+		}//end try
 
 		if (is_array($results) === false) {
 			return [];
