@@ -76,9 +76,9 @@ class FinalDocumentServiceTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		if ($unreachable === true) {
-			$objectService->method('searchObjects')->willThrowException(new RuntimeException('no register'));
+			$objectService->method('searchObjectsBySlug')->willThrowException(new RuntimeException('no register'));
 		} else {
-			$objectService->method('searchObjects')->willReturnCallback(fn (): array => $this->rows);
+			$objectService->method('searchObjectsBySlug')->willReturnCallback(fn (): array => $this->rows);
 		}
 
 		$objectService->method('saveObject')->willReturnCallback(

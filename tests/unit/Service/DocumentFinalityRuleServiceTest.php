@@ -78,7 +78,7 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 		$this->finalised = [];
 
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($rows);
+		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('saveObject')->willReturnCallback(
 			static fn (...$arguments): array => (($arguments[0] ?? []) + ['uuid' => 'rule-1'])
 		);

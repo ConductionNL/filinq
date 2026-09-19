@@ -162,13 +162,14 @@ class IntakeDefaultRuleService {
 	 */
 	private function rules(): array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// match() never matched and every inbound document arrived
+			// unstamped, indistinguishable from an instance with no rules.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: []
 			);
 		} catch (Throwable $e) {
 			// An unreadable rule set stamps NOTHING rather than failing the

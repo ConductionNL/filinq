@@ -56,7 +56,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 */
 	private function service(array $documents): DocumentReviewService {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($documents);
+		$objectService->method('searchObjectsBySlug')->willReturn($documents);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($documents): ?array {
 				$id = (string)($arguments[0] ?? '');

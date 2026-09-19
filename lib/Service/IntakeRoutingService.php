@@ -143,12 +143,16 @@ class IntakeRoutingService {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => self::SCHEMA,
-					],
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` reads `@self.register` and `@self.schema` as
+			// numeric ids and answers a slug with zero rows and no error, so
+			// every routing declaration read as absent and apply() stamped
+			// `acceptance.required = false` on documents whose declaring app
+			// had asked for acceptance. Filters stay BARE keys.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: [
 					'declaringApp' => $declaringApp,
 					'typeReference' => $typeReference,
 				]

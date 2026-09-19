@@ -140,14 +140,14 @@ class MergeJobRepository {
 	 */
 	public function findQueued(): array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => IntakeRepository::REGISTER,
-						'schema' => DocumentMergeService::SCHEMA,
-					],
-					'status' => DocumentMergeService::STATUS_QUEUED,
-				]
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// MergeDocumentsJob iterated nothing, logged nothing and reported
+			// a clean run every interval while every queued merge sat there.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: DocumentMergeService::SCHEMA,
+				filters: ['status' => DocumentMergeService::STATUS_QUEUED]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

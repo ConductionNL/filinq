@@ -175,12 +175,16 @@ class DocumentFinalityRuleService {
 	 */
 	public function find(string $declaringApp, string $typeReference, string $documentRole = ''): ?array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: [
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => self::SCHEMA,
-					],
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `searchObjects` answers a slug with zero rows and no error, so
+			// no declaration ever matched, applyStateChange() returned an
+			// empty list, and no document was ever finalised by a consuming
+			// app's state change. `$documentRole` is matched below rather
+			// than here, so it stays out of the filters.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: [
 					'declaringApp' => $declaringApp,
 					'typeReference' => $typeReference,
 				]

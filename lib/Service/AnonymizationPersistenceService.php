@@ -242,14 +242,18 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function buildLinkObject(mixed $objectService, int $fileId, array $resultInfo): array {
-		$results = $objectService->searchObjects(
-			query: [
-				'@self' => [
-					'register' => 'filinq',
-					'schema' => 'anonymizationLink',
-				],
-				'sourceFileId' => $fileId,
-			]
+		// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+		// `searchObjects` answers `filinq` / `anonymizationLink` with zero
+		// rows and no error, so `$existing` was always empty: `runCount`
+		// stayed 1 and re-anonymising the same source file wrote a new link
+		// row every time instead of updating the one already there.
+		//
+		// Only this read moves. The identical `@self` literal further down
+		// belongs to the SAVED OBJECT, not to a query, and must stay.
+		$results = $objectService->searchObjectsBySlug(
+			registerSlug: 'filinq',
+			schemaSlug: 'anonymizationLink',
+			filters: ['sourceFileId' => $fileId]
 		);
 
 		$existing = [];

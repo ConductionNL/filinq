@@ -77,7 +77,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 */
 	private function service(?array $policy): UploadPolicyService {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn(($policy === null ? [] : [$policy]));
+		$objectService->method('searchObjectsBySlug')->willReturn(($policy === null ? [] : [$policy]));
 
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);

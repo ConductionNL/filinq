@@ -99,7 +99,7 @@ class FinalDocumentCorrectionServiceTest extends TestCase {
 		$this->frozenFileWasWritten = false;
 
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturn($rows);
+		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($rows): ?array {
 				$id = (string)($arguments[0] ?? '');

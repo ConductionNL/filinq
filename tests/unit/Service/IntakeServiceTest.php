@@ -82,16 +82,16 @@ class IntakeServiceTest extends TestCase {
 		?string $placedAt = null,
 	): IntakeService {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturnCallback(
-			static function (array $query) use ($rows): array {
+		// 🔴 `searchObjectsBySlug`, not `searchObjects`: the repository passes
+		// the slugs `filinq` and `intakeDocument`, and `searchObjects` reads
+		// those as numeric ids and answers zero rows with no error. A double
+		// on the wrong method is a double that cannot fail.
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			static function (string $registerSlug, string $schemaSlug, array $filters) use ($rows): array {
 				$matches = [];
 				foreach ($rows as $row) {
 					$hit = true;
-					foreach ($query as $key => $value) {
-						if ($key === '@self') {
-							continue;
-						}
-
+					foreach ($filters as $key => $value) {
 						if ((string)($row[$key] ?? '') !== (string)$value) {
 							$hit = false;
 						}

@@ -56,15 +56,18 @@ class IntakeRoutingServiceTest extends TestCase {
 	 */
 	private function service(array $declarations): IntakeRoutingService {
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('searchObjects')->willReturnCallback(
-			static function (array $query) use ($declarations): array {
+		// 🔴 `searchObjectsBySlug`, not `searchObjects`: the service passes the
+		// slugs `filinq` and `intakeRoutingRule`, which `searchObjects`
+		// answers with zero rows and no error.
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			static function (string $registerSlug, string $schemaSlug, array $filters) use ($declarations): array {
 				$matches = [];
 				foreach ($declarations as $row) {
-					if ((string)($row['declaringApp'] ?? '') !== (string)($query['declaringApp'] ?? '')) {
+					if ((string)($row['declaringApp'] ?? '') !== (string)($filters['declaringApp'] ?? '')) {
 						continue;
 					}
 
-					if ((string)($row['typeReference'] ?? '') !== (string)($query['typeReference'] ?? '')) {
+					if ((string)($row['typeReference'] ?? '') !== (string)($filters['typeReference'] ?? '')) {
 						continue;
 					}
 
