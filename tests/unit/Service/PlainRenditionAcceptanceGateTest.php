@@ -34,6 +34,8 @@ use PHPUnit\Framework\TestCase;
  * `PlainRenditionAcceptanceGate`.
  *
  * @covers \OCA\Filinq\Service\PlainRenditionAcceptanceGate
+ *
+ * @uses \OCA\Filinq\Exception\PlainRenditionRefusedException
  */
 class PlainRenditionAcceptanceGateTest extends TestCase {
 
