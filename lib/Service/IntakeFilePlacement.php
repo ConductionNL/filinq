@@ -162,6 +162,24 @@ class IntakeFilePlacement {
 			return null;
 		}
 
+		return $this->folderIn(object: $object);
+
+	}//end folderOf()
+
+	/**
+	 * The folder path a record carries, read from either place it can sit.
+	 *
+	 * OpenRegister puts it under `@self.folder`; a record written before that
+	 * carries a plain `folder`. Both are read, because a record that has one
+	 * and is read as having none goes to the inbox root instead of its case.
+	 *
+	 * @param mixed $object The record, as OpenRegister returned it.
+	 *
+	 * @return string|null The folder path, or null when it names none.
+	 *
+	 * @spec exclude Shape adapter over an OpenRegister response.
+	 */
+	private function folderIn(mixed $object): ?string {
 		$data = $object;
 		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
 			$data = $object->jsonSerialize();
@@ -185,5 +203,5 @@ class IntakeFilePlacement {
 
 		return $folder;
 
-	}//end folderOf()
+	}//end folderIn()
 }//end class

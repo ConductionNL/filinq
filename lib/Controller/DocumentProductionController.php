@@ -184,17 +184,17 @@ class DocumentProductionController extends Controller {
 	/**
 	 * The documents due for review.
 	 *
-	 * @param string $on The day to ask about, or an empty string for today.
+	 * @param string $day The day to ask about, or an empty string for today.
 	 *
 	 * @return JSONResponse The due documents.
 	 *
 	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
-	public function dueForReview(string $on = ''): JSONResponse {
+	public function dueForReview(string $day = ''): JSONResponse {
 		return $this->answer(
-			handler: function () use ($on): array {
-				$due = $this->reviews->listDue(on: $on);
+			handler: function () use ($day): array {
+				$due = $this->reviews->listDue(day: $day);
 
 				return ['results' => $due, 'total' => count($due)];
 			}

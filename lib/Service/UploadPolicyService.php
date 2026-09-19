@@ -91,62 +91,140 @@ class UploadPolicyService {
 		}
 
 		$name = (string)($policy['name'] ?? '');
-		$size = strlen($contents);
-		$maximum = (int)($policy['maxSizeBytes'] ?? 0);
-		if ($maximum > 0 && $size > $maximum) {
-			throw new UploadRefusedException(
-				message: 'This file is ' . $this->megabytes(bytes: $size)
-					. ' and the policy allows ' . $this->megabytes(bytes: $maximum) . '.',
-				detectedType: '',
-				policy: $name
-			);
-		}
 
-		$extensions = $this->stringList(value: ($policy['allowedExtensions'] ?? []));
-		$extension = strtolower((string)pathinfo($fileName, PATHINFO_EXTENSION));
-		if ($extensions !== [] && in_array($extension, $extensions, true) === false) {
-			$named = '.' . $extension;
-			if ($extension === '') {
-				$named = 'a file without an extension';
-			}
-
-			throw new UploadRefusedException(
-				message: 'The policy does not allow ' . $named . '.',
-				detectedType: '',
-				policy: $name
-			);
-		}
+		$this->refuseOversize(contents: $contents, policy: $policy, name: $name);
+		$this->refuseExtension(fileName: $fileName, policy: $policy, name: $name);
 
 		$detected = $this->detect(contents: $contents);
 		if ($detected === '') {
-			if (($policy['refuseUnknownType'] ?? true) === true) {
-				throw new UploadRefusedException(
-					message: 'The type of this file could not be read from its contents, and the policy refuses those.',
-					detectedType: '',
-					policy: $name
-				);
-			}
-
-			$this->logger->warning(
-				message: '[UploadPolicyService] stored a file whose type could not be read, as the policy allows',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'fileName' => $fileName]
-			);
-
-			return ['detectedType' => '', 'policy' => $name, 'checked' => true];
+			return $this->unreadableType(fileName: $fileName, policy: $policy, name: $name);
 		}
 
-		$types = $this->stringList(value: ($policy['allowedMediaTypes'] ?? []));
-		if ($types !== [] && in_array($detected, $types, true) === false) {
-			throw new UploadRefusedException(
-				message: 'This file is a ' . $detected . ', which the policy does not allow.',
-				detectedType: $detected,
-				policy: $name
-			);
-		}
+		$this->refuseMediaType(detected: $detected, policy: $policy, name: $name);
 
 		return ['detectedType' => $detected, 'policy' => $name, 'checked' => true];
 
 	}//end check()
+
+	/**
+	 * Refuse a file the policy says is too big.
+	 *
+	 * @param string $contents The bytes.
+	 * @param array<string, mixed> $policy The policy in force.
+	 * @param string $name The policy's name, for the refusal.
+	 *
+	 * @return void
+	 *
+	 * @throws UploadRefusedException When the file is over the ceiling.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function refuseOversize(string $contents, array $policy, string $name): void {
+		$size = strlen($contents);
+		$maximum = (int)($policy['maxSizeBytes'] ?? 0);
+		if ($maximum <= 0 || $size <= $maximum) {
+			return;
+		}
+
+		throw new UploadRefusedException(
+			message: 'This file is ' . $this->megabytes(bytes: $size)
+				. ' and the policy allows ' . $this->megabytes(bytes: $maximum) . '.',
+			detectedType: '',
+			policy: $name
+		);
+
+	}//end refuseOversize()
+
+	/**
+	 * Refuse a file whose extension the policy does not allow.
+	 *
+	 * @param string $fileName The name it arrived under.
+	 * @param array<string, mixed> $policy The policy in force.
+	 * @param string $name The policy's name, for the refusal.
+	 *
+	 * @return void
+	 *
+	 * @throws UploadRefusedException When the extension is not on the list.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function refuseExtension(string $fileName, array $policy, string $name): void {
+		$extensions = $this->stringList(value: ($policy['allowedExtensions'] ?? []));
+		$extension = strtolower((string)pathinfo($fileName, PATHINFO_EXTENSION));
+		if ($extensions === [] || in_array($extension, $extensions, true) === true) {
+			return;
+		}
+
+		$named = '.' . $extension;
+		if ($extension === '') {
+			$named = 'a file without an extension';
+		}
+
+		throw new UploadRefusedException(
+			message: 'The policy does not allow ' . $named . '.',
+			detectedType: '',
+			policy: $name
+		);
+
+	}//end refuseExtension()
+
+	/**
+	 * What to do with a file whose type could not be read from its bytes.
+	 *
+	 * @param string $fileName The name it arrived under.
+	 * @param array<string, mixed> $policy The policy in force.
+	 * @param string $name The policy's name, for the refusal.
+	 *
+	 * @return array{detectedType: string, policy: string, checked: bool} The verdict, when the policy allows it.
+	 *
+	 * @throws UploadRefusedException When the policy refuses unreadable types.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function unreadableType(string $fileName, array $policy, string $name): array {
+		if (($policy['refuseUnknownType'] ?? true) === true) {
+			throw new UploadRefusedException(
+				message: 'The type of this file could not be read from its contents, and the policy refuses those.',
+				detectedType: '',
+				policy: $name
+			);
+		}
+
+		$this->logger->warning(
+			message: '[UploadPolicyService] stored a file whose type could not be read, as the policy allows',
+			context: ['file' => __FILE__, 'line' => __LINE__, 'fileName' => $fileName]
+		);
+
+		return ['detectedType' => '', 'policy' => $name, 'checked' => true];
+
+	}//end unreadableType()
+
+	/**
+	 * Refuse a file whose media type the policy does not allow.
+	 *
+	 * @param string $detected The type read from the bytes.
+	 * @param array<string, mixed> $policy The policy in force.
+	 * @param string $name The policy's name, for the refusal.
+	 *
+	 * @return void
+	 *
+	 * @throws UploadRefusedException When the type is not on the list.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function refuseMediaType(string $detected, array $policy, string $name): void {
+		$types = $this->stringList(value: ($policy['allowedMediaTypes'] ?? []));
+		if ($types === [] || in_array($detected, $types, true) === true) {
+			return;
+		}
+
+		throw new UploadRefusedException(
+			message: 'This file is a ' . $detected . ', which the policy does not allow.',
+			detectedType: $detected,
+			policy: $name
+		);
+
+	}//end refuseMediaType()
 
 	/**
 	 * The policy in force, or null when none is declared.

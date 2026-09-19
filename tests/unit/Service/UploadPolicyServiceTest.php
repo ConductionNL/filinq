@@ -159,8 +159,21 @@ class UploadPolicyServiceTest extends TestCase {
 	public function testAnExtensionThePolicyDoesNotAllowIsRefused(): void {
 		$service = $this->service(policy: $this->standardPolicy());
 
-		$this->expectException(UploadRefusedException::class);
-		$service->check(fileName: 'script.sh', contents: "#!/bin/sh\necho hoi\n");
+		// 🔴 THE MESSAGE IS THE ASSERTION, NOT THE EXCEPTION TYPE. A `.sh` is
+		// refused by the extension rule AND by the media-type rule, so asserting
+		// only that something threw passes with the extension check deleted:
+		// measured, by removing it. Naming the rule is what makes this test able
+		// to fail for the reason it claims to test.
+		try {
+			$service->check(fileName: 'script.sh', contents: "#!/bin/sh\necho hoi\n");
+			$this->fail('an extension the policy does not allow must be refused');
+		} catch (UploadRefusedException $refusal) {
+			$this->assertSame(
+				'The policy does not allow .sh.',
+				$refusal->getMessage(),
+				'the extension rule refused it, and says so'
+			);
+		}
 
 	}//end testAnExtensionThePolicyDoesNotAllowIsRefused()
 

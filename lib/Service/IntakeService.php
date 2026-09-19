@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCP\IUserSession;
@@ -237,7 +239,8 @@ class IntakeService {
 	 * @param array<string, mixed> $target The record, as `register`, `schema` and `id`,
 	 *                                     optionally with the `declaringApp` and
 	 *                                     `typeReference` the routing is declared against.
-	 * @param bool $withAttachments Also assign everything that arrived with this message.
+	 * This assigns the one document. To take everything that arrived with it
+	 * along, call {@see assignWithAttachments()}.
 	 *
 	 * @return array<string, mixed> The assigned document.
 	 *
@@ -248,7 +251,7 @@ class IntakeService {
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
-	public function assign(string $uuid, array $target, bool $withAttachments = false): array {
+	public function assign(string $uuid, array $target): array {
 		$register = trim((string)($target['register'] ?? ''));
 		$schema = trim((string)($target['schema'] ?? ''));
 		$id = trim((string)($target['id'] ?? ''));
@@ -287,17 +290,6 @@ class IntakeService {
 
 		$assigned = $this->repository->save(document: $document, uuid: $uuid);
 
-		if ($withAttachments === true) {
-			foreach ($this->repository->findArrivedWith(uuid: $uuid) as $attachment) {
-				$attachmentUuid = (string)($attachment['uuid'] ?? '');
-				if ($attachmentUuid === '' || (string)($attachment['status'] ?? '') !== IntakeRepository::STATUS_RECEIVED) {
-					continue;
-				}
-
-				$this->assign(uuid: $attachmentUuid, target: $target);
-			}
-		}
-
 		$arrivedWith = trim((string)($document['arrivedWith'] ?? ''));
 		if ($arrivedWith !== '') {
 			$this->noteOnMessage(messageUuid: $arrivedWith, attachmentUuid: $uuid, target: $target);
@@ -306,6 +298,40 @@ class IntakeService {
 		return $assigned;
 
 	}//end assign()
+
+	/**
+	 * Assign one waiting document and everything that arrived with it.
+	 *
+	 * The message is assigned first, so a refusal on the message itself stops
+	 * before any attachment moves. An attachment that has already left the
+	 * inbox is skipped rather than assigned twice.
+	 *
+	 * @param string $uuid The intake document of the message.
+	 * @param array<string, mixed> $target The record, as `register`, `schema` and `id`,
+	 *                                     optionally with the `declaringApp` and
+	 *                                     `typeReference` the routing is declared against.
+	 *
+	 * @return array<string, mixed> The assigned message.
+	 *
+	 * @throws IntakeRefusedException When the message itself cannot be assigned.
+	 *
+	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	public function assignWithAttachments(string $uuid, array $target): array {
+		$assigned = $this->assign(uuid: $uuid, target: $target);
+
+		foreach ($this->repository->findArrivedWith(uuid: $uuid) as $attachment) {
+			$attachmentUuid = (string)($attachment['uuid'] ?? '');
+			if ($attachmentUuid === '' || (string)($attachment['status'] ?? '') !== IntakeRepository::STATUS_RECEIVED) {
+				continue;
+			}
+
+			$this->assign(uuid: $attachmentUuid, target: $target);
+		}
+
+		return $assigned;
+
+	}//end assignWithAttachments()
 
 	/**
 	 * Note on a message that one of its attachments went somewhere.
@@ -468,7 +494,7 @@ class IntakeService {
 	 * @spec exclude Clock accessor with no behaviour of its own.
 	 */
 	private function now(): string {
-		return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM);
+		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeImmutable::ATOM);
 
 	}//end now()
 }//end class

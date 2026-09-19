@@ -130,13 +130,13 @@ class DocumentReviewServiceTest extends TestCase {
 			'reviewDate' => '2026-03-01T10:00:00+00:00',
 		];
 
-		$this->assertTrue($service->isDue(document: $document, on: '2026-03-02T09:00:00+00:00'));
-		$this->assertFalse($service->isDue(document: $document, on: '2026-02-01T09:00:00+00:00'));
+		$this->assertTrue($service->isDue(document: $document, day: '2026-03-02T09:00:00+00:00'));
+		$this->assertFalse($service->isDue(document: $document, day: '2026-02-01T09:00:00+00:00'));
 
 		// An unread notification changes nothing: only a review does.
 		$reviewed = ($document + []);
 		$reviewed['reviewedAt'] = '2026-03-03T09:00:00+00:00';
-		$this->assertFalse($service->isDue(document: $reviewed, on: '2026-03-04T09:00:00+00:00'));
+		$this->assertFalse($service->isDue(document: $reviewed, day: '2026-03-04T09:00:00+00:00'));
 
 	}//end testADueDocumentStaysDueUntilSomebodyReviewsIt()
 
@@ -155,7 +155,7 @@ class DocumentReviewServiceTest extends TestCase {
 			'reviewedAt' => '2025-03-01T10:00:00+00:00',
 		];
 
-		$this->assertTrue($service->isDue(document: $document, on: '2026-03-02T09:00:00+00:00'));
+		$this->assertTrue($service->isDue(document: $document, day: '2026-03-02T09:00:00+00:00'));
 
 	}//end testAReviewFromBeforeTheDateDoesNotClearIt()
 
@@ -175,7 +175,7 @@ class DocumentReviewServiceTest extends TestCase {
 			]
 		);
 
-		$due = $service->listDue(on: '2026-06-01T00:00:00+00:00');
+		$due = $service->listDue(day: '2026-06-01T00:00:00+00:00');
 
 		$this->assertCount(1, $due);
 		$this->assertSame('doc-1', $due[0]['uuid']);

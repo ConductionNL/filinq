@@ -109,6 +109,34 @@ class PdfDocumentFactory {
 	}//end appendPages()
 
 	/**
+	 * Put the cover page on the front, with its bookmark.
+	 *
+	 * The bookmark is decided here rather than by the caller because this class
+	 * is the one that knows the cover starts at page 1. The caller only knows
+	 * whether the bundle carries bookmarks at all.
+	 *
+	 * @param MergedPdfDocument $document The document under construction, still empty.
+	 * @param string $pdf The raw bytes of the rendered cover.
+	 * @param bool $withBookmark Whether this bundle carries bookmarks.
+	 *
+	 * @return int How many pages the cover added.
+	 *
+	 * @throws RuntimeException When the bytes are not a PDF FPDI can read.
+	 *
+	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 */
+	public function appendCover(MergedPdfDocument $document, string $pdf, bool $withBookmark): int {
+		$pages = $this->appendPages(document: $document, pdf: $pdf);
+
+		if ($withBookmark === true) {
+			$document->addBookmark('Voorblad', 1);
+		}
+
+		return $pages;
+
+	}//end appendCover()
+
+	/**
 	 * The finished document, as bytes.
 	 *
 	 * @param MergedPdfDocument $document The document.

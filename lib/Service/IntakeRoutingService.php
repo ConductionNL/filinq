@@ -170,7 +170,20 @@ class IntakeRoutingService {
 			return null;
 		}
 
-		$row = $results[0];
+		return $this->normalise(row: $results[0]);
+
+	}//end find()
+
+	/**
+	 * Read one OpenRegister row into the flat shape this service uses.
+	 *
+	 * @param mixed $row The row.
+	 *
+	 * @return array<string, mixed>|null The declaration, or null when the row is not one.
+	 *
+	 * @spec exclude Shape adapter over an OpenRegister response.
+	 */
+	private function normalise(mixed $row): ?array {
 		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
 			$row = $row->jsonSerialize();
 		}
@@ -188,7 +201,7 @@ class IntakeRoutingService {
 
 		return $fields;
 
-	}//end find()
+	}//end normalise()
 
 	/**
 	 * Apply the declaration of one record type to a document being filed.
