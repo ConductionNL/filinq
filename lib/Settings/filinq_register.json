@@ -199,7 +199,7 @@
                 ],
                 "properties": {
                     "scope": {
-                        "description": "Discriminator: `document` = per-document/per-entity consent in the WOO workflow; `entity` = standing consent for a recurring entity (mayor, council member, etc.). Default `document` preserves backward compatibility — existing rows automatically load as `document`.",
+                        "description": "Discriminator: `document` = per-document/per-entity consent in the WOO workflow; `entity` = standing consent for a recurring entity (mayor, council member, etc.). Default `document` preserves backward compatibility: existing rows automatically load as `document`.",
                         "type": "string",
                         "enum": [
                             "document",
@@ -984,7 +984,7 @@
                         ]
                     },
                     "caseReference": {
-                        "description": "UUID of the source Zaak (case) in Procest. Cross-app reference: the target schema lives in Procest's register, not Filinq's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register.",
+                        "description": "UUID of the source Zaak (case) in Procest. Cross-app reference: the target schema lives in Procest's register, not Filinq's, so this is a plain identifier rather than an OpenRegister relation, see x-external-register.",
                         "type": "string",
                         "format": "uuid",
                         "x-external-register": "procest",
@@ -1265,7 +1265,7 @@
                         "maxLength": 64
                     },
                     "caseId": {
-                        "description": "UUID of the linked Zaak (case) in Procest (optional). Cross-app reference: the target schema lives in Procest's register, not Filinq's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register.",
+                        "description": "UUID of the linked Zaak (case) in Procest (optional). Cross-app reference: the target schema lives in Procest's register, not Filinq's, so this is a plain identifier rather than an OpenRegister relation, see x-external-register.",
                         "type": "string",
                         "format": "uuid",
                         "x-external-register": "procest",
@@ -1336,7 +1336,7 @@
                         "visible": true,
                         "order": 22,
                         "facetable": true,
-                        "title": "View",
+                        "title": "Saved view",
                         "maxLength": 255
                     },
                     "recordCount": {
@@ -1395,7 +1395,7 @@
                         "visible": true,
                         "order": 28,
                         "facetable": false,
-                        "title": "plainRenditionFileId"
+                        "title": "Plain-language file"
                     },
                     "plainRenditionFilePath": {
                         "description": "Where the plain-language rendition was filed.",
@@ -1404,7 +1404,7 @@
                         "visible": true,
                         "order": 29,
                         "facetable": false,
-                        "title": "plainRenditionFilePath",
+                        "title": "Plain-language file path",
                         "maxLength": 1024
                     },
                     "plainRenditionExplains": {
@@ -1414,7 +1414,7 @@
                         "visible": true,
                         "order": 30,
                         "facetable": false,
-                        "title": "plainRenditionExplains",
+                        "title": "Plain-language version explains",
                         "maxLength": 1024
                     },
                     "plainRenditionSource": {
@@ -1424,7 +1424,7 @@
                         "visible": true,
                         "order": 31,
                         "facetable": false,
-                        "title": "plainRenditionSource",
+                        "title": "Plain-language source",
                         "enum": [
                             "template",
                             "machine"
@@ -1437,7 +1437,7 @@
                         "visible": true,
                         "order": 32,
                         "facetable": false,
-                        "title": "plainRenditionAcceptedBy",
+                        "title": "Plain-language accepted by",
                         "maxLength": 64
                     },
                     "plainRenditionAcceptedAt": {
@@ -1447,7 +1447,7 @@
                         "visible": true,
                         "order": 33,
                         "facetable": false,
-                        "title": "plainRenditionAcceptedAt",
+                        "title": "Plain-language accepted at",
                         "format": "date-time"
                     },
                     "plainRenditionGeneratedAt": {
@@ -1457,7 +1457,7 @@
                         "visible": true,
                         "order": 34,
                         "facetable": false,
-                        "title": "plainRenditionGeneratedAt",
+                        "title": "Plain-language generated at",
                         "format": "date-time"
                     }
                 },
@@ -2048,7 +2048,7 @@
                         "maxLength": 64
                     },
                     "userId": {
-                        "description": "Nextcloud user ID that owns the batch. BatchStateService refuses a read by any other non-admin user. maxLength is 255, not 64: measured on the dev instance, OpenRegister enforces `required`, `enum` and property constraints EVEN WHEN `hardValidation` is false, so a long externally-provisioned uid over the limit would fail the batch write closed — the exact failure mode this schema exists to remove.",
+                        "description": "Nextcloud user ID that owns the batch. BatchStateService refuses a read by any other non-admin user. maxLength is 255, not 64: measured on the dev instance, OpenRegister enforces `required`, `enum` and property constraints EVEN WHEN `hardValidation` is false, so a long externally-provisioned uid over the limit would fail the batch write closed, which is the exact failure mode this schema exists to remove.",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -4205,7 +4205,7 @@
                 ],
                 "properties": {
                     "primaryName": {
-                        "description": "Human-readable primary identifier — the name on the court order or the categorical exemption title.",
+                        "description": "Human-readable primary identifier: the name on the court order or the categorical exemption title.",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -5951,7 +5951,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "View",
+                        "title": "Saved view",
                         "maxLength": 255
                     },
                     "templateId": {
