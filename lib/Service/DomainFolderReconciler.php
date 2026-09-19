@@ -95,6 +95,28 @@ class DomainFolderReconciler {
 		$inStep = 0;
 
 		foreach ($directory['domains'] as $domain) {
+			// 🔴 THE FOLDER IS MADE BEFORE ITS ACCESS IS RECONCILED. reconcile()
+			// reads and writes group access on a PATH; it never creates one. A
+			// domain whose folder does not exist yet therefore had every grant
+			// refused, night after night, and the report said "refused" with a
+			// file-system message rather than "there is no folder here". This
+			// is the reconciler ensureFolder() was written for, and it had no
+			// caller at all: the folder was never made by anything.
+			$made = $this->folderService->ensureFolder(domain: $domain, owner: $owner);
+			if ($made['error'] !== null) {
+				// A folder that could not be made is a refusal with its reason,
+				// not a skip. Skipping would make it indistinguishable from a
+				// folder that needed nothing.
+				$refused[] = [
+					'domain' => (string)($domain['id'] ?? ''),
+					'path' => (string)$made['path'],
+					'refused' => [['group' => '*', 'action' => 'create', 'reason' => (string)$made['error']]],
+					'granted' => [],
+					'revoked' => [],
+				];
+				continue;
+			}
+
 			try {
 				$outcome = $this->folderService->reconcile(domain: $domain, owner: $owner);
 			} catch (Throwable $e) {
