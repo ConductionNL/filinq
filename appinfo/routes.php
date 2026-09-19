@@ -92,6 +92,14 @@ $extra = [
         ['name' => 'caseDocuments#mine', 'url' => 'api/case-documents/mine', 'verb' => 'GET'],
         ['name' => 'caseDocuments#uploadPolicy', 'url' => 'api/case-documents/upload-policy', 'verb' => 'GET'],
 
+        // The post register's derived reads. The open post list is offered here
+        // rather than as an ADR-066 leaf because filinq ships no `leaves`
+        // webpack entry yet; a leaf registered without one is DARK, and the
+        // list is real behaviour that should not wait for the surface.
+        ['name' => 'postRegister#openPost', 'url' => 'api/post-register/open', 'verb' => 'GET'],
+        ['name' => 'postRegister#answers', 'url' => 'api/post-register/answers', 'verb' => 'GET'],
+        ['name' => 'postRegister#series', 'url' => 'api/post-register/series', 'verb' => 'GET'],
+
         // Layouts, bundles, periodic documents and reviews
         // (documents-from-a-template).
         ['name' => 'documentProduction#layoutVersions', 'url' => 'api/page-layouts', 'verb' => 'GET'],
@@ -105,6 +113,21 @@ $extra = [
         // Merge to PDF (merge-documents-to-pdf).
         ['name' => 'merge#create', 'url' => 'api/merge', 'verb' => 'POST'],
         ['name' => 'merge#show', 'url' => 'api/merge/{id}', 'verb' => 'GET'],
+
+        // Paper intake: separator sheets, scan profiles and batch splitting
+        // (scan-intake-with-separator-sheets).
+        ['name' => 'scanIntake#separators', 'url' => 'api/scan/separators', 'verb' => 'POST'],
+        ['name' => 'scanIntake#listProfiles', 'url' => 'api/scan/profiles', 'verb' => 'GET'],
+        ['name' => 'scanIntake#declareProfiles', 'url' => 'api/scan/profiles', 'verb' => 'POST'],
+        ['name' => 'scanIntake#split', 'url' => 'api/scan/batches/{fileId}/split', 'verb' => 'POST'],
+
+        // What leaves the building: the review mark, the composed publication
+        // list and the conditions a gated download waits on
+        // (redaction-and-what-leaves-the-building).
+        ['name' => 'redactionOutput#markChecked', 'url' => 'api/redaction/documents/{fileId}/checked', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'redactionOutput#composeList', 'url' => 'api/redaction/publication-list', 'verb' => 'POST'],
+        ['name' => 'redactionOutput#agreement', 'url' => 'api/redaction/agreement', 'verb' => 'GET'],
+        ['name' => 'redactionOutput#acceptAgreement', 'url' => 'api/redaction/agreement/accept', 'verb' => 'POST'],
 
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
@@ -223,6 +246,16 @@ $extra = [
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
+
+        // Signing folder routes (signing-folder-across-cases): everything
+        // pending for one signer across every record, and the pass that signs
+        // a selection of it through the per-request path above. The mandate
+        // declarations are instance configuration, so they are admin-only.
+        ['name' => 'signingFolder#folder', 'url' => 'api/signing/folder', 'verb' => 'GET'],
+        ['name' => 'signingFolder#signFolder', 'url' => 'api/signing/folder/sign', 'verb' => 'POST'],
+        ['name' => 'signingFolder#mandates', 'url' => 'api/signing/mandates', 'verb' => 'GET'],
+        ['name' => 'signingFolder#declareMandate', 'url' => 'api/signing/mandates', 'verb' => 'POST'],
+        ['name' => 'signingFolder#withdrawMandate', 'url' => 'api/signing/mandates/{typeApp}/{typeSchema}', 'verb' => 'DELETE'],
 
         // Portal signing receiver routes (portal-signing-actions,
         // portal-signing-surface): the A6 endpoint-forward targets portaliq

@@ -18,6 +18,31 @@
  *
  * ⚠️ The `@e2e` anchors name BOTH the change's delta spec and the canonical
  * spec it is synced into at archive time. Gate 19 scans `openspec/specs/` only.
+ *
+ * WHAT THIS FILE DELIBERATELY DOES NOT COVER, AND WHERE IT IS COVERED INSTEAD
+ * -------------------------------------------------------------------------
+ * Three members of this change run on the scheduler or before any document
+ * exists, and none of them has a surface a browser can reach:
+ *
+ *   - the nightly domain-folder reconciliation (REQ-CDF-02). Its whole point is
+ *     the report on drift it could NOT correct, and reddening that here would
+ *     mean a mount rigged to refuse a permission change, which is a fixture no
+ *     instance will hold still for. Covered by DomainFolderReconcilerTest,
+ *     including the partly-reconciled case that must report refused rather
+ *     than corrected.
+ *   - the nightly upload-fragment reaper (REQ-CDF-05). A fragment has to be
+ *     older than the declared age, and the floor under that age is one hour, so
+ *     an honest run of it takes an hour of wall clock. Covered by
+ *     UploadFragmentReaperTest, where the assertions that matter are the ones
+ *     about what it LEAVES.
+ *   - validating an external mount before it is used (REQ-CDF-06). The
+ *     validator is built and tested; the probe that asks a real mount what it
+ *     supports is not, because OCP\Files\Mount\IMountPoint and
+ *     OCP\Files\Storage\IStorage do not exist in this repository's test
+ *     environment. Covered by ExternalMountValidatorTest.
+ *
+ * Each of those scenarios carries its own `@e2e exclude` in the spec, so the
+ * gate sees the reason rather than a gap.
  */
 
 import type { APIRequestContext } from '@playwright/test'
@@ -121,13 +146,21 @@ test.describe('Case documents and the flat list', () => {
 
 		const list = await page.request.get(`${API}/case-documents/files`, {
 			headers: jsonHeaders(token),
-			params: { register: CASE.register, schema: CASE.schema, id: CASE.id, limit: 50 },
+			params: {
+				register: CASE.register,
+				schema: CASE.schema,
+				id: CASE.id,
+				limit: 50,
+			},
 		})
 		expect(list.status()).toBe(200)
 		const body = await list.json()
 		expect(body.total).toBeGreaterThanOrEqual(3)
 		for (const row of body.results) {
-			expect(row.record?.uuid, 'every row names the record it belongs to').not.toBe('')
+			expect(
+				row.record?.uuid,
+				'every row names the record it belongs to',
+			).not.toBe('')
 		}
 	})
 
@@ -162,21 +195,32 @@ test.describe('Case documents and the flat list', () => {
 			'een advies',
 		)
 		expect(status).toBeLessThan(300)
-		const uuid = await seedRecord(page.request, token, fileId, 'advies-voor-drie.txt')
+		const uuid = await seedRecord(
+			page.request,
+			token,
+			fileId,
+			'advies-voor-drie.txt',
+		)
 
-		const second = await page.request.post(`${API}/case-documents/${uuid}/domains`, {
-			headers: jsonHeaders(token),
-			data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
-		})
+		const second = await page.request.post(
+			`${API}/case-documents/${uuid}/domains`,
+			{
+				headers: jsonHeaders(token),
+				data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
+			},
+		)
 		expect(second.status()).toBe(200)
 		const linked = await second.json()
 		expect(Array.isArray(linked.domains)).toBe(true)
 		expect(linked.domains.length, 'the same domain twice stays one link').toBe(1)
 
-		const unlinked = await page.request.delete(`${API}/case-documents/${uuid}/domains`, {
-			headers: jsonHeaders(token),
-			data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
-		})
+		const unlinked = await page.request.delete(
+			`${API}/case-documents/${uuid}/domains`,
+			{
+				headers: jsonHeaders(token),
+				data: { register: CASE.register, schema: CASE.schema, id: CASE.id },
+			},
+		)
 		expect(unlinked.status()).toBe(200)
 
 		// The record itself survives the unlink, which is the whole point.
@@ -203,10 +247,15 @@ test.describe('Case documents and the flat list', () => {
 
 	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#an-executable-is-refused
 	// @e2e openspec/specs/document-register/spec.md#an-executable-is-refused
-	test('the upload policy is readable, and says what it allows', async ({ page }) => {
-		const response = await page.request.get(`${API}/case-documents/upload-policy`, {
-			headers: jsonHeaders(token),
-		})
+	test('the upload policy is readable, and says what it allows', async ({
+		page,
+	}) => {
+		const response = await page.request.get(
+			`${API}/case-documents/upload-policy`,
+			{
+				headers: jsonHeaders(token),
+			},
+		)
 		expect(response.status()).toBe(200)
 		const body = await response.json()
 

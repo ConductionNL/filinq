@@ -138,6 +138,7 @@ folder and MUST NOT be reimplemented in filinq.
 - GIVEN an external mount that does not support per-group permissions
 - WHEN it is configured as the store for a domain
 - THEN setup names the reconciliation requirement it cannot meet, before any document is stored
+- @e2e exclude the validation is reached from the setup path, which needs a probe over a real mount; covered by PHPUnit on ExternalMountValidator with a probe that refuses and a probe that cannot answer
 
 #### Scenario: Word on the desktop, through the sync client
 

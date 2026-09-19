@@ -37,6 +37,8 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use OCA\Filinq\Service\DemoDataService;
+use OCA\Filinq\Service\DomainFolderService;
+use OCA\Filinq\Service\ExternalMountValidator;
 
 /**
  * First-time setup wizard endpoints.
@@ -85,6 +87,7 @@ class SetupController extends Controller {
 	 * @param IAppConfig      $appConfig       Records the demo-data decision.
 	 * @param LoggerInterface $logger          Records a failed import.
 	 * @param DemoDataService $demoDataService Imports the shipped demo dataset.
+	 * @param ExternalMountValidator $mountValidator Names what the domain store cannot keep.
 	 *
 	 * @return void
 	 */
@@ -93,6 +96,7 @@ class SetupController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly DemoDataService $demoDataService,
+		private readonly ExternalMountValidator $mountValidator,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -124,6 +128,13 @@ class SetupController extends Controller {
 				'datasets'  => $this->demoDataService->listChoices(),
 				'steps'     => [
 					'demo-data' => ['done' => ($picked !== '')],
+					// 🔴 REQ-CDF-06 SAYS "BEFORE ANY DOCUMENT IS STORED", AND THIS
+					// IS THAT MOMENT. The wizard's status document is read before
+					// an administrator has put anything in the domain folders, so
+					// a store that cannot keep what reconciliation and the upload
+					// policy need is named here rather than discovered the first
+					// night the reconciler reports a refusal it cannot explain.
+					'domain-store' => $this->domainStoreStep(),
 					// "None" is an ANSWER, so the load step is finished the moment
 					// it is chosen: there is nothing left for the operator to run.
 					'load-demo-data' => [
@@ -134,6 +145,56 @@ class SetupController extends Controller {
 		);
 
 	}//end status()
+
+	/**
+	 * What the store behind the domain folders can and cannot keep.
+	 *
+	 * 🔑 IT NEVER BLOCKS SETUP. `done` is true whatever the findings say: an
+	 * administrator may legitimately run filinq on a store whose permissions are
+	 * managed outside Nextcloud, and an outstanding optional step opens the
+	 * wizard over every page. What they may not do is decide that without the
+	 * consequence in front of them, so the findings travel with the step.
+	 *
+	 * 🔴 A VALIDATOR THAT THROWS MUST NOT TAKE THE WIZARD DOWN. This runs on the
+	 * first screen an administrator sees; a storage backend that raises here
+	 * would make setup unreachable, which is a worse failure than the one the
+	 * check exists to report.
+	 *
+	 * @return array<string, mixed> The step.
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	private function domainStoreStep(): array {
+		try {
+			$result = $this->mountValidator->validate(path: DomainFolderService::ROOT);
+
+			return [
+				'done' => true,
+				'ok' => $result['ok'],
+				'findings' => $result['findings'],
+			];
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'filinq.setup.domain-store-check-failed',
+				['error' => $e->getMessage()]
+			);
+
+			// Reported as a finding of its own rather than as a pass. "The check
+			// did not run" and "the store is fine" must not look the same.
+			return [
+				'done' => true,
+				'ok' => false,
+				'findings' => [
+					[
+						'requirement' => 'check the store behind the domain folders',
+						'verdict' => ExternalMountValidator::UNKNOWN,
+						'message' => 'The store behind the domain folders could not be checked: ' . $e->getMessage(),
+					],
+				],
+			];
+		}//end try
+
+	}//end domainStoreStep()
 
 	/**
 	 * Persist the wizard's `choice` answer.

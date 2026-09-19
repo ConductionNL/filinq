@@ -133,6 +133,13 @@
 			"order": 60
 		},
 		{
+			"id": "SigningFolder",
+			"label": "Signing folder",
+			"icon": "SignatureFreehand",
+			"route": "SigningFolder",
+			"order": 65
+		},
+		{
 			"id": "CustomDictionary",
 			"label": "Custom dictionaries",
 			"icon": "Domain",
@@ -355,6 +362,14 @@
 				"route": "SigningRequestForm"
 			},
 			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered in the `signing` register, so CnIndexPage lists the requests directly. (`register` was `filinq` from Phase 8 until 2026-08-03 — a register Filinq has never shipped; see the Templates note.) Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
+		},
+		{
+			"id": "SigningFolder",
+			"route": "/signing-folder",
+			"type": "custom",
+			"title": "Signing folder",
+			"component": "SigningFolder",
+			"_note": "Everything still waiting for one signer, across every case (openspec/changes/signing-folder-across-cases, REQ-SFC-01..04). It has its own /signing-folder route, so the /signing/:id detail route cannot swallow it. The list is read from GET api/signing/folder on every visit and never cached: the folder is a query, not a stored list. NO TYPED ARCHETYPE FITS, and that is why this raises the custom-page count. type:index renders one schema through OpenRegister; this screen is a cross-case queue assembled by filinq from signing requests the signer holds a mandate for, with a multi-select and one bulk sign action that writes through api/signing/folder/sign. A typed index has neither the cross-schema fetch nor that action, so declaring one would show an empty list with no way to sign."
 		},
 		{
 			"id": "SigningRequestForm",

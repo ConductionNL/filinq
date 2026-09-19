@@ -28,6 +28,7 @@ namespace OCA\Filinq\AppInfo;
 use OCA\Filinq\Dashboard\AnonymizationWidget;
 use OCA\Filinq\Dashboard\FileEntitiesWidget;
 use OCA\Filinq\EventListener\DossierCheckedOnListener;
+use OCA\Filinq\EventListener\DocumentRegistrationWriteGuard;
 use OCA\Filinq\EventListener\FilinqEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -46,6 +47,11 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) This class IS the list of
+ * listeners the app registers, so its coupling is the count of them. The
+ * fourteenth is DocumentRegistrationWriteGuard, which refuses a change to a
+ * registration number before the write lands.
  */
 class ObjectEventRegistrar {
 	/**
@@ -78,6 +84,16 @@ class ObjectEventRegistrar {
 		// Filinq will enrich metadata and manage consent tracking.
 		$context->registerEventListener(ObjectCreatedEvent::class, FilinqEventListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, FilinqEventListener::class);
+
+		// The PRE-write event, so a registration number already issued cannot be
+		// moved. The past-tense listener above cannot do this: by the time it
+		// fires the number has already changed. Verified rather than assumed:
+		// MagicMapper dispatches ObjectUpdatingEvent before the update and
+		// throws HookStoppedException when a listener stops propagation.
+		$context->registerEventListener(
+			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
+			DocumentRegistrationWriteGuard::class
+		);
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);
 
 		// REGISTERED BY STRING, NOT BY `::class`. `EntityRelationDecisionUpdatedEvent`

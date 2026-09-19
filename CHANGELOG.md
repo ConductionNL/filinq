@@ -9,6 +9,14 @@
 
 ### Added
 
+- **Filinq records now sit on the standard leaves, and Filinq's documents are visible outside Filinq (`leaf-integrations`).** Six schemas opt in: a signing request and a consent record link to NC Mail and show their deadline on the calendar leaf, a signer bridges to Contacts, generated documents and dossiers carry the files leaf, and publication follow-ups get a Deck card. An objection mail or an inbound case mail can seed a consent or correspondence record from the Mail sidebar, in its initial state only: no decision, no status advance, no send.
+
+  Filinq also contributes its first leaf. `filinq-documents` renders the documents Filinq holds for any Open Register object, on the object's own page in whichever app shows it, through Filinq's existing flat list and its existing access control.
+
+  The leaf ships as its own `filinq-leaves` bundle. Without one, Open Register looks for `js/filinq-leaves.js`, finds nothing and skips the app in silence, so a leaf whose halves both registered would render nowhere with every check green.
+
+  Each leaf hides when its Nextcloud app is absent, and the record still opens. The agent surface is unchanged: a signer record and a consent record stay off it.
+
 - **Agents can now edit spreadsheets and presentations, not just text documents (`multi-format-editing-tools`).** Four new tools — `readSpreadsheet`, `editSpreadsheet`, `readPresentation`, `editPresentation` — over `.ods`/`.xlsx` and `.pptx`/`.odp`. They reuse the existing lock, version precondition and agent-authored marking rather than opening a second write path.
 
   Addressing follows the durable identity each kind already has: spreadsheets by `Sheet!Cell`, presentations by slide id and shape id (**never position** — slide order changes and ids do not). Speaker notes are a distinct region so drafting talking points cannot alter what is on screen.
