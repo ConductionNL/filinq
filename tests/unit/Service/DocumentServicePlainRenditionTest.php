@@ -50,6 +50,13 @@ use Psr\Log\NullLogger;
  * `DocumentService` with a plain-language counterpart.
  *
  * @covers \OCA\Filinq\Service\DocumentService
+ *
+ * @uses \OCA\Filinq\Exception\PlainRenditionRefusedException
+ * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
+ * @uses \OCA\Filinq\Service\DocumentRenderPipeline
+ * @uses \OCA\Filinq\Service\GeneratedDocumentLogger
+ * @uses \OCA\Filinq\Service\PlainLanguageRenditionService
+ * @uses \OCA\Filinq\Service\PlainRenditionAcceptanceGate
  */
 class DocumentServicePlainRenditionTest extends TestCase {
 

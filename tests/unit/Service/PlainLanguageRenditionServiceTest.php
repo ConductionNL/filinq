@@ -45,6 +45,9 @@ use RuntimeException;
  * `PlainLanguageRenditionService`.
  *
  * @covers \OCA\Filinq\Service\PlainLanguageRenditionService
+ *
+ * @uses \OCA\Filinq\Exception\PlainRenditionRefusedException
+ * @uses \OCA\Filinq\Service\PlainRenditionAcceptanceGate
  */
 class PlainLanguageRenditionServiceTest extends TestCase {
 
