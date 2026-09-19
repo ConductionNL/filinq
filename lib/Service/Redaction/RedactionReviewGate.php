@@ -122,6 +122,13 @@ class RedactionReviewGate {
 		$checkedRun = trim((string)($mark['detectionRun'] ?? ''));
 		if ($checkedRun !== $detectionRunId) {
 			// 🔴 THE APPROVAL WAS REAL AND IT WAS ABOUT DIFFERENT FINDINGS.
+			//
+			// This comparison is the whole of the re-detection rule, and it is
+			// why a re-run needs no mark of its own. Carrying the old mark
+			// forward with a note, or keeping it "for reference", is how it
+			// ends up read as an approval: every surface that asks "is there
+			// a mark" gets yes. Nothing does that, and this branch is what
+			// makes sure nothing can.
 			return $this->refusal(
 				reason: self::CHECKED_AN_OLDER_RUN,
 				message: sprintf(
@@ -163,21 +170,6 @@ class RedactionReviewGate {
 	public function mayWrite(?array $mark, string $detectionRunId): bool {
 		return ($this->refuse(mark: $mark, detectionRunId: $detectionRunId) === null);
 	}//end mayWrite()
-
-	/**
-	 * The mark a re-run of detection leaves behind.
-	 *
-	 * Null, always. Carrying the old mark forward with a note, or keeping it
-	 * "for reference", is how it ends up read as an approval: every surface
-	 * that asks "is there a mark" gets yes.
-	 *
-	 * @return array<string, mixed>|null Nothing.
-	 *
-	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
-	 */
-	public function markAfterRedetection(): ?array {
-		return null;
-	}//end markAfterRedetection()
 
 	/**
 	 * Which documents in a batch are refused, and why each one.
