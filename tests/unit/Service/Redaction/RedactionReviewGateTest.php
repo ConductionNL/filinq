@@ -117,16 +117,25 @@ class RedactionReviewGateTest extends TestCase {
 	}//end testTheStaleRefusalNamesWhoCheckedItBefore()
 
 	/**
-	 * 🔴 A RE-RUN LEAVES NO MARK AT ALL. Carrying the old one forward "for
-	 * reference" is how it ends up read as an approval: every surface that asks
-	 * "is there a mark" gets yes.
+	 * 🔴 A RE-RUN LEAVES NO MARK AT ALL, AND AN OLD ONE DOES NOT STAND IN FOR
+	 * ONE. Carrying the old mark forward "for reference" is how it ends up
+	 * read as an approval: every surface that asks "is there a mark" gets yes.
+	 *
+	 * This used to assert against `markAfterRedetection()`, a method that
+	 * returned a literal null and that nothing called. Asserting a constant
+	 * cannot fail on the thing that matters, which is whether the gate
+	 * refuses. Both refusals are asserted here instead.
 	 *
 	 * @return void
 	 */
 	public function testRedetectionLeavesNoMarkBehind(): void {
-		$this->assertNull($this->gate->markAfterRedetection());
 		$this->assertFalse(
-			$this->gate->mayWrite(mark: $this->gate->markAfterRedetection(), detectionRunId: 'run-2')
+			$this->gate->mayWrite(mark: null, detectionRunId: 'run-2'),
+			'a re-run with no mark must not be written'
+		);
+		$this->assertFalse(
+			$this->gate->mayWrite(mark: $this->mark(run: 'run-1'), detectionRunId: 'run-2'),
+			'the mark from the previous run must not stand in for one on this run'
 		);
 	}//end testRedetectionLeavesNoMarkBehind()
 
