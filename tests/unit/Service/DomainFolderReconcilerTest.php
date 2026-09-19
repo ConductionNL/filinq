@@ -74,17 +74,29 @@ class DomainFolderReconcilerTest extends TestCase {
 	 * A folder service answering with the given outcomes, in order.
 	 *
 	 * @param array<int, array<string, mixed>> $outcomes One outcome per domain.
+	 * @param string|null                      $createError Why the folder could not be made, or null when it can.
 	 *
 	 * @return DomainFolderService The double.
 	 */
-	private function folders(array $outcomes): DomainFolderService {
+	private function folders(array $outcomes, ?string $createError = null): DomainFolderService {
 		$service = $this->getMockBuilder(DomainFolderService::class)
 			->disableOriginalConstructor()
-			->onlyMethods(['reconcile', 'pathFor'])
+			->onlyMethods(['reconcile', 'pathFor', 'ensureFolder'])
 			->getMock();
 
 		$service->method('pathFor')->willReturnCallback(
 			static fn (array $domain): string => 'Filinq/' . (string)($domain['id'] ?? '')
+		);
+
+		// The reconciler makes the folder before it reconciles access, because
+		// reconcile() reads and writes group access on a path and never
+		// creates one.
+		$service->method('ensureFolder')->willReturnCallback(
+			static fn (array $domain): array => [
+				'created' => ($createError === null),
+				'path' => 'Filinq/' . (string)($domain['id'] ?? ''),
+				'error' => $createError,
+			]
 		);
 
 		$calls = 0;
@@ -273,4 +285,84 @@ class DomainFolderReconcilerTest extends TestCase {
 		self::assertStringContainsString('configured', $report['reason']);
 		self::assertSame(0, $report['inStepCount']);
 	}//end testUnconfiguredIsASkipNotACleanNight()
+
+	/**
+	 * Every domain's folder is made before its access is reconciled.
+	 *
+	 * reconcile() reads and writes group access on a PATH and never creates
+	 * one, so a domain whose folder does not exist yet had every grant refused
+	 * with a file-system message, night after night. ensureFolder() exists to
+	 * answer that and had no caller anywhere in lib/.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function testTheFolderIsMadeBeforeItsAccessIsReconciled(): void {
+		$folders = $this->getMockBuilder(DomainFolderService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['reconcile', 'pathFor', 'ensureFolder'])
+			->getMock();
+
+		$folders->method('pathFor')->willReturnCallback(
+			static fn (array $domain): string => 'Filinq/' . (string)($domain['id'] ?? '')
+		);
+
+		$order = [];
+		$folders->method('ensureFolder')->willReturnCallback(
+			static function (array $domain) use (&$order): array {
+				$order[] = 'ensureFolder:' . (string)($domain['id'] ?? '');
+
+				return ['created' => true, 'path' => 'Filinq/' . (string)($domain['id'] ?? ''), 'error' => null];
+			}
+		);
+		$folders->method('reconcile')->willReturnCallback(
+			function (array $domain) use (&$order): array {
+				$order[] = 'reconcile:' . (string)($domain['id'] ?? '');
+
+				return $this->outcome(DomainFolderService::STATE_IN_STEP, 'Filinq/' . (string)($domain['id'] ?? ''));
+			}
+		);
+
+		(new DomainFolderReconciler($this->directory([['id' => 'zaak-1']]), $folders, new NullLogger()))->run();
+
+		self::assertSame(
+			['ensureFolder:zaak-1', 'reconcile:zaak-1'],
+			$order,
+			'the folder must be made first: reconcile() only reads and writes access on a path that already exists'
+		);
+	}//end testTheFolderIsMadeBeforeItsAccessIsReconciled()
+
+	/**
+	 * A folder that could not be made is a refusal with its reason.
+	 *
+	 * Not a skip: a skipped domain is indistinguishable in the report from one
+	 * that needed nothing, which is the reading this reconciler exists to
+	 * prevent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 */
+	public function testAFolderThatCouldNotBeMadeIsRefusedNotSkipped(): void {
+		$reconciler = new DomainFolderReconciler(
+			$this->directory([['id' => 'zaak-1']]),
+			$this->folders(
+				[$this->outcome(DomainFolderService::STATE_IN_STEP, 'Filinq/zaak-1')],
+				'the storage is read only'
+			),
+			new NullLogger()
+		);
+
+		$report = $reconciler->run();
+
+		self::assertSame(1, $report['refusedCount']);
+		self::assertSame('create', $report['refused'][0]['refused'][0]['action']);
+		self::assertSame('the storage is read only', $report['refused'][0]['refused'][0]['reason']);
+		self::assertSame(
+			0,
+			$report['inStepCount'],
+			'a domain with no folder must not be counted as in step'
+		);
+	}//end testAFolderThatCouldNotBeMadeIsRefusedNotSkipped()
 }//end class
