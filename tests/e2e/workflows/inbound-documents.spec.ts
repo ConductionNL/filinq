@@ -28,7 +28,8 @@ import { API, harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 const OR_INTAKE = '/index.php/apps/openregister/api/objects/filinq/intakeDocument'
 
 /** The OpenRegister objects endpoint for the routing declarations. */
-const OR_ROUTING = '/index.php/apps/openregister/api/objects/filinq/intakeRoutingRule'
+const OR_ROUTING =
+	'/index.php/apps/openregister/api/objects/filinq/intakeRoutingRule'
 
 /**
  * Seed one intake document in a given state.
@@ -53,7 +54,9 @@ async function seed(
 			...fields,
 		},
 	})
-	expect(created.status(), 'seeding an intake document must succeed').toBeLessThan(300)
+	expect(created.status(), 'seeding an intake document must succeed').toBeLessThan(
+		300,
+	)
 	const body = await created.json()
 	const uuid = body?.['@self']?.id || body?.id || body?.uuid || ''
 	expect(uuid, 'seeding must yield a uuid').not.toBe('')
@@ -73,7 +76,9 @@ async function readBack(
 	token: string,
 	uuid: string,
 ): Promise<Record<string, unknown>> {
-	const response = await req.get(`${OR_INTAKE}/${uuid}`, { headers: jsonHeaders(token) })
+	const response = await req.get(`${OR_INTAKE}/${uuid}`, {
+		headers: jsonHeaders(token),
+	})
 	expect(response.status()).toBe(200)
 	const body = await response.json()
 	return (body.object ?? body) as Record<string, unknown>
@@ -109,7 +114,11 @@ test.describe('Inbound documents and the worklist', () => {
 			`${API}/intake/documents/${attachment}/assign`,
 			{
 				headers: jsonHeaders(token),
-				data: { register: 'filinq', schema: 'dossier', id: await firstDossier(page.request, token) },
+				data: {
+					register: 'filinq',
+					schema: 'dossier',
+					id: await firstDossier(page.request, token),
+				},
 			},
 		)
 		expect(assigned.status()).toBe(200)
@@ -146,10 +155,14 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(stored.detachReason).toBe('verkeerde zaak')
 
 		await page.goto('/index.php/apps/filinq/#/intake')
-		await expect(page.getByTestId('intake-index')).toBeVisible({ timeout: 15000 })
+		await expect(page.getByTestId('intake-index')).toBeVisible({
+			timeout: 15000,
+		})
 		await page.getByTestId('intake-mode-detached').click()
 		await expect(
-			page.getByRole('row', { name: new RegExp(`${TEST_PREFIX}-verkeerde-zaak`) }),
+			page.getByRole('row', {
+				name: new RegExp(`${TEST_PREFIX}-verkeerde-zaak`),
+			}),
 		).toBeVisible({ timeout: 15000 })
 	})
 
@@ -203,16 +216,19 @@ test.describe('Inbound documents and the worklist', () => {
 			subject: `${TEST_PREFIX}-routing`,
 			sourceRef: `${TEST_PREFIX}-routing`,
 		})
-		const assigned = await page.request.post(`${API}/intake/documents/${uuid}/assign`, {
-			headers: jsonHeaders(token),
-			data: {
-				register: 'filinq',
-				schema: 'dossier',
-				id: await firstDossier(page.request, token),
-				declaringApp: 'dossiq',
-				typeReference,
+		const assigned = await page.request.post(
+			`${API}/intake/documents/${uuid}/assign`,
+			{
+				headers: jsonHeaders(token),
+				data: {
+					register: 'filinq',
+					schema: 'dossier',
+					id: await firstDossier(page.request, token),
+					declaringApp: 'dossiq',
+					typeReference,
+				},
 			},
-		})
+		)
 		expect(assigned.status()).toBe(200)
 
 		const stored = await readBack(page.request, token, uuid)
@@ -228,22 +244,27 @@ test.describe('Inbound documents and the worklist', () => {
 
 	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#no-declaration-no-routing
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#no-declaration-no-routing
-	test('a record type nobody declared is assigned without routing', async ({ page }) => {
+	test('a record type nobody declared is assigned without routing', async ({
+		page,
+	}) => {
 		const uuid = await seed(page.request, token, {
 			subject: `${TEST_PREFIX}-geen-routing`,
 			sourceRef: `${TEST_PREFIX}-geen-routing`,
 		})
 
-		const assigned = await page.request.post(`${API}/intake/documents/${uuid}/assign`, {
-			headers: jsonHeaders(token),
-			data: {
-				register: 'filinq',
-				schema: 'dossier',
-				id: await firstDossier(page.request, token),
-				declaringApp: 'dossiq',
-				typeReference: `${TEST_PREFIX}-niet-gedeclareerd`,
+		const assigned = await page.request.post(
+			`${API}/intake/documents/${uuid}/assign`,
+			{
+				headers: jsonHeaders(token),
+				data: {
+					register: 'filinq',
+					schema: 'dossier',
+					id: await firstDossier(page.request, token),
+					declaringApp: 'dossiq',
+					typeReference: `${TEST_PREFIX}-niet-gedeclareerd`,
+				},
 			},
-		})
+		)
 		expect(assigned.status()).toBe(200)
 
 		const stored = await readBack(page.request, token, uuid)
@@ -252,7 +273,9 @@ test.describe('Inbound documents and the worklist', () => {
 
 	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-rejection-teaches-the-corpus
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#a-rejection-teaches-the-corpus
-	test('rejecting a party suggestion is recorded as a correction', async ({ page }) => {
+	test('rejecting a party suggestion is recorded as a correction', async ({
+		page,
+	}) => {
 		const recorded = await page.request.post(`${API}/intake/party-decisions`, {
 			headers: jsonHeaders(token),
 			data: {
@@ -295,13 +318,13 @@ test.describe('Inbound documents and the worklist', () => {
  * @param token The CSRF request-token.
  * @return The dossier id.
  */
-async function firstDossier(
-	req: APIRequestContext,
-	token: string,
-): Promise<string> {
-	const list = await req.get('/index.php/apps/openregister/api/objects/filinq/dossier', {
-		headers: jsonHeaders(token),
-	})
+async function firstDossier(req: APIRequestContext, token: string): Promise<string> {
+	const list = await req.get(
+		'/index.php/apps/openregister/api/objects/filinq/dossier',
+		{
+			headers: jsonHeaders(token),
+		},
+	)
 	expect(list.status()).toBe(200)
 	const body = await list.json()
 	const first = Array.isArray(body?.results) ? body.results[0] : null
@@ -310,10 +333,13 @@ async function firstDossier(
 		return existing
 	}
 
-	const created = await req.post('/index.php/apps/openregister/api/objects/filinq/dossier', {
-		headers: jsonHeaders(token),
-		data: { title: `${TEST_PREFIX}-dossier` },
-	})
+	const created = await req.post(
+		'/index.php/apps/openregister/api/objects/filinq/dossier',
+		{
+			headers: jsonHeaders(token),
+			data: { title: `${TEST_PREFIX}-dossier` },
+		},
+	)
 	expect(created.status()).toBeLessThan(300)
 	const made = await created.json()
 	return made?.['@self']?.id || made?.id || ''

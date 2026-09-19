@@ -50,7 +50,9 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			</template>
 
 			<template #column-channel="{ row }">
-				<CnStatusBadge :label="channelLabel(row.channel)" :colorMap="channelColorMap" />
+				<CnStatusBadge
+					:label="channelLabel(row.channel)"
+					:colorMap="channelColorMap" />
 			</template>
 
 			<template #column-receivedAt="{ row }">
@@ -172,11 +174,18 @@ export default {
 				{ key: 'channel', label: t('filinq', 'Channel'), sortable: true },
 				{ key: 'sender', label: t('filinq', 'Sender'), sortable: true },
 				{ key: 'subject', label: t('filinq', 'Subject'), sortable: true },
-				{ key: 'receivedAt', label: t('filinq', 'Received'), sortable: true },
+				{
+					key: 'receivedAt',
+					label: t('filinq', 'Received'),
+					sortable: true,
+				},
 			]
 			if (this.mode === 'detached') {
 				columns.push({ key: 'detachReason', label: t('filinq', 'Reason') })
-				columns.push({ key: 'detachedBy', label: t('filinq', 'Taken off by') })
+				columns.push({
+					key: 'detachedBy',
+					label: t('filinq', 'Taken off by'),
+				})
 			}
 			return columns
 		},
@@ -188,11 +197,15 @@ export default {
 			if (this.mode === 'detached') {
 				return t('filinq', 'No document has been taken off a record.')
 			}
-			return t('filinq', 'Nothing is waiting. Every document that arrived has a record.')
+			return t(
+				'filinq',
+				'Nothing is waiting. Every document that arrived has a record.',
+			)
 		},
 
 		rejectExplanation() {
-			const subject = this.rejectTarget?.subject || t('filinq', 'this document')
+			const subject =
+				this.rejectTarget?.subject || t('filinq', 'this document')
 			return t(
 				'filinq',
 				'Say why "{subject}" does not belong here. The reason stays with the document.',
@@ -337,7 +350,8 @@ export default {
 				await this.load()
 			} catch (error) {
 				this.actionError =
-					error?.response?.data?.error || t('filinq', 'The rejection was refused.')
+					error?.response?.data?.error
+					|| t('filinq', 'The rejection was refused.')
 			} finally {
 				this.saving = false
 			}

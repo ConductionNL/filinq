@@ -131,19 +131,27 @@ test.describe('The intake inbox', () => {
 			`${API}/intake/documents/${uuid}/assign`,
 			{
 				headers: jsonHeaders(token),
-				data: { register: 'filinq', schema: 'dossier', id: await firstDossier(page.request, token) },
+				data: {
+					register: 'filinq',
+					schema: 'dossier',
+					id: await firstDossier(page.request, token),
+				},
 			},
 		)
 		expect(assigned.status()).toBe(200)
 
 		const stored = await readBack(page.request, token, uuid)
-		expect(stored.status ?? (stored as Record<string, Record<string, unknown>>).object?.status).toBe(
-			'assigned',
-		)
+		expect(
+			stored.status
+				?? (stored as Record<string, Record<string, unknown>>).object
+					?.status,
+		).toBe('assigned')
 
 		// And it is gone from the inbox, which is the thing a clerk notices.
 		await page.goto('/index.php/apps/filinq/#/intake')
-		await expect(page.getByTestId('intake-index')).toBeVisible({ timeout: 15000 })
+		await expect(page.getByTestId('intake-index')).toBeVisible({
+			timeout: 15000,
+		})
 		await expect(
 			page.getByRole('row', { name: new RegExp(`${TEST_PREFIX}-toewijzen`) }),
 		).toHaveCount(0)
@@ -214,16 +222,22 @@ test.describe('The intake inbox', () => {
 		)
 		const dossier = await firstDossier(page.request, token)
 
-		const first = await page.request.post(`${API}/intake/documents/${uuid}/assign`, {
-			headers: jsonHeaders(token),
-			data: { register: 'filinq', schema: 'dossier', id: dossier },
-		})
+		const first = await page.request.post(
+			`${API}/intake/documents/${uuid}/assign`,
+			{
+				headers: jsonHeaders(token),
+				data: { register: 'filinq', schema: 'dossier', id: dossier },
+			},
+		)
 		expect(first.status()).toBe(200)
 
-		const second = await page.request.post(`${API}/intake/documents/${uuid}/assign`, {
-			headers: jsonHeaders(token),
-			data: { register: 'filinq', schema: 'dossier', id: dossier },
-		})
+		const second = await page.request.post(
+			`${API}/intake/documents/${uuid}/assign`,
+			{
+				headers: jsonHeaders(token),
+				data: { register: 'filinq', schema: 'dossier', id: dossier },
+			},
+		)
 		expect(second.status()).toBe(409)
 	})
 })
@@ -235,13 +249,13 @@ test.describe('The intake inbox', () => {
  * @param token The CSRF request-token.
  * @return The dossier id.
  */
-async function firstDossier(
-	req: APIRequestContext,
-	token: string,
-): Promise<string> {
-	const list = await req.get('/index.php/apps/openregister/api/objects/filinq/dossier', {
-		headers: jsonHeaders(token),
-	})
+async function firstDossier(req: APIRequestContext, token: string): Promise<string> {
+	const list = await req.get(
+		'/index.php/apps/openregister/api/objects/filinq/dossier',
+		{
+			headers: jsonHeaders(token),
+		},
+	)
 	expect(list.status()).toBe(200)
 	const body = await list.json()
 	const first = Array.isArray(body?.results) ? body.results[0] : null
@@ -250,10 +264,13 @@ async function firstDossier(
 		return existing
 	}
 
-	const created = await req.post('/index.php/apps/openregister/api/objects/filinq/dossier', {
-		headers: jsonHeaders(token),
-		data: { title: `${TEST_PREFIX}-dossier` },
-	})
+	const created = await req.post(
+		'/index.php/apps/openregister/api/objects/filinq/dossier',
+		{
+			headers: jsonHeaders(token),
+			data: { title: `${TEST_PREFIX}-dossier` },
+		},
+	)
 	expect(created.status()).toBeLessThan(300)
 	const made = await created.json()
 	return made?.['@self']?.id || made?.id || ''
