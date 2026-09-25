@@ -51,7 +51,7 @@
     "axe-core": "^4.12.1",
     "babel-loader": "^10.1.1",
     "css-loader": "^7.1.2",
-    "dexie": "^4.4.5",
+    "dexie": "4.4.6",
     "dompurify": "^3.4.15",
     "gridstack": "^13.2.0",
     "jszip": "^3.10.1",
