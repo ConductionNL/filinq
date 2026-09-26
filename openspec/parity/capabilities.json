@@ -4671,7 +4671,7 @@
 			"filinq": "partial",
 			"built": {
 				"state": "built",
-				"owner": "files_confidential (third-party Nextcloud app; the labeling UI and any access restriction it applies are not part of this repo)",
+				"owner": "nextcloud/files_confidential",
 				"evidence": "lib/Service/ConfidentialityLabelService.php reads a file's confidentiality label via Nextcloud's system-tag API, but ONLY when the external, optional Nextcloud app `files_confidential` is installed (openspec/specs/files-confidential-labels/spec.md REQ-DDFCL-001; guarded via IAppManager, returns null and never crashes otherwise). lib/Service/AnonymizationService.php:319 and lib/Service/FolderBatchService.php consume the label to inform anonymisation, not to restrict file access."
 			},
 			"reachedOn": "no filinq page reads or sets this label; it is read internally during anonymisation only",
@@ -4679,7 +4679,7 @@
 			"providerHow": "read-from-code",
 			"feature": "files-confidential-labels",
 			"featureConfidence": "high",
-			"note": "Filinq neither labels files nor restricts access by the label itself; it only reads an existing label (if the optional sibling app is installed) to steer its own anonymisation defaults.",
+			"note": "Filinq neither labels files nor restricts access by the label itself; it only reads an existing label (if the optional sibling app is installed) to steer its own anonymisation defaults. files_confidential is a third-party Nextcloud app; the labeling UI and any access restriction it applies are not part of this repo.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
