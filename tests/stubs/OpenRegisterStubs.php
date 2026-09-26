@@ -204,6 +204,21 @@ class ObjectService {
 	}//end setSchema()
 
 	/**
+	 * Get the Schema entity of the current schema context.
+	 *
+	 * Loosely typed (vs. the real `?Schema`) for the same reason as
+	 * `setSchema()`: the stub does not know OpenRegister's entity classes.
+	 * The intake gate reads the schema's `authorization.update` declaration
+	 * off this entity, so a double that could not answer it would have no way
+	 * to express "this schema is restricted".
+	 *
+	 * @return mixed The Schema entity, or null when no schema is set.
+	 */
+	public function getCurrentSchemaEntity() {
+		return null;
+	}//end getCurrentSchemaEntity()
+
+	/**
 	 * Get the current register context's resolved numeric ID.
 	 *
 	 * @return int|null
@@ -260,6 +275,43 @@ class RegisterService {
 	 * @return array
 	 */
 	public function findAll($limit = null, $offset = null, $filters = [], $searchConditions = [], $searchParams = [], $_extend = []) {
+		return [];
+	}//end findAll()
+}//end class
+
+/**
+ * Stub for ViewService (saved views).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class ViewService {
+	/**
+	 * Find one saved view.
+	 *
+	 * Loosely typed (vs. the real `View`) so the stub does not need to know
+	 * OpenRegister's entity class beyond the getters filinq reads.
+	 *
+	 * @param int|string $id The view id or slug.
+	 * @param string $owner The user asking.
+	 *
+	 * @return mixed The view.
+	 */
+	public function find($id, string $owner) {
+		return null;
+	}//end find()
+
+	/**
+	 * Every view one user can see.
+	 *
+	 * @param string $owner The user asking.
+	 *
+	 * @return array The views.
+	 */
+	public function findAll(string $owner): array {
 		return [];
 	}//end findAll()
 }//end class
@@ -566,6 +618,44 @@ class Schema {
 	public function jsonSerialize(): array {
 		return [];
 	}//end jsonSerialize()
+}//end class
+
+/**
+ * Stub for the View entity.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class View {
+	/**
+	 * The stored query: registers, schemas and filters.
+	 *
+	 * @return array The query.
+	 */
+	public function getQuery(): array {
+		return [];
+	}//end getQuery()
+
+	/**
+	 * The view's name.
+	 *
+	 * @return string The name.
+	 */
+	public function getName(): string {
+		return '';
+	}//end getName()
+
+	/**
+	 * The view's id.
+	 *
+	 * @return int|null The id.
+	 */
+	public function getId() {
+		return null;
+	}//end getId()
 }//end class
 
 /**
@@ -1572,6 +1662,19 @@ interface IUser {
  */
 interface IGroupManager {
 	public function isAdmin(string $userId): bool;
+
+	/**
+	 * Signature pinned to OCP\IGroupManager::isInGroup($userId, $group) at
+	 * HEAD. A stub that omits a method the real interface has cannot be
+	 * configured on a mock, so the test fails at setup rather than reporting
+	 * a guard that was never exercised.
+	 *
+	 * @param string $userId The user id.
+	 * @param string $group The group id.
+	 *
+	 * @return bool Whether the user is in the group.
+	 */
+	public function isInGroup(string $userId, string $group): bool;
 }//end interface
 
 namespace OCP\Files;
@@ -1734,6 +1837,19 @@ interface Node {
 	 * @return bool
 	 */
 	public function isUpdateable();
+
+	/**
+	 * Whether the acting user may create a new node inside this one.
+	 *
+	 * Declared here because the REAL `OCP\Files\Folder` declares it
+	 * (`vendor/nextcloud/ocp/OCP/Files/Folder.php`) and this stub shadows that
+	 * interface. A stub that is missing a method the real class has makes a
+	 * double refuse to answer a call production makes every day, which is the
+	 * mirror of a double inventing one.
+	 *
+	 * @return bool
+	 */
+	public function isCreatable();
 }//end interface
 
 /**
@@ -2136,6 +2252,57 @@ class ObjectCreatedEvent extends Event {
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
+/**
+ * Stub for OCA\OpenRegister\Event\ObjectUpdatingEvent.
+ *
+ * The PRE-write event. Mirrors the real class, verified against
+ * openregister/lib/Event/ObjectUpdatingEvent.php on 2026-09-18: the same
+ * constructor, `getNewObject()`, `getOldObject()`, `setErrors()`,
+ * `stopPropagation()` and `isPropagationStopped()`.
+ *
+ * 🔑 THE REFUSAL IS REAL, NOT DECORATIVE, and that was checked rather than
+ * assumed: `MagicMapper` dispatches this event before an update and throws
+ * `HookStoppedException` carrying the listener's own errors when propagation
+ * was stopped. A stub that merely recorded the call would let a guard pass its
+ * tests while refusing nothing in production.
+ */
+class ObjectUpdatingEvent extends Event {
+	private array $errors = [];
+
+	private bool $stopped = false;
+
+	public function __construct(
+		private readonly ?ObjectEntity $newObject = null,
+		private readonly ?ObjectEntity $oldObject = null,
+	) {
+		parent::__construct();
+	}//end __construct()
+
+	public function getNewObject(): ?ObjectEntity {
+		return $this->newObject;
+	}//end getNewObject()
+
+	public function getOldObject(): ?ObjectEntity {
+		return $this->oldObject;
+	}//end getOldObject()
+
+	public function setErrors(array $errors): void {
+		$this->errors = $errors;
+	}//end setErrors()
+
+	public function getErrors(): array {
+		return $this->errors;
+	}//end getErrors()
+
+	public function stopPropagation(): void {
+		$this->stopped = true;
+	}//end stopPropagation()
+
+	public function isPropagationStopped(): bool {
+		return $this->stopped;
+	}//end isPropagationStopped()
+}//end class
+
 class ObjectUpdatedEvent extends Event {
 	public function __construct(
 		private readonly ?ObjectEntity $newObject = null,
@@ -2468,5 +2635,154 @@ class TaskState {
 		}
 
 		return in_array(strtolower(trim($outcome)), self::REJECTING_OUTCOMES, true);
+	}
+}//end class
+
+namespace OCA\OpenRegister\Service\Integration;
+
+/**
+ * Stub for LeafDescriptor (ADR-066): the immutable value object a sibling app
+ * hands OpenRegister to declare one leaf.
+ *
+ * Mirrors the real constructor's parameter list, order and defaults, and the
+ * accessors the tests read. A stub that accepted a different shape would let a
+ * listener pass here and throw on a live instance.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Integration
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class LeafDescriptor {
+	public const KIND_RENDER_SURFACE = 'render-surface';
+
+	public const KIND_DATA_PROVIDER = 'data-provider';
+
+	public const KIND_AGENT_RUNNER = 'agent-runner';
+
+	public const VALID_KINDS = [
+		self::KIND_RENDER_SURFACE,
+		self::KIND_DATA_PROVIDER,
+		self::KIND_AGENT_RUNNER,
+	];
+
+	public const VALID_SURFACES = [
+		'user-dashboard',
+		'app-dashboard',
+		'detail-page',
+		'single-entity',
+	];
+
+	public const RENDER_MODE_COMPONENT = 'component';
+
+	public const RENDER_MODE_MOUNT = 'mount';
+
+	public const VALID_RENDER_MODES = [
+		self::RENDER_MODE_COMPONENT,
+		self::RENDER_MODE_MOUNT,
+	];
+
+	public function __construct(
+		private string $id,
+		private string $label,
+		private string $icon,
+		private array $kinds,
+		private ?string $requiredApp = null,
+		private ?string $group = null,
+		private array $surfaces = [],
+		private ?string $referenceType = null,
+		private ?string $requiresPermission = null,
+		private string $renderMode = self::RENDER_MODE_COMPONENT,
+	) {
+		if ($kinds === []) {
+			throw new \InvalidArgumentException('A leaf must declare at least one kind');
+		}
+
+		foreach ($kinds as $kind) {
+			if (in_array($kind, self::VALID_KINDS, true) === false) {
+				throw new \InvalidArgumentException('Unknown leaf kind: ' . (string)$kind);
+			}
+		}
+
+		foreach ($surfaces as $surface) {
+			if (in_array($surface, self::VALID_SURFACES, true) === false) {
+				throw new \InvalidArgumentException('Unknown leaf surface: ' . (string)$surface);
+			}
+		}
+
+		if (in_array($renderMode, self::VALID_RENDER_MODES, true) === false) {
+			throw new \InvalidArgumentException('Unknown render mode: ' . $renderMode);
+		}
+	}
+
+	public function getId(): string {
+		return $this->id;
+	}
+
+	public function getLabel(): string {
+		return $this->label;
+	}
+
+	public function getIcon(): string {
+		return $this->icon;
+	}
+
+	public function getKinds(): array {
+		return $this->kinds;
+	}
+
+	public function getRequiredApp(): ?string {
+		return $this->requiredApp;
+	}
+
+	public function getGroup(): ?string {
+		return $this->group;
+	}
+
+	public function getSurfaces(): array {
+		return $this->surfaces;
+	}
+
+	public function getReferenceType(): ?string {
+		return $this->referenceType;
+	}
+
+	public function getRequiresPermission(): ?string {
+		return $this->requiresPermission;
+	}
+
+	public function getRenderMode(): string {
+		return $this->renderMode;
+	}
+}//end class
+
+namespace OCA\OpenRegister\Event;
+
+use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+use OCP\EventDispatcher\Event;
+
+/**
+ * Stub for RegisterLeafProvidersEvent: the collector a sibling app registers
+ * its leaves on.
+ *
+ * A real collector rather than a mock, so a test reads back the descriptor the
+ * listener actually built instead of asserting that some method was called.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class RegisterLeafProvidersEvent extends Event {
+	private array $leaves = [];
+
+	public function registerLeaf(LeafDescriptor $descriptor, ?object $provider = null): void {
+		$this->leaves[] = ['descriptor' => $descriptor, 'provider' => $provider];
+	}
+
+	public function getLeaves(): array {
+		return $this->leaves;
 	}
 }//end class

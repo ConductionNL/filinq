@@ -41,6 +41,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -67,6 +68,7 @@ class SignedArtifactProducer {
 	 * @param IUserSession $userSession User session (signer label + folder fallback).
 	 * @param IRequest $request HTTP request (client IP for the evidence context).
 	 * @param IRootFolder $rootFolder Root folder (reads the document, stores the signed version).
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
 	 *
 	 * @return void
 	 */
@@ -75,6 +77,7 @@ class SignedArtifactProducer {
 		private readonly IUserSession $userSession,
 		private readonly IRequest $request,
 		private readonly IRootFolder $rootFolder,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
@@ -91,17 +94,28 @@ class SignedArtifactProducer {
 	 *
 	 * @return string The stored signed-artifact reference (file id + version).
 	 *
+	 * @throws DocumentFinalException When the document's current version is already final.
 	 * @throws RuntimeException When no verifiable artifact can be produced/stored,
 	 *                          or when the request names an unregistered provider.
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function produce(array $request, ?array $verifiedActor = null): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
 		if ($fileId <= 0) {
 			throw new RuntimeException('Cannot produce a signed artifact: the request has no document file id');
 		}
+
+		// Signing writes the signed bytes over the document, so it is a write
+		// path like the editors and it asks the same service. A signature is a
+		// common reason a version becomes final; once it is, the next signature
+		// goes on a new version rather than over the frozen one.
+		$this->finalDocuments->assertWritable(
+			fileId: $fileId,
+			action: 'store a signed version of this document'
+		);
 
 		$file = $this->resolveDocumentFile(fileId: $fileId, request: $request);
 

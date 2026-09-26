@@ -1,10 +1,23 @@
 <script setup>
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
+import { computed } from 'vue'
+import DocumentLeafTabs from '../components/DocumentLeafTabs.vue'
+import { documentRecordIdFor } from '../services/documentLeafTabs.js'
 import {
 	anonymizationStore,
 	fileViewerStore,
 	myDocumentsStore,
 } from '../store/store.js'
+
+// The OpenRegister record the leaf tabs bind to. Empty for a document that has
+// never been through anonymisation, which hides the section rather than showing
+// three panels that can only ever be empty.
+const documentRecordId = computed(() =>
+	documentRecordIdFor(
+		myDocumentsStore.anonymizationLinks,
+		fileViewerStore.currentFile?.fileId,
+	),
+)
 </script>
 
 <template>
@@ -432,6 +445,15 @@ import {
 				{{ exportError }}
 			</p>
 		</div>
+		<!-- The contacts / activity / shares leaves, rendered by the registry's
+		     own tab host. This sits BELOW the app-owned review surface and adds
+		     nothing to it: anonymisation, redaction and signing stay Filinq's
+		     own, because no leaf provides them and Filinq is the service that
+		     does (ADR-022 documented exception). -->
+		<DocumentLeafTabs
+			register="filinq"
+			schema="anonymizationLink"
+			:objectId="documentRecordId" />
 	</NcAppSidebar>
 </template>
 

@@ -76,10 +76,12 @@ import DossierDetail from './views/dossier/DossierDetail.vue'
 import DossierIndex from './views/dossier/DossierIndex.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
+import IntakeIndex from './views/intake/IntakeIndex.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
 import StandingConsentIndex from './views/policy/StandingConsentIndex.vue'
 import SignatureVerification from './views/signing/SignatureVerification.vue'
+import SigningFolder from './views/signing/SigningFolder.vue'
 import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
 import SigningRequestForm from './views/signing/SigningRequestForm.vue'
 import TemplateDetail from './views/templates/TemplateDetail.vue'
@@ -98,6 +100,7 @@ export default {
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },
 	FolderAnonymizationView: { kind: 'page', component: FolderAnonymizationView },
 	TemplateDetail: { kind: 'page', component: TemplateDetail },
+	SigningFolder: { kind: 'page', component: SigningFolder },
 	SigningRequestDetail: { kind: 'page', component: SigningRequestDetail },
 	SigningRequestForm: { kind: 'page', component: SigningRequestForm },
 	SignatureVerification: { kind: 'page', component: SignatureVerification },
@@ -115,5 +118,6 @@ export default {
 	DossierIndex: { kind: 'page', component: DossierIndex },
 	DossierDetail: { kind: 'page', component: DossierDetail },
 	DossierFormModal: { kind: 'modal', component: DossierFormModal },
+	IntakeIndex: { kind: 'page', component: IntakeIndex },
 	CustomDictionaryDetail: { kind: 'page', component: CustomDictionaryDetail },
 }

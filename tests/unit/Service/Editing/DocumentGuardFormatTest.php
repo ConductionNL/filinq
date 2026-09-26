@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -38,7 +39,8 @@ class DocumentGuardFormatTest extends TestCase {
 	protected function setUp(): void {
 		$this->guard = new DocumentGuard(
 			$this->createMock(DocumentObjectServiceResolver::class),
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(FinalDocumentService::class)
 		);
 	}//end setUp()
 
