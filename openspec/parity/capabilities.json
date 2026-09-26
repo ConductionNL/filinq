@@ -475,14 +475,15 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/IntakeService.php:104-117 receive() de-duplicates silently on sourceRef: it logs an info-level message and returns the existing document unchanged. No field or UI surfaces a 'this looks like a duplicate' warning to a clerk; IntakeIndex.vue has no duplicate indicator."
+				"evidence": "lib/Service/IntakeService.php:104-117 receive() de-duplicates silently on sourceRef: it logs an info-level message and returns the existing document unchanged. No field or UI surfaces a 'this looks like a duplicate' warning to a clerk; IntakeIndex.vue has no duplicate indicator.",
+				"readOn": "2026-09-26"
 			},
-			"reachedOn": "nothing warns anyone (silent de-dup only)",
+			"reachedOn": "nothing detects content-level duplicates; the sourceRef re-delivery skip is intended",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-intake-inbox",
 			"featureConfidence": "high",
-			"note": "The row asks for a clerk-visible warning; what exists is silent, invisible de-duplication - a different behaviour.",
+			"note": "Corrected 2026-09-26: the sourceRef skip at lib/Service/IntakeService.php:104-117 is correct behaviour, it stops a channel's re-delivery of the same document from creating a second intake record. The gap the row asks about is content-level duplicates (the same document arriving under a different sourceRef), and nothing detects or warns about those.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -5246,14 +5247,15 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "dossiq's lib/Service/Beschikking/FilinqTemplateEngineAdapter.php resolves filinq's DocumentService via FleetAppId and calls generateDocument() (filinq lib/Service/DocumentService.php:168) directly through PHP DI, described as 'Filinq owns document generation for the fleet (ADR-075)'. Counter-evidence: scholiq's lib/Service/ReportCardPdfDelegationService.php POSTs to 'apps/docudesk/api/v1/documents/render', which its OWN docblock states does not exist anywhere in filinq ('no docudesk endpoint, controller, or PHP call exists... tracked follow-up leaf') - the report-card half is unbuilt on filinq's side."
+				"evidence": "dossiq's lib/Service/Beschikking/FilinqTemplateEngineAdapter.php resolves filinq's DocumentService via FleetAppId and calls generateDocument() (filinq lib/Service/DocumentService.php:168) directly through PHP DI, described as 'Filinq owns document generation for the fleet (ADR-075)'. Counter-evidence: learniq (formerly scholiq) lib/Service/ReportCardPdfDelegationService.php:199-200 now resolves the app id through FleetAppId::path($this->appManager, 'filinq', ...) and POSTs to the documents/render path under it, but that render endpoint still does not exist in filinq, so the report-card half is unbuilt on filinq's side (corrected 2026-09-26).",
+				"readOn": "2026-09-26"
 			},
 			"reachedOn": "machine consumer: dossiq (FilinqTemplateEngineAdapter, via direct DI to DocumentService::generateDocument())",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-creatie-sjablonen",
 			"featureConfidence": "high",
-			"note": "Works for dossiq's beschikking generation; the report-card path scholiq expects is not implemented on filinq's side (dead HTTP call to a route that does not exist).",
+			"note": "Works for dossiq's beschikking generation; the report-card path learniq expects is not implemented on filinq's side (its HTTP call targets a render route that does not exist).",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -5526,15 +5528,16 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/openregister",
-				"evidence": "OpenRegister ships a full Organisation/tenancy substrate defaulting _rbac/_multitenancy to ON in every ObjectService call (per openspec/changes/multi-tenant-hardening/proposal.md, verified at OR HEAD). But that same proposal documents Filinq 'actively defeats' it: 29 call sites across 8 service files (ConsentService, PolicyCrudService, PolicyMatchService, PolicyRetroactiveService, GrondslagenSummaryService, GrondslagProposalService, BasesResolverService) force _rbac:false/_multitenancy:false, causing [CRITICAL] GH #283 (open): any authenticated user in any tenant can read/forge consent and objection decisions across tenants. tasks.md: 0/17 done -- entirely unbuilt fix. No per-organisation admin UI found anywhere in src/views.",
-				"change": "openspec/changes/multi-tenant-hardening"
+				"evidence": "OpenRegister ships a full Organisation/tenancy substrate defaulting _rbac/_multitenancy to ON in every ObjectService call (per openspec/changes/multi-tenant-hardening/proposal.md, verified at OR HEAD). But that same proposal documents Filinq 'actively defeats' it: 25 call sites in 11 files (recounted 2026-09-26; the earlier text said 29 across 8 service files) (ConsentService, PolicyCrudService, PolicyMatchService, PolicyRetroactiveService, GrondslagenSummaryService, GrondslagProposalService, BasesResolverService) force _rbac:false/_multitenancy:false, causing [CRITICAL] GH #283 (open): any authenticated user in any tenant can read/forge consent and objection decisions across tenants. tasks.md: 0/17 done -- entirely unbuilt fix. No per-organisation admin UI found anywhere in src/views.",
+				"change": "openspec/changes/multi-tenant-hardening",
+				"readOn": "2026-09-26"
 			},
 			"reachedOn": "OpenRegister's tenancy substrate is inherited by default wherever filinq does not override it; broken specifically on the consent/policy/grondslag surfaces",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "multi-tenant-hardening",
 			"featureConfidence": "high",
-			"note": "LIVE DEFECT / SECURITY: GH #283 (open, critical) -- cross-tenant read+forge of consent/objection decisions via 29 _rbac:false/_multitenancy:false call sites. Multi-tenant-hardening proposal to fix this is 0/17 done.",
+			"note": "LIVE DEFECT / SECURITY: GH #283 (open, critical) -- cross-tenant read+forge of consent/objection decisions via 25 _rbac:false/_multitenancy:false call sites in 11 files. Multi-tenant-hardening proposal to fix this is 0/17 done.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -5580,15 +5583,16 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/filinq-upload-dropzone-keyboard-access/proposal.md (0/7 tasks done) documents that 2 of 4 drag-and-drop upload zones have NO keyboard-operable alternative: src/views/anonymization/AnonymizationWidget.vue:9-33 (a plain div with a decorative '+ Select files' span, no tabindex/role/keydown handler) and src/views/widgets/AnonymizationDashboardWidget.vue:81-110 (identical, no NcButton anywhere). The other two (AnonymizationPocWidget.vue:37, BatchAnonymizationView.vue:12) DO expose a focusable NcButton alternative.",
-				"change": "openspec/changes/filinq-upload-dropzone-keyboard-access"
+				"evidence": "Corrected 2026-09-26, the earlier finding is stale. Both dropzones named by openspec/changes/filinq-upload-dropzone-keyboard-access now carry a real <button type=\"button\"> that opens the file input: src/views/anonymization/AnonymizationWidget.vue:40 and src/views/widgets/AnonymizationDashboardWidget.vue:133. The other two (AnonymizationPocWidget.vue:37, BatchAnonymizationView.vue:12) expose a focusable NcButton. No full keyboard or screen-reader audit of the app was run, so the row stays partial.",
+				"change": "openspec/changes/filinq-upload-dropzone-keyboard-access",
+				"readOn": "2026-09-26"
 			},
-			"reachedOn": "/anonymization (AnonymizationWidget.vue) and the anonymization dashboard widget -- both keyboard-inaccessible for file selection",
+			"reachedOn": "/anonymization (AnonymizationWidget.vue) and the anonymization dashboard widget, both with a keyboard-operable select-files button",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "filinq-upload-dropzone-keyboard-access",
 			"featureConfidence": "high",
-			"note": "LIVE DEFECT: a keyboard-only or screen-reader user has no way to open the file picker in AnonymizationWidget.vue or AnonymizationDashboardWidget.vue (display:none file input is not focusable).",
+			"note": "The earlier live defect (no keyboard way to open the file picker) is fixed on development. Partial stands because only the upload zones were checked, not the app as a whole.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
