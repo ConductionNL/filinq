@@ -241,7 +241,7 @@
 			"name": "Paperless-ngx",
 			"vendor": "Paperless-ngx community",
 			"readOn": "2026-09-26",
-			"evidenceGrade": "docs-only",
+			"evidenceGrade": "source-read",
 			"readHow": "source read at v3.2.1 (commit 7575d607), not driven; earlier: two intelligence rows of 2026-07-16 and 92 release-note rows of 2026-07-23",
 			"columnAddedOn": "2026-09-26",
 			"unknownReason": "source read at v3.2.1, not driven; the source did not settle this row",
@@ -293,7 +293,12 @@
 				}
 			},
 			"version": "v3.2.1",
-			"commit": "7575d6078227ebdb4cf443f263d53ebc7575aa37"
+			"commit": "7575d6078227ebdb4cf443f263d53ebc7575aa37",
+			"readVersion": {
+				"tag": "v3.2.1",
+				"commit": "7575d6078227ebdb4cf443f263d53ebc7575aa37"
+			},
+			"evidenceGradeBefore": "docs-only"
 		},
 		{
 			"key": "decos-join",
