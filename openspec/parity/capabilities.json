@@ -445,6 +445,11 @@
 			"kind": "app"
 		},
 		{
+			"key": "hermiq",
+			"name": "Hermiq",
+			"kind": "app"
+		},
+		{
 			"key": "nextcloud",
 			"name": "Nextcloud",
 			"kind": "platform"
@@ -6375,6 +6380,655 @@
 			"decos-join": "unknown",
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: a step-by-step ngx-ui-tour covers dashboard, upload, documents, filters, views, tags, mail, workflows, tasks and settings (src-ui/src/app/app.component.ts:168-245), started from the welcome widget or Settings (welcome-widget.component.html:14, settings.component.html:7; docs/usage.md:63-64)."
+			}
+		},
+		{
+			"id": "woo-withdraw",
+			"area": "woo",
+			"name": "Withdraw a document that was published by mistake.",
+			"source": "category-derived",
+			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (Dordrecht WOO Publicatietool, requirement VPB-05)",
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/opencatalogi",
+				"evidence": "filinq: no withdraw or depublish code; grep -ri 'depublic|depublish|unpublish|publicatiedatum' lib src finds nothing about publication (only signing-mandate withdrawal, lib/Controller/SigningFolderController.php:204). The withdraw flow is only designed: openspec/changes/woo-publicatie-pipeline/design.md:165 (0 of 16 tasks done). opencatalogi@a00f9f84 has it for its own publications: appinfo/routes.php:82 POST /api/publications/depublish -> lib/Controller/DepublicationController.php:126 depublish() (no src/ caller), and src/dialogs/attachment/MassAttachmentModal.vue:234 massDepublishAttachments, opened from src/modals/object/ViewObject.vue:2328.",
+				"change": "openspec/changes/woo-publicatie-pipeline"
+			},
+			"reachedOn": "nothing reaches it from filinq: filinq hands no document to opencatalogi, so nothing filinq published exists there to withdraw",
+			"provider": "opencatalogi",
+			"providerHow": "read-from-code",
+			"feature": "woo-publicatie-pipeline",
+			"featureConfidence": "high",
+			"note": "OpenCatalogi can depublish what it holds (attachments from its own object view); the gap is filinq's hand-off, the same gap as woo-publish.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no publication concept: grep -rni 'publish|diwoo|depubl' src/documents src/paperless src-ui/src/app hits only src/documents/_snowball_stopwords.py and src-ui/src/app/pipes/file-size.pipe.ts. The nearest thing is revoking a share link (src/documents/models.py:972 ShareLink), which is not a publication."
+			}
+		},
+		{
+			"id": "woo-metadata-gaps",
+			"area": "woo",
+			"name": "See which documents waiting for publication lack the metadata the Woo index needs, and fill it in.",
+			"source": "category-derived",
+			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (requirement VPB-02)",
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no DiWoo metadata or readiness view: grep -ri 'diwoo|informatiecategorie' lib src finds nothing; the only Woo-named service, lib/Service/WooProfileService.php:40, holds the anonymisation entity profile. DiWoo metadata assembly and the readiness check exist only as design: openspec/changes/woo-publicatie-pipeline/proposal.md:26 and :37 (0 of 16 tasks done). opencatalogi@a00f9f84 lib/Controller/WooReadinessController.php:46 checks catalog harvester readiness, not per-document metadata.",
+				"change": "openspec/changes/woo-publicatie-pipeline"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "woo-publicatie-pipeline",
+			"featureConfidence": "high",
+			"note": "No record of documents waiting for publication exists yet (the publicationRecord schema is not in lib/Settings/filinq_register.json), so there is nothing to list gaps on.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no Woo or publication metadata: grep -rni 'publish|diwoo|depubl' src/documents src/paperless src-ui/src/app returns no publication code. Custom fields (src/documents/models.py CustomField) can hold any metadata, but nothing lists documents missing required fields for an index."
+			}
+		},
+		{
+			"id": "woo-unpublish-destroyed",
+			"area": "woo",
+			"name": "Take a published document offline automatically when it is destroyed in the source system.",
+			"source": "category-derived",
+			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (requirement VPB-10)",
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no destruction-date propagation: grep -ri 'vernietigingsdatum|destructionDate|retentionExpiresAt' lib src finds nothing. Designed only: openspec/changes/woo-publicatie-pipeline/design.md:171 (filinq records the source system's destruction date and propagates it as retentionExpiresAt; 0 of 16 tasks done). opencatalogi@a00f9f84 lib/Service/RetentionService.php:531 evaluates retentionExpiresAt on its own publications (lib/BackgroundJob/RetentionEvaluation.php), but no filinq document reaches it.",
+				"change": "openspec/changes/woo-publicatie-pipeline"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "woo-publicatie-pipeline",
+			"featureConfidence": "high",
+			"note": "Per the design, filinq propagates and OpenCatalogi disposes; neither half runs for filinq documents today.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no publication to take offline: grep -rni 'publish|diwoo|depubl' src/documents src/paperless src-ui/src/app finds no publication code, and nothing links a Paperless document to a source-system destruction event."
+			}
+		},
+		{
+			"id": "wk-ml-fields",
+			"area": "work",
+			"name": "Have a document's own metadata fields filled in from its content by a model.",
+			"source": "competitor-derived",
+			"sourceRef": "featureRequest: https://github.com/paperless-ngx/paperless-ngx/discussions/6932",
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/6932",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "a model fills a fixed set of invoice fields only: lib/Service/FinancialExtractionService.php:242 extractFinancial() calls applyAiEnhancement() (:509), which runs a Nextcloud TaskProcessing TextToText task (:877) for the fields the heuristics left empty. Reached via POST api/extraction/financial (appinfo/routes.php:276), called by shillinq, no filinq page. General enrichment (lib/Service/MetadataService.php:100 enhanceTextMetadata) fills language, keywords and topic with heuristics (lib/Service/TextAnalysisService.php:95 word counts), not a model, and not the document's own schema fields."
+			},
+			"reachedOn": "machine consumer: shillinq via POST api/extraction/financial; enrichment runs on document object writes (toggle at /settings)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "financial-document-field-extraction",
+			"featureConfidence": "medium",
+			"note": "Narrower than the row: the model fills invoice fields for one consumer, not arbitrary metadata fields a document type declares.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "partial",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/paperless_ai/ai_classifier.py:266-271 the LLM suggests title, tags, correspondents, document types, storage paths and dates; served by src/documents/views.py:1656 and called from src-ui/src/app/services/rest/document.service.ts:428 ai_suggestions. Custom fields are not suggested (grep custom_field in src/paperless_ai hits only embedding/indexing input)."
+			}
+		},
+		{
+			"id": "in-stamp",
+			"area": "intake",
+			"name": "Put a visible stamp, such as received with the date, on a document.",
+			"source": "competitor-derived",
+			"sourceRef": "featureRequest: https://github.com/paperless-ngx/paperless-ngx/discussions/3744",
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/3744",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done)."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": null,
+			"featureConfidence": "low",
+			"note": "The received date is recorded as metadata at intake (in-sender-date), just not drawn on the document.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: grep -rni 'stamp|stamping|watermark|overlay' src/documents src-ui/src/app finds no stamping code (only timestamps and query annotations); the PDF edit operations in src/documents/bulk_edit.py rotate, split, merge and delete pages but add no overlay."
+			}
+		},
+		{
+			"id": "op-export-list",
+			"area": "operate",
+			"name": "Export a list of documents with their metadata as a spreadsheet.",
+			"source": "competitor-derived",
+			"sourceRef": "featureRequest: https://github.com/paperless-ngx/paperless-ngx/discussions/1796",
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/1796",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/openregister",
+				"evidence": "filinq offers no list export: its document lists switch the shared export off (src/views/intake/IntakeIndex.vue:27 and src/views/dossier/DossierIndex.vue:20 :showMassExport=\"false\"), and no manifest index page lists documentRegistration (lib/Settings/filinq_register.json:71). openregister@86a2fb87 exports any schema's objects as Excel or CSV: appinfo/routes.php:1172 GET /api/objects/{register}/{schema}/export, from src/modals/register/ExportRegister.vue:89 opened in src/components/cards/RegisterSchemaCard.vue:304."
+			},
+			"reachedOn": "OpenRegister's own register page (RegisterSchemaCard export action), not a filinq page",
+			"provider": "openregister",
+			"providerHow": "read-from-code",
+			"feature": "document-register",
+			"featureConfidence": "medium",
+			"note": "Works for a user with access to OpenRegister's admin UI and the filinq register; a filinq-only user has no export button.",
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no spreadsheet export: grep -rni 'csv|xlsx|spreadsheet' src/documents src/paperless src-ui/src/app hits only an icon name (src/documents/models.py:578). The document list is available as JSON through the REST API and whole-collection export via document_exporter, neither a spreadsheet.",
+				"zylab": "docs-only, read 2026-09-26: https://docs.zylab.com/01/ZyLAB/Woo-Dutch/3030600.html the inventory list exports the document list with the displayed columns; https://docs.zylab.com/01/ZyLAB/Woo-Dutch/707001.html CSV export"
+			}
+		},
+		{
+			"id": "sig-containers",
+			"area": "signing",
+			"name": "Keep and open EU signed containers such as ASiC-E and CAdES files.",
+			"source": "competitor-derived",
+			"sourceRef": "featureRequest: https://github.com/paperless-ngx/paperless-ngx/discussions/13604",
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/13604",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no ASiC or CAdES handling: grep -ri 'asic|cades|p7m|p7s|pkcs7|xades' lib src finds nothing. Signature verification reads PDFs only: lib/Service/SigningVerificationService.php:153 extractSignatures(pdfContent) pattern-matches inside the PDF bytes. A container can sit in Nextcloud Files like any file, but filinq neither opens nor verifies it."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "medium",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no container support: grep -rni 'asic|cades|p7m|pkcs7|xades' src/documents src/paperless finds nothing, the parsers' supported types (e.g. src/paperless/parsers/tika.py:43-53 office formats) include none, and the consumer rejects any other type (src/documents/consumer.py:474 'Unsupported mime type')."
+			}
+		},
+		{
+			"id": "wk-ai-chat",
+			"area": "work",
+			"name": "Ask questions about one document or a whole collection in an AI chat that cites its sources.",
+			"source": "competitor-derived",
+			"sourceRef": "changelog: https://github.com/paperless-ngx/paperless-ngx/pull/10319",
+			"origin": "changelog",
+			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/pull/10319",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/hermiq",
+				"evidence": "filinq mounts the shared AI companion: src/App.vue:14 :aiCompanion=\"true\" -> nextcloud-vue v2.39.0 (filinq's lockfile) src/components/CnAppRoot/CnAppRoot.vue:410 <CnAiCompanion>, which talks to hermiq by default (src/composables/aiChatConfig.js DEFAULT_CHAT_APP_ID). hermiq@5277c0df appinfo/routes.php:514 chat#sendMessage returns sources (lib/Controller/ChatController.php:1161), but the companion at v2.39.0 renders none (grep '\\.sources' in src/components hits only CnIconBrowser), and nothing scopes a chat to one document. filinq's own MCP tools (lib/Mcp/FilinqScannableServices.php:73-74) expose correspondence and editing, not document reading."
+			},
+			"reachedOn": "floating AI companion on every filinq page, shown only when hermiq's /api/chat/health answers",
+			"provider": "hermiq",
+			"providerHow": "read-from-code",
+			"feature": "filinq-mcp-adoption",
+			"featureConfidence": "low",
+			"note": "A general chat is there; the row's two specifics, citing sources and asking about one document, are missing in what a filinq user sees. Whether hermiq's retrieval indexes filinq's documents depends on its file vectorisation setup, not checked.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "partial",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/paperless_ai/chat.py:96 stream_chat_with_documents with document references (:49 _get_document_references, :200 trailer); src/documents/views.py:2410 ChatStreamingView scopes to one document when an id is given (:2425) or all permitted documents; UI src-ui/src/app/components/chat/chat/chat.component.ts:67 picks the open document, chat.component.html:16 lists references; mounted in app-frame.component.ts:75. Needs AI enabled (views.py:2416).",
+				"decos-join": "docs-only, read 2026-09-26: https://decos.com/zaaksysteem/joni-plus upload a document and ask questions about it, search the case system and knowledge bases with result cards; citing sources per answer is not stated"
+			}
+		},
+		{
+			"id": "sh-bundle",
+			"area": "share",
+			"name": "Share several documents at once as one bundle behind one link.",
+			"source": "competitor-derived",
+			"sourceRef": "changelog: https://github.com/paperless-ngx/paperless-ngx/pull/11682",
+			"origin": "changelog",
+			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/pull/11682",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no share code: grep -ri 'IShare|ShareManager|shareLink|share link' lib src finds nothing; the only ZIP handling is office package I/O (lib/Service/Editing/PackagePartIo.php:78). Nearest: lib/Controller/MergeController.php merges several documents into one PDF, which is a file, not a link."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": null,
+			"featureConfidence": "low",
+			"note": "Outside filinq, a user can share a Nextcloud folder by public link in Files; that is the platform, not a bundle of chosen documents.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/models.py:1032 ShareLinkBundle (status pending/ready, expiry); src/paperless/urls.py:84 share_link_bundles API; src/documents/tasks.py:770 build_share_link_bundle builds the archive, :862 cleans up expired ones; created from the document list bulk editor (src-ui/src/app/components/document-list/bulk-editor/bulk-editor.component.ts:106) and managed in manage/share-links/share-link-bundle-list."
+			}
+		},
+		{
+			"id": "in-pdf-password",
+			"area": "intake",
+			"name": "Remove the password from an encrypted PDF so it can be processed.",
+			"source": "competitor-derived",
+			"sourceRef": "changelog: https://github.com/paperless-ngx/paperless-ngx/pull/11656",
+			"origin": "changelog",
+			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/pull/11656",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "filinq detects and refuses, it does not decrypt: lib/Service/DocumentValidationService.php:306 encryptionFindings() reports 'The PDF is encrypted or password-protected and cannot be anonymised.' (:323); grep -ri 'decrypt|qpdf|pikepdf|password' lib finds no removal step."
+			},
+			"reachedOn": "nothing reaches it (the encrypted-PDF check is shown at /my-documents via ValidationResultModal.vue)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-validation-checks",
+			"featureConfidence": "medium",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/bulk_edit.py:1012 remove_password() opens the PDF with pikepdf and the supplied password (:1055) and saves it unprotected; exposed at /api/documents/remove_password/ (src/documents/serialisers.py:1853, :1968); UI src-ui/src/app/components/document-detail/document-detail.component.ts:1906 removePassword()."
+			}
+		},
+		{
+			"id": "sig-field-validation",
+			"area": "signing",
+			"name": "Check what a signer types in a form field, such as a valid IBAN.",
+			"source": "competitor-derived",
+			"sourceRef": "changelog: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23",
+			"origin": "changelog",
+			"originUrl": "https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done)."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "medium",
+			"note": "Depends on sig-fields, which is also no.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no e-signing in Paperless: grep -rni 'signature|signer|cades|asic' src/documents src/paperless src/paperless_mail finds only the classifier's HMAC file signature (src/documents/classifier.py:78) and auth scheme names; there are no signers, signing requests or form fields.",
+				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23 validation types on text fields, Dutch IBAN check first, queryable through the API"
+			}
+		},
+		{
+			"id": "sig-accept-only",
+			"area": "signing",
+			"name": "Let one recipient accept a document without signing it while others sign.",
+			"source": "competitor-derived",
+			"sourceRef": "changelog: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23",
+			"origin": "changelog",
+			"originUrl": "https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "medium",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no e-signing in Paperless: grep -rni 'signature|signer|cades|asic' src/documents src/paperless src/paperless_mail finds only the classifier's HMAC file signature (src/documents/classifier.py:78) and auth scheme names; there are no signers, signing requests or form fields.",
+				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23 'Accept only' now set per recipient so one accepts while another signs; https://developers.validsign.eu/docs/documents/accept_only"
+			}
+		},
+		{
+			"id": "rec-trash",
+			"area": "records",
+			"name": "Restore a deleted document from a trash that empties itself after a set time.",
+			"source": "competitor-derived",
+			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "nextcloud/server",
+				"evidence": "filinq sends a removed document to the Nextcloud trash: src/views/dossier/DossierDetail.vue:390 tells the user it 'will be moved to the trash, where you can still restore it' -> lib/Controller/DossierManagementController.php:201 removeDocument() -> lib/Service/DossierManagementService.php:401 -> lib/Service/DossierFileService.php:324 $node->delete(), which routes through files_trashbin. Restore and the automatic expiry are Nextcloud Files' trashbin, not filinq code."
+			},
+			"reachedOn": "/dossiers/:id (DossierDetail.vue) remove action; restore in Nextcloud Files, Deleted files",
+			"provider": "nextcloud",
+			"providerHow": "read-from-code",
+			"feature": "dossier-register",
+			"featureConfidence": "medium",
+			"note": "Platform capability; works only when files_trashbin is enabled. A document only unlinked from a dossier (used elsewhere) is not trashed. Whether the documentRegistration object follows the file into the trash was not checked.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "partial",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/views.py:5559 TrashView (restore or empty) at src/paperless/urls.py:263; src/documents/tasks.py:473 empty_trash deletes after settings.EMPTY_TRASH_DELAY days (:482), default 30 (src/paperless/settings/__init__.py:1154); UI route 'trash' (src-ui/src/app/app-routing.module.ts:187, components/admin/trash).",
+				"validsign": "docs-only, read 2026-09-26: https://developers.validsign.eu/docs/callback/setting-up-callback-notifications PACKAGE_TRASH and PACKAGE_RESTORE events for signing packages; automatic emptying is not described"
+			}
+		},
+		{
+			"id": "wk-page-edit",
+			"area": "work",
+			"name": "Split, rotate, reorder and delete pages of a PDF.",
+			"source": "competitor-derived",
+			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no PDF page operations: grep -ri 'rotate|splitPdf|reorder|deletePage|removePage|extractPages' lib src finds none on PDFs (hits are GL-account reordering and signing-secret rotation). openspec/changes/document-editing-tools/proposal.md covers conversion and text edits by an agent, not pages. lib/Controller/MergeController.php:107 merges several documents into one PDF, the only page-level operation."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-editing",
+			"featureConfidence": "low",
+			"note": "Merging is covered elsewhere (merge-documents-to-pdf); split, rotate, reorder and delete pages are not.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/bulk_edit.py:452 rotate, :741 split, :820 delete_pages, :873 edit_pdf (reorder, rotate and drop pages in one pass), :522 merge; client calls src-ui/src/app/services/rest/document.service.ts:368 rotate and :395 edit_pdf; page editor UI src-ui/src/app/components/common/pdf-editor/pdf-editor.component.ts opened from document-detail."
+			}
+		},
+		{
+			"id": "op-backup-export",
+			"area": "operate",
+			"name": "Export the whole collection with its metadata and import it again elsewhere.",
+			"source": "competitor-derived",
+			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/openregister",
+				"evidence": "filinq has no export or import of its own (grep -ri 'function export|function import' lib/Controller finds only a custom dictionary term import, lib/Controller/CustomDictionaryController.php:271). openregister@86a2fb87 exports a configuration with its objects: src/modals/configuration/ExportConfiguration.vue:23 'Include related objects' -> :140 includeObjects -> GET /api/configurations/{id}/export (appinfo/routes.php:1715), and imports through src/modals/configuration/ImportConfiguration.vue:940 POST /api/configurations/import. The metadata objects travel; the document files live in Nextcloud storage and are not in that export (no file content handling in lib/Service/Configuration)."
+			},
+			"reachedOn": "OpenRegister's own configuration page (ExportConfiguration and ImportConfiguration modals), not a filinq page",
+			"provider": "openregister",
+			"providerHow": "read-from-code",
+			"feature": "openregister-bridge",
+			"featureConfidence": "low",
+			"note": "The files themselves need a Nextcloud-level backup; nothing exports files and their metadata together and restores the pairing elsewhere.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "partial",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/management/commands/document_exporter.py:90 exports all documents with a manifest of their data (:179 --split-manifest), and document_importer.py:65 reads that manifest back into another instance; both are documented management commands.",
+				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-08 Archive Manager compiles archives of completed transactions for download; re-importing elsewhere is not described"
+			}
+		},
+		{
+			"id": "op-integrity",
+			"area": "operate",
+			"name": "Run a check that finds missing, changed or orphaned files.",
+			"source": "competitor-derived",
+			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib)."
+			},
+			"reachedOn": "/versions (VersionsView.vue) checksum warning for one final document at a time",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-versions",
+			"featureConfidence": "medium",
+			"note": "Finds a changed file for a frozen document when someone opens it; does not find missing or orphaned files across the collection.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/sanity_checker.py:4 checks every document for a missing file, checksum mismatch (:233) and archive consistency (:245), and reports orphaned files in the media directory; run by the document_sanity_checker command and as a scheduled task (src/paperless/settings/custom.py:115 'Perform sanity check' -> src/documents/tasks.py:282)."
+			}
+		},
+		{
+			"id": "sig-reminders",
+			"area": "signing",
+			"name": "Remind signers on a schedule until they have signed.",
+			"source": "competitor-derived",
+			"sourceRef": "https://developers.validsign.eu/docs/transactions/reminder-schedule",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "declared reminder, executed by OpenRegister: lib/Settings/filinq_register.json:2735 signerRecord x-openregister-notifications 'signingDeadline', trigger scheduled every 86400 s for status PENDING, channel nc-notification, recipient the signer's userId. openregister@86a2fb87 runs scheduled triggers in lib/BackgroundJob/ScheduledNotificationJob.php:215, registered in appinfo/info.xml:148. Signer records are written PENDING by lib/Service/SigningService.php:194."
+			},
+			"reachedOn": "automatic: OpenRegister's scheduled notification job, as a Nextcloud notification to account holders",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "medium",
+			"note": "Read from a declaration plus a registered executor, not driven. Fixed daily interval, nothing lets the sender set a schedule, and a signer without a Nextcloud account (email only) gets no reminder.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no e-signing in Paperless: grep -rni 'signature|signer|cades|asic' src/documents src/paperless src/paperless_mail finds only the classifier's HMAC file signature (src/documents/classifier.py:78) and auth scheme names; there are no signers or signing requests to remind.",
+				"validsign": "docs-only, read 2026-09-26: https://developers.validsign.eu/docs/transactions/reminder-schedule reminder schedule per transaction; https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23 sent reminders recorded in the evidence document"
+			}
+		},
+		{
+			"id": "woo-withheld-page",
+			"area": "woo",
+			"name": "Replace pages that are withheld in full by one page that says why.",
+			"source": "competitor-derived",
+			"sourceRef": "https://www.binnenlandsbestuur.nl/juridisch/reveal-zylab/lakken-bij-woo-verzoeken-kan-veel-vriendelijker",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no withheld-page replacement: grep -ri 'withheld|whole page|full page|geweigerd' lib finds nothing; the redaction output modes (lib/Service/Redaction/RedactionOutputModes.php) redact passages in place. The only placeholder pages are for unrenderable email attachments (lib/Service/EmlPdfAssemblyService.php:451). No openspec change specifies it (grep -rli 'withheld|entire page' openspec/changes/*/proposal.md: none)."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "low",
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no redaction or disclosure sets: grep -rni 'redact|anonymi|blackout|withheld|disclos' src/documents src/paperless src-ui/src/app finds no such code.",
+				"zylab": "docs-only, read 2026-09-26: https://www.binnenlandsbestuur.nl/juridisch/reveal-zylab/lakken-bij-woo-verzoeken-kan-veel-vriendelijker pages refused in full can be replaced by 'een enkele pagina' saying they are withheld (vendor article)"
+			}
+		},
+		{
+			"id": "woo-page-numbers",
+			"area": "woo",
+			"name": "Number every document and page of a Woo disclosure set.",
+			"source": "competitor-derived",
+			"sourceRef": "https://docs.zylab.com/01/ZyLAB/Woo-Dutch/707001.html",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no numbering of a disclosure set: grep -ri 'page number|paginanummer|bates|PAGENO' lib finds nothing; the grondslagen PDF (lib/Service/GrondslagenPdfWriter.php:334 importAllPages) appends a summary without numbering. Registration numbers per document exist as in-number (partial, unreached) but are not a set or page numbering."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": null,
+			"featureConfidence": "low",
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no disclosure sets or page numbering: grep -rni 'bates|page number|disclos' src/documents src-ui/src/app finds none. The archive serial number (src/documents/models.py:300) numbers documents collection-wide, not the documents and pages of one set.",
+				"zylab": "docs-only, read 2026-09-26: https://docs.zylab.com/01/ZyLAB/Woo-Dutch/707001.html sequential document numbering or per-page Bates numbering burnt into the production"
+			}
+		},
+		{
+			"id": "red-sample",
+			"area": "redact",
+			"name": "Check a random sample of reviewed documents to measure the quality of the review.",
+			"source": "competitor-derived",
+			"sourceRef": "https://docs.zylab.com/01/ZyLAB/Woo-Dutch/050516.html",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no sampling QA: grep -ri 'sample|random|steekproef' lib src finds only template preview sample data (lib/Service/TemplatePreviewService.php:56). Specified only: openspec/changes/redaction-at-scale/proposal.md:64 'Sampling QA: an admin-configurable random sample (default 5%)', tasks.md:28 sampler unchecked (0 of 18 tasks done)."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "batch-anonymization",
+			"featureConfidence": "medium",
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: no redaction review to sample: grep -rni 'redact|anonymi|blackout' src/documents src/paperless src-ui/src/app finds no such code.",
+				"zylab": "docs-only, read 2026-09-26: https://docs.zylab.com/01/ZyLAB/Woo-Dutch/050516.html the Woo dashboard has a sampling function, 'Een steekproef uitvoeren' (3030301)"
+			}
+		},
+		{
+			"id": "tpl-test",
+			"area": "templates",
+			"name": "Test a template with sample data before it is published to users.",
+			"source": "competitor-derived",
+			"sourceRef": "https://smartdocuments.com/productfeatures/",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "testing works: src/views/templates/TemplateDetail.vue:200 sample-data box and 'Refresh preview' -> :486 templateStore.previewTemplate -> src/store/modules/template.js:273 POST api/templates/preview (appinfo/routes.php:227) -> lib/Service/TemplatePreviewService.php:56. There is no publish step to test before: the template schema (lib/Settings/filinq_register.json:549) has no status or published property, so a saved template is usable at once; only an edit lock exists (lib/Controller/TemplatesController.php:292)."
+			},
+			"reachedOn": "/templates/:id (TemplateDetail.vue) preview tab",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "template-management",
+			"featureConfidence": "medium",
+			"note": "Previous template versions can be restored (TemplateVersionsController), which softens but does not replace a draft-then-publish gate.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: Paperless generates no documents from templates: src/documents/templating/ holds filename and workflow placeholder templating only. The nearest thing is testing a storage-path filename template (src/documents/views.py:4192 StoragePathViewSet.test), which is not a document template.",
+				"smartdocuments": "docs-only, read 2026-09-26: https://smartdocuments.com/productfeatures/ SmartControl 'Template testing before publication'"
+			}
+		},
+		{
+			"id": "gen-draft",
+			"area": "generate",
+			"name": "Save a half-finished document and finish it later.",
+			"source": "competitor-derived",
+			"sourceRef": "https://smartdocuments.com/productfeatures/",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "no saved half-finished generation: grep -ri 'draft|resume|save for later' lib src finds only finalisation drafts of existing files (lib/Service/FinalDocumentCorrectionService.php:102) and machine-drafted plain renditions. The guided wizard puts it out of scope: openspec/changes/guided-document-wizard/proposal.md:119 'Multi-user / resumable wizard sessions persisted server-side' (a run is one sitting; abandoning the browser discards the draft)."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "guided-document-wizard",
+			"featureConfidence": "high",
+			"note": "Decided out of scope in the wizard change rather than simply missing. A generated file stored to Files can be edited later in an office editor, which is editing a finished document, not resuming a generation.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "no",
+			"decos-join": "unknown",
+			"evidence": {
+				"paperless-ngx": "source read at v3.2.1, not driven: Paperless does not generate documents: no generation or mail-merge code (grep -rli 'docx|mail merge|generate document' src/documents/*.py returns nothing), so there is no half-finished generation to save.",
+				"smartdocuments": "docs-only, read 2026-09-26: https://smartdocuments.com/productfeatures/ SmartWizard 'Draft auto-save functionality'"
 			}
 		}
 	],
