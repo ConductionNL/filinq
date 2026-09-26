@@ -1,0 +1,4835 @@
+{
+	"_comment": "Filinq capability matrix. Authored here; the cross-product index in market-intelligence is generated from it. Built by a lane generator; see the PR body for method, sources and the split of row origins.",
+	"comparedOn": "2026-09-26",
+	"category": "Document services for the Dutch public sector, run inside Nextcloud: taking documents in (intake, scanning, OCR, classification), finding and removing personal data before disclosure (anonymisation and redaction under the Woo and the AVG, with legal grounds and publication consent), producing documents from templates in the house style, signing them, and keeping them in a state fit for the record. The research anchors it as the anonymisation app for Woo disclosure (intelligence apps.anonymization_primary_app), so its sharpest competitors are the Woo redaction products (ZyLAB ONE, xxllnc Anonimiseren); on generation it meets the government document-creation incumbents (SmartDocuments, Xential), on signing the Dutch e-signature services (ValidSign), on intake the open-source document archivers (Paperless-ngx), and across all of it the zaaksysteem and DMS suites (Decos JOIN, BCT Corsa). Case handling itself is dossiq's, publication is opencatalogi's, and the archiving process with sign-off is openregister's (decision D7), so filinq is often the provider behind another app's row. Correct this paragraph if the positioning is wrong; everything below follows from it.",
+	"corpus": {
+		"repo": "ConductionNL/concurrentie-analyse intelligence database (competitor_apps app_slug docudesk and openanonymiser) plus procest/dimpact-zac research files",
+		"file": "competitor_features, competitors, user_stories (app_id docudesk), canonical_features (app_slug docudesk)"
+	},
+	"ownRevision": "ConductionNL/filinq development a392105",
+	"systems": [
+		{
+			"key": "filinq",
+			"name": "Filinq",
+			"vendor": "Conduction",
+			"isSelf": true,
+			"readOn": "2026-09-26",
+			"readHow": "code read at ConductionNL/filinq development a3921051, not driven"
+		},
+		{
+			"key": "zylab",
+			"name": "ZyLAB ONE (Reveal)",
+			"vendor": "ZyLAB / Reveal",
+			"readOn": "2026-07-16",
+			"evidenceGrade": "docs-only",
+			"columnAddedOn": "2026-09-26",
+			"unknownReason": "not covered by the intelligence database rows for ZyLAB ONE (Reveal) (competitor id 1529, read for this matrix 2026-09-26); nobody has driven ZyLAB ONE (Reveal) for this row"
+		},
+		{
+			"key": "datamask",
+			"name": "xxllnc Anonimiseren (DataMask)",
+			"vendor": "xxllnc",
+			"readOn": "2026-07-16",
+			"evidenceGrade": "docs-only",
+			"columnAddedOn": "2026-09-26",
+			"unknownReason": "not covered by the intelligence database rows for xxllnc Anonimiseren (DataMask) (competitor id 1528, read for this matrix 2026-09-26); nobody has driven xxllnc Anonimiseren (DataMask) for this row"
+		},
+		{
+			"key": "smartdocuments",
+			"name": "SmartDocuments",
+			"vendor": "SmartDocuments",
+			"readOn": "2026-07-16",
+			"evidenceGrade": "docs-only",
+			"readHow": "five intelligence rows of 2026-07-16 plus the ZAC integration research of 2026-03-14/21",
+			"columnAddedOn": "2026-09-26",
+			"unknownReason": "not covered by the intelligence database rows for SmartDocuments (competitor id 1519, read for this matrix 2026-09-26); nobody has driven SmartDocuments for this row"
+		},
+		{
+			"key": "validsign",
+			"name": "ValidSign",
+			"vendor": "ValidSign",
+			"readOn": "2026-07-16",
+			"evidenceGrade": "docs-only",
+			"columnAddedOn": "2026-09-26",
+			"unknownReason": "not covered by the intelligence database rows for ValidSign (competitor id 1537, read for this matrix 2026-09-26); nobody has driven ValidSign for this row"
+		},
+		{
+			"key": "paperless-ngx",
+			"name": "Paperless-ngx",
+			"vendor": "Paperless-ngx community",
+			"readOn": "2026-07-23",
+			"evidenceGrade": "docs-only",
+			"readHow": "two intelligence rows of 2026-07-16 and 92 release-note rows captured 2026-07-23",
+			"columnAddedOn": "2026-09-26",
+			"unknownReason": "not covered by the intelligence database rows for Paperless-ngx (competitor id 1543, read for this matrix 2026-09-26); nobody has driven Paperless-ngx for this row"
+		},
+		{
+			"key": "decos-join",
+			"name": "Decos JOIN",
+			"vendor": "Decos",
+			"readOn": "2026-09-14",
+			"evidenceGrade": "docs-only",
+			"readHow": "intelligence rows of 2026-03-27, 2026-04-10, 2026-07-16 and the dossiq round 4 sweep of 2026-09-14",
+			"columnAddedOn": "2026-09-26",
+			"unknownReason": "not covered by the intelligence database rows for Decos JOIN (competitor id 52, read for this matrix 2026-09-26); nobody has driven Decos JOIN for this row"
+		}
+	],
+	"areas": [
+		{
+			"key": "intake",
+			"name": "Receive and register incoming documents",
+			"name_nl": "Inkomende documenten ontvangen en registreren"
+		},
+		{
+			"key": "generate",
+			"name": "Generate documents from templates",
+			"name_nl": "Documenten genereren uit sjablonen"
+		},
+		{
+			"key": "templates",
+			"name": "Build and govern templates and house style",
+			"name_nl": "Sjablonen en huisstijl opbouwen en beheren"
+		},
+		{
+			"key": "work",
+			"name": "View, compare and change documents",
+			"name_nl": "Documenten bekijken, vergelijken en wijzigen"
+		},
+		{
+			"key": "detect",
+			"name": "Find personal data in documents",
+			"name_nl": "Persoonsgegevens in documenten vinden"
+		},
+		{
+			"key": "redact",
+			"name": "Redact and anonymise documents",
+			"name_nl": "Documenten lakken en anonimiseren"
+		},
+		{
+			"key": "woo",
+			"name": "Handle Woo requests, legal grounds and publication consent",
+			"name_nl": "Woo-verzoeken, grondslagen en publicatie-instemming afhandelen"
+		},
+		{
+			"key": "signing",
+			"name": "Sign documents and check signatures",
+			"name_nl": "Documenten ondertekenen en handtekeningen controleren"
+		},
+		{
+			"key": "records",
+			"name": "Keep documents as records",
+			"name_nl": "Documenten als archiefstuk bewaren"
+		},
+		{
+			"key": "share",
+			"name": "Send and share documents",
+			"name_nl": "Documenten versturen en delen"
+		},
+		{
+			"key": "connect",
+			"name": "Connect other apps and software",
+			"name_nl": "Andere apps en software koppelen"
+		},
+		{
+			"key": "operate",
+			"name": "Set up, monitor and report",
+			"name_nl": "Inrichten, bewaken en rapporteren"
+		}
+	],
+	"providers": [
+		{
+			"key": "filinq",
+			"name": "Filinq",
+			"kind": "self"
+		},
+		{
+			"key": "openregister",
+			"name": "OpenRegister",
+			"kind": "app"
+		},
+		{
+			"key": "opencatalogi",
+			"name": "OpenCatalogi",
+			"kind": "app"
+		},
+		{
+			"key": "dossiq",
+			"name": "Dossiq",
+			"kind": "app"
+		},
+		{
+			"key": "portaliq",
+			"name": "Portaliq",
+			"kind": "app"
+		},
+		{
+			"key": "integriq",
+			"name": "Integriq",
+			"kind": "app"
+		},
+		{
+			"key": "nextcloud",
+			"name": "Nextcloud",
+			"kind": "platform"
+		},
+		{
+			"key": "external",
+			"name": "An outside service",
+			"kind": "external"
+		}
+	],
+	"capabilities": [],
+	"pending": [
+		{
+			"id": "in-worklist",
+			"area": "intake",
+			"name": "See every incoming document that nobody has assigned yet in one worklist.",
+			"source": "category-derived",
+			"sourceRef": "user story \"View and prioritise the unprocessed correspondence queue\"; dossiq gap register 1.4",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#25499 (Decos JOIN, recorded 2026-04-10) \"Multi-channel Intake: Support for intake via web forms, email, post, and counter across all channels\""
+			}
+		},
+		{
+			"id": "in-assign",
+			"area": "intake",
+			"name": "Assign an incoming document to a case, or reject it with a reason.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 1.4 (opencase, xxllnc-zaken)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-scan-split",
+			"area": "intake",
+			"name": "Scan a stack of paper and have it split into separate documents at separator sheets.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 1.6",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40791 (Paperless-ngx, recorded 2026-07-23) \"[BREAKING] Remove pybzar as a barcode reader @stumpylog (#12065): From Paperless-ngx v3.0.0 (2026-07-22)\""
+			}
+		},
+		{
+			"id": "in-scan-profile",
+			"area": "intake",
+			"name": "Save scanner settings per source as a reusable scan profile.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-email",
+			"area": "intake",
+			"name": "Register an incoming email and its attachments as an official document.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Import incoming email as official document\"; canonical email-integration",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40823 (Paperless-ngx, recorded 2026-07-23) \"Fix: scope ProcessedMail UID deduplication by IMAP UIDVALIDITY @chouquette (#12839): From Paperless-ngx v3.0.0-beta.rc2 (2026-07-17)\"",
+				"decos-join": "docs-only: intelligence.competitor_features#1024 (Decos JOIN, recorded 2026-03-27) \"Email Integration: Automatic email capture and linking to cases with correspondence tracking\""
+			}
+		},
+		{
+			"id": "in-email-suggest",
+			"area": "intake",
+			"name": "Get a suggested case for an incoming email from its subject or reference.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Automatically suggest matching case for incoming email\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-classify",
+			"area": "intake",
+			"name": "Have an incoming document classified into a document type automatically, then confirm or correct it.",
+			"source": "competitor-derived",
+			"sourceRef": "Paperless-ngx ML auto-tagging; Visma Circle auto-registration; user story \"Accept or override AI-suggested classification\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#32499 (Paperless-ngx, recorded 2026-07-16) \"ML auto-tagging: Learned classification of correspondent/type/tags on inbound docs\""
+			}
+		},
+		{
+			"id": "in-party",
+			"area": "intake",
+			"name": "Have the sender's name and address recognised in an incoming document so nobody types them.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-intake-32 (Visma Circle Djumalytics NAW)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-number",
+			"area": "intake",
+			"name": "Give every incoming and outgoing document a registration number scoped to a year and a unit.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 4.26; user story \"Assign unique document number on registration\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-sender-date",
+			"area": "intake",
+			"name": "Record who sent a document, which way it went and the date it was received.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Record sender and receipt date\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-route",
+			"area": "intake",
+			"name": "Route incoming documents to a department or person by rules.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Route document to responsible department\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-duplicate",
+			"area": "intake",
+			"name": "Get warned when an incoming document duplicates one already registered.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Detect duplicate incoming document\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-deadline",
+			"area": "intake",
+			"name": "Set a handling deadline on incoming post and see what is overdue.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Set handling deadline on incoming correspondence\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-ack",
+			"area": "intake",
+			"name": "Send the sender an acknowledgement of receipt automatically when a document is registered.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Generate Acknowledgement of Receipt\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-validate",
+			"area": "intake",
+			"name": "Have an uploaded document checked for being unreadable, encrypted or incomplete before anyone works on it.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40843 (Paperless-ngx, recorded 2026-07-23) \"Feature: password removal action @shamoon (#11656): From Paperless-ngx v3.0.0-beta.rc1 (2026-05-05)\""
+			}
+		},
+		{
+			"id": "in-ocr",
+			"area": "intake",
+			"name": "Make a scanned PDF or image searchable with OCR on your own server.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical ocr; Workflow OCR app; Paperless-ngx",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40786 (Paperless-ngx, recorded 2026-07-23) \"[BREAKING] Decouple OCR control from archive file control @stumpylog (#12448): From Paperless-ngx v3.0.0 (2026-07-22)\"",
+				"decos-join": "docs-only: intelligence.competitor_features#145275 (Decos JOIN, recorded 2026-09-14) \"C-intake-13 A paper archive is digitised into the digital one, with scanning, OCR and metadata.: decos-join: documented, /oplossingen/rma-archivering Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-17.\""
+			}
+		},
+		{
+			"id": "in-ocr-auto",
+			"area": "intake",
+			"name": "Run OCR automatically when a file lands in a folder, without anyone starting it.",
+			"source": "competitor-derived",
+			"sourceRef": "Workflow OCR (Nextcloud app) flow-triggered OCR; Paperless-ngx consumer",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40793 (Paperless-ngx, recorded 2026-07-23) \"[BREAKING] Feature: Simplify and improve the consumer @stumpylog (#11753): From Paperless-ngx v3.0.0 (2026-07-22)\""
+			}
+		},
+		{
+			"id": "in-upload-policy",
+			"area": "intake",
+			"name": "Refuse uploads of file types or sizes the organisation does not allow.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-paper-archive",
+			"area": "intake",
+			"name": "Digitise a paper archive in batches and mark each paper original as digitised.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Migrate Legacy Paper Records to Digital Archive\"; procest round 4 C-intake-13",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145275 (Decos JOIN, recorded 2026-09-14) \"C-intake-13 A paper archive is digitised into the digital one, with scanning, OCR and metadata.: decos-join: documented, /oplossingen/rma-archivering Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-17.\""
+			}
+		},
+		{
+			"id": "in-failure",
+			"area": "intake",
+			"name": "Tell a person when an incoming document could not be processed, instead of leaving it in a log.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-detached",
+			"area": "intake",
+			"name": "Find documents that were detached from a case and file them again.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-mail-archive",
+			"area": "intake",
+			"name": "Import a mailbox archive in bulk and file the mails to dossiers.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Migrate Historic Email Archive to DMS\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-invoice-fields",
+			"area": "intake",
+			"name": "Pull amounts, dates and invoice numbers out of an incoming invoice.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-gl-suggest",
+			"area": "intake",
+			"name": "Get a suggested ledger account for an invoice line.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "in-basisreg",
+			"area": "intake",
+			"name": "Fill in a document's metadata from the national base registries.",
+			"source": "competitor-derived",
+			"sourceRef": "Visma Circle \"Basisregistratie enrichment\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-from-record",
+			"area": "generate",
+			"name": "Generate a document from a template filled with the data of a case or record.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical document-generation (24 competitors)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: concurrentie-analyse/procest/dimpact-zac/docs/smartdocuments-integration.md:11 \"User starts SmartDocument wizard from ZAC ... SmartDocuments: Creates Word document and stores it ... Links document to case/task\" (read 2026-03-21)",
+				"decos-join": "docs-only: intelligence.competitor_features#25505 (Decos JOIN, recorded 2026-04-10) \"Document Generation (Templates): Template-based document generation with merge fields from case data\""
+			}
+		},
+		{
+			"id": "gen-pdf",
+			"area": "generate",
+			"name": "Get a generated document as a PDF.",
+			"source": "category-derived",
+			"sourceRef": "canonical html-to-pdf",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-pdfa",
+			"area": "generate",
+			"name": "Get a generated document as archive-ready PDF/A.",
+			"source": "competitor-derived",
+			"sourceRef": "Gotenberg PDF/A conformance conversion; canonical pdf-a-conversion",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-editable",
+			"area": "generate",
+			"name": "Get a generated document as an editable Word or OpenDocument file.",
+			"source": "competitor-derived",
+			"sourceRef": "Carbone multi-format output",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: concurrentie-analyse/procest/dimpact-zac/docs/smartdocuments-integration.md:11 \"User starts SmartDocument wizard from ZAC ... SmartDocuments: Creates Word document and stores it ... Links document to case/task\" (read 2026-03-21)"
+			}
+		},
+		{
+			"id": "gen-one-render",
+			"area": "generate",
+			"name": "Produce the PDF and the editable version from one generation.",
+			"source": "competitor-derived",
+			"sourceRef": "Docmosis multi-format single render",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-preview",
+			"area": "generate",
+			"name": "Preview a generated document before it is stored or sent.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Preview generated letter before finalising\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-wizard",
+			"area": "generate",
+			"name": "Build a document step by step by answering questions.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments Q&A wizard; docassemble guided interview",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32496 (SmartDocuments, recorded 2026-07-16) \"Q&A wizard document creation: End users build a document step-by-step by answering questions\""
+			}
+		},
+		{
+			"id": "gen-attended",
+			"area": "generate",
+			"name": "Edit a generated document by hand before it is stored.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments attended mode (ZAC integration)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: concurrentie-analyse/procest/dimpact-zac/specs/smart-documents-integration/spec.md:42 \"Attended: Opens SmartDocuments wizard in browser for user editing / Unattended: Generates document directly without user interaction\" (analysed 2026-03-14)"
+			}
+		},
+		{
+			"id": "gen-unattended",
+			"area": "generate",
+			"name": "Generate a document with nobody at the screen, from a rule or from another app.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments unattended mode (ZAC integration)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: concurrentie-analyse/procest/dimpact-zac/specs/smart-documents-integration/spec.md:42 \"Attended: Opens SmartDocuments wizard in browser for user editing / Unattended: Generates document directly without user interaction\" (analysed 2026-03-14)"
+			}
+		},
+		{
+			"id": "gen-batch",
+			"area": "generate",
+			"name": "Generate one letter per recipient from a list and follow the batch as it runs.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Generate Batch Correspondence\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-store-case",
+			"area": "generate",
+			"name": "Store a generated document on the case it was made for, automatically.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments ZAC callback stores the document on the case",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: concurrentie-analyse/procest/dimpact-zac/docs/smartdocuments-integration.md:11 \"User starts SmartDocument wizard from ZAC ... SmartDocuments: Creates Word document and stores it ... Links document to case/task\" (read 2026-03-21)"
+			}
+		},
+		{
+			"id": "gen-conditional",
+			"area": "generate",
+			"name": "Include or leave out a part of a template depending on the data.",
+			"source": "competitor-derived",
+			"sourceRef": "Docmosis conditions and loops; canonical conditional-content",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-lists",
+			"area": "generate",
+			"name": "Fill a table in a template from a list of related records.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-charts",
+			"area": "generate",
+			"name": "Put a chart built from the data into a generated document.",
+			"source": "competitor-derived",
+			"sourceRef": "Carbone charts and pivot tables",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-legal-basis",
+			"area": "generate",
+			"name": "Include the legal basis and the decision deadline in a decision letter.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Include legal basis reference in decision letter\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-template-version",
+			"area": "generate",
+			"name": "See which template version a generated document was made from.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-accessible",
+			"area": "generate",
+			"name": "Generate PDFs that a screen reader can read (PDF/UA).",
+			"source": "competitor-derived",
+			"sourceRef": "Xential WCAG-compliant templates",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-plain-language",
+			"area": "generate",
+			"name": "Keep a plain-language version of a generated letter beside the formal one.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 4.28",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-periodic",
+			"area": "generate",
+			"name": "Regenerate a recurring document on a schedule.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-destination",
+			"area": "generate",
+			"name": "Send a generated document straight to a folder instead of downloading it.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-print",
+			"area": "generate",
+			"name": "Send generated documents to print, one by one or as a batch, and follow the print job.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-api",
+			"area": "generate",
+			"name": "Generate documents from other software through an API.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments zaaksysteem integrations; Xential VNG Documentcreatieservices",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32460 (SmartDocuments, recorded 2026-07-16) \"Zaaksysteem integrations: Corsa, Verseon, Decos, Centric, PinkRoccade native couplings\""
+			}
+		},
+		{
+			"id": "gen-ai",
+			"area": "generate",
+			"name": "Let an AI assistant generate a document from a template.",
+			"source": "competitor-derived",
+			"sourceRef": "Carbone official MCP server",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-merge",
+			"area": "generate",
+			"name": "Merge several documents into one PDF.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 4.14; Gotenberg merge/split",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "gen-case-archive",
+			"area": "generate",
+			"name": "Download all documents of a case as one archive with a manifest.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-editor",
+			"area": "templates",
+			"name": "Create and edit a template in the browser.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments drag-and-drop template editor; Xential web-based creation",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32453 (SmartDocuments, recorded 2026-07-16) \"Drag-and-drop template editor: Visual template editor with version control and access permissions\""
+			}
+		},
+		{
+			"id": "tpl-office",
+			"area": "templates",
+			"name": "Write a template in Word or LibreOffice with placeholders in it.",
+			"source": "competitor-derived",
+			"sourceRef": "Carbone office-file-native templates; Docmosis; Templater",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-from-doc",
+			"area": "templates",
+			"name": "Turn an existing document into a template.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Create template from existing document\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-fields",
+			"area": "templates",
+			"name": "Define the fields a template asks for and bind them to record properties.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Define variable fields in a template\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-versions",
+			"area": "templates",
+			"name": "Keep every version of a template and go back to an earlier one.",
+			"source": "competitor-derived",
+			"sourceRef": "PDFMonkey template versioning with rollback; SmartDocuments version control",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32453 (SmartDocuments, recorded 2026-07-16) \"Drag-and-drop template editor: Visual template editor with version control and access permissions\""
+			}
+		},
+		{
+			"id": "tpl-diff",
+			"area": "templates",
+			"name": "See what changed between two versions of a template.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-lock",
+			"area": "templates",
+			"name": "Lock a template so nobody changes it while it is in use.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-copy",
+			"area": "templates",
+			"name": "Copy a template as the start of a new one.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-access",
+			"area": "templates",
+			"name": "Decide who may use or edit a template.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments template access permissions; user story \"Set access permissions on a template\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32453 (SmartDocuments, recorded 2026-07-16) \"Drag-and-drop template editor: Visual template editor with version control and access permissions\""
+			}
+		},
+		{
+			"id": "tpl-per-type",
+			"area": "templates",
+			"name": "Offer only the templates that fit a case type or document type.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments templates mapped to zaaktypes (ZAC integration); user story \"Assign template to document type\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: concurrentie-analyse/procest/dimpact-zac/specs/smart-documents-integration/spec.md:68 \"Templates are mapped to zaaktypes and informatieobjecttypen\" (analysed 2026-03-14)"
+			}
+		},
+		{
+			"id": "tpl-house-style",
+			"area": "templates",
+			"name": "Apply the organisation's house style to every generated document from one place.",
+			"source": "competitor-derived",
+			"sourceRef": "Xential central template governance and huisstijl enforcement",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-layout",
+			"area": "templates",
+			"name": "Change the letterhead and page layout once, and keep its earlier versions.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-text-blocks",
+			"area": "templates",
+			"name": "Reuse approved text blocks across templates.",
+			"source": "competitor-derived",
+			"sourceRef": "iWRITER 365 text-block libraries",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-retire",
+			"area": "templates",
+			"name": "Retire an old template so nobody can choose it any more.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Retire an obsolete template\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-languages",
+			"area": "templates",
+			"name": "Keep one template in Dutch and English.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-in-case",
+			"area": "templates",
+			"name": "Pick a template from the case screen of another app.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "tpl-rollout",
+			"area": "templates",
+			"name": "Roll a template change out to the whole organisation from one console.",
+			"source": "competitor-derived",
+			"sourceRef": "Xential central template governance console",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-preview",
+			"area": "work",
+			"name": "Open a PDF, office file or email in the browser without downloading it.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-eml",
+			"area": "work",
+			"name": "Read an email file with its attachments in the browser.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-compare",
+			"area": "work",
+			"name": "Compare two versions of a document and see what changed.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Compare two document versions\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-versions",
+			"area": "work",
+			"name": "See every version of a document and restore an earlier one.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Save new version on revision\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40796 (Paperless-ngx, recorded 2026-07-23) \"Feature: document file versions @shamoon (#12061): From Paperless-ngx v3.0.0 (2026-07-22)\"",
+				"decos-join": "docs-only: intelligence.competitor_features#1013 (Decos JOIN, recorded 2026-03-27) \"Document Management: Integrated DMS with versioning, metadata profiles, and digital signing\""
+			}
+		},
+		{
+			"id": "wk-final",
+			"area": "work",
+			"name": "Mark a document as final so it can no longer change, with any correction recorded.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-documents-5 (final documents frozen); user story \"Mark document as officially adopted\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-final-rule",
+			"area": "work",
+			"name": "Make documents final automatically when their case reaches a given status.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-review-due",
+			"area": "work",
+			"name": "See which documents are due for periodic review and mark them reviewed.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-office-edit",
+			"area": "work",
+			"name": "Edit a document in the office editor straight from the app.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-ai-edit",
+			"area": "work",
+			"name": "Ask an AI assistant to change a document's text, style or layout.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-to-pdfa",
+			"area": "work",
+			"name": "Convert a document to PDF/A for archiving.",
+			"source": "competitor-derived",
+			"sourceRef": "Gotenberg PDF/A conformance conversion",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-pdfa-check",
+			"area": "work",
+			"name": "Check that a PDF/A file really conforms to the standard.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-watermark",
+			"area": "work",
+			"name": "Put a watermark on a document before it is shared.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Apply watermark to shared documents\"; canonical watermarking",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-print-preview",
+			"area": "work",
+			"name": "See a print preview of a document and download it as PDF/A.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-enrich",
+			"area": "work",
+			"name": "Have a document's language, keywords and topic filled in automatically.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-notes",
+			"area": "work",
+			"name": "Add a note to a document for colleagues.",
+			"source": "competitor-derived",
+			"sourceRef": "Paperless-ngx document notes",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40848 (Paperless-ngx, recorded 2026-07-23) \"Fix: reject invalid requests to API notes endpoint @ggouzi (#12582): From Paperless-ngx v2.20.15 (2026-04-27)\""
+			}
+		},
+		{
+			"id": "wk-case-list",
+			"area": "work",
+			"name": "See all documents of a case in one flat list with sortable columns.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 cluster 21; user story \"View all documents in case dossier\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-mine",
+			"area": "work",
+			"name": "See the documents I produced or that wait for me.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-multi-link",
+			"area": "work",
+			"name": "Link one document to more than one case or record.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "wk-fulltext",
+			"area": "work",
+			"name": "Find documents by words in their content.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical full-text-search (5 competitors)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40794 (Paperless-ngx, recorded 2026-07-23) \"Feature: Replace Whoosh with tantivy search backend @stumpylog (#12471): From Paperless-ngx v3.0.0 (2026-07-22)\"",
+				"decos-join": "docs-only: intelligence.competitor_features#25506 (Decos JOIN, recorded 2026-04-10) \"Full-text Search: Full-text search across all cases, documents and metadata\""
+			}
+		},
+		{
+			"id": "wk-person-search",
+			"area": "work",
+			"name": "Find every document that mentions a given person, BSN or IBAN.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Search all documents relating to a data subject\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-auto",
+			"area": "detect",
+			"name": "Detect personal data in a document automatically.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical pii-detection; anonymisation cluster",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "yes",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"zylab": "docs-only: intelligence.competitor_features#32459 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"Woo request case workflow: Collect, filter, dedupe, anonymize, annotate, publish for passive disclosure\"",
+				"datamask": "docs-only: intelligence.competitor_features#32479 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Suggest-then-approve review workflow: Employee accepts/rejects each suggestion; human control mandated\"",
+				"decos-join": "docs-only: intelligence.competitor_features#32489 (Decos JOIN, recorded 2026-07-16) \"One-click anonymization via DataMask: Anonymization embedded in the case system civil servants already use\""
+			}
+		},
+		{
+			"id": "det-local",
+			"area": "detect",
+			"name": "Detect personal data on your own server, with nothing sent to a cloud service.",
+			"source": "competitor-derived",
+			"sourceRef": "Cloak Anonymizer weakness \"data leaves instance\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-dutch-ids",
+			"area": "detect",
+			"name": "Recognise Dutch identifiers such as BSN, IBAN and licence plates.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-dictionary",
+			"area": "detect",
+			"name": "Add your own list of names or terms that must always be found.",
+			"source": "competitor-derived",
+			"sourceRef": "OCTOBOX value lists; user story \"Configure custom PII detection patterns\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-engine",
+			"area": "detect",
+			"name": "Choose the detection engine: patterns, a local model, Presidio or a language model.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-llm",
+			"area": "detect",
+			"name": "Use a language model to find sensitive passages that patterns miss.",
+			"source": "competitor-derived",
+			"sourceRef": "Woo-AVL (anonimiseren via LLM); Paperless AI",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-business",
+			"area": "detect",
+			"name": "Detect confidential business and financial data, not only personal data.",
+			"source": "competitor-derived",
+			"sourceRef": "xxllnc Anonimiseren Woo-scope detection beyond AVG",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"datamask": "docs-only: intelligence.competitor_features#32447 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Woo-scope detection beyond AVG: Detects confidential financial data, not only personal data\""
+			}
+		},
+		{
+			"id": "det-scans",
+			"area": "detect",
+			"name": "Detect personal data in scanned PDFs and photographed pages.",
+			"source": "competitor-derived",
+			"sourceRef": "Presidio image redaction; CaseGuard handwriting OCR",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-faces",
+			"area": "detect",
+			"name": "Detect and blur faces and licence plates in images.",
+			"source": "competitor-derived",
+			"sourceRef": "CaseGuard video redaction; Presidio image redaction",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-handwriting",
+			"area": "detect",
+			"name": "Detect personal data in handwriting.",
+			"source": "competitor-derived",
+			"sourceRef": "CaseGuard handwriting OCR redaction",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-av",
+			"area": "detect",
+			"name": "Redact personal data in audio and video recordings.",
+			"source": "competitor-derived",
+			"sourceRef": "CaseGuard audio and video redaction",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-fail-closed",
+			"area": "detect",
+			"name": "Refuse to anonymise when no detector is set up, rather than pass a document through untouched.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-measure",
+			"area": "detect",
+			"name": "Measure how well detection works on your own documents.",
+			"source": "competitor-derived",
+			"sourceRef": "Presidio recognizer evaluation harness",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-structured",
+			"area": "detect",
+			"name": "Anonymise spreadsheets and tables, not only running text.",
+			"source": "competitor-derived",
+			"sourceRef": "Presidio structured-data anonymization",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-overview",
+			"area": "detect",
+			"name": "See across the organisation which documents contain personal data.",
+			"source": "category-derived",
+			"sourceRef": "user story \"View PII risk dashboard across all documents\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-on-upload",
+			"area": "detect",
+			"name": "Scan uploaded documents for personal data as they arrive.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Automatically scan uploaded documents for PII\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "det-email",
+			"area": "detect",
+			"name": "Find personal data inside emails and their attachments.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-review",
+			"area": "redact",
+			"name": "Accept or reject each suggested redaction before the document is anonymised.",
+			"source": "competitor-derived",
+			"sourceRef": "xxllnc Anonimiseren suggest-then-approve; OCTOBOX mandatory human accept/reject",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"datamask": "docs-only: intelligence.competitor_features#32479 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Suggest-then-approve review workflow: Employee accepts/rejects each suggestion; human control mandated\""
+			}
+		},
+		{
+			"id": "red-manual",
+			"area": "redact",
+			"name": "Mark extra text for redaction by hand.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-true-removal",
+			"area": "redact",
+			"name": "Remove redacted text from the file itself, not just cover it with a black box.",
+			"source": "competitor-derived",
+			"sourceRef": "Stirling PDF true content-removing redaction; ZyLAB PDF/A burn-in",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"zylab": "docs-only: intelligence.competitor_features#32483 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"PDF/A burn-in: Documents to images to searchable PDF/A for disclosure\""
+			}
+		},
+		{
+			"id": "red-formats",
+			"area": "redact",
+			"name": "Anonymise Word, PDF, OpenDocument and plain text files.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-pdf-out",
+			"area": "redact",
+			"name": "Get the anonymised result as a PDF whatever the input format was.",
+			"source": "competitor-derived",
+			"sourceRef": "ZyLAB PDF/A burn-in",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"zylab": "docs-only: intelligence.competitor_features#32483 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"PDF/A burn-in: Documents to images to searchable PDF/A for disclosure\""
+			}
+		},
+		{
+			"id": "red-pseudonym",
+			"area": "redact",
+			"name": "Replace each person with a consistent pseudonym so the text stays readable.",
+			"source": "competitor-derived",
+			"sourceRef": "Cloak Anonymizer seven methods; canonical pseudonymization",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-reversible",
+			"area": "redact",
+			"name": "Reverse a pseudonymisation later under control, with the key kept apart.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical pseudonymization (keyed tokenisation)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-sanitise",
+			"area": "redact",
+			"name": "Strip hidden metadata, tracked changes, comments and embedded objects before a document leaves.",
+			"source": "competitor-derived",
+			"sourceRef": "Redactable document sanitization; Adobe sanitization pass",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-folder",
+			"area": "redact",
+			"name": "Anonymise a whole folder in one background job.",
+			"source": "competitor-derived",
+			"sourceRef": "CaseGuard scheduled batch redaction; canonical batch-processing",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-dossier",
+			"area": "redact",
+			"name": "Anonymise a whole dossier at once, with the same decisions applied to every document.",
+			"source": "competitor-derived",
+			"sourceRef": "iOpenbaar whole-dossier automatic anonymization",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-batch-review",
+			"area": "redact",
+			"name": "Review what was detected across a whole batch in one screen.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-output-layout",
+			"area": "redact",
+			"name": "Keep anonymised copies apart from the originals in their own folder.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-certificate",
+			"area": "redact",
+			"name": "Get a certificate per redaction that proves what was removed and why.",
+			"source": "competitor-derived",
+			"sourceRef": "Redactable redaction certificates",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-accessible",
+			"area": "redact",
+			"name": "Keep an anonymised PDF readable by a screen reader.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-one-click",
+			"area": "redact",
+			"name": "Anonymise a document with one click from inside the case system.",
+			"source": "competitor-derived",
+			"sourceRef": "xxllnc Anonimiseren zaaksysteem-embedded flow; Decos JOIN one-click via DataMask",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"datamask": "docs-only: intelligence.competitor_features#32437 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Zaaksysteem-embedded one-click flow: Anonymize button inside Decos JOIN\"",
+				"decos-join": "docs-only: intelligence.competitor_features#32489 (Decos JOIN, recorded 2026-07-16) \"One-click anonymization via DataMask: Anonymization embedded in the case system civil servants already use\""
+			}
+		},
+		{
+			"id": "red-four-eyes",
+			"area": "redact",
+			"name": "Have a second person mark a redacted document as checked.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-link",
+			"area": "redact",
+			"name": "Keep an anonymised copy linked to its original so both can be found.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-scheduled",
+			"area": "redact",
+			"name": "Schedule bulk redaction to run outside office hours.",
+			"source": "competitor-derived",
+			"sourceRef": "CaseGuard scheduled batch redaction jobs",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-profiles",
+			"area": "redact",
+			"name": "Save anonymisation settings as reusable profiles per kind of document.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "red-ai-guard",
+			"area": "redact",
+			"name": "Remove personal data from a document before an AI model sees it.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-access-and-privacy-3 (Decos JOIN Joni)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#146118 (Decos JOIN, recorded 2026-09-14) \"C-access-and-privacy-3 A document's personal data is removed before a model sees it: decos-join: documented, /zaaksysteem/joni-plus Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-22.\""
+			}
+		},
+		{
+			"id": "woo-grounds",
+			"area": "woo",
+			"name": "Record the Woo exemption ground for each redacted passage.",
+			"source": "competitor-derived",
+			"sourceRef": "ZyLAB exemption-ground annotation; Adobe redaction code sets",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"zylab": "docs-only: intelligence.competitor_features#32462 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"Exemption-ground annotation: Woo uitzonderingsgrond tagged per redacted passage\""
+			}
+		},
+		{
+			"id": "woo-grounds-pdf",
+			"area": "woo",
+			"name": "Produce a summary of every redaction and its legal ground as a PDF for the decision.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-ground-propose",
+			"area": "woo",
+			"name": "Get the likely legal ground proposed for each kind of personal data.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-request",
+			"area": "woo",
+			"name": "Handle a Woo request end to end: collect, filter, redact and publish.",
+			"source": "competitor-derived",
+			"sourceRef": "ZyLAB Woo request case workflow; journey \"Process WOO Information Request\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"zylab": "docs-only: intelligence.competitor_features#32459 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"Woo request case workflow: Collect, filter, dedupe, anonymize, annotate, publish for passive disclosure\""
+			}
+		},
+		{
+			"id": "woo-dedupe",
+			"area": "woo",
+			"name": "Remove duplicates and thread emails in a large Woo request.",
+			"source": "competitor-derived",
+			"sourceRef": "ZyLAB email threading and dedupe",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"zylab": "docs-only: intelligence.competitor_features#32500 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"Email threading and dedupe: Handles multi-thousand-document requests\""
+			}
+		},
+		{
+			"id": "woo-scope",
+			"area": "woo",
+			"name": "Search across source systems to find what falls within a Woo request.",
+			"source": "competitor-derived",
+			"sourceRef": "INDICA Woo cross-system content discovery",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-deadline",
+			"area": "woo",
+			"name": "Track the statutory Woo deadline and record extensions.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Track WOO deadline and record extensions\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-consent",
+			"area": "woo",
+			"name": "Ask third parties for their view before publication and track the objection period.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-decisions-20 (Visma Circle)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-period",
+			"area": "woo",
+			"name": "Set the length of the objection period, four weeks by default.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-never",
+			"area": "woo",
+			"name": "Keep named people or organisations out of every publication, with any override audited.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-always",
+			"area": "woo",
+			"name": "Record that someone agreed to publication once, for all later documents.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-policy-redact",
+			"area": "woo",
+			"name": "Apply the publish-never and publish-always rules during ordinary anonymisation as well.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-pub-list",
+			"area": "woo",
+			"name": "Compose the list of documents to publish with their redaction status.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-publish",
+			"area": "woo",
+			"name": "Hand approved documents to the publication platform.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-decisions-14; GPP-Woo publicatiebank",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145663 (Decos JOIN, recorded 2026-09-14) \"C-decisions-14 Public information is published to a portal fed straight from the case system, actively and on request.: decos-join: documented, /oplossingen/woo-portaal Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-18, D-dec\""
+			}
+		},
+		{
+			"id": "woo-index",
+			"area": "woo",
+			"name": "Feed the national Woo index with what was published.",
+			"source": "competitor-derived",
+			"sourceRef": "GPP-Woo DiWoo feed; KOOP Woo-index",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-active",
+			"area": "woo",
+			"name": "See which documents must be published actively and what is still outstanding.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Publish Documents for Active Disclosure\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145678 (Decos JOIN, recorded 2026-09-14) \"C-decisions-27 Which collections are published, and on what conditions, is configured rather than fixed.: decos-join: documented, /oplossingen/woo-portaal Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-20.\""
+			}
+		},
+		{
+			"id": "woo-algorithm",
+			"area": "woo",
+			"name": "List the anonymisation algorithm in the public algorithm register.",
+			"source": "competitor-derived",
+			"sourceRef": "xxllnc Anonimiseren algorithm register presence",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"datamask": "docs-only: intelligence.competitor_features#32449 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Algorithm register presence: Registered per municipality on algoritmes.overheid.nl\""
+			}
+		},
+		{
+			"id": "woo-agreement",
+			"area": "woo",
+			"name": "Make a recipient accept conditions before downloading disclosed documents.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "woo-sar",
+			"area": "woo",
+			"name": "Answer a subject access request by finding, redacting and packaging every document about one person.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Handle Subject Access Request with Document Redaction\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-request",
+			"area": "signing",
+			"name": "Send a document to one or more people for signature.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical signature-requests (6 competitors)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32456 (SmartDocuments, recorded 2026-07-16) \"Built-in digital signature step: Signing as part of the document workflow\"",
+				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\"",
+				"decos-join": "docs-only: intelligence.competitor_features#25496 (Decos JOIN, recorded 2026-04-10) \"Digital Signing: Built-in digital signing capabilities for case documents and decisions\""
+			}
+		},
+		{
+			"id": "sig-order",
+			"area": "signing",
+			"name": "Choose whether signers sign one after another or at the same time.",
+			"source": "competitor-derived",
+			"sourceRef": "LibreSign multi-document envelopes (order and roles); canonical signing-order",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-levels",
+			"area": "signing",
+			"name": "Sign at the eIDAS level a document needs: simple, advanced or qualified.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-qes",
+			"area": "signing",
+			"name": "Sign with a qualified electronic signature.",
+			"source": "competitor-derived",
+			"sourceRef": "Zynyo QTSP qualified certificates; Signhost remote qualified signing",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-nl-id",
+			"area": "signing",
+			"name": "Let signers prove who they are with DigiD, eHerkenning or iDIN.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign NL identity rails",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"validsign": "docs-only: intelligence.competitor_features#32429 (ValidSign, recorded 2026-07-16) \"DigiD/eHerkenning/iDIN/BankID signer identity: NL identity rails for signer authentication\""
+			}
+		},
+		{
+			"id": "sig-sms",
+			"area": "signing",
+			"name": "Verify a signer with a code sent to their phone.",
+			"source": "competitor-derived",
+			"sourceRef": "DocuSeal SMS identity verification",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-external",
+			"area": "signing",
+			"name": "Let someone without an account sign through a portal.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-decline",
+			"area": "signing",
+			"name": "Let a signer decline with a reason and tell the sender.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Reject a signing request with a reason\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-audit",
+			"area": "signing",
+			"name": "See who signed what, when and from where.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign evidence summary; canonical audit-trail",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\""
+			}
+		},
+		{
+			"id": "sig-evidence",
+			"area": "signing",
+			"name": "Get one evidence document that summarises the whole signing transaction.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign evidence summary artifact",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\""
+			}
+		},
+		{
+			"id": "sig-verify",
+			"area": "signing",
+			"name": "Check the signature on a document someone sent you.",
+			"source": "competitor-derived",
+			"sourceRef": "Mayan EDMS signature verification of inbound documents",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-trust-list",
+			"area": "signing",
+			"name": "Check a signer's certificate against the EU trusted list.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Check certificate against EU Trusted List\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-tamper",
+			"area": "signing",
+			"name": "See whether a signed document was changed after signing.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Detect document tampering after signing\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-bulk",
+			"area": "signing",
+			"name": "Sign many documents in one go.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical multi-document-batch-signing",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-folder",
+			"area": "signing",
+			"name": "Gather documents from several cases into one signing folder for one signer.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 4.27",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-mandate",
+			"area": "signing",
+			"name": "Delegate signing authority for a period and limit it to certain document types.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Manage Signing Mandate\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-fields",
+			"area": "signing",
+			"name": "Place signature and form fields on a document visually.",
+			"source": "competitor-derived",
+			"sourceRef": "DocuSeal WYSIWYG field-placement builder",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-bulk-send",
+			"area": "signing",
+			"name": "Send the same document to many people for signature from a list.",
+			"source": "competitor-derived",
+			"sourceRef": "DocuSeal bulk send; DocuSign envelope-based bulk",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-in-person",
+			"area": "signing",
+			"name": "Sign face to face on one device.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign face-to-face signing mode",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"validsign": "docs-only: intelligence.competitor_features#32484 (ValidSign, recorded 2026-07-16) \"Face-to-face signing mode: In-person signing ceremony support\""
+			}
+		},
+		{
+			"id": "sig-cancel",
+			"area": "signing",
+			"name": "Cancel a signing request that is under way.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-provider",
+			"area": "signing",
+			"name": "Sign through an outside provider such as LibreSign or ValidSign.",
+			"source": "competitor-derived",
+			"sourceRef": "BCT Corsa ValidSign integration; LibreSign self-hosted CA",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-seal",
+			"area": "signing",
+			"name": "Stamp a published document with the organisation's digital seal.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-decisions-24 (Visma Circle)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sig-in-generation",
+			"area": "signing",
+			"name": "Sign as a step of the document generation flow.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments built-in digital signature step; Docupilot",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32456 (SmartDocuments, recorded 2026-07-16) \"Built-in digital signature step: Signing as part of the document workflow\""
+			}
+		},
+		{
+			"id": "rec-register",
+			"area": "records",
+			"name": "Keep a register of every document with its metadata, not only the file.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#1013 (Decos JOIN, recorded 2026-03-27) \"Document Management: Integrated DMS with versioning, metadata profiles, and digital signing\""
+			}
+		},
+		{
+			"id": "rec-schema",
+			"area": "records",
+			"name": "Define the metadata a document type must carry.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Design Metadata Schema for Document Type\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-mdto",
+			"area": "records",
+			"name": "Describe records with the Dutch archival metadata standard MDTO or TMLO.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-documents-21; BCT Corsa MDTO",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145477 (Decos JOIN, recorded 2026-09-14) \"C-documents-21 Documents are stored for the long term in PDF/A and described with MDTO.: decos-join: documented, /oplossingen/rma-archivering Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-13.\""
+			}
+		},
+		{
+			"id": "rec-retention",
+			"area": "records",
+			"name": "Attach a retention period from the selection list to a document.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Classify Record with Retention Schedule\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#1015 (Decos JOIN, recorded 2026-03-27) \"Archive Management: TMLO/MDTO-compliant archiving with automated retention and transfer to e-Depot\""
+			}
+		},
+		{
+			"id": "rec-destroy",
+			"area": "records",
+			"name": "Destroy documents at the end of their retention period through named steps and a person's decision.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-documents-32",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145491 (Decos JOIN, recorded 2026-09-14) \"C-documents-32 The end of a retention period is a process with named steps and a person's decision, not a delete job.: Passes this candidate; the sweep recorded it as finding D-decos-14, D-decos-16. The best evidence cell of the consolidated candidate names another system: atabi\""
+			}
+		},
+		{
+			"id": "rec-hold",
+			"area": "records",
+			"name": "Put documents on legal hold so they cannot be destroyed.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Exclude document from destruction due to legal hold\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-transfer",
+			"area": "records",
+			"name": "Transfer records to an e-depot.",
+			"source": "competitor-derived",
+			"sourceRef": "BCT Corsa e-depot connection",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#1015 (Decos JOIN, recorded 2026-03-27) \"Archive Management: TMLO/MDTO-compliant archiving with automated retention and transfer to e-Depot\""
+			}
+		},
+		{
+			"id": "rec-pdfa",
+			"area": "records",
+			"name": "Store records for the long term as PDF/A.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-documents-21",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145477 (Decos JOIN, recorded 2026-09-14) \"C-documents-21 Documents are stored for the long term in PDF/A and described with MDTO.: decos-join: documented, /oplossingen/rma-archivering Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-13.\""
+			}
+		},
+		{
+			"id": "rec-born-ready",
+			"area": "records",
+			"name": "File a record in archive-ready form the moment it is created, not converted later.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-documents-39",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145501 (Decos JOIN, recorded 2026-09-14) \"C-documents-39 The record is filed in archive-ready form at the moment it is created, not converted later.: decos-join: documented, /oplossingen/rma-archivering Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-11.\""
+			}
+		},
+		{
+			"id": "rec-erase",
+			"area": "records",
+			"name": "Erase one person from the documents while the records themselves stay, with a certificate.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-access-and-privacy-22",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-art30",
+			"area": "records",
+			"name": "Export the register of processing activities (AVG article 30).",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-dossier",
+			"area": "records",
+			"name": "Group documents into a dossier and move the dossier through statuses.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Compose Complete Case Dossier\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-dossier-index",
+			"area": "records",
+			"name": "Set the order of documents in a dossier and print an index of it.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Generate printable dossier index\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-complete",
+			"area": "records",
+			"name": "Check that a dossier's metadata is complete before it is closed or transferred.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Validate dossier metadata before archival\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-confidential",
+			"area": "records",
+			"name": "Label a document's confidentiality and restrict access by it.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "rec-audit",
+			"area": "records",
+			"name": "See an audit trail of everything done to a document.",
+			"source": "category-derived",
+			"sourceRef": "canonical audit-trail (5 competitors)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#25507 (Decos JOIN, recorded 2026-04-10) \"Audit Trail: Complete audit trail of all actions performed on cases and documents\""
+			}
+		},
+		{
+			"id": "rec-certified",
+			"area": "records",
+			"name": "Show certification against the records management standards.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-integrations-24",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#146074 (Decos JOIN, recorded 2026-09-14) \"C-integrations-24 Certification against the named records management standards, published.: Passes this candidate; the sweep recorded it as finding D-decos-12. The best evidence cell of the consolidated candidate names another system: xxllnc-zaken: Arc\""
+			}
+		},
+		{
+			"id": "rec-contracts",
+			"area": "records",
+			"name": "Manage contracts with an alert before one renews, changes or lapses.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-deadlines-10; BCT Corsa contract management",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#145691 (Decos JOIN, recorded 2026-09-14) \"C-deadlines-10 Contracts are managed from the case system, with an alert before one renews, changes or lapses.: decos-join: documented, /oplossingen/modules (Contractbeheer) Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-de\""
+			}
+		},
+		{
+			"id": "rec-download-alert",
+			"area": "records",
+			"name": "Be told when a file is downloaded.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 13.39",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sh-letter",
+			"area": "share",
+			"name": "Compose an outgoing letter from an approved template and send it.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Send Official Correspondence by Email\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#19399 (Decos JOIN, recorded 2026-04-10) \"Correspondence management: Correspondence management feature of Decos JOIN\""
+			}
+		},
+		{
+			"id": "sh-post-register",
+			"area": "share",
+			"name": "See the open incoming post and which outgoing letters answered it.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 4.26",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sh-email",
+			"area": "share",
+			"name": "Send a document by email from the app and keep the sent copy on the case.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Automatically archive sent correspondence in case dossier\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#1024 (Decos JOIN, recorded 2026-03-27) \"Email Integration: Automatic email capture and linking to cases with correspondence tracking\""
+			}
+		},
+		{
+			"id": "sh-link",
+			"area": "share",
+			"name": "Share a document with an outside party through a time-limited link.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Share document via time-limited secure link\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#40797 (Paperless-ngx, recorded 2026-07-23) \"Feature: sharelink bundles @shamoon (#11682): From Paperless-ngx v3.0.0 (2026-07-22)\""
+			}
+		},
+		{
+			"id": "sh-revoke",
+			"area": "share",
+			"name": "Revoke access to a document that was shared.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Revoke access to shared documents\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sh-portal",
+			"area": "share",
+			"name": "Let a citizen see and download the documents of their request in a portal.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Track Document Status as Citizen\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#1016 (Decos JOIN, recorded 2026-03-27) \"Citizen Portal: Self-service citizen portal for case tracking, document submission, and status updates\""
+			}
+		},
+		{
+			"id": "sh-approve",
+			"area": "share",
+			"name": "Have an outgoing letter approved before it is sent.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Approve Outgoing Correspondence\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sh-channel",
+			"area": "share",
+			"name": "Send a letter through the recipient's preferred channel: post, email or digital post.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Send acknowledgement via the sender's preferred channel\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sh-notify",
+			"area": "share",
+			"name": "Notify people when a document they follow changes status.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Receive notification when document status changes\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "sh-cloud",
+			"area": "share",
+			"name": "Process documents straight from Google Drive, OneDrive or Dropbox.",
+			"source": "competitor-derived",
+			"sourceRef": "Redactable cloud storage connectors",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-api",
+			"area": "connect",
+			"name": "Reach every document function through a documented REST API.",
+			"source": "category-derived",
+			"sourceRef": "canonical api-platform (11 competitors)",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#25502 (Decos JOIN, recorded 2026-04-10) \"REST API Platform: Modern REST APIs for integration with third-party systems\""
+			}
+		},
+		{
+			"id": "con-events",
+			"area": "connect",
+			"name": "React automatically when a document is created or changed in the register.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-flow",
+			"area": "connect",
+			"name": "Start document actions from Nextcloud Flow rules.",
+			"source": "competitor-derived",
+			"sourceRef": "Paperless-ngx trigger-action pipelines; Workflow OCR",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "yes",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"paperless-ngx": "docs-only: intelligence.competitor_features#32445 (Paperless-ngx, recorded 2026-07-16) \"Trigger-action document pipelines: Consumption workflow automation\""
+			}
+		},
+		{
+			"id": "con-mcp",
+			"area": "connect",
+			"name": "Let AI agents use the document functions through MCP.",
+			"source": "competitor-derived",
+			"sourceRef": "Carbone official MCP server",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-zgw",
+			"area": "connect",
+			"name": "Exchange documents with a zaaksysteem through the ZGW Documenten API.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments zaaksysteem integrations; Xential VNG Documentcreatieservices",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32460 (SmartDocuments, recorded 2026-07-16) \"Zaaksysteem integrations: Corsa, Verseon, Decos, Centric, PinkRoccade native couplings\""
+			}
+		},
+		{
+			"id": "con-leaf",
+			"area": "connect",
+			"name": "Show a document list on another app's record page.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-sign-rail",
+			"area": "connect",
+			"name": "Sign documents on behalf of other apps through one signing route.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-gen-for-apps",
+			"area": "connect",
+			"name": "Generate documents on behalf of other apps, such as certificates and report cards.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-search",
+			"area": "connect",
+			"name": "Find documents from Nextcloud's unified search.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-notifications",
+			"area": "connect",
+			"name": "Get Nextcloud notifications about document events.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-webhook",
+			"area": "connect",
+			"name": "Call an outside system when something happens to a document.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical webhook-support",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "con-widget",
+			"area": "connect",
+			"name": "See document work on the Nextcloud dashboard.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-settings",
+			"area": "operate",
+			"name": "Configure the app on one admin page.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-setup",
+			"area": "operate",
+			"name": "Be walked through setup the first time.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-metrics",
+			"area": "operate",
+			"name": "Monitor the app with Prometheus metrics and a health check.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-reports",
+			"area": "operate",
+			"name": "See reports on signing, anonymisation and produced documents.",
+			"source": "category-derived",
+			"sourceRef": "canonical management-information",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#1021 (Decos JOIN, recorded 2026-03-27) \"Management Information: Dashboards and reports on case volumes, throughput times, and departmental performance\""
+			}
+		},
+		{
+			"id": "op-dashboard",
+			"area": "operate",
+			"name": "See consent and anonymisation work at a glance on a dashboard.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-self-hosted",
+			"area": "operate",
+			"name": "Run everything on your own infrastructure.",
+			"source": "category-derived",
+			"sourceRef": "canonical self-hosted",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-open-source",
+			"area": "operate",
+			"name": "Get the source code under an open licence.",
+			"source": "category-derived",
+			"sourceRef": "canonical open-source",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "no",
+			"datamask": "no",
+			"smartdocuments": "no",
+			"validsign": "no",
+			"paperless-ngx": "yes",
+			"decos-join": "no",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"zylab": "docs-only: intelligence.competitors#1529 license = \"Proprietary\"",
+				"datamask": "docs-only: intelligence.competitors#1528 license = \"Proprietary\"",
+				"smartdocuments": "docs-only: intelligence.competitors#1519 license = \"Proprietary\"",
+				"validsign": "docs-only: intelligence.competitors#1537 license = \"Proprietary\"",
+				"paperless-ngx": "docs-only: intelligence.competitors#1543 license = \"GPL-3.0\"",
+				"decos-join": "docs-only: intelligence.competitors#52 license = \"Proprietary\""
+			}
+		},
+		{
+			"id": "op-tenants",
+			"area": "operate",
+			"name": "Serve several organisations from one instance with their data kept apart.",
+			"source": "competitor-derived",
+			"sourceRef": "Decos JOIN multi-tenant SaaS",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#25508 (Decos JOIN, recorded 2026-04-10) \"Multi-tenant SaaS: Cloud-hosted multi-tenant SaaS deployment model\""
+			}
+		},
+		{
+			"id": "op-languages",
+			"area": "operate",
+			"name": "Use the app in Dutch and in English.",
+			"source": "category-derived",
+			"sourceRef": "canonical multi-language-support",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-a11y",
+			"area": "operate",
+			"name": "Use the app with only a keyboard or a screen reader.",
+			"source": "category-derived",
+			"sourceRef": "canonical accessibility",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-mobile",
+			"area": "operate",
+			"name": "Work with documents from a phone.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments mobile app; Decos JOIN mobile access",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"smartdocuments": "docs-only: intelligence.competitor_features#32444 (SmartDocuments, recorded 2026-07-16) \"Mobile app: Template creation and signing on the go\"",
+				"decos-join": "docs-only: intelligence.competitor_features#1025 (Decos JOIN, recorded 2026-03-27) \"Mobile Access: Mobile-responsive interface for case workers to handle tasks on the go\""
+			}
+		},
+		{
+			"id": "op-access",
+			"area": "operate",
+			"name": "Decide per kind of document who may see and change it.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Review requester permissions against document classification\"",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet",
+				"decos-join": "docs-only: intelligence.competitor_features#25501 (Decos JOIN, recorded 2026-04-10) \"Role-based Authorization: Fine-grained role-based access control for case data and documents\""
+			}
+		},
+		{
+			"id": "op-prefs",
+			"area": "operate",
+			"name": "Keep each user's own preferences.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		},
+		{
+			"id": "op-tour",
+			"area": "operate",
+			"name": "Get a guided tour of the app.",
+			"source": "own-code",
+			"filinq": "unknown",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq"
+			},
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"filinq": "not checked: code reading of this row not finished yet"
+			}
+		}
+	]
+}
