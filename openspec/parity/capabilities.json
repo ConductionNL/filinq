@@ -7102,7 +7102,7 @@
 			"sourceRef": "Xential central template governance console",
 			"filinq": "unknown",
 			"built": {
-				"state": "pending",
+				"state": "specified",
 				"owner": "ConductionNL/openregister",
 				"evidence": "template schema declares configuration.x-openregister-shareable: true (lib/Settings/filinq_register.json ~line 740), which per the register's own v8.4.0 changelog note offers templates through OpenRegister's federated configuration sharing 'with no Filinq code'."
 			},
@@ -7123,7 +7123,8 @@
 				"filinq": "not checked: Rests only on an x-openregister-shareable:true declaration in lib/Settings/filinq_register.json; whether OpenRegister's sharing UI amounts to a one-console 'roll out to the whole organisation' experience could not be verified from filinq's own repo.",
 				"paperless-ngx": "source read at v3.2.1, not driven: no document templates exist to roll out (grep -riE 'docx.?template|letter.?template' src/ src-ui/src/app returns nothing); 'templates' in src/documents/templates are Django login pages.",
 				"smartdocuments": "docs-only, read 2026-09-26: https://smartdocuments.com/documentsjabloonbeheer/ and https://smartdocuments.com/productfeatures/ SmartControl manages all templates from one central environment, with testing before publication"
-			}
+			},
+			"note": "built.state was 'pending', outside the schema enum (the pending marker is the row's status field); set to 'specified' 2026-09-27 because only the x-openregister-shareable declaration exists and nothing shows it working as a one-console roll-out. Ratings unchanged."
 		},
 		{
 			"id": "det-local",
@@ -7285,7 +7286,7 @@
 			"sourceRef": "SmartDocuments mobile app; Decos JOIN mobile access",
 			"filinq": "unknown",
 			"built": {
-				"state": "pending",
+				"state": "none",
 				"owner": "ConductionNL/filinq",
 				"evidence": "No dedicated responsive/mobile-breakpoint work found: only 4 view files contain '@media' at all (AnonymizationDashboardWidget.vue, AnonymizationWidget.vue, MyDocumentsIndex.vue, DossierDetail.vue), and the one checked in src/assets/app.css (line 127) is a prefers-color-scheme dark-mode query, not a responsive layout breakpoint."
 			},
@@ -7306,7 +7307,8 @@
 				"filinq": "not checked: Static code reading cannot settle actual phone usability (touch targets, WYSIWYG editor and drag-drop zones on a small viewport); would need a live/visual run, which is out of scope here.",
 				"paperless-ngx": "source read at v3.2.1, not driven: the web UI is responsive with a collapsing navbar and mobile search (src-ui/src/app/components/app-frame/app-frame.component.html:2, 31) and ships a web app manifest (src-ui/src/index.html:10); there is no official mobile app, docs/usage.md:190-193 points to community-maintained third-party apps.",
 				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/aan-de-slag/validsign-mobiele-app-na-update (ValidSign mobile app)"
-			}
+			},
+			"note": "built.state was 'pending', outside the schema enum (the pending marker is the row's status field); set to 'none' 2026-09-27 because the evidence found no mobile or responsive work in filinq. Ratings unchanged."
 		}
 	]
 }
