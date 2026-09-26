@@ -2727,6 +2727,502 @@
 			"evidence": {}
 		},
 		{
+			"id": "red-review",
+			"area": "redact",
+			"name": "Accept or reject each suggested redaction before the document is anonymised.",
+			"source": "competitor-derived",
+			"sourceRef": "xxllnc Anonimiseren suggest-then-approve; OCTOBOX mandatory human accept/reject",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "The entity-level review step is built and reachable: src/views/anonymization/EntityReviewTable.vue lets a user include/skip each detected entity (persistSkip -> PATCH api/anonymization/relations/{id}, routes.php:137, FE). But the sentence's second half never happens: AnonymizationService::runAnonymize (lib/Service/AnonymizationService.php:594-624) unconditionally calls RedactionOutputGuard::assertMayWrite() at line 616 BEFORE any file is written, and that guard (lib/Service/Redaction/RedactionReviewGate.php:98-155) always refuses when no RedactionReviewMark exists. The ONLY way a mark is created is RedactionOutputController::markChecked (lib/Controller/RedactionOutputController.php:92) via POST api/redaction/documents/{fileId}/checked (routes.php:127) — grepped src/ entirely (components, views, services, store) for markChecked/redaction/documents/checked, zero hits; _lane/shared/route-reach.txt line 53 independently tags that route 'none'; also grepped all 5 available sibling repos (procest, dq-flow, shillinq, opencatalogi, scholiq) on origin/development, zero hits.",
+				"change": "openspec/changes/redaction-and-what-leaves-the-building"
+			},
+			"reachedOn": "/anonymization (AnonymizationIndex.vue) and /folder-anonymization (FolderAnonymizationView.vue) for the review step; the commit step always throws RedactionNotReviewedException",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization-entity-review",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT (confirmed jointly with reader r3): every anonymise call from every surface throws NEVER_CHECKED because nothing ever calls markChecked. See notes.md. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "unknown",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"datamask": "docs-only: intelligence.competitor_features#32479 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Suggest-then-approve review workflow: Employee accepts/rejects each suggestion; human control mandated\""
+			}
+		},
+		{
+			"id": "red-manual",
+			"area": "redact",
+			"name": "Mark extra text for redaction by hand.",
+			"source": "own-code",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "No UI or endpoint to mark arbitrary hand-selected text as an entity to redact: PATCH api/anonymization/relations/{id} (updateRelation, lib/Controller/AnonymizationController.php:414-425) only toggles include/skip on an EXISTING detected relation via RelationSkipDecisionService; there is no POST/create-relation endpoint. Grepped src/views/anonymization for 'manual', no hits."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-true-removal",
+			"area": "redact",
+			"name": "Remove redacted text from the file itself, not just cover it with a black box.",
+			"source": "competitor-derived",
+			"sourceRef": "Stirling PDF true content-removing redaction; ZyLAB PDF/A burn-in",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/openregister",
+				"evidence": "The mechanism is built: src/services/anonymizationUpload.js docblock describes true byte-level removal per format (PHPWord for docx, OpenRegister's in-place XML surgery for odt, byte-level replace for txt, the SAPP byte-replace pipeline for pdf), and lib/Service/Redaction/RedactionIrreversibilityVerifier.php verifies the produced bytes for every known leak route rather than trusting the claim. But this all runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard::assertMayWrite() gate as red-review, which always refuses (see red-review evidence). So no copy is ever actually produced to verify."
+			},
+			"reachedOn": "/anonymization (AnonymizationIndex.vue); blocked before the write",
+			"provider": "openregister",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"note": "RedactionIrreversibilityVerifier.php's own docblock: 'Filinq does not produce these bytes... The redaction is performed by OpenRegister's anonymisation backend, which drives the anonymiq ExApp.' LIVE DEFECT: blocked by the same RedactionOutputGuard issue as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"zylab": "docs-only: intelligence.competitor_features#32483 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"PDF/A burn-in: Documents to images to searchable PDF/A for disclosure\""
+			}
+		},
+		{
+			"id": "red-formats",
+			"area": "redact",
+			"name": "Anonymise Word, PDF, OpenDocument and plain text files.",
+			"source": "own-code",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "src/services/anonymizationUpload.js: ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'], ALLOWED_MIMES covers Word/ODT/plain-text/PDF/eml — Word, PDF, OpenDocument and plain text are all accepted formats with real per-format handling described in the same file's docblock. But every one of those formats routes through AnonymizationService::runAnonymize -> RedactionOutputGuard::assertMayWrite (lib/Service/AnonymizationService.php:616), which always refuses (see red-review evidence), so no anonymised file is ever produced for any format today."
+			},
+			"reachedOn": "/anonymization upload dialog (AnonymizationUploadDialog.vue) accepts all four formats; the anonymise action always fails",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT: same root cause as red-review (RedactionOutputGuard has no way to be satisfied). Format acceptance/conversion code itself is genuinely built. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-pdf-out",
+			"area": "redact",
+			"name": "Get the anonymised result as a PDF whatever the input format was.",
+			"source": "competitor-derived",
+			"sourceRef": "ZyLAB PDF/A burn-in",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "lib/Service/AnonymisedPdfOutputService.php implements the pdf-only/pdf output-format cascade (convertResultToPdf/runPdfCascade, lines 85-162), selected via AnonymizationController::resolveOutputFormat (VALID_OUTPUT_FORMATS 'pdf-only'|'pdf'|'preserve', tenant default falls back to 'pdf-only'). This runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard gate as red-review, so it never executes for a real request today."
+			},
+			"reachedOn": "/anonymization (AnonymizationIndex.vue) output-format selector; blocked before the write",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT: same root cause as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "yes",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"zylab": "docs-only: intelligence.competitor_features#32483 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"PDF/A burn-in: Documents to images to searchable PDF/A for disclosure\""
+			}
+		},
+		{
+			"id": "red-pseudonym",
+			"area": "redact",
+			"name": "Replace each person with a consistent pseudonym so the text stays readable.",
+			"source": "competitor-derived",
+			"sourceRef": "Cloak Anonymizer seven methods; canonical pseudonymization",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "No pseudonym-replacement mode for document text anonymisation exists in filinq. The only 'pseudonym' concept in the codebase is OpenRegister's Archival AnonymisationService::pseudonymFor() for database-field-level GDPR erasure/archival (origin/development lib/Service/Archival/AnonymisationService.php:164), and filinq's own lib/Service/SubjectErasure/SubjectErasureRules.php explicitly says its erasure NEVER applies 'pseudonym' treatment ('the pseudonym is the opposite requirement... an erasure never applies pseudonym'). No 'redactionMode'/'treatment' parameter accepting a pseudonym value exists in AnonymizeRequestValidator or DocumentAnonymizeRunner."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"note": "The GDPR-erasure 'pseudonym' concept is a different feature (structured-data field replacement) than replacing a detected person NAME in document TEXT with a stable readable token.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-reversible",
+			"area": "redact",
+			"name": "Reverse a pseudonymisation later under control, with the key kept apart.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical pseudonymization (keyed tokenisation)",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "No reverse-pseudonymisation / re-identification-under-control feature exists for document redaction (grepped for 'reversible'/'reverse pseudonym' — only unrelated hits: a migration comment, a key-naming comment, and SubjectErasureRules' note that it 'destroys any reversible mapping it finds'). Since red-pseudonym itself is not built, there is nothing to reverse."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-sanitise",
+			"area": "redact",
+			"name": "Strip hidden metadata, tracked changes, comments and embedded objects before a document leaves.",
+			"source": "competitor-derived",
+			"sourceRef": "Redactable document sanitization; Adobe sanitization pass",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/document-sanitization/tasks.md: 0 of 16 tasks checked. openspec/specs/anonymization/spec.md:11 lists it as '(active)': 'anonymisation runs persist/surface OpenRegister's sanitization report and the anonymise endpoint gains the additive opt-in sanitize flag'. No 'sanitize'/'sanitizationReport' parameter exists anywhere in AnonymizationController.php or AnonymizationService.php/DocumentAnonymizeRunner.php today.",
+				"change": "openspec/changes/document-sanitization"
+			},
+			"reachedOn": "nothing reaches it yet",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-folder",
+			"area": "redact",
+			"name": "Anonymise a whole folder in one background job.",
+			"source": "competitor-derived",
+			"sourceRef": "CaseGuard scheduled batch redaction; canonical batch-processing",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "The folder job itself is built and reachable: /folder-anonymization (FolderAnonymizationView.vue) drives BatchAnonymizationController (routes.php:156-166: folderBatch, batchUpload, batchExtract, batchStatus, batchEntities, batchAnonymize, batchReport, all FE). But BatchAnonymizeService::processDocument (lib/Service/BatchAnonymizeService.php:346,356) calls AnonymizationService::anonymizeDocumentWithBasisSummary()/anonymizeDocument(), which funnel into the exact same runAnonymize -> RedactionOutputGuard::assertMayWrite gate as red-review, so every per-document anonymise call in the batch refuses."
+			},
+			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue); extraction/review/status/report all work, the anonymise step always fails per document",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "folder-analysis-anonymization",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT: same root cause as red-review, hitting every document in the batch. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-dossier",
+			"area": "redact",
+			"name": "Anonymise a whole dossier at once, with the same decisions applied to every document.",
+			"source": "competitor-derived",
+			"sourceRef": "iOpenbaar whole-dossier automatic anonymization",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "src/views/dossier/DossierDetail.vue has an 'Anonymise this dossier' button (line ~90); AnonymizationService.php:461-464 documents scope='dossier' forwarded to OpenRegister for 'consistent numbering across the dossier folder' with a stable dossierKey. This still calls anonymizeDocumentWithBasisSummary()/anonymizeDocument() -> runAnonymize -> the same RedactionOutputGuard gate as red-review, so it refuses."
+			},
+			"reachedOn": "/dossiers/:id (DossierDetail.vue) 'Anonymise this dossier' button",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT: same root cause as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-batch-review",
+			"area": "redact",
+			"name": "Review what was detected across a whole batch in one screen.",
+			"source": "own-code",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "src/views/anonymization/FolderAnonymizationView.vue Step 3 ('Entity review', v-if=\"store.batchStatus === 'review'\", review-section, lines ~148-149) shows detected entities across the whole batch in one screen before any write is attempted. This review/display step is not gated by RedactionOutputGuard (that only blocks the terminal anonymise write, not viewing detections)."
+			},
+			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue) review step",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "folder-analysis-anonymization",
+			"featureConfidence": "high",
+			"note": "Distinguished from red-folder: viewing/reviewing what a batch detected works; committing the anonymisation afterwards is what the RedactionOutputGuard defect blocks.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-certificate",
+			"area": "redact",
+			"name": "Get a certificate per redaction that proves what was removed and why.",
+			"source": "competitor-derived",
+			"sourceRef": "Redactable redaction certificates",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/document-waarmerk-certification/tasks.md: 0 of 15 tasks checked. Its proposal.md explicitly names this as unbuilt: 'Redactable sells redaction certificates (what was redacted, when, by whom)... evidence artifacts are a 6-competitor feature theme' and 'Anonymization runs can be certified with a data-minimised evidence PDF' (design.md:46) as the planned mechanism, built from the existing anonymizationLink record. No certificate-generation code exists today.",
+				"change": "openspec/changes/document-waarmerk-certification"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization-link",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-accessible",
+			"area": "redact",
+			"name": "Keep an anonymised PDF readable by a screen reader.",
+			"source": "own-code",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/accessible-redaction-output/tasks.md: 0 of 10 tasks checked. No PDF/UA tagging or screen-reader-accessibility code found in the anonymised-PDF output path (AnonymisedPdfOutputService.php, PdfConversionService).",
+				"change": "openspec/changes/accessible-redaction-output"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-one-click",
+			"area": "redact",
+			"name": "Anonymise a document with one click from inside the case system.",
+			"source": "competitor-derived",
+			"sourceRef": "xxllnc Anonimiseren zaaksysteem-embedded flow; Decos JOIN one-click via DataMask",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "The machine-consumer wiring exists: dq-flow (dossiq)'s lib/Service/FilinqRedactionClient.php resolves filinq's AnonymizationService via cross-app DI (FleetAppId::getService) and calls extractAndDetectEntities() then anonymizeDocument() directly from WOORedactionService, as a one-click hand-off from dossiq's own Woo case screen. But this hits the exact same runAnonymize -> RedactionOutputGuard gate as red-review: dossiq's own catch block (FilinqRedactionClient.php, around line 146) already anticipates a Throwable and rethrows as 'filinq_redaction_failed', so this integration is currently 100% non-functional, confirmed from BOTH sides of the cross-app call."
+			},
+			"reachedOn": "machine consumer: dossiq's Woo case screen -> dq-flow lib/Service/FilinqRedactionClient.php -> filinq's AnonymizationService (cross-app DI, no HTTP route)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT, confirmed independently from the dossiq side: every one-click Woo redaction attempt from dossiq currently fails closed with 'filinq_redaction_failed' due to the RedactionOutputGuard issue. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "unknown",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"datamask": "docs-only: intelligence.competitor_features#32437 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Zaaksysteem-embedded one-click flow: Anonymize button inside Decos JOIN\"",
+				"decos-join": "docs-only: intelligence.competitor_features#32489 (Decos JOIN, recorded 2026-07-16) \"One-click anonymization via DataMask: Anonymization embedded in the case system civil servants already use\""
+			}
+		},
+		{
+			"id": "red-four-eyes",
+			"area": "redact",
+			"name": "Have a second person mark a redacted document as checked.",
+			"source": "own-code",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "The capability is fully implemented server-side and completely unreachable: RedactionOutputController::markChecked (lib/Controller/RedactionOutputController.php:92) records checkedBy from the SESSION user (never the payload, per the method's own comment 'THE CHECKER IS THE SESSION'), which is exactly a second-person sign-off distinct from whoever ran detection. Route POST api/redaction/documents/{fileId}/checked (routes.php:127) is tagged 'none' in _lane/shared/route-reach.txt; grepped all of src/ and all 5 available sibling repos, zero callers anywhere.",
+				"change": "openspec/changes/redaction-and-what-leaves-the-building"
+			},
+			"reachedOn": "nothing reaches it — no frontend caller, no sibling caller",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "high",
+			"note": "This IS the same defect as red-review, viewed from the built-but-dark capability's own name. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-link",
+			"area": "redact",
+			"name": "Keep an anonymised copy linked to its original so both can be found.",
+			"source": "own-code",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "lib/Service/Redaction/AnonymizationLinkReader.php reads 'anonymizationLink' rows pairing a source file with its redacted copy (SCHEMA constant, line 38), used by PublicationListComposer to resolve which redacted copy belongs to which original for a Woo publication list. But this link record is written only as part of a successful anonymise-and-write, which the RedactionOutputGuard defect (see red-review) blocks on every path today, so no new links are being created."
+			},
+			"reachedOn": "/anonymization pipeline; blocked before any link would be written",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization-link",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT: same root cause as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-scheduled",
+			"area": "redact",
+			"name": "Schedule bulk redaction to run outside office hours.",
+			"source": "competitor-derived",
+			"sourceRef": "CaseGuard scheduled batch redaction jobs",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "lib/BackgroundJob/BatchDocumentJob.php is a QueuedJob (runs once, immediately after being queued), not a TimedJob with a configurable off-hours schedule. No UI or setting found for scheduling bulk redaction to run at a specific time or outside office hours."
+			},
+			"reachedOn": "nothing reaches a scheduling UI",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "batch-anonymization",
+			"featureConfidence": "medium",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-profiles",
+			"area": "redact",
+			"name": "Save anonymisation settings as reusable profiles per kind of document.",
+			"source": "own-code",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "lib/Service/WooProfileService.php persists ONE reusable anonymize/keep entity-type profile via IAppConfig (getProfile/saveProfile), exposed through GET/PUT api/anonymization/profiles (routes.php:165-166, FE, batchAnonymization#getProfiles/#updateProfiles)."
+			},
+			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue) profile settings",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "batch-anonymization",
+			"featureConfidence": "high",
+			"note": "This is a single tenant-wide default profile, not multiple named/reusable profiles selectable per kind of document as the row describes.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "red-ai-guard",
+			"area": "redact",
+			"name": "Remove personal data from a document before an AI model sees it.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-access-and-privacy-3 (Decos JOIN Joni)",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Grepped for PII-stripping-before-LLM-call patterns; found only WOOAnonymisationAssistService/WOOAssessmentController in dq-flow (dossiq), which is AI ASSISTING detection decisions (woo-llm-anonymisation), not stripping PII from a document before an AI model processes it. No such guard exists in filinq."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "medium",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"decos-join": "docs-only: intelligence.competitor_features#146118 (Decos JOIN, recorded 2026-09-14) \"C-access-and-privacy-3 A document's personal data is removed before a model sees it: decos-join: documented, /zaaksysteem/joni-plus Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-22.\""
+			}
+		},
+		{
 			"id": "woo-grounds",
 			"area": "woo",
 			"name": "Record the Woo exemption ground for each redacted passage.",
@@ -3219,6 +3715,608 @@
 			"paperless-ngx": "unknown",
 			"decos-join": "unknown",
 			"evidence": {}
+		},
+		{
+			"id": "sig-request",
+			"area": "signing",
+			"name": "Send a document to one or more people for signature.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical signature-requests (6 competitors)",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue."
+			},
+			"reachedOn": "/signing/new (SigningRequestForm.vue)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"smartdocuments": "docs-only: intelligence.competitor_features#32456 (SmartDocuments, recorded 2026-07-16) \"Built-in digital signature step: Signing as part of the document workflow\"",
+				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\"",
+				"decos-join": "docs-only: intelligence.competitor_features#25496 (Decos JOIN, recorded 2026-04-10) \"Digital Signing: Built-in digital signing capabilities for case documents and decisions\""
+			}
+		},
+		{
+			"id": "sig-order",
+			"area": "signing",
+			"name": "Choose whether signers sign one after another or at the same time.",
+			"source": "competitor-derived",
+			"sourceRef": "LibreSign multi-document envelopes (order and roles); canonical signing-order",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "src/views/signing/SigningRequestForm.vue:46-50 has a signingMode <select> with 'sequential'/'parallel' options (default 'sequential', line 79). lib/Service/SigningRequestValidator.php:87 validates signingMode against exactly ['sequential','parallel']; SigningService.php:154 persists it and :199 persists a per-signer 'order' field."
+			},
+			"reachedOn": "/signing/new (SigningRequestForm.vue)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-levels",
+			"area": "signing",
+			"name": "Sign at the eIDAS level a document needs: simple, advanced or qualified.",
+			"source": "own-code",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "signatureLevel is a real, honoured field: NativeSigningProvider::supportsLevel() (lib/Service/Signing/NativeSigningProvider.php:275-277) returns true only for 'SES'; ValidSignProvider::supportsLevel() (lib/Service/Signing/ValidSignProvider.php:190-192) returns true for SES/AdES/QES. produceSignedArtifact() on both providers now checks supportsLevel() before producing (NativeSigningProvider.php:327, ValidSignProvider.php:212-217, both citing REQ-DDSTR-002/signing-trust-rebuild), and SignedArtifactProducer.php:130 explicitly documents 'no fallback to getActiveProvider()/native' on a level mismatch."
+			},
+			"reachedOn": "/signing/new (SigningRequestForm.vue) level selector",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"note": "Choosing and honestly enforcing the level works; actually PRODUCING anything above SES requires the ValidSign provider, which is not functionally wired (see sig-qes).",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-qes",
+			"area": "signing",
+			"name": "Sign with a qualified electronic signature.",
+			"source": "competitor-derived",
+			"sourceRef": "Zynyo QTSP qualified certificates; Signhost remote qualified signing",
+			"filinq": "no",
+			"built": {
+				"state": "building",
+				"owner": "ConductionNL/filinq",
+				"evidence": "ValidSignProvider.php is the only path to QES (NativeSigningProvider only supports SES). ValidSignProvider's constructor takes only IAppConfig — no HTTP client at all (grepped for IClient/curl/guzzle, no hits). Its own docblocks: produceSignedArtifact() 'Always throws — the ValidSign artifact flow is not wired' (line ~207), downloadSignedDocument() 'Always throws - not yet implemented' (line ~136)."
+			},
+			"reachedOn": "/signing/new (SigningRequestForm.vue) can select QES via ValidSign, but the request can never complete",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"note": "A QES request can be created but never produces a signed artifact or a downloadable document — the ValidSign integration is a scaffold, not a working QTSP connection.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-nl-id",
+			"area": "signing",
+			"name": "Let signers prove who they are with DigiD, eHerkenning or iDIN.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign NL identity rails",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "grep -rliF digid over lib/ and src/ returns nothing: no DigiD, eHerkenning or iDIN signer authentication in the code. Specified, unbuilt, in openspec/changes/signer-identity-rails.",
+				"change": "openspec/changes/signer-identity-rails"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "signer-identity-rails",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"validsign": "docs-only: intelligence.competitor_features#32429 (ValidSign, recorded 2026-07-16) \"DigiD/eHerkenning/iDIN/BankID signer identity: NL identity rails for signer authentication\""
+			}
+		},
+		{
+			"id": "sig-sms",
+			"area": "signing",
+			"name": "Verify a signer with a code sent to their phone.",
+			"source": "competitor-derived",
+			"sourceRef": "DocuSeal SMS identity verification",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/signer-identity-rails/tasks.md has unchecked items including step-up identity verification (task 3.2, 4.2 reference a mock-OIDC IdP, not SMS specifically). Grepped for 'sms'/'text message'/phone-code verification in signing code; no hits.",
+				"change": "openspec/changes/signer-identity-rails"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "signer-identity-rails",
+			"featureConfidence": "medium",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-external",
+			"area": "signing",
+			"name": "Let someone without an account sign through a portal.",
+			"source": "own-code",
+			"filinq": "partial",
+			"built": {
+				"state": "building",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/portal-signing-surface/tasks.md: 9/11 done. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes."
+			},
+			"reachedOn": "external: portaliq's shared external portal (cross-app), calling filinq's api/portal/signing/* routes",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "portal-signing-surface",
+			"featureConfidence": "medium",
+			"note": "Both dependency changes are largely but not fully built (4 and 2 tasks respectively still unchecked).",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-decline",
+			"area": "signing",
+			"name": "Let a signer decline with a reason and tell the sender.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Reject a signing request with a reason\"",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "POST api/signing/requests/{id}/decline (routes.php:245, FE, signing#decline) -> SigningController::decline -> SigningService::decline() (lib/Service/SigningService.php:476-520), which takes a $reason param, records declineReason on the signer, and (per signing-trust-rebuild REQ-DDSTR-003, comment at line 481-485) now gates on isValidTransition() BEFORE any mutation — closing the #282 residual where decline() used to skip the status machine."
+			},
+			"reachedOn": "/signing/:id (SigningRequestDetail.vue) decline action",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-audit",
+			"area": "signing",
+			"name": "See who signed what, when and from where.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign evidence summary; canonical audit-trail",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "GET api/signing/requests/{id}/audit (routes.php:248, FE, signing#getAudit) -> SigningController::getAudit (lib/Controller/SigningController.php:418+), gated to initiator/signer/admin. lib/Service/SigningAuditService.php routes through OR's hash-chained AuditTrailMapper per signing-audit-via-or (status done per openspec/specs/signing-audit-via-or)."
+			},
+			"reachedOn": "/signing/:id (SigningRequestDetail.vue) audit trail",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "signing-audit-via-or",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\""
+			}
+		},
+		{
+			"id": "sig-evidence",
+			"area": "signing",
+			"name": "Get one evidence document that summarises the whole signing transaction.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign evidence summary artifact",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/document-waarmerk-certification/tasks.md: 0/15 done; its proposal.md explicitly names 'ValidSign ships an evidence summary' and 'a signing-specific evidence PDF' as the gap this change would close. signing-trust-rebuild's proposal.md separately notes 'Deed-of-signing / evidence-summary artifacts (Zynyo/ValidSign parity)' as out of scope for that change. No evidence-document generator exists in code today (only the raw per-event audit trail, sig-audit).",
+				"change": "openspec/changes/document-waarmerk-certification"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\""
+			}
+		},
+		{
+			"id": "sig-verify",
+			"area": "signing",
+			"name": "Check the signature on a document someone sent you.",
+			"source": "competitor-derived",
+			"sourceRef": "Mayan EDMS signature verification of inbound documents",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "GET api/signing/verify/{fileId} (routes.php:247, FE, signing#verify) -> SigningController::verify (line 389) -> SigningVerificationService::verifyDocument (line 73), which checks every embedded signature assertion (verifyAssertion, line 255) and works on any document, not only ones the caller signed themselves."
+			},
+			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"note": "Per signing-trust-rebuild (13/17 done), the MAC's field coverage (whether signer/timestamp/level are bound, not only the content hash) is a residual item this checkout did not independently re-verify byte-for-byte; the tri-state verified/invalid/unverifiable honesty shipped (see sig-tamper).",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-trust-list",
+			"area": "signing",
+			"name": "Check a signer's certificate against the EU trusted list.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Check certificate against EU Trusted List\"",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Grepped lib/, src/, openspec/specs, openspec/changes for 'trusted list'/'eu trust'/'LOTL'/certificate-chain-against-a-list terms; zero hits."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-tamper",
+			"area": "signing",
+			"name": "See whether a signed document was changed after signing.",
+			"source": "category-derived",
+			"sourceRef": "user story \"Detect document tampering after signing\"",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "lib/Service/SigningVerificationService.php implements an honest tri-state verdict: 'invalid' maps to 'tampered' (lines 104-126), distinguished from 'unverifiable' (inability to check, e.g. legacy v1 assertions or unconfigured secret) so tampering is never confused with 'could not verify'. Reached via the same verify() endpoint as sig-verify."
+			},
+			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-bulk",
+			"area": "signing",
+			"name": "Sign many documents in one go.",
+			"source": "competitor-derived",
+			"sourceRef": "canonical multi-document-batch-signing",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "POST api/signing/bulk (routes.php:246, FE, signing#bulkSign) -> SigningController::bulkSign (line 355-376) -> SigningService::bulkSign(requestIds). Reached from src/views/signing/BulkSigningPanel.vue."
+			},
+			"reachedOn": "BulkSigningPanel.vue (signing area)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"note": "This signs many EXISTING requests at once; it is not the same as sig-bulk-send (creating and sending many new requests from a CSV list).",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-folder",
+			"area": "signing",
+			"name": "Gather documents from several cases into one signing folder for one signer.",
+			"source": "competitor-derived",
+			"sourceRef": "dossiq gap register 4.27",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "GET api/signing/folder + POST api/signing/folder/sign (routes.php:254-255, both FE, signingFolder#folder/#signFolder) -> SigningFolderController. src/manifest.json's own note on the SigningFolder page describes it as 'a cross-case queue assembled by filinq from signing requests the signer holds a mandate for' with a multi-select bulk-sign action. openspec/changes/signing-folder-across-cases/tasks.md: 8/10 done."
+			},
+			"reachedOn": "/signing-folder (SigningFolder.vue)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "signing-folder-across-cases",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-mandate",
+			"area": "signing",
+			"name": "Delegate signing authority for a period and limit it to certain document types.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Manage Signing Mandate\"",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "GET/POST api/signing/mandates + DELETE api/signing/mandates/{typeApp}/{typeSchema} (routes.php:256-258, all tagged 'none' in _lane/shared/route-reach.txt) -> SigningFolderController::mandates/declareMandate/withdrawMandate. Grepped all of src/ for 'mandate'; the only hit is the manifest's own descriptive note (src/manifest.json:372) assuming mandates already exist — there is no UI anywhere to declare, view or withdraw one."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "signing-folder-across-cases",
+			"featureConfidence": "high",
+			"note": "The backend exists and the folder feature (sig-folder) silently assumes mandates are already granted, but nothing lets a user actually delegate or limit one.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-fields",
+			"area": "signing",
+			"name": "Place signature and form fields on a document visually.",
+			"source": "competitor-derived",
+			"sourceRef": "DocuSeal WYSIWYG field-placement builder",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/bulk-signing-field-builder/tasks.md: 0/16 done. proposal.md names this explicitly: 'Signature field placement — DocuSeal: WYSIWYG field-placement builder... Filinq's native artifact is an appended marker with no visible signature block'.",
+				"change": "openspec/changes/bulk-signing-field-builder"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-bulk-send",
+			"area": "signing",
+			"name": "Send the same document to many people for signature from a list.",
+			"source": "competitor-derived",
+			"sourceRef": "DocuSeal bulk send; DocuSign envelope-based bulk",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/bulk-signing-field-builder/tasks.md: 0/16 done. proposal.md names this explicitly as 'Bulk send — upload a CSV/XLSX recipient list against one document... today that is N manual SigningRequestForm submissions'. No CSV/XLSX bulk-send endpoint or UI exists today.",
+				"change": "openspec/changes/bulk-signing-field-builder"
+			},
+			"reachedOn": "nothing reaches it (today: N manual single-request submissions)",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-in-person",
+			"area": "signing",
+			"name": "Sign face to face on one device.",
+			"source": "competitor-derived",
+			"sourceRef": "ValidSign face-to-face signing mode",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Grepped lib/, src/, openspec for 'face to face'/'in person'/'same device'/kiosk-style signing terms; zero hits."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "yes",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"validsign": "docs-only: intelligence.competitor_features#32484 (ValidSign, recorded 2026-07-16) \"Face-to-face signing mode: In-person signing ceremony support\""
+			}
+		},
+		{
+			"id": "sig-cancel",
+			"area": "signing",
+			"name": "Cancel a signing request that is under way.",
+			"source": "own-code",
+			"filinq": "no",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Reachable path: DELETE api/signing/requests/{id} (routes.php:243, FE, signing#cancelRequest) -> SigningController::cancelRequest (line 218) -> SigningService::cancelRequest (lib/Service/SigningService.php:557-594), which validates isValidTransition and flips the request's OWN status to CANCELLED, but never calls any provider. The class built to do that, SigningCancellationService.php (line 146: getActiveProvider()->cancelSigning($externalId)), is never referenced anywhere else in lib/ (grepped) — it has zero callers, so it never runs. ValidSignProvider::cancelSigning() itself was fixed to throw instead of the old 'return true' stub (per its own docblock, matching the signing-cancellation proposal's exact complaint), but that fix is unreachable because nothing calls it.",
+				"change": "openspec/changes/signing-cancellation"
+			},
+			"reachedOn": "/signing/:id (SigningRequestDetail.vue) cancel action flips filinq's own status only",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"note": "LIVE DEFECT, and signing-cancellation's premise still holds even though tasks.md shows 0/15: cancelling in the UI never notifies the external provider (ValidSign), so a signer who already has the link can still sign a request the initiator believes withdrawn. For the native provider this is contained because signing checks the local status; for ValidSign it is not.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-provider",
+			"area": "signing",
+			"name": "Sign through an outside provider such as LibreSign or ValidSign.",
+			"source": "competitor-derived",
+			"sourceRef": "BCT Corsa ValidSign integration; LibreSign self-hosted CA",
+			"filinq": "no",
+			"built": {
+				"state": "building",
+				"owner": "ConductionNL/filinq",
+				"evidence": "ValidSignProvider.php implements SigningProviderInterface and is selectable via SigningProviderFactory, but its constructor takes only IAppConfig (no HTTP client anywhere in the 245-line file), initiateSigning() returns a result without a real external call unless already configured, produceSignedArtifact() and downloadSignedDocument() both unconditionally throw ('not yet implemented' / 'not wired', per their own docblocks). libresign-signing-provider (LibreSign support) is a separate proposal, 0/10 tasks done — LibreSign has no provider class in filinq at all today.",
+				"change": "openspec/changes/libresign-signing-provider"
+			},
+			"reachedOn": "/signing/new (SigningRequestForm.vue) can select ValidSign, but signing never completes; LibreSign is not selectable at all",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"note": "one-signing-rail-for-the-fleet confirms this is not just a filinq-internal gap: decidesk's (decidiq's) EIDASSignatureService still posts to endpoint '/signing-requests' via integriq Source slug 'docudesk-signing' (git-grepped on origin/development, EIDASSignatureService.php line ~586), which does not match filinq's real route 'api/signing/requests' — decidiq's filinq integration is dark. Dossiq does not attempt to use filinq's signing contract at all (it signs beschikkingen through its own separate LibresignSigningAdapter).",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-seal",
+			"area": "signing",
+			"name": "Stamp a published document with the organisation's digital seal.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-decisions-24 (Visma Circle)",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/document-waarmerk-certification/tasks.md: 0/15 done. proposal.md is explicitly about this: an eIDAS 'electronic seal' (Art. 3(25)/(27)) applied with an organisation certificate to a published document ('waarmerk'), citing De Connectie 391449 and Dordrecht/Drechtsteden 407973 VPB-11 as the demand signal. No seal-application code exists today.",
+				"change": "openspec/changes/document-waarmerk-certification"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "sig-in-generation",
+			"area": "signing",
+			"name": "Sign as a step of the document generation flow.",
+			"source": "competitor-derived",
+			"sourceRef": "SmartDocuments built-in digital signature step; Docupilot",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Grepped openspec/specs/*/spec.md and lib/Service/DocumentMergeService.php for a sign-as-a-step-of-generation flow; no hits linking template/document generation directly to a signing step. Signing is a wholly separate action initiated from a generated document afterwards (SigningRequestForm), not a step inside the generation flow itself."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-signing",
+			"featureConfidence": "medium",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "yes",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"smartdocuments": "docs-only: intelligence.competitor_features#32456 (SmartDocuments, recorded 2026-07-16) \"Built-in digital signature step: Signing as part of the document workflow\""
+			}
 		},
 		{
 			"id": "rec-register",
@@ -4724,909 +5822,31 @@
 			}
 		},
 		{
-			"id": "red-review",
-			"area": "redact",
-			"name": "Accept or reject each suggested redaction before the document is anonymised.",
-			"source": "competitor-derived",
-			"sourceRef": "xxllnc Anonimiseren suggest-then-approve; OCTOBOX mandatory human accept/reject",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "yes",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"datamask": "docs-only: intelligence.competitor_features#32479 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Suggest-then-approve review workflow: Employee accepts/rejects each suggestion; human control mandated\""
-			}
-		},
-		{
-			"id": "red-manual",
-			"area": "redact",
-			"name": "Mark extra text for redaction by hand.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-true-removal",
-			"area": "redact",
-			"name": "Remove redacted text from the file itself, not just cover it with a black box.",
-			"source": "competitor-derived",
-			"sourceRef": "Stirling PDF true content-removing redaction; ZyLAB PDF/A burn-in",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "yes",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"zylab": "docs-only: intelligence.competitor_features#32483 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"PDF/A burn-in: Documents to images to searchable PDF/A for disclosure\""
-			}
-		},
-		{
-			"id": "red-formats",
-			"area": "redact",
-			"name": "Anonymise Word, PDF, OpenDocument and plain text files.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-pdf-out",
-			"area": "redact",
-			"name": "Get the anonymised result as a PDF whatever the input format was.",
-			"source": "competitor-derived",
-			"sourceRef": "ZyLAB PDF/A burn-in",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "yes",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"zylab": "docs-only: intelligence.competitor_features#32483 (ZyLAB ONE (Reveal), recorded 2026-07-16) \"PDF/A burn-in: Documents to images to searchable PDF/A for disclosure\""
-			}
-		},
-		{
-			"id": "red-pseudonym",
-			"area": "redact",
-			"name": "Replace each person with a consistent pseudonym so the text stays readable.",
-			"source": "competitor-derived",
-			"sourceRef": "Cloak Anonymizer seven methods; canonical pseudonymization",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-reversible",
-			"area": "redact",
-			"name": "Reverse a pseudonymisation later under control, with the key kept apart.",
-			"source": "competitor-derived",
-			"sourceRef": "canonical pseudonymization (keyed tokenisation)",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-sanitise",
-			"area": "redact",
-			"name": "Strip hidden metadata, tracked changes, comments and embedded objects before a document leaves.",
-			"source": "competitor-derived",
-			"sourceRef": "Redactable document sanitization; Adobe sanitization pass",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-folder",
-			"area": "redact",
-			"name": "Anonymise a whole folder in one background job.",
-			"source": "competitor-derived",
-			"sourceRef": "CaseGuard scheduled batch redaction; canonical batch-processing",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-dossier",
-			"area": "redact",
-			"name": "Anonymise a whole dossier at once, with the same decisions applied to every document.",
-			"source": "competitor-derived",
-			"sourceRef": "iOpenbaar whole-dossier automatic anonymization",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-batch-review",
-			"area": "redact",
-			"name": "Review what was detected across a whole batch in one screen.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
 			"id": "red-output-layout",
 			"area": "redact",
 			"name": "Keep anonymised copies apart from the originals in their own folder.",
 			"source": "own-code",
-			"filinq": "unknown",
+			"filinq": "no",
 			"built": {
 				"state": "none",
-				"owner": "ConductionNL/filinq"
+				"owner": "ConductionNL/filinq",
+				"evidence": "Grepped DocumentAnonymizeRunner.php and AnonymizationService.php for outputFolder/targetFolder/destinationFolder/createFolder terms relating to anonymisation output placement; no hits. No dedicated 'keep anonymised copies in their own folder' convention found (anonymised files appear to be named/placed relative to the source per anonymizedFilePath, not organised into a separate folder tree)."
 			},
+			"reachedOn": "nothing found",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "anonymization",
+			"featureConfidence": "low",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
 			"validsign": "unknown",
 			"paperless-ngx": "unknown",
 			"decos-join": "unknown",
+			"status": "pending",
+			"pendingReason": "Could not find the actual output-path-construction code in the time available; rating from absence of an explicit separate-folder convention, not from having traced the exact write-path logic.",
 			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-certificate",
-			"area": "redact",
-			"name": "Get a certificate per redaction that proves what was removed and why.",
-			"source": "competitor-derived",
-			"sourceRef": "Redactable redaction certificates",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-accessible",
-			"area": "redact",
-			"name": "Keep an anonymised PDF readable by a screen reader.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-one-click",
-			"area": "redact",
-			"name": "Anonymise a document with one click from inside the case system.",
-			"source": "competitor-derived",
-			"sourceRef": "xxllnc Anonimiseren zaaksysteem-embedded flow; Decos JOIN one-click via DataMask",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "yes",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "yes",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"datamask": "docs-only: intelligence.competitor_features#32437 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Zaaksysteem-embedded one-click flow: Anonymize button inside Decos JOIN\"",
-				"decos-join": "docs-only: intelligence.competitor_features#32489 (Decos JOIN, recorded 2026-07-16) \"One-click anonymization via DataMask: Anonymization embedded in the case system civil servants already use\""
-			}
-		},
-		{
-			"id": "red-four-eyes",
-			"area": "redact",
-			"name": "Have a second person mark a redacted document as checked.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-link",
-			"area": "redact",
-			"name": "Keep an anonymised copy linked to its original so both can be found.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-scheduled",
-			"area": "redact",
-			"name": "Schedule bulk redaction to run outside office hours.",
-			"source": "competitor-derived",
-			"sourceRef": "CaseGuard scheduled batch redaction jobs",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-profiles",
-			"area": "redact",
-			"name": "Save anonymisation settings as reusable profiles per kind of document.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "red-ai-guard",
-			"area": "redact",
-			"name": "Remove personal data from a document before an AI model sees it.",
-			"source": "competitor-derived",
-			"sourceRef": "procest round 4 C-access-and-privacy-3 (Decos JOIN Joni)",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "yes",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"decos-join": "docs-only: intelligence.competitor_features#146118 (Decos JOIN, recorded 2026-09-14) \"C-access-and-privacy-3 A document's personal data is removed before a model sees it: decos-join: documented, /zaaksysteem/joni-plus Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-22.\""
-			}
-		},
-		{
-			"id": "sig-request",
-			"area": "signing",
-			"name": "Send a document to one or more people for signature.",
-			"source": "competitor-derived",
-			"sourceRef": "canonical signature-requests (6 competitors)",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "yes",
-			"validsign": "yes",
-			"paperless-ngx": "unknown",
-			"decos-join": "yes",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"smartdocuments": "docs-only: intelligence.competitor_features#32456 (SmartDocuments, recorded 2026-07-16) \"Built-in digital signature step: Signing as part of the document workflow\"",
-				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\"",
-				"decos-join": "docs-only: intelligence.competitor_features#25496 (Decos JOIN, recorded 2026-04-10) \"Digital Signing: Built-in digital signing capabilities for case documents and decisions\""
-			}
-		},
-		{
-			"id": "sig-order",
-			"area": "signing",
-			"name": "Choose whether signers sign one after another or at the same time.",
-			"source": "competitor-derived",
-			"sourceRef": "LibreSign multi-document envelopes (order and roles); canonical signing-order",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-levels",
-			"area": "signing",
-			"name": "Sign at the eIDAS level a document needs: simple, advanced or qualified.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-qes",
-			"area": "signing",
-			"name": "Sign with a qualified electronic signature.",
-			"source": "competitor-derived",
-			"sourceRef": "Zynyo QTSP qualified certificates; Signhost remote qualified signing",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-nl-id",
-			"area": "signing",
-			"name": "Let signers prove who they are with DigiD, eHerkenning or iDIN.",
-			"source": "competitor-derived",
-			"sourceRef": "ValidSign NL identity rails",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "yes",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"validsign": "docs-only: intelligence.competitor_features#32429 (ValidSign, recorded 2026-07-16) \"DigiD/eHerkenning/iDIN/BankID signer identity: NL identity rails for signer authentication\""
-			}
-		},
-		{
-			"id": "sig-sms",
-			"area": "signing",
-			"name": "Verify a signer with a code sent to their phone.",
-			"source": "competitor-derived",
-			"sourceRef": "DocuSeal SMS identity verification",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-external",
-			"area": "signing",
-			"name": "Let someone without an account sign through a portal.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-decline",
-			"area": "signing",
-			"name": "Let a signer decline with a reason and tell the sender.",
-			"source": "category-derived",
-			"sourceRef": "user story \"Reject a signing request with a reason\"",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-audit",
-			"area": "signing",
-			"name": "See who signed what, when and from where.",
-			"source": "competitor-derived",
-			"sourceRef": "ValidSign evidence summary; canonical audit-trail",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "yes",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\""
-			}
-		},
-		{
-			"id": "sig-evidence",
-			"area": "signing",
-			"name": "Get one evidence document that summarises the whole signing transaction.",
-			"source": "competitor-derived",
-			"sourceRef": "ValidSign evidence summary artifact",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "yes",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"validsign": "docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\""
-			}
-		},
-		{
-			"id": "sig-verify",
-			"area": "signing",
-			"name": "Check the signature on a document someone sent you.",
-			"source": "competitor-derived",
-			"sourceRef": "Mayan EDMS signature verification of inbound documents",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-trust-list",
-			"area": "signing",
-			"name": "Check a signer's certificate against the EU trusted list.",
-			"source": "category-derived",
-			"sourceRef": "user story \"Check certificate against EU Trusted List\"",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-tamper",
-			"area": "signing",
-			"name": "See whether a signed document was changed after signing.",
-			"source": "category-derived",
-			"sourceRef": "user story \"Detect document tampering after signing\"",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-bulk",
-			"area": "signing",
-			"name": "Sign many documents in one go.",
-			"source": "competitor-derived",
-			"sourceRef": "canonical multi-document-batch-signing",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-folder",
-			"area": "signing",
-			"name": "Gather documents from several cases into one signing folder for one signer.",
-			"source": "competitor-derived",
-			"sourceRef": "dossiq gap register 4.27",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-mandate",
-			"area": "signing",
-			"name": "Delegate signing authority for a period and limit it to certain document types.",
-			"source": "category-derived",
-			"sourceRef": "journey \"Manage Signing Mandate\"",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-fields",
-			"area": "signing",
-			"name": "Place signature and form fields on a document visually.",
-			"source": "competitor-derived",
-			"sourceRef": "DocuSeal WYSIWYG field-placement builder",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-bulk-send",
-			"area": "signing",
-			"name": "Send the same document to many people for signature from a list.",
-			"source": "competitor-derived",
-			"sourceRef": "DocuSeal bulk send; DocuSign envelope-based bulk",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-in-person",
-			"area": "signing",
-			"name": "Sign face to face on one device.",
-			"source": "competitor-derived",
-			"sourceRef": "ValidSign face-to-face signing mode",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "yes",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"validsign": "docs-only: intelligence.competitor_features#32484 (ValidSign, recorded 2026-07-16) \"Face-to-face signing mode: In-person signing ceremony support\""
-			}
-		},
-		{
-			"id": "sig-cancel",
-			"area": "signing",
-			"name": "Cancel a signing request that is under way.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-provider",
-			"area": "signing",
-			"name": "Sign through an outside provider such as LibreSign or ValidSign.",
-			"source": "competitor-derived",
-			"sourceRef": "BCT Corsa ValidSign integration; LibreSign self-hosted CA",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-seal",
-			"area": "signing",
-			"name": "Stamp a published document with the organisation's digital seal.",
-			"source": "competitor-derived",
-			"sourceRef": "procest round 4 C-decisions-24 (Visma Circle)",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "sig-in-generation",
-			"area": "signing",
-			"name": "Sign as a step of the document generation flow.",
-			"source": "competitor-derived",
-			"sourceRef": "SmartDocuments built-in digital signature step; Docupilot",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "yes",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"smartdocuments": "docs-only: intelligence.competitor_features#32456 (SmartDocuments, recorded 2026-07-16) \"Built-in digital signature step: Signing as part of the document workflow\""
+				"filinq": "not checked: Could not find the actual output-path-construction code in the time available; rating from absence of an explicit separate-folder convention, not from having traced the exact write-path logic."
 			}
 		},
 		{
