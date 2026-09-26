@@ -152,7 +152,10 @@ class DocumentProductionSchemaTest extends TestCase {
 
 		$declaration = $schemas['template']['properties']['plainLanguage'] ?? null;
 		$this->assertIsArray($declaration, 'a template must be able to declare a plain-language counterpart.');
-		$this->assertSame('1.3.0', $schemas['template']['version']);
+		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
+		// and `tenantId` — an importer skips an unchanged version, so this pin
+		// moves whenever the schema actually does.
+		$this->assertSame('1.4.0', $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(

@@ -551,7 +551,7 @@
                 "slug": "template",
                 "title": "Document Template",
                 "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.3.0",
+                "version": "1.4.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -706,6 +706,24 @@
                             }
                         }
                     }
+                },
+                "slug": {
+                    "description": "Stabiele, mensleesbare identifier waarmee externe apps (bijv. learniq) dit template kunnen opvragen zonder de UUID te kennen. Uniek per combinatie van namespace en tenantId.",
+                    "type": "string",
+                    "visible": true,
+                    "order": 12,
+                    "facetable": true,
+                    "title": "Slug",
+                    "maxLength": 128
+                },
+                "tenantId": {
+                    "description": "Optionele scoping van dit template tot één afnemer (bijv. een school) binnen de namespace. Leeg laten maakt het template de namespace-brede standaard waarnaar wordt teruggevallen wanneer geen tenant-specifiek template met dezelfde slug bestaat.",
+                    "type": "string",
+                    "visible": true,
+                    "order": 13,
+                    "facetable": true,
+                    "title": "Tenant",
+                    "maxLength": 128
                 },
                 "archive": [],
                 "source": "internal",
