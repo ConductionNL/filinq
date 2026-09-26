@@ -423,7 +423,7 @@
 			"name": "Store a generated document on the case it was made for, automatically.",
 			"source": "competitor-derived",
 			"sourceRef": "SmartDocuments ZAC callback stores the document on the case",
-			"filinq": "yes",
+			"filinq": "partial",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
@@ -434,7 +434,7 @@
 			"providerHow": "read-from-code",
 			"feature": "documents-from-a-template",
 			"featureConfidence": "high",
-			"note": "Filinq's own Correspondence UI never stores to a case -- it only downloads. This capability is proven only via the dossiq integration.",
+			"note": "Filinq's own Correspondence UI never stores to a case -- it only downloads. This capability is proven only via the dossiq integration. Downgraded by the lane from yes: the only consumer is dossiq's FilinqTemplateEngineAdapter, which is opt-in; dossiq lib/Settings/connections.json:102 says 'A mock adapter answers here. No template reaches Filinq' until beschikking_template_adapter is set, and no filinq page reaches it.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "yes",
@@ -605,7 +605,7 @@
 			"name": "Keep a plain-language version of a generated letter beside the formal one.",
 			"source": "competitor-derived",
 			"sourceRef": "dossiq gap register 4.28",
-			"filinq": "yes",
+			"filinq": "partial",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
@@ -617,7 +617,7 @@
 			"providerHow": "read-from-code",
 			"feature": "documents-in-and-out-of-the-building",
 			"featureConfidence": "high",
-			"note": "Filinq's own Correspondence/Templates UI has no plain-language surface; reachability is proven only through the dossiq/DocumentService path.",
+			"note": "Filinq's own Correspondence/Templates UI has no plain-language surface; reachability is proven only through the dossiq/DocumentService path. Downgraded by the lane from yes: the only consumer is dossiq's FilinqTemplateEngineAdapter, which is opt-in; dossiq lib/Settings/connections.json:102 says 'A mock adapter answers here. No template reaches Filinq' until beschikking_template_adapter is set, and no filinq page reaches it.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -656,7 +656,7 @@
 			"area": "generate",
 			"name": "Send a generated document straight to a folder instead of downloading it.",
 			"source": "own-code",
-			"filinq": "yes",
+			"filinq": "partial",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
@@ -667,7 +667,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-output-destinations-and-bulk-retention",
 			"featureConfidence": "high",
-			"note": "Filinq's own Correspondence UI always downloads (src/store/modules/correspondence.js _triggerDownload); it has no 'send to folder' toggle. Also: default target folder is 'DocuDesk/<namespace>/' (DocumentService.php:539) and src/store/modules/myDocuments.js:56/647/689/702 still reference literal /DocuDesk/ paths -- a leftover of the pre-rename app id (docudesk -> filinq).",
+			"note": "Filinq's own Correspondence UI always downloads (src/store/modules/correspondence.js _triggerDownload); it has no 'send to folder' toggle. Also: default target folder is 'DocuDesk/<namespace>/' (DocumentService.php:539) and src/store/modules/myDocuments.js:56/647/689/702 still reference literal /DocuDesk/ paths -- a leftover of the pre-rename app id (docudesk -> filinq). Downgraded by the lane from yes: the only consumer is dossiq's FilinqTemplateEngineAdapter, which is opt-in; dossiq lib/Settings/connections.json:102 says 'A mock adapter answers here. No template reaches Filinq' until beschikking_template_adapter is set, and no filinq page reaches it.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -1192,7 +1192,7 @@
 			"area": "templates",
 			"name": "Pick a template from the case screen of another app.",
 			"source": "own-code",
-			"filinq": "yes",
+			"filinq": "partial",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/dossiq",
@@ -1203,7 +1203,7 @@
 			"providerHow": "read-from-code",
 			"feature": "documents-from-a-template",
 			"featureConfidence": "high",
-			"note": "This capability is entirely dossiq's UI calling into filinq's generation service; filinq itself has no 'pick a template from another app's case screen' code of its own beyond serving as the callee.",
+			"note": "This capability is entirely dossiq's UI calling into filinq's generation service; filinq itself has no 'pick a template from another app's case screen' code of its own beyond serving as the callee. Downgraded by the lane from yes: the only consumer is dossiq's FilinqTemplateEngineAdapter, which is opt-in; dossiq lib/Settings/connections.json:102 says 'A mock adapter answers here. No template reaches Filinq' until beschikking_template_adapter is set, and no filinq page reaches it.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -2045,6 +2045,168 @@
 			"feature": "document-register",
 			"featureConfidence": "medium",
 			"note": "See notes.md: this composer sits behind the same RedactionOutputGuard whose markChecked() step nothing in the frontend appears to call either.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "woo-publish",
+			"area": "woo",
+			"name": "Hand approved documents to the publication platform.",
+			"source": "competitor-derived",
+			"sourceRef": "procest round 4 C-decisions-14; GPP-Woo publicatiebank",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/opencatalogi",
+				"evidence": "openspec/changes/woo-publicatie-pipeline/proposal.md (0 of 16 tasks done) states: 'sibling apps own the endpoint: OpenCatalogi publishes OR publication objects with DiWoo/TOOI-validated Woo-index sitemaps...What is missing is the pipeline that chains them: nothing today answers is this document ready to publish, assembles the DiWoo metadata, [or] hands the redacted result off to the publication endpoint.' lib/Service/DossierContextService.php:286 comment confirms: 'The woo-publicatie-pipeline has not shipped.'",
+				"change": "openspec/changes/woo-publicatie-pipeline"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "opencatalogi",
+			"providerHow": "read-from-code",
+			"feature": "woo-publicatie-pipeline",
+			"featureConfidence": "high",
+			"note": "OpenCatalogi is the publication platform itself and already exists; the gap is entirely the filinq-side hand-off pipeline that would give redacted, approved documents to it.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"decos-join": "docs-only: intelligence.competitor_features#145663 (Decos JOIN, recorded 2026-09-14) \"C-decisions-14 Public information is published to a portal fed straight from the case system, actively and on request.: decos-join: documented, /oplossingen/woo-portaal Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-18, D-dec\""
+			}
+		},
+		{
+			"id": "woo-index",
+			"area": "woo",
+			"name": "Feed the national Woo index with what was published.",
+			"source": "competitor-derived",
+			"sourceRef": "GPP-Woo DiWoo feed; KOOP Woo-index",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/opencatalogi",
+				"evidence": "Same as woo-publish: openspec/changes/woo-publicatie-pipeline/proposal.md confirms OpenCatalogi already produces DiWoo/TOOI-validated Woo-index sitemaps for objects IT publishes, but since filinq has no built pipeline handing documents to OpenCatalogi at all (0/16 tasks), filinq users get no Woo-index feed through filinq today.",
+				"change": "openspec/changes/woo-publicatie-pipeline"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "opencatalogi",
+			"providerHow": "read-from-code",
+			"feature": "woo-publicatie-pipeline",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "woo-active",
+			"area": "woo",
+			"name": "See which documents must be published actively and what is still outstanding.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Publish Documents for Active Disclosure\"",
+			"filinq": "no",
+			"built": {
+				"state": "specified",
+				"owner": "ConductionNL/filinq",
+				"evidence": "openspec/changes/woo-publicatie-pipeline/proposal.md: 'nothing today answers \"is this document ready to publish?\"' is listed as the core missing piece (0 of 16 tasks done). No readiness/outstanding-items view exists in src/ for active-disclosure tracking.",
+				"change": "openspec/changes/woo-publicatie-pipeline"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "woo-publicatie-pipeline",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "yes",
+			"evidence": {
+				"decos-join": "docs-only: intelligence.competitor_features#145678 (Decos JOIN, recorded 2026-09-14) \"C-decisions-27 Which collections are published, and on what conditions, is configured rather than fixed.: decos-join: documented, /oplossingen/woo-portaal Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-20.\""
+			}
+		},
+		{
+			"id": "woo-algorithm",
+			"area": "woo",
+			"name": "List the anonymisation algorithm in the public algorithm register.",
+			"source": "competitor-derived",
+			"sourceRef": "xxllnc Anonimiseren algorithm register presence",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "grep for 'algoritmeregister' across lib/, src/ and openspec found it used only as competitive-research motivation in seven proposals/specs (image-redaction, ocr-trigger-surface, anonymization-review-workbench, redaction-at-scale, custom-dictionary-recognition), never as an actual feature that lists filinq's own anonymisation algorithm in the public register. No admin page or export for this exists in src/views/settings/Settings.vue."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "none",
+			"featureConfidence": "high",
+			"zylab": "unknown",
+			"datamask": "yes",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {
+				"datamask": "docs-only: intelligence.competitor_features#32449 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Algorithm register presence: Registered per municipality on algoritmes.overheid.nl\""
+			}
+		},
+		{
+			"id": "woo-agreement",
+			"area": "woo",
+			"name": "Make a recipient accept conditions before downloading disclosed documents.",
+			"source": "own-code",
+			"filinq": "partial",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "lib/Controller/RedactionOutputController.php:151 agreement() (GET /api/redaction/agreement) and :169 acceptAgreement() (POST /api/redaction/agreement/accept) are implemented over DownloadAgreementGate, part of the mostly-complete (11/12 tasks) redaction-and-what-leaves-the-building change. Both routes are route-reach 'none'; grep for 'agreement' across all of src/ (.vue/.js) found zero references.",
+				"change": "openspec/changes/redaction-and-what-leaves-the-building"
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "document-register",
+			"featureConfidence": "medium",
+			"note": "Same unreached cluster as woo-pub-list/wk-review-due/wk-final-rule -- a real backend gate with no UI ever calling it.",
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown",
+			"evidence": {}
+		},
+		{
+			"id": "woo-sar",
+			"area": "woo",
+			"name": "Answer a subject access request by finding, redacting and packaging every document about one person.",
+			"source": "category-derived",
+			"sourceRef": "journey \"Handle Subject Access Request with Document Redaction\"",
+			"filinq": "no",
+			"built": {
+				"state": "none",
+				"owner": "ConductionNL/filinq",
+				"evidence": "No dedicated subject-access-request change or schema exists (grep for 'subject access request'/'inzageverzoek'/AVG-art-15 across lib/, src/, openspec found nothing; no matching entry in openspec/changes/*). The building blocks it would need are themselves unbuilt: entity-search (find every document mentioning a person, 0/11 tasks) and the collection/packaging half of woo-request-workflow (0/15 tasks)."
+			},
+			"reachedOn": "nothing reaches it",
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "none",
+			"featureConfidence": "high",
+			"note": "Depends on entity-search and woo-request-workflow, both themselves unbuilt; no dedicated SAR change exists to point to.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -4232,134 +4394,6 @@
 			"evidence": {
 				"filinq": "not checked: code reading of this row not finished yet",
 				"decos-join": "docs-only: intelligence.competitor_features#146118 (Decos JOIN, recorded 2026-09-14) \"C-access-and-privacy-3 A document's personal data is removed before a model sees it: decos-join: documented, /zaaksysteem/joni-plus Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-22.\""
-			}
-		},
-		{
-			"id": "woo-publish",
-			"area": "woo",
-			"name": "Hand approved documents to the publication platform.",
-			"source": "competitor-derived",
-			"sourceRef": "procest round 4 C-decisions-14; GPP-Woo publicatiebank",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "yes",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"decos-join": "docs-only: intelligence.competitor_features#145663 (Decos JOIN, recorded 2026-09-14) \"C-decisions-14 Public information is published to a portal fed straight from the case system, actively and on request.: decos-join: documented, /oplossingen/woo-portaal Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-18, D-dec\""
-			}
-		},
-		{
-			"id": "woo-index",
-			"area": "woo",
-			"name": "Feed the national Woo index with what was published.",
-			"source": "competitor-derived",
-			"sourceRef": "GPP-Woo DiWoo feed; KOOP Woo-index",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "woo-active",
-			"area": "woo",
-			"name": "See which documents must be published actively and what is still outstanding.",
-			"source": "category-derived",
-			"sourceRef": "journey \"Publish Documents for Active Disclosure\"",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "yes",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"decos-join": "docs-only: intelligence.competitor_features#145678 (Decos JOIN, recorded 2026-09-14) \"C-decisions-27 Which collections are published, and on what conditions, is configured rather than fixed.: decos-join: documented, /oplossingen/woo-portaal Read from documentation, not from a running instance, so it is an upper bound. Lane findings: D-decos-20.\""
-			}
-		},
-		{
-			"id": "woo-algorithm",
-			"area": "woo",
-			"name": "List the anonymisation algorithm in the public algorithm register.",
-			"source": "competitor-derived",
-			"sourceRef": "xxllnc Anonimiseren algorithm register presence",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "yes",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet",
-				"datamask": "docs-only: intelligence.competitor_features#32449 (xxllnc Anonimiseren (DataMask), recorded 2026-07-16) \"Algorithm register presence: Registered per municipality on algoritmes.overheid.nl\""
-			}
-		},
-		{
-			"id": "woo-agreement",
-			"area": "woo",
-			"name": "Make a recipient accept conditions before downloading disclosed documents.",
-			"source": "own-code",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
-			}
-		},
-		{
-			"id": "woo-sar",
-			"area": "woo",
-			"name": "Answer a subject access request by finding, redacting and packaging every document about one person.",
-			"source": "category-derived",
-			"sourceRef": "journey \"Handle Subject Access Request with Document Redaction\"",
-			"filinq": "unknown",
-			"built": {
-				"state": "none",
-				"owner": "ConductionNL/filinq"
-			},
-			"zylab": "unknown",
-			"datamask": "unknown",
-			"smartdocuments": "unknown",
-			"validsign": "unknown",
-			"paperless-ngx": "unknown",
-			"decos-join": "unknown",
-			"evidence": {
-				"filinq": "not checked: code reading of this row not finished yet"
 			}
 		},
 		{
