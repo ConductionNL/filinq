@@ -860,6 +860,22 @@ class GuardianConsentGuardTest extends TestCase {
 	}//end testTheAgeIsEvaluatedWhenTheMinorSigned()
 
 	/**
+	 * The completing request gains the basis only when it has one.
+	 *
+	 * @return void
+	 */
+	public function testWithConsentBasisTouchesOnlyARequestThatNeedsIt(): void {
+		$request = $this->request(signerIds: ['learner-1', 'guardian-1']);
+
+		$withBasis = $this->guard->withConsentBasis(request: $request, signers: $this->completingSigners());
+		$this->assertSame('learner-1', $withBasis['consentBasis'][0]['signerId']);
+
+		$adults = ['alice-1' => ['id' => 'alice-1', 'userId' => 'alice', 'status' => 'SIGNED', 'signedAt' => self::NOW]];
+		$this->assertSame($request, $this->guard->withConsentBasis(request: $request, signers: $adults));
+
+	}//end testWithConsentBasisTouchesOnlyARequestThatNeedsIt()
+
+	/**
 	 * A request between adults carries no consent basis.
 	 *
 	 * @return void
