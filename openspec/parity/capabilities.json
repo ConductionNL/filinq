@@ -1325,9 +1325,9 @@
 			"sourceRef": "SmartDocuments attended mode (ZAC integration)",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No edit-before-store step found: src/views/templates/TemplateDetail.vue:213-215 preview is read-only (v-html); src/views/correspondence/CorrespondenceIndex.vue:_triggerDownload downloads the generated blob immediately with no intermediate edit step. openspec/specs/document-rich-editing/spec.md covers agent edits of ALREADY-stored documents' style/metadata, not pre-store editing of a fresh generation."
+				"evidence": "Specified in openspec/changes/generate-draft-and-attended-edit on 2026-09-27. Before: No edit-before-store step found: src/views/templates/TemplateDetail.vue:213-215 preview is read-only (v-html); src/views/correspondence/CorrespondenceIndex.vue:_triggerDownload downloads the generated blob immediately with no intermediate edit step. openspec/specs/document-rich-editing/spec.md covers agent edits of ALREADY-stored documents' style/metadata, not pre-store editing of a fresh generation."
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",
@@ -5728,9 +5728,9 @@
 			"sourceRef": "canonical api-platform (11 competitors)",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "appinfo/routes.php declares ~150 REST routes covering every controller/service function. openapi.json exists at the repo root but python parse shows only 2 documented paths ('/api/anonymization/batch/folder' and an unrelated ocs path) out of the ~150 routes."
+				"evidence": "Specified in openspec/changes/connect-openapi-documentation on 2026-09-27 for the missing half: an OpenAPI document that covers every route, published with the app, where today openapi.json documents 2 of about 150 routes. Before: appinfo/routes.php declares ~150 REST routes covering every controller/service function. openapi.json exists at the repo root but python parse shows only 2 documented paths ('/api/anonymization/batch/folder' and an unrelated ocs path) out of the ~150 routes."
 			},
 			"reachedOn": "external frontend, not in this repo (any HTTP client can call the routes); the OpenAPI documentation itself is far from complete",
 			"provider": "filinq",
@@ -6490,9 +6490,9 @@
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/6932",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "a model fills a fixed set of invoice fields only: lib/Service/FinancialExtractionService.php:242 extractFinancial() calls applyAiEnhancement() (:509), which runs a Nextcloud TaskProcessing TextToText task (:877) for the fields the heuristics left empty. Reached via POST api/extraction/financial (appinfo/routes.php:276), called by shillinq, no filinq page. General enrichment (lib/Service/MetadataService.php:100 enhanceTextMetadata) fills language, keywords and topic with heuristics (lib/Service/TextAnalysisService.php:95 word counts), not a model, and not the document's own schema fields."
+				"evidence": "Specified in openspec/changes/extraction-model-filled-fields on 2026-09-27 for the missing half: a model fills the fields a document type or record schema declares, not only the fixed invoice fields for one consumer. Before: a model fills a fixed set of invoice fields only: lib/Service/FinancialExtractionService.php:242 extractFinancial() calls applyAiEnhancement() (:509), which runs a Nextcloud TaskProcessing TextToText task (:877) for the fields the heuristics left empty. Reached via POST api/extraction/financial (appinfo/routes.php:276), called by shillinq, no filinq page. General enrichment (lib/Service/MetadataService.php:100 enhanceTextMetadata) fills language, keywords and topic with heuristics (lib/Service/TextAnalysisService.php:95 word counts), not a model, and not the document's own schema fields."
 			},
 			"reachedOn": "machine consumer: shillinq via POST api/extraction/financial; enrichment runs on document object writes (toggle at /settings)",
 			"provider": "filinq",
@@ -7015,9 +7015,9 @@
 			"sourceRef": "https://smartdocuments.com/productfeatures/",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no saved half-finished generation: grep -ri 'draft|resume|save for later' lib src finds only finalisation drafts of existing files (lib/Service/FinalDocumentCorrectionService.php:102) and machine-drafted plain renditions. The guided wizard puts it out of scope: openspec/changes/guided-document-wizard/proposal.md:119 'Multi-user / resumable wizard sessions persisted server-side' (a run is one sitting; abandoning the browser discards the draft)."
+				"evidence": "Specified in openspec/changes/generate-draft-and-attended-edit on 2026-09-27. Before: no saved half-finished generation: grep -ri 'draft|resume|save for later' lib src finds only finalisation drafts of existing files (lib/Service/FinalDocumentCorrectionService.php:102) and machine-drafted plain renditions. The guided wizard puts it out of scope: openspec/changes/guided-document-wizard/proposal.md:119 'Multi-user / resumable wizard sessions persisted server-side' (a run is one sitting; abandoning the browser discards the draft)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
