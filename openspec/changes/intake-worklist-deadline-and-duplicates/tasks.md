@@ -4,7 +4,7 @@
 
 ## 1. Register
 
-- [ ] 1.1 Add `handlingDeadline`, `deadlineReason`, `contentHash`, `duplicateOf` and the read-time computed `daysLeft` to `intakeDocument`, and `handlingDays` and `handledWhen` to `intakeDefaultRule`, with the seed and a version bump (REQ-IWS-001, REQ-IWS-003). Verify: `occ maintenance:repair` imports them; `GET` on a seeded document returns `daysLeft`.
+- [ ] 1.1 Add `handlingDeadline`, `deadlineReason`, `contentHash`, `duplicateOf` the read-time computed `daysLeft` and an `x-openregister-dedup` exact rule on `contentHash` to `intakeDocument`, and `handlingDays` and `handledWhen` to `intakeDefaultRule`, with the seed and a version bump (REQ-IWS-001, REQ-IWS-003). Verify: `occ maintenance:repair` imports them; `GET` on a seeded document returns `daysLeft`.
 
 ## 2. Arrival
 

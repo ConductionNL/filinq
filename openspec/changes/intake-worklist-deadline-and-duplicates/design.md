@@ -74,9 +74,15 @@ whose deadline has passed and which are not handled by their rule.
 `contentHash`. `findByContentHash()` looks for an earlier intake document
 with the same hash that is not rejected. When one exists the newcomer gets
 `duplicateOf` = its uuid. The arrival is never refused and the
-`sourceRef` skip runs first, unchanged. Alternative considered: refusing a
-duplicate, as Paperless-ngx can. Rejected: two identical files may belong
-to two cases, and the registrar decides.
+`sourceRef` skip runs first, unchanged. Alternatives considered: refusing a
+duplicate, as Paperless-ngx can (rejected: two identical files may belong
+to two cases, and the registrar decides), and openregister's
+`DuplicateDetectionService` with an `x-openregister-dedup` rule (its
+`openspec/specs/duplicate-detection/spec.md`), which scores candidate pairs
+across a schema for a data steward but does not run at arrival. filinq also
+declares `x-openregister-dedup` with an exact match on `contentHash`, so
+openregister's steward view lists the same pairs (ADR-011: reuse, do not
+rebuild).
 
 ### D5. Rejecting a duplicate uses the existing reject
 
@@ -90,7 +96,8 @@ reject transition. No new transition.
 |---|---|---|
 | days left | declarative, read-time computed field | always current, no job |
 | deadline at arrival | imperative, in `receive()` from the matched rule | working-day arithmetic over the rule |
-| duplicate lookup | imperative, in `receive()` | a query against other objects |
+| duplicate lookup | imperative, in `receive()` | a query against other objects at the moment of arrival |
+| duplicate pairs for a steward | declarative `x-openregister-dedup` on `contentHash` | openregister's duplicate view finds them without code |
 | handled | declarative rule field, read in `findOverdue()` | the organisation decides what handled means |
 
 ## Seed data
