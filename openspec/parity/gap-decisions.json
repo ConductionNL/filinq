@@ -8,6 +8,14 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "con-webhook",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate it yes (validsign, paperless-ngx).",
+    "change": "connect-document-webhooks",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "con-zgw",
     "matrix": "filinq",
     "decision": "existing",
@@ -400,6 +408,14 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "sh-bundle",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a changelog demand row (https://github.com/paperless-ngx/paperless-ngx/pull/11682) plus one competitor yes (paperless-ngx).",
+    "change": "share-document-links",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "sh-channel",
     "matrix": "filinq",
     "decision": "defer",
@@ -432,6 +448,14 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "sh-link",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "One competitor rates it yes (paperless-ngx), which alone would defer it, but a time-limited link is the same mechanism as the bundle link of sh-bundle (a bundle may hold one document), so it is specified in the same change rather than deferred.",
+    "change": "share-document-links",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "sh-notify",
     "matrix": "filinq",
     "decision": "defer",
@@ -456,6 +480,22 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "sh-revoke",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "One competitor rates it yes (paperless-ngx), which alone would defer it, but withdrawing a shared link is part of the same link mechanism as sh-bundle, so it is specified in the same change rather than deferred.",
+    "change": "share-document-links",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-accept-only",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a changelog demand row (https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23) plus one competitor yes (validsign).",
+    "change": "signing-accept-only-recipient",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "sig-cancel",
     "matrix": "filinq",
     "decision": "existing",
@@ -469,6 +509,14 @@
     "decision": "defer",
     "reason": "A featureRequest demand row (https://github.com/paperless-ngx/paperless-ngx/discussions/13604) but no competitor rates it yes, and signing is outside the core area.",
     "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-field-validation",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a changelog demand row (https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23) plus one competitor yes (validsign).",
+    "change": "signing-field-validation",
     "decidedOn": "2026-09-27"
   },
   {
@@ -568,6 +616,14 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "wk-fulltext",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate it yes (zylab, paperless-ngx, decos-join).",
+    "change": "work-content-search",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "wk-mine",
     "matrix": "filinq",
     "decision": "defer",
@@ -581,6 +637,14 @@
     "decision": "defer",
     "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
     "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-notes",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate it yes (zylab, paperless-ngx).",
+    "change": "work-document-notes",
     "decidedOn": "2026-09-27"
   },
   {
