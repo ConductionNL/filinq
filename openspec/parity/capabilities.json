@@ -611,9 +611,9 @@
 			"sourceRef": "user story \"Automatically suggest matching case for incoming email\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/email-ingestion/design.md Non-Goals: 'No auto-matching of emails to cases/dossiers by content (\"automatically suggest matching case\") - v1 maps inbox folder -> dossier statically; suggestion is a follow-up once matching heuristics have an owner.' email-ingestion itself is entirely unbuilt (see in-email)."
+				"evidence": "Specified in openspec/changes/inbound-auto-classification (an open change found in the openspec pass on 2026-09-27). Before: openspec/changes/email-ingestion/design.md Non-Goals: 'No auto-matching of emails to cases/dossiers by content (\"automatically suggest matching case\") - v1 maps inbox folder -> dossier statically; suggestion is a follow-up once matching heuristics have an owner.' email-ingestion itself is entirely unbuilt (see in-email)."
 			},
 			"reachedOn": "nothing reaches it (explicit non-goal, unbuilt)",
 			"provider": "filinq",
@@ -775,9 +775,9 @@
 			"sourceRef": "user story \"Detect duplicate incoming document\"",
 			"filinq": "no",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/IntakeService.php:104-117 receive() de-duplicates silently on sourceRef: it logs an info-level message and returns the existing document unchanged. No field or UI surfaces a 'this looks like a duplicate' warning to a clerk; IntakeIndex.vue has no duplicate indicator.",
+				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: lib/Service/IntakeService.php:104-117 receive() de-duplicates silently on sourceRef: it logs an info-level message and returns the existing document unchanged. No field or UI surfaces a 'this looks like a duplicate' warning to a clerk; IntakeIndex.vue has no duplicate indicator.",
 				"readOn": "2026-09-26"
 			},
 			"reachedOn": "nothing detects content-level duplicates; the sourceRef re-delivery skip is intended",
@@ -804,9 +804,9 @@
 			"sourceRef": "user story \"Set handling deadline on incoming correspondence\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Searched lib/Service/Intake*, lib/Service/IntakeService.php, lib/Service/IntakeRepository.php and lib/Settings/filinq_register.json for handlingDeadline/afhandeltermijn/overdue: no match. lib/Service/ObjectionDeadlineChecker.php exists but is unrelated - it checks GDPR publication-objection deadlines on consent records (openspec/specs/consent-management), not intake handling deadlines."
+				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: Searched lib/Service/Intake*, lib/Service/IntakeService.php, lib/Service/IntakeRepository.php and lib/Settings/filinq_register.json for handlingDeadline/afhandeltermijn/overdue: no match. lib/Service/ObjectionDeadlineChecker.php exists but is unrelated - it checks GDPR publication-objection deadlines on consent records (openspec/specs/consent-management), not intake handling deadlines."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -831,9 +831,9 @@
 			"sourceRef": "journey \"Generate Acknowledgement of Receipt\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ for 'acknowledg*': all hits are print-job acknowledgement (PrintJobController) or anonymisation-override acknowledgement (AnonymizeRequestValidator, ProhibitionGateService) - none is a sender acknowledgement-of-receipt on document registration. No template or auto-send-on-registration found."
+				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: Grepped lib/ for 'acknowledg*': all hits are print-job acknowledgement (PrintJobController) or anonymisation-override acknowledgement (AnonymizeRequestValidator, ProhibitionGateService) - none is a sender acknowledgement-of-receipt on document registration. No template or auto-send-on-registration found."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -968,9 +968,9 @@
 			"sourceRef": "journey \"Migrate Legacy Paper Records to Digital Archive\"; procest round 4 C-intake-13",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found."
+				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -1022,9 +1022,9 @@
 			"sourceRef": "journey \"Migrate Historic Email Archive to DMS\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/email-ingestion/design.md Non-Goals: 'No native .msg (Outlook CFBF) parsing and no PST/MBOX bulk-archive splitter in v1 (the cluster's bulk import PST/MBOX story needs a container-format decision first - deferred).' email-ingestion itself is entirely unbuilt."
+				"evidence": "Specified in openspec/changes/intake-mailbox-archive-import on 2026-09-27. Before: openspec/changes/email-ingestion/design.md Non-Goals: 'No native .msg (Outlook CFBF) parsing and no PST/MBOX bulk-archive splitter in v1 (the cluster's bulk import PST/MBOX story needs a container-format decision first - deferred).' email-ingestion itself is entirely unbuilt."
 			},
 			"reachedOn": "nothing reaches it (explicit non-goal, unbuilt)",
 			"provider": "filinq",
@@ -1101,9 +1101,9 @@
 			"sourceRef": "Visma Circle \"Basisregistratie enrichment\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/MetadataService.php (@spec metadata-enrichment) is text-analysis only (language detection, keyword extraction, topic classification per the processing-activity catalogue entry 'docudesk-metadata-enrichment' in src/views/settings/Settings.vue) - grep for BAG/BRP/KVK/basisregist* in it returns nothing. metadata#enrich route (routes.php:55) is 'none' in route-reach.txt and has no frontend caller either."
+				"evidence": "Specified in openspec/changes/intake-base-registry-enrichment on 2026-09-27. Before: lib/Service/MetadataService.php (@spec metadata-enrichment) is text-analysis only (language detection, keyword extraction, topic classification per the processing-activity catalogue entry 'docudesk-metadata-enrichment' in src/views/settings/Settings.vue) - grep for BAG/BRP/KVK/basisregist* in it returns nothing. metadata#enrich route (routes.php:55) is 'none' in route-reach.txt and has no frontend caller either."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -2932,9 +2932,9 @@
 			"sourceRef": "Presidio image redaction; CaseGuard handwriting OCR",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "OpenRegister's TextExtractionService (the class filinq calls for detection, AnonymizationService.php:202) has no OCR code path (git grep on origin/development openregister for ocr/tesseract in that file returned nothing). Filinq's own OcrService/Tesseract integration exists only inside FinancialExtractionService.php (a different feature, 'scan-en-herken'), not called from the anonymisation pipeline (AnonymizationService.php / DocumentAnonymizeRunner.php have no OcrService references)."
+				"evidence": "Specified in openspec/changes/ocr-trigger-surface (an open change found in the openspec pass on 2026-09-27). Before: OpenRegister's TextExtractionService (the class filinq calls for detection, AnonymizationService.php:202) has no OCR code path (git grep on origin/development openregister for ocr/tesseract in that file returned nothing). Filinq's own OcrService/Tesseract integration exists only inside FinancialExtractionService.php (a different feature, 'scan-en-herken'), not called from the anonymisation pipeline (AnonymizationService.php / DocumentAnonymizeRunner.php have no OcrService references)."
 			},
 			"reachedOn": "nothing reaches OCR-then-detect for the anonymisation pipeline",
 			"provider": "filinq",
@@ -3239,9 +3239,9 @@
 			"source": "own-code",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No UI or endpoint to mark arbitrary hand-selected text as an entity to redact: PATCH api/anonymization/relations/{id} (updateRelation, lib/Controller/AnonymizationController.php:414-425) only toggles include/skip on an EXISTING detected relation via RelationSkipDecisionService; there is no POST/create-relation endpoint. Grepped src/views/anonymization for 'manual', no hits."
+				"evidence": "Specified in openspec/changes/anonymization-review-workbench (an open change found in the openspec pass on 2026-09-27). Before: No UI or endpoint to mark arbitrary hand-selected text as an entity to redact: PATCH api/anonymization/relations/{id} (updateRelation, lib/Controller/AnonymizationController.php:414-425) only toggles include/skip on an EXISTING detected relation via RelationSkipDecisionService; there is no POST/create-relation endpoint. Grepped src/views/anonymization for 'manual', no hits."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3360,9 +3360,9 @@
 			"sourceRef": "Cloak Anonymizer seven methods; canonical pseudonymization",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No pseudonym-replacement mode for document text anonymisation exists in filinq. The only 'pseudonym' concept in the codebase is OpenRegister's Archival AnonymisationService::pseudonymFor() for database-field-level GDPR erasure/archival (origin/development lib/Service/Archival/AnonymisationService.php:164), and filinq's own lib/Service/SubjectErasure/SubjectErasureRules.php explicitly says its erasure NEVER applies 'pseudonym' treatment ('the pseudonym is the opposite requirement... an erasure never applies pseudonym'). No 'redactionMode'/'treatment' parameter accepting a pseudonym value exists in AnonymizeRequestValidator or DocumentAnonymizeRunner."
+				"evidence": "Specified in openspec/changes/reversible-pseudonymization (an open change found in the openspec pass on 2026-09-27). Before: No pseudonym-replacement mode for document text anonymisation exists in filinq. The only 'pseudonym' concept in the codebase is OpenRegister's Archival AnonymisationService::pseudonymFor() for database-field-level GDPR erasure/archival (origin/development lib/Service/Archival/AnonymisationService.php:164), and filinq's own lib/Service/SubjectErasure/SubjectErasureRules.php explicitly says its erasure NEVER applies 'pseudonym' treatment ('the pseudonym is the opposite requirement... an erasure never applies pseudonym'). No 'redactionMode'/'treatment' parameter accepting a pseudonym value exists in AnonymizeRequestValidator or DocumentAnonymizeRunner."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3389,9 +3389,9 @@
 			"sourceRef": "canonical pseudonymization (keyed tokenisation)",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No reverse-pseudonymisation / re-identification-under-control feature exists for document redaction (grepped for 'reversible'/'reverse pseudonym' — only unrelated hits: a migration comment, a key-naming comment, and SubjectErasureRules' note that it 'destroys any reversible mapping it finds'). Since red-pseudonym itself is not built, there is nothing to reverse."
+				"evidence": "Specified in openspec/changes/reversible-pseudonymization (an open change found in the openspec pass on 2026-09-27). Before: No reverse-pseudonymisation / re-identification-under-control feature exists for document redaction (grepped for 'reversible'/'reverse pseudonym' — only unrelated hits: a migration comment, a key-naming comment, and SubjectErasureRules' note that it 'destroys any reversible mapping it finds'). Since red-pseudonym itself is not built, there is nothing to reverse."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5307,16 +5307,16 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"owner": "nextcloud/files_confidential",
-				"evidence": "lib/Service/ConfidentialityLabelService.php reads a file's confidentiality label via Nextcloud's system-tag API, but ONLY when the external, optional Nextcloud app `files_confidential` is installed (openspec/specs/files-confidential-labels/spec.md REQ-DDFCL-001; guarded via IAppManager, returns null and never crashes otherwise). lib/Service/AnonymizationService.php:319 and lib/Service/FolderBatchService.php consume the label to inform anonymisation, not to restrict file access."
+				"evidence": "Decided no on 2026-09-27 in the openspec pass: Owned by nextcloud/files_confidential: confidentiality labels and access by label are the Nextcloud Files Confidential app, outside the fleet; decided no for filinq per the openspec pass addendum. filinq reads the label (archived change 2026-07-23-files-confidential-labels). Before: lib/Service/ConfidentialityLabelService.php reads a file's confidentiality label via Nextcloud's system-tag API, but ONLY when the external, optional Nextcloud app `files_confidential` is installed (openspec/specs/files-confidential-labels/spec.md REQ-DDFCL-001; guarded via IAppManager, returns null and never crashes otherwise). lib/Service/AnonymizationService.php:319 and lib/Service/FolderBatchService.php consume the label to inform anonymisation, not to restrict file access."
 			},
 			"reachedOn": "no filinq page reads or sets this label; it is read internally during anonymisation only",
 			"provider": "external",
 			"providerHow": "read-from-code",
 			"feature": "files-confidential-labels",
 			"featureConfidence": "high",
-			"note": "Filinq neither labels files nor restricts access by the label itself; it only reads an existing label (if the optional sibling app is installed) to steer its own anonymisation defaults. files_confidential is a third-party Nextcloud app; the labeling UI and any access restriction it applies are not part of this repo.",
+			"note": "Filinq neither labels files nor restricts access by the label itself; it only reads an existing label (if the optional sibling app is installed) to steer its own anonymisation defaults. files_confidential is a third-party Nextcloud app; the labeling UI and any access restriction it applies are not part of this repo. Decided no on 2026-09-27: platform-provided by nextcloud/files_confidential.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -5839,9 +5839,9 @@
 			"sourceRef": "SmartDocuments zaaksysteem integrations; Xential VNG Documentcreatieservices",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ for zgw/documenten.*api/zaaksysteem: no match anywhere in the repo."
+				"evidence": "Specified in openspec/changes/zgw-document-bridge (an open change found in the openspec pass on 2026-09-27). Before: Grepped lib/ for zgw/documenten.*api/zaaksysteem: no match anywhere in the repo."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -6428,9 +6428,9 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no DiWoo metadata or readiness view: grep -ri 'diwoo|informatiecategorie' lib src finds nothing; the only Woo-named service, lib/Service/WooProfileService.php:40, holds the anonymisation entity profile. DiWoo metadata assembly and the readiness check exist only as design: openspec/changes/woo-publicatie-pipeline/proposal.md:26 and :37 (0 of 16 tasks done). opencatalogi@a00f9f84 lib/Controller/WooReadinessController.php:46 checks catalog harvester readiness, not per-document metadata.",
+				"evidence": "Specified in openspec/changes/woo-metadata-worklist on 2026-09-27. Before: no DiWoo metadata or readiness view: grep -ri 'diwoo|informatiecategorie' lib src finds nothing; the only Woo-named service, lib/Service/WooProfileService.php:40, holds the anonymisation entity profile. DiWoo metadata assembly and the readiness check exist only as design: openspec/changes/woo-publicatie-pipeline/proposal.md:26 and :37 (0 of 16 tasks done). opencatalogi@a00f9f84 lib/Controller/WooReadinessController.php:46 checks catalog harvester readiness, not per-document metadata.",
 				"change": "openspec/changes/woo-publicatie-pipeline"
 			},
 			"reachedOn": "nothing reaches it",
@@ -6459,9 +6459,9 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no destruction-date propagation: grep -ri 'vernietigingsdatum|destructionDate|retentionExpiresAt' lib src finds nothing. Designed only: openspec/changes/woo-publicatie-pipeline/design.md:171 (filinq records the source system's destruction date and propagates it as retentionExpiresAt; 0 of 16 tasks done). opencatalogi@a00f9f84 lib/Service/RetentionService.php:531 evaluates retentionExpiresAt on its own publications (lib/BackgroundJob/RetentionEvaluation.php), but no filinq document reaches it.",
+				"evidence": "Specified in openspec/changes/woo-publicatie-pipeline (an open change found in the openspec pass on 2026-09-27). Before: no destruction-date propagation: grep -ri 'vernietigingsdatum|destructionDate|retentionExpiresAt' lib src finds nothing. Designed only: openspec/changes/woo-publicatie-pipeline/design.md:171 (filinq records the source system's destruction date and propagates it as retentionExpiresAt; 0 of 16 tasks done). opencatalogi@a00f9f84 lib/Service/RetentionService.php:531 evaluates retentionExpiresAt on its own publications (lib/BackgroundJob/RetentionEvaluation.php), but no filinq document reaches it.",
 				"change": "openspec/changes/woo-publicatie-pipeline"
 			},
 			"reachedOn": "nothing reaches it",
@@ -6520,9 +6520,9 @@
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/3744",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done)."
+				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6671,9 +6671,9 @@
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/pull/11656",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "filinq detects and refuses, it does not decrypt: lib/Service/DocumentValidationService.php:306 encryptionFindings() reports 'The PDF is encrypted or password-protected and cannot be anonymised.' (:323); grep -ri 'decrypt|qpdf|pikepdf|password' lib finds no removal step."
+				"evidence": "Specified in openspec/changes/intake-pdf-password-removal on 2026-09-27. Before: filinq detects and refuses, it does not decrypt: lib/Service/DocumentValidationService.php:306 encryptionFindings() reports 'The PDF is encrypted or password-protected and cannot be anonymised.' (:323); grep -ri 'decrypt|qpdf|pikepdf|password' lib finds no removal step."
 			},
 			"reachedOn": "nothing reaches it (the encrypted-PDF check is shown at /my-documents via ValidationResultModal.vue)",
 			"provider": "filinq",
@@ -6958,9 +6958,9 @@
 			"sourceRef": "https://docs.zylab.com/01/ZyLAB/Woo-Dutch/050516.html",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no sampling QA: grep -ri 'sample|random|steekproef' lib src finds only template preview sample data (lib/Service/TemplatePreviewService.php:56). Specified only: openspec/changes/redaction-at-scale/proposal.md:64 'Sampling QA: an admin-configurable random sample (default 5%)', tasks.md:28 sampler unchecked (0 of 18 tasks done)."
+				"evidence": "Specified in openspec/changes/redaction-at-scale (an open change found in the openspec pass on 2026-09-27). Before: no sampling QA: grep -ri 'sample|random|steekproef' lib src finds only template preview sample data (lib/Service/TemplatePreviewService.php:56). Specified only: openspec/changes/redaction-at-scale/proposal.md:64 'Sampling QA: an admin-configurable random sample (default 5%)', tasks.md:28 sampler unchecked (0 of 18 tasks done)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
