@@ -96,6 +96,8 @@ it.
 - `src/views/settings/`: the bridge status panel from
   `zgw-document-bridge` gains a destinations list and the waiting and
   failed deliveries.
+- `src/views/myDocuments/MyDocumentsIndex.vue`: an "In the case system"
+  badge; `src/manifest.json`: two counts on `/reports/documents`.
 - `docs/features/`: a section with a screenshot.
 
 ## Out of scope

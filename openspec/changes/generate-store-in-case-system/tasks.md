@@ -15,7 +15,7 @@
 ## 3. Screens
 
 - [ ] 3.1 Add the destinations list and form, and the waiting and failed deliveries with retry, to the bridge status panel in `src/views/settings/` (REQ-GSC-001, REQ-GSC-003). Verify: Playwright `tests/e2e/case-system-delivery.spec.ts` adds a destination and retries a failed delivery.
-- [ ] 3.2 Show the delivery state on the generated document's record where filinq lists produced documents (REQ-GSC-003). Verify: Playwright reads "In the case system" on the seeded delivered document.
+- [ ] 3.2 Show "In the case system" on the stored file's row in `/my-documents`, through the bridge's batched badge lookup (REQ-DDZGW-009), and add two stat widgets to `/reports/documents` in `src/manifest.json`: deliveries waiting and deliveries failed (REQ-GSC-003). Verify: Playwright reads the badge on the seeded delivered document and both counts.
 
 ## 4. Cross-app, strings, tests and docs
 

@@ -66,6 +66,9 @@ states as an `x-openregister-lifecycle`: `ready_for_writeback` to
 `written_back` or `writeback_failed`, and `writeback_failed` back to
 `ready_for_writeback` on retry. The admin bridge panel MUST list waiting
 and failed deliveries with the document name and the `writeBackError`.
+The stored file's row on `/my-documents` MUST show "In the case system"
+once its delivery is `written_back`, and `/reports/documents` MUST count
+waiting and failed deliveries.
 `POST api/bridge/deliveries/{id}/retry` MUST move a failed delivery back
 to `ready_for_writeback` on the same object and MUST NOT create a second
 delivery. A move to `writeback_failed` MUST notify the user in the
@@ -83,6 +86,6 @@ Rows: `td-dms-link` (humaniq matrix)
 #### Scenario: A delivered document shows where it went
 
 - GIVEN a delivery that integriq set to `written_back` with a `resultExternalId`
-- WHEN a clerk opens the generated document's record
-- THEN it shows "In the case system" with the external identifier
+- WHEN the clerk who generated it opens `/my-documents`
+- THEN the row of the stored file shows the badge "In the case system", and `/reports/documents` counts no failed delivery
 - @e2e tests/e2e/case-system-delivery.spec.ts
