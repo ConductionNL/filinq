@@ -8,6 +8,14 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "con-api",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate it yes (validsign, paperless-ngx, decos-join). Specified for the missing half: an OpenAPI document that covers every route, published with the app, where today openapi.json documents 2 of about 150 routes.",
+    "change": "connect-openapi-documentation",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "con-webhook",
     "matrix": "filinq",
     "decision": "build",
@@ -96,11 +104,27 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "gen-attended",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (generate, the area of the matrix's first 30 rows).",
+    "change": "generate-draft-and-attended-edit",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "gen-destination",
     "matrix": "filinq",
     "decision": "defer",
     "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
     "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "gen-draft",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (generate, the area of the matrix's first 30 rows).",
+    "change": "generate-draft-and-attended-edit",
     "decidedOn": "2026-09-27"
   },
   {
@@ -632,6 +656,14 @@
     "decidedOn": "2026-09-27"
   },
   {
+    "row": "wk-ml-fields",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: partial and built, with a featureRequest demand row (https://github.com/paperless-ngx/paperless-ngx/discussions/6932) for the missing half. Specified for the missing half: a model fills the fields a document type or record schema declares, not only the fixed invoice fields for one consumer.",
+    "change": "extraction-model-filled-fields",
+    "decidedOn": "2026-09-27"
+  },
+  {
     "row": "wk-multi-link",
     "matrix": "filinq",
     "decision": "defer",
@@ -773,6 +805,46 @@
     "decision": "existing",
     "reason": "dossiq matrix row, owned by filinq. Open change merge-documents-to-pdf covers the merge (REQ-DMG-01 to 04, the leaf and dialog tasks 3.1 and 3.2 open); its proposal places copy to another case with the files leaf's existing copy between objects, not in filinq.",
     "change": "merge-documents-to-pdf",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "exp-receipt-photo",
+    "matrix": "shillinq",
+    "decision": "build",
+    "reason": "shillinq matrix row, owned by filinq. Build: 4 competitors rate it yes (exact-online, moneybird, snelstart, odoo). Specified for the missing half: a phone-friendly capture that takes the photo and starts the read, where today no filinq or shillinq screen can take one.",
+    "change": "extraction-receipt-photo-and-invoice-agent",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-ai-fill",
+    "matrix": "shillinq",
+    "decision": "build",
+    "reason": "shillinq matrix row, owned by filinq. Build: 2 competitors rate it yes (moneybird, odoo). Specified for the missing half: the fields of any declared record schema filled from an attached file by a model, not only purchase invoices and receipts; the free-prompt half belongs to the assistant (hermiq).",
+    "change": "extraction-model-filled-fields",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pur-ai-agent",
+    "matrix": "shillinq",
+    "decision": "build",
+    "reason": "shillinq matrix row, owned by filinq. Build: 2 competitors rate it yes (exact-online, moneybird). Specified for the missing half: per-field confidence and an unattended verdict on each extraction, so shillinq can let a trusted supplier invoice pass without a person; the booking itself stays shillinq.",
+    "change": "extraction-receipt-photo-and-invoice-agent",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-employer-statement",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "humaniq matrix row, owned by filinq. Build: 3 competitors rate it yes (afas, visma-raet, hr2day). Specified for the missing half: the standard employer statement template that humaniq discovers in namespace hrmq, category werkgeversverklaring, where today every request is skipped for want of a template.",
+    "change": "templates-employer-statement",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-dms-link",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "humaniq matrix row, owned by filinq. Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705). Specified for the missing half: generated documents stored in the organisation's case system over the ZGW Documenten API, not only in Nextcloud Files.",
+    "change": "generate-store-in-case-system",
     "decidedOn": "2026-09-27"
   },
   {
