@@ -2617,9 +2617,9 @@
 			"sourceRef": "Paperless-ngx document notes",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names."
+				"evidence": "Specified in openspec/changes/work-document-notes on 2026-09-27. Before: No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -2728,9 +2728,9 @@
 			"sourceRef": "canonical full-text-search (5 competitors)",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No document-content search exists. src/services caseDocumentsService and MyDocumentsIndex's DdSearchBar only filter by file NAME (searchQuery). The unified-search-provider spec (openspec/specs/unified-search-provider/spec.md) only makes `template` and `signingRequest` OBJECT records searchable by their own fields, not by document body text. openspec/changes/entity-search/proposal.md states plainly: 'Filinq detects entities per file and reviews them per batch, but ... no cross-document search' -- confirming no search-by-content capability exists anywhere in the app."
+				"evidence": "Specified in openspec/changes/work-content-search on 2026-09-27. Before: No document-content search exists. src/services caseDocumentsService and MyDocumentsIndex's DdSearchBar only filter by file NAME (searchQuery). The unified-search-provider spec (openspec/specs/unified-search-provider/spec.md) only makes `template` and `signingRequest` OBJECT records searchable by their own fields, not by document body text. openspec/changes/entity-search/proposal.md states plainly: 'Filinq detects entities per file and reviews them per batch, but ... no cross-document search' -- confirming no search-by-content capability exists anywhere in the app."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5537,9 +5537,9 @@
 			"sourceRef": "user story \"Share document via time-limited secure link\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ and src/ for shareLink/time-limited/expiringLink/publicShare/'share.*link': no feature-relevant match (only an unrelated docblock hit in DocumentAnonymizeRunner.php about a shared code path, and an unrelated UI-copy string in FolderAnonymizationView.vue)."
+				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: Grepped lib/ and src/ for shareLink/time-limited/expiringLink/publicShare/'share.*link': no feature-relevant match (only an unrelated docblock hit in DocumentAnonymizeRunner.php about a shared code path, and an unrelated UI-copy string in FolderAnonymizationView.vue)."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5564,9 +5564,9 @@
 			"sourceRef": "user story \"Revoke access to shared documents\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No time-limited external share exists to revoke (see sh-link); no revoke-access endpoint or service found anywhere in lib/Controller or lib/Service."
+				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: No time-limited external share exists to revoke (see sh-link); no revoke-access endpoint or service found anywhere in lib/Controller or lib/Service."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5974,9 +5974,9 @@
 			"sourceRef": "canonical webhook-support",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ for 'webhook': no match anywhere in the app."
+				"evidence": "Specified in openspec/changes/connect-document-webhooks on 2026-09-27. Before: Grepped lib/ for 'webhook': no match anywhere in the app."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -6641,9 +6641,9 @@
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/pull/11682",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no share code: grep -ri 'IShare|ShareManager|shareLink|share link' lib src finds nothing; the only ZIP handling is office package I/O (lib/Service/Editing/PackagePartIo.php:78). Nearest: lib/Controller/MergeController.php merges several documents into one PDF, which is a file, not a link."
+				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: no share code: grep -ri 'IShare|ShareManager|shareLink|share link' lib src finds nothing; the only ZIP handling is office package I/O (lib/Service/Editing/PackagePartIo.php:78). Nearest: lib/Controller/MergeController.php merges several documents into one PDF, which is a file, not a link."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6700,9 +6700,9 @@
 			"originUrl": "https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done)."
+				"evidence": "Specified in openspec/changes/signing-field-validation on 2026-09-27. Before: no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6731,9 +6731,9 @@
 			"originUrl": "https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role."
+				"evidence": "Specified in openspec/changes/signing-accept-only-recipient on 2026-09-27. Before: no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
