@@ -393,4 +393,4 @@ this requirement does not deliver.
 - WHEN filinq creates the request
 - THEN the guardian's signer record carries `role: guardian`, `guardianForSignerId` the learner's signer record id, `guardianAct: co-sign` and the `guardianRef`
 - AND the learner's signer record carries the `birthDate` in a property hidden from list views
-- @e2e exclude cross-app event contract with no screen of its own, covered by PHPUnit (tests/unit/Service/SigningServiceGuardianConsentTest.php)
+- @e2e exclude cross-app event contract with no screen of its own, covered by PHPUnit (tests/unit/EventListener/DocumentSigningRequestedListenerTest.php, tests/unit/Service/SigningServiceGuardianConsentTest.php)
