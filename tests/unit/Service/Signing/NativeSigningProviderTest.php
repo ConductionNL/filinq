@@ -221,6 +221,79 @@ class NativeSigningProviderTest extends TestCase {
 	}//end testProduceSignedArtifactBindsPortalIdentityIntoMac()
 
 	/**
+	 * The consent basis of a minor's signature sits inside the MAC
+	 * (signer-identity-rails REQ-DDSIR-010): the artifact names both signers
+	 * and the basis, and rewriting the basis invalidates verification.
+	 *
+	 * @return void
+	 */
+	public function testProduceSignedArtifactBindsConsentBasisIntoMac(): void {
+		$secret = 'unit-test-signing-secret';
+		$provider = $this->buildProvider(secret: $secret);
+
+		$consentBasis = [
+			[
+				'signerId' => 'learner-1',
+				'displayName' => 'Sanne de Vries',
+				'guardianConsentAge' => 16,
+				'evaluatedAt' => '2026-09-20T09:00:00+00:00',
+				'basis' => 'guardian-co-signature',
+				'guardians' => [
+					[
+						'signerId' => 'guardian-1',
+						'displayName' => 'Mark de Vries',
+						'guardianAct' => 'co-sign',
+						'actedAt' => '2026-09-21T19:30:00+00:00',
+						'identity' => ['provider' => 'nextcloud-session', 'assurance' => 'low', 'authenticatedAt' => '2026-09-21T19:30:00+00:00'],
+					],
+				],
+			],
+		];
+
+		$signed = $provider->produceSignedArtifact(
+			documentContent: "%PDF-1.4\nontwikkelingsperspectief\n%%EOF\n",
+			context: [
+				'signer' => 'Mark de Vries',
+				'signers' => ['learner-1', 'guardian-1'],
+				'ip' => '127.0.0.1',
+				'level' => 'SES',
+				'consentBasis' => $consentBasis,
+			]
+		);
+
+		preg_match('/\/DocuDesk-Signature\s*\(([^)]+)\)/', $signed, $matches);
+		$assertion = json_decode(base64_decode($matches[1]), true);
+		$this->assertSame(['learner-1', 'guardian-1'], $assertion['signers']);
+		$this->assertSame($consentBasis, $assertion['consentBasis'] ?? null, 'The assertion must carry the consent basis.');
+
+		$verifierConfig = $this->createMock(IAppConfig::class);
+		$verifierConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
+		$verifier = new \OCA\Filinq\Service\SigningVerificationService(
+			rootFolder: $this->createMock(\OCP\Files\IRootFolder::class),
+			config: $verifierConfig
+		);
+		$method = (new \ReflectionClass($verifier))->getMethod('extractSignatures');
+		$method->setAccessible(true);
+
+		$this->assertSame('verified', $method->invoke($verifier, $signed)[0]['status']);
+
+		$forged = $assertion;
+		$forged['consentBasis'][0]['basis'] = 'guardian-consent';
+		$forgedSigned = str_replace($matches[1], base64_encode((string)json_encode($forged)), $signed);
+
+		$this->assertSame(
+			'invalid',
+			$method->invoke($verifier, $forgedSigned)[0]['status'],
+			'Rewriting the consent basis (MAC kept) MUST invalidate verification.'
+		);
+
+	}//end testProduceSignedArtifactBindsConsentBasisIntoMac()
+
+	/**
 	 * Provider/level honesty (signing-trust-rebuild REQ-DDSTR-002 point 3):
 	 * NativeSigningProvider::produceSignedArtifact() refuses a level it does
 	 * not support, rather than producing an SES-mechanism artifact labelled

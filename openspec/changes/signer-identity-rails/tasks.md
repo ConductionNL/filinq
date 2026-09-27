@@ -1,6 +1,6 @@
 # Tasks: signer-identity-rails
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 19.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register & data model
@@ -39,6 +39,22 @@
 - [ ] 4.3 i18n EN source + NL translations (step-up prompts, assurance labels, admin panel)
 
 - [ ] 4.4 Docs in `docs/features/` (identity rails setup, broker config, assurance floors, EUDI readiness statement with Dec 2026 timeline — no shipped-wallet claim) with Playwright screenshots (ADR-010); `openspec validate signer-identity-rails --strict` passes
+
+## 5. Guardian consent for signers under the age of consent (D11 amendment)
+
+- [x] 5.1 Register: additive `signerRecord` properties (`role`, `guardianForSignerId`, `guardianAct`, `consentStatement`, `guardianRef`, hidden `birthDate`, `actingIdentity`) and `signingRequest` properties (`guardianConsentAge`, `consentBasis`); bump `signerRecord` 1.2.0 to 1.3.0, `signingRequest` 1.4.0 to 1.5.0, register 8.16.0 to 8.17.0; catalogue keys in `l10n/en.json` and `l10n/nl.json` (REQ-DDSIR-008 to 010)
+  - `npm run check:schema-l10n` at or below baseline; `npm run test:l10n` green
+
+- [x] 5.2 Admin setting `signing_guardian_consent_age` (default 16) in `SettingsService` toggles and writable keys, with a number field in the signing section of the admin settings (REQ-DDSIR-008)
+
+- [x] 5.3 `lib/Service/Signing/GuardianConsentGuard.php`, a required dependency of `SigningService`: creation-time validation and guardian-link resolution in `createRequest()`, the act guard in `sign()` before any mutation, the completion guard and `consentBasis` in `updateRequestStatus()` before the artifact is produced (REQ-DDSIR-008, 009)
+  - Tests written first and seen red: `tests/unit/Service/Signing/GuardianConsentGuardTest.php`, `tests/unit/Service/SigningServiceGuardianConsentTest.php`
+
+- [x] 5.4 Record: `consentBasis` on the completed request, threaded through `SignedArtifactProducer` into the native assertion before the MAC; guardian link in the minor's and guardian's `SIGNED` audit metadata (REQ-DDSIR-010)
+  - `tests/unit/Service/Signing/NativeSigningProviderTest.php` proves the basis sits inside the MAC
+
+- [x] 5.5 Consumer contract (REQ-DDSIR-011): signer-entry fields documented on `DocumentSigningRequestedEvent` and in `docs/features/digital-signing.md`, naming learniq OPP and POK and portaliq toestemmingsformulieren
+  - The learniq switch to the delegated event is a learniq change, not a task here
 
 ## Quality checklist
 

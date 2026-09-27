@@ -151,6 +151,93 @@ than a configurable max age (default 15 minutes for the signing act), and meet
 gate is fail-closed: absent/expired/insufficient evidence → 403 with a
 step-up hint, nothing mutates.
 
+### D7: Guardian consent for signers under the age of consent (amendment, D11)
+
+Learniq round 1 decision D11 folds e-signature with parental consent into this
+change. The design choices, in the order a reviewer will question them:
+
+**Where the age comes from.** Filinq holds no person record. The consumer
+knows the learner's birth date (`LearnerProfile.birthDate` in learniq) and
+sends it on the signer entry. Filinq evaluates the age itself, at the moment of
+the signer's own act, against the admin setting `signing_guardian_consent_age`
+(default 16, UAVG article 5; unset, non-numeric or non-positive falls back to
+16). The birth date is stored on the signer record with `visible: false`,
+because the age must be evaluated at signing time and the request can sit open
+for weeks. It never leaves that record: the consent basis carries the applied
+age and the moment of evaluation, not the date. Rejected alternative: a
+consumer-computed `minor: true` flag. It minimises one field but moves the age
+rule, and the setting, out of filinq, so the configured age would be a lie.
+
+**Per-request age.** `guardianConsentAge` on the request may raise the age and
+never lower it, the same floor rule REQ-DDSIR-002 applies to
+`requiredAssurance`. A POK needs 18, because a minor under civil law is anyone
+under 18. The applied value is persisted on every request, so the record says
+which age governed it.
+
+**Who the guardian is.** A signer record with `role: guardian` and
+`guardianForSignerId`. The consumer names it on the entry with `guardianFor`,
+the `userId` or email of another entry in the same list; `createRequest()`
+resolves that to the minor's signer record id after saving the records. A
+guardian therefore goes through `SigningActorResolver` and
+`loadAuthorisedSigner()` like every signer, and gets the REQ-DDSIR-003 gate for
+free once task 3.1 lands. Rejected alternative: a separate guardian endpoint.
+It would be a second identity path, which is exactly what "the same identity
+rails" forbids.
+
+**Co-sign or consent.** `guardianAct: co-sign` (default) makes the guardian a
+party to the document, which is what an OPP asks of parents. `guardianAct:
+consent` records the toestemming of article 1:234 BW: the guardian consents to
+the minor's act against a `consentStatement` the consumer supplies, and is not
+a party. Both acts run through the same `sign()` call; only the label in the
+record differs. A standing consent given outside the request is out of scope
+(proposal), because filinq cannot verify how another app identified the
+guardian.
+
+**Enforcement points**, in `lib/Service/Signing/GuardianConsentGuard.php`:
+
+1. `createRequest()`: validate entries before anything is persisted. A
+   `guardianFor` that resolves to nobody or to the guardian itself, a `consent`
+   act without a statement, a malformed birth date, and a signer under the age
+   at creation time with no guardian all throw with code 400.
+2. `sign()`: after `loadAuthorisedSigner()` and the PENDING check, before any
+   mutation. A minor with no guardian record pointing at them, a guardian under
+   the age, and a guardian whose uid or email is the minor's all throw with
+   code 403. The controller already honours the exception code.
+3. `updateRequestStatus()`: before `SignedArtifactProducer::produce()`. The
+   guard builds the consent basis from the loaded signer records and throws
+   when a signer who signed under the age has no guardian who acted. The
+   request then stays IN_PROGRESS, the same honest-completion rule the
+   artifact gate already follows.
+
+The guard is a required constructor dependency of `SigningService`, not a
+nullable seam like `SigningMandateService`. A safety guard that silently does
+nothing when unwired is the failure this fleet keeps finding, so an unwired
+guard fails construction instead.
+
+**The identity tuple.** At the act of a minor or a guardian the guard records
+`actingIdentity: {provider, assurance, authenticatedAt}` on the signer's own
+record. In-app: `nextcloud-session`, `low` (REQ-DDSIR-002 table). Portal:
+`portaliq`, the verified assertion's `trust`, where an unknown trust becomes
+`low`. When REQ-DDSIR-004 `identityEvidence` is on the record, the tuple is
+copied from it. The portal subject reference is deliberately left out; the
+artifact already binds it for the completing actor, and the consent basis does
+not need a pseudonym to say who acted.
+
+**The record.** `signingRequest.consentBasis` (array, written at completion)
+and the same array in the native artifact assertion, before the MAC. The
+verifier recomputes over the assertion minus `mac`, so a new field stays
+verifiable with no verifier change. A request with no signer under the age
+writes no `consentBasis` and its assertion gains no field.
+
+**Schema additions** (additive, `signerRecord` 1.2.0 to 1.3.0,
+`signingRequest` 1.4.0 to 1.5.0, register 8.16.0 to 8.17.0): on
+`signerRecord`, `role`, `guardianForSignerId`, `guardianAct`,
+`consentStatement`, `guardianRef`, `birthDate` (hidden) and `actingIdentity`;
+on `signingRequest`, `guardianConsentAge` and `consentBasis`. The
+`signingRequest` schema is deprecated in favour of OR task sequences
+(`migrate-signing-to-or-tasks`); these fields are request data and travel with
+it when that migration lands, the same as `requiredAssurance`.
+
 ## OpenRegister usage (ADR-001)
 
 All persistence via OR ObjectService on the existing `signing` register:
@@ -218,3 +305,11 @@ pass-through. No new registers; no Filinq-local tables.
   same `oidc-broker` provider server-side? portaliq owns the portal auth edge
   (ADR-046); alignment conversation filed with the portaliq team at apply
   time.
+- Should a guardian be held to a higher assurance than the minor? Learniq
+  already asks `substantial` of a parent signing an OPP
+  (`LearningPlanSignatureGuard`). Today both acts meet the request's single
+  `requiredAssurance`; a per-role floor would be a later amendment once task
+  3.1 exists.
+- Standing consents (proposal, out of scope): if learniq or portaliq later
+  record a guardian's consent through filinq's rails, a reference to that act
+  could satisfy REQ-DDSIR-008 for later requests.

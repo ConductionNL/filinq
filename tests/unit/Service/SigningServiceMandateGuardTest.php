@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
+use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\SigningActorResolver;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
@@ -153,6 +154,7 @@ class SigningServiceMandateGuardTest extends TestCase {
 			validator: $this->createMock(SigningRequestValidator::class),
 			actorResolver: $this->actorResolver,
 			emitter: $this->createMock(SigningConclusionEmitter::class),
+			consentGuard: new GuardianConsentGuard(settingsService: $settingsService),
 			mandateService: $this->mandateService
 		);
 

@@ -27,6 +27,7 @@ use OCA\Filinq\Event\SigningConcludedEventFactory;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
+use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningActorResolver;
 use OCA\Filinq\Service\SigningAuditService;
@@ -201,7 +202,8 @@ class SigningServiceTest extends TestCase {
 				eventDispatcher: $eventDispatcher,
 				logger: $logger,
 				eventFactory: new SigningConcludedEventFactory()
-			)
+			),
+			consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService)
 		);
 
 	}//end setUp()

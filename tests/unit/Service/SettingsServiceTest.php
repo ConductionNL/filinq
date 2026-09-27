@@ -238,6 +238,28 @@ class SettingsServiceTest extends TestCase {
 	}//end testUpdateSettingsPersistsValues()
 
 	/**
+	 * The guardian consent age is an admin setting, 16 until someone changes it
+	 * (signer-identity-rails REQ-DDSIR-008).
+	 *
+	 * @return void
+	 */
+	public function testTheGuardianConsentAgeIsAWritableSettingThatDefaultsToSixteen(): void {
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				return $default;
+			}
+		);
+		$this->assertSame('16', $this->settingsService->getFeatureToggles()['signing_guardian_consent_age'] ?? null);
+
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'signing_guardian_consent_age', '18');
+
+		$this->settingsService->updateSettings(['signing_guardian_consent_age' => '18']);
+
+	}//end testTheGuardianConsentAgeIsAWritableSettingThatDefaultsToSixteen()
+
+	/**
 	 * Test updateSettings silently rejects unknown keys
 	 *
 	 * Keys not present in WRITABLE_KEYS must be dropped from the result and

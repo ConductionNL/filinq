@@ -9,6 +9,10 @@
 
 ### Added
 
+- **A pupil under the age of consent signs only with a parent or guardian beside them (`signer-identity-rails`, guardian consent).** A request names the guardian as a signer entry with `role: guardian` and `guardianFor` the pupil; the guardian co-signs, or consents against a statement the requesting app supplies. The age is an admin setting, 16 by default (the Dutch age of consent); a request can raise it, for example to 18 on a praktijkovereenkomst, and never lower it.
+
+  Filinq refuses a request that names a pupil under the age without a guardian (400), refuses the pupil's signature while no guardian is on the request (403, through the portal too), refuses a guardian who is the pupil or a minor, and completes nothing until a guardian has acted. The completed request and the signed file record both signers and the consent basis, inside the signature seal, without the birth date. The register moves to 8.17.0 (`signerRecord` 1.3.0, `signingRequest` 1.5.0); every new field is optional.
+
 - **Filinq records now sit on the standard leaves, and Filinq's documents are visible outside Filinq (`leaf-integrations`).** Six schemas opt in: a signing request and a consent record link to NC Mail and show their deadline on the calendar leaf, a signer bridges to Contacts, generated documents and dossiers carry the files leaf, and publication follow-ups get a Deck card. An objection mail or an inbound case mail can seed a consent or correspondence record from the Mail sidebar, in its initial state only: no decision, no status advance, no send.
 
   Filinq also contributes its first leaf. `filinq-documents` renders the documents Filinq holds for any Open Register object, on the object's own page in whichever app shows it, through Filinq's existing flat list and its existing access control.

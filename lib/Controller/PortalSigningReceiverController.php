@@ -129,12 +129,14 @@ class PortalSigningReceiverController extends Controller {
 	 * portal-signing-surface REQ-DDPSS-002): records the signer's consent
 	 * confirmation + optional drawn-signature payload, then drives
 	 * `SigningService::sign()` acting as the resolved, verified external
-	 * signer.
+	 * signer. A refusal by the guardian consent rule answers 403
+	 * `signing_refused` rather than 502 (signer-identity-rails REQ-DDSIR-008).
 	 *
 	 * @return JSONResponse
 	 *
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -164,6 +166,15 @@ class PortalSigningReceiverController extends Controller {
 				signatureData: $signatureData
 			);
 		} catch (Throwable $e) {
+			// A refusal by the guardian consent rule (signer-identity-rails
+			// REQ-DDSIR-008/009) carries code 403: the act was refused, nothing
+			// failed downstream. It is not a rejected assertion either, so it
+			// does not go through forbidden() and the brute-force counter.
+			if ($e->getCode() === Http::STATUS_FORBIDDEN) {
+				$this->logger->info('Filinq: portal signing refused: ' . $e->getMessage());
+				return new JSONResponse(['error' => 'signing_refused'], Http::STATUS_FORBIDDEN);
+			}
+
 			return $this->downstreamFailure(context: 'signDocument', exception: $e);
 		}
 
