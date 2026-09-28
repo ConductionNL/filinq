@@ -1535,6 +1535,8 @@ OC.L10N.register(
         "Signer evidence": "Identiteitsbewijs van ondertekenaars",
         "Each signer's identity evidence at completion: provider, means, assurance, pseudonym, moment and evidence hash": "Het identiteitsbewijs van elke ondertekenaar bij afronding: aanbieder, middel, niveau, pseudoniem, moment en hash van het bewijs",
         "Identity evidence": "Identiteitsbewijs",
+        "Signature assurance": "Betrouwbaarheid van de handtekening",
+        "The assurance level a portal signature may claim: at most AES, never above the portal session's trust, never QES": "Het betrouwbaarheidsniveau dat een handtekening via het portaal mag claimen: hoogstens AES, nooit boven het vertrouwensniveau van de portaalsessie, nooit QES",
         "How the signer's identity was established for the act, with a pseudonym and a token hash, never a BSN or a raw token": "Hoe de identiteit van de ondertekenaar voor deze handeling is vastgesteld, met een pseudoniem en een hash van het token, nooit een BSN of het token zelf",
         "The signer-authentication provider that asserted the identity": "De aanbieder die de identiteit van de ondertekenaar heeft vastgesteld",
         "Means": "Middel",

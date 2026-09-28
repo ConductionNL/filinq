@@ -1441,6 +1441,8 @@ OC.L10N.register(
         "Signer evidence": "Signer evidence",
         "Each signer's identity evidence at completion: provider, means, assurance, pseudonym, moment and evidence hash": "Each signer's identity evidence at completion: provider, means, assurance, pseudonym, moment and evidence hash",
         "Identity evidence": "Identity evidence",
+        "Signature assurance": "Signature assurance",
+        "The assurance level a portal signature may claim: at most AES, never above the portal session's trust, never QES": "The assurance level a portal signature may claim: at most AES, never above the portal session's trust, never QES",
         "How the signer's identity was established for the act, with a pseudonym and a token hash, never a BSN or a raw token": "How the signer's identity was established for the act, with a pseudonym and a token hash, never a BSN or a raw token",
         "The signer-authentication provider that asserted the identity": "The signer-authentication provider that asserted the identity",
         "Means": "Means",
