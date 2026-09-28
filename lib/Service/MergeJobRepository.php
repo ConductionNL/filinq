@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 class MergeJobRepository {
 
@@ -67,7 +67,7 @@ class MergeJobRepository {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function create(array $job): array {
 		return $this->write(job: $job, uuid: null);
@@ -84,7 +84,7 @@ class MergeJobRepository {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function save(array $job, string $uuid): array {
 		if ($uuid === '') {
@@ -104,7 +104,7 @@ class MergeJobRepository {
 	 *
 	 * @throws MergeJobStoreUnreadableException When the read failed, as opposed to finding nothing.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function find(string $uuid): ?array {
 		if ($uuid === '') {
@@ -150,7 +150,7 @@ class MergeJobRepository {
 	 *
 	 * @throws MergeJobStoreUnreadableException When the read failed, as opposed to finding nothing.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function findQueued(): array {
 		try {
@@ -203,7 +203,7 @@ class MergeJobRepository {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function write(array $job, ?string $uuid): array {
 		unset($job['uuid']);

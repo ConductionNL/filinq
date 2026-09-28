@@ -141,7 +141,7 @@ let instanceCount = 0
  * `POST /apps/filinq/api/merge`. The server writes the PDF beside the first
  * document, so on a case page it lands in the case folder.
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export default {
 	name: 'CnFilinqMergeToPdfWidget',
@@ -189,7 +189,7 @@ export default {
 		 * @param {number} fileId The file id.
 		 * @return {string} Its name.
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		nameOf(fileId) {
 			const row = this.rows.find((candidate) => candidate.fileId === fileId)
@@ -202,7 +202,7 @@ export default {
 		 * @param {number} fileId The file id.
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		toggle(fileId) {
 			this.selection = toggleInSelection(this.selection, fileId)
@@ -215,7 +215,7 @@ export default {
 		 * @param {number} delta -1 up, 1 down.
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		move(index, delta) {
 			this.selection = moveInSelection(this.selection, index, delta)
@@ -226,7 +226,7 @@ export default {
 		 *
 		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		async load() {
 			if (this.objectId === '') {
@@ -258,7 +258,7 @@ export default {
 		 *
 		 * @return {Promise<void>} Resolves once `templates` is set.
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		async loadTemplates() {
 			try {
@@ -282,7 +282,7 @@ export default {
 		 *
 		 * @return {Promise<void>} Resolves once `outcome` is set.
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		async submit() {
 			if (this.mergeable === false || this.busy === true) {
@@ -335,7 +335,7 @@ export default {
 		 * @param {object} job    The answer body.
 		 * @return {{failed: boolean, message: string, link: string}} The outcome.
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		describe(status, job) {
 			if (status === 202) {
@@ -371,7 +371,7 @@ export default {
 		 * @param {string} url The route.
 		 * @return {Promise<object>} The body.
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		async request(url) {
 			const response = await fetch(url, {
@@ -392,7 +392,7 @@ export default {
 		 *
 		 * @return {string} The token, or ''.
 		 *
-		 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+		 * @spec openspec/specs/document-merge/spec.md
 		 */
 		requestToken() {
 			const head = document.getElementsByTagName('head')[0]

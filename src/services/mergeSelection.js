@@ -17,7 +17,7 @@
  *
  * @return {number[]} A new selection.
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export function toggleInSelection(selection, fileId) {
 	if (selection.includes(fileId) === true) {
@@ -36,7 +36,7 @@ export function toggleInSelection(selection, fileId) {
  *
  * @return {number[]} A new selection.
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export function moveInSelection(selection, index, delta) {
 	const target = index + delta
@@ -58,7 +58,7 @@ export function moveInSelection(selection, index, delta) {
  *
  * @return {boolean} True with two or more documents.
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export function canMerge(selection) {
 	return selection.length >= 2
@@ -80,7 +80,7 @@ export function canMerge(selection) {
  *
  * @return {{inputs: object[], options: object, hostObject: object}} The request body.
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export function buildMergeRequest({
 	rows,

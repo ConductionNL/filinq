@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -50,7 +50,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 class MergeController extends Controller {
 
@@ -101,7 +101,7 @@ class MergeController extends Controller {
 	 *
 	 * @return JSONResponse The finished job, the queued job, or the refusal.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	#[NoAdminRequired]
 	public function create(array $inputs = [], array $options = [], array $hostObject = []): JSONResponse {
@@ -143,7 +143,7 @@ class MergeController extends Controller {
 	 *
 	 * @throws MergeJobStoreUnreadableException Never: it is caught here and translated to 503.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -180,7 +180,7 @@ class MergeController extends Controller {
 	 *
 	 * @return int The threshold.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function threshold(): int {
 		$declared = (int)$this->config->getValueInt(
@@ -202,7 +202,7 @@ class MergeController extends Controller {
 	 *
 	 * @return JSONResponse|null The refusal, or null when somebody is logged in.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function requireUser(): ?JSONResponse {
 		if ($this->userSession->getUser() !== null) {
@@ -223,7 +223,7 @@ class MergeController extends Controller {
 	 *
 	 * @return JSONResponse The refusal.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function failure(Throwable $error): JSONResponse {
 		$status = Http::STATUS_INTERNAL_SERVER_ERROR;

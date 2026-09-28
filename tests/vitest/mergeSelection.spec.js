@@ -9,7 +9,7 @@
  * template, the bookmarks toggle and the name. No target folder: the server
  * puts the result beside the first input.
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 
 import { describe, expect, it } from 'vitest'

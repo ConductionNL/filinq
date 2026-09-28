@@ -9,7 +9,7 @@
  * A render surface on one object: the widget lists that object's documents,
  * lets the handler choose and order them, and asks Filinq for one PDF.
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 import { translate as t } from '@nextcloud/l10n'
 import { createApp } from 'vue'
@@ -29,7 +29,7 @@ const mountedApps = new Map()
  *
  * @return {void}
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export function mount(el, props) {
 	if (el === undefined || el === null || mountedApps.has(el) === true) {
@@ -48,7 +48,7 @@ export function mount(el, props) {
  *
  * @return {void}
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export function unmount(el) {
 	const app = mountedApps.get(el)
@@ -82,7 +82,7 @@ export const mergeToPdfLeafDescriptor = {
  *
  * @return {void}
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 export function registerMergeToPdfLeaf(globalRef) {
 	const target = globalRef || (typeof window !== 'undefined' ? window : null)

@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;
@@ -71,7 +71,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testTheRegisterListsTheMergeJob(): void {
 		$descriptor = $this->descriptor();
@@ -89,7 +89,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testDoneAndFailedAreBothTerminal(): void {
 		$lifecycle = $this->mergeJob()['x-openregister-lifecycle'];
@@ -121,7 +121,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testEveryFieldTheSpecNamesIsDeclared(): void {
 		$properties = $this->mergeJob()['properties'];
@@ -152,7 +152,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testTheJobSaysWhatTheResultActuallyIs(): void {
 		$conformance = $this->mergeJob()['properties']['conformance'];
@@ -168,7 +168,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testTheLeafHostObjectValidates(): void {
 		$raw = file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json');

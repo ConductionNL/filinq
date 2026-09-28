@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -244,7 +244,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testThreeFilesBecomeOnePdfInTheChosenOrder(): void {
 		$service = $this->service(files: $this->threeDocuments());
@@ -278,7 +278,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testBookmarksOffProducesNoOutline(): void {
 		$service = $this->service(files: $this->threeDocuments());
@@ -297,7 +297,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testAnInputNobodyCanConvertFailsTheJobCleanly(): void {
 		$service = $this->service(files: $this->threeDocuments(), conversionFails: true);
@@ -323,7 +323,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testAFileTheUserMayNotReadIsRefusedAndCreatesNoJob(): void {
 		$service = $this->service(files: $this->threeDocuments());
@@ -348,7 +348,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testATargetTheUserMayNotWriteIsRefused(): void {
 		$service = $this->service(files: $this->threeDocuments(), writable: false);
@@ -369,7 +369,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testAMergeWithNoInputsIsRefused(): void {
 		$service = $this->service(files: []);
@@ -388,7 +388,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testTheResultSaysWhetherItIsReallyPdfA(): void {
 		$without = $this->service(files: $this->threeDocuments())->merge(
@@ -413,7 +413,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testProgressMovesWhileTheMergeRuns(): void {
 		$service = $this->service(files: $this->threeDocuments());
@@ -441,7 +441,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testALargeSelectionIsQueued(): void {
 		$service = $this->service(files: $this->threeDocuments());
@@ -466,7 +466,7 @@ class DocumentMergeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testAQueuedMergeIsStoredAndRunsLater(): void {
 		$service = $this->service(files: $this->threeDocuments());

@@ -25,7 +25,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 
 declare(strict_types=1);

@@ -1750,13 +1750,14 @@
 			"name": "Merge several documents into one PDF.",
 			"source": "competitor-derived",
 			"sourceRef": "dossiq gap register 4.14; Gotenberg merge/split",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/MergeController.php:107 create() -> lib/Service/DocumentMergeService.php:134 merge()/170 queue() (background via BackgroundJob/MergeDocumentsJob.php) fully implemented; route merge#create api/merge (routes.php:114). No FE literal '/apps/filinq/api/merge' found anywhere in src/; no caller in dossiq/shillinq/opencatalogi/scholiq."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-merge-documents-to-pdf (archived 2026-09-28): src/integrations/CnFilinqMergeToPdfWidget.vue (leaf filinq-merge-to-pdf, registered by src/integrations/registerMergeToPdfLeaf.js in main.js and the filinq-leaves bundle, server half lib/EventListener/RegisterMergeToPdfLeafListener.php) lists an object's documents, orders them and calls POST api/merge -> MergeController::create() -> DocumentMergeService::merge()/queue(). Reached on any host page that places the leaf; dossiq placement asked in ConductionNL/dossiq#3185. Before: lib/Controller/MergeController.php:107 create() -> lib/Service/DocumentMergeService.php:134 merge()/170 queue() (background via BackgroundJob/MergeDocumentsJob.php) fully implemented; route merge#create api/merge (routes.php:114). No FE literal '/apps/filinq/api/merge' found anywhere in src/; no caller in dossiq/shillinq/opencatalogi/scholiq.",
+				"change": "openspec/changes/archive/2026-09-28-merge-documents-to-pdf"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the filinq-merge-to-pdf leaf on a host object page (detail-page, single-entity)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "merge-documents-to-pdf",

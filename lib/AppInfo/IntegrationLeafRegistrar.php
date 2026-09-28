@@ -48,7 +48,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 class IntegrationLeafRegistrar {
 
@@ -70,7 +70,7 @@ class IntegrationLeafRegistrar {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) OpenRegisterAutoloader::register() is
 	 * the app's own static prelude; there is no container at the composition root
