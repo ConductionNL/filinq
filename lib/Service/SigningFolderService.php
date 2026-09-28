@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Exception\StepUpRequiredException;
 use RuntimeException;
 
 /**
@@ -176,6 +177,7 @@ class SigningFolderService {
 	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function signOne(string $requestId, string $userId): array {
+		$signerId = null;
 		try {
 			$request = $this->signingService->getRequest(requestId: $requestId, callerUserId: $userId);
 			if ($request === null) {
@@ -208,6 +210,12 @@ class SigningFolderService {
 				'signerId' => $signerId,
 				'signedAt' => (string)($signer['signedAt'] ?? ''),
 			];
+		} catch (StepUpRequiredException $e) {
+			// Identity rails (signer-identity-rails REQ-DDSIR-003): the folder
+			// offers the step-up for this document, so it needs the hint and
+			// the signer record the step-up is started for.
+			return $this->refusal(requestId: $requestId, reason: 'This document asks for a stronger identity check')
+				+ ['signerId' => (string)$signerId, 'stepUp' => $e->stepUp()];
 		} catch (Exception $e) {
 			return $this->refusal(requestId: $requestId, reason: $e->getMessage());
 		}//end try

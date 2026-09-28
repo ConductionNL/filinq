@@ -42,6 +42,18 @@
 			</select>
 		</div>
 		<div class="form-group">
+			<NcSelect
+				v-model="form.requiredAssurance"
+				:inputLabel="t('filinq', 'Identity check for signers')"
+				:options="assuranceOptions"
+				:clearable="false"
+				label="label"
+				:reduce="(option) => option.id" />
+			<p class="signers__hint">
+				{{ assuranceHint }}
+			</p>
+		</div>
+		<div class="form-group">
 			<label>{{ t('filinq', 'Signing Mode') }}</label>
 			<select v-model="form.signingMode">
 				<option value="sequential">
@@ -117,13 +129,14 @@
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcNoteCard } from '@nextcloud/vue'
+import { NcButton, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { assuranceFloor, assuranceLevelsFrom } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 import { emptySignerRow, signersAreComplete, toSigners } from './signerRows.js'
 
 export default {
 	name: 'SigningRequestForm',
-	components: { NcButton, NcNoteCard },
+	components: { NcButton, NcNoteCard, NcSelect },
 	data() {
 		return {
 			form: {
@@ -131,6 +144,7 @@ export default {
 				documentName: '',
 				signatureLevel: 'SES',
 				signingMode: 'sequential',
+				requiredAssurance: 'low',
 			},
 
 			signerRows: [emptySignerRow()],
@@ -138,6 +152,47 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The identity levels this signature level allows: its floor and up.
+		 *
+		 * @return {Array<object>} Id and label per level.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		assuranceOptions() {
+			const labels = {
+				low: t('filinq', 'Low: a Nextcloud login is enough'),
+				substantial: t(
+					'filinq',
+					'Substantial: DigiD Midden, eHerkenning EH3 or iDIN',
+				),
+
+				high: t('filinq', 'High: DigiD Hoog or eHerkenning EH4'),
+			}
+			return assuranceLevelsFrom(this.form.signatureLevel).map((id) => ({
+				id,
+				label: labels[id],
+			}))
+		},
+
+		/**
+		 * The floor the chosen signature level sets.
+		 *
+		 * @return {string} The hint.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		assuranceHint() {
+			return t(
+				'filinq',
+				'{level} needs at least {floor}. Signers below it confirm their identity before they sign.',
+				{
+					level: this.form.signatureLevel,
+					floor: t('filinq', assuranceFloor(this.form.signatureLevel)),
+				},
+			)
+		},
+
 		/**
 		 * The document is named and every signer row can be reached (#1209).
 		 *
@@ -150,6 +205,22 @@ export default {
 				&& Boolean(this.form.documentName)
 				&& signersAreComplete(this.signerRows)
 			)
+		},
+	},
+
+	watch: {
+		/**
+		 * Raise the identity level when a stronger signature level needs it.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		'form.signatureLevel': function () {
+			const allowed = assuranceLevelsFrom(this.form.signatureLevel)
+			if (!allowed.includes(this.form.requiredAssurance)) {
+				this.form.requiredAssurance = allowed[0]
+			}
 		},
 	},
 

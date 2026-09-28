@@ -21,6 +21,15 @@ SPDX-License-Identifier: EUPL-1.2
 			v-if="signingStore.loading && entries.length === 0"
 			:size="44" />
 
+		<NcNoteCard v-if="stepUpFailed" type="warning">
+			{{
+				t(
+					'filinq',
+					'Your identity could not be confirmed. Try again, or ask your administrator to check the identity broker.',
+				)
+			}}
+		</NcNoteCard>
+
 		<NcNoteCard v-if="signingStore.error" type="error">
 			{{ signingStore.error }}
 		</NcNoteCard>
@@ -114,10 +123,25 @@ SPDX-License-Identifier: EUPL-1.2
 								reason: result.reason,
 							})
 						}}
+						<NcButton
+							v-if="hintOf(result)"
+							variant="secondary"
+							@click="stepUp = result">
+							{{ t('filinq', 'Confirm my identity') }}
+						</NcButton>
 					</span>
 				</li>
 			</ul>
 		</section>
+
+		<SignerStepUpModal
+			v-if="stepUp"
+			:show="true"
+			:requestId="stepUp.requestId"
+			:signerId="stepUp.signerId"
+			:requiredAssurance="hintOf(stepUp).requiredAssurance"
+			@close="stepUp = null"
+			@ready="stepUp = null" />
 
 		<SigningFolderDocumentModal
 			v-if="reading"
@@ -132,7 +156,9 @@ SPDX-License-Identifier: EUPL-1.2
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningFolderDocumentModal from '../../modals/SigningFolderDocumentModal.vue'
+import { stepUpHint, stepUpReturn } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
@@ -142,6 +168,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
+		SignerStepUpModal,
 		SigningFolderDocumentModal,
 	},
 
@@ -164,10 +191,22 @@ export default {
 			selected: [],
 			results: [],
 			reading: null,
+			stepUp: null,
 		}
 	},
 
 	computed: {
+		/**
+		 * Did the broker send the signer back without a confirmed identity.
+		 *
+		 * @return {boolean} True after a failed step-up.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		stepUpFailed() {
+			return stepUpReturn(this.$route?.query).status === 'failed'
+		},
+
 		/**
 		 * The entries of the folder page currently held.
 		 *
@@ -208,6 +247,18 @@ export default {
 			this.results = outcome?.results ?? []
 			this.selected = []
 			await this.signingStore.fetchSigningFolder()
+		},
+
+		/**
+		 * The step-up hint of a result, when the document needs a stronger identity.
+		 *
+		 * @param {object} result A result of the last pass.
+		 * @return {object|null} The hint.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
+		hintOf(result) {
+			return stepUpHint(result)
 		},
 
 		/**

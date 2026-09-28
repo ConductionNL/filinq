@@ -28,7 +28,8 @@
 
 - [x] 3.2 Evidence recording: persist `identityEvidence` on the signer record, extend the OR audit `changed` context, include the tuple in the v2 artifact assertion (MAC-covered per REQ-DDSTR-001); raw token never stored, evidenceHash only (REQ-DDSIR-004)
 
-- [ ] 3.3 Step-up UI: sign dialog (in `src/modals/`) triggers `initiateAuthentication` on 403 step-up, handles the broker redirect/callback, re-attempts the signature; request form exposes `requiredAssurance` with floor hints (NcSelect with `inputLabel`)
+- [x] 3.3 Step-up UI: sign dialog (in `src/modals/`) triggers `initiateAuthentication` on 403 step-up, handles the broker redirect/callback, re-attempts the signature; request form exposes `requiredAssurance` with floor hints (NcSelect with `inputLabel`)
+  - Built as: the signing folder reports a step-up hint per refused document and offers *Confirm my identity* (`src/modals/SignerStepUpModal.vue`); the broker returns the signer to `/signing/{id}?stepUp=done`, where *Sign now* re-attempts the signature and a second refusal reopens the dialog. There is no single-request sign dialog in the app today, so the folder is where signing starts. Tests: `tests/vitest/signerStepUp.spec.js`, `tests/unit/Service/SigningFolderServiceTest.php`
 
 - [x] 3.4 Surface resolved assurance to consumers (REQ-DDSIR-007): expose the recorded `identityEvidence.assurance` on the `filinq-signing` completion payload (feeds decidesk `QesGuard`; coordinates with `signing-trust-rebuild` REQ-DDSTR-010) and make it readable by the `portal-signing-actions` `minTrust` gate; surface pseudonym + assurance only, never BSN/raw token
 
@@ -38,10 +39,12 @@
   - Run standalone instead (`composer check:strict`, lane rules keep lanes off the container). Minimisation scan: `tests/unit/Service/SignerAuth/EvidenceMinimisationTest.php`; custody grep: `CredentialCustodyTest.php`. Every new class has its own test file; the coverage percentage was not measured locally (no pcov or xdebug), CI's coverage job reports it
 
 - [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/signer-identity-rails.spec.ts` against a throwaway mock-OIDC IdP container: substantial request refuses session-only signer → step-up at digid-substantial → signature accepted → evidence visible on record/audit/artifact; floor normalisation on QES creation; verify on Postgres (8080), nldesign theme enabled
+  - Open: the follow-up lane that built 1.x to 4.x had no access to the shared instance or to containers (lane rules), so no mock-OIDC IdP and no browser run. Every scenario it would cover has a PHPUnit or vitest test
 
-- [ ] 4.3 i18n EN source + NL translations (step-up prompts, assurance labels, admin panel)
+- [x] 4.3 i18n EN source + NL translations (step-up prompts, assurance labels, admin panel)
 
 - [ ] 4.4 Docs in `docs/features/` (identity rails setup, broker config, assurance floors, EUDI readiness statement with Dec 2026 timeline — no shipped-wallet claim) with Playwright screenshots (ADR-010); `openspec validate signer-identity-rails --strict` passes
+  - Partly done: the section "Signer identity: DigiD, eHerkenning and iDIN" in `docs/features/digital-signing.md` covers setup, broker config, floors and the EUDI statement, and the change validates. Open: the Playwright screenshots, which need the live instance (see 4.2)
 
 ## 5. Guardian consent for signers under the age of consent (D11 amendment)
 

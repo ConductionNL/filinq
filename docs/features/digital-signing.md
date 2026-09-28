@@ -6,6 +6,9 @@ sidebar_position: 2
 description: Secure digital document signing, verification, and audit trail within Nextcloud
 keywords:
   - signing
+  - DigiD
+  - eHerkenning
+  - EUDI wallet
   - verification
   - eIDAS
   - digital signature
@@ -263,6 +266,78 @@ changing it afterwards makes verification fail.
 once they raise their signing requests through `DocumentSigningRequestedEvent`.
 
 Next: set the guardian consent age for your school in the signing settings.
+
+---
+
+## Signer identity: DigiD, eHerkenning and iDIN
+
+A Nextcloud login tells Filinq which account is signing. It does not say how strongly that
+person proved who they are. For a signature that needs more, a signer confirms their
+identity once more through an identity broker, just before they sign.
+
+**Assurance levels.** Filinq uses the three eIDAS levels: `low`, `substantial` and `high`.
+Each signature level has a floor, and a request can ask for more but never less.
+
+| Signature level | Assurance floor |
+|-----------------|-----------------|
+| SES             | `low`           |
+| AdES            | `substantial`   |
+| QES             | `high`          |
+
+A QES request that asks for `low` is stored at `high`, and the create response says so in
+`assuranceFloor`. A request made before this feature reads as `low`, so nothing changes for
+it.
+
+**What reaches which level.**
+
+| Identity means                      | Assurance     |
+|-------------------------------------|---------------|
+| Nextcloud login                     | `low`         |
+| DigiD Midden or Substantieel        | `substantial` |
+| DigiD Hoog                          | `high`        |
+| eHerkenning EH3                     | `substantial` |
+| eHerkenning EH4                     | `high`        |
+| iDIN (your broker's value)          | `substantial` |
+| Portal signer                       | the portal's verified trust |
+
+An unknown broker value counts as `low`, never higher.
+
+**Connect a broker.** Under *Settings > Signer identity*:
+
+1. Create the broker's client secret in the OpenRegister credential broker, on an inject-only
+   provider, and allow the app `filinq`. Copy the credential's ID.
+2. Fill in the issuer, the client ID, the authorization and token endpoints (https only) and
+   the redirect URI `https://<your-cloud>/index.php/apps/filinq/api/signing/identity/callback`.
+3. Paste the credential ID into *Credential reference*. Filinq stores this reference, never
+   the secret, and refuses anything that is not a credential ID.
+4. Add your broker's own iDIN value under *Extra acr mapping*. DigiD and eHerkenning are
+   mapped already.
+5. Choose *Identity broker* as the identity provider and save.
+
+**Signing with a stronger identity.** When a request asks for more than the signer has, the
+sign action answers 403 with a `stepUp` hint: the level needed and why. In the signing folder
+the signer then chooses *Confirm my identity*, logs in at the broker, comes back on the
+request and signs. A login stays valid for signing for 15 minutes by default; set another
+window in the settings. It counts for that one request and signer only.
+
+**Parents and guardians.** A request can ask more of a guardian than of the pupil: send
+`guardianRequiredAssurance: substantial` and the parent confirms with DigiD while the pupil
+signs with their Nextcloud login. An administrator can set a minimum for every guardian under
+*Minimum assurance for a parent or guardian*.
+
+**What is recorded.** Each signer record, its audit entry and the signed file carry the
+identity evidence: provider, means, level, a pseudonym, the moment and a hash of the broker's
+token. Filinq never keeps a BSN or the token itself; the subject is always hashed with a key
+unique to your Nextcloud. The completed request carries the weakest level among its signers
+as `resolvedAssurance`, and apps that asked for the signature receive that same value.
+
+**EUDI wallet.** Every EU country must offer its citizens an EUDI wallet by December 2026,
+with qualified signatures from a phone. Filinq does not ship a wallet integration today. The
+identity seam is built so a wallet verifier can plug in as one more provider: it passes the
+provider contract tests (`tests/unit/Service/SignerAuth/SignerAuthProviderContractTestCase.php`)
+and registers, with no other change.
+
+Next: connect your identity broker under *Settings > Signer identity*.
 
 ---
 

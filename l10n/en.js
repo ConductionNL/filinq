@@ -1477,7 +1477,25 @@ OC.L10N.register(
         "Substantial": "Substantial",
         "Could not load the signer identity settings": "Could not load the signer identity settings",
         "Signer identity settings saved": "Signer identity settings saved",
-        "Check the signer identity settings: one value is not valid": "Check the signer identity settings: one value is not valid"
+        "Check the signer identity settings: one value is not valid": "Check the signer identity settings: one value is not valid",
+        "{level} needs at least {floor}. Signers below it confirm their identity before they sign.": "{level} needs at least {floor}. Signers below it confirm their identity before they sign.",
+        "Confirm my identity": "Confirm my identity",
+        "Confirm who you are": "Confirm who you are",
+        "high": "high",
+        "High: DigiD Hoog or eHerkenning EH4": "High: DigiD Hoog or eHerkenning EH4",
+        "Identity check for signers": "Identity check for signers",
+        "Log in once more with DigiD, eHerkenning or your bank. You come back here and sign.": "Log in once more with DigiD, eHerkenning or your bank. You come back here and sign.",
+        "low": "low",
+        "Low: a Nextcloud login is enough": "Low: a Nextcloud login is enough",
+        "Sign now": "Sign now",
+        "substantial": "substantial",
+        "Substantial: DigiD Midden, eHerkenning EH3 or iDIN": "Substantial: DigiD Midden, eHerkenning EH3 or iDIN",
+        "The identity check could not start. Ask your administrator to check the identity broker.": "The identity check could not start. Ask your administrator to check the identity broker.",
+        "This document asks for assurance {level}. Your Nextcloud login is not enough for it.": "This document asks for assurance {level}. Your Nextcloud login is not enough for it.",
+        "You signed this document.": "You signed this document.",
+        "Your identity could not be confirmed. Try again, or ask your administrator to check the identity broker.": "Your identity could not be confirmed. Try again, or ask your administrator to check the identity broker.",
+        "Your identity is confirmed. Sign now; the confirmation counts for 15 minutes.": "Your identity is confirmed. Sign now; the confirmation counts for 15 minutes.",
+        "This document asks for a stronger identity check": "This document asks for a stronger identity check"
     },
     "nplurals=2; plural=(n != 1);"
 )
