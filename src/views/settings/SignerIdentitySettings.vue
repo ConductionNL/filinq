@@ -162,6 +162,13 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The providers an admin can choose.
+		 *
+		 * @return {Array<object>} Id and label per provider.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
 		providerOptions() {
 			return [
 				{ id: 'nextcloud-session', label: t('filinq', 'Nextcloud login') },
@@ -172,6 +179,13 @@ export default {
 			]
 		},
 
+		/**
+		 * The assurance levels, in words.
+		 *
+		 * @return {Array<object>} Id and label per level.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
 		assuranceOptions() {
 			return [
 				{ id: 'low', label: t('filinq', 'Low') },
@@ -180,6 +194,13 @@ export default {
 			]
 		},
 
+		/**
+		 * An example of an extra acr mapping.
+		 *
+		 * @return {string} The example JSON.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
 		acrPlaceholder() {
 			return '{"urn:your-broker:idin": {"means": "idin", "assurance": "substantial"}}'
 		},
@@ -192,10 +213,25 @@ export default {
 	methods: {
 		t,
 
+		/**
+		 * The panel's endpoint.
+		 *
+		 * @return {string} The URL.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
 		url() {
 			return generateUrl('/apps/filinq/api/settings/signer-identity')
 		},
 
+		/**
+		 * Show the settings the server returned.
+		 *
+		 * @param {object} data The settings.
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
 		apply(data) {
 			this.provider = data.provider || 'nextcloud-session'
 			for (const field of FIELDS) {
@@ -206,6 +242,13 @@ export default {
 			}
 		},
 
+		/**
+		 * Load the settings.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
 		async load() {
 			try {
 				const { data } = await axios.get(this.url())
@@ -217,6 +260,13 @@ export default {
 			}
 		},
 
+		/**
+		 * Save the settings; the server refuses an invalid value with a 400.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 */
 		async save() {
 			this.saving = true
 			try {
