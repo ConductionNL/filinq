@@ -1503,7 +1503,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/ObjectionTermCalculator.php computes the objection deadline (Awb 6:7, bezwaar_termijn_weken weeks, default 6, from the day after besluitDatum/decisionDate, weekend moved to Monday). DocumentService::addDecisionContext puts it in the template context as bezwaar (uiterlijk, vanaf, termijnWeken) on generation and preview, offers a resolved base object as grondslag, and warns when a template uses bezwaar without a decision date. src/dialogs/MergeFieldDialog.vue offers grondslag.name, grondslag.description and the bezwaar fields. Public holidays are not moved (documented limit).",
+				"evidence": "lib/Service/ObjectionTermCalculator.php computes the objection deadline (Awb 6:7, bezwaar_termijn_weken weeks, default 6, from the day after besluitDatum/decisionDate, weekend moved to Monday). ObjectionTermCalculator::addToContext, called from DocumentRenderPipeline::renderWithHuisstijl, puts it in the template context as bezwaar (uiterlijk, vanaf, termijnWeken) on every render (generation, preview, bulk), offers a resolved base object as grondslag, and warns when a template uses bezwaar without a decision date. src/dialogs/MergeFieldDialog.vue offers grondslag.name, grondslag.description and the bezwaar fields. Public holidays are not moved (documented limit).",
 				"change": "openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline",
 				"readOn": "2026-09-28"
 			},

@@ -18,6 +18,8 @@ import { translate as t } from '@nextcloud/l10n'
  * The offered fields, each with the path to insert and a label to show.
  *
  * @return {Array<{field: string, label: string}>} The offered merge fields.
+ *
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function suggestedMergeFields() {
 	return [

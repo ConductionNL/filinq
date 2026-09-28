@@ -113,7 +113,6 @@ class DocumentService {
 	 * @param IJobList $jobList Nextcloud job list for async processing
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
-	 * @param ObjectionTermCalculator|null $objectionTerm The objection deadline of a decision letter
 	 *
 	 * @return void
 	 */
@@ -127,7 +126,6 @@ class DocumentService {
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
-		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 	) {
 
 	}//end __construct()
@@ -241,10 +239,6 @@ class DocumentService {
 			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
 			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
 		}
-
-		$decision = $this->addDecisionContext(data: $data, templateContent: (string) ($template['content'] ?? ''));
-		$data = $decision['data'];
-		$warnings = array_merge($warnings, $decision['warnings']);
 
 		// 🔴 THE PLAIN RENDITION IS PLANNED BEFORE ANYTHING IS FILED. REQ-DIO-04's
 		// fourth scenario asks a refused generation to leave NEITHER rendition
@@ -381,10 +375,6 @@ class DocumentService {
 			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
 		}
 
-		$decision = $this->addDecisionContext(data: $data, templateContent: (string) ($template['content'] ?? ''));
-		$data = $decision['data'];
-		$warnings = array_merge($warnings, $decision['warnings']);
-
 		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
 		$renderResult = $this->renderPipeline->renderWithHuisstijl(
 			templateContent: $template['content'],
@@ -399,52 +389,6 @@ class DocumentService {
 		];
 
 	}//end generatePreview()
-
-	/**
-	 * Add the legal basis and the objection deadline to a template context.
-	 *
-	 * A resolved `base` object is also offered as `grondslag`, the name the
-	 * merge field dialog uses. The `bezwaar` block is added when the data
-	 * carries a decision date; when it does not and the template uses
-	 * `bezwaar`, a warning says so instead of printing a wrong date.
-	 *
-	 * @param array<string, mixed> $data            The resolved template data
-	 * @param string               $templateContent The template source, to see whether it uses `bezwaar`
-	 *
-	 * @return array{data: array<string, mixed>, warnings: array<int, string>}
-	 *
-	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
-	 */
-	private function addDecisionContext(array $data, string $templateContent): array {
-		if (isset($data['grondslag']) === false && is_array($data['base'] ?? null) === true) {
-			$data['grondslag'] = $data['base'];
-		}
-
-		if ($this->objectionTerm === null || isset($data['bezwaar']) === true) {
-			return ['data' => $data, 'warnings' => []];
-		}
-
-		$decisionDate = $this->objectionTerm->findDecisionDate(data: $data);
-		$term = null;
-		if ($decisionDate !== null) {
-			$term = $this->objectionTerm->calculate(decisionDate: $decisionDate);
-		}
-
-		if ($term !== null) {
-			$data['bezwaar'] = $term;
-			return ['data' => $data, 'warnings' => []];
-		}
-
-		if (str_contains($templateContent, 'bezwaar') === false) {
-			return ['data' => $data, 'warnings' => []];
-		}
-
-		return [
-			'data' => $data,
-			'warnings' => ['No decision date found (besluitDatum or decisionDate), so the objection deadline is left out.'],
-		];
-
-	}//end addDecisionContext()
 
 	/**
 	 * Generate documents for multiple objects in a single request.

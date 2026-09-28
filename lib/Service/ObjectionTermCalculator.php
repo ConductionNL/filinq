@@ -148,6 +148,52 @@ class ObjectionTermCalculator {
 	}//end findDecisionDate()
 
 	/**
+	 * Add the legal basis and the objection deadline to a template context.
+	 *
+	 * A resolved `base` object is also offered as `grondslag`, the name the
+	 * merge field dialog uses. The `bezwaar` block is added when the data
+	 * carries a decision date; when it does not and the template uses
+	 * `bezwaar`, a warning says so instead of printing a wrong date.
+	 *
+	 * @param array<string, mixed> $data            The resolved template data
+	 * @param string               $templateContent The template source, to see whether it uses `bezwaar`
+	 *
+	 * @return array{data: array<string, mixed>, warnings: array<int, string>}
+	 *
+	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
+	 */
+	public function addToContext(array $data, string $templateContent): array {
+		if (isset($data['grondslag']) === false && is_array($data['base'] ?? null) === true) {
+			$data['grondslag'] = $data['base'];
+		}
+
+		if (isset($data['bezwaar']) === true) {
+			return ['data' => $data, 'warnings' => []];
+		}
+
+		$decisionDate = $this->findDecisionDate(data: $data);
+		$term = null;
+		if ($decisionDate !== null) {
+			$term = $this->calculate(decisionDate: $decisionDate);
+		}
+
+		if ($term !== null) {
+			$data['bezwaar'] = $term;
+			return ['data' => $data, 'warnings' => []];
+		}
+
+		if (str_contains($templateContent, 'bezwaar') === false) {
+			return ['data' => $data, 'warnings' => []];
+		}
+
+		return [
+			'data' => $data,
+			'warnings' => ['No decision date found (besluitDatum or decisionDate), so the objection deadline is left out.'],
+		];
+
+	}//end addToContext()
+
+	/**
 	 * Read the configured term, falling back to the statutory six weeks.
 	 *
 	 * @return int The term in weeks, at least one.

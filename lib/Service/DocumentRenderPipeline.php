@@ -56,6 +56,7 @@ class DocumentRenderPipeline {
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
+	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
 	 *
 	 * @return void
 	 */
@@ -65,6 +66,7 @@ class DocumentRenderPipeline {
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
 		private readonly SvgRasterizer $svgRasterizer,
+		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 	) {
 
 	}//end __construct()
@@ -151,6 +153,7 @@ class DocumentRenderPipeline {
 	 * @throws Exception If rendering fails
 	 *
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function renderWithHuisstijl(
 		string $templateContent,
@@ -159,6 +162,12 @@ class DocumentRenderPipeline {
 	): array {
 		$fullContent = '';
 		$warnings = [];
+
+		if ($this->objectionTerm !== null) {
+			$decision = $this->objectionTerm->addToContext(data: $data, templateContent: $templateContent);
+			$data = $decision['data'];
+			$warnings = $decision['warnings'];
+		}
 
 		if ($huisstijl !== null && empty($huisstijl['headerHtml']) === false) {
 			$headerData = array_merge($data, ['huisstijl' => $huisstijl]);

@@ -40,3 +40,10 @@ source mentions `bezwaar`; the `bezwaar` key is left out either way.
 - Holidays: Awb 6:7 counts calendar weeks and the Algemene termijnenwet moves a
   deadline that ends on a weekend or holiday. D1 moves a Saturday or Sunday to
   the Monday; public holidays are listed in the docs as a known limit.
+
+### D4. The context is added in the render pipeline, not in DocumentService
+
+Built as `ObjectionTermCalculator::addToContext()`, called from
+`DocumentRenderPipeline::renderWithHuisstijl()`. That one place covers
+generation, preview and bulk, and keeps `DocumentService` under the phpmd class
+length and parameter limits it was already at.

@@ -83,14 +83,12 @@ class DocumentServiceDecisionLetterTest extends TestCase {
 		return new DocumentService(
 			$templates,
 			new DataResolverService($container, $appManager, $logger, $appConfig),
-			new DocumentRenderPipeline($renderer, new PdfService($logger, $renderer), $objectResolver, $logger, $rasterizer),
+			new DocumentRenderPipeline($renderer, new PdfService($logger, $renderer), $objectResolver, $logger, $rasterizer, new ObjectionTermCalculator($appConfig)),
 			$this->createMock(DocumentStorageService::class),
 			new GeneratedDocumentLogger($objectResolver, $logger),
 			$container,
 			$this->createMock(IJobList::class),
-			$logger,
-			null,
-			new ObjectionTermCalculator($appConfig)
+			$logger
 		);
 
 	}//end service()
