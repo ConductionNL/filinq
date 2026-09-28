@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\AppInfo;
 
 use OCA\Filinq\EventListener\RegisterDocumentsLeafListener;
+use OCA\Filinq\EventListener\RegisterMergeToPdfLeafListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -46,6 +47,8 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
  */
 class IntegrationLeafRegistrar {
 
@@ -67,6 +70,8 @@ class IntegrationLeafRegistrar {
 	 *
 	 * @return void
 	 *
+	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) OpenRegisterAutoloader::register() is
 	 * the app's own static prelude; there is no container at the composition root
 	 * to resolve an adapter from.
@@ -81,6 +86,11 @@ class IntegrationLeafRegistrar {
 		$context->registerEventListener(
 			event: self::LEAF_EVENT,
 			listener: RegisterDocumentsLeafListener::class
+		);
+
+		$context->registerEventListener(
+			event: self::LEAF_EVENT,
+			listener: RegisterMergeToPdfLeafListener::class
 		);
 
 	}//end register()

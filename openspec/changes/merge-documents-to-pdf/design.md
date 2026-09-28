@@ -54,18 +54,32 @@ id; the leaf polls `progress`.
 
 ## D3. The leaf, ADR-066 `render-surface`
 
-- Server: `RegisterLeafProvidersEvent` listener adds a `LeafDescriptor`
-  with id `filinq-merge-to-pdf`, kind `render-surface`, `renderMode:
-  component`, surface `bulkAction`.
-- Client: `registerIntegration()` under the same id with a `bulkAction`
-  and a `widget` (gate-24 parity: the widget lists the host object's merge
-  jobs and their results). Props: the selected file ids, the host object
-  and the target folder.
-- The dialog: order the inputs by drag, pick a cover template (optional),
-  toggle bookmarks, name the result. Confirm calls
-  `POST /apps/filinq/api/merge`.
-- Nothing crosses the seam except the result file in the folder the
-  consumer named. The consumer's files browser refreshes and shows it.
+Corrected on 2026-09-28, when the leaf was built. The first version of this
+section placed the leaf in a `bulkAction` slot of the host's files browser.
+The shared integration registry (`@conduction/nextcloud-vue`
+`src/integrations/registry.js`) knows the surfaces `user-dashboard`,
+`app-dashboard`, `detail-page` and `single-entity`, and has no bulk-action
+slot, so a `bulkAction` declared here would be ignored by every host. The
+leaf therefore carries its own selection.
+
+- Server: `RegisterMergeToPdfLeafListener` adds a `LeafDescriptor` with id
+  `filinq-merge-to-pdf`, kind `render-surface`, `renderMode: mount`,
+  surfaces `detail-page` and `single-entity`, wired by
+  `IntegrationLeafRegistrar`.
+- Client: `src/integrations/registerMergeToPdfLeaf.js` registers the same
+  id, icon, surfaces and render mode, in `main.js` and in the `filinq-leaves`
+  bundle. Props: the host object (`register`, `schema`, `objectId`).
+- The widget lists the host object's documents through
+  `GET /api/case-documents/files`, which already leaves out files the reader
+  cannot see. The handler ticks documents, orders them with move up and move
+  down buttons (keyboard operable, where a drag list is not), picks an
+  optional cover template from `GET /api/templates`, toggles bookmarks and
+  names the result. Confirm calls `POST /apps/filinq/api/merge` without a
+  target folder, so the server writes the PDF beside the first document,
+  which on a case is the case folder.
+- Nothing crosses the seam except the result file. A bulk action on a host's
+  own file list needs a bulk-action slot in the shared registry first; that is
+  a nextcloud-vue change, not this one.
 
 ## D4. Endpoint
 

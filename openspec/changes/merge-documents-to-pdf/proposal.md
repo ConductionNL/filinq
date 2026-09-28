@@ -31,6 +31,8 @@ which exists. This change covers the merge only.
 
 ## What changes
 
+> Corrected 2026-09-28: the shared integration registry has no bulk-action slot, so the leaf is built as a render surface on an object's page that carries its own selection (design D3). A bulk action on a host's file list waits for that slot in nextcloud-vue.
+
 - A `mergeJob` object in the `document` register: the ordered input files,
   the options, the result file and a lifecycle.
 - `DocumentMergeService::merge(files[], options)`: convert every input to

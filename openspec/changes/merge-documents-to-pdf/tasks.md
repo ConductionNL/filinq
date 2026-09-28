@@ -16,14 +16,14 @@
 
 ## 3. Leaf
 
-- [ ] 3.1 Register `filinq-merge-to-pdf`: `RegisterLeafProvidersEvent` listener plus `registerIntegration()` with `bulkAction` and `widget` (REQ-DMG-04)
-  - Filinq ships no leaf infrastructure yet: no `leaves` webpack entry, no `LeafDescriptor`, no `registerIntegration`. The leaf is a change of its own rather than a webpack entry smuggled in here.
-- [ ] 3.2 Build the action dialog: drag order, cover template picker, bookmarks toggle, result name (REQ-DMG-04)
-  - Follows the leaf. The endpoint already takes the order, the cover template, the bookmarks toggle and the result name.
+- [x] 3.1 Register `filinq-merge-to-pdf`: `RegisterMergeToPdfLeafListener` through `IntegrationLeafRegistrar`, and `registerMergeToPdfLeaf()` in `main.js` and the `filinq-leaves` bundle (REQ-DMG-04)
+  - Built 2026-09-28 as a render surface on `detail-page` and `single-entity`, not a `bulkAction`: the shared registry has no bulk-action slot (design D3, corrected). Test: `tests/unit/EventListener/RegisterMergeToPdfLeafListenerTest.php` (descriptor, both halves agree, registrar wires it).
+- [x] 3.2 Build the action dialog: choose and order the documents, cover template picker, bookmarks toggle, result name (REQ-DMG-04)
+  - `src/integrations/CnFilinqMergeToPdfWidget.vue` over `src/services/mergeSelection.js`; move up and move down replace drag, so the order can be set with a keyboard. Test: `tests/vitest/mergeSelection.spec.js`.
 
 ## 4. Quality
 
 - [x] 4.1 PHPUnit for `DocumentMergeService` (order, bookmarks, failed conversion, refused read) inside the container; 75% on new code (ADR-009)
-- [x] 4.2 Playwright `tests/e2e/workflows/merge-to-pdf.spec.ts` covers the merge, the refusal, the empty request and the queued job; the strings and the feature docs are still open
-- [ ] 4.3 Tell dossiq the leaf id and props so `documents-on-the-case` places the bulk action
-  - Follows the leaf: there is no leaf id to tell dossiq about yet.
+- [x] 4.2 Playwright `tests/e2e/workflows/merge-to-pdf.spec.ts` covers the merge, the refusal, the empty request and the queued job; the leaf strings (six locales) and `docs/features/merge-to-pdf.md` landed with the leaf on 2026-09-28
+- [x] 4.3 Tell dossiq the leaf id and props so `documents-on-the-case` places the leaf
+  - Told in ConductionNL/dossiq#3185 (id, props, surfaces, and that it is a case-page leaf, not a Files-tab bulk action).

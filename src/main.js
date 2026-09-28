@@ -21,6 +21,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
 import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
+import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
@@ -451,3 +452,4 @@ app.mount('#filinq-app')
 // the SPA, because this bundle is already on the page and a second script would
 // register the id twice.
 registerDocumentsLeaf()
+registerMergeToPdfLeaf()

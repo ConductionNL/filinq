@@ -75,27 +75,37 @@ the same checks, and `GET /apps/filinq/api/merge/{id}` MUST report
 - THEN the response carries a `mergeJob` id in `queued`, and progress reads above 0 once the job has started
 - @e2e exclude background job execution; covered by PHPUnit on `MergeDocumentsJob`
 
-### Requirement: Merge to PDF is a bulk-action leaf (REQ-DMG-04)
+### Requirement: Merge to PDF is a leaf on an object's page (REQ-DMG-04)
 
 Filinq MUST register a leaf with id `filinq-merge-to-pdf` on both halves:
 a `LeafDescriptor` of kind `render-surface` through
-`RegisterLeafProvidersEvent`, and a JS `registerIntegration()` under the
-same id with a `bulkAction` and a `widget`. The action dialog MUST let the
-user order the inputs, pick a cover template, toggle bookmarks and name
-the result. The leaf MUST NOT invoke any action in the consuming app
-(ADR-066 decision 2); the result reaches the consumer as a file in the
-folder it named.
+`RegisterLeafProvidersEvent`, and a JS registration under the same id, icon,
+surfaces (`detail-page`, `single-entity`) and render mode (`mount`). The leaf
+MUST list the host object's documents the reader may see, and MUST let the
+user choose them, put them in order without a pointer device, pick a cover
+template, toggle bookmarks and name the result. With fewer than two
+documents chosen it MUST NOT send a merge. The leaf MUST NOT invoke any
+action in the consuming app (ADR-066 decision 2); the result reaches the
+consumer as a file beside the first document.
 
-#### Scenario: dossiq merges the documents of a case
+#### Scenario: A handler merges the documents of a case
 
-- GIVEN filinq and dossiq are installed and dossiq's Files tab places `filinq-merge-to-pdf` as a bulk action
-- WHEN a handler selects three documents, orders them, and confirms
-- THEN the merged PDF appears in the case folder and the Files tab lists it
-- e2e: `tests/e2e/merge-to-pdf.spec.ts`
+- GIVEN filinq and dossiq are installed and a case page places `filinq-merge-to-pdf`
+- WHEN a handler ticks three documents, moves the last one to the top, and chooses "Merge"
+- THEN the merged PDF appears in the case folder with the documents in that order, and the leaf says "The PDF is ready." with a link to it
+- @e2e exclude the leaf mounts inside a host app's page, which the filinq e2e suite does not run; the order and the request are covered by tests/vitest/mergeSelection.spec.js and the merge itself by tests/e2e/workflows/merge-to-pdf.spec.ts
+
+#### Scenario: One document is not a bundle
+
+- GIVEN the leaf on a case with documents
+- WHEN the handler ticks one document
+- THEN the leaf says "Choose at least two documents" and the merge button stays disabled
+- @e2e exclude covered by tests/vitest/mergeSelection.spec.js (canMerge)
 
 #### Scenario: Descriptor and JS registration agree
 
 - GIVEN the leaf is registered
-- WHEN gate-24 (integration parity) inspects the app
-- THEN the descriptor and the JS registration share the id and both `bulkAction` and `widget` exist
-- @e2e exclude parity is checked mechanically by gate-24, not in a browser
+- WHEN the PHP test reads the JS half
+- THEN both name the same id, icon, surfaces and render mode, and the registrar wires the listener
+- @e2e exclude parity is checked by tests/unit/EventListener/RegisterMergeToPdfLeafListenerTest.php and gate-24, not in a browser
+
