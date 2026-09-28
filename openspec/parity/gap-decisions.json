@@ -878,5 +878,69 @@
     "reason": "E-sign request and status contract. filinq-signing-events (9 of 9 tasks) ships DocumentSigningRequestedEvent with a result slot and SigningConcludedEvent on every terminal outcome, which answers humaniq's open question on subscribing instead of polling; one-signing-rail-for-the-fleet makes it the only door, so humaniq's FilinqSigningGateway should dispatch the event rather than call SigningService duck-typed. createRequest() still needs a session user, which humaniq's user-started request has. A signer without a Nextcloud account is portal-signing-actions (11 of 15) and signer-identity-rails.",
     "change": "filinq-signing-events",
     "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "gen-legal-basis",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "In the core area (generate). The missing half is the computed objection deadline and the legal basis as fields to pick; the generic merge-field path is built.",
+    "change": "decision-letter-legal-basis-and-deadline",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "gen-print",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "In the core area (generate). The print job API is built; no screen calls it, there is no job list, and job PDFs sit in app configuration.",
+    "change": "print-jobs-in-the-app",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-fields",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: a merge field dialog inserts free-text fields. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-diff",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: TemplateVersionService::getDiff and its route, with no screen. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-per-type",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). The built half: a free-text category filter on the templates list. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-house-style",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). The built half: huisstijl is applied to every generation; it is edited through the generic OpenRegister object screen. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-languages",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: template name, description and content are translatable in the register. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sig-qes",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (validsign rates it yes). The built half: the ValidSign provider seam; the artifact flow is not wired. libresign-signing-provider covers QES through a qualified LibreSign. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
   }
 ]

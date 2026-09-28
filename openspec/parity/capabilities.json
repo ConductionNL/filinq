@@ -1503,7 +1503,8 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Generic templating lets any resolved dataRef field (including a 'base'/grondslag object) be inserted as a merge field, so a template author can manually type a legal-basis field. But there is no dedicated feature computing/inserting an objection deadline into a decision letter: lib/Service/ObjectionDeadlineChecker.php:96-133 (getObjectionPeriodDays/calculateDeadline/checkObjectionDeadline) is used only by ConsentService/PolicyController for publication-objection flows, never by CorrespondenceService or DocumentService."
+				"evidence": "Missing half specified in openspec/changes/decision-letter-legal-basis-and-deadline on 2026-09-28 in the build-all pass. Before: Generic templating lets any resolved dataRef field (including a 'base'/grondslag object) be inserted as a merge field, so a template author can manually type a legal-basis field. But there is no dedicated feature computing/inserting an objection deadline into a decision letter: lib/Service/ObjectionDeadlineChecker.php:96-133 (getObjectionPeriodDays/calculateDeadline/checkObjectionDeadline) is used only by ConsentService/PolicyController for publication-objection flows, never by CorrespondenceService or DocumentService.",
+				"change": "openspec/changes/decision-letter-legal-basis-and-deadline"
 			},
 			"reachedOn": "templates can reference legal-basis fields generically via merge fields; no dedicated 'legal basis + deadline in decision letter' computation in filinq",
 			"provider": "filinq",
@@ -1672,7 +1673,8 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PrintJobController.php implements create/show/download/updateStatus/batch (lines 106,178,231,307,382) in full, routes registered at routes.php:207-211 with the comment 'for external print services'. No FE calls any print/jobs or print/batch endpoint (only PrintPreview.vue calls print/preview and print/pdf-a); no caller found in dossiq/shillinq/opencatalogi/scholiq."
+				"evidence": "Missing half specified in openspec/changes/print-jobs-in-the-app on 2026-09-28 in the build-all pass. Before: lib/Controller/PrintJobController.php implements create/show/download/updateStatus/batch (lines 106,178,231,307,382) in full, routes registered at routes.php:207-211 with the comment 'for external print services'. No FE calls any print/jobs or print/batch endpoint (only PrintPreview.vue calls print/preview and print/pdf-a); no caller found in dossiq/shillinq/opencatalogi/scholiq.",
+				"change": "openspec/changes/print-jobs-in-the-app"
 			},
 			"reachedOn": "nothing reaches it; designed for an external print service that could not be located",
 			"provider": "filinq",
@@ -1894,9 +1896,9 @@
 			"sourceRef": "user story \"Define variable fields in a template\"",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/dialogs/MergeFieldDialog.vue inserts a free-text '{{ fieldname }}' placeholder into the editor (no dropdown bound to actual OpenRegister schema properties). The only structured field-requirement declaration is template.plainLanguage.requiredStatements (lib/Settings/filinq_register.json ~line 690s), scoped to the plain-language feature only, not general template fields."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: a merge field dialog inserts free-text fields. Reversible when demand or a second competitor appears. Before: src/dialogs/MergeFieldDialog.vue inserts a free-text '{{ fieldname }}' placeholder into the editor (no dropdown bound to actual OpenRegister schema properties). The only structured field-requirement declaration is template.plainLanguage.requiredStatements (lib/Settings/filinq_register.json ~line 690s), scoped to the plain-language feature only, not general template fields."
 			},
 			"reachedOn": "/templates/:id (Insert merge field dialog)",
 			"provider": "filinq",
@@ -1949,9 +1951,9 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplateVersionsController.php:157 diffVersions() -> lib/Service/TemplateVersionService.php:279 getDiff() fully implemented; route templateVersions#diffVersions (routes.php:232). No call to a 'diff' endpoint anywhere in src/store/modules/template.js or TemplateDetail.vue (only fetchVersions/restoreVersion exist); the versions tab lists versions and offers restore only, no diff view."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: TemplateVersionService::getDiff and its route, with no screen. Reversible when demand or a second competitor appears. Before: lib/Controller/TemplateVersionsController.php:157 diffVersions() -> lib/Service/TemplateVersionService.php:279 getDiff() fully implemented; route templateVersions#diffVersions (routes.php:232). No call to a 'diff' endpoint anywhere in src/store/modules/template.js or TemplateDetail.vue (only fetchVersions/restoreVersion exist); the versions tab lists versions and offers restore only, no diff view."
 			},
 			"reachedOn": "nothing reaches it; backend built, no UI",
 			"provider": "filinq",
@@ -2059,9 +2061,9 @@
 			"sourceRef": "SmartDocuments templates mapped to zaaktypes (ZAC integration); user story \"Assign template to document type\"",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "template schema has only a free-text 'category' property (lib/Settings/filinq_register.json, e.g. 'beschikkingen, brieven'), filterable in src/views/templates/TemplateIndex.vue:13-14/152-154 categoryOptions. There is no formal binding from a template to a case-type/document-type enum on a consuming app's records; dossiq's own BeschikkingComposerDialog.vue lets a user pick any filinq template via NcSelect with no case-type filtering visible in filinq's own code."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). The built half: a free-text category filter on the templates list. Reversible when demand or a second competitor appears. Before: template schema has only a free-text 'category' property (lib/Settings/filinq_register.json, e.g. 'beschikkingen, brieven'), filterable in src/views/templates/TemplateIndex.vue:13-14/152-154 categoryOptions. There is no formal binding from a template to a case-type/document-type enum on a consuming app's records; dossiq's own BeschikkingComposerDialog.vue lets a user pick any filinq template via NcSelect with no case-type filtering visible in filinq's own code."
 			},
 			"reachedOn": "/templates (category filter dropdown, an unenforced free-text convention, not a real type binding)",
 			"provider": "filinq",
@@ -2087,9 +2089,9 @@
 			"sourceRef": "Xential central template governance and huisstijl enforcement",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "huisstijl is applied automatically during rendering (CorrespondenceService::loadHuisstijl/buildPdfOptions, ~lines 540-602) and is a full OpenRegister schema, but there is NO dedicated UI anywhere in src/views to create/edit a huisstijl (grep for huisstijl/Huisstijl across src/views/*.vue returns nothing); an admin would have to edit the huisstijl object via OpenRegister's generic object UI."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). The built half: huisstijl is applied to every generation; it is edited through the generic OpenRegister object screen. Reversible when demand or a second competitor appears. Before: huisstijl is applied automatically during rendering (CorrespondenceService::loadHuisstijl/buildPdfOptions, ~lines 540-602) and is a full OpenRegister schema, but there is NO dedicated UI anywhere in src/views to create/edit a huisstijl (grep for huisstijl/Huisstijl across src/views/*.vue returns nothing); an admin would have to edit the huisstijl object via OpenRegister's generic object UI."
 			},
 			"reachedOn": "nothing in filinq's own UI manages huisstijl directly; applied automatically at render time once a huisstijlId is configured",
 			"provider": "filinq",
@@ -2197,9 +2199,9 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "template schema properties (name, description, content) are declared translatable:true, and OpenRegister's TranslationHandler / register-i18n mechanism can store per-language variants (per register-i18n change). But filinq's own UI never exercises it: src/components/LanguageSelector.vue exists but is imported nowhere (grep across src/ finds zero usages), and src/store/modules/template.js:29 setLanguage() (which would drive buildLanguageHeaders(), used at lines 84/108) is never called from any view, so selectedLanguage is always null and the Accept-Language override never fires."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: template name, description and content are translatable in the register. Reversible when demand or a second competitor appears. Before: template schema properties (name, description, content) are declared translatable:true, and OpenRegister's TranslationHandler / register-i18n mechanism can store per-language variants (per register-i18n change). But filinq's own UI never exercises it: src/components/LanguageSelector.vue exists but is imported nowhere (grep across src/ finds zero usages), and src/store/modules/template.js:29 setLanguage() (which would drive buildLanguageHeaders(), used at lines 84/108) is never called from any view, so selectedLanguage is always null and the Accept-Language override never fires."
 			},
 			"reachedOn": "nothing in the UI reaches per-language editing; the register-i18n plumbing exists but is unused dead code in this app",
 			"provider": "filinq",
@@ -4388,9 +4390,9 @@
 			"sourceRef": "Zynyo QTSP qualified certificates; Signhost remote qualified signing",
 			"filinq": "no",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "ValidSignProvider.php is the only path to QES (NativeSigningProvider only supports SES). ValidSignProvider's constructor takes only IAppConfig — no HTTP client at all (grepped for IClient/curl/guzzle, no hits). Its own docblocks: produceSignedArtifact() 'Always throws — the ValidSign artifact flow is not wired' (line ~207), downloadSignedDocument() 'Always throws - not yet implemented' (line ~136)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (validsign rates it yes). The built half: the ValidSign provider seam; the artifact flow is not wired. libresign-signing-provider covers QES through a qualified LibreSign. Reversible when demand or a second competitor appears. Before: ValidSignProvider.php is the only path to QES (NativeSigningProvider only supports SES). ValidSignProvider's constructor takes only IAppConfig — no HTTP client at all (grepped for IClient/curl/guzzle, no hits). Its own docblocks: produceSignedArtifact() 'Always throws — the ValidSign artifact flow is not wired' (line ~207), downloadSignedDocument() 'Always throws - not yet implemented' (line ~136)."
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue) can select QES via ValidSign, but the request can never complete",
 			"provider": "filinq",
