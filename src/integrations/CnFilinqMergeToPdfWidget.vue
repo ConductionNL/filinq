@@ -172,11 +172,25 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Whether the chosen documents are enough for a merge.
+		 *
+		 * @return {boolean} True with two or more.
+		 *
+		 * @spec openspec/specs/document-merge/spec.md
+		 */
 		mergeable() {
 			return canMerge(this.selection)
 		},
 	},
 
+	/**
+	 * Load the documents and the cover templates.
+	 *
+	 * @return {void}
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
 	mounted() {
 		this.load()
 		this.loadTemplates()
