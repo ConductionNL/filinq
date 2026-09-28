@@ -39,12 +39,13 @@
   - Run standalone instead (`composer check:strict`, lane rules keep lanes off the container). Minimisation scan: `tests/unit/Service/SignerAuth/EvidenceMinimisationTest.php`; custody grep: `CredentialCustodyTest.php`. Every new class has its own test file; the coverage percentage was not measured locally (no pcov or xdebug), CI's coverage job reports it
 
 - [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/signer-identity-rails.spec.ts` against a throwaway mock-OIDC IdP container: substantial request refuses session-only signer → step-up at digid-substantial → signature accepted → evidence visible on record/audit/artifact; floor normalisation on QES creation; verify on Postgres (8080), nldesign theme enabled
-  - Open: the follow-up lane that built 1.x to 4.x had no access to the shared instance or to containers (lane rules), so no mock-OIDC IdP and no browser run. Every scenario it would cover has a PHPUnit or vitest test
+  - Built: `tests/e2e/spec-coverage/signer-identity-rails.spec.ts` starts its own mock OIDC broker (a Node https server with the fixed test key in `tests/e2e/fixtures/mock-oidc/`), no container. Run on the shared instance 2026-09-28: the floor, the session-only refusal and the front channel of the step-up (folder hint, dialog, authorize request with state, nonce and the substantial acr values, return to Filinq) pass.
+  - Blocked: the token exchange is server-side, and Nextcloud refuses it (`LocalServerException`) unless the instance trusts `tests/e2e/fixtures/mock-oidc/test-cert.pem` and allows the back-channel host (`allow_local_remote_servers`). Making those two instance changes needs a person's decision, so the two tests that need them (signature accepted after step-up, evidence on record, audit and artifact) run only with `FILINQ_E2E_OIDC_BACKCHANNEL=1` and are reported as skipped otherwise. They have not run green yet.
 
 - [x] 4.3 i18n EN source + NL translations (step-up prompts, assurance labels, admin panel)
 
-- [ ] 4.4 Docs in `docs/features/` (identity rails setup, broker config, assurance floors, EUDI readiness statement with Dec 2026 timeline — no shipped-wallet claim) with Playwright screenshots (ADR-010); `openspec validate signer-identity-rails --strict` passes
-  - Partly done: the section "Signer identity: DigiD, eHerkenning and iDIN" in `docs/features/digital-signing.md` covers setup, broker config, floors and the EUDI statement, and the change validates. Open: the Playwright screenshots, which need the live instance (see 4.2)
+- [x] 4.4 Docs in `docs/features/` (identity rails setup, broker config, assurance floors, EUDI readiness statement with Dec 2026 timeline — no shipped-wallet claim) with Playwright screenshots (ADR-010); `openspec validate signer-identity-rails --strict` passes
+  - The section "Signer identity: DigiD, eHerkenning and iDIN" in `docs/features/digital-signing.md` covers setup, broker config, floors and the EUDI statement, and now shows three screenshots from the live instance: `docs/static/screenshots/signer-identity-step-up-hint.png`, `signer-identity-step-up-start.png` and `signer-identity-guardian-minimum.png`
 
 ## 5. Guardian consent for signers under the age of consent (D11 amendment)
 
