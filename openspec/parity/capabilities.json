@@ -2815,16 +2815,17 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/openregister",
-				"evidence": "lib/Service/EntityDetectionService.php:51-52 TYPED_PII_TYPES includes 'BSN' and 'IBAN' (always redacted regardless of length, closes #285). No 'LICENSE_PLATE'/'KENTEKEN' entity type anywhere: grepped filinq and OpenRegister (origin/development) for kenteken/license_plate/licenseplate, zero hits in either repo."
+				"evidence": "lib/Service/EntityDetectionService.php:51-52 TYPED_PII_TYPES includes 'BSN' and 'IBAN' (always redacted regardless of length, closes #285). No 'LICENSE_PLATE'/'KENTEKEN' entity type anywhere: grepped filinq and OpenRegister (origin/development) for kenteken/license_plate/licenseplate, zero hits in either repo.",
+				"change": "ConductionNL/openregister openspec/changes/detection-dutch-licence-plates"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) via the same detect/extract pipeline as det-auto",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "BSN and IBAN are always-redact typed PII; licence plates are not a recognised entity type anywhere in the fleet's detection code.",
+			"note": "BSN and IBAN are always-redact typed PII; licence plates are not a recognised entity type anywhere in the fleet's detection code. Specified in ConductionNL/openregister openspec/changes/detection-dutch-licence-plates (openregister lane, OpenSpec pass 2026-09-27).",
 			"zylab": "unknown",
 			"datamask": "yes",
 			"smartdocuments": "unknown",
@@ -2873,16 +2874,17 @@
 			"source": "own-code",
 			"filinq": "no",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/openregister",
-				"evidence": "AnonymiserBackendStateClient::getState() (lib/Service/AnonymiserBackendStateClient.php) only READS the current method; filinq's own Settings.vue (lines ~846, 1048) only displays the current backend and shows a warning when it is 'regex'. No picker/action anywhere in filinq lets a user or admin choose the engine. OpenRegister owns the actual choice: OR's FileSettingsController / AnonymisationBackendController (git grep on origin/development) implement the setting."
+				"evidence": "AnonymiserBackendStateClient::getState() (lib/Service/AnonymiserBackendStateClient.php) only READS the current method; filinq's own Settings.vue (lines ~846, 1048) only displays the current backend and shows a warning when it is 'regex'. No picker/action anywhere in filinq lets a user or admin choose the engine. OpenRegister owns the actual choice: OR's FileSettingsController / AnonymisationBackendController (git grep on origin/development) implement the setting.",
+				"change": "ConductionNL/openregister openspec/changes/anonymiser-backend-selection"
 			},
 			"reachedOn": "nothing in filinq; the engine is chosen in OpenRegister's own admin settings",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "filinq is read-only about the backend (warning banner); no filinq screen lets a user choose it.",
+			"note": "filinq is read-only about the backend (warning banner); no filinq screen lets a user choose it. Specified in ConductionNL/openregister openspec/changes/anonymiser-backend-selection (openregister lane, OpenSpec pass 2026-09-27).",
 			"zylab": "unknown",
 			"datamask": "partial",
 			"smartdocuments": "unknown",
@@ -3270,7 +3272,7 @@
 			"filinq": "no",
 			"built": {
 				"state": "built",
-				"owner": "ConductionNL/openregister",
+				"owner": "ConductionNL/filinq",
 				"evidence": "The mechanism is built: src/services/anonymizationUpload.js docblock describes true byte-level removal per format (PHPWord for docx, OpenRegister's in-place XML surgery for odt, byte-level replace for txt, the SAPP byte-replace pipeline for pdf), and lib/Service/Redaction/RedactionIrreversibilityVerifier.php verifies the produced bytes for every known leak route rather than trusting the claim. But this all runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard::assertMayWrite() gate as red-review, which always refuses (see red-review evidence). So no copy is ever actually produced to verify."
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue); blocked before the write",
@@ -3278,7 +3280,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "RedactionIrreversibilityVerifier.php's own docblock: 'Filinq does not produce these bytes... The redaction is performed by OpenRegister's anonymisation backend, which drives the anonymiq ExApp.' LIVE DEFECT: blocked by the same RedactionOutputGuard issue as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED.",
+			"note": "RedactionIrreversibilityVerifier.php's own docblock: 'Filinq does not produce these bytes... The redaction is performed by OpenRegister's anonymisation backend, which drives the anonymiq ExApp.' LIVE DEFECT: blocked by the same RedactionOutputGuard issue as red-review. Live defect filed as ConductionNL/filinq#1178: AnonymizationService.php:616 calls RedactionOutputGuard::assertMayWrite() on every write, and the only route that sets the review mark (routes.php:127, markChecked) has no caller, so every anonymise refuses with NEVER_CHECKED. Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-06-14-pdf-anonymisation; the missing half is filinq's own work, so the owner moved to ConductionNL/filinq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister).",
 			"zylab": "yes",
 			"datamask": "yes",
 			"smartdocuments": "yes",
@@ -6397,17 +6399,17 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
 			"filinq": "no",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/opencatalogi",
 				"evidence": "filinq: no withdraw or depublish code; grep -ri 'depublic|depublish|unpublish|publicatiedatum' lib src finds nothing about publication (only signing-mandate withdrawal, lib/Controller/SigningFolderController.php:204). The withdraw flow is only designed: openspec/changes/woo-publicatie-pipeline/design.md:165 (0 of 16 tasks done). opencatalogi@a00f9f84 has it for its own publications: appinfo/routes.php:82 POST /api/publications/depublish -> lib/Controller/DepublicationController.php:126 depublish() (no src/ caller), and src/dialogs/attachment/MassAttachmentModal.vue:234 massDepublishAttachments, opened from src/modals/object/ViewObject.vue:2328.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"change": "ConductionNL/opencatalogi openspec/changes/publications-publish-and-withdraw-action"
 			},
 			"reachedOn": "nothing reaches it from filinq: filinq hands no document to opencatalogi, so nothing filinq published exists there to withdraw",
 			"provider": "opencatalogi",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
 			"featureConfidence": "high",
-			"note": "OpenCatalogi can depublish what it holds (attachments from its own object view); the gap is filinq's hand-off, the same gap as woo-publish.",
+			"note": "OpenCatalogi can depublish what it holds (attachments from its own object view); the gap is filinq's hand-off, the same gap as woo-publish. Specified in ConductionNL/opencatalogi openspec/changes/publications-publish-and-withdraw-action (opencatalogi lane, OpenSpec pass 2026-09-27). built.change previously named openspec/changes/woo-publicatie-pipeline, which carried the built half.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -6551,7 +6553,7 @@
 			"filinq": "partial",
 			"built": {
 				"state": "built",
-				"owner": "ConductionNL/openregister",
+				"owner": "ConductionNL/filinq",
 				"evidence": "filinq offers no list export: its document lists switch the shared export off (src/views/intake/IntakeIndex.vue:27 and src/views/dossier/DossierIndex.vue:20 :showMassExport=\"false\"), and no manifest index page lists documentRegistration (lib/Settings/filinq_register.json:71). openregister@86a2fb87 exports any schema's objects as Excel or CSV: appinfo/routes.php:1172 GET /api/objects/{register}/{schema}/export, from src/modals/register/ExportRegister.vue:89 opened in src/components/cards/RegisterSchemaCard.vue:304."
 			},
 			"reachedOn": "OpenRegister's own register page (RegisterSchemaCard export action), not a filinq page",
@@ -6559,7 +6561,7 @@
 			"providerHow": "read-from-code",
 			"feature": "document-register",
 			"featureConfidence": "medium",
-			"note": "Works for a user with access to OpenRegister's admin UI and the filinq register; a filinq-only user has no export button.",
+			"note": "Works for a user with access to OpenRegister's admin UI and the filinq register; a filinq-only user has no export button. Open Register's half shipped in ConductionNL/openregister openspec/changes/archive/2026-05-02-data-import-export; the missing half is filinq's own work, so the owner moved to ConductionNL/filinq (openregister lane, OpenSpec pass 2026-09-27; owner was ConductionNL/openregister).",
 			"zylab": "yes",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -6610,16 +6612,17 @@
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/pull/10319",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/hermiq",
-				"evidence": "filinq mounts the shared AI companion: src/App.vue:14 :aiCompanion=\"true\" -> nextcloud-vue v2.39.0 (filinq's lockfile) src/components/CnAppRoot/CnAppRoot.vue:410 <CnAiCompanion>, which talks to hermiq by default (src/composables/aiChatConfig.js DEFAULT_CHAT_APP_ID). hermiq@5277c0df appinfo/routes.php:514 chat#sendMessage returns sources (lib/Controller/ChatController.php:1161), but the companion at v2.39.0 renders none (grep '\\.sources' in src/components hits only CnIconBrowser), and nothing scopes a chat to one document. filinq's own MCP tools (lib/Mcp/FilinqScannableServices.php:73-74) expose correspondence and editing, not document reading."
+				"evidence": "filinq mounts the shared AI companion: src/App.vue:14 :aiCompanion=\"true\" -> nextcloud-vue v2.39.0 (filinq's lockfile) src/components/CnAppRoot/CnAppRoot.vue:410 <CnAiCompanion>, which talks to hermiq by default (src/composables/aiChatConfig.js DEFAULT_CHAT_APP_ID). hermiq@5277c0df appinfo/routes.php:514 chat#sendMessage returns sources (lib/Controller/ChatController.php:1161), but the companion at v2.39.0 renders none (grep '\\.sources' in src/components hits only CnIconBrowser), and nothing scopes a chat to one document. filinq's own MCP tools (lib/Mcp/FilinqScannableServices.php:73-74) expose correspondence and editing, not document reading.",
+				"change": "ConductionNL/hermiq openspec/changes/companion-everywhere"
 			},
 			"reachedOn": "floating AI companion on every filinq page, shown only when hermiq's /api/chat/health answers",
 			"provider": "hermiq",
 			"providerHow": "read-from-code",
 			"feature": "filinq-mcp-adoption",
 			"featureConfidence": "low",
-			"note": "A general chat is there; the row's two specifics, citing sources and asking about one document, are missing in what a filinq user sees. Whether hermiq's retrieval indexes filinq's documents depends on its file vectorisation setup, not checked.",
+			"note": "A general chat is there; the row's two specifics, citing sources and asking about one document, are missing in what a filinq user sees. Whether hermiq's retrieval indexes filinq's documents depends on its file vectorisation setup, not checked. Specified in ConductionNL/hermiq openspec/changes/companion-everywhere (hermiq lane, OpenSpec pass 2026-09-27).",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -6816,16 +6819,17 @@
 			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
 			"filinq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"owner": "ConductionNL/openregister",
-				"evidence": "filinq has no export or import of its own (grep -ri 'function export|function import' lib/Controller finds only a custom dictionary term import, lib/Controller/CustomDictionaryController.php:271). openregister@86a2fb87 exports a configuration with its objects: src/modals/configuration/ExportConfiguration.vue:23 'Include related objects' -> :140 includeObjects -> GET /api/configurations/{id}/export (appinfo/routes.php:1715), and imports through src/modals/configuration/ImportConfiguration.vue:940 POST /api/configurations/import. The metadata objects travel; the document files live in Nextcloud storage and are not in that export (no file content handling in lib/Service/Configuration)."
+				"evidence": "filinq has no export or import of its own (grep -ri 'function export|function import' lib/Controller finds only a custom dictionary term import, lib/Controller/CustomDictionaryController.php:271). openregister@86a2fb87 exports a configuration with its objects: src/modals/configuration/ExportConfiguration.vue:23 'Include related objects' -> :140 includeObjects -> GET /api/configurations/{id}/export (appinfo/routes.php:1715), and imports through src/modals/configuration/ImportConfiguration.vue:940 POST /api/configurations/import. The metadata objects travel; the document files live in Nextcloud storage and are not in that export (no file content handling in lib/Service/Configuration).",
+				"change": "ConductionNL/openregister openspec/changes/import-preview-and-conflict-policy"
 			},
 			"reachedOn": "OpenRegister's own configuration page (ExportConfiguration and ImportConfiguration modals), not a filinq page",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "openregister-bridge",
 			"featureConfidence": "low",
-			"note": "The files themselves need a Nextcloud-level backup; nothing exports files and their metadata together and restores the pairing elsewhere.",
+			"note": "The files themselves need a Nextcloud-level backup; nothing exports files and their metadata together and restores the pairing elsewhere. Specified in ConductionNL/openregister openspec/changes/import-preview-and-conflict-policy (openregister lane, OpenSpec pass 2026-09-27).",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
