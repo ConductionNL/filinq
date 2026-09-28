@@ -226,6 +226,10 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
                  the old one in place, REFUSES two sources targeting one
                  destination, deletes nothing, and a re-run is a no-op. -->
             <step>OCA\Filinq\Repair\RenameDutchColumns</step>
+            <!-- Needs the printJob schema, which the register import creates on
+                 boot after the repair steps: the first pass moves nothing and
+                 keeps the entries, a later pass moves them. -->
+            <step>OCA\Filinq\Repair\MigratePrintJobsOutOfAppConfig</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
