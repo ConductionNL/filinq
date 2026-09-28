@@ -151,6 +151,10 @@ class DocumentService {
 	 *                       — defaults to mode 'return' (byte-identical to
 	 *                       this method's behaviour before output support
 	 *                       existed)
+	 * @param array $recordFields Extra fields for the generatedDocument entry, such as the
+	 *                            view a periodic run rendered over. A PHP-only parameter:
+	 *                            no HTTP route passes it, so a request cannot write into
+	 *                            its own audit entry. Canonical fields always win.
 	 *
 	 * @return array{content: string, format: string, metadata: array, warnings: string[], output: array}
 	 *
@@ -159,11 +163,13 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function generateDocument(
 		string $templateId,
 		array $dataRefs,
 		array $options = [],
+		array $recordFields = [],
 	): array {
 		$format = $options['format'] ?? self::DEFAULT_FORMAT;
 		$this->validateFormat(format: $format);
@@ -175,7 +181,8 @@ class DocumentService {
 			templateId: $templateId,
 			template: $template,
 			dataRefs: $dataRefs,
-			options: $options
+			options: $options,
+			recordFields: $recordFields
 		);
 
 	}//end generateDocument()
@@ -195,6 +202,7 @@ class DocumentService {
 	 *                        `format` and `orientation` when known.
 	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
 	 * @param array $options The same options {@see generateDocument()} takes.
+	 * @param array $recordFields The same extra entry fields {@see generateDocument()} takes.
 	 *
 	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[], output: array}
 	 *               `html` is the rendered template before format conversion.
@@ -213,6 +221,7 @@ class DocumentService {
 		array $template,
 		array $dataRefs,
 		array $options = [],
+		array $recordFields = [],
 	): array {
 		$format = $options['format'] ?? self::DEFAULT_FORMAT;
 		$this->validateFormat(format: $format);
@@ -304,7 +313,7 @@ class DocumentService {
 				'filePath' => $stored['path'],
 			],
 			userId: (string)($options['userId'] ?? ''),
-			extra: $plain['record']
+			extra: array_merge($recordFields, $plain['record'])
 		);
 
 		return [

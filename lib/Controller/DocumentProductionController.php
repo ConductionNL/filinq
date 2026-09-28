@@ -200,10 +200,15 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The document this run produced.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function runPeriodic(array $schedule = []): JSONResponse {
-		return $this->answer(handler: fn (): array => $this->periodic->run(schedule: $schedule));
+		// The PDF lands in the Files of the person who asked for it, never in
+		// somebody else's folder because the posted schedule named them.
+		$userId = (string)($this->userSession->getUser()?->getUID() ?? '');
+
+		return $this->answer(handler: fn (): array => $this->periodic->run(schedule: $schedule, userId: $userId));
 
 	}//end runPeriodic()
 

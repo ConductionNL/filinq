@@ -1,26 +1,29 @@
 <?php
 
 /**
- * Unit tests for PeriodicDocumentService
+ * Tests for PeriodicDocumentService (periodic-documents-on-a-schedule).
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service
- *
- * @author    Conduction Development Team <info@conduction.nl>
+ * @author   Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
- * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
  *
- * @version GIT: <git_id>
- *
- * @link https://www.filinq.app
- *
- * @spec openspec/specs/document-creatie-sjablonen/spec.md
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
+
+declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use DateTimeImmutable;
+use Exception;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\PageLayoutService;
+use OCA\Filinq\Service\PeriodicCadence;
 use OCA\Filinq\Service\PeriodicDocumentService;
 use OCA\Filinq\Service\SavedViewReader;
 use OCA\OpenRegister\Service\ObjectService;
@@ -29,61 +32,52 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Asserts that the besluitenlijst makes itself, that last week's list is
- * untouched, and that a deleted view fails LOUDLY instead of producing an empty
- * document that reads like a quiet week.
- *
- * @category Tests
- * @package  OCA\Filinq\Tests\Unit\Service
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
+ * The besluitenlijst makes itself as a stored PDF, last week's list is
+ * untouched, and a broken schedule says so on the schedule.
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class PeriodicDocumentServiceTest extends TestCase {
 
 	/**
-	 * Objects the fake OpenRegister was asked to store.
+	 * Schedule writes: [uuid, fields].
+	 *
+	 * @var array<int, array{0: string|null, 1: array<string, mixed>}>
+	 */
+	private array $scheduleWrites = [];
+
+	/**
+	 * The generateDocument calls: [templateId, options, recordFields].
+	 *
+	 * @var array<int, array{0: string, 1: array<string, mixed>, 2: array<string, mixed>}>
+	 */
+	private array $generations = [];
+
+	/**
+	 * The stored schedules searchObjectsBySlug answers with.
 	 *
 	 * @var array<int, array<string, mixed>>
 	 */
-	private array $written = [];
+	private array $stored = [];
 
 	/**
-	 * The schemas those writes were addressed to.
+	 * Build the service.
 	 *
-	 * @var array<int, string>
+	 * @param array<int, mixed>|null    $records  What the view returns, or null when it is gone.
+	 * @param array<string, mixed>|null $layout   The layout the schedule names.
+	 * @param Exception|null            $failWith What generation throws, if anything.
+	 *
+	 * @return PeriodicDocumentService
 	 */
-	private array $writtenTo = [];
-
-	/**
-	 * The uuids those writes were addressed to.
-	 *
-	 * @var array<int, string|null>
-	 */
-	private array $writtenUuids = [];
-
-	/**
-	 * Build the service over a view that returns the given records.
-	 *
-	 * @param array<int, mixed>|null $records What the view returns, or null when it is gone.
-	 * @param array<string, mixed>|null $layout The layout the schedule names, if any.
-	 *
-	 * @return PeriodicDocumentService The service under test.
-	 */
-	private function service(?array $records, ?array $layout = null): PeriodicDocumentService {
+	private function service(?array $records, ?array $layout = null, ?Exception $failWith = null): PeriodicDocumentService {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
-				$object = ($arguments[0] ?? []);
-				$this->written[] = $object;
-				$this->writtenTo[] = (string)($arguments[2] ?? '');
-				$this->writtenUuids[] = ($arguments[3] ?? null);
-
-				return ($object + ['uuid' => ($arguments[3] ?? 'document-new')]);
+				$this->scheduleWrites[] = [($arguments[3] ?? null), ($arguments[0] ?? [])];
+				return ($arguments[0] ?? []);
 			}
 		);
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(fn (): array => $this->stored);
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);
 
@@ -94,14 +88,25 @@ class PeriodicDocumentServiceTest extends TestCase {
 		$layouts->method('resolve')->willReturn($layout);
 		$layouts->method('stamp')->willReturnCallback(
 			static function (array $document, ?array $resolved): array {
-				if ($resolved === null) {
-					return $document;
+				if ($resolved !== null) {
+					$document['layoutId'] = (string)$resolved['uuid'];
+					$document['layoutVersion'] = (int)$resolved['layoutVersion'];
 				}
-
-				$document['layoutId'] = (string)($resolved['uuid'] ?? '');
-				$document['layoutVersion'] = (int)($resolved['layoutVersion'] ?? 0);
-
 				return $document;
+			}
+		);
+
+		$documents = $this->createMock(DocumentService::class);
+		$documents->method('generateDocument')->willReturnCallback(
+			function (string $templateId, array $dataRefs, array $options = [], array $recordFields = []) use ($failWith): array {
+				$this->generations[] = [$templateId, $options, $recordFields];
+				if ($failWith !== null) {
+					throw $failWith;
+				}
+				return [
+					'metadata' => ['uuid' => 'document-new', 'status' => 'generated', 'templateId' => $templateId] + $recordFields,
+					'output' => ['mode' => 'files', 'fileId' => 991, 'path' => '/x'],
+				];
 			}
 		);
 
@@ -109,18 +114,22 @@ class PeriodicDocumentServiceTest extends TestCase {
 			$resolver,
 			$views,
 			$layouts,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$documents,
+			new PeriodicCadence()
 		);
 
 	}//end service()
 
 	/**
-	 * The besluitenlijst schedule.
+	 * The besluitenlijst schedule as OpenRegister stores it.
 	 *
-	 * @return array<string, mixed> The schedule.
+	 * @param array<string, mixed> $overrides Fields to change.
+	 *
+	 * @return array<string, mixed>
 	 */
-	private function schedule(): array {
-		return [
+	private function schedule(array $overrides = []): array {
+		return $overrides + [
 			'uuid' => 'schedule-1',
 			'name' => 'Besluitenlijst',
 			'viewSlug' => 'besluiten-deze-maand',
@@ -128,18 +137,13 @@ class PeriodicDocumentServiceTest extends TestCase {
 			'layout' => 'Gemeente, besluit',
 			'cadence' => 'weekly',
 			'active' => true,
+			'lastRunDocument' => 'document-last-week',
+			'@self' => ['owner' => 'griffier'],
 		];
 
 	}//end schedule()
 
-	/**
-	 * The run writes a document naming the view and the count.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-	 */
-	public function testTheBesluitenlijstMakesItself(): void {
+	public function testARunRendersTheViewIntoAStoredPdfInTheOwnersFiles(): void {
 		$service = $this->service(
 			records: [['id' => 'a'], ['id' => 'b'], ['id' => 'c']],
 			layout: ['uuid' => 'layout-2', 'layoutVersion' => 2]
@@ -147,48 +151,45 @@ class PeriodicDocumentServiceTest extends TestCase {
 
 		$document = $service->run(schedule: $this->schedule());
 
-		$this->assertSame('besluiten-deze-maand', $document['viewSlug']);
+		[$templateId, $options, $recordFields] = $this->generations[0];
+		$this->assertSame('template-1', $templateId);
+		$this->assertSame('pdf', $options['format']);
+		$this->assertSame(['mode' => 'files'], $options['output']);
+		$this->assertSame('griffier', $options['userId']);
+		$this->assertSame([['id' => 'a'], ['id' => 'b'], ['id' => 'c']], $options['adHocData']['records']);
+		$this->assertSame('besluiten-deze-maand', $options['adHocData']['view']);
+		$this->assertStringStartsWith('Besluitenlijst ', $options['filename']);
+		$this->assertSame(['viewSlug' => 'besluiten-deze-maand', 'recordCount' => 3, 'layoutId' => 'layout-2', 'layoutVersion' => 2], $recordFields);
+
+		$this->assertSame(991, $document['fileId']);
 		$this->assertSame(3, $document['recordCount']);
-		$this->assertSame(2, $document['layoutVersion']);
-		$this->assertSame('generated', $document['status']);
+	}
 
-	}//end testTheBesluitenlijstMakesItself()
-
-	/**
-	 * A run writes a NEW document and updates only the schedule.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-	 */
-	public function testLastWeeksListIsUntouched(): void {
+	public function testTheScheduleNowPointsAtTheNewDocumentAndLastWeeksIsUntouched(): void {
 		$service = $this->service(records: [['id' => 'a']]);
 
-		$service->run(schedule: $this->schedule());
+		$service->run(schedule: $this->schedule(['lastRunError' => 'old trouble']));
 
-		// Two writes: the new document (created, no uuid) and the schedule
-		// (updated). Nothing addresses an earlier document.
-		$this->assertCount(2, $this->written);
-		$this->assertSame('generatedDocument', $this->writtenTo[0]);
-		$this->assertNull($this->writtenUuids[0], 'Each run CREATES a document.');
-		$this->assertSame('periodicDocument', $this->writtenTo[1]);
-		$this->assertSame('schedule-1', $this->writtenUuids[1]);
+		$this->assertCount(1, $this->scheduleWrites, 'Only the schedule is written here; the document entry is the generation path\'s.');
+		[$uuid, $fields] = $this->scheduleWrites[0];
+		$this->assertSame('schedule-1', $uuid);
+		$this->assertSame('document-new', $fields['lastRunDocument']);
+		$this->assertSame(1, $fields['lastRunRecords']);
+		$this->assertSame('', $fields['lastRunError']);
+		$this->assertArrayNotHasKey('@self', $fields);
+	}
 
-	}//end testLastWeeksListIsUntouched()
+	public function testOnDemandTheCallerReceivesThePdf(): void {
+		$service = $this->service(records: []);
 
-	/**
-	 * A deleted view fails, naming it, and produces no document.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-	 */
-	public function testADeletedViewFailsLoudlyAndWritesNothing(): void {
+		$service->run(schedule: $this->schedule(), userId: 'handler');
+
+		$this->assertSame('handler', $this->generations[0][1]['userId']);
+	}
+
+	public function testADeletedViewFailsNamingItAndGeneratesNothing(): void {
 		$service = $this->service(records: null);
 
-		// The failure is CAPTURED rather than asserted inside the catch:
-		// PHPUnit's own fail() throws a RuntimeException subclass, so a catch
-		// on RuntimeException would swallow it and the test could not fail.
 		$failure = null;
 		try {
 			$service->run(schedule: $this->schedule());
@@ -196,40 +197,21 @@ class PeriodicDocumentServiceTest extends TestCase {
 			$failure = $caught;
 		}
 
-		$this->assertNotNull($failure, 'A run against a deleted view must fail.');
+		$this->assertNotNull($failure);
 		$this->assertStringContainsString('besluiten-deze-maand', $failure->getMessage());
+		$this->assertSame([], $this->generations);
+		$this->assertSame([], $this->scheduleWrites);
+	}
 
-		$this->assertSame([], $this->written, 'A failed run must not leave an empty document behind.');
-
-	}//end testADeletedViewFailsLoudlyAndWritesNothing()
-
-	/**
-	 * An EMPTY view is a quiet month, and still produces its document.
-	 *
-	 * This is the other half of the deleted-view case: both look like "no
-	 * records" to anything that only counts rows, and only one of them is a
-	 * broken schedule.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-	 */
-	public function testAnEmptyViewIsNotADeletedView(): void {
+	public function testAnEmptyViewIsAQuietWeekAndStillADocument(): void {
 		$service = $this->service(records: []);
 
 		$document = $service->run(schedule: $this->schedule());
 
 		$this->assertSame(0, $document['recordCount']);
+		$this->assertCount(1, $this->generations);
+	}
 
-	}//end testAnEmptyViewIsNotADeletedView()
-
-	/**
-	 * A schedule that names no view is refused.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-	 */
 	public function testAScheduleWithoutAViewIsRefused(): void {
 		$service = $this->service(records: []);
 		$schedule = $this->schedule();
@@ -237,6 +219,58 @@ class PeriodicDocumentServiceTest extends TestCase {
 
 		$this->expectException(RuntimeException::class);
 		$service->run(schedule: $schedule);
+	}
 
-	}//end testAScheduleWithoutAViewIsRefused()
-}//end class
+	public function testTheSweepRunsWhatIsDueAndSkipsTheRest(): void {
+		$this->stored = [
+			$this->schedule(['uuid' => 'due', 'lastRunAt' => '2026-09-21T09:00:00+00:00']),
+			$this->schedule(['uuid' => 'fresh', 'lastRunAt' => '2026-09-27T09:00:00+00:00']),
+			$this->schedule(['uuid' => 'manual', 'cadence' => 'onDemand']),
+		];
+		$service = $this->service(records: [['id' => 'a']]);
+
+		$summary = $service->runDue(now: new DateTimeImmutable('2026-09-28T10:00:00+00:00'));
+
+		$this->assertSame(['ran' => 1, 'failed' => 0, 'skipped' => 2], $summary);
+		$this->assertCount(1, $this->generations);
+		$this->assertSame('due', $this->scheduleWrites[0][0]);
+	}
+
+	public function testABrokenViewIsWrittenOnTheScheduleAndLastWeeksDocumentStays(): void {
+		$this->stored = [$this->schedule(['lastRunAt' => '2026-09-21T09:00:00+00:00'])];
+		$service = $this->service(records: null);
+
+		$summary = $service->runDue(now: new DateTimeImmutable('2026-09-28T10:00:00+00:00'));
+
+		$this->assertSame(1, $summary['failed']);
+		[$uuid, $fields] = $this->scheduleWrites[0];
+		$this->assertSame('schedule-1', $uuid);
+		$this->assertStringContainsString('no longer exists', $fields['lastRunError']);
+		$this->assertSame('2026-09-28T10:00:00+00:00', $fields['lastRunErrorAt']);
+		$this->assertSame('document-last-week', $fields['lastRunDocument']);
+		$this->assertSame('2026-09-21T09:00:00+00:00', $fields['lastRunAt']);
+	}
+
+	public function testAFailedGenerationIsRecordedAndTheNextScheduleStillRuns(): void {
+		$this->stored = [
+			$this->schedule(['uuid' => 'one']),
+			$this->schedule(['uuid' => 'two']),
+		];
+		$service = $this->service(records: [], failWith: new Exception('Template not found', 404));
+
+		$summary = $service->runDue(now: new DateTimeImmutable('2026-09-28T10:00:00+00:00'));
+
+		$this->assertSame(['ran' => 0, 'failed' => 2, 'skipped' => 0], $summary);
+		$this->assertStringContainsString('Template not found', $this->scheduleWrites[1][1]['lastRunError']);
+	}
+
+	public function testAScheduleWithoutAnOwnerIsAFailureNotAFileInNobodysFolder(): void {
+		$this->stored = [$this->schedule(['@self' => []])];
+		$service = $this->service(records: []);
+
+		$service->runDue(now: new DateTimeImmutable('2026-09-28T10:00:00+00:00'));
+
+		$this->assertSame([], $this->generations);
+		$this->assertStringContainsString('no owner', $this->scheduleWrites[0][1]['lastRunError']);
+	}
+}
