@@ -328,13 +328,17 @@ fi
 # Verify against OpenRegister directly, and require exactly the slugs declared
 # in `lib/Settings/filinq_register.json` — so this check cannot drift away
 # from what the app actually ships.
+#
+# Both lists are read to the end, page by page: OpenRegister caps a page and
+# returns no total, so a single `_limit=1000` read dropped every schema past
+# the cap on a crowded instance and reported filinq's own schemas as missing.
 REG_BODY="$(mktemp)"
-curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/registers?_limit=300" -o "$REG_BODY"
+bash "${SCRIPT_DIR}/lib/fetch-all-pages.sh" \
+	"${BASE}/index.php/apps/openregister/api/registers" "$REG_BODY" "${USER_NAME}:${USER_PASS}"
 
 SCH_BODY="$(mktemp)"
-curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/schemas?_limit=1000" -o "$SCH_BODY"
+bash "${SCRIPT_DIR}/lib/fetch-all-pages.sh" \
+	"${BASE}/index.php/apps/openregister/api/schemas" "$SCH_BODY" "${USER_NAME}:${USER_PASS}"
 
 # Emits `KEY<TAB>VALUE` lines for the app-config bindings, on stdout, after
 # verifying. Anything diagnostic goes to stderr so the two never mix.

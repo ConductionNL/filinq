@@ -8,11 +8,13 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<NcModal
 		:show="show"
-		:name="t('filinq', 'Confirm who you are')"
+		labelId="signer-step-up-title"
 		size="normal"
 		@close="$emit('close')">
 		<div class="signer-step-up">
-			<h2>{{ t('filinq', 'Confirm who you are') }}</h2>
+			<h2 id="signer-step-up-title">
+				{{ t('filinq', 'Confirm who you are') }}
+			</h2>
 			<p>
 				{{
 					t(

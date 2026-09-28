@@ -843,6 +843,10 @@ import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import { initialSections } from '../../services/settingsSections.js'
+
+/** The object types whose register and schema this page binds. */
+const OBJECT_TYPES = ['publicationConsent']
 
 export default {
 	name: 'Settings',
@@ -881,8 +885,8 @@ export default {
 			availableRegisters: [],
 			availableRegistersOptions: { options: [] },
 			globalSchemasOptions: {},
-			objectTypes: ['publicationConsent'],
-			sections: {},
+			objectTypes: OBJECT_TYPES,
+			sections: initialSections(OBJECT_TYPES),
 			// Propose-grondslag-per-entity-type: curated entity types, the
 			// available base records, and the operator-configured mapping
 			// (entity type → base slug[]). All supplied by the settings GET.
