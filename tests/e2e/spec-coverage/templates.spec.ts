@@ -11,7 +11,7 @@
 
 // @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
 // @e2e openspec/specs/template-management/spec.md#create-a-template
-// @e2e openspec/changes/decision-letter-legal-basis-and-deadline/specs/document-creatie-sjablonen/spec.md#the-author-picks-the-fields-instead-of-typing-them
+// @e2e openspec/specs/document-creatie-sjablonen/spec.md#the-author-picks-the-fields-instead-of-typing-them
 
 import { expect, test } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers.ts'
@@ -136,7 +136,7 @@ test.describe('template-management — templates list UI', () => {
 	})
 
 	test('the merge field dialog offers the legal basis and the objection deadline', async ({ page }) => {
-		// @e2e openspec/changes/decision-letter-legal-basis-and-deadline/specs/document-creatie-sjablonen/spec.md#the-author-picks-the-fields-instead-of-typing-them
+		// @e2e openspec/specs/document-creatie-sjablonen/spec.md#the-author-picks-the-fields-instead-of-typing-them
 		const guard = attachConsoleGuard(page)
 		await go(page, 'templates/new')
 		await dismissOverlays(page)

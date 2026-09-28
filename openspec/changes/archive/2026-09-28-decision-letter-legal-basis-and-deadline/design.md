@@ -19,9 +19,21 @@ generation warnings say so, so a template can test `{% if bezwaar %}`.
 
 ### D2. The legal basis is a normal data reference
 
-A template binds a `base` object through `dataRefs` as `grondslag`. The merge
-field dialog lists `grondslag.name` and `grondslag.article` beside the
-`bezwaar` fields, so the author picks instead of types.
+A template binds a `base` object through `dataRefs`. The resolver keys resolved
+objects by schema slug, so the object arrives as `base`; generation also offers
+it as `grondslag` when the data has no `grondslag` of its own. The merge field
+dialog lists `grondslag.name` and `grondslag.description` beside the `bezwaar`
+fields, so the author picks instead of types.
+
+Corrected at build (28 Sep 2026): the design named `grondslag.article`, but the
+`base` schema has `name` and `description` and no article, and `dataRefs` has
+no alias, so `grondslag` only exists through the alias above.
+
+### D3. The missing-date warning only fires for a template that uses `bezwaar`
+
+Every generation without a decision date would otherwise warn, including
+letters that are not decisions at all. The warning is added when the template
+source mentions `bezwaar`; the `bezwaar` key is left out either way.
 
 ## Risks
 

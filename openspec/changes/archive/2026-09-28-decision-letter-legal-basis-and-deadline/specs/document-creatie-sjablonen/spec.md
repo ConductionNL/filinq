@@ -8,9 +8,11 @@ Generation MUST add a `bezwaar` object to the template context when the data
 carries a decision date, with the term in weeks (app setting
 `bezwaar_termijn_weken`, default 6) and the last day to object, counted from
 the day after the decision date, with a deadline on a Saturday or Sunday moved
-to the Monday. Without a decision date the context MUST NOT carry `bezwaar` and
-the generation warnings MUST say that no decision date was found. The merge
-field dialog MUST offer the legal basis and objection deadline fields.
+to the Monday. Without a decision date the context MUST NOT carry `bezwaar`, and when the
+template uses `bezwaar` the generation warnings MUST say that no decision date
+was found. A resolved `base` object MUST also be offered as `grondslag`. The
+merge field dialog MUST offer the legal basis (`grondslag.name`,
+`grondslag.description`) and objection deadline fields.
 
 #### Scenario: The letter states the last day to object
 
@@ -21,10 +23,10 @@ field dialog MUST offer the legal basis and objection deadline fields.
 
 #### Scenario: No decision date is a warning, not a wrong date
 
-- GIVEN data without a decision date
+- GIVEN a template using `bezwaar` and data without a decision date
 - WHEN the letter is generated
 - THEN the context has no `bezwaar` and the warnings name the missing decision date
-- @e2e exclude generation warning, covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php)
+- @e2e exclude generation warning, covered by PHPUnit (tests/unit/Service/DocumentServiceDecisionLetterTest.php)
 
 #### Scenario: The author picks the fields instead of typing them
 

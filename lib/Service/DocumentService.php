@@ -413,7 +413,7 @@ class DocumentService {
 	 *
 	 * @return array{data: array<string, mixed>, warnings: array<int, string>}
 	 *
-	 * @spec openspec/changes/decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
 	 */
 	private function addDecisionContext(array $data, string $templateContent): array {
 		if (isset($data['grondslag']) === false && is_array($data['base'] ?? null) === true) {

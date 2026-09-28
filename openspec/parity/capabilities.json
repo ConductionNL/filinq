@@ -1499,12 +1499,13 @@
 			"name": "Include the legal basis and the decision deadline in a decision letter.",
 			"source": "category-derived",
 			"sourceRef": "user story \"Include legal basis reference in decision letter\"",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Missing half specified in openspec/changes/decision-letter-legal-basis-and-deadline on 2026-09-28 in the build-all pass. Before: Generic templating lets any resolved dataRef field (including a 'base'/grondslag object) be inserted as a merge field, so a template author can manually type a legal-basis field. But there is no dedicated feature computing/inserting an objection deadline into a decision letter: lib/Service/ObjectionDeadlineChecker.php:96-133 (getObjectionPeriodDays/calculateDeadline/checkObjectionDeadline) is used only by ConsentService/PolicyController for publication-objection flows, never by CorrespondenceService or DocumentService.",
-				"change": "openspec/changes/decision-letter-legal-basis-and-deadline"
+				"evidence": "lib/Service/ObjectionTermCalculator.php computes the objection deadline (Awb 6:7, bezwaar_termijn_weken weeks, default 6, from the day after besluitDatum/decisionDate, weekend moved to Monday). DocumentService::addDecisionContext puts it in the template context as bezwaar (uiterlijk, vanaf, termijnWeken) on generation and preview, offers a resolved base object as grondslag, and warns when a template uses bezwaar without a decision date. src/dialogs/MergeFieldDialog.vue offers grondslag.name, grondslag.description and the bezwaar fields. Public holidays are not moved (documented limit).",
+				"change": "openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline",
+				"readOn": "2026-09-28"
 			},
 			"reachedOn": "templates can reference legal-basis fields generically via merge fields; no dedicated 'legal basis + deadline in decision letter' computation in filinq",
 			"provider": "filinq",

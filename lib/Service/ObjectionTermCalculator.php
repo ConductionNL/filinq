@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/decision-letter-legal-basis-and-deadline/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use OCP\IAppConfig;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/decision-letter-legal-basis-and-deadline/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class ObjectionTermCalculator {
 
@@ -77,7 +77,7 @@ class ObjectionTermCalculator {
 	 * @return array{termijnWeken: int, vanaf: string, uiterlijk: string, uiterlijkIso: string}|null
 	 *         The term, or null when the date cannot be read.
 	 *
-	 * @spec openspec/changes/decision-letter-legal-basis-and-deadline/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.1
 	 */
 	public function calculate(string $decisionDate): ?array {
 		if (trim($decisionDate) === '') {
@@ -122,7 +122,7 @@ class ObjectionTermCalculator {
 	 *
 	 * @return string|null The decision date, or null when the data has none.
 	 *
-	 * @spec openspec/changes/decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.2
 	 */
 	public function findDecisionDate(array $data): ?string {
 		foreach (self::DATE_KEYS as $key) {

@@ -9,7 +9,7 @@
  * generation from the decision date in the data (besluitDatum or
  * decisionDate) and the `bezwaar_termijn_weken` app setting.
  *
- * @spec openspec/changes/decision-letter-legal-basis-and-deadline/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline/tasks.md#task-1.3
  */
 
 import { translate as t } from '@nextcloud/l10n'
