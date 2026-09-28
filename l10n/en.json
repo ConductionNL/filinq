@@ -1446,7 +1446,12 @@
         "Write text to field": "Write text to field",
         "Also write the rendered text into this field of the object. Only that field changes.": "Also write the rendered text into this field of the object. Only that field changes.",
         "Output field": "Output field",
-        "The item field that receives the document details. Defaults to document.": "The item field that receives the document details. Defaults to document."
+        "The item field that receives the document details. Defaults to document.": "The item field that receives the document details. Defaults to document.",
+        "E-mail": "E-mail",
+        "Nextcloud user": "Nextcloud user",
+        "Add signer": "Add signer",
+        "Remove signer {number}": "Remove signer {number}",
+        "Give each signer an e-mail address or a Nextcloud user. In sequential mode they sign in this order.": "Give each signer an e-mail address or a Nextcloud user. In sequential mode they sign in this order."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

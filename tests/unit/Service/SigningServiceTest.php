@@ -242,6 +242,7 @@ class SigningServiceTest extends TestCase {
 				'documentName' => 'besluit.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
 			]
 		);
 
@@ -283,6 +284,7 @@ class SigningServiceTest extends TestCase {
 				'documentName' => 'contract.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
 				'sourceApp' => 'shillinq',
 				'subjectRegister' => 'finance',
 				'subjectSchema' => 'invoice',
@@ -326,12 +328,83 @@ class SigningServiceTest extends TestCase {
 				'documentName' => 'internal.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
 			]
 		);
 
 		$this->assertArrayNotHasKey('sourceApp', $captured);
 
 	}//end testCreateRequestInternalHasNoProvenance()
+
+	/**
+	 * Issue #1209: a request that names nobody to sign is refused with a 400
+	 * before anything is stored, instead of being saved as a PENDING request
+	 * nobody can ever sign.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestRejectsARequestWithoutSigners(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		foreach ([[], [['displayName' => 'Nobody reachable']], [['userId' => '', 'email' => '  ']]] as $signers) {
+			try {
+				$this->service->createRequest(
+					data: [
+						'documentFileId' => 'file-001',
+						'documentName' => 'besluit.pdf',
+						'signatureLevel' => 'SES',
+						'signingMode' => 'sequential',
+						'signers' => $signers,
+					]
+				);
+				$this->fail('createRequest() must refuse a request without a reachable signer: '.json_encode($signers));
+			} catch (RuntimeException $e) {
+				$this->assertSame(400, $e->getCode());
+				$this->assertStringContainsString('signer', $e->getMessage());
+			}
+		}
+
+	}//end testCreateRequestRejectsARequestWithoutSigners()
+
+	/**
+	 * Issue #1209: the signers sent with the form are stored as signer records
+	 * linked to the new request.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestStoresTheSignersItIsGiven(): void {
+		$saved = [];
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-1209' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$result = $this->service->createRequest(
+			data: [
+				'documentFileId' => 'file-001',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [
+					['displayName' => 'Bea', 'email' => 'bea@example.org'],
+					['displayName' => 'Carl', 'userId' => 'carl'],
+				],
+			]
+		);
+
+		$signerRecords = array_values(array_filter($saved, static fn (array $o) => isset($o['signingRequestId']) === true));
+		$this->assertCount(2, $signerRecords);
+		$this->assertSame('req-1209', $signerRecords[0]['signingRequestId']);
+		$this->assertSame('bea@example.org', $signerRecords[0]['email']);
+		$this->assertSame('carl', $signerRecords[1]['userId']);
+		$this->assertCount(2, $result['signerIds']);
+
+	}//end testCreateRequestStoresTheSignersItIsGiven()
 
 	/**
 	 * createRequest() rejects missing documentFileId.

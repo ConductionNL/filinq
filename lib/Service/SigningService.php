@@ -189,6 +189,10 @@ class SigningService {
 		// with a 400 and leaves no object behind.
 		$request['guardianConsentAge'] = $this->consentGuard->appliedAge(data: $data);
 		$signers = (array)($data['signers'] ?? []);
+
+		// A request that names nobody who can sign is refused before anything
+		// is stored, instead of being saved as PENDING for ever (#1209).
+		$this->validator->validateSigners(signers: $signers);
 		$prepared = $this->consentGuard->prepareSigners(
 			signers: $signers,
 			age: $request['guardianConsentAge'],
