@@ -157,7 +157,7 @@ class DocumentService {
 	 * @throws Exception If generation fails
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function generateDocument(
@@ -343,7 +343,7 @@ class DocumentService {
 	 * @throws Exception If rendering fails
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function generatePreview(
 		string $templateId,
@@ -394,7 +394,7 @@ class DocumentService {
 	 * per-object-resolved collection to end up) no longer holds — but
 	 * wiring listRefs through bulk was intentionally left out of this
 	 * change's scope; it remains unimplemented pending a real use case.
-	 * See openspec/changes/document-generation-list-refs/proposal.md and
+	 * See openspec/changes/archive/2026-09-28-document-generation-list-refs/proposal.md and
 	 * openspec/changes/document-output-destinations-and-bulk-retention/proposal.md.
 	 *
 	 * For batches larger than SYNC_BATCH_LIMIT (async), `options.output.mode`

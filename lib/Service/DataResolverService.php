@@ -114,7 +114,7 @@ class DataResolverService {
 	 *
 	 * @return ListReferenceResolver The resolver for listRefs
 	 *
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function getListReferenceResolver(): ListReferenceResolver {
 		if ($this->listResolver === null) {
@@ -153,7 +153,7 @@ class DataResolverService {
 	 *                   failures
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function resolve(array $dataRefs, array $listRefs = [], array $adHocData = []): array {
 		$this->resolvedCache = [];

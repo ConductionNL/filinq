@@ -1444,9 +1444,10 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DataResolverService.php:158 resolve(dataRefs, listRefs, adHocData) and lib/Service/TemplateRenderer.php:290 buildDataTableFunction() (data_table() Twig fn) are fully implemented (openspec/changes/document-generation-list-refs/tasks.md: 14/14 done). But lib/Service/CorrespondenceService.php's generate() calls dataResolver->resolve() WITHOUT listRefs, and TemplatePreviewController/TemplateDetail.vue's preview path never sends listRefs either -- only DocumentService::generateDocument()/generatePreview() accept it, and that controller has no verified FE or machine caller (dossiq's FilinqTemplateEngineAdapter passes only dataRefs+adHocData, no listRefs)."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-document-generation-list-refs (archived 2026-09-28, 14 of 14 tasks): POST api/documents/generate and generate/preview accept options.listRefs (DocumentController -> DocumentService::generateDocument/generatePreview -> DataResolverService::resolve -> ListReferenceResolver), and templates render the collection with data_table(). Rated partial because the change scoped listRefs to those two endpoints (REQ-DDLR-004): CorrespondenceService::generate() and the template preview screen do not pass listRefs, and dossiq's FilinqTemplateEngineAdapter sends only dataRefs and adHocData. Before: lib/Service/DataResolverService.php:158 resolve(dataRefs, listRefs, adHocData) and lib/Service/TemplateRenderer.php:290 buildDataTableFunction() (data_table() Twig fn) are fully implemented (openspec/changes/document-generation-list-refs/tasks.md: 14/14 done). But lib/Service/CorrespondenceService.php's generate() calls dataResolver->resolve() WITHOUT listRefs, and TemplatePreviewController/TemplateDetail.vue's preview path never sends listRefs either -- only DocumentService::generateDocument()/generatePreview() accept it, and that controller has no verified FE or machine caller (dossiq's FilinqTemplateEngineAdapter passes only dataRefs+adHocData, no listRefs).",
+				"change": "openspec/changes/archive/2026-09-28-document-generation-list-refs"
 			},
 			"reachedOn": "nothing reaches the listRefs path; data_table() Twig fn is technically usable via TemplateDetail.vue's raw-HTML toggle but only against fields already in a single resolved dataRef object",
 			"provider": "filinq",
