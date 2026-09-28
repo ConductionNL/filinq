@@ -23,17 +23,19 @@
 
 ## 3. Enforcement & evidence
 
-- [ ] 3.1 Assurance gate in `SigningService::sign()`/`decline()` after the ownership check: registered provider + `requiredAssurance` met + evidence age ≤ configurable max (default 15 min); 403 with step-up indication, zero mutation on refusal (REQ-DDSIR-003); creation-time floor normalisation SES→low/AdES→substantial/QES→high (REQ-DDSIR-002)
+- [x] 3.1 Assurance gate in `SigningService::sign()`/`decline()` after the ownership check: registered provider + `requiredAssurance` met + evidence age ≤ configurable max (default 15 min); 403 with step-up indication, zero mutation on refusal (REQ-DDSIR-003); creation-time floor normalisation SES→low/AdES→substantial/QES→high (REQ-DDSIR-002)
+  - Built with the guardian's stronger check (design D6a, REQ-DDSIR-009): a guardian needs the strongest of `requiredAssurance`, `guardianRequiredAssurance` and the admin guardian minimum. Tests: `tests/unit/Service/SignerAuth/SigningAssuranceGateTest.php`, `tests/unit/Service/SigningServiceTest.php`
 
-- [ ] 3.2 Evidence recording: persist `identityEvidence` on the signer record, extend the OR audit `changed` context, include the tuple in the v2 artifact assertion (MAC-covered per REQ-DDSTR-001); raw token never stored, evidenceHash only (REQ-DDSIR-004)
+- [x] 3.2 Evidence recording: persist `identityEvidence` on the signer record, extend the OR audit `changed` context, include the tuple in the v2 artifact assertion (MAC-covered per REQ-DDSTR-001); raw token never stored, evidenceHash only (REQ-DDSIR-004)
 
 - [ ] 3.3 Step-up UI: sign dialog (in `src/modals/`) triggers `initiateAuthentication` on 403 step-up, handles the broker redirect/callback, re-attempts the signature; request form exposes `requiredAssurance` with floor hints (NcSelect with `inputLabel`)
 
-- [ ] 3.4 Surface resolved assurance to consumers (REQ-DDSIR-007): expose the recorded `identityEvidence.assurance` on the `filinq-signing` completion payload (feeds decidesk `QesGuard`; coordinates with `signing-trust-rebuild` REQ-DDSTR-010) and make it readable by the `portal-signing-actions` `minTrust` gate; surface pseudonym + assurance only, never BSN/raw token
+- [x] 3.4 Surface resolved assurance to consumers (REQ-DDSIR-007): expose the recorded `identityEvidence.assurance` on the `filinq-signing` completion payload (feeds decidesk `QesGuard`; coordinates with `signing-trust-rebuild` REQ-DDSTR-010) and make it readable by the `portal-signing-actions` `minTrust` gate; surface pseudonym + assurance only, never BSN/raw token
 
 ## 4. Quality, i18n, docs
 
-- [ ] 4.1 Unit tests ≥75% on new code incl. minimisation scan (no BSN-like value / raw token in store, audit, logs, artifact) and custody grep; run in container `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [x] 4.1 Unit tests ≥75% on new code incl. minimisation scan (no BSN-like value / raw token in store, audit, logs, artifact) and custody grep; run in container `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+  - Run standalone instead (`composer check:strict`, lane rules keep lanes off the container). Minimisation scan: `tests/unit/Service/SignerAuth/EvidenceMinimisationTest.php`; custody grep: `CredentialCustodyTest.php`. Every new class has its own test file; the coverage percentage was not measured locally (no pcov or xdebug), CI's coverage job reports it
 
 - [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/signer-identity-rails.spec.ts` against a throwaway mock-OIDC IdP container: substantial request refuses session-only signer → step-up at digid-substantial → signature accepted → evidence visible on record/audit/artifact; floor normalisation on QES creation; verify on Postgres (8080), nldesign theme enabled
 

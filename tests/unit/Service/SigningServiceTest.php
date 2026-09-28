@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+require_once __DIR__ . '/SignerAuth/AssuranceGateHarness.php';
+
 use OCA\Filinq\Event\SigningConcludedEventFactory;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\SettingsService;
@@ -44,6 +46,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use DateTimeImmutable;
+use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
 
 /**
  * Tests for SigningService signing request lifecycle
@@ -57,6 +62,8 @@ use RuntimeException;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class SigningServiceTest extends TestCase {
+	use \OCA\Filinq\Tests\Unit\Service\SignerAuth\AssuranceGateHarness;
+
 
 	/**
 	 * @var SigningService
@@ -203,7 +210,8 @@ class SigningServiceTest extends TestCase {
 				logger: $logger,
 				eventFactory: new SigningConcludedEventFactory()
 			),
-			consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService)
+			consentGuard: new GuardianConsentGuard(settingsService: $this->settingsService),
+			assuranceGate: $this->assuranceGate(userSession: $this->userSession)
 		);
 
 	}//end setUp()
@@ -1284,4 +1292,226 @@ class SigningServiceTest extends TestCase {
 		$this->assertFalse($sawCompleted, 'The request must NOT complete via a silently substituted provider.');
 
 	}//end testCompletionFailsLoudlyOnUnknownProviderNoFallback()
+	/**
+	 * Keep step-up evidence for req-001 / signer-001, as the broker callback does.
+	 *
+	 * @param string $assurance The assurance.
+	 * @param int $ageSeconds How long ago the signer authenticated.
+	 *
+	 * @return void
+	 */
+	private function keepStepUpEvidence(string $assurance, int $ageSeconds = 30): void {
+		$this->evidenceStore()->put(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			evidence: new IdentityEvidence(
+				provider: 'oidc-broker',
+				means: 'digid',
+				assurance: $assurance,
+				subjectPseudonym: 'ps-abcdef',
+				authenticatedAt: (new DateTimeImmutable())->modify('-' . $ageSeconds . ' seconds'),
+				evidenceHash: str_repeat('d', 64)
+			)
+		);
+
+	}//end keepStepUpEvidence()
+
+	/**
+	 * A substantial request refuses a session-only signer: 403 with a step-up hint, nothing written.
+	 *
+	 * @return void
+	 */
+	public function testASubstantialRequestRefusesASessionOnlySignerWithoutMutation(): void {
+		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+			$this->fail('A session-only signer must not sign a substantial request');
+		} catch (StepUpRequiredException $e) {
+			$this->assertSame(403, $e->getCode());
+			$this->assertSame('substantial', $e->stepUp()['requiredAssurance']);
+		}
+
+	}//end testASubstantialRequestRefusesASessionOnlySignerWithoutMutation()
+
+	/**
+	 * Stale evidence does not carry over (REQ-DDSIR-003 "Stale evidence does not carry over").
+	 *
+	 * @return void
+	 */
+	public function testStaleEvidenceDoesNotCarryOver(): void {
+		$this->keepStepUpEvidence(assurance: 'substantial', ageSeconds: 20 * 60);
+		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001']];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(StepUpRequiredException::class);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testStaleEvidenceDoesNotCarryOver()
+
+	/**
+	 * After step-up the act is accepted and the evidence lands on the record and the audit entry.
+	 *
+	 * @return void
+	 */
+	public function testStepUpEvidenceLandsOnTheRecordAndTheAuditEntry(): void {
+		$this->keepStepUpEvidence(assurance: 'substantial');
+		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'requiredAssurance' => 'substantial', 'signerIds' => ['signer-001', 'signer-002']];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$other = ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer, $signer + ['status' => 'SIGNED'], $other, $request);
+		$this->objectService->method('saveObject')->willReturnArgument(0);
+
+		$metadata = null;
+		$this->auditService->expects($this->once())->method('logEvent')->willReturnCallback(
+			function (...$args) use (&$metadata): array {
+				$metadata = $args[7] ?? null;
+				return [];
+			}
+		);
+
+		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertSame('SIGNED', $result['status']);
+		$this->assertSame('oidc-broker', $result['identityEvidence']['provider']);
+		$this->assertSame('substantial', $result['identityEvidence']['assurance']);
+		$this->assertSame('ps-abcdef', $result['identityEvidence']['subjectPseudonym']);
+		$this->assertSame($result['identityEvidence'], $metadata['identityEvidence'] ?? null);
+		$this->assertNull($this->evidenceStore()->get(requestId: 'req-001', signerId: 'signer-001'), 'The act spends the evidence');
+
+	}//end testStepUpEvidenceLandsOnTheRecordAndTheAuditEntry()
+
+	/**
+	 * decline() runs the same gate.
+	 *
+	 * @return void
+	 */
+	public function testDeclineIsGatedToo(): void {
+		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'requiredAssurance' => 'high'];
+		$signer = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($request, $signer);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(StepUpRequiredException::class);
+
+		$this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
+
+	}//end testDeclineIsGatedToo()
+
+	/**
+	 * Completion writes the resolved assurance and each signer's evidence, and hands both to the artifact.
+	 *
+	 * @return void
+	 */
+	public function testCompletionRecordsTheResolvedAssuranceAndHandsTheEvidenceToTheArtifact(): void {
+		$this->keepStepUpEvidence(assurance: 'substantial');
+		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'requiredAssurance' => 'substantial', 'initiatorUserId' => 'alice', 'documentFileId' => '42', 'signerIds' => ['signer-001']];
+		$pending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+		$this->objectService->method('find')->willReturnCallback(
+			function (string $id) use ($request, $pending, &$saved): array {
+				if ($id === 'req-001') {
+					return $request;
+				}
+
+				foreach (array_reverse($saved) as $object) {
+					if (($object['id'] ?? '') === $id) {
+						return $object;
+					}
+				}
+
+				return $pending;
+			}
+		);
+
+		$context = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $bytes, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$completed = array_values(array_filter($saved, static fn (array $o): bool => ($o['status'] ?? '') === 'COMPLETED'))[0] ?? [];
+		$this->assertSame('substantial', $completed['resolvedAssurance'] ?? null);
+		$this->assertSame('signer-001', $completed['signerEvidence'][0]['signerId'] ?? null);
+		$this->assertSame('oidc-broker', $completed['signerEvidence'][0]['provider'] ?? null);
+		$this->assertSame($completed['signerEvidence'], $context['signerEvidence'] ?? null);
+
+	}//end testCompletionRecordsTheResolvedAssuranceAndHandsTheEvidenceToTheArtifact()
+
+	/**
+	 * The completion payload carries exactly the recorded assurance (REQ-DDSIR-007).
+	 *
+	 * @return void
+	 */
+	public function testTheCompletionPayloadCarriesTheRecordedAssurance(): void {
+		$factory = new SigningConcludedEventFactory();
+
+		$recorded = $factory->create(request: ['id' => 'r', 'provider' => 'native', 'signatureLevel' => 'SES', 'resolvedAssurance' => 'substantial'], status: 'signed');
+		$this->assertSame('substantial', $recorded->getAssuranceLevel());
+
+		$forged = $factory->create(request: ['id' => 'r', 'provider' => 'native', 'signatureLevel' => 'SES', 'resolvedAssurance' => 'ultra'], status: 'signed');
+		$this->assertSame('low', $forged->getAssuranceLevel(), 'A value off the scale is never surfaced');
+
+		$legacy = $factory->create(request: ['id' => 'r', 'provider' => 'native', 'signatureLevel' => 'SES'], status: 'declined');
+		$this->assertSame('low', $legacy->getAssuranceLevel());
+
+	}//end testTheCompletionPayloadCarriesTheRecordedAssurance()
+
+	/**
+	 * Creation holds a request at its floor and says so.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestHoldsTheAssuranceAtTheFloor(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$first = null;
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$first): array {
+				$first ??= $object;
+				return ['id' => $object['id'] ?? 'req-001'] + $object;
+			}
+		);
+
+		$result = $this->service->createRequest(
+			data: [
+				'documentFileId' => 'file-001',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'AdES',
+				'provider' => 'validsign',
+				'requiredAssurance' => 'low',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame('substantial', $first['requiredAssurance']);
+		$this->assertSame('substantial', $result['requiredAssurance']);
+		$this->assertSame('substantial', $result['assuranceFloor']);
+
+	}//end testCreateRequestHoldsTheAssuranceAtTheFloor()
+
 }//end class

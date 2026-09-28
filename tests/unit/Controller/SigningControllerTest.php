@@ -40,6 +40,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Exception\StepUpRequiredException;
 
 /**
  * Tests for SigningController::listRequests() error handling
@@ -83,6 +84,7 @@ class SigningControllerTest extends TestCase {
 		parent::setUp();
 
 		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(fn (string $key, mixed $default = null): mixed => $default);
 		$this->signingService = $this->createMock(SigningService::class);
 		$auditService = $this->createMock(SigningAuditService::class);
 		$verificationService = $this->createMock(SigningVerificationService::class);
@@ -186,5 +188,40 @@ class SigningControllerTest extends TestCase {
 		$this->assertSame($expected, $response->getData());
 
 	}//end testListRequestsReturnsServiceResultOnSuccess()
+
+	/**
+	 * A step-up refusal answers 403 with the hint the sign dialog needs (REQ-DDSIR-003).
+	 *
+	 * @return void
+	 */
+	public function testAStepUpRefusalAnswers403WithTheHint(): void {
+		$this->signingService->method('sign')->willThrowException(
+			new StepUpRequiredException(reason: 'insufficient', requiredAssurance: 'substantial', heldAssurance: 'low', provider: 'oidc-broker')
+		);
+
+		$response = $this->controller->sign('req-1');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertSame(
+			['required' => true, 'reason' => 'insufficient', 'requiredAssurance' => 'substantial', 'heldAssurance' => 'low', 'provider' => 'oidc-broker'],
+			$response->getData()['stepUp'] ?? null
+		);
+
+	}//end testAStepUpRefusalAnswers403WithTheHint()
+
+	/**
+	 * Any other failure carries no hint.
+	 *
+	 * @return void
+	 */
+	public function testAnOrdinaryRefusalCarriesNoHint(): void {
+		$this->signingService->method('decline')->willThrowException(new \RuntimeException('Not authorized to decline as this signer', 403));
+
+		$response = $this->controller->decline('req-1');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertArrayNotHasKey('stepUp', $response->getData());
+
+	}//end testAnOrdinaryRefusalCarriesNoHint()
 
 }//end class

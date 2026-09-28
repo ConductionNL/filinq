@@ -221,6 +221,14 @@ class PortalSigningReceiverController extends Controller {
 				verifiedActor: $verifiedActor
 			);
 		} catch (Throwable $e) {
+			// The identity gate (signer-identity-rails REQ-DDSIR-003/007) refuses
+			// a portal trust below the request's assurance with code 403: the
+			// same refusal as sign, not a downstream failure.
+			if ($e->getCode() === Http::STATUS_FORBIDDEN) {
+				$this->logger->info('Filinq: portal decline refused: ' . $e->getMessage());
+				return new JSONResponse(['error' => 'signing_refused'], Http::STATUS_FORBIDDEN);
+			}
+
 			return $this->downstreamFailure(context: 'declineDocument', exception: $e);
 		}
 
@@ -231,6 +239,7 @@ class PortalSigningReceiverController extends Controller {
 		);
 
 	}//end declineDocument()
+
 
 	/**
 	 * GET /apps/filinq/api/portal/signing/viewDocument

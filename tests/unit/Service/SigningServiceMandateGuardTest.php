@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+require_once __DIR__ . '/SignerAuth/AssuranceGateHarness.php';
+
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
@@ -56,6 +58,8 @@ use RuntimeException;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class SigningServiceMandateGuardTest extends TestCase {
+	use \OCA\Filinq\Tests\Unit\Service\SignerAuth\AssuranceGateHarness;
+
 
 	/**
 	 * The sentinel thrown where the signer record would be loaded.
@@ -155,6 +159,7 @@ class SigningServiceMandateGuardTest extends TestCase {
 			actorResolver: $this->actorResolver,
 			emitter: $this->createMock(SigningConclusionEmitter::class),
 			consentGuard: new GuardianConsentGuard(settingsService: $settingsService),
+			assuranceGate: $this->assuranceGate(userSession: $this->createMock(\OCP\IUserSession::class)),
 			mandateService: $this->mandateService
 		);
 
