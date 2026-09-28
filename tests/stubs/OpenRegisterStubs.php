@@ -1902,6 +1902,15 @@ interface File extends Node {
 	 */
 	public function putContent($data): void;
 
+	/**
+	 * Open the file as a stream (mirrors OCP\Files\File::fopen()).
+	 *
+	 * @param string $mode The fopen mode.
+	 *
+	 * @return resource|false The stream.
+	 */
+	public function fopen($mode);
+
 	public function getParent(): \OCP\Files\Folder;
 
 	public function delete(): void;
