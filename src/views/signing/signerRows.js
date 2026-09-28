@@ -13,6 +13,7 @@
  * A new, empty signer row.
  *
  * @return {{displayName: string, email: string, userId: string}}
+ * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function emptySignerRow() {
 	return { displayName: '', email: '', userId: '' }
@@ -23,6 +24,7 @@ export function emptySignerRow() {
  *
  * @param {{email?: string, userId?: string}} row The signer row.
  * @return {boolean}
+ * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function isReachable(row) {
 	return (
@@ -37,6 +39,7 @@ export function isReachable(row) {
  *
  * @param {Array<object>} rows The signer rows.
  * @return {boolean}
+ * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function signersAreComplete(rows) {
 	return Array.isArray(rows) && rows.length > 0 && rows.every(isReachable)
@@ -48,6 +51,7 @@ export function signersAreComplete(rows) {
  *
  * @param {Array<object>} rows The signer rows.
  * @return {Array<object>}
+ * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function toSigners(rows) {
 	return rows.map((row, index) => {

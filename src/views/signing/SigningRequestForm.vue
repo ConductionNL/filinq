@@ -82,7 +82,8 @@
 					<input
 						:id="`signer-${index}-email`"
 						v-model="signer.email"
-						type="email" />
+						type="email"
+						autocomplete="off" />
 				</div>
 				<div class="form-group">
 					<label :for="`signer-${index}-user`">{{
@@ -141,6 +142,7 @@ export default {
 		 * The document is named and every signer row can be reached (#1209).
 		 *
 		 * @return {boolean}
+		 * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
 		 */
 		canSubmit() {
 			return (
@@ -153,7 +155,11 @@ export default {
 
 	methods: {
 		t,
-		/** Add an empty signer row at the end. */
+		/**
+		 * Add an empty signer row at the end.
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+		 */
 		addSigner() {
 			this.signerRows.push(emptySignerRow())
 		},
@@ -162,6 +168,7 @@ export default {
 		 * Remove one signer row; the last row stays.
 		 *
 		 * @param {number} index The row to remove.
+		 * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
 		 */
 		removeSigner(index) {
 			if (this.signerRows.length > 1) {
