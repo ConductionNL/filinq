@@ -11,6 +11,7 @@
 
 // @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
 // @e2e openspec/specs/template-management/spec.md#create-a-template
+// @e2e openspec/changes/decision-letter-legal-basis-and-deadline/specs/document-creatie-sjablonen/spec.md#the-author-picks-the-fields-instead-of-typing-them
 
 import { expect, test } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers.ts'
@@ -131,6 +132,20 @@ test.describe('template-management — templates list UI', () => {
 		await page.waitForTimeout(400)
 		await expect(dialog).toBeVisible()
 		await expect(dialog).toContainText(/Template/i)
+		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
+	})
+
+	test('the merge field dialog offers the legal basis and the objection deadline', async ({ page }) => {
+		// @e2e openspec/changes/decision-letter-legal-basis-and-deadline/specs/document-creatie-sjablonen/spec.md#the-author-picks-the-fields-instead-of-typing-them
+		const guard = attachConsoleGuard(page)
+		await go(page, 'templates/new')
+		await dismissOverlays(page)
+		await page.getByTitle('Insert merge field').click()
+		const dialog = page.locator('[role="dialog"]').first()
+		await dialog.waitFor({ state: 'visible', timeout: 15_000 })
+		await expect(dialog.getByRole('button', { name: 'Legal basis', exact: true })).toBeVisible()
+		await dialog.getByRole('button', { name: 'Last day to object' }).click()
+		await expect(dialog).toContainText('{{ bezwaar.uiterlijk }}')
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 

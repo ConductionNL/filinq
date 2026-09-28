@@ -1,6 +1,11 @@
 OC.L10N.register(
     "filinq",
     {
+        "Or pick a common field": "Of kies een veelgebruikt veld",
+        "Legal basis explanation": "Toelichting op de grondslag",
+        "Last day to object": "Laatste dag voor bezwaar",
+        "First day to object": "Eerste dag voor bezwaar",
+        "Objection term in weeks": "Bezwaartermijn in weken",
         "Last error at": "Laatste fout op",
         "When the last attempt failed (ISO 8601). Empty after a good run.": "Wanneer de laatste poging mislukte (ISO 8601). Leeg na een geslaagde run.",
         "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.": "Waarom de laatste poging mislukte, bijvoorbeeld een weergave die niet meer bestaat. Leeg na een geslaagde run. Een mislukte run laat lastRunDocument naar het laatste goede document wijzen.",

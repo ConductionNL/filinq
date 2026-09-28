@@ -1,5 +1,10 @@
 {
     "translations": {
+        "Or pick a common field": "Or pick a common field",
+        "Legal basis explanation": "Legal basis explanation",
+        "Last day to object": "Last day to object",
+        "First day to object": "First day to object",
+        "Objection term in weeks": "Objection term in weeks",
         "Last error at": "Last error at",
         "When the last attempt failed (ISO 8601). Empty after a good run.": "When the last attempt failed (ISO 8601). Empty after a good run.",
         "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.": "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.",

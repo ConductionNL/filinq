@@ -1,6 +1,11 @@
 OC.L10N.register(
     "filinq",
     {
+        "Or pick a common field": "O elija un campo habitual",
+        "Legal basis explanation": "Explicación de la base jurídica",
+        "Last day to object": "Último día para recurrir",
+        "First day to object": "Primer día para recurrir",
+        "Objection term in weeks": "Plazo de recurso en semanas",
         "Last error at": "Último error el",
         "When the last attempt failed (ISO 8601). Empty after a good run.": "Cuándo falló el último intento (ISO 8601). Vacío tras una ejecución correcta.",
         "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.": "Por qué falló el último intento, por ejemplo una vista que ya no existe. Vacío tras una ejecución correcta. Una ejecución fallida deja lastRunDocument apuntando al último documento correcto.",
