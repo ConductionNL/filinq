@@ -804,6 +804,96 @@ class SigningServiceTest extends TestCase {
 	}//end testSignHappyPath()
 
 	/**
+	 * A portal signature records its assurance level, capped by the session
+	 * trust and never QES (portal-signing-surface REQ-DDPSS-005).
+	 *
+	 * @return void
+	 */
+	public function testPortalSignatureRecordsAssuranceNoHigherThanTheSession(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'AES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'email' => 'mark@home.example',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$requestData,
+			$signerData,
+			$requestData,
+			$signerData
+		);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+
+				return $object;
+			}
+		);
+
+		$result = $this->service->sign(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			verifiedActor: [
+				'email' => 'mark@home.example',
+				'subjectRef' => 'sub-1',
+				'identityRef' => 'sub-1',
+				'trust' => 'low',
+				'jti' => 'jti-1',
+			]
+		);
+
+		$this->assertSame('SES', $result['signatureAssurance'] ?? null, 'A low session caps an AES request at SES.');
+		$this->assertSame('SES', $saved[0]['signatureAssurance'] ?? null, 'The capped level is what is stored.');
+
+	}//end testPortalSignatureRecordsAssuranceNoHigherThanTheSession()
+
+	/**
+	 * An in-app signature carries no portal assurance field.
+	 *
+	 * @return void
+	 */
+	public function testInAppSignatureRecordsNoPortalAssurance(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$requestData,
+			$signerData,
+			$requestData,
+			$signerData
+		);
+		$this->objectService->method('saveObject')->willReturnArgument(0);
+
+		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertArrayNotHasKey('signatureAssurance', $result);
+
+	}//end testInAppSignatureRecordsNoPortalAssurance()
+
+	/**
 	 * The completing signature produces + stores a signed artifact and sets
 	 * signedDocumentRef to that artifact (native-ses-signature-embedding).
 	 *

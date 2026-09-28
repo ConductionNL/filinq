@@ -494,6 +494,32 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	}//end testSignDocumentHappyPath()
 
 	/**
+	 * The portal answer names the assurance the signature recorded, so the
+	 * signer sees AES or SES and never QES (portal-signing-surface REQ-DDPSS-005).
+	 *
+	 * @return void
+	 */
+	public function testSignDocumentExposesTheRecordedAssurance(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: [
+				'signingRequestId' => 'request-uuid-1',
+				'consent' => true,
+			]
+		);
+
+		$this->mockSigningService->method('sign')
+			->willReturn(['status' => 'SIGNED', 'signatureAssurance' => 'SES']);
+
+		$result = $this->controller()->signDocument();
+
+		$this->assertSame(Http::STATUS_OK, $result->getStatus());
+		$this->assertSame('SES', $result->getData()['assurance'] ?? null);
+
+	}//end testSignDocumentExposesTheRecordedAssurance()
+
+	/**
 	 * Happy-path declineDocument: reason recorded, drives
 	 * `SigningService::decline()` with the verified actor.
 	 *

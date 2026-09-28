@@ -27,6 +27,7 @@ use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
+use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
 use RuntimeException;
 
 /**
@@ -540,6 +541,15 @@ class SigningService {
 			// optional drawn signature, recorded into the existing
 			// `visible:false` field — never used for identity.
 			$signer['signatureData'] = $signatureData;
+		}
+
+		// Portal-signing-surface REQ-DDPSS-005: a portal signature records its
+		// assurance, capped by the verified session trust and never QES.
+		if ($verifiedActor !== null) {
+			$signer['signatureAssurance'] = (new PortalSignatureAssurance())->levelFor(
+				requestedLevel: (string)($request['signatureLevel'] ?? 'SES'),
+				trust: (string)($verifiedActor['trust'] ?? '')
+			);
 		}
 
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);

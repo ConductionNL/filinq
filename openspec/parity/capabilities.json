@@ -4470,7 +4470,7 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/portal-signing-surface/tasks.md: 9/11 done. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes."
+				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/archive/2026-09-28-portal-signing-surface: every task done (T06, the SES/AES cap with signerRecord.signatureAssurance, landed 2026-09-28). Still building because portal-signing-actions waits on the portaliq signerEmail claim and its Newman collection. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes."
 			},
 			"reachedOn": "external: portaliq's shared external portal (cross-app), calling filinq's api/portal/signing/* routes",
 			"provider": "filinq",
