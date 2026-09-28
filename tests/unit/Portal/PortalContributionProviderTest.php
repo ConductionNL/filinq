@@ -414,6 +414,34 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testSignerManifestDeclaresEndpointActions()
 
 	/**
+	 * Portaliq contract (portaliq#804, merged as portaliq#833): an endpoint
+	 * action is offered on a row only when it declares `rowField`, the body
+	 * key the portal stamps the proven row's id under, and a declared
+	 * `scopeClaim` rides in the signed `X-Portal-Subject` assertion. The
+	 * receiver reads `signingRequestId` from the body and `signerEmail` from
+	 * the assertion (PortalSigningReceiverController), so sign and decline
+	 * must declare exactly those two names; without them portaliq drops both
+	 * row buttons and the receiver refuses the call.
+	 *
+	 * @return void
+	 */
+	public function testSignAndDeclineDeclareTheRowFieldAndScopeClaimTheReceiverReads(): void {
+		$manifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
+		$this->assertIsArray($manifest);
+
+		$actions = $this->indexById($manifest['actions']);
+		foreach (['sign', 'decline'] as $id) {
+			$this->assertSame('signingRequestId', ($actions[$id]['rowField'] ?? null), "action '{$id}' must declare rowField signingRequestId");
+			$this->assertSame('signerEmail', ($actions[$id]['scopeClaim'] ?? null), "action '{$id}' must declare scopeClaim signerEmail");
+			$this->assertArrayNotHasKey('type', $actions[$id], "action '{$id}' must stay an endpoint action, not a create/update");
+		}
+
+		$requests = $this->indexById($manifest['collections'])['signerSigningRequests'];
+		$this->assertSame('signerEmail', $requests['scopeClaim'], 'the collection the rows come from is scoped by the same claim');
+
+	}//end testSignAndDeclineDeclareTheRowFieldAndScopeClaimTheReceiverReads()
+
+	/**
 	 * Pin the scoping map + whitelists against the shipped register JSON.
 	 *
 	 * Every declared scopeField, every via-join field and every projected read

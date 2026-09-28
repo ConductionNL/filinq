@@ -393,37 +393,61 @@ class PortalContributionProvider {
 					],
 				],
 			],
-			// Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
-			// ONLY three actions on the `signer` manifest, all instance-local
-			// relative endpoints under `/apps/filinq/api/portal/signing/`,
-			// all gated `minTrust: substantial`. Handled by
-			// `PortalSigningReceiverController` +
-			// `Portal\PortalAssertionVerifier`.
-			'actions' => [
-				[
-					'id' => 'sign',
-					'label' => 'Sign',
-					'endpoint' => self::SIGN_ENDPOINT,
-					'method' => 'POST',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-				[
-					'id' => 'decline',
-					'label' => 'Decline to sign',
-					'endpoint' => self::DECLINE_ENDPOINT,
-					'method' => 'POST',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-				[
-					'id' => 'viewDocument',
-					'label' => 'View document',
-					'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
-					'method' => 'GET',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-			],
+			'actions' => $this->signerActions(),
 			'notifications' => [],
 		];
 
 	}//end signerContribution()
+
+	/**
+	 * The actions on the `signer` manifest.
+	 *
+	 * Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
+	 * ONLY three actions on the `signer` manifest, all instance-local
+	 * relative endpoints under `/apps/filinq/api/portal/signing/`,
+	 * all gated `minTrust: substantial`. Handled by
+	 * `PortalSigningReceiverController` +
+	 * `Portal\PortalAssertionVerifier`.
+	 *
+	 * `sign` and `decline` are endpoint ROW actions in portaliq's
+	 * contract (portaliq#804 / #833): `rowField` is the body key the
+	 * portal stamps the proven row's id under, and `scopeClaim` rides
+	 * in the signed X-Portal-Subject assertion. The receiver reads
+	 * exactly `signingRequestId` and `signerEmail`; without these two
+	 * keys portaliq drops the row buttons and the receiver refuses.
+	 *
+	 * @return array<int, array<string, mixed>> The actions.
+	 *
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 */
+	private function signerActions(): array {
+		return [
+			[
+				'id' => 'sign',
+				'label' => 'Sign',
+				'endpoint' => self::SIGN_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'rowField' => 'signingRequestId',
+				'scopeClaim' => 'signerEmail',
+			],
+			[
+				'id' => 'decline',
+				'label' => 'Decline to sign',
+				'endpoint' => self::DECLINE_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'rowField' => 'signingRequestId',
+				'scopeClaim' => 'signerEmail',
+			],
+			[
+				'id' => 'viewDocument',
+				'label' => 'View document',
+				'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
+				'method' => 'GET',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+			],
+		];
+
+	}//end signerActions()
 }//end class
