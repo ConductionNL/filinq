@@ -87,4 +87,32 @@ class PortalSignatureAssurance {
 		return self::LEVELS[min((int)$requestedIndex, $capIndex)];
 
 	}//end levelFor()
+
+	/**
+	 * Record the capped level on a signer a portal actor is signing as.
+	 *
+	 * A signer acting in Nextcloud has no verified portal actor and gets no
+	 * field: the cap describes a portal session, not a Nextcloud login.
+	 *
+	 * @param array<string, mixed>      $signer        The signer record about to be saved.
+	 * @param array<string, mixed>      $request       The signing request.
+	 * @param array<string, mixed>|null $verifiedActor The verified portal actor, or null in-app.
+	 *
+	 * @return array<string, mixed> The signer, with `signatureAssurance` for a portal actor.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	public function recordOn(array $signer, array $request, ?array $verifiedActor): array {
+		if ($verifiedActor === null) {
+			return $signer;
+		}
+
+		$signer['signatureAssurance'] = $this->levelFor(
+			requestedLevel: (string)($request['signatureLevel'] ?? 'SES'),
+			trust: (string)($verifiedActor['trust'] ?? '')
+		);
+
+		return $signer;
+
+	}//end recordOn()
 }//end class

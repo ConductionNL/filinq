@@ -537,20 +537,11 @@ class SigningService {
 		$signer['signedAt'] = $now->format(DateTimeInterface::ATOM);
 		$signer['ipAddress'] = $this->actorResolver->getClientIp();
 		if ($signatureData !== null) {
-			// Portal-signing-surface REQ-DDPSS-002: consent confirmation +
-			// optional drawn signature, recorded into the existing
-			// `visible:false` field — never used for identity.
+			// Portal-signing-surface REQ-DDPSS-002: consent and an optional drawn
+			// signature, in the `visible:false` field, never used for identity.
 			$signer['signatureData'] = $signatureData;
 		}
-
-		// Portal-signing-surface REQ-DDPSS-005: a portal signature records its
-		// assurance, capped by the verified session trust and never QES.
-		if ($verifiedActor !== null) {
-			$signer['signatureAssurance'] = (new PortalSignatureAssurance())->levelFor(
-				requestedLevel: (string)($request['signatureLevel'] ?? 'SES'),
-				trust: (string)($verifiedActor['trust'] ?? '')
-			);
-		}
+		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
 
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 
