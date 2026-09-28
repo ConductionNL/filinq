@@ -1409,7 +1409,24 @@ OC.L10N.register(
         "Slug": "Slug",
         "A stable, human-readable identifier other apps (for example learniq) use to ask for this template without knowing its UUID. Unique per combination of namespace and tenantId.": "A stable, human-readable identifier other apps (for example learniq) use to ask for this template without knowing its UUID. Unique per combination of namespace and tenantId.",
         "Tenant": "Tenant",
-        "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists.": "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists."
+        "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists.": "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists.",
+        "Generate document": "Generate document",
+        "Render a Filinq template for each item and file the document with its object.": "Render a Filinq template for each item and file the document with its object.",
+        "The id of a Filinq template. Leave empty when you use a slug or inline text.": "The id of a Filinq template. Leave empty when you use a slug or inline text.",
+        "Template slug": "Template slug",
+        "Find the template by its slug instead of its id. Needs the template namespace.": "Find the template by its slug instead of its id. Needs the template namespace.",
+        "Template namespace": "Template namespace",
+        "The app the template belongs to, for example dossiq.": "The app the template belongs to, for example dossiq.",
+        "Inline template": "Inline template",
+        "Template text to render instead of a stored template. Fields of the item are available by name.": "Template text to render instead of a stored template. Fields of the item are available by name.",
+        "pdf, odf or html. Defaults to pdf.": "pdf, odf or html. Defaults to pdf.",
+        "Without extension. May use item fields, for example {{ identifier }}.": "Without extension. May use item fields, for example {{ identifier }}.",
+        "Store as a file": "Store as a file",
+        "Turn off to only write the rendered text into a field.": "Turn off to only write the rendered text into a field.",
+        "Write text to field": "Write text to field",
+        "Also write the rendered text into this field of the object. Only that field changes.": "Also write the rendered text into this field of the object. Only that field changes.",
+        "Output field": "Output field",
+        "The item field that receives the document details. Defaults to document.": "The item field that receives the document details. Defaults to document."
     },
     "nplurals=2; plural=(n != 1);"
 )
