@@ -854,5 +854,29 @@
     "reason": "Owned by nextcloud/files_confidential: confidentiality labels and access by label are the Nextcloud Files Confidential app, outside the fleet; decided no for filinq per the openspec pass addendum. filinq reads the label (archived change 2026-07-23-files-confidential-labels).",
     "change": null,
     "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "agenda-paper-watermark",
+    "matrix": "decidiq",
+    "decision": "build",
+    "reason": "PDF page stamping, a half the merged decidiq change agenda-paper-watermark depends on (row decidiq age-19, diligent-boards yes): decidiq serves a confidential paper only stamped with the reader's name and the date and refuses while filinq cannot stamp. No filinq change offers a stamp on every page; intake-acknowledge-and-stamp stamps page 1 of an arrived document only. filinq's own row wk-watermark stays deferred for its sharing screen.",
+    "change": "work-stamp-text-on-every-page",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "surfaces-document-house-style",
+    "matrix": "thematiq",
+    "decision": "build",
+    "reason": "Seeding and refreshing filinq's huisstijl from thematiq's document house style profile, a half the merged thematiq change surfaces-document-house-style depends on. Row thematiq sur-generated-documents has tender demand (TenderNed 404703, 415897, 298070). loadHuisstijl() applies no house style without an explicit id, and no filinq change reads the thematiq profile.",
+    "change": "templates-house-style-from-thematiq",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "people-esign-hr-documents",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "E-sign request and status contract. filinq-signing-events (9 of 9 tasks) ships DocumentSigningRequestedEvent with a result slot and SigningConcludedEvent on every terminal outcome, which answers humaniq's open question on subscribing instead of polling; one-signing-rail-for-the-fleet makes it the only door, so humaniq's FilinqSigningGateway should dispatch the event rather than call SigningService duck-typed. createRequest() still needs a session user, which humaniq's user-started request has. A signer without a Nextcloud account is portal-signing-actions (11 of 15) and signer-identity-rails.",
+    "change": "filinq-signing-events",
+    "decidedOn": "2026-09-28"
   }
 ]
