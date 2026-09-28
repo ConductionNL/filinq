@@ -1879,6 +1879,16 @@ interface Node {
 	 * @return bool
 	 */
 	public function isCreatable();
+
+	/**
+	 * Whether the acting user may read this node.
+	 *
+	 * Declared because the REAL `OCP\Files\Node` declares it, untyped, and
+	 * TemplateImageResolver asks it before reading an image for a template.
+	 *
+	 * @return bool
+	 */
+	public function isReadable();
 }//end interface
 
 /**

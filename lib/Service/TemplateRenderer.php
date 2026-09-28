@@ -29,6 +29,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Service\Charts\ChartSvgRenderer;
 use OCA\Filinq\Service\Charts\TableHtmlRenderer;
+use OCA\Filinq\Service\Charts\TemplateImageResolver;
+use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use Twig\Environment;
 use Twig\Extension\SandboxExtension;
@@ -95,6 +97,7 @@ class TemplateRenderer {
 		'min',
 		'chart',
 		'data_table',
+		'nc_image',
 	];
 
 	/**
@@ -139,6 +142,9 @@ class TemplateRenderer {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param ChartSvgRenderer $chartRenderer Renderer for the `chart()` Twig function
 	 * @param TableHtmlRenderer $tableRenderer Renderer for the `data_table()` Twig function
+	 * @param TemplateImageResolver|null $imageResolver Reads files for `nc_image()`; without it every
+	 *                                                  image degrades to a marker
+	 * @param IL10N|null $l10n Translates the markers and the empty-table row
 	 *
 	 * @return void
 	 */
@@ -146,6 +152,8 @@ class TemplateRenderer {
 		private readonly LoggerInterface $logger,
 		private readonly ChartSvgRenderer $chartRenderer,
 		private readonly TableHtmlRenderer $tableRenderer,
+		private readonly ?TemplateImageResolver $imageResolver = null,
+		private readonly ?IL10N $l10n = null,
 	) {
 
 	}//end __construct()
@@ -188,6 +196,7 @@ class TemplateRenderer {
 		$twig->addExtension(extension: $sandbox);
 		$twig->addFunction(function: $this->buildChartFunction(huisstijl: $huisstijl));
 		$twig->addFunction(function: $this->buildDataTableFunction());
+		$twig->addFunction(function: $this->buildImageFunction());
 
 		try {
 			return $twig->render(name: 'document', context: $data);
@@ -247,7 +256,10 @@ class TemplateRenderer {
 				$callCount++;
 
 				if ($callCount > $maxCharts) {
-					$message = 'chart error: document exceeds the maximum of ' . $maxCharts . ' charts';
+					$message = $this->translate(
+						text: 'chart error: document exceeds the maximum of %s charts',
+						parameters: [$maxCharts]
+					);
 					$this->lastRenderWarnings[] = $message;
 					return '<div>[' . $message . ']</div>';
 				}
@@ -301,12 +313,104 @@ class TemplateRenderer {
 					$options = [];
 				}
 
+				if (isset($options['emptyText']) === false && $this->l10n !== null) {
+					$options['emptyText'] = $this->l10n->t('No data available');
+				}
+
 				return $tableRenderer->render(collection: $collection, columns: $columns, options: $options);
 			},
 			options: ['is_safe' => ['html']]
 		);
 
 	}//end buildDataTableFunction()
+
+	/**
+	 * Build the sandbox-registered `nc_image(fileId, options)` Twig function.
+	 *
+	 * 🔴 THE ONLY READ IS THE RESOLVER'S, AS THE SIGNED-IN USER. The function
+	 * takes a file id and nothing else that could reach storage, so a template
+	 * can embed exactly the images its generating user could open, and a file
+	 * it cannot reach becomes a visible marker plus a warning, never a blank.
+	 *
+	 * Options: `alt` (text), `width` and `height` (whole pixels).
+	 *
+	 * @return TwigFunction
+	 *
+	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-006
+	 * @spec openspec/changes/template-charts/specs/pdf-generation/spec.md#REQ-DDTCH-005
+	 */
+	private function buildImageFunction(): TwigFunction {
+		return new TwigFunction(
+			name: 'nc_image',
+			callable: function ($fileId = null, $options = []) {
+				if (is_array($options) === false) {
+					$options = [];
+				}
+
+				$result = ['src' => null, 'reason' => 'image support is not available', 'parameters' => []];
+				if ($this->imageResolver !== null) {
+					$result = $this->imageResolver->resolve(fileId: $fileId);
+				}
+
+				if ($result['src'] === null) {
+					$message = $this->translate(
+						text: 'image unavailable: %s',
+						parameters: [$this->translate(text: (string)$result['reason'], parameters: $result['parameters'])]
+					);
+					$this->lastRenderWarnings[] = $message;
+					return '<span>[' . htmlspecialchars($message, ENT_QUOTES | ENT_HTML5, 'UTF-8') . ']</span>';
+				}
+
+				return $this->imageTag(src: $result['src'], options: $options);
+			},
+			options: ['is_safe' => ['html']]
+		);
+
+	}//end buildImageFunction()
+
+	/**
+	 * Build the `<img>` element for a resolved image.
+	 *
+	 * @param string $src     The data URI.
+	 * @param array  $options The `alt`, `width` and `height` options.
+	 *
+	 * @return string The escaped element.
+	 */
+	private function imageTag(string $src, array $options): string {
+		$tag = '<img src="' . $src . '" alt="'
+			. htmlspecialchars((string)($options['alt'] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8') . '"';
+
+		foreach (['width', 'height'] as $dimension) {
+			$value = $options[$dimension] ?? null;
+			if (is_numeric($value) === true && (int)$value > 0) {
+				$tag .= ' ' . $dimension . '="' . (int)$value . '"';
+			}
+		}
+
+		return $tag . ' />';
+
+	}//end imageTag()
+
+	/**
+	 * Translate a marker, or fill its slots in English when no translator is wired.
+	 *
+	 * @param string $text       English source text with `%s` slots.
+	 * @param array  $parameters Values for the slots.
+	 *
+	 * @return string The translated text.
+	 */
+	private function translate(string $text, array $parameters = []): string {
+		if ($this->l10n !== null) {
+			return $this->l10n->t($text, $parameters);
+		}
+
+		if ($parameters === []) {
+			return $text;
+		}
+
+		return vsprintf($text, $parameters);
+
+	}//end translate()
 
 	/**
 	 * Convert conditional section data attributes to Twig if blocks.

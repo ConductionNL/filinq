@@ -40,12 +40,16 @@ final class ChartRenderError {
 	/**
 	 * Constructor for ChartRenderError.
 	 *
-	 * @param string $message Human-readable, already user-safe reason.
+	 * @param string $message    Human-readable, already user-safe reason. An
+	 *                           English source string with `%s` slots, so the
+	 *                           caller can translate it with the parameters.
+	 * @param array  $parameters Values for the `%s` slots in the message.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		public readonly string $message,
+		public readonly array $parameters = [],
 	) {
 
 	}//end __construct()

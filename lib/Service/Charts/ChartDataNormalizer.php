@@ -121,7 +121,8 @@ class ChartDataNormalizer {
 
 		if (count($labels) > $maxPoints) {
 			return new ChartRenderError(
-				message: 'chart error: too many data points (max ' . $maxPoints . ')'
+				message: 'chart error: too many data points (max %s)',
+				parameters: [$maxPoints]
 			);
 		}
 
