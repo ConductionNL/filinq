@@ -7,7 +7,7 @@
  * compares the two. The widget downloads every file on one object as one
  * archive with a manifest, and warns first when the files exceed the ceiling.
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 import { translate as t } from '@nextcloud/l10n'
 import { createApp } from 'vue'
@@ -27,7 +27,7 @@ const mountedApps = new Map()
  *
  * @return {void}
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function mount(el, props) {
 	if (el === undefined || el === null || mountedApps.has(el) === true) {
@@ -46,7 +46,7 @@ export function mount(el, props) {
  *
  * @return {void}
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function unmount(el) {
 	const app = mountedApps.get(el)
@@ -80,7 +80,7 @@ export const downloadAllFilesLeafDescriptor = {
  *
  * @return {void}
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function registerDownloadAllFilesLeaf(globalRef) {
 	const target = globalRef || (typeof window !== 'undefined' ? window : null)

@@ -16,7 +16,7 @@ const REASONS = ['ceiling', 'permission', 'missing']
  *
  * @return {string} For example "1.5".
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function megabytes(bytes) {
 	return (Number(bytes || 0) / 1048576).toFixed(1)
@@ -29,7 +29,7 @@ export function megabytes(bytes) {
  *
  * @return {boolean} True when the files exceed the ceiling.
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function needsWarning(preflight) {
 	return (
@@ -47,7 +47,7 @@ export function needsWarning(preflight) {
  *
  * @return {{ceiling: string[], permission: string[], missing: string[], other: string[]}} Names per reason.
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function excludedByReason(manifest) {
 	const grouped = { ceiling: [], permission: [], missing: [], other: [] }
@@ -69,7 +69,7 @@ export function excludedByReason(manifest) {
  *
  * @return {number} The file id.
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export function archiveFileId(manifest) {
 	return Number((manifest && manifest.archive && manifest.archive.fileId) || 0)

@@ -679,6 +679,9 @@
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
 
+		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
+		<PageLayoutSettings v-if="isAdmin" />
+
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
 			v-if="isAdmin"
@@ -842,6 +845,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import PageLayoutSettings from './PageLayoutSettings.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import { initialSections } from '../../services/settingsSections.js'
 
@@ -865,6 +869,7 @@ export default {
 		FileExportOutline,
 		AccountSearchOutline,
 		EntityTypeSelector,
+		PageLayoutSettings,
 		SignerIdentitySettings,
 	},
 

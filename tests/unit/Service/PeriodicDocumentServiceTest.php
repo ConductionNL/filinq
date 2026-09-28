@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -137,7 +137,7 @@ class PeriodicDocumentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testTheBesluitenlijstMakesItself(): void {
 		$service = $this->service(
@@ -159,7 +159,7 @@ class PeriodicDocumentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testLastWeeksListIsUntouched(): void {
 		$service = $this->service(records: [['id' => 'a']]);
@@ -181,7 +181,7 @@ class PeriodicDocumentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testADeletedViewFailsLoudlyAndWritesNothing(): void {
 		$service = $this->service(records: null);
@@ -212,7 +212,7 @@ class PeriodicDocumentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAnEmptyViewIsNotADeletedView(): void {
 		$service = $this->service(records: []);
@@ -228,7 +228,7 @@ class PeriodicDocumentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAScheduleWithoutAViewIsRefused(): void {
 		$service = $this->service(records: []);

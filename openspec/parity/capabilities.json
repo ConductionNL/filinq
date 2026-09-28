@@ -1614,9 +1614,10 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/PeriodicDocumentService.php:88 run(array $schedule) is fully implemented (write/recordRun at lines 160/198). Only trigger is documentProduction#runPeriodic POST api/periodic-documents/run (routes.php:109), tagged 'none' in route-reach.txt. appinfo/info.xml <background-jobs> lists only SigningExpirationJob, DomainFolderReconciliationJob, UploadFragmentReaperJob -- no periodic-document job registered; lib/Command/ has only OfficeProbeCommand.php (no occ command); no caller found in dossiq/shillinq/opencatalogi/scholiq."
+				"evidence": "Specified in openspec/changes/periodic-documents-on-a-schedule on 2026-09-28, after documents-from-a-template was archived: the run writes a generatedDocument record but renders no file, and no job runs it on its cadence. Before: lib/Service/PeriodicDocumentService.php:88 run(array $schedule) is fully implemented (write/recordRun at lines 160/198). Only trigger is documentProduction#runPeriodic POST api/periodic-documents/run (routes.php:109), tagged 'none' in route-reach.txt. appinfo/info.xml <background-jobs> lists only SigningExpirationJob, DomainFolderReconciliationJob, UploadFragmentReaperJob -- no periodic-document job registered; lib/Command/ has only OfficeProbeCommand.php (no occ command); no caller found in dossiq/shillinq/opencatalogi/scholiq.",
+				"change": "openspec/changes/periodic-documents-on-a-schedule"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -1777,13 +1778,14 @@
 			"area": "generate",
 			"name": "Download all documents of a case as one archive with a manifest.",
 			"source": "own-code",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php builds the manifest (:142 manifestFor) and records the job (:195 record), but writes no archive. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. No FE literal 'case-archive' found in src/; no caller in dossiq/shillinq/opencatalogi/scholiq. Corrections round 8 (2026-09-28), filinq#1210: archiveManifest() (lib/Controller/DocumentProductionController.php:151-167) returns the manifest and calls record(), which stores fileId 0 and status completed (lib/Service/CaseArchiveService.php:195-206) with no archive file behind it; nothing in lib/ writes a zip for it, and task 3.2, the page, is open (openspec/changes/documents-from-a-template/tasks.md:19), at 9fd042f."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/integrations/CnFilinqDownloadAllFilesWidget.vue (leaf filinq-download-all-files, server half lib/EventListener/RegisterDownloadAllFilesLeafListener.php) calls GET api/case-archive/preflight, warns when exceedsCeiling, then POST api/case-archive/manifest -> CaseArchiveService::build() writes the archive and returns its fileId with the manifest of included and excluded files by reason. Before: lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php builds the manifest (:142 manifestFor) and records the job (:195 record), but writes no archive. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. No FE literal 'case-archive' found in src/; no caller in dossiq/shillinq/opencatalogi/scholiq. Corrections round 8 (2026-09-28), filinq#1210: archiveManifest() (lib/Controller/DocumentProductionController.php:151-167) returns the manifest and calls record(), which stores fileId 0 and status completed (lib/Service/CaseArchiveService.php:195-206) with no archive file behind it; nothing in lib/ writes a zip for it, and task 3.2, the page, is open (openspec/changes/documents-from-a-template/tasks.md:19), at 9fd042f.",
+				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the filinq-download-all-files leaf on a host object page (detail-page, single-entity)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "documents-from-a-template",
@@ -2109,13 +2111,14 @@
 			"area": "templates",
 			"name": "Change the letterhead and page layout once, and keep its earlier versions.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/DocumentProductionController.php:89 layoutVersions(), :105 editLayout() -> lib/Service/PageLayoutService.php (versioned page layouts, per documents-from-a-template's pageLayout schema). Route documentProduction#layoutVersions/editLayout api/page-layouts (routes.php:105-106), tagged 'none' in route-reach.txt; no FE literal '/api/page-layouts' found anywhere in src/."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/views/settings/PageLayoutSettings.vue on the admin settings page lists active layouts (GET api/page-layouts), creates one (POST api/page-layouts/new -> PageLayoutService::create()), saves an edit as the next version (POST api/page-layouts -> edit()) and lists the versions, with a drawn preview of the first and following pages. Earlier versions stay resolvable for templates that name them. Before: lib/Controller/DocumentProductionController.php:89 layoutVersions(), :105 editLayout() -> lib/Service/PageLayoutService.php (versioned page layouts, per documents-from-a-template's pageLayout schema). Route documentProduction#layoutVersions/editLayout api/page-layouts (routes.php:105-106), tagged 'none' in route-reach.txt; no FE literal '/api/page-layouts' found anywhere in src/.",
+				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "admin settings, Page layouts section (PageLayoutSettings.vue)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "documents-from-a-template",

@@ -28,12 +28,14 @@ earlier version.
 - GIVEN a template naming the "Gemeente, besluit" layout
 - WHEN a handler generates a besluit
 - THEN the output carries that layout's header, footer and logo, with the first page as the layout declares
+- @e2e exclude the rendered header, footer and logo are asserted by PHPUnit on PageLayoutService::pdfOptions (tests/unit/Service/PageLayoutServiceTest.php); a PDF is not inspected in a browser
 
 #### Scenario: A layout change does not rewrite history
 
 - GIVEN a besluit generated in March against layout version 2
 - WHEN the layout is edited to version 3
 - THEN the March besluit still records version 2 and its file is unchanged
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
 
 ### Requirement: A dossier is downloaded as one bundle with a manifest (REQ-DFT-02)
 
@@ -48,18 +50,21 @@ told before the job starts.
 - GIVEN a case with twenty files the handler may read
 - WHEN they download all case files
 - THEN one archive is produced containing those twenty files and a manifest naming them
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
 
 #### Scenario: Nothing is dropped silently
 
 - GIVEN a case whose files exceed the ceiling
 - WHEN the archive is produced
 - THEN the manifest names every file left out and the reason, and the user was warned before the job started
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
 
 #### Scenario: A file the user may not read
 
 - GIVEN a case carrying a file outside the user's access
 - WHEN they download all case files
 - THEN the file is absent and the manifest records that it was left out on permission
+- @e2e exclude a second user with a partial share is not seeded in the e2e suite; covered by PHPUnit on CaseArchiveService (tests/unit/Service/CaseArchiveServiceTest.php)
 
 ### Requirement: A periodic document renders from a saved view (REQ-DFT-03)
 
@@ -75,18 +80,21 @@ and MUST NOT produce an empty document.
 - GIVEN a saved view of the decisions taken this month and a besluitenlijst template
 - WHEN the weekly run fires
 - THEN a new document is generated listing those decisions, recording the view and the count
+- @e2e exclude a cron cadence is not driven in a browser; covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php)
 
 #### Scenario: Last week's list is untouched
 
 - GIVEN a besluitenlijst generated last week
 - WHEN this week's run fires
 - THEN a second document is generated and the first is unchanged
+- @e2e exclude a cron cadence is not driven in a browser; covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php)
 
 #### Scenario: A deleted view fails loudly
 
 - GIVEN a schedule naming a view somebody has deleted
 - WHEN the run fires
 - THEN it fails naming the view, and no document is produced
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
 
 ### Requirement: A released document is reviewed again on a date (REQ-DFT-04)
 
@@ -100,38 +108,14 @@ dialect. The document MUST stay listed as due until somebody reviews it.
 - GIVEN a released beleidsregel with a review interval of twelve months
 - WHEN the review date arrives
 - THEN the document is listed as due and its owner is notified
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
 
 #### Scenario: An unread notification changes nothing
 
 - GIVEN a due document whose owner has not read the notification
 - WHEN the list of due documents is opened
 - THEN the document is still listed as due
-
-### Requirement: A file is a value a field can hold, and a form becomes a document (REQ-DFT-05)
-
-A form field MUST be able to hold a reference to a document record. The
-field MUST validate that the reference resolves and that the caller may
-read it, and MUST NOT copy the file into the field. A submitted form MUST
-be rendered to a document at submission, from the values as submitted,
-and filed on the record.
-
-#### Scenario: Evidence as a field value
-
-- GIVEN a permit form with a field "Overzicht DigiD-aansluitingen" holding a document reference
-- WHEN the applicant selects a document they may read
-- THEN the field holds the reference and the file is stored once
-
-#### Scenario: The form in the dossier
-
-- GIVEN a submitted aanvraagformulier
-- WHEN it is submitted
-- THEN a document is generated from the values as submitted and filed on the case
-
-#### Scenario: A later value change does not rewrite the form
-
-- GIVEN a filed aanvraagformulier document
-- WHEN a field on the case is changed afterwards
-- THEN the filed document still shows what was submitted
+- @e2e exclude notification delivery is OpenRegister's dialect; the due list is covered in tests/e2e/workflows/documents-from-a-template.spec.ts
 
 ### Requirement: A verified signature says what was verified (REQ-DFT-06)
 
@@ -145,9 +129,11 @@ MUST say so rather than rendering as unverified.
 - GIVEN a signed besluit whose signature verifies
 - WHEN a handler opens the document
 - THEN the result names the signer, the key, the time of checking and what it proves
+- @e2e exclude verification output is covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php)
 
 #### Scenario: An unavailable trust anchor is not a failed signature
 
 - GIVEN a signature whose certificate chain cannot be reached
 - WHEN verification runs
 - THEN the result says verification could not be completed, and does not report the signature as invalid
+- @e2e exclude verification output is covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php)

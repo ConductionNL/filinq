@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class PeriodicDocumentService {
 
@@ -83,7 +83,7 @@ class PeriodicDocumentService {
 	 *
 	 * @throws RuntimeException When the view is gone, or the run cannot be recorded.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function run(array $schedule): array {
 		$viewSlug = trim((string)($schedule['viewSlug'] ?? ''));
@@ -139,7 +139,7 @@ class PeriodicDocumentService {
 	 *
 	 * @return array<int, mixed>|null The records, or null when the view does not exist.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function readView(string $slug): ?array {
 		return $this->views->records(view: $slug);
@@ -155,7 +155,7 @@ class PeriodicDocumentService {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function write(array $document): array {
 		try {
@@ -193,7 +193,7 @@ class PeriodicDocumentService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function recordRun(array $schedule, string $ranAt, int $records, array $document): void {
 		$uuid = (string)($schedule['uuid'] ?? '');

@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class DocumentReviewService {
 
@@ -80,7 +80,7 @@ class DocumentReviewService {
 	 *
 	 * @throws RuntimeException When the interval is not a duration.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function reviewDate(string $interval, string $from = ''): string {
 		$interval = trim($interval);
@@ -125,7 +125,7 @@ class DocumentReviewService {
 	 *
 	 * @throws RuntimeException When the interval is not a duration.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function schedule(array $document, string $interval): array {
 		$document['reviewInterval'] = $interval;
@@ -150,7 +150,7 @@ class DocumentReviewService {
 	 *
 	 * @return bool True when it is due.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function isDue(array $document, string $day = ''): bool {
 		$date = trim((string)($document['reviewDate'] ?? ''));
@@ -192,7 +192,7 @@ class DocumentReviewService {
 	 *
 	 * @return array<int, array<string, mixed>> The due documents.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function listDue(string $day = ''): array {
 		try {
@@ -239,7 +239,7 @@ class DocumentReviewService {
 	 *
 	 * @throws RuntimeException When there is no such document.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function markReviewed(string $uuid): array {
 		try {

@@ -9,7 +9,7 @@
  * return: `{files, bytes, ceilingBytes, exceedsCeiling}` and
  * `{included, excluded: [{name, reason}], bytes, archive: {fileId, path}}`.
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 
 import { describe, expect, it } from 'vitest'

@@ -125,7 +125,7 @@ class FlatFileListService {
 	 *
 	 * @return array<int, array<string, mixed>> The records.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function recordsFor(array $domain): array {
 		return $this->repository->findByDomain(domain: $domain);

@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class CaseArchiveService {
 
@@ -127,7 +127,7 @@ class CaseArchiveService {
 	 *
 	 * @return array{files: int, bytes: int, ceilingBytes: int, exceedsCeiling: bool} The preflight.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function preflight(array $domain, int $ceiling = self::DEFAULT_CEILING): array {
 		$rows = $this->readable(domain: $domain);
@@ -157,7 +157,7 @@ class CaseArchiveService {
 	 *
 	 * @return array{included: array<int, array<string, mixed>>, excluded: array<int, array<string, mixed>>, bytes: int} The manifest.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function manifestFor(array $domain, int $ceiling = self::DEFAULT_CEILING): array {
 		$included = [];
@@ -207,7 +207,7 @@ class CaseArchiveService {
 	 *
 	 * @return int The ceiling in bytes.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function ceiling(int $requested=0): int {
 		$administered = $this->appConfig->getValueInt(
@@ -244,7 +244,7 @@ class CaseArchiveService {
 	 *
 	 * @throws RuntimeException When the archive cannot be written or the job cannot be recorded.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function build(array $domain, int $requestedCeiling=0): array {
 		$ceiling  = $this->ceiling(requested: $requestedCeiling);
@@ -289,7 +289,7 @@ class CaseArchiveService {
 	 *
 	 * @throws RuntimeException When the job cannot be stored.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function record(array $domain, array $manifest, int $ceiling, int $fileId = 0): array {
 		$job = [
@@ -339,7 +339,7 @@ class CaseArchiveService {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function readable(array $domain): array {
 		$page = $this->files->listFor(domain: $domain, page: 1, limit: 10000);
@@ -359,7 +359,7 @@ class CaseArchiveService {
 	 *
 	 * @return array<int, array<string, mixed>> The records whose file did not come back.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function unreadable(array $domain): array {
 		$visible = [];

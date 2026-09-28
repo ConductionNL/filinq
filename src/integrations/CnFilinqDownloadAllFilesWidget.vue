@@ -100,7 +100,7 @@ import {
  * told before the job starts, then builds the archive and lists every file
  * that was left out, with the reason.
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 export default {
 	name: 'CnFilinqDownloadAllFilesWidget',
@@ -135,7 +135,7 @@ export default {
 		 *
 		 * @return {boolean} True when the files exceed the ceiling.
 		 *
-		 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
 		warn() {
 			return needsWarning(this.preflight)
@@ -146,7 +146,7 @@ export default {
 		 *
 		 * @return {Array<{reason: string, label: string, names: string[]}>} Non-empty groups.
 		 *
-		 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
 		leftOut() {
 			if (this.result === null || this.result.failed === true) {
@@ -173,7 +173,7 @@ export default {
 	 *
 	 * @return {void}
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	mounted() {
 		this.load()
@@ -186,7 +186,7 @@ export default {
 		 * @param {number} bytes The size.
 		 * @return {string} The size in MB.
 		 *
-		 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
 		size(bytes) {
 			return megabytes(bytes)
@@ -197,7 +197,7 @@ export default {
 		 *
 		 * @return {URLSearchParams} The parameters.
 		 *
-		 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
 		params() {
 			return new URLSearchParams({
@@ -212,7 +212,7 @@ export default {
 		 *
 		 * @return {Promise<void>} Resolves once `preflight` is set.
 		 *
-		 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
 		async load() {
 			if (this.objectId === '') {
@@ -248,7 +248,7 @@ export default {
 		 *
 		 * @return {Promise<void>} Resolves once `result` is set.
 		 *
-		 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
 		async download() {
 			this.busy = true
@@ -300,7 +300,7 @@ export default {
 		 *
 		 * @return {string} The token, or ''.
 		 *
-		 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
 		requestToken() {
 			const head = document.getElementsByTagName('head')[0]

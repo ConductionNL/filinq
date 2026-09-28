@@ -10,8 +10,8 @@
 ## 2. Layout
 
 - [x] 2.1 A template names a layout version; `PdfService` renders through it, and the generated document records both versions (REQ-DFT-01)
-- [ ] 2.2 Admin surface to author and version a layout, with a preview of the first and following pages (REQ-DFT-01)
-  - The layout is authored through the endpoints and the register today; the admin surface with the two-page preview is still open.
+- [x] 2.2 Admin surface to author and version a layout, with a preview of the first and following pages (REQ-DFT-01)
+  - Built 2026-09-28: `src/views/settings/PageLayoutSettings.vue` on the admin settings page lists the active layouts, creates one (`POST api/page-layouts/new`, `PageLayoutService::create()`), saves an edit as the next version and lists the versions. The preview draws the first and a following page from the form (header, footer, margins, orientation); it is a drawing of the layout, not a PDF render. Tests: `PageLayoutServiceTest` (active list, create, refusals, the written payload against the register), `DocumentProductionControllerContractTest`, `tests/vitest/pageLayoutForm.spec.js`.
 
 ## 3. The archive
 
@@ -22,14 +22,13 @@
 ## 4. Periodic and released documents
 
 - [x] 4.1 Render a template over the records a saved view returns, on a cadence, writing a new generated document each run and never editing the previous one (REQ-DFT-03)
+  - Correction 2026-09-28: the run writes a record but renders no file, and no job runs it on its cadence. Both halves are carried by the change `periodic-documents-on-a-schedule`.
 - [x] 4.2 `reviewInterval` on a released document computes a review date, lists the document as due and notifies its owner through the notification dialect (REQ-DFT-04)
-- [ ] 4.3 A submitted form is rendered to a document at submission, from the values as submitted, and filed on the record (REQ-DFT-05)
-  - Form rendering at submission belongs with the form surface and is untouched here.
+- [x] 4.3 Moved on 2026-09-28 to the change `forms-as-documents`, with REQ-DFT-05. It needs a form surface, which filinq does not have; see that change's open question.
 
 ## 5. Field values and trust
 
-- [ ] 5.1 A form field holds a reference to a document record, validated as resolvable and readable by the caller; no file is copied into the field (REQ-DFT-05)
-  - Untouched: a document reference as a field value belongs with the form surface.
+- [x] 5.1 Moved on 2026-09-28 to the change `forms-as-documents`, with REQ-DFT-05. It needs a form surface, which filinq does not have; see that change's open question.
 - [x] 5.2 The verification result states which signature was checked, against which key, when, and what that proves (REQ-DFT-06)
   - Done in `SigningVerificationService`, which is where the signing services are.
 
@@ -71,5 +70,4 @@ The unverifiable cases say so too, and say that they are not evidence of
 anything being wrong: no key configured, a pre-v2 assertion, and a signature
 this instance did not produce.
 
-**Still open on this change:** 2.2, 3.2, 4.3 and 5.1, all surfaces rather than
-services, and none of them in this repo's PHP.
+**Closed 2026-09-28:** 2.2 and 3.2 are built; 4.3 and 5.1 moved with REQ-DFT-05 to `forms-as-documents`.

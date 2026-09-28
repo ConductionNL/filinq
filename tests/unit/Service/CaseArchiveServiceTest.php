@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -263,7 +263,7 @@ class CaseArchiveServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testOneBundleForTheBezwaarcommissie(): void {
 		$rows = [];
@@ -286,7 +286,7 @@ class CaseArchiveServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testNothingIsDroppedSilentlyWhenTheCeilingIsReached(): void {
 		$rows = [
@@ -312,7 +312,7 @@ class CaseArchiveServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAFileTheUserMayNotReadIsRecordedAsSuch(): void {
 		$rows = [$this->row(fileId: 1, name: 'zichtbaar.pdf', size: 100)];
@@ -335,7 +335,7 @@ class CaseArchiveServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testThePreflightWarnsBeforeTheJobStarts(): void {
 		$rows = [
@@ -359,7 +359,7 @@ class CaseArchiveServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testABundleThatFitsDoesNotWarn(): void {
 		$preflight = $this->service(
@@ -376,7 +376,7 @@ class CaseArchiveServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testTheJobRecordsWhatWasHandedOver(): void {
 		$service = $this->service(
