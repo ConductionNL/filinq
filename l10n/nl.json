@@ -1,5 +1,17 @@
 {
     "translations": {
+        "chart error: no data": "grafiekfout: geen gegevens",
+        "chart error: data must include \"labels\" and \"series\"": "grafiekfout: de gegevens moeten \"labels\" en \"series\" bevatten",
+        "chart error: too many data points (max %s)": "grafiekfout: te veel datapunten (maximaal %s)",
+        "chart error: unsupported chart type \"%s\"": "grafiekfout: grafiektype \"%s\" wordt niet ondersteund",
+        "chart error: document exceeds the maximum of %s charts": "grafiekfout: het document heeft meer dan het maximum van %s grafieken",
+        "chart error: the chart could not be converted for %s": "grafiekfout: de grafiek kon niet worden omgezet naar %s",
+        "image unavailable: %s": "afbeelding niet beschikbaar: %s",
+        "not found or no access": "niet gevonden of geen toegang",
+        "not a raster image": "geen rasterafbeelding",
+        "larger than %s bytes": "groter dan %s bytes",
+        "image support is not available": "afbeeldingen worden niet ondersteund",
+        "No data available": "Geen gegevens beschikbaar",
         "(in use)": "(in gebruik)",
         "Bottom": "Onder",
         "Create layout": "Layout maken",

@@ -1,6 +1,18 @@
 OC.L10N.register(
     "filinq",
     {
+        "chart error: no data": "error de gráfico: sin datos",
+        "chart error: data must include \"labels\" and \"series\"": "error de gráfico: los datos deben incluir \"labels\" y \"series\"",
+        "chart error: too many data points (max %s)": "error de gráfico: demasiados puntos de datos (máximo %s)",
+        "chart error: unsupported chart type \"%s\"": "error de gráfico: el tipo de gráfico \"%s\" no es compatible",
+        "chart error: document exceeds the maximum of %s charts": "error de gráfico: el documento supera el máximo de %s gráficos",
+        "chart error: the chart could not be converted for %s": "error de gráfico: no se pudo convertir el gráfico a %s",
+        "image unavailable: %s": "imagen no disponible: %s",
+        "not found or no access": "no encontrado o sin acceso",
+        "not a raster image": "no es una imagen rasterizada",
+        "larger than %s bytes": "mayor de %s bytes",
+        "image support is not available": "las imágenes no son compatibles",
+        "No data available": "No hay datos disponibles",
         "(in use)": "(en uso)",
         "Bottom": "Abajo",
         "Create layout": "Crear diseño",

@@ -1,5 +1,17 @@
 {
     "translations": {
+        "chart error: no data": "chart error: no data",
+        "chart error: data must include \"labels\" and \"series\"": "chart error: data must include \"labels\" and \"series\"",
+        "chart error: too many data points (max %s)": "chart error: too many data points (max %s)",
+        "chart error: unsupported chart type \"%s\"": "chart error: unsupported chart type \"%s\"",
+        "chart error: document exceeds the maximum of %s charts": "chart error: document exceeds the maximum of %s charts",
+        "chart error: the chart could not be converted for %s": "chart error: the chart could not be converted for %s",
+        "image unavailable: %s": "image unavailable: %s",
+        "not found or no access": "not found or no access",
+        "not a raster image": "not a raster image",
+        "larger than %s bytes": "larger than %s bytes",
+        "image support is not available": "image support is not available",
+        "No data available": "No data available",
         "(in use)": "(in use)",
         "Bottom": "Bottom",
         "Create layout": "Create layout",
