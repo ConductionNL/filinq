@@ -216,6 +216,14 @@ $extra = [
         ['name' => 'document#generateBulk', 'url' => 'api/documents/generate/bulk', 'verb' => 'POST'],
         ['name' => 'document#jobStatus', 'url' => 'api/documents/jobs/{jobId}', 'verb' => 'GET'],
 
+        // External render contract (filinq-configurable-report-templates): a
+        // stable, slug-addressed endpoint for server-to-server callers (e.g.
+        // learniq's ReportCardPdfDelegationService) that already hold their
+        // data and only need a school-styled PDF back, not filinq's
+        // register/schema data-resolution model.
+        ['name' => 'reportRender#render', 'url' => 'api/v1/documents/render', 'verb' => 'POST'],
+        ['name' => 'reportRender#renderBatch', 'url' => 'api/v1/documents/render/batch', 'verb' => 'POST'],
+
         // Correspondence routes.
         ['name' => 'correspondence#generate', 'url' => 'api/correspondence/generate', 'verb' => 'POST'],
         ['name' => 'correspondence#generateBatch', 'url' => 'api/correspondence/generate/batch', 'verb' => 'POST'],

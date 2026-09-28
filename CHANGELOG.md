@@ -9,6 +9,8 @@
 
 ### Added
 
+- **Report templates can now be selected by a stable slug, per school, with a print-quality option and batch ZIP export (`filinq-configurable-report-templates`).** `POST /api/v1/documents/render` resolves a template by `templateSlug`, prefers a tenant-specific override and falls back to the namespace default, then renders it against inline data through the existing huisstijl pipeline and returns a document reference. `outputQuality: "print"` produces PDF/A-3 output through the existing archival conversion service. `POST /api/v1/documents/render/batch` renders a list of items against one template and packages them into a single ZIP; one item failing does not stop the rest. Both endpoints authenticate with a shared-secret bearer token, since the caller is another app, not a logged-in user.
+
 - **Filinq records now sit on the standard leaves, and Filinq's documents are visible outside Filinq (`leaf-integrations`).** Six schemas opt in: a signing request and a consent record link to NC Mail and show their deadline on the calendar leaf, a signer bridges to Contacts, generated documents and dossiers carry the files leaf, and publication follow-ups get a Deck card. An objection mail or an inbound case mail can seed a consent or correspondence record from the Mail sidebar, in its initial state only: no decision, no status advance, no send.
 
   Filinq also contributes its first leaf. `filinq-documents` renders the documents Filinq holds for any Open Register object, on the object's own page in whichever app shows it, through Filinq's existing flat list and its existing access control.
