@@ -1526,7 +1526,24 @@
         "Slug": "Slug",
         "A stable, human-readable identifier other apps (for example learniq) use to ask for this template without knowing its UUID. Unique per combination of namespace and tenantId.": "Stabiele, mensleesbare identifier waarmee externe apps (bijv. learniq) dit template kunnen opvragen zonder de UUID te kennen. Uniek per combinatie van namespace en tenantId.",
         "Tenant": "Afnemer",
-        "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists.": "Optionele scoping van dit template tot één afnemer (bijv. een school) binnen de namespace. Leeg laten maakt het template de namespace-brede standaard waarnaar wordt teruggevallen wanneer geen tenant-specifiek template met dezelfde slug bestaat."
+        "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists.": "Optionele scoping van dit template tot één afnemer (bijv. een school) binnen de namespace. Leeg laten maakt het template de namespace-brede standaard waarnaar wordt teruggevallen wanneer geen tenant-specifiek template met dezelfde slug bestaat.",
+        "Generate document": "Document genereren",
+        "Render a Filinq template for each item and file the document with its object.": "Vul voor elk item een Filinq-sjabloon in en sla het document op bij het bijbehorende object.",
+        "The id of a Filinq template. Leave empty when you use a slug or inline text.": "Het id van een Filinq-sjabloon. Laat leeg als je een slug of eigen sjabloontekst gebruikt.",
+        "Template slug": "Slug van het sjabloon",
+        "Find the template by its slug instead of its id. Needs the template namespace.": "Zoek het sjabloon op zijn slug in plaats van zijn id. Vul dan ook de namespace van het sjabloon in.",
+        "Template namespace": "Namespace van het sjabloon",
+        "The app the template belongs to, for example dossiq.": "De app waar het sjabloon bij hoort, bijvoorbeeld dossiq.",
+        "Inline template": "Eigen sjabloontekst",
+        "Template text to render instead of a stored template. Fields of the item are available by name.": "Sjabloontekst die wordt ingevuld in plaats van een opgeslagen sjabloon. Velden van het item zijn beschikbaar onder hun naam.",
+        "pdf, odf or html. Defaults to pdf.": "pdf, odf of html. Standaard pdf.",
+        "Without extension. May use item fields, for example {{ identifier }}.": "Zonder extensie. Je kunt velden van het item gebruiken, bijvoorbeeld {{ identifier }}.",
+        "Store as a file": "Opslaan als bestand",
+        "Turn off to only write the rendered text into a field.": "Zet uit om de ingevulde tekst alleen in een veld te schrijven.",
+        "Write text to field": "Tekst naar veld schrijven",
+        "Also write the rendered text into this field of the object. Only that field changes.": "Schrijf de ingevulde tekst ook in dit veld van het object. Alleen dat veld verandert.",
+        "Output field": "Uitvoerveld",
+        "The item field that receives the document details. Defaults to document.": "Het veld op het item dat de gegevens van het document krijgt. Standaard document."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

@@ -210,6 +210,13 @@ foreach (
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
 
+// OpenRegister's flow-node contract (IFlowNode, RegisterFlowNodesEvent and the
+// optional companions). The same file PHPStan and psalm read, so the node is
+// tested against the shape the analysers check it against.
+if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false) {
+	require_once __DIR__ . '/stubs/openregister-flow.stub.php';
+}
+
 // Shared test-only trait. The composer PSR-4 dev prefix maps
 // OCA\Filinq\Tests\ to tests/, which cannot resolve the lower-cased
 // tests/unit/ directory segment, so non-test helper classes under tests/unit

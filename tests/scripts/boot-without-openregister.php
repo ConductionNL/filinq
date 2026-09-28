@@ -16,7 +16,8 @@
  *
  * Exit code 0 and the line `BOOT-OK` mean: the retired classes are
  * unresolvable, every signing-surface class links, and
- * `SigningEventRegistrar::register()` completes, registering no retired
+ * `SigningEventRegistrar::register()` and `DocumentGenerationRegistrar::register()`
+ * complete, the latter without OpenRegister's flow contract, registering no retired
  * event name.
  *
  * @category  Tests
@@ -145,6 +146,38 @@ foreach ($context->events as $registeredEvent) {
 	}
 }
 
-echo 'BOOT-OK: signing wiring loads with the retired approval surface absent; registered: '
+// 4. The document-generation wiring must link and register with OpenRegister
+//    absent too. GenerateDocumentNode itself implements IFlowNode and is only
+//    ever built when OpenRegister dispatches RegisterFlowNodesEvent, so it is
+//    deliberately NOT in this list; everything that register() touches is.
+if (interface_exists('OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === true) {
+	bootProofFail('the OpenRegister flow contract resolves in this process');
+}
+
+$generationSurface = [
+	'OCA\\Filinq\\AppInfo\\DocumentGenerationRegistrar',
+	'OCA\\Filinq\\Flow\\FilinqFlowNodeListener',
+	'OCA\\Filinq\\EventListener\\DocumentGenerationRequestedListener',
+	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
+	'OCA\\Filinq\\Event\\DocumentGeneratedEvent',
+];
+foreach ($generationSurface as $surfaceClass) {
+	if (class_exists($surfaceClass) === false) {
+		bootProofFail('document-generation class does not link: ' . $surfaceClass);
+	}
+}
+
+$context->events = [];
+(new \OCA\Filinq\AppInfo\DocumentGenerationRegistrar())->register(context: $context);
+$expectedGeneration = [
+	'OCA\\OpenRegister\\Service\\Flow\\RegisterFlowNodesEvent',
+	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
+];
+if ($context->events !== $expectedGeneration) {
+	bootProofFail('unexpected document-generation registrations: ' . implode(', ', $context->events));
+}
+
+echo 'BOOT-OK: signing wiring loads with the retired approval surface absent, and document-generation '
+	. 'wiring loads with the OpenRegister flow contract absent; registered: '
 	. implode(', ', $context->events) . "\n";
 exit(0);

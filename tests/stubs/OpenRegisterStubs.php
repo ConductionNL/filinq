@@ -75,6 +75,35 @@ class ObjectService {
 	}//end saveObject()
 
 	/**
+	 * Merge partial data into a stored object and save it.
+	 *
+	 * Signature pinned to the real OpenRegister ObjectService::patchObject()
+	 * on `development`, so a mock built from this stub refuses the named
+	 * arguments the real class would refuse.
+	 *
+	 * @param string $objectId Object id, uuid or slug.
+	 * @param array $data Partial object data to merge.
+	 * @param mixed $register Optional register scope.
+	 * @param mixed $schema Optional schema scope.
+	 * @param bool $_rbac Whether to apply RBAC checks.
+	 * @param bool $_multitenancy Whether to apply multitenancy filtering.
+	 * @param mixed $currentUser Explicit acting user.
+	 *
+	 * @return mixed
+	 */
+	public function patchObject(
+		string $objectId,
+		array $data,
+		$register = null,
+		$schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		$currentUser = null,
+	) {
+		return null;
+	}//end patchObject()
+
+	/**
 	 * Find all objects matching a set of filters
 	 *
 	 * Signature pinned to the real OpenRegister ObjectService::findAll() at
