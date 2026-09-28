@@ -91,6 +91,38 @@ class SigningRequestValidator {
 	}//end validateRequestData()
 
 	/**
+	 * Validate that a request names at least one signer who can be reached.
+	 *
+	 * A signer is reachable through a Nextcloud user id or an e-mail address;
+	 * a name alone reaches nobody. Every entry must be reachable, and there
+	 * must be at least one, so a request can never be stored as PENDING with
+	 * nobody able to sign it (issue #1209, REQ-SAO-001).
+	 *
+	 * @param array<int|string, mixed> $signers The `signers` entries of the request.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With code 400 when no signer, or an unreachable one, is given.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+	 */
+	public function validateSigners(array $signers): void {
+		if ($signers === []) {
+			throw new RuntimeException('A signing request needs at least one signer', 400);
+		}
+
+		foreach ($signers as $signer) {
+			$signer = (array) $signer;
+			$userId = trim((string) ($signer['userId'] ?? ''));
+			$email  = trim((string) ($signer['email'] ?? ''));
+			if ($userId === '' && $email === '') {
+				throw new RuntimeException('Every signer needs a user or an e-mail address', 400);
+			}
+		}
+
+	}//end validateSigners()
+
+	/**
 	 * Validate that the requested provider actually supports the requested level.
 	 *
 	 * Provider/level honesty at request creation (signing-trust-rebuild
