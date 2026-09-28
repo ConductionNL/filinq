@@ -585,7 +585,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/email-ingestion/tasks.md: every task unchecked ([ ] throughout, sections 1-4). openspec/changes/email-ingestion/design.md: 'No ingestion machinery exists: no watched folder, no mailbox client, no email record schema, no filing.' find lib -iname '*EmailIngestion*' returns nothing."
+				"evidence": "openspec/changes/email-ingestion/tasks.md: every task unchecked ([ ] throughout, sections 1-4). openspec/changes/email-ingestion/design.md: 'No ingestion machinery exists: no watched folder, no mailbox client, no email record schema, no filing.' find lib -iname '*EmailIngestion*' returns nothing.",
+				"change": "openspec/changes/email-ingestion"
 			},
 			"reachedOn": "nothing reaches it (unbuilt)",
 			"provider": "filinq",
@@ -601,7 +602,8 @@
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: src/paperless_mail/models.py:87 MailRule with from/subject/body/attachment filters (:166-:206) and consumption_scope incl. full .eml (:234); src/paperless_mail/mail.py:916 consumes the mail as .eml; src/paperless/parsers/mail.py:68 MailDocumentParser; UI manage/mail/mail.component.ts; processed-mail dialog.",
 				"decos-join": "docs-only: intelligence.competitor_features#1024 (Decos JOIN, recorded 2026-03-27) \"Email Integration: Automatic email capture and linking to cases with correspondence tracking\""
-			}
+			},
+			"note": "corrections round 9 (2026-09-28): carried by openspec/changes/email-ingestion (open, 0 of 11 tasks), which specifies the emailDocument record for an ingested email with its attachments, the PDF/A derivative and filing into a dossier."
 		},
 		{
 			"id": "in-email-suggest",
@@ -640,7 +642,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/inbound-auto-classification/tasks.md: every task unchecked. find lib -iname '*DocumentTypeClassifier*' -o -iname '*InboundClassification*' -o -iname '*ClassificationController*' returns nothing."
+				"evidence": "openspec/changes/inbound-auto-classification/tasks.md: every task unchecked. find lib -iname '*DocumentTypeClassifier*' -o -iname '*InboundClassification*' -o -iname '*ClassificationController*' returns nothing.",
+				"change": "openspec/changes/inbound-auto-classification"
 			},
 			"reachedOn": "nothing reaches it (unbuilt)",
 			"provider": "filinq",
@@ -655,7 +658,8 @@
 			"decos-join": "unknown",
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/apps.py:26 set_document_type runs on consumption finished; src/documents/signals/handlers.py:156 applies classifier/match (src/documents/classifier.py:631 predict_document_type); user corrects in document detail, suggestions via src/documents/views.py:1545 and LLM suggestions :1605."
-			}
+			},
+			"note": "corrections round 9 (2026-09-28): carried by openspec/changes/inbound-auto-classification (open, 0 of 14 tasks), which specifies a suggested document type and correspondent on intake that a person confirms or corrects."
 		},
 		{
 			"id": "in-party",
@@ -914,7 +918,7 @@
 			"sourceRef": "Workflow OCR (Nextcloud app) flow-triggered OCR; Paperless-ngx consumer",
 			"filinq": "no",
 			"built": {
-				"state": "specified",
+				"state": "none",
 				"owner": "ConductionNL/filinq",
 				"evidence": "No watched-folder job triggers OCR (lib/BackgroundJob/ has no such job; scan-intake-with-separator-sheets task 3.2 confirms none exists). openspec/changes/ocr-trigger-surface (which would add automatic OCR fallback inside AnonymizationService::extractAndDetectEntities()) is entirely unchecked - task 2.3 unimplemented."
 			},
@@ -931,7 +935,8 @@
 			"decos-join": "unknown",
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/management/commands/document_consumer.py:377 watches the consume folder and queues consumption, which runs OCR with no user action (docs/usage.md:156); ignore patterns :447."
-			}
+			},
+			"note": "corrections round 9 (2026-09-28): no change carries this row at eade8329579d, so the state is none. scan-intake-with-separator-sheets gives a scanner a watched folder but puts OCR of the segments out of scope (proposal.md, Out of scope), ocr-trigger-surface runs OCR from a user action and inside the anonymisation pipeline only, inbound-documents-and-the-worklist task 4.2 hands the OCR path back to the scan feeder, and the archived 2026-06-14-ocr-document-scanning lists OCR during upload as a non-goal (design.md:24). Each leans on an OCR folder watch that does not exist: OcrService::processFile() has no caller in lib, and no job in lib/BackgroundJob watches a folder."
 		},
 		{
 			"id": "in-upload-policy",
