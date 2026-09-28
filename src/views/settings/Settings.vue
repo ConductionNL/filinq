@@ -651,6 +651,29 @@
 					}}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-guardian-consent-age">{{
+						t('filinq', 'Guardian consent age')
+					}}</label>
+					<input
+						id="signing-guardian-consent-age"
+						v-model.number="settings.signing_guardian_consent_age"
+						type="number"
+						min="1"
+						max="21"
+						placeholder="16" />
+				</div>
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.',
+						)
+					}}
+				</div>
+			</div>
 		</NcSettingsSection>
 
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
@@ -875,6 +898,7 @@ export default {
 				signing_provider: 'native',
 				signing_default_level: 'SES',
 				signing_request_expiry_days: 30,
+				signing_guardian_consent_age: 16,
 				'filinq.anonymisation.default_output_format': 'pdf-only',
 				// files-confidential-labels — off by default (design.md D3).
 				'filinq.confidentiality.prioritise_analysis': false,
@@ -1074,6 +1098,8 @@ export default {
 						data.signing_default_level || 'SES'
 					this.settings.signing_request_expiry_days =
 						parseInt(data.signing_request_expiry_days, 10) || 30
+					this.settings.signing_guardian_consent_age =
+						parseInt(data.signing_guardian_consent_age, 10) || 16
 					this.settings['filinq.anonymisation.default_output_format'] =
 						data['filinq.anonymisation.default_output_format']
 						?? 'pdf-only'
@@ -1262,6 +1288,10 @@ export default {
 				signing_default_level: this.settings.signing_default_level || 'SES',
 				signing_request_expiry_days: String(
 					this.settings.signing_request_expiry_days || 30,
+				),
+
+				signing_guardian_consent_age: String(
+					this.settings.signing_guardian_consent_age || 16,
 				),
 
 				'filinq.anonymisation.default_output_format': [

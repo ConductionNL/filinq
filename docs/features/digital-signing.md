@@ -222,6 +222,50 @@ docker exec nextcloud php occ config:app:set filinq filinq_validsign_api_key --v
 
 ---
 
+## Signers under the age of consent
+
+A pupil of 14 cannot sign an ontwikkelingsperspectief (OPP) on their own. Filinq refuses
+the signature until a parent or guardian stands beside them on the same request.
+
+**The age.** Set it under *Settings > Digital signing > Guardian consent age*. The default
+is 16, the age of consent in Dutch law (UAVG article 5). A request can raise it for its own
+signers: send `guardianConsentAge: 18` on a praktijkovereenkomst (POK), because a student
+under 18 is a minor under civil law. A request can never lower it.
+
+**Naming the guardian.** Give each signer entry the extra fields below. The app that asks
+for the signature knows the pupil's birth date and the parents, so it sends them.
+
+| Field              | On                | Meaning                                                          |
+|--------------------|-------------------|------------------------------------------------------------------|
+| `birthDate`        | the pupil         | `YYYY-MM-DD`. Decides whether a guardian must sign too.          |
+| `role`             | the guardian      | `guardian`. Every other entry is a `signer`.                     |
+| `guardianFor`      | the guardian      | The `userId` or `email` of the pupil's entry in the same list.   |
+| `guardianAct`      | the guardian      | `co-sign` (default): signs the document too. `consent`: agrees that the pupil signs. |
+| `consentStatement` | a `consent` act   | The text the guardian agrees to. Required for `consent`.         |
+| `guardianRef`      | the guardian      | Your own reference to the guardian, for example a learniq guardian id. |
+
+**What Filinq checks.**
+
+- A request that names a pupil under the age without a guardian is refused (400).
+- The pupil's signature is refused (403) while no guardian on the request points at them.
+- A guardian signs through the same sign action as anyone else, in Nextcloud or in the portal.
+- A guardian cannot be the pupil, and cannot be under the age themselves.
+- The age is checked at the moment the pupil signs, not when the request was made.
+- The request completes only once a guardian has acted for every pupil under the age.
+
+**What the signed document records.** The completed request and the signed file carry a
+`consentBasis`: per pupil, the signer record, the age that applied, the moment it was
+checked, and each guardian who acted, how, and how their identity was established. It never
+carries the birth date. In the signed file the basis sits inside the signature seal, so
+changing it afterwards makes verification fail.
+
+**Who uses it.** learniq for the OPP and the POK, and portaliq for toestemmingsformulieren,
+once they raise their signing requests through `DocumentSigningRequestedEvent`.
+
+Next: set the guardian consent age for your school in the signing settings.
+
+---
+
 ## Request State Machine
 
 ```

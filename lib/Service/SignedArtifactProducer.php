@@ -169,6 +169,14 @@ class SignedArtifactProducer {
 			'level' => (string)($request['signatureLevel'] ?? 'SES'),
 		];
 
+		// Guardian consent (signer-identity-rails REQ-DDSIR-010): a signer who
+		// signed under the age of consent, and the guardian who acted for them,
+		// are recorded in the artifact itself. SigningService computed the basis
+		// from the stored signer records; it never comes from request input.
+		if (empty($request['consentBasis']) === false && is_array($request['consentBasis']) === true) {
+			$context['consentBasis'] = $request['consentBasis'];
+		}
+
 		if ($verifiedActor === null) {
 			return $context;
 		}

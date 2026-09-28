@@ -1386,7 +1386,26 @@ OC.L10N.register(
         "Why the document was rejected. A rejection without a reason is refused.": "Why the document was rejected. A rejection without a reason is refused.",
         "Why the document was taken off the record it was filed on.": "Why the document was taken off the record it was filed on.",
         "Withdrawn At": "Withdrawn At",
-        "Withdrawn Reason": "Withdrawn Reason"
+        "Withdrawn Reason": "Withdrawn Reason",
+        "Role": "Role",
+        "Guardian for": "Guardian for",
+        "Guardian act": "Guardian act",
+        "Consent statement": "Consent statement",
+        "Guardian reference": "Guardian reference",
+        "Birth date": "Birth date",
+        "Acting identity": "Acting identity",
+        "Guardian consent age": "Guardian consent age",
+        "Consent basis": "Consent basis",
+        "Signs as a party, or as guardian of a signer under the age of consent": "Signs as a party, or as guardian of a signer under the age of consent",
+        "The signer this guardian stands beside": "The signer this guardian stands beside",
+        "Co-signs the document, or consents to the signer signing it": "Co-signs the document, or consents to the signer signing it",
+        "The statement the guardian consents to": "The statement the guardian consents to",
+        "Reference to the guardian in the app that asked for the signature": "Reference to the guardian in the app that asked for the signature",
+        "Decides whether a guardian must sign too. Never copied into the consent basis": "Decides whether a guardian must sign too. Never copied into the consent basis",
+        "How the signer's identity was established: provider, assurance and moment": "How the signer's identity was established: provider, assurance and moment",
+        "Signers under this age need a guardian": "Signers under this age need a guardian",
+        "For each signer under the age of consent: which guardian acted, and how": "For each signer under the age of consent: which guardian acted, and how",
+        "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.": "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent."
     },
     "nplurals=2; plural=(n != 1);"
 )

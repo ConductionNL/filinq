@@ -321,6 +321,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function produceSignedArtifact(string $documentContent, array $context): string {
 		$level = (string)($context['level'] ?? 'SES');
@@ -359,6 +360,14 @@ class NativeSigningProvider implements SigningProviderInterface {
 			if (isset($context[$portalField]) === true && $context[$portalField] !== '') {
 				$assertion[$portalField] = (string)$context[$portalField];
 			}
+		}
+
+		// Guardian consent (signer-identity-rails REQ-DDSIR-010): the consent
+		// basis of a minor's signature joins the assertion BEFORE the MAC, so a
+		// rewritten basis fails verification like a rewritten signer. Absent for
+		// a request between adults, whose assertion keeps its old shape.
+		if (empty($context['consentBasis']) === false && is_array($context['consentBasis']) === true) {
+			$assertion['consentBasis'] = $context['consentBasis'];
 		}
 
 		// Build the canonical (unsigned-marker) form the verifier will recompute:

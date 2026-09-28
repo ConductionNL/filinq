@@ -193,6 +193,8 @@ class SettingsService {
 				'signing_request_expiry_days',
 				'30'
 			),
+			// Guardian consent age (signer-identity-rails REQ-DDSIR-008): default 16, the Dutch age of consent.
+			'signing_guardian_consent_age' => $this->config->getValueString($this->appName, 'signing_guardian_consent_age', '16'),
 			// Anonymise-output-as-pdf-by-default — tenant-wide default
 			// for the anonymise endpoint's `outputFormat` request param.
 			// 'pdf-only' (default) converts via the cascade and deletes the
@@ -385,6 +387,7 @@ class SettingsService {
 		'signing_provider',
 		'signing_default_level',
 		'signing_request_expiry_days',
+		'signing_guardian_consent_age',
 		'ocr_enabled',
 		'ocr_languages',
 		'ocr_dpi',

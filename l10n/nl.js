@@ -1480,7 +1480,26 @@ OC.L10N.register(
         "Why the document was rejected. A rejection without a reason is refused.": "Waarom het document is afgewezen. Een afwijzing zonder reden wordt geweigerd.",
         "Why the document was taken off the record it was filed on.": "Waarom het document is gehaald van de zaak waarop het was vastgelegd.",
         "Withdrawn At": "Ingetrokken op",
-        "Withdrawn Reason": "Reden intrekking"
+        "Withdrawn Reason": "Reden intrekking",
+        "Role": "Rol",
+        "Guardian for": "Ouder of voogd van",
+        "Guardian act": "Handeling ouder of voogd",
+        "Consent statement": "Toestemmingsverklaring",
+        "Guardian reference": "Verwijzing naar ouder of voogd",
+        "Birth date": "Geboortedatum",
+        "Acting identity": "Vastgestelde identiteit",
+        "Guardian consent age": "Leeftijd voor toestemming",
+        "Consent basis": "Grondslag toestemming",
+        "Signs as a party, or as guardian of a signer under the age of consent": "Tekent als partij, of als ouder of voogd van een ondertekenaar onder de toestemmingsleeftijd",
+        "The signer this guardian stands beside": "De ondertekenaar voor wie deze ouder of voogd tekent",
+        "Co-signs the document, or consents to the signer signing it": "Tekent het document mee, of geeft toestemming dat de ondertekenaar tekent",
+        "The statement the guardian consents to": "De verklaring waarmee de ouder of voogd instemt",
+        "Reference to the guardian in the app that asked for the signature": "Verwijzing naar de ouder of voogd in de app die om de handtekening vroeg",
+        "Decides whether a guardian must sign too. Never copied into the consent basis": "Bepaalt of een ouder of voogd mee moet tekenen. Wordt nooit overgenomen in de grondslag",
+        "How the signer's identity was established: provider, assurance and moment": "Hoe de identiteit van de ondertekenaar is vastgesteld: aanbieder, betrouwbaarheidsniveau en moment",
+        "Signers under this age need a guardian": "Ondertekenaars onder deze leeftijd hebben een ouder of voogd nodig",
+        "For each signer under the age of consent: which guardian acted, and how": "Per ondertekenaar onder de toestemmingsleeftijd: welke ouder of voogd handelde, en hoe",
+        "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.": "Ondertekenaars onder deze leeftijd tekenen alleen met een ouder of voogd op het verzoek. Standaard is dat 16, de toestemmingsleeftijd in Nederland."
     },
     "nplurals=2; plural=(n != 1);"
 )

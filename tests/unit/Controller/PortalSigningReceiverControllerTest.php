@@ -150,7 +150,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	 *
 	 * @return PortalSigningReceiverController
 	 */
-	private function controller(): PortalSigningReceiverController {
+	private function controller(?IThrottler $throttler = null): PortalSigningReceiverController {
 		return new PortalSigningReceiverController(
 			appName: 'filinq',
 			request: $this->mockRequest,
@@ -164,7 +164,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 			registerResolver: new OpenRegisterResolver(settingsService: $this->mockSettingsService),
 			logger: $this->mockLogger,
 			documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder),
-			throttler: $this->createMock(IThrottler::class)
+			throttler: ($throttler ?? $this->createMock(IThrottler::class))
 		);
 
 	}//end controller()
@@ -548,6 +548,30 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		$this->assertStringNotContainsString('already responded', (string)$body);
 
 	}//end testDownstreamFailureReturns502()
+
+	/**
+	 * A guardian-consent refusal is a refused act, not a downstream failure
+	 * (signer-identity-rails REQ-DDSIR-008/009): 403, a generic body, and no
+	 * rejected-assertion count, because the assertion itself was valid.
+	 *
+	 * @return void
+	 */
+	public function testAGuardianConsentRefusalReturns403(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$this->mockSigningService->method('sign')->willThrowException(
+			new \RuntimeException('A signer under 16 signs only with a guardian, and this request names no guardian for them', 403)
+		);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$result = $this->controller(throttler: $throttler)->signDocument();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+		$this->assertSame(['error' => 'signing_refused'], $result->getData());
+
+	}//end testAGuardianConsentRefusalReturns403()
 
 	/**
 	 * viewDocument happy path: returns the target document as base64 JSON,
