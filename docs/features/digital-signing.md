@@ -320,10 +320,16 @@ the signer then chooses *Confirm my identity*, logs in at the broker, comes back
 request and signs. A login stays valid for signing for 15 minutes by default; set another
 window in the settings. It counts for that one request and signer only.
 
+![The signing folder after a pass: the document asks for a stronger identity check](/screenshots/signer-identity-step-up-hint.png)
+
+![The dialog that sends the signer to the identity broker](/screenshots/signer-identity-step-up-start.png)
+
 **Parents and guardians.** A request can ask more of a guardian than of the pupil: send
 `guardianRequiredAssurance: substantial` and the parent confirms with DigiD while the pupil
 signs with their Nextcloud login. An administrator can set a minimum for every guardian under
 *Minimum assurance for a parent or guardian*.
+
+![The signer identity settings with the guardian minimum set to substantial](/screenshots/signer-identity-guardian-minimum.png)
 
 **What is recorded.** Each signer record, its audit entry and the signed file carry the
 identity evidence: provider, means, level, a pseudonym, the moment and a hash of the broker's
