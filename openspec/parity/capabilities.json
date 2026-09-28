@@ -1770,11 +1770,11 @@
 			"area": "generate",
 			"name": "Download all documents of a case as one archive with a manifest.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "no",
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php implemented in full. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. No FE literal 'case-archive' found in src/; no caller in dossiq/shillinq/opencatalogi/scholiq."
+				"evidence": "lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php builds the manifest (:142 manifestFor) and records the job (:195 record), but writes no archive. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. No FE literal 'case-archive' found in src/; no caller in dossiq/shillinq/opencatalogi/scholiq. Corrections round 8 (2026-09-28), filinq#1210: archiveManifest() (lib/Controller/DocumentProductionController.php:151-167) returns the manifest and calls record(), which stores fileId 0 and status completed (lib/Service/CaseArchiveService.php:195-206) with no archive file behind it; nothing in lib/ writes a zip for it, and task 3.2, the page, is open (openspec/changes/documents-from-a-template/tasks.md:19), at 9fd042f."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -1789,7 +1789,8 @@
 			"decos-join": "unknown",
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: src/documents/views.py:4069 BulkDownloadView zips any selection (originals, archive or both; src/documents/bulk_download.py:14); share link bundles zip a selection (src/documents/models.py:1032). No case entity and no manifest; the exporter's manifest.json (document_exporter.py:389) covers the whole instance."
-			}
+			},
+			"note": "Own rating partial to no (corrections round 8, 2026-09-28): no archive is ever written, only a manifest, and the job is still recorded as completed, filinq#1210. The evidence said 'lib/Service/CaseArchiveService.php implemented in full'."
 		},
 		{
 			"id": "tpl-editor",
@@ -2817,7 +2818,7 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
-				"evidence": "lib/Service/EntityDetectionService.php:51-52 TYPED_PII_TYPES includes 'BSN' and 'IBAN' (always redacted regardless of length, closes #285). No 'LICENSE_PLATE'/'KENTEKEN' entity type anywhere: grepped filinq and OpenRegister (origin/development) for kenteken/license_plate/licenseplate, zero hits in either repo.",
+				"evidence": "lib/Service/EntityDetectionService.php:51-52 TYPED_PII_TYPES includes 'BSN' and 'IBAN' (always redacted regardless of length, closes #285). No detector produces a licence plate: filinq lists KENTEKEN as a selectable type (src/services/entityTypes.js:31, lib/Service/LegalBasisProposalService.php:103), but OpenRegister has no plate pattern and drops every type it cannot map before calling Presidio or anonymiq (lib/Service/TextExtraction/EntityRecognitionHandler.php:873-876 at 555af72), and anonymiq defines DutchLicensePlateRecognizer without registering it (src/api/services/text_analyzer.py:70-79 at eb4e7b0). Corrections round 8 (2026-09-28), openregister#4104: TYPED_PII_TYPES is a filter over the entities OpenRegister returns (lib/Service/EntityDetectionService.php:177 at 9fd042f) and produces none itself, and OpenRegister never returns a BSN entity: its regex set is e-mail, phone and IBAN only (lib/Service/TextExtraction/EntityRecognitionHandler.php:505-526 at 555af72), so a BSN is at best labelled PHONE (:515); Presidio is asked for US_SSN (:869); and anonymiq's own BSN recogniser is never asked for, because its default entities omit BSN (anonymiq src/api/config.py:17 at eb4e7b0) and a whitelist that names BSN loses it at EntityRecognitionHandler.php:873-876. IBAN is recognised (EntityRecognitionHandler.php:520).",
 				"change": "ConductionNL/openregister openspec/changes/detection-dutch-licence-plates"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) via the same detect/extract pipeline as det-auto",
@@ -2825,7 +2826,7 @@
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
 			"featureConfidence": "high",
-			"note": "BSN and IBAN are always-redact typed PII; licence plates are not a recognised entity type anywhere in the fleet's detection code. Specified in ConductionNL/openregister openspec/changes/detection-dutch-licence-plates (openregister lane, OpenSpec pass 2026-09-27).",
+			"note": "BSN and IBAN are always-redact typed PII; licence plates are not a recognised entity type anywhere in the fleet's detection code. Specified in ConductionNL/openregister openspec/changes/detection-dutch-licence-plates (openregister lane, OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): no engine produces a BSN entity, so a BSN is at best redacted as a phone number, and licence plates are not detected either; of the three examples only IBAN is recognised, openregister#4104; rating kept at partial because IBAN recognition works, and the earlier claim that BSN is recognised is withdrawn. The evidence said \"No 'LICENSE_PLATE'/'KENTEKEN' entity type anywhere: grepped filinq and OpenRegister (origin/development) for kenteken/license_plate/licenseplate, zero hits in either repo\"; filinq does list KENTEKEN, but nothing detects it.",
 			"zylab": "unknown",
 			"datamask": "yes",
 			"smartdocuments": "unknown",
@@ -4286,11 +4287,11 @@
 			"name": "Send a document to one or more people for signature.",
 			"source": "competitor-derived",
 			"sourceRef": "canonical signature-requests (6 competitors)",
-			"filinq": "yes",
+			"filinq": "partial",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue."
+				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue. Corrections round 8 (2026-09-28), filinq#1209: the form at /signing/new cannot name a signer, it asks for file id, name, level and mode only (src/views/signing/SigningRequestForm.vue:12-54) and posts signers: [] (:80), so lib/Service/SigningService.php:189-193 saves a PENDING request with nobody to sign it; signers can only be passed by an API caller or by another app through the signing event (lib/EventListener/DocumentSigningRequestedListener.php:149), and each is then told by the signerRecord signingRequested notification (lib/Settings/filinq_register.json:2716), at 9fd042f."
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue)",
 			"provider": "filinq",
@@ -4308,7 +4309,8 @@
 				"validsign": "docs-only, read 2026-09-26: https://developers.validsign.eu/docs/transactions/create-a-new-transaction documents creating a transaction (package) with documents and signers; https://www.validsign.eu/features-3/ 'upload, preparation, and distribution' (earlier source: docs-only: intelligence.competitor_features#32473 (ValidSign, recorded 2026-07-16) \"Evidence summary artifact: Who/what/when/IP transaction record + audit trail\")",
 				"decos-join": "docs-only: intelligence.competitor_features#25496 (Decos JOIN, recorded 2026-04-10) \"Digital Signing: Built-in digital signing capabilities for case documents and decisions\"",
 				"paperless-ngx": "source read at v3.2.1, not driven: grep -riwE 'eidas|pades|pkcs7|x509|signers?' src/ src-ui/src/app docs/ returns nothing; 'signatur' finds only HMAC helpers (src/paperless/signed_pickle.py:23, src/documents/classifier.py:78); no document signing."
-			}
+			},
+			"note": "Own rating yes to partial (corrections round 8, 2026-09-28): the signing page creates requests with no signers and offers no way to add one, so only an API caller or another app can send a document for signature, filinq#1209."
 		},
 		{
 			"id": "sig-order",
@@ -4316,11 +4318,11 @@
 			"name": "Choose whether signers sign one after another or at the same time.",
 			"source": "competitor-derived",
 			"sourceRef": "LibreSign multi-document envelopes (order and roles); canonical signing-order",
-			"filinq": "yes",
+			"filinq": "no",
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/signing/SigningRequestForm.vue:46-50 has a signingMode <select> with 'sequential'/'parallel' options (default 'sequential', line 79). lib/Service/SigningRequestValidator.php:87 validates signingMode against exactly ['sequential','parallel']; SigningService.php:154 persists it and :199 persists a per-signer 'order' field."
+				"evidence": "src/views/signing/SigningRequestForm.vue:46-50 has a signingMode <select> with 'sequential'/'parallel' options (default 'sequential', line 79). lib/Service/SigningRequestValidator.php:87 validates signingMode against exactly ['sequential','parallel']; SigningService.php:154 persists it and :199 persists a per-signer 'order' field. Corrections round 8 (2026-09-28), filinq#1209: the mode on the form has nothing to order, because the form sends no signers (src/views/signing/SigningRequestForm.vue:80); and the choice is stored but never read: signingMode is written only at lib/Service/SigningService.php:154 and order only at :199, sign() (:383) lets any pending signer sign (:424), and every signerRecord is notified on creation (lib/Settings/filinq_register.json:2716), at 9fd042f."
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue)",
 			"provider": "filinq",
@@ -4336,7 +4338,8 @@
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: no signing requests exist, so no signer order; grep -riwE 'eidas|pades|pkcs7|x509|signers?' src/ src-ui/src/app docs/ returns nothing; 'signatur' finds only HMAC helpers (src/paperless/signed_pickle.py:23, src/documents/classifier.py:78); no document signing.",
 				"validsign": "docs-only, read 2026-09-26: https://developers.validsign.eu/docs/transactions/creating-a-signer-workflow 'a signer with a signing order 1 ... will sign first'; 'two signers with the same signing order can sign documents simultaneously'"
-			}
+			},
+			"note": "Own rating yes to no (corrections round 8, 2026-09-28): the form cannot add signers to order, filinq#1209, and neither sign() nor the notifications read signingMode or order, so signers always sign in parallel whatever is chosen."
 		},
 		{
 			"id": "sig-levels",
@@ -5427,7 +5430,7 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DocumentDownloadRecorder.php:82 record() and :125 shouldNotify() are a complete, well-documented implementation (per its own docblock and openspec/changes/documents-in-and-out-of-the-building/tasks.md: 6 of 7 tasks checked), but grep for 'DocumentDownloadRecorder', 'recordDownload' across all of lib/ found ZERO references outside the class's own file: no controller, route, event listener or background job calls it.",
+				"evidence": "lib/Service/DocumentDownloadRecorder.php:82 record() and :125 shouldNotify() are a complete, well-documented implementation (per its own docblock and openspec/changes/documents-in-and-out-of-the-building/tasks.md: 6 tasks done and 7 in progress), but grep for 'DocumentDownloadRecorder', 'recordDownload' across all of lib/ found ZERO references outside the class's own file: no controller, route, event listener or background job calls it. Corrections round 8 (2026-09-28), filinq#1185: the recorder still has no caller at 9fd042f; task 4.1 is in progress (openspec/changes/documents-in-and-out-of-the-building/tasks.md:213) and names what waits, wiring it into four filinq controllers (:235-236), and downloads served by Nextcloud itself stay unrecorded because the only platform download event fires for DAV direct links alone (:215-226).",
 				"change": "openspec/changes/documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it",
@@ -5435,7 +5438,7 @@
 			"providerHow": "read-from-code",
 			"feature": "documents-in-and-out-of-the-building",
 			"featureConfidence": "high",
-			"note": "A fully-built, well-tested service with no call site anywhere -- see notes.md live-defect list.",
+			"note": "A fully-built, well-tested service with no call site anywhere -- see notes.md live-defect list. Corrections round 8 (2026-09-28): the recorder is still uncalled and its task 4.1 is in progress, not done, filinq#1185; rating kept because it is already no. The evidence said '6 of 7 tasks checked'; the change has 6 tasks done and 7 in progress.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
@@ -6705,14 +6708,14 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/signing-field-validation on 2026-09-27. Before: no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done)."
+				"evidence": "Specified in openspec/changes/signing-field-validation on 2026-09-27. Before: no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done). Corrections round 8 (2026-09-28), filinq#1209: the create form also offers no signer or field composition (src/views/signing/SigningRequestForm.vue:12-54), which openspec/specs/orphaned-surface-restoration/spec.md:106 requires, at 9fd042f."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-signing",
 			"featureConfidence": "medium",
-			"note": "Depends on sig-fields, which is also no.",
+			"note": "Depends on sig-fields, which is also no. Corrections round 8 (2026-09-28): the signing form cannot even add a signer, so there is nobody to type in a field, filinq#1209; rating kept because it is already no.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
