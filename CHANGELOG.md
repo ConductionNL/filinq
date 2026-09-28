@@ -51,6 +51,8 @@
 
 ### Fixed
 
+- **The `template` schema imports again, with `slug` and `tenantId` as real properties (register 8.17.1, `template` 1.4.1).** The report-templates change put both field definitions beside the schema's own keys instead of inside `properties`. The `slug` definition was a duplicate JSON key, so the schema's own slug `template` was replaced by a property definition, and OpenRegister refuses a schema fragment without a string slug: the whole `template` schema was skipped on import while the import reported success, and the slug resolver queried fields no schema declared. `SchemaSlugIntegrityTest` now pins that every schema carries its own key as a string slug.
+
 - **ODF headings were invisible to `readDocument`, and could not be edited.** ODF writes a heading as `text:h`, its own element, and the block scanner spanned `text:p` only — so on a four-block `.odt` the tool reported three blocks and an agent asked to edit the heading was told its anchor did not exist for text plainly on the page.
 
 - **Duplicate derived tool ids were hiding real tools.** A derived id carries no register, so 13 copies of one schema slug collided. Suppressing them took the catalogue from 207 rows / 159 distinct to 173 / 173 — and 14 tools became visible that were not before, including `template` and `huisstijl`.

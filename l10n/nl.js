@@ -1499,7 +1499,11 @@ OC.L10N.register(
         "How the signer's identity was established: provider, assurance and moment": "Hoe de identiteit van de ondertekenaar is vastgesteld: aanbieder, betrouwbaarheidsniveau en moment",
         "Signers under this age need a guardian": "Ondertekenaars onder deze leeftijd hebben een ouder of voogd nodig",
         "For each signer under the age of consent: which guardian acted, and how": "Per ondertekenaar onder de toestemmingsleeftijd: welke ouder of voogd handelde, en hoe",
-        "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.": "Ondertekenaars onder deze leeftijd tekenen alleen met een ouder of voogd op het verzoek. Standaard is dat 16, de toestemmingsleeftijd in Nederland."
+        "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.": "Ondertekenaars onder deze leeftijd tekenen alleen met een ouder of voogd op het verzoek. Standaard is dat 16, de toestemmingsleeftijd in Nederland.",
+        "Slug": "Slug",
+        "A stable, human-readable identifier other apps (for example learniq) use to ask for this template without knowing its UUID. Unique per combination of namespace and tenantId.": "Stabiele, mensleesbare identifier waarmee externe apps (bijv. learniq) dit template kunnen opvragen zonder de UUID te kennen. Uniek per combinatie van namespace en tenantId.",
+        "Tenant": "Afnemer",
+        "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists.": "Optionele scoping van dit template tot één afnemer (bijv. een school) binnen de namespace. Leeg laten maakt het template de namespace-brede standaard waarnaar wordt teruggevallen wanneer geen tenant-specifiek template met dezelfde slug bestaat."
     },
     "nplurals=2; plural=(n != 1);"
 )

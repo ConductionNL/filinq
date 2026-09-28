@@ -1425,7 +1425,11 @@
         "How the signer's identity was established: provider, assurance and moment": "How the signer's identity was established: provider, assurance and moment",
         "Signers under this age need a guardian": "Signers under this age need a guardian",
         "For each signer under the age of consent: which guardian acted, and how": "For each signer under the age of consent: which guardian acted, and how",
-        "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.": "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent."
+        "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.": "Signers under this age sign only with a parent or guardian on the request. The default is 16, the Dutch age of consent.",
+        "Slug": "Slug",
+        "A stable, human-readable identifier other apps (for example learniq) use to ask for this template without knowing its UUID. Unique per combination of namespace and tenantId.": "A stable, human-readable identifier other apps (for example learniq) use to ask for this template without knowing its UUID. Unique per combination of namespace and tenantId.",
+        "Tenant": "Tenant",
+        "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists.": "Optionally limits this template to one customer (for example a school) within the namespace. Left empty, the template is the namespace-wide default, used when no tenant-specific template with the same slug exists."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
