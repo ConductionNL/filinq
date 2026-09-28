@@ -22,9 +22,15 @@ import { translate as t } from '@nextcloud/l10n'
 export function suggestedMergeFields() {
 	return [
 		{ field: 'grondslag.name', label: t('filinq', 'Legal basis') },
-		{ field: 'grondslag.description', label: t('filinq', 'Legal basis explanation') },
+		{
+			field: 'grondslag.description',
+			label: t('filinq', 'Legal basis explanation'),
+		},
 		{ field: 'bezwaar.uiterlijk', label: t('filinq', 'Last day to object') },
 		{ field: 'bezwaar.vanaf', label: t('filinq', 'First day to object') },
-		{ field: 'bezwaar.termijnWeken', label: t('filinq', 'Objection term in weeks') },
+		{
+			field: 'bezwaar.termijnWeken',
+			label: t('filinq', 'Objection term in weeks'),
+		},
 	]
 }

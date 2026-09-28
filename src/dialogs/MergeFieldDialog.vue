@@ -5,10 +5,14 @@
 				v-model="fieldName"
 				:label="t('filinq', 'Field name')"
 				:placeholder="t('filinq', 'e.g. name, address, date')" />
-			<p :id="suggestionsLabelId" class="merge-field-dialog__suggestions-label">
+			<p
+				:id="suggestionsLabelId"
+				class="merge-field-dialog__suggestions-label">
 				{{ t('filinq', 'Or pick a common field') }}
 			</p>
-			<ul class="merge-field-dialog__suggestions" :aria-labelledby="suggestionsLabelId">
+			<ul
+				class="merge-field-dialog__suggestions"
+				:aria-labelledby="suggestionsLabelId">
 				<li v-for="suggestion in suggestions" :key="suggestion.field">
 					<NcButton
 						variant="tertiary"
@@ -46,7 +50,8 @@ export default {
 		return {
 			fieldName: '',
 			suggestions: suggestedMergeFields(),
-			suggestionsLabelId: 'merge-field-suggestions-' + Math.random().toString(36).slice(2, 8),
+			suggestionsLabelId:
+				'merge-field-suggestions-' + Math.random().toString(36).slice(2, 8),
 		}
 	},
 

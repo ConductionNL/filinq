@@ -135,7 +135,9 @@ test.describe('template-management — templates list UI', () => {
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
-	test('the merge field dialog offers the legal basis and the objection deadline', async ({ page }) => {
+	test('the merge field dialog offers the legal basis and the objection deadline', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/document-creatie-sjablonen/spec.md#the-author-picks-the-fields-instead-of-typing-them
 		const guard = attachConsoleGuard(page)
 		await go(page, 'templates/new')
@@ -143,7 +145,9 @@ test.describe('template-management — templates list UI', () => {
 		await page.getByTitle('Insert merge field').click()
 		const dialog = page.locator('[role="dialog"]').first()
 		await dialog.waitFor({ state: 'visible', timeout: 15_000 })
-		await expect(dialog.getByRole('button', { name: 'Legal basis', exact: true })).toBeVisible()
+		await expect(
+			dialog.getByRole('button', { name: 'Legal basis', exact: true }),
+		).toBeVisible()
 		await dialog.getByRole('button', { name: 'Last day to object' }).click()
 		await expect(dialog).toContainText('{{ bezwaar.uiterlijk }}')
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
