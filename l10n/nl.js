@@ -1520,7 +1520,12 @@ OC.L10N.register(
         "Write text to field": "Tekst naar veld schrijven",
         "Also write the rendered text into this field of the object. Only that field changes.": "Schrijf de ingevulde tekst ook in dit veld van het object. Alleen dat veld verandert.",
         "Output field": "Uitvoerveld",
-        "The item field that receives the document details. Defaults to document.": "Het veld op het item dat de gegevens van het document krijgt. Standaard document."
+        "The item field that receives the document details. Defaults to document.": "Het veld op het item dat de gegevens van het document krijgt. Standaard document.",
+        "E-mail": "E-mail",
+        "Nextcloud user": "Nextcloud-gebruiker",
+        "Add signer": "Ondertekenaar toevoegen",
+        "Remove signer {number}": "Ondertekenaar {number} verwijderen",
+        "Give each signer an e-mail address or a Nextcloud user. In sequential mode they sign in this order.": "Geef elke ondertekenaar een e-mailadres of een Nextcloud-gebruiker. Bij volgordelijk ondertekenen tekenen ze in deze volgorde."
     },
     "nplurals=2; plural=(n != 1);"
 )
