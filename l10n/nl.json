@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Last error at": "Laatste fout op",
+        "When the last attempt failed (ISO 8601). Empty after a good run.": "Wanneer de laatste poging mislukte (ISO 8601). Leeg na een geslaagde run.",
+        "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.": "Waarom de laatste poging mislukte, bijvoorbeeld een weergave die niet meer bestaat. Leeg na een geslaagde run. Een mislukte run laat lastRunDocument naar het laatste goede document wijzen.",
         "chart error: no data": "grafiekfout: geen gegevens",
         "chart error: data must include \"labels\" and \"series\"": "grafiekfout: de gegevens moeten \"labels\" en \"series\" bevatten",
         "chart error: too many data points (max %s)": "grafiekfout: te veel datapunten (maximaal %s)",

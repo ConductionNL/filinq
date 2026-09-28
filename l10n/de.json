@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Last error at": "Letzter Fehler am",
+        "When the last attempt failed (ISO 8601). Empty after a good run.": "Wann der letzte Versuch fehlschlug (ISO 8601). Leer nach einem erfolgreichen Lauf.",
+        "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.": "Warum der letzte Versuch fehlschlug, etwa weil eine Ansicht nicht mehr existiert. Leer nach einem erfolgreichen Lauf. Ein fehlgeschlagener Lauf lässt lastRunDocument auf das letzte gute Dokument zeigen.",
         "chart error: no data": "Diagrammfehler: keine Daten",
         "chart error: data must include \"labels\" and \"series\"": "Diagrammfehler: die Daten müssen \"labels\" und \"series\" enthalten",
         "chart error: too many data points (max %s)": "Diagrammfehler: zu viele Datenpunkte (höchstens %s)",

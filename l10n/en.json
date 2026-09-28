@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Last error at": "Last error at",
+        "When the last attempt failed (ISO 8601). Empty after a good run.": "When the last attempt failed (ISO 8601). Empty after a good run.",
+        "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.": "Why the last attempt failed, such as a view that no longer exists. Empty after a good run. A failed run leaves lastRunDocument pointing at the last good document.",
         "chart error: no data": "chart error: no data",
         "chart error: data must include \"labels\" and \"series\"": "chart error: data must include \"labels\" and \"series\"",
         "chart error: too many data points (max %s)": "chart error: too many data points (max %s)",
