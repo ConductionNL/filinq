@@ -110,10 +110,13 @@ class DocumentProductionController extends Controller {
 	/**
 	 * What a bundle of this object would be, before it is built.
 	 *
+	 * The ceiling is the administered one; a caller may ask for a lower one
+	 * but never a higher one (#1210).
+	 *
 	 * @param string $register The object's register slug.
 	 * @param string $schema The object's schema slug.
 	 * @param string $id The object's id.
-	 * @param int $ceiling The ceiling in force, in bytes.
+	 * @param int $ceiling A lower ceiling the caller asks for, in bytes, or 0.
 	 *
 	 * @return JSONResponse The preflight, including whether it exceeds the ceiling.
 	 *
@@ -124,26 +127,28 @@ class DocumentProductionController extends Controller {
 		string $register = '',
 		string $schema = '',
 		string $id = '',
-		int $ceiling = CaseArchiveService::DEFAULT_CEILING,
+		int $ceiling = 0,
 	): JSONResponse {
 		return $this->answer(
 			handler: fn (): array => $this->archives->preflight(
 				domain: ['register' => $register, 'schema' => $schema, 'id' => $id],
-				ceiling: $ceiling
+				ceiling: $this->archives->ceiling(requested: $ceiling)
 			)
 		);
 
 	}//end archivePreflight()
 
 	/**
-	 * The manifest of a bundle of this object: what goes in, and what does not.
+	 * Build the bundle of this object: one archive with the files and a
+	 * manifest, recorded as a job, and answer with the manifest and where
+	 * the archive was written (REQ-DFT-02, #1210).
 	 *
 	 * @param string $register The object's register slug.
 	 * @param string $schema The object's schema slug.
 	 * @param string $id The object's id.
-	 * @param int $ceiling The ceiling in force, in bytes.
+	 * @param int $ceiling A lower ceiling the caller asks for, in bytes, or 0.
 	 *
-	 * @return JSONResponse The manifest.
+	 * @return JSONResponse The manifest, with `archive` naming the written file.
 	 *
 	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
 	 */
@@ -152,16 +157,13 @@ class DocumentProductionController extends Controller {
 		string $register = '',
 		string $schema = '',
 		string $id = '',
-		int $ceiling = CaseArchiveService::DEFAULT_CEILING,
+		int $ceiling = 0,
 	): JSONResponse {
 		return $this->answer(
-			handler: function () use ($register, $schema, $id, $ceiling): array {
-				$domain = ['register' => $register, 'schema' => $schema, 'id' => $id];
-				$manifest = $this->archives->manifestFor(domain: $domain, ceiling: $ceiling);
-				$this->archives->record(domain: $domain, manifest: $manifest, ceiling: $ceiling);
-
-				return $manifest;
-			}
+			handler: fn (): array => $this->archives->build(
+				domain: ['register' => $register, 'schema' => $schema, 'id' => $id],
+				requestedCeiling: $ceiling
+			)
 		);
 
 	}//end archiveManifest()

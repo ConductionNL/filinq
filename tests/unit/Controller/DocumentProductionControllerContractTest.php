@@ -131,6 +131,18 @@ class DocumentProductionControllerContractTest extends TestCase {
 				return ['included' => ['a.pdf'], 'excluded' => []];
 			}
 		);
+		// The ceiling rule lives in the service (CaseArchiveServiceTest): an
+		// administered 8192 bytes that a caller may lower but not raise.
+		$this->archives->method('ceiling')->willReturnCallback(
+			static fn (int $requested = 0): int => ($requested > 0 && $requested < 8192) ? $requested : 8192
+		);
+		$this->archives->method('build')->willReturnCallback(
+			function (array $domain, int $requestedCeiling = 0): array {
+				$this->asked[] = ['call' => 'build', 'domain' => $domain, 'ceiling' => $requestedCeiling];
+
+				return ['included' => ['a.pdf'], 'excluded' => [], 'archive' => ['fileId' => 9001]];
+			}
+		);
 		$this->archives->method('record')->willReturnCallback(
 			function (array $domain, array $manifest, int $ceiling, int $fileId = 0): array {
 				$this->asked[] = ['call' => 'record', 'domain' => $domain, 'manifest' => $manifest];
@@ -236,7 +248,7 @@ class DocumentProductionControllerContractTest extends TestCase {
 		);
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus(), 'a preflight answers 200');
-		$this->assertSame(4096, ($this->asked[0]['ceiling'] ?? 0), 'the ceiling reaches the service');
+		$this->assertSame(4096, ($this->asked[0]['ceiling'] ?? 0), 'a lower ceiling reaches the service');
 		$this->assertSame(
 			['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-9'],
 			($this->asked[0]['domain'] ?? []),
@@ -246,40 +258,39 @@ class DocumentProductionControllerContractTest extends TestCase {
 	}//end testArchivePreflightHonoursTheCeilingItWasGiven()
 
 	/**
-	 * The preflight falls back to the administered default ceiling.
+	 * The preflight falls back to the administered ceiling, and a caller
+	 * cannot raise it (#1210).
 	 *
 	 * @return void
 	 */
 	public function testArchivePreflightFallsBackToTheDefaultCeiling(): void {
 		$this->controller()->archivePreflight(register: 'zaken', schema: 'zaak', id: 'zaak-9');
+		$this->controller()->archivePreflight(register: 'zaken', schema: 'zaak', id: 'zaak-9', ceiling: 999999999);
 
-		$this->assertSame(
-			CaseArchiveService::DEFAULT_CEILING,
-			($this->asked[0]['ceiling'] ?? 0),
-			'a caller that names no ceiling gets the declared default, not zero'
-		);
+		$this->assertSame(8192, ($this->asked[0]['ceiling'] ?? 0), 'a caller that names no ceiling gets the administered one, not zero');
+		$this->assertSame(8192, ($this->asked[1]['ceiling'] ?? 0), 'and a caller cannot raise it');
 
 	}//end testArchivePreflightFallsBackToTheDefaultCeiling()
 
 	/**
-	 * The manifest endpoint RECORDS the manifest it returns.
+	 * The manifest endpoint BUILDS the bundle (archive, manifest and job in
+	 * one service call, CaseArchiveServiceTest covers the three) and answers
+	 * with what the build returned, including where the archive went (#1210).
 	 *
 	 * @return void
 	 */
 	public function testArchiveManifestRecordsTheManifestItReturns(): void {
-		$response = $this->controller()->archiveManifest(register: 'zaken', schema: 'zaak', id: 'zaak-9');
+		$response = $this->controller()->archiveManifest(register: 'zaken', schema: 'zaak', id: 'zaak-9', ceiling: 2048);
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus(), 'the manifest answers 200');
 		$this->assertSame(
-			['manifestFor', 'record'],
+			['build'],
 			array_column($this->asked, 'call'),
-			'the manifest is built and then recorded: one returned but never recorded is a bundle nobody can check afterwards'
+			'the controller asks for the whole bundle, not a manifest it records apart from any archive'
 		);
-		$this->assertSame(
-			$response->getData(),
-			($this->asked[1]['manifest'] ?? []),
-			'and the manifest recorded is the very one the caller was handed'
-		);
+		$this->assertSame(['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-9'], ($this->asked[0]['domain'] ?? []));
+		$this->assertSame(2048, ($this->asked[0]['ceiling'] ?? 0), 'a lower ceiling is passed on');
+		$this->assertSame(9001, ($response->getData()['archive']['fileId'] ?? 0), 'and the answer names the archive');
 
 	}//end testArchiveManifestRecordsTheManifestItReturns()
 
