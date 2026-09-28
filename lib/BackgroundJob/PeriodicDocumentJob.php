@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class PeriodicDocumentJob extends TimedJob {
 
@@ -70,7 +70,7 @@ class PeriodicDocumentJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	protected function run(mixed $argument): void {
 		$now = (new DateTimeImmutable())->setTimestamp($this->clock->getTime());

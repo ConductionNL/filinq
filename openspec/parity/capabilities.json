@@ -1612,12 +1612,13 @@
 			"area": "generate",
 			"name": "Regenerate a recurring document on a schedule.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/periodic-documents-on-a-schedule on 2026-09-28, after documents-from-a-template was archived: the run writes a generatedDocument record but renders no file, and no job runs it on its cadence. Before: lib/Service/PeriodicDocumentService.php:88 run(array $schedule) is fully implemented (write/recordRun at lines 160/198). Only trigger is documentProduction#runPeriodic POST api/periodic-documents/run (routes.php:109), tagged 'none' in route-reach.txt. appinfo/info.xml <background-jobs> lists only SigningExpirationJob, DomainFolderReconciliationJob, UploadFragmentReaperJob -- no periodic-document job registered; lib/Command/ has only OfficeProbeCommand.php (no occ command); no caller found in dossiq/shillinq/opencatalogi/scholiq.",
-				"change": "openspec/changes/periodic-documents-on-a-schedule"
+				"evidence": "lib/BackgroundJob/PeriodicDocumentJob.php (hourly, appinfo/info.xml) runs every active periodicDocument whose cadence has come round (lib/Service/PeriodicCadence.php). PeriodicDocumentService::run renders the template over the saved view's records through DocumentService::generateDocument, stores the PDF in the owner's Files and points lastRunDocument at the entry; a failed run writes lastRunError. On demand: POST api/periodic-documents/run.",
+				"change": "openspec/changes/archive/2026-09-28-periodic-documents-on-a-schedule",
+				"readOn": "2026-09-28"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

@@ -163,7 +163,7 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
-	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function generateDocument(
 		string $templateId,

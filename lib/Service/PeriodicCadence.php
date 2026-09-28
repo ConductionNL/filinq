@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use Exception;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class PeriodicCadence {
 
@@ -66,7 +66,7 @@ class PeriodicCadence {
 	 *
 	 * @return bool True when the cadence has come round since the last run.
 	 *
-	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function isDue(string $cadence, ?string $lastRunAt, DateTimeImmutable $now): bool {
 		if ($cadence === '') {

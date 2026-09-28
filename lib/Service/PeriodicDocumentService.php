@@ -20,7 +20,7 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
- * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -95,7 +95,7 @@ class PeriodicDocumentService {
 	 * @throws RuntimeException When the schedule names no view, the view is gone,
 	 *                          nobody owns the schedule, or generation fails.
 	 *
-	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function run(array $schedule, string $userId = ''): array {
 		$viewSlug = trim((string)($schedule['viewSlug'] ?? ''));
@@ -177,7 +177,7 @@ class PeriodicDocumentService {
 	 *
 	 * @return array{ran: int, failed: int, skipped: int} What the sweep did.
 	 *
-	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function runDue(DateTimeImmutable $now): array {
 		$summary = ['ran' => 0, 'failed' => 0, 'skipped' => 0];

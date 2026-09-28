@@ -200,7 +200,7 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The document this run produced.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-	 * @spec openspec/changes/periodic-documents-on-a-schedule/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function runPeriodic(array $schedule = []): JSONResponse {
