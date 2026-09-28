@@ -52,6 +52,7 @@ use OCP\Security\Bruteforce\IThrottler;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Exception\StepUpRequiredException;
 
 /**
  * Tests for PortalSigningReceiverController.
@@ -630,4 +631,29 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
 
 	}//end testViewDocumentNullRequestReturns403()
+	/**
+	 * A portal signer below the request's assurance is refused with 403, not 502, and is not
+	 * counted as a rejected assertion (REQ-DDSIR-007 part b).
+	 *
+	 * @return void
+	 */
+	public function testAPortalSignerBelowTheRequestAssuranceIsRefused(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+		$refusal = new StepUpRequiredException(reason: 'insufficient', requiredAssurance: 'high', heldAssurance: 'substantial', provider: 'nextcloud-session');
+		$this->mockSigningService->method('sign')->willThrowException($refusal);
+		$this->mockSigningService->method('decline')->willThrowException($refusal);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$signed = $this->controller(throttler: $throttler)->signDocument();
+		$declined = $this->controller(throttler: $throttler)->declineDocument();
+
+		foreach ([$signed, $declined] as $result) {
+			$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+			$this->assertSame(['error' => 'signing_refused'], $result->getData());
+		}
+
+	}//end testAPortalSignerBelowTheRequestAssuranceIsRefused()
+
 }//end class

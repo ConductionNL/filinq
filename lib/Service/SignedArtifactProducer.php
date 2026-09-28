@@ -177,6 +177,12 @@ class SignedArtifactProducer {
 			$context['consentBasis'] = $request['consentBasis'];
 		}
 
+		// Identity rails (signer-identity-rails REQ-DDSIR-004): each signer's
+		// recorded identity evidence, from the stored signer records.
+		if (empty($request['signerEvidence']) === false && is_array($request['signerEvidence']) === true) {
+			$context['signerEvidence'] = $request['signerEvidence'];
+		}
+
 		if ($verifiedActor === null) {
 			return $context;
 		}

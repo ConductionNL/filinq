@@ -92,6 +92,18 @@ minutes). A missing, expired, or insufficient evidence MUST yield a 403
 carrying a step-up indication, and no signer or request object may be mutated.
 The `nextcloud-session` provider satisfies only `low`, so a `substantial`/
 `high` request is unsignable until the signer completes broker step-up.
+Evidence from a step-up MUST be bound to the request and signer it was
+started for, and a verified portal assertion (portal-signing-actions
+REQ-DDPSA-005) MUST count as evidence from provider `portaliq` at the
+assertion's trust, so an external signer below the request's assurance is
+refused too.
+
+#### Scenario: Evidence from one act cannot be spent on another
+
+- GIVEN a signer who stepped up to `high` for signer record A
+- WHEN the same session attempts to sign as signer record B on the same request, which needs `substantial`
+- THEN the act is refused with the step-up indication
+- @e2e exclude session binding of evidence, covered by PHPUnit (tests/unit/Service/SignerAuth/SigningAssuranceGateTest.php)
 
 #### Scenario: Substantial request refuses a session-only signer
 
@@ -305,6 +317,22 @@ identity evidence exists), `assurance` (`low | substantial | high`; an unknown
 portal trust maps to `low`) and `authenticatedAt`, and nothing more
 identifying: no BSN, no pseudonym, no raw token. When REQ-DDSIR-004
 `identityEvidence` exists on the record, the tuple MUST be taken from it.
+
+A guardian MUST be held to the strongest of the request's
+`requiredAssurance`, the request's own `guardianRequiredAssurance` and the
+admin setting for the guardian minimum (default `low`, which changes
+nothing). A request's `guardianRequiredAssurance` below its
+`requiredAssurance` MUST be raised to it. The minor is held to the request's
+`requiredAssurance` only, so a consumer can ask `substantial` of a parent
+while the pupil signs with a Nextcloud login.
+
+#### Scenario: A parent is held to the stronger assurance the OPP asks of them
+
+- GIVEN a request with `requiredAssurance: low` and `guardianRequiredAssurance: substantial`, a learner signer and a guardian signer
+- WHEN the learner signs in their Nextcloud session, and the guardian tries the same
+- THEN the learner's act is accepted and the guardian's is refused with a 403 step-up indication naming `substantial`
+- AND after a broker step-up at `substantial` the guardian's act is accepted
+- @e2e exclude assurance gate for the guardian role, covered by PHPUnit (tests/unit/Service/SignerAuth/SigningAssuranceGateTest.php)
 
 #### Scenario: A parent co-signs the OPP of a 14-year-old
 

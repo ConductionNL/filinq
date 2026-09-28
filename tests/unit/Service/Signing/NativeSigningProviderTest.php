@@ -439,4 +439,57 @@ class NativeSigningProviderTest extends TestCase {
 		$provider->checkStatus(externalId: 'native-does-not-exist');
 
 	}//end testCheckStatusOnMissingSessionThrows()
+	/**
+	 * Each signer's identity evidence sits inside the assertion the MAC covers
+	 * (signer-identity-rails REQ-DDSIR-004): rewriting the assurance fails verification.
+	 *
+	 * @return void
+	 */
+	public function testProduceSignedArtifactBindsSignerEvidenceIntoMac(): void {
+		$secret = 'unit-test-signing-secret';
+		$provider = $this->buildProvider(secret: $secret);
+		$signerEvidence = [
+			[
+				'signerId' => 'signer-1',
+				'provider' => 'oidc-broker',
+				'means' => 'digid',
+				'assurance' => 'substantial',
+				'subjectPseudonym' => 'ps-abcdef',
+				'authenticatedAt' => '2026-09-28T10:00:00+00:00',
+				'evidenceHash' => str_repeat('e', 64),
+			],
+		];
+
+		$signed = $provider->produceSignedArtifact(
+			documentContent: "%PDF-1.4\nmachtiging\n%%EOF\n",
+			context: ['signer' => 'Alice', 'signers' => ['signer-1'], 'ip' => '127.0.0.1', 'level' => 'SES', 'signerEvidence' => $signerEvidence]
+		);
+
+		preg_match('/\/DocuDesk-Signature\s*\(([^)]+)\)/', $signed, $matches);
+		$assertion = json_decode(base64_decode($matches[1]), true);
+		$this->assertSame($signerEvidence, $assertion['signerEvidence'] ?? null);
+
+		$verifierConfig = $this->createMock(IAppConfig::class);
+		$verifierConfig->method('getValueString')->willReturnCallback(
+			fn (string $app, string $key, string $default = ''): string => $key === 'signing_verification_secret' ? $secret : $default
+		);
+		$verifier = new \OCA\Filinq\Service\SigningVerificationService(
+			rootFolder: $this->createMock(\OCP\Files\IRootFolder::class),
+			config: $verifierConfig
+		);
+		$method = (new \ReflectionClass($verifier))->getMethod('extractSignatures');
+		$method->setAccessible(true);
+		$this->assertSame('verified', $method->invoke($verifier, $signed)[0]['status']);
+
+		$forged = $assertion;
+		$forged['signerEvidence'][0]['assurance'] = 'high';
+		$forgedSigned = str_replace($matches[1], base64_encode((string)json_encode($forged)), $signed);
+		$this->assertSame('invalid', $method->invoke($verifier, $forgedSigned)[0]['status'], 'Rewriting the evidence (MAC kept) MUST invalidate verification.');
+
+		$plain = $provider->produceSignedArtifact(documentContent: "%PDF-1.4\n", context: ['level' => 'SES']);
+		preg_match('/\/DocuDesk-Signature\s*\(([^)]+)\)/', $plain, $plainMatches);
+		$this->assertArrayNotHasKey('signerEvidence', json_decode(base64_decode($plainMatches[1]), true));
+
+	}//end testProduceSignedArtifactBindsSignerEvidenceIntoMac()
+
 }//end class

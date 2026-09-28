@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+require_once __DIR__ . '/SignerAuth/AssuranceGateHarness.php';
+
 use DateTimeImmutable;
 use OCA\Filinq\Event\SigningConcludedEventFactory;
 use OCA\Filinq\Service\FinalDocumentService;
@@ -63,6 +65,8 @@ use Throwable;
  * @psalm-suppress PropertyNotSetInConstructor
  */
 class SigningServiceGuardianConsentTest extends TestCase {
+	use \OCA\Filinq\Tests\Unit\Service\SignerAuth\AssuranceGateHarness;
+
 
 	/**
 	 * Objects by id: requests and signer records alike.
@@ -237,7 +241,8 @@ class SigningServiceGuardianConsentTest extends TestCase {
 				logger: $this->createMock(LoggerInterface::class),
 				eventFactory: new SigningConcludedEventFactory()
 			),
-			consentGuard: new GuardianConsentGuard(settingsService: $settings)
+			consentGuard: new GuardianConsentGuard(settingsService: $settings),
+			assuranceGate: $this->assuranceGate(userSession: $userSession)
 		);
 
 	}//end setUp()

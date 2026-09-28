@@ -325,6 +325,57 @@ class JSONResponse extends Response {
 }//end class
 
 /**
+ * Stub for OCP\AppFramework\Http\RedirectResponse
+ *
+ * Constructor signature as in vendor/nextcloud/ocp (default 303 See Other,
+ * Location header set to the redirect URL).
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2
+ * @link     https://www.filinq.app
+ */
+class RedirectResponse extends Response {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string $redirectURL The target.
+	 * @param int $status HTTP status code.
+	 * @param array<string, string> $headers Extra headers.
+	 *
+	 * @return void
+	 */
+	public function __construct(private string $redirectURL, private int $status = 303, array $headers = []) {
+		foreach ($headers as $name => $value) {
+			$this->addHeader($name, $value);
+		}
+
+		$this->addHeader('Location', $redirectURL);
+
+	}//end __construct()
+
+	/**
+	 * The redirect target.
+	 *
+	 * @return string
+	 */
+	public function getRedirectURL(): string {
+		return $this->redirectURL;
+	}//end getRedirectURL()
+
+	/**
+	 * The HTTP status code.
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return $this->status;
+	}//end getStatus()
+}//end class
+
+/**
  * Stub for OCP\AppFramework\Http\DataDownloadResponse
  *
  * Extends the local Response stub (matching the real

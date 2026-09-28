@@ -178,6 +178,32 @@ than a configurable max age (default 15 minutes for the signing act), and meet
 gate is fail-closed: absent/expired/insufficient evidence → 403 with a
 step-up hint, nothing mutates.
 
+### D6a: The gate as built (task 3.1, 2026-09-28)
+
+`SigningAssuranceGate::evidenceForAct()` runs in `sign()` and `decline()` after
+the ownership, status and mandate checks and before any write. It takes the
+evidence from, in order: the verified portal assertion (provider `portaliq`,
+the assertion's trust, subject salted); the evidence a step-up kept for this
+exact request and signer in the signer's session (`IdentityEvidenceStore`);
+otherwise the `nextcloud-session` provider at `low`. It refuses evidence from
+an unregistered provider, older than the window (`signer_auth_evidence_max_age_minutes`,
+default 15) or below the signer's required assurance, with a
+`StepUpRequiredException` (code 403) whose hint names the reason, the required
+and held assurance and the step-up provider. `SigningController` returns that
+hint as `stepUp`; the portal receiver answers 403 `signing_refused`. The act
+records the tuple on the signer record and in the audit `metadata`
+(`identityEvidence`), then forgets the stored evidence. At completion
+`withResolvedAssurance()` writes `signerEvidence` and `resolvedAssurance` (the
+weakest recorded level, a pre-rails signer counting as `low`) onto the request;
+the evidence joins the native assertion before the MAC and
+`SigningConcludedEvent::assuranceLevel` carries `resolvedAssurance` exactly.
+
+Step-up endpoints: `POST /api/signing/requests/{id}/identity` (the signing
+ownership check, then the configured provider's challenge) and
+`GET /api/signing/identity/callback` (no CSRF token, the single-use state is
+the CSRF guard; it keeps the evidence for the state's bound act and returns
+the signer to `/signing/{id}?stepUp=done&signerId=...`).
+
 ### D7: Guardian consent for signers under the age of consent (amendment, D11)
 
 Learniq round 1 decision D11 folds e-signature with parental consent into this
@@ -332,11 +358,13 @@ pass-through. No new registers; no Filinq-local tables.
   same `oidc-broker` provider server-side? portaliq owns the portal auth edge
   (ADR-046); alignment conversation filed with the portaliq team at apply
   time.
-- Should a guardian be held to a higher assurance than the minor? Learniq
-  already asks `substantial` of a parent signing an OPP
-  (`LearningPlanSignatureGuard`). Today both acts meet the request's single
-  `requiredAssurance`; a per-role floor would be a later amendment once task
-  3.1 exists.
+- ~~Should a guardian be held to a higher assurance than the minor?~~
+  Resolved with task 3.1 (2026-09-28): yes, when asked. A request may carry
+  `guardianRequiredAssurance` (never below its `requiredAssurance`) and the
+  admin can set a guardian minimum for every request (default `low`). The gate
+  holds a guardian to the strongest of the three. Learniq's OPP can then send
+  `guardianRequiredAssurance: substantial`, matching its own
+  `LearningPlanSignatureGuard`, while the pupil signs with a Nextcloud login.
 - Standing consents (proposal, out of scope): if learniq or portaliq later
   record a guardian's consent through filinq's rails, a reference to that act
   could satisfy REQ-DDSIR-008 for later requests.

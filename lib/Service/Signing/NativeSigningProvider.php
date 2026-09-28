@@ -366,9 +366,13 @@ class NativeSigningProvider implements SigningProviderInterface {
 		// basis of a minor's signature joins the assertion BEFORE the MAC, so a
 		// rewritten basis fails verification like a rewritten signer. Absent for
 		// a request between adults, whose assertion keeps its old shape.
-		if (empty($context['consentBasis']) === false && is_array($context['consentBasis']) === true) {
-			$assertion['consentBasis'] = $context['consentBasis'];
-		}
+		// Identity rails (signer-identity-rails REQ-DDSIR-004) likewise: each
+		// signer's identity evidence (provider, means, assurance, pseudonym,
+		// moment and token hash). Only non-empty lists join; an empty or
+		// non-list value is left out, so an adults-only, pre-rails request keeps
+		// its old assertion shape.
+		$boundLists = array_intersect_key($context, array_flip(['consentBasis', 'signerEvidence']));
+		$assertion += array_filter(array_filter($boundLists, 'is_array'));
 
 		// Build the canonical (unsigned-marker) form the verifier will recompute:
 		// the produced document with an empty marker payload. The HMAC is taken

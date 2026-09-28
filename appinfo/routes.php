@@ -255,8 +255,12 @@ $extra = [
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
-        // Signer identity rails (signer-identity-rails): the admin panel's
-        // settings, reference-only; admin gated by #[AuthorizedAdminSetting].
+        // Signer identity rails (signer-identity-rails): the step-up start
+        // (signing ownership check in the service) and the broker callback
+        // (state-bound, no CSRF token), then the admin panel's settings,
+        // reference-only; admin gated by #[AuthorizedAdminSetting].
+        ['name' => 'signerIdentity#start', 'url' => 'api/signing/requests/{id}/identity', 'verb' => 'POST'],
+        ['name' => 'signerIdentity#callback', 'url' => 'api/signing/identity/callback', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
 

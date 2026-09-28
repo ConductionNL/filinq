@@ -25,6 +25,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
 use RuntimeException;
 
@@ -48,7 +49,9 @@ use RuntimeException;
  * SigningMandateService, added so a direct signing attempt is refused by the
  * same rule that leaves the document out of the folder. Inlining that rule here
  * would be the second copy of it. The fourteenth is GuardianConsentGuard, for
- * the same reason: the guardian rule is applied here and kept there.
+ * the same reason: the guardian rule is applied here and kept there. The
+ * fifteenth is SigningAssuranceGate (signer-identity-rails REQ-DDSIR-003): the
+ * identity gate runs here, at every act, and its rules live there.
  *
  * @spec openspec/specs/document-signing/spec.md
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
@@ -84,6 +87,10 @@ class SigningService {
 	 *                                           REQ-DDSIR-008 to 010). Required, not a
 	 *                                           nullable seam: an unwired safety guard
 	 *                                           must fail construction, not pass silently.
+	 * @param SigningAssuranceGate $assuranceGate The identity gate of every signing act
+	 *                                           (signer-identity-rails REQ-DDSIR-003).
+	 *                                           Required for the same reason as the
+	 *                                           consent guard.
 	 * @param SigningMandateService|null $mandateService Applies the consuming app's per-type
 	 *                                                   mandate declaration to a direct signing
 	 *                                                   attempt (signing-folder-across-cases
@@ -103,6 +110,7 @@ class SigningService {
 		private readonly SigningActorResolver $actorResolver,
 		private readonly SigningConclusionEmitter $emitter,
 		private readonly GuardianConsentGuard $consentGuard,
+		private readonly SigningAssuranceGate $assuranceGate,
 		private readonly ?SigningMandateService $mandateService = null,
 	) {
 
@@ -188,6 +196,8 @@ class SigningService {
 		// request naming a signer under that age without a guardian is refused
 		// with a 400 and leaves no object behind.
 		$request['guardianConsentAge'] = $this->consentGuard->appliedAge(data: $data);
+		// Required assurance, never below the level's floor (REQ-DDSIR-002).
+		$request = $this->assuranceGate->applyToRequest(request: $request, data: $data);
 		$signers = (array)($data['signers'] ?? []);
 
 		// A request that names nobody who can sign is refused before anything
@@ -222,6 +232,7 @@ class SigningService {
 			prepared: $prepared
 		);
 		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema);
+		$createdRequest['assuranceFloor'] = $this->assuranceGate->floorFor(request: $request);
 
 		$this->auditService->logEvent(
 			signingRequestId: $requestId,
@@ -442,6 +453,12 @@ class SigningService {
 	 * @return array<string, mixed> The updated signer record
 	 *
 	 * @throws RuntimeException If signing fails
+	 * @throws \OCA\Filinq\Exception\StepUpRequiredException With code 403, before any write, when the
+	 *                                                         identity evidence is missing, stale, from an
+	 *                                                         unregistered provider or below the assurance
+	 *                                                         this signer needs (signer-identity-rails
+	 *                                                         REQ-DDSIR-003). The evidence goes onto the
+	 *                                                         record and the SIGNED audit entry.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 * @spec openspec/specs/portal-signing-actions/spec.md
@@ -498,6 +515,14 @@ class SigningService {
 		// a 403, before anything is written. The guardian reached this line
 		// through the same identity resolution and ownership check as anyone.
 		$now = new DateTimeImmutable();
+		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
+			request: $request + ['id' => $requestId],
+			signer: $signer + ['id' => $signerId],
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			now: $now
+		)->toArray();
+
 		$consent = $this->consentGuard->guardSigningAct(
 			requestId: $requestId,
 			request: $request,
@@ -529,9 +554,11 @@ class SigningService {
 			provider: $request['provider'] ?? 'native',
 			metadata: array_merge(
 				$this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor),
-				$consent['audit']
+				$consent['audit'],
+				['identityEvidence' => $signer['identityEvidence']]
 			)
 		);
+		$this->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
 
 		$this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
 
@@ -592,6 +619,15 @@ class SigningService {
 			action: 'decline'
 		);
 
+		// The same identity gate as sign() (REQ-DDSIR-003), before any write.
+		$signer['identityEvidence'] = $this->assuranceGate->evidenceForAct(
+			request: $request + ['id' => $requestId],
+			signer: $signer + ['id' => $signerId],
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			now: new DateTimeImmutable()
+		)->toArray();
+
 		$signer['status'] = 'DECLINED';
 		$signer['declineReason'] = $reason;
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
@@ -608,6 +644,7 @@ class SigningService {
 
 		$metadata = $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor);
 		$metadata['reason'] = $reason;
+		$metadata['identityEvidence'] = $signer['identityEvidence'];
 
 		$this->auditService->logEvent(
 			signingRequestId: $requestId,
@@ -829,6 +866,11 @@ class SigningService {
 		// when the artifact cannot be produced. The basis travels onto the
 		// request and, through the producer, into the MAC-covered assertion.
 		$freshRequest = $this->consentGuard->withConsentBasis(request: $freshRequest, signers: $signers);
+
+		// Identity rails (REQ-DDSIR-004/007): each signer's recorded evidence and
+		// the weakest assurance among them travel onto the request, into the
+		// MAC-covered assertion and into the completion payload.
+		$freshRequest = $this->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
 
 		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $verifiedActor);
 
