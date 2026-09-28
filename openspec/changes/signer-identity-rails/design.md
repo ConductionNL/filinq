@@ -123,10 +123,37 @@ holding token PII.
 Broker config in admin settings: issuer URL, client id, redirect URI, acr
 mapping — all non-secret, stored via IAppConfig. The client secret is stored
 ONLY as a `credentialRef` resolved at token-exchange time through the
-credential broker (same interim `ICrypto` local-custody mode behind the same
-interface as `document-waarmerk-certification` task 2.1 — reuse that resolver,
-ADR-011). Secret never in a register schema, never logged, never echoed to the
-frontend.
+credential broker. Secret never in a register schema, never logged, never
+echoed to the frontend.
+
+Amended at apply time (2026-09-28). The `document-waarmerk-certification`
+resolver this decision first pointed at is unbuilt, and ADR-064 forbids an app
+its own broker. `BrokerCredentialResolver` therefore calls OpenRegister's
+`CredentialBrokerService::resolveInjectable($credentialRef, 'filinq')`,
+looked up by class name so filinq still boots without it. An identity broker is
+an arbitrary self-hosted host that the broker's host-locked proxy cannot serve,
+which is exactly ADR-064's documented injection exception: the admin mints the
+secret in OpenRegister on an `inject_only` provider with `filinq` allowed, and
+enters the credential's UUID in filinq. The settings refuse anything that is
+not a UUID. The secret is used by `OidcTokenExchange` for the one token request
+and kept nowhere.
+
+**OIDC mechanics as built.** State and nonce live in the signer's own
+server-side session (`OidcPendingAuthentications`), bound to request, signer
+and user, single use, ten minutes. The callback carries only `code` and
+`state`, so the provider exposes `boundAct(state)` for the callback to learn
+which act to complete. The ID token comes from a direct server-side TLS call to
+an https token endpoint, so its claims are validated (`iss`, `aud`/`azp`,
+`exp`, `iat`, `nonce`, `sub`) and its signature is not: OpenID Connect Core
+section 3.1.3.7 allows TLS server validation in place of the signature check
+for exactly this case. `sub` is always hashed with a key derived from the
+instance secret (`SubjectPseudonymiser`), because filinq cannot tell a pairwise
+`sub` from one that embeds a BSN. The authorize request sends `prompt=login`
+and `acr_values` limited to the values that meet the required assurance; an old
+`auth_time` makes the evidence stale at the gate. DigiD's defaults are the
+Logius AuthnContextClassRefs, eHerkenning's the eToegang assurance classes;
+iDIN has no standard acr, so its default key is a placeholder the admin
+replaces with their broker's value.
 
 ### D5 — EUDI readiness = a conformance contract, not a stub
 
@@ -134,7 +161,7 @@ The orphaned-capability trap (fleet lesson: implemented + spec'd + green but
 nothing invokes it) is avoided by: (a) the seam ships with TWO live providers
 (`nextcloud-session` default; `oidc-broker` exercised e2e against a test OIDC
 IdP in CI), so every interface method has a real caller; (b) EUDI readiness is
-expressed as a documented conformance suite (`SignerAuthProviderContractTest`,
+expressed as a documented conformance suite (`SignerAuthProviderContractTestCase`,
 an abstract PHPUnit contract any provider must extend) + a readiness statement
 in docs naming the Dec 2026 timeline; (c) NO `eudi-wallet` class ships — a
 stub provider would be dead code. A future wallet plugin passes the contract

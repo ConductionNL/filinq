@@ -255,6 +255,11 @@ $extra = [
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
+        // Signer identity rails (signer-identity-rails): the admin panel's
+        // settings, reference-only; admin gated by #[AuthorizedAdminSetting].
+        ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
+        ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
+
         // Signing folder routes (signing-folder-across-cases): everything
         // pending for one signer across every record, and the pass that signs
         // a selection of it through the per-request path above. The mandate

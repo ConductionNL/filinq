@@ -676,6 +676,9 @@
 			</div>
 		</NcSettingsSection>
 
+		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
+		<SignerIdentitySettings v-if="isAdmin" />
+
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
 			v-if="isAdmin"
@@ -839,6 +842,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import SignerIdentitySettings from './SignerIdentitySettings.vue'
 
 export default {
 	name: 'Settings',
@@ -857,6 +861,7 @@ export default {
 		FileExportOutline,
 		AccountSearchOutline,
 		EntityTypeSelector,
+		SignerIdentitySettings,
 	},
 
 	data() {
