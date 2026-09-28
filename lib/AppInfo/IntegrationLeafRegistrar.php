@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\AppInfo;
 
 use OCA\Filinq\EventListener\RegisterDocumentsLeafListener;
+use OCA\Filinq\EventListener\RegisterDownloadAllFilesLeafListener;
 use OCA\Filinq\EventListener\RegisterMergeToPdfLeafListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
@@ -91,6 +92,11 @@ class IntegrationLeafRegistrar {
 		$context->registerEventListener(
 			event: self::LEAF_EVENT,
 			listener: RegisterMergeToPdfLeafListener::class
+		);
+
+		$context->registerEventListener(
+			event: self::LEAF_EVENT,
+			listener: RegisterDownloadAllFilesLeafListener::class
 		);
 
 	}//end register()

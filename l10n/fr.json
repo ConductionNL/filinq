@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Building the archive": "Création de l'archive",
+        "Download all files": "Télécharger tous les fichiers",
+        "Left out because the archive reached the size limit": "Omis car l'archive a atteint la taille limite",
+        "Left out because the file no longer exists": "Omis car le fichier n'existe plus",
+        "Left out because you may not open them": "Omis car vous ne pouvez pas les ouvrir",
+        "Left out for another reason": "Omis pour une autre raison",
+        "Open the archive": "Ouvrir l'archive",
+        "The archive could not be built: {reason}": "L'archive n'a pas pu être créée : {reason}",
+        "The archive holds {count} files and a manifest.": "L'archive contient {count} fichiers et un inventaire.",
+        "These files are larger than the limit of {limit} MB. Files past the limit are left out and listed in the manifest.": "Ces fichiers dépassent la limite de {limit} Mo. Les fichiers au-delà de la limite sont omis et listés dans l'inventaire.",
+        "{count} files, {size} MB": "{count} fichiers, {size} Mo",
         "A bookmark per document": "Un signet par document",
         "Choose at least two documents": "Choisissez au moins deux documents",
         "Choose the documents to merge, then put them in order.": "Choisissez les documents à fusionner, puis mettez-les dans l'ordre.",

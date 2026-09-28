@@ -26,6 +26,7 @@
  */
 import { loadTranslations } from '@nextcloud/l10n'
 import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
+import { registerDownloadAllFilesLeaf } from './integrations/registerDownloadAllFilesLeaf.js'
 import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
 
 // Register FIRST, translate second.
@@ -38,6 +39,7 @@ import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js
 // lands, which is the lesser failure and a visible one.
 registerDocumentsLeaf()
 registerMergeToPdfLeaf()
+registerDownloadAllFilesLeaf()
 
 // `loadTranslations` REJECTS on a 404, which is any locale for which
 // l10n/<lang>.json was never generated, so an unguarded call here would raise an

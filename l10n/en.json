@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Building the archive": "Building the archive",
+        "Download all files": "Download all files",
+        "Left out because the archive reached the size limit": "Left out because the archive reached the size limit",
+        "Left out because the file no longer exists": "Left out because the file no longer exists",
+        "Left out because you may not open them": "Left out because you may not open them",
+        "Left out for another reason": "Left out for another reason",
+        "Open the archive": "Open the archive",
+        "The archive could not be built: {reason}": "The archive could not be built: {reason}",
+        "The archive holds {count} files and a manifest.": "The archive holds {count} files and a manifest.",
+        "These files are larger than the limit of {limit} MB. Files past the limit are left out and listed in the manifest.": "These files are larger than the limit of {limit} MB. Files past the limit are left out and listed in the manifest.",
+        "{count} files, {size} MB": "{count} files, {size} MB",
         "A bookmark per document": "A bookmark per document",
         "Choose at least two documents": "Choose at least two documents",
         "Choose the documents to merge, then put them in order.": "Choose the documents to merge, then put them in order.",

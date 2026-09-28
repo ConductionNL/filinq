@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Building the archive": "Das Archiv wird erstellt",
+        "Download all files": "Alle Dateien herunterladen",
+        "Left out because the archive reached the size limit": "Ausgelassen, weil das Archiv die Größengrenze erreicht hat",
+        "Left out because the file no longer exists": "Ausgelassen, weil die Datei nicht mehr existiert",
+        "Left out because you may not open them": "Ausgelassen, weil Sie sie nicht öffnen dürfen",
+        "Left out for another reason": "Aus einem anderen Grund ausgelassen",
+        "Open the archive": "Archiv öffnen",
+        "The archive could not be built: {reason}": "Das Archiv konnte nicht erstellt werden: {reason}",
+        "The archive holds {count} files and a manifest.": "Das Archiv enthält {count} Dateien und ein Verzeichnis.",
+        "These files are larger than the limit of {limit} MB. Files past the limit are left out and listed in the manifest.": "Diese Dateien sind größer als die Grenze von {limit} MB. Dateien über der Grenze werden ausgelassen und im Verzeichnis aufgeführt.",
+        "{count} files, {size} MB": "{count} Dateien, {size} MB",
         "A bookmark per document": "Ein Lesezeichen pro Dokument",
         "Choose at least two documents": "Wählen Sie mindestens zwei Dokumente",
         "Choose the documents to merge, then put them in order.": "Wählen Sie die Dokumente zum Zusammenführen und bringen Sie sie dann in eine Reihenfolge.",

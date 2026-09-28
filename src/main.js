@@ -21,6 +21,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
 import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
+import { registerDownloadAllFilesLeaf } from './integrations/registerDownloadAllFilesLeaf.js'
 import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
@@ -453,3 +454,4 @@ app.mount('#filinq-app')
 // register the id twice.
 registerDocumentsLeaf()
 registerMergeToPdfLeaf()
+registerDownloadAllFilesLeaf()

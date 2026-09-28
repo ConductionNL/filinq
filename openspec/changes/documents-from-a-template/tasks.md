@@ -16,8 +16,8 @@
 ## 3. The archive
 
 - [x] 3.1 `CaseArchiveService`: collect every file on an object, honour the administered ceiling, write the manifest of what was included and what was left out with the reason (REQ-DFT-02)
-- [ ] 3.2 Leaf `filinq-download-all-files` per ADR-066, warning before the job starts when the selection already exceeds the ceiling (REQ-DFT-02)
-  - The manifest and the ceiling are endpoints. Filinq ships no leaf infrastructure yet, so the leaf is a change of its own.
+- [x] 3.2 Leaf `filinq-download-all-files` per ADR-066, warning before the job starts when the selection already exceeds the ceiling (REQ-DFT-02)
+  - Built 2026-09-28: `RegisterDownloadAllFilesLeafListener` and `src/integrations/registerDownloadAllFilesLeaf.js` (surfaces `detail-page`, `single-entity`), widget `CnFilinqDownloadAllFilesWidget.vue` reads the preflight, warns when `exceedsCeiling`, builds the archive and lists every left-out file by reason. Tests: `RegisterDownloadAllFilesLeafListenerTest`, `tests/vitest/archiveBundle.spec.js`.
 
 ## 4. Periodic and released documents
 

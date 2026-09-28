@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Building the archive": "Creando el archivo",
+        "Download all files": "Descargar todos los archivos",
+        "Left out because the archive reached the size limit": "Omitido porque el archivo alcanzó el límite de tamaño",
+        "Left out because the file no longer exists": "Omitido porque el fichero ya no existe",
+        "Left out because you may not open them": "Omitido porque no tiene permiso para abrirlo",
+        "Left out for another reason": "Omitido por otro motivo",
+        "Open the archive": "Abrir el archivo",
+        "The archive could not be built: {reason}": "No se pudo crear el archivo: {reason}",
+        "The archive holds {count} files and a manifest.": "El archivo contiene {count} ficheros y un índice.",
+        "These files are larger than the limit of {limit} MB. Files past the limit are left out and listed in the manifest.": "Estos ficheros superan el límite de {limit} MB. Los que pasan del límite se omiten y figuran en el índice.",
+        "{count} files, {size} MB": "{count} ficheros, {size} MB",
         "A bookmark per document": "Un marcador por documento",
         "Choose at least two documents": "Elija al menos dos documentos",
         "Choose the documents to merge, then put them in order.": "Elija los documentos que quiere combinar y después ordénelos.",

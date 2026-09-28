@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Building the archive": "Het archief wordt gemaakt",
+        "Download all files": "Alle bestanden downloaden",
+        "Left out because the archive reached the size limit": "Weggelaten omdat het archief de maximale grootte bereikte",
+        "Left out because the file no longer exists": "Weggelaten omdat het bestand niet meer bestaat",
+        "Left out because you may not open them": "Weggelaten omdat je ze niet mag openen",
+        "Left out for another reason": "Weggelaten om een andere reden",
+        "Open the archive": "Open het archief",
+        "The archive could not be built: {reason}": "Het archief kon niet worden gemaakt: {reason}",
+        "The archive holds {count} files and a manifest.": "Het archief bevat {count} bestanden en een overzicht.",
+        "These files are larger than the limit of {limit} MB. Files past the limit are left out and listed in the manifest.": "Deze bestanden zijn groter dan de grens van {limit} MB. Bestanden boven de grens worden weggelaten en in het overzicht genoemd.",
+        "{count} files, {size} MB": "{count} bestanden, {size} MB",
         "A bookmark per document": "Een bladwijzer per document",
         "Choose at least two documents": "Kies minstens twee documenten",
         "Choose the documents to merge, then put them in order.": "Kies de documenten die samengevoegd worden en zet ze daarna op volgorde.",
