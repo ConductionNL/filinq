@@ -1,7 +1,7 @@
 # upload-dropzone-keyboard-access Specification (delta)
 
 ---
-status: proposed
+status: done
 ---
 
 ## Purpose
@@ -31,6 +31,7 @@ equivalent picker).
 - THEN the trigger SHALL be a real focusable element (not a `display:none`
   input or a non-interactive `<span>`)
 - AND pressing Enter or Space SHALL open the native file picker
+- @e2e exclude opening the OS file picker is outside what a browser test can observe, covered by the static audit tests/vitest/uploadTriggerKeyboard.spec.js
 
 #### Scenario: Hidden file input is never the only trigger
 
@@ -40,6 +41,7 @@ equivalent picker).
 - THEN there MUST exist at least one other element that (a) triggers the
   same input's `click()` and (b) is independently reachable and operable
   via keyboard (Tab + Enter/Space)
+- @e2e exclude static audit of every component, covered by tests/vitest/uploadTriggerKeyboard.spec.js
 
 #### Scenario: Drag-and-drop remains pointer-only without violating the rule
 
@@ -50,3 +52,4 @@ equivalent picker).
 - WHEN the component is audited for keyboard accessibility
 - THEN no violation SHALL be reported, since the drag gesture has a
   keyboard-reachable equivalent
+- @e2e exclude static audit, covered by tests/vitest/uploadTriggerKeyboard.spec.js
