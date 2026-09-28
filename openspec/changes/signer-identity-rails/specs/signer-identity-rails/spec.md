@@ -44,7 +44,7 @@ MUST exist that every provider (shipped or future plugin) passes.
 - GIVEN the abstract SignerAuthProvider contract test suite
 - WHEN it is run against `nextcloud-session` and `oidc-broker`
 - THEN both providers pass every contract case (identifier, means, assurance bounds, fail-closed completeAuthentication on invalid input)
-- @e2e exclude backend seam contract — covered by PHPUnit (tests/unit/Service/SignerAuth/SignerAuthProviderContractTest.php)
+- @e2e exclude backend seam contract — covered by PHPUnit (tests/unit/Service/SignerAuth/SignerAuthProviderContractTestCase.php)
 
 #### Scenario: Unknown provider configuration fails loudly
 
@@ -150,9 +150,12 @@ declared additively in the register JSON with a register version bump.
 Broker configuration (issuer, client id, redirect URI, acr mapping) MUST live
 in admin settings as non-secret values; the OIDC client secret MUST be stored
 only as a `credentialRef` and resolved at token-exchange time through the
-credential-custody resolver (reusing the `document-waarmerk-certification`
-resolver seam per ADR-011). Secret material MUST NOT appear in any register
-schema, app-config value, log line, or frontend response (ADR-064).
+OpenRegister credential broker (`CredentialBrokerService::resolveInjectable()`,
+the ADR-064 path for a self-hosted host the broker cannot proxy). The app MUST
+NOT build its own custody store. A settings value that is not a credential
+reference MUST be refused, so a secret pasted into the field is never written.
+Secret material MUST NOT appear in any register schema, app-config value, log
+line, or frontend response (ADR-064).
 
 #### Scenario: Secret is only a reference at rest
 
@@ -186,7 +189,7 @@ shipped wallet integration.
 - GIVEN a fixture provider declaring means `eudi-wallet` and assurance `high`
 - WHEN it is run through the abstract provider contract suite
 - THEN the suite exercises initiate/complete/fail-closed cases without any Filinq core change
-- @e2e exclude plugin-seam conformance — covered by PHPUnit (tests/unit/Service/SignerAuth/SignerAuthProviderContractTest.php)
+- @e2e exclude plugin-seam conformance — covered by PHPUnit (tests/unit/Service/SignerAuth/SignerAuthProviderContractTestCase.php)
 
 ### Requirement: Resolved assurance is surfaced to downstream consumers (REQ-DDSIR-007)
 

@@ -2099,6 +2099,16 @@ interface IClient {
 	 * @return IResponse
 	 */
 	public function get(string $uri, array $options = []): IResponse;
+
+	/**
+	 * Issue a POST request (signature as in vendor/nextcloud/ocp IClient).
+	 *
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function post(string $uri, array $options = []): IResponse;
 }//end interface
 
 /**

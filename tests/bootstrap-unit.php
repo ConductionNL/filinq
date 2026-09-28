@@ -133,6 +133,16 @@ if (is_dir($ocpBruteforceDir) === true) {
 	}
 }
 
+// Load OCP's session and secure-random contracts (the signer identity rails
+// keep an OIDC state and nonce in the signer's session) — same "real file,
+// not classmapped" situation as the throttler contract above.
+foreach (['ISession.php', 'Security/ISecureRandom.php'] as $ocpSessionFile) {
+	$ocpSessionPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpSessionFile;
+	if (is_file($ocpSessionPath) === true && interface_exists('\\OCP\\' . str_replace(['/', '.php'], ['\\', ''], $ocpSessionFile)) === false) {
+		require_once $ocpSessionPath;
+	}
+}
+
 // Load OCP's file-lock contracts (the agent document-editing session takes an
 // ILockManager lock so a document open in Collabora refuses the edit rather
 // than losing the human's changes) — same "real file, not classmapped"

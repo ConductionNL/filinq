@@ -5,20 +5,21 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Additive register edit in `lib/Settings/filinq_register.json`: `signingRequest.requiredAssurance` (enum low|substantial|high) + `signerRecord.identityEvidence` (object: provider, means, assurance, subjectPseudonym, authenticatedAt, evidenceHash) with register version bump for boot import (REQ-DDSIR-004)
+- [x] 1.1 Additive register edit in `lib/Settings/filinq_register.json`: `signingRequest.requiredAssurance` (enum low|substantial|high) + `signerRecord.identityEvidence` (object: provider, means, assurance, subjectPseudonym, authenticatedAt, evidenceHash) with register version bump for boot import (REQ-DDSIR-004)
   - Union-additive diff against merge base — no existing property dropped; `tests/validate-manifest.js` passes
+  - Built with `guardianRequiredAssurance`, `resolvedAssurance` and `signerEvidence` on `signingRequest` too (used by 3.1, 3.2 and 3.4), so the data model moves once: register 8.19.0, `signingRequest` 1.6.0, `signerRecord` 1.4.0. Test: `tests/unit/Settings/SignerIdentitySchemaTest.php`
 
-- [ ] 1.2 Seed data: demo request `…e001` (`requiredAssurance: substantial`) + signer `…e002` with fixture evidence per design.md Seed Data (nil-UUID pattern, `demo-pseudonym-not-a-bsn-0001`)
+- [x] 1.2 Seed data: demo request `…e001` (`requiredAssurance: substantial`) + signer `…e002` with fixture evidence per design.md Seed Data (nil-UUID pattern, `demo-pseudonym-not-a-bsn-0001`)
 
 ## 2. Provider seam
 
-- [ ] 2.1 `lib/Service/SignerAuth/`: `SignerAuthenticationProviderInterface` + strict `SignerAuthProviderFactory` (unknown provider throws, no fallback) + `NextcloudSessionProvider` (assurance low, default) (REQ-DDSIR-001)
+- [x] 2.1 `lib/Service/SignerAuth/`: `SignerAuthenticationProviderInterface` + strict `SignerAuthProviderFactory` (unknown provider throws, no fallback) + `NextcloudSessionProvider` (assurance low, default) (REQ-DDSIR-001)
 
-- [ ] 2.2 `OidcBrokerProvider`: authorize-URL initiation with state bound to signerId+requestId, server-side code exchange, nonce/aud/iss/exp validation, configurable acr→assurance mapping with documented DigiD/eHerkenning/iDIN defaults and fail-closed `low` for unknown acr (REQ-DDSIR-001/002)
+- [x] 2.2 `OidcBrokerProvider`: authorize-URL initiation with state bound to signerId+requestId, server-side code exchange, nonce/aud/iss/exp validation, configurable acr→assurance mapping with documented DigiD/eHerkenning/iDIN defaults and fail-closed `low` for unknown acr (REQ-DDSIR-001/002)
 
-- [ ] 2.3 Credential custody: broker client secret behind `credentialRef` resolved at token-exchange time via the waarmerk custody resolver seam (ADR-011 reuse, ADR-064); admin settings panel (settings framework, NOT vue-router) for issuer/client-id/redirect/acr-mapping/credentialRef (REQ-DDSIR-005)
+- [x] 2.3 Credential custody: broker client secret behind `credentialRef` resolved at token-exchange time via OpenRegister's credential broker (`resolveInjectable`, ADR-064; the waarmerk resolver is unbuilt, see design D4); admin settings panel (settings framework, NOT vue-router) for issuer/client-id/redirect/acr-mapping/credentialRef (REQ-DDSIR-005)
 
-- [ ] 2.4 Abstract `SignerAuthProviderContractTest` (initiate/complete/fail-closed/means/assurance bounds) run against both shipped providers + the `eudi-wallet` fixture provider (REQ-DDSIR-001/006)
+- [x] 2.4 Abstract `SignerAuthProviderContractTestCase` (initiate/complete/fail-closed/means/assurance bounds) run against both shipped providers + the `eudi-wallet` fixture provider (REQ-DDSIR-001/006)
 
 ## 3. Enforcement & evidence
 
