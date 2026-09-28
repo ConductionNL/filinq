@@ -58,19 +58,11 @@ use UnexpectedValueException;
 class DocumentGenerationRequestService {
 
 	/**
-	 * The output formats, and the mime type each produces.
-	 *
-	 * `html` is the source format: the rendered template before conversion.
-	 * These are exactly the formats DocumentRenderPipeline::produceOutput()
-	 * produces; a format outside this list would fall through to PDF there.
+	 * The output formats and their mime types ({@see DocumentGenerationRequestRules::FORMATS}).
 	 *
 	 * @var array<string, string>
 	 */
-	public const FORMATS = [
-		'pdf' => 'application/pdf',
-		'odf' => 'application/vnd.oasis.opendocument.text',
-		'html' => 'text/html',
-	];
+	public const FORMATS = DocumentGenerationRequestRules::FORMATS;
 
 	/**
 	 * The name recorded for a template given as inline text.
@@ -96,6 +88,7 @@ class DocumentGenerationRequestService {
 	 * @param DocumentObjectServiceResolver $objectResolver  Reaches OpenRegister for the field write.
 	 * @param IUserSession                  $userSession     The acting user, whose Files receive the document.
 	 * @param IEventDispatcher              $eventDispatcher Announces the generated document.
+	 * @param DocumentGenerationRequestRules $rules          What a request must hold, and how its values read.
 	 *
 	 * @return void
 	 */
@@ -107,6 +100,7 @@ class DocumentGenerationRequestService {
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly IUserSession $userSession,
 		private readonly IEventDispatcher $eventDispatcher,
+		private readonly DocumentGenerationRequestRules $rules = new DocumentGenerationRequestRules(),
 	) {
 
 	}//end __construct()
@@ -128,53 +122,11 @@ class DocumentGenerationRequestService {
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-a-configuration-that-cannot-run-is-refused-when-the-flow-is-saved
 	 */
 	public function validate(array $request): void {
-		$sources = array_filter(
-			[
-				'templateId' => $this->text(value: ($request['templateId'] ?? null)),
-				'templateSlug' => $this->text(value: ($request['templateSlug'] ?? null)),
-				'template' => $this->text(value: ($request['template'] ?? null)),
-			],
-			static fn (string $value): bool => $value !== ''
-		);
-
-		if (count($sources) !== 1) {
-			throw new UnexpectedValueException(
-				'Name exactly one template: "templateId", "templateSlug" or "template" (inline text).'
-			);
-		}
-
-		if (isset($sources['templateSlug']) === true
-			&& $this->text(value: ($request['templateNamespace'] ?? null)) === ''
-		) {
-			throw new UnexpectedValueException('"templateSlug" needs "templateNamespace", the app the template belongs to.');
-		}
-
-		$format = $this->text(value: ($request['format'] ?? 'pdf'));
-		if (array_key_exists($format, self::FORMATS) === false) {
-			throw new UnexpectedValueException(
-				'"format" must be one of: ' . implode(', ', array_keys(self::FORMATS)) . '.'
-			);
-		}
-
-		$targetField = ($request['targetField'] ?? null);
-		if ($targetField !== null && is_string($targetField) === false) {
-			throw new UnexpectedValueException('"targetField" must be the name of one field on the object.');
-		}
-
-		if ($this->storesFile(request: $request) === false && $this->text(value: $targetField) === '') {
-			throw new UnexpectedValueException(
-				'With "storeFile" off the document goes nowhere. Set "targetField", or leave "storeFile" on.'
-			);
-		}
-
-		if (array_key_exists('metadata', $request) === true && is_array($request['metadata']) === false) {
-			throw new UnexpectedValueException('"metadata" must be an object.');
-		}
-
-		if (array_key_exists('output', $request) === true && $this->text(value: $request['output']) === '') {
-			throw new UnexpectedValueException('"output" must name the item field the document is written to.');
-		}
+		$this->rules->validate(request: $request);
 	}//end validate()
+
+
+
 
 	/**
 	 * Generate one document and announce it.
@@ -206,9 +158,9 @@ class DocumentGenerationRequestService {
 	public function generate(array $request, string $requestingApp): array {
 		$this->validate(request: $request);
 
-		$storeFile = $this->storesFile(request: $request);
-		$targetField = $this->text(value: ($request['targetField'] ?? null));
-		$object = $this->objectRef(value: ($request['object'] ?? null));
+		$storeFile = $this->rules->storesFile(request: $request);
+		$targetField = $this->rules->text(value: ($request['targetField'] ?? null));
+		$object = $this->rules->objectRef(value: ($request['object'] ?? null));
 		$data = (array)($request['data'] ?? []);
 		$metadata = (array)($request['metadata'] ?? []);
 
@@ -220,12 +172,11 @@ class DocumentGenerationRequestService {
 
 		// A field-only request files nothing, so it has no use for a PDF: the
 		// source format is what is written, and 'return' keeps it off disk.
-		$format = $this->text(value: ($request['format'] ?? 'pdf'));
+		$format = 'html';
 		$mode = 'return';
 		if ($storeFile === true) {
+			$format = $this->rules->text(value: ($request['format'] ?? 'pdf'));
 			$mode = 'files';
-		} else {
-			$format = 'html';
 		}
 
 		$resolved = $this->resolveTemplate(request: $request);
@@ -245,7 +196,7 @@ class DocumentGenerationRequestService {
 		$options = [
 			'format' => $format,
 			'adHocData' => $adHocData,
-			'huisstijlId' => $this->orNull(value: $this->text(value: ($request['huisstijlId'] ?? null))),
+			'huisstijlId' => $this->rules->orNull(value: $this->rules->text(value: ($request['huisstijlId'] ?? null))),
 			'filename' => $this->filename(request: $request, template: $template, data: $adHocData),
 			'output' => ['mode' => $mode],
 		];
@@ -271,7 +222,7 @@ class DocumentGenerationRequestService {
 			'fileId' => ($generated['output']['fileId'] ?? null),
 			'path' => ($generated['output']['path'] ?? null),
 			'name' => ($generated['output']['name'] ?? null),
-			'mime' => self::FORMATS[$format],
+			'mime' => DocumentGenerationRequestRules::FORMATS[$format],
 			'size' => ($generated['output']['size'] ?? null),
 			'format' => $format,
 			'template' => $resolved['summary'],
@@ -306,7 +257,7 @@ class DocumentGenerationRequestService {
 	 * @throws \Exception When a named template does not exist.
 	 */
 	private function resolveTemplate(array $request): array {
-		$templateId = $this->text(value: ($request['templateId'] ?? null));
+		$templateId = $this->rules->text(value: ($request['templateId'] ?? null));
 		if ($templateId !== '') {
 			$template = $this->templates->getTemplate(id: $templateId);
 
@@ -317,13 +268,13 @@ class DocumentGenerationRequestService {
 			];
 		}
 
-		$slug = $this->text(value: ($request['templateSlug'] ?? null));
+		$slug = $this->rules->text(value: ($request['templateSlug'] ?? null));
 		if ($slug !== '') {
-			$tenant = $this->text(value: ($request['templateTenantId'] ?? null));
+			$tenant = $this->rules->text(value: ($request['templateTenantId'] ?? null));
 			$template = $this->slugs->resolve(
-				namespace: $this->text(value: ($request['templateNamespace'] ?? null)),
+				namespace: $this->rules->text(value: ($request['templateNamespace'] ?? null)),
 				slug: $slug,
-				tenantId: $this->orNull(value: $tenant)
+				tenantId: $this->rules->orNull(value: $tenant)
 			);
 			$id = (string)($template['id'] ?? ($template['uuid'] ?? $slug));
 
@@ -334,15 +285,15 @@ class DocumentGenerationRequestService {
 			];
 		}
 
-		$name = $this->orDefault(
-			value: $this->text(value: ($request['templateName'] ?? null)),
+		$name = $this->rules->orDefault(
+			value: $this->rules->text(value: ($request['templateName'] ?? null)),
 			default: self::INLINE_TEMPLATE_NAME
 		);
 		$template = [
 			'name' => $name,
 			'content' => (string)$request['template'],
-			'namespace' => $this->orDefault(
-				value: $this->text(value: ($request['templateNamespace'] ?? null)),
+			'namespace' => $this->rules->orDefault(
+				value: $this->rules->text(value: ($request['templateNamespace'] ?? null)),
 				default: self::INLINE_NAMESPACE
 			),
 		];
@@ -373,46 +324,7 @@ class DocumentGenerationRequestService {
 		];
 	}//end summary()
 
-	/**
-	 * Whether the request stores a file (the default).
-	 *
-	 * @param array<string, mixed> $request The request.
-	 *
-	 * @return bool True unless storeFile is explicitly off.
-	 */
-	private function storesFile(array $request): bool {
-		$value = ($request['storeFile'] ?? true);
-		if (is_string($value) === true) {
-			return in_array(strtolower(trim($value)), ['0', 'false', 'no', 'off', ''], true) === false;
-		}
 
-		return (bool)$value;
-	}//end storesFile()
-
-	/**
-	 * The object reference, when the request carries a complete one.
-	 *
-	 * @param mixed $value The request's `object`.
-	 *
-	 * @return array{register: string, schema: string, id: string}|null Null when any part is missing.
-	 */
-	private function objectRef(mixed $value): ?array {
-		if (is_array($value) === false) {
-			return null;
-		}
-
-		$ref = [
-			'register' => $this->text(value: ($value['register'] ?? null)),
-			'schema' => $this->text(value: ($value['schema'] ?? null)),
-			'id' => $this->text(value: ($value['id'] ?? null)),
-		];
-
-		if (in_array('', $ref, true) === true) {
-			return null;
-		}
-
-		return $ref;
-	}//end objectRef()
 
 	/**
 	 * The user whose Files receive the document.
@@ -427,7 +339,7 @@ class DocumentGenerationRequestService {
 	 * @throws RuntimeException When there is no user to own the file.
 	 */
 	private function userId(array $request): string {
-		$explicit = $this->text(value: ($request['userId'] ?? null));
+		$explicit = $this->rules->text(value: ($request['userId'] ?? null));
 		if ($explicit !== '') {
 			return $explicit;
 		}
@@ -457,7 +369,7 @@ class DocumentGenerationRequestService {
 	 * @return string The folder path.
 	 */
 	private function targetPath(array $request, string $templateId, array $template, ?array $object): string {
-		$explicit = $this->text(value: ($request['targetPath'] ?? null));
+		$explicit = $this->rules->text(value: ($request['targetPath'] ?? null));
 		if ($explicit !== '') {
 			return $explicit;
 		}
@@ -485,9 +397,9 @@ class DocumentGenerationRequestService {
 	 * @return string The file name, without extension.
 	 */
 	private function filename(array $request, array $template, array $data): string {
-		$name = $this->text(value: ($request['filename'] ?? null));
+		$name = $this->rules->text(value: ($request['filename'] ?? null));
 		if ($name === '') {
-			$name = $this->orDefault(value: $this->text(value: ($template['name'] ?? null)), default: 'document');
+			$name = $this->rules->orDefault(value: $this->rules->text(value: ($template['name'] ?? null)), default: 'document');
 		}
 
 		if (str_contains($name, '{{') === true) {
@@ -500,7 +412,7 @@ class DocumentGenerationRequestService {
 		// A slash would turn the name into a path under the target folder.
 		$name = trim(str_replace(['/', '\\'], '-', $name));
 
-		return $this->orDefault(value: $name, default: 'document');
+		return $this->rules->orDefault(value: $name, default: 'document');
 	}//end filename()
 
 	/**
@@ -526,49 +438,6 @@ class DocumentGenerationRequestService {
 		);
 	}//end writeField()
 
-	/**
-	 * The value, or null when it is empty.
-	 *
-	 * @param string $value The value.
-	 *
-	 * @return string|null The value, or null.
-	 */
-	private function orNull(string $value): ?string {
-		if ($value === '') {
-			return null;
-		}
 
-		return $value;
-	}//end orNull()
 
-	/**
-	 * The value, or the default when it is empty.
-	 *
-	 * @param string $value   The value.
-	 * @param string $default The default.
-	 *
-	 * @return string The value or the default.
-	 */
-	private function orDefault(string $value, string $default): string {
-		if ($value === '') {
-			return $default;
-		}
-
-		return $value;
-	}//end orDefault()
-
-	/**
-	 * A scalar as trimmed text, anything else as ''.
-	 *
-	 * @param mixed $value The value.
-	 *
-	 * @return string The text.
-	 */
-	private function text(mixed $value): string {
-		if (is_scalar($value) === false) {
-			return '';
-		}
-
-		return trim((string)$value);
-	}//end text()
 }//end class

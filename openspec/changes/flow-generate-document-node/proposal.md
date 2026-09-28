@@ -20,6 +20,6 @@ Ruben decided: Filinq exposes generation to OpenRegister's flow engine and to ot
 
 ## Impact
 
-- New: `lib/Flow/`, `lib/Event/DocumentGenerationRequestedEvent.php`, `lib/Event/DocumentGeneratedEvent.php`, `lib/EventListener/DocumentGenerationRequestedListener.php`, `lib/Service/DocumentGenerationRequestService.php`, `lib/AppInfo/DocumentGenerationRegistrar.php`.
+- New: `lib/Flow/`, `lib/Event/DocumentGenerationRequestedEvent.php`, `lib/Event/DocumentGeneratedEvent.php`, `lib/EventListener/DocumentGenerationRequestedListener.php`, `lib/Service/DocumentGenerationRequestService.php`, `lib/Service/DocumentGenerationRequestRules.php` (validation and value reading), `lib/AppInfo/DocumentGenerationRegistrar.php`.
 - Changed: `DocumentService` (split, behaviour of `generateDocument()` unchanged, result gains `html`), `RegistrationBootstrap` (one line).
 - Filinq still boots without OpenRegister: the node listener is registered by event name only, and the node class is built only when OpenRegister dispatches the event.
