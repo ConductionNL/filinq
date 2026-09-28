@@ -1,12 +1,12 @@
 # Design: template-charts
 
-> **Descope note (this implementation wave):** D3 (office path) and the
-> `nc_image()` half of D2 are not built — D3 depends on the unbuilt
-> `office-template-authoring` REQ-DDOTA-003 pre-pass slot, and `nc_image()`
-> is not trivial enough to fit the reduced HTML/PDF-only scope this wave
-> covers (`chart()` + `data_table()` only). D5's raster fallback is
-> likewise descoped since it only applies to the (out-of-scope) office/odf
-> conversion paths. See `tasks.md` for the per-task breakdown.
+> **Build note (28 Sep 2026).** D1, D2, D4 and D5 are built. D3 (office path)
+> moved to the `office-charts-and-images` change: it needs the office render
+> path from office-template-authoring 2.3, which does not exist yet. D5 applies
+> to two conversions in the code: documents to ODT (`DocumentRenderPipeline`)
+> and letters to DOCX (`CorrespondenceService`); documents have no HTML to DOCX
+> output. The rasteriser reuses the PDF backend's soffice lock and binary
+> setting and runs soffice with a private profile per call.
 
 ## Context
 
