@@ -113,7 +113,7 @@ class SignerIdentityController extends Controller {
 	public function callback(): RedirectResponse {
 		$base = $this->urlGenerator->linkToRoute('filinq.dashboard.page');
 		try {
-			$act = $this->stepUp->finish(
+			$act = $this->stepUp->authorizeCallback(
 				code: (string)$this->request->getParam('code', ''),
 				state: (string)$this->request->getParam('state', '')
 			);

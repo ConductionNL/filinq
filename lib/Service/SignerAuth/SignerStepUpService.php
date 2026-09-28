@@ -102,7 +102,10 @@ class SignerStepUpService {
 	}//end start()
 
 	/**
-	 * Finish a broker step-up and keep the evidence for its act.
+	 * Authorise a broker callback against this session, then keep the evidence for its act.
+	 *
+	 * The state must be one this session opened, for this session's user;
+	 * anything else is refused before the broker is called.
 	 *
 	 * @param string $code The authorization code.
 	 * @param string $state The state the broker returned.
@@ -113,7 +116,7 @@ class SignerStepUpService {
 	 *
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
-	public function finish(string $code, string $state): array {
+	public function authorizeCallback(string $code, string $state): array {
 		[$userId] = $this->actors->resolveActingIdentity();
 		$act = $this->broker->boundAct(state: $state);
 		if ($act === null) {
@@ -133,5 +136,5 @@ class SignerStepUpService {
 
 		return ['requestId' => $act['requestId'], 'signerId' => $act['signerId'], 'assurance' => $evidence->assurance];
 
-	}//end finish()
+	}//end authorizeCallback()
 }//end class

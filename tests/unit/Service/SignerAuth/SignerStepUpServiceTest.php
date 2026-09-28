@@ -149,7 +149,7 @@ class SignerStepUpServiceTest extends TestCase {
 		$challenge = $service->start(requestId: 'req-1', signerId: 'signer-9');
 		$this->nextClaims = $this->claimsFor(nonce: $this->queryParam(url: $challenge['url'], name: 'nonce'), acr: 'urn:oasis:names:tc:SAML:2.0:ac:classes:Smartcard');
 
-		$act = $service->finish(code: 'c', state: $this->queryParam(url: $challenge['url'], name: 'state'));
+		$act = $service->authorizeCallback(code: 'c', state: $this->queryParam(url: $challenge['url'], name: 'state'));
 
 		$this->assertSame(['requestId' => 'req-1', 'signerId' => 'signer-9', 'assurance' => 'substantial'], $act);
 		$this->assertSame('substantial', $this->evidenceStore()->get(requestId: 'req-1', signerId: 'signer-9')?->assurance);
@@ -169,7 +169,7 @@ class SignerStepUpServiceTest extends TestCase {
 		$this->uid = 'mallory';
 
 		try {
-			$service->finish(code: 'c', state: $this->queryParam(url: $challenge['url'], name: 'state'));
+			$service->authorizeCallback(code: 'c', state: $this->queryParam(url: $challenge['url'], name: 'state'));
 			$this->fail('Another user must not finish this step-up');
 		} catch (RuntimeException) {
 			$this->assertNull($this->evidenceStore()->get(requestId: 'req-1', signerId: 'signer-9'));
@@ -185,7 +185,7 @@ class SignerStepUpServiceTest extends TestCase {
 	public function testAnUnknownStateIsRefused(): void {
 		$this->expectException(RuntimeException::class);
 
-		$this->service()->finish(code: 'c', state: 'never-issued');
+		$this->service()->authorizeCallback(code: 'c', state: 'never-issued');
 
 	}//end testAnUnknownStateIsRefused()
 }//end class

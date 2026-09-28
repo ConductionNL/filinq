@@ -123,7 +123,7 @@ class SignerIdentityControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheCallbackReturnsTheSignerToTheRequest(): void {
-		$this->stepUp->expects($this->once())->method('finish')->with('the-code', 'the-state')
+		$this->stepUp->expects($this->once())->method('authorizeCallback')->with('the-code', 'the-state')
 			->willReturn(['requestId' => 'req-1', 'signerId' => 'signer-1', 'assurance' => 'substantial']);
 
 		$response = $this->controller(['code' => 'the-code', 'state' => 'the-state'])->callback();
@@ -138,7 +138,7 @@ class SignerIdentityControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailedCallbackSaysSo(): void {
-		$this->stepUp->method('finish')->willThrowException(new RuntimeException('ID token failed the nonce check'));
+		$this->stepUp->method('authorizeCallback')->willThrowException(new RuntimeException('ID token failed the nonce check'));
 
 		$response = $this->controller(['code' => 'x', 'state' => 'y'])->callback();
 
