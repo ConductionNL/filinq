@@ -33,6 +33,15 @@
             route table and carry the same call.
         -->
         <file name="vendor/conduction/hydra-gates/hydra-gates/stubs/openregister-apphost-bootstrap.stub.php" />
+        <!--
+            OpenRegister's flow-node contract (IFlowNode and its optional
+            companions, RegisterFlowNodesEvent). Filinq's GenerateDocumentNode
+            implements it and the listener registers on the event; the real
+            classes live in the openregister sibling app. A stub lets psalm
+            check the implementation against the contract instead of
+            suppressing every reference to it.
+        -->
+        <file name="tests/stubs/openregister-flow.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>

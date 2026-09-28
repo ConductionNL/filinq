@@ -57,12 +57,15 @@ class RegistrationBootstrap {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-filinq-registers-its-node-and-still-boots-without-openregister
 	 */
 	public function register(IRegistrationContext $context): void {
 		(new ObjectEventRegistrar())->register(context: $context);
 		(new SigningEventRegistrar())->register(context: $context);
 		(new PdfConversionRegistrar())->register(context: $context);
 		(new IntegrationLeafRegistrar())->register(context: $context);
+		(new DocumentGenerationRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
 

@@ -159,11 +159,6 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) The plain-language rendition
-	 * step pushed this past the threshold. It belongs in the same method because
-	 * the formal document and its plain counterpart are filed together or not at
-	 * all; splitting the step out would make a half-filed pair reachable.
 	 */
 	public function generateDocument(
 		string $templateId,
@@ -172,9 +167,56 @@ class DocumentService {
 	): array {
 		$format = $options['format'] ?? self::DEFAULT_FORMAT;
 		$this->validateFormat(format: $format);
-		$outputMode = $this->resolveOutputMode(options: $options);
+		$this->resolveOutputMode(options: $options);
 
 		$template = $this->templateService->getTemplate(id: $templateId);
+
+		return $this->generateFromTemplate(
+			templateId: $templateId,
+			template: $template,
+			dataRefs: $dataRefs,
+			options: $options
+		);
+
+	}//end generateDocument()
+
+	/**
+	 * Generate a document from a template the caller already holds.
+	 *
+	 * The body of {@see generateDocument()}, split out so a caller that
+	 * resolved its template another way (by slug through
+	 * {@see TemplateSlugResolver}, or as inline template text on a flow step)
+	 * reaches the exact same render, store and audit path instead of a
+	 * second copy of it. `generateDocument()` is this method plus a lookup by
+	 * id, so its behaviour is unchanged.
+	 *
+	 * @param string $templateId The template's identifier, for the audit record and default folder.
+	 * @param array $template The template: at least `content`; `name`, `namespace`, `version`,
+	 *                        `format` and `orientation` when known.
+	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
+	 * @param array $options The same options {@see generateDocument()} takes.
+	 *
+	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[], output: array}
+	 *               `html` is the rendered template before format conversion.
+	 *
+	 * @throws Exception If generation fails
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) The plain-language rendition
+	 * step pushed this past the threshold. It belongs in the same method because
+	 * the formal document and its plain counterpart are filed together or not at
+	 * all; splitting the step out would make a half-filed pair reachable.
+	 */
+	public function generateFromTemplate(
+		string $templateId,
+		array $template,
+		array $dataRefs,
+		array $options = [],
+	): array {
+		$format = $options['format'] ?? self::DEFAULT_FORMAT;
+		$this->validateFormat(format: $format);
+		$outputMode = $this->resolveOutputMode(options: $options);
 
 		$resolution = $this->dataResolver->resolve(
 			dataRefs: $dataRefs,
@@ -266,6 +308,7 @@ class DocumentService {
 
 		return [
 			'content' => $content,
+			'html' => $htmlContent,
 			'format' => $format,
 			'metadata' => $metadata,
 			'plainRendition' => $plain['rendition'],
@@ -279,7 +322,7 @@ class DocumentService {
 			],
 		];
 
-	}//end generateDocument()
+	}//end generateFromTemplate()
 
 	/**
 	 * Generate an HTML preview of a template without producing final output.
