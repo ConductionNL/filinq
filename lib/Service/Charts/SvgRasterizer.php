@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-007
+ * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-007
+ * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
  */
 class SvgRasterizer {
 
@@ -110,7 +110,7 @@ class SvgRasterizer {
 	 *
 	 * @return array{html: string, warnings: string[]} The HTML to convert and any warnings.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-007
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
 	 */
 	public function rasterizeInlineSvg(string $html, string $format): array {
 		if (preg_match_all(self::SVG_PATTERN, $html, $matches) === 0) {

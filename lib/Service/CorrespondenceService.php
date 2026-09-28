@@ -188,7 +188,7 @@ class CorrespondenceService {
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
 	 * @spec openspec/changes/filinq-mcp-adoption/tasks.md#task-2-1
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-007
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
 	 */
 	#[McpTool(
 		name: 'generateCorrespondence',

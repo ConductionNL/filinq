@@ -177,7 +177,7 @@ class TemplateRenderer {
 	 * @throws Exception If Twig rendering fails (syntax error, security violation)
 	 *
 	 * @spec openspec/specs/pdf-generation/spec.md
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
 	public function renderTemplate(string $templateContent, array $data, ?array $huisstijl = null): string {
 		$this->lastRenderWarnings = [];
@@ -221,7 +221,7 @@ class TemplateRenderer {
 	 *
 	 * @return string[]
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
 	public function getLastRenderWarnings(): array {
 		return $this->lastRenderWarnings;
@@ -237,7 +237,7 @@ class TemplateRenderer {
 	 *
 	 * @return TwigFunction
 	 *
-	 * @spec openspec/changes/template-charts/specs/pdf-generation/spec.md#REQ-DDTCH-005
+	 * @spec openspec/specs/pdf-generation/spec.md#REQ-DDTCH-005
 	 */
 	private function buildChartFunction(?array $huisstijl): TwigFunction {
 		$chartRenderer = $this->chartRenderer;
@@ -297,7 +297,7 @@ class TemplateRenderer {
 	 *
 	 * @return TwigFunction
 	 *
-	 * @spec openspec/changes/template-charts/specs/pdf-generation/spec.md#REQ-DDTCH-005
+	 * @spec openspec/specs/pdf-generation/spec.md#REQ-DDTCH-005
 	 */
 	private function buildDataTableFunction(): TwigFunction {
 		$tableRenderer = $this->tableRenderer;
@@ -336,8 +336,8 @@ class TemplateRenderer {
 	 *
 	 * @return TwigFunction
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-006
-	 * @spec openspec/changes/template-charts/specs/pdf-generation/spec.md#REQ-DDTCH-005
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-006
+	 * @spec openspec/specs/pdf-generation/spec.md#REQ-DDTCH-005
 	 */
 	private function buildImageFunction(): TwigFunction {
 		return new TwigFunction(

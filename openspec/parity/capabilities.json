@@ -1473,12 +1473,12 @@
 			"sourceRef": "Carbone charts and pivot tables",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/TemplateRenderer.php:233 buildChartFunction() registers a sandboxed chart() Twig function via ChartSvgRenderer (lib/Service/Charts/). openspec/changes/template-charts/tasks.md: 5/12 done. No toolbar button in TemplateDetail.vue inserts chart(); only reachable by an author manually typing Twig into the 'Edit HTML' raw-content textarea (TemplateDetail.vue showRaw toggle), which is then rendered through the same pipeline used by Correspondence/Document generation.",
-				"change": "openspec/changes/template-charts"
+				"evidence": "lib/Service/TemplateRenderer.php registers the sandboxed chart(), data_table() and nc_image() Twig functions (lib/Service/Charts/ChartSvgRenderer, TableHtmlRenderer, TemplateImageResolver). Charts reach HTML and PDF as SVG, and ODT documents (DocumentRenderPipeline) and DOCX letters (CorrespondenceService) as PNG through lib/Service/Charts/SvgRasterizer. Rating stays partial: office templates (${chart:key}, ${image:key}) wait on openspec/changes/office-charts-and-images, and there is no editor button, an author types the function in Edit HTML.",
+				"change": "openspec/changes/archive/2026-09-28-template-charts"
 			},
-			"reachedOn": "/templates/:id raw-HTML edit (no dedicated UI affordance)",
+			"reachedOn": "/templates/:id Edit HTML, then Preview with Sample data (JSON)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "template-charts",

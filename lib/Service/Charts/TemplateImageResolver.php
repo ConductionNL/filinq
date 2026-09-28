@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-006
+ * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-006
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use OCP\Lock\LockedException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-006
+ * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-006
  */
 class TemplateImageResolver {
 
@@ -100,7 +100,7 @@ class TemplateImageResolver {
 	 *                                                                        reason there is none (English
 	 *                                                                        source text with `%s` slots).
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-006
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-006
 	 */
 	public function resolve(mixed $fileId): array {
 		$file = $this->findFile(fileId: $fileId);

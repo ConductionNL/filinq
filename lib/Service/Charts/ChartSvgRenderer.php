@@ -24,7 +24,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+ * @spec openspec/specs/template-charts/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -51,7 +51,7 @@ use OCP\IL10N;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/template-charts/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-28-template-charts/tasks.md#task-1.1
  */
 class ChartSvgRenderer {
 
@@ -180,7 +180,7 @@ class ChartSvgRenderer {
 	 *
 	 * @return string SVG markup (starts with `<svg`).
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-001
 	 */
 	public function render(string $type, array $data, array $options = []): string {
 		$this->lastWarning = null;
@@ -238,7 +238,7 @@ class ChartSvgRenderer {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
 	public function getLastWarning(): ?string {
 		return $this->lastWarning;
@@ -307,7 +307,7 @@ class ChartSvgRenderer {
 	 *
 	 * @return string SVG markup.
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
 	private function renderPlaceholder(int $width, int $height, string $message, array $parameters = []): string {
 		if ($this->l10n !== null) {

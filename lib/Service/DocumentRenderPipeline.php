@@ -150,7 +150,7 @@ class DocumentRenderPipeline {
 	 *
 	 * @throws Exception If rendering fails
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
 	public function renderWithHuisstijl(
 		string $templateContent,
@@ -205,7 +205,7 @@ class DocumentRenderPipeline {
 	 *
 	 * @throws Exception If output generation fails
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-007
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
 	 */
 	public function produceOutput(string $htmlContent, string $format, array $pdfOptions): string {
 		$this->lastOutputWarnings = [];
@@ -233,7 +233,7 @@ class DocumentRenderPipeline {
 	 *
 	 * @return string[]
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-007
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
 	 */
 	public function getLastOutputWarnings(): array {
 		return $this->lastOutputWarnings;
