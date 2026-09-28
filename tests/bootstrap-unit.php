@@ -143,6 +143,16 @@ foreach (['ISession.php', 'Security/ISecureRandom.php'] as $ocpSessionFile) {
 	}
 }
 
+// Load OCP's app data contracts (print jobs keep their PDFs in the app data
+// folder) — same "real file, not classmapped" situation as the contracts
+// above. NotFoundException and NotPermittedException come from the stubs.
+foreach (['Files/SimpleFS/ISimpleFile.php', 'Files/SimpleFS/InMemoryFile.php', 'Files/SimpleFS/ISimpleFolder.php', 'Files/SimpleFS/ISimpleRoot.php', 'Files/IAppData.php'] as $ocpAppDataFile) {
+	$ocpAppDataPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpAppDataFile;
+	if (is_file($ocpAppDataPath) === true) {
+		require_once $ocpAppDataPath;
+	}
+}
+
 // Load OCP's file-lock contracts (the agent document-editing session takes an
 // ILockManager lock so a document open in Collabora refuses the edit rather
 // than losing the human's changes) — same "real file, not classmapped"

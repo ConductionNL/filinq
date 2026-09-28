@@ -14,378 +14,180 @@
  *
  * @link https://www.filinq.app
  *
+ * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Controller;
 
+require_once __DIR__ . '/../Service/PrintJobDoubles.php';
+
 use OCA\Filinq\Controller\PrintJobController;
+use OCA\Filinq\Service\DataResolverService;
+use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Tests\Unit\Service\PrintJobDoubles;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
-use OCP\AppFramework\Http\JSONResponse;
+use OCP\BackgroundJob\IJobList;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * Unit tests for PrintJobController
+ * The print job endpoints over the real service, with in-memory rows.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Controller
- * @author   Conduction B.V. <info@conduction.nl>
+ * @author   Conduction Development Team <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
- *
- * @psalm-suppress PropertyNotSetInConstructor
  */
 class PrintJobControllerTest extends TestCase {
+	use PrintJobDoubles;
 
 	/**
-	 * The controller under test.
+	 * The real service, shared by the controllers of each caller.
 	 *
-	 * @var PrintJobController
+	 * @var PrintJobService
 	 */
-	private PrintJobController $controller;
+	private PrintJobService $service;
 
 	/**
-	 * Mock request.
-	 *
-	 * @var IRequest&MockObject
-	 */
-	private IRequest $mockRequest;
-
-	/**
-	 * Mock print job service.
-	 *
-	 * @var PrintJobService&MockObject
-	 */
-	private PrintJobService $mockPrintJobSvc;
-
-	/**
-	 * Mock user session.
-	 *
-	 * @var IUserSession&MockObject
-	 */
-	private IUserSession $mockUserSession;
-
-	/**
-	 * Mock group manager.
-	 *
-	 * @var IGroupManager&MockObject
-	 */
-	private IGroupManager $mockGroupManager;
-
-	/**
-	 * Mock logger.
-	 *
-	 * @var LoggerInterface&MockObject
-	 */
-	private LoggerInterface $mockLogger;
-
-	/**
-	 * Mock user.
-	 *
-	 * @var IUser&MockObject
-	 */
-	private IUser $mockUser;
-
-	/**
-	 * Set up test environment
+	 * Build the service.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->mockRequest = $this->createMock(originalClassName: IRequest::class);
-		$this->mockPrintJobSvc = $this->createMock(originalClassName: PrintJobService::class);
-		$this->mockUserSession = $this->createMock(originalClassName: IUserSession::class);
-		$this->mockGroupManager = $this->createMock(originalClassName: IGroupManager::class);
-		$this->mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
-		$this->mockUser = $this->createMock(originalClassName: IUser::class);
+		$pdf = $this->createMock(PdfService::class);
+		$pdf->method('renderPdf')->willReturn('%PDF-x');
+		$templates = $this->createMock(TemplateService::class);
+		$templates->method('getTemplate')->willReturn(['id' => 't', 'name' => 'Brief', 'content' => '']);
 
-		$this->mockUser->method('getUID')->willReturn('test-user');
-		$this->mockUserSession->method('getUser')->willReturn($this->mockUser);
-
-		$this->controller = new PrintJobController(
-			appName: 'filinq',
-			request: $this->mockRequest,
-			printJobSvc: $this->mockPrintJobSvc,
-			userSession: $this->mockUserSession,
-			groupManager: $this->mockGroupManager,
-			logger: $this->mockLogger
+		$this->service = new PrintJobService(
+			$pdf,
+			$templates,
+			$this->createMock(DataResolverService::class),
+			$this->printJobRepository(),
+			$this->printJobFileStore(),
+			$this->createMock(IJobList::class),
+			$this->createMock(LoggerInterface::class)
 		);
 
 	}//end setUp()
 
 	/**
-	 * Test create returns 400 when templateId is missing
+	 * A controller as one caller, with the given request parameters.
 	 *
-	 * @return void
+	 * @param string               $uid     The caller
+	 * @param array<string, mixed> $params  Request parameters
+	 * @param bool                 $isAdmin Whether the caller is an admin
+	 *
+	 * @return PrintJobController
 	 */
-	public function testCreateReturns400WhenTemplateIdMissing(): void {
-		$this->mockRequest->method('getParam')
-			->willReturnMap(
-				[
-					['templateId', '', ''],
-					['data', [], []],
-					['options', [], []],
-					['filename', 'document.pdf', 'document.pdf'],
-				]
-			);
+	private function as(string $uid, array $params = [], bool $isAdmin = false): PrintJobController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => $params[$key] ?? $default
+		);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturn($isAdmin);
 
-		$result = $this->controller->create();
+		return new PrintJobController('filinq', $request, $this->service, $session, $groups, $this->createMock(LoggerInterface::class));
 
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(Http::STATUS_BAD_REQUEST, $result->getStatus());
-
-	}//end testCreateReturns400WhenTemplateIdMissing()
+	}//end as()
 
 	/**
-	 * Test create returns 201 on success
+	 * Somebody else's jobs stay out of the list.
 	 *
 	 * @return void
 	 */
-	public function testCreateReturns201OnSuccess(): void {
-		$this->mockRequest->method('getParam')
-			->willReturnMap(
-				[
-					['templateId', '', 'template-uuid'],
-					['data', [], []],
-					['options', [], []],
-					['filename', 'document.pdf', 'output.pdf'],
-				]
-			);
+	public function testSomebodyElsesJobsStayOutOfTheList(): void {
+		$this->as('handler-a', ['templateId' => 't'])->create();
+		$this->as('handler-b', ['templateId' => 't'])->create();
 
-		$this->mockPrintJobSvc->method('createJob')
-			->willReturn(
-				[
-					'jobId' => 'job-123',
-					'status' => 'completed',
-					'printConfig' => ['duplex' => false, 'color' => true],
-				]
-			);
+		$listed = $this->as('handler-a')->index()->getData()['results'];
 
-		$result = $this->controller->create();
+		$this->assertCount(1, $listed);
+		$this->assertSame('handler-a', $listed[0]['requestedBy']);
 
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(Http::STATUS_CREATED, $result->getStatus());
-		$this->assertEquals('job-123', $result->getData()['jobId']);
+		// An admin's list is also their own.
+		$this->assertSame([], $this->as('admin', [], true)->index()->getData()['results']);
 
-	}//end testCreateReturns201OnSuccess()
+	}//end testSomebodyElsesJobsStayOutOfTheList()
 
 	/**
-	 * Test show returns 404 when job not found
+	 * Another user cannot read or report on a job; an admin can read it.
 	 *
 	 * @return void
 	 */
-	public function testShowReturns404WhenJobNotFound(): void {
-		$this->mockPrintJobSvc->method('getJob')->willReturn(null);
+	public function testAnotherUsersJobIsForbidden(): void {
+		$id = $this->as('handler-a', ['templateId' => 't'])->create()->getData()['jobId'];
 
-		$result = $this->controller->show(id: 'nonexistent');
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->as('handler-b')->show($id)->getStatus());
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->as('handler-b', ['status' => 'printed'])->updateStatus($id)->getStatus());
+		$this->assertSame(Http::STATUS_OK, $this->as('admin', [], true)->show($id)->getStatus());
 
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(Http::STATUS_NOT_FOUND, $result->getStatus());
-
-	}//end testShowReturns404WhenJobNotFound()
+	}//end testAnotherUsersJobIsForbidden()
 
 	/**
-	 * Test show returns 403 when user is not owner and not admin
+	 * A batch becomes one job; an empty batch is refused.
 	 *
 	 * @return void
 	 */
-	public function testShowReturns403WhenNotAuthorized(): void {
-		$this->mockPrintJobSvc->method('getJob')
-			->willReturn(
-				[
-					'status' => 'completed',
-					'ownerUserId' => 'other-user',
-				]
-			);
+	public function testABatchIsOneJob(): void {
+		$response = $this->as('u', ['templateId' => 't', 'items' => [['data' => []], ['data' => []], ['data' => []]]])->batch();
 
-		$this->mockGroupManager->method('isAdmin')->willReturn(false);
+		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
+		$this->assertSame(3, $response->getData()['total']);
+		$this->assertCount(1, $this->rows);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->as('u', ['templateId' => 't', 'items' => []])->batch()->getStatus());
 
-		$result = $this->controller->show(id: 'job-123');
-
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(Http::STATUS_FORBIDDEN, $result->getStatus());
-
-	}//end testShowReturns403WhenNotAuthorized()
+	}//end testABatchIsOneJob()
 
 	/**
-	 * Test show returns job data when user is owner
+	 * The print service reports back through the status endpoint.
 	 *
 	 * @return void
 	 */
-	public function testShowReturnsDataWhenUserIsOwner(): void {
-		$jobData = [
-			'status' => 'completed',
-			'ownerUserId' => 'test-user',
-			'printConfig' => [],
-		];
+	public function testThePrintServiceReportsBack(): void {
+		$id = $this->as('u', ['templateId' => 't'])->create()->getData()['jobId'];
 
-		$this->mockPrintJobSvc->method('getJob')->willReturn($jobData);
+		$response = $this->as('u', ['status' => 'printed', 'details' => ['tray' => 2]])->updateStatus($id);
 
-		$result = $this->controller->show(id: 'job-123');
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('printed', $response->getData()['status']);
+		$this->assertSame('{"tray":2}', $response->getData()['statusDetails']);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->as('u', ['status' => 'lost'])->updateStatus($id)->getStatus());
 
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(200, $result->getStatus());
-
-	}//end testShowReturnsDataWhenUserIsOwner()
+	}//end testThePrintServiceReportsBack()
 
 	/**
-	 * Test show returns data when user is admin
+	 * The download is the PDF; a job still rendering is a conflict.
 	 *
 	 * @return void
 	 */
-	public function testShowReturnsDataWhenUserIsAdmin(): void {
-		$this->mockPrintJobSvc->method('getJob')
-			->willReturn(
-				[
-					'status' => 'completed',
-					'ownerUserId' => 'other-user',
-				]
-			);
+	public function testTheDownload(): void {
+		$id = $this->as('u', ['templateId' => 't', 'filename' => 'brief.pdf'])->create()->getData()['jobId'];
 
-		$this->mockGroupManager->method('isAdmin')->willReturn(true);
+		$response = $this->as('u')->download($id);
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
 
-		$result = $this->controller->show(id: 'job-123');
+		$this->rows[$id]['status'] = 'rendering';
+		$this->assertSame(Http::STATUS_CONFLICT, $this->as('u')->download($id)->getStatus());
+		$this->assertSame(Http::STATUS_NOT_FOUND, $this->as('u')->download('nope')->getStatus());
 
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(200, $result->getStatus());
-
-	}//end testShowReturnsDataWhenUserIsAdmin()
-
-	/**
-	 * Test download returns 409 when job not completed
-	 *
-	 * @return void
-	 */
-	public function testDownloadReturns409WhenJobNotCompleted(): void {
-		$this->mockPrintJobSvc->method('getJob')
-			->willReturn(
-				[
-					'status' => 'processing',
-					'ownerUserId' => 'test-user',
-				]
-			);
-
-		$result = $this->controller->download(id: 'job-123');
-
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(Http::STATUS_CONFLICT, $result->getStatus());
-
-	}//end testDownloadReturns409WhenJobNotCompleted()
-
-	/**
-	 * Test download returns PDF binary on success
-	 *
-	 * @return void
-	 */
-	public function testDownloadReturnsPdfOnSuccess(): void {
-		$this->mockPrintJobSvc->method('getJob')
-			->willReturn(
-				[
-					'status' => 'completed',
-					'ownerUserId' => 'test-user',
-					'filename' => 'output.pdf',
-				]
-			);
-
-		$this->mockPrintJobSvc->method('loadJobPdf')
-			->willReturn('%PDF-1.4 fake content');
-
-		$result = $this->controller->download(id: 'job-123');
-
-		$this->assertInstanceOf(DataDownloadResponse::class, $result);
-
-	}//end testDownloadReturnsPdfOnSuccess()
-
-	/**
-	 * Test updateStatus returns 400 when status is invalid
-	 *
-	 * @return void
-	 */
-	public function testUpdateStatusReturns400WhenStatusInvalid(): void {
-		$this->mockPrintJobSvc->method('getJob')
-			->willReturn(
-				[
-					'status' => 'completed',
-					'ownerUserId' => 'test-user',
-				]
-			);
-
-		$this->mockRequest->method('getParam')
-			->willReturnMap(
-				[
-					['status', '', 'invalid-status'],
-					['details', null, null],
-				]
-			);
-
-		$result = $this->controller->updateStatus(id: 'job-123');
-
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(Http::STATUS_BAD_REQUEST, $result->getStatus());
-
-	}//end testUpdateStatusReturns400WhenStatusInvalid()
-
-	/**
-	 * Test updateStatus returns updated job on valid status
-	 *
-	 * @return void
-	 */
-	public function testUpdateStatusReturnsUpdatedJobOnValidStatus(): void {
-		$jobData = [
-			'status' => 'completed',
-			'ownerUserId' => 'test-user',
-		];
-
-		$this->mockPrintJobSvc->method('getJob')->willReturn($jobData);
-
-		$this->mockRequest->method('getParam')
-			->willReturnMap(
-				[
-					['status', '', 'printing'],
-					['details', null, null],
-				]
-			);
-
-		$this->mockPrintJobSvc->expects($this->once())->method('storeJobStatus');
-
-		$result = $this->controller->updateStatus(id: 'job-123');
-
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(200, $result->getStatus());
-		$this->assertEquals('printing', $result->getData()['externalStatus']);
-
-	}//end testUpdateStatusReturnsUpdatedJobOnValidStatus()
-
-	/**
-	 * Test batch returns 400 when items is empty
-	 *
-	 * @return void
-	 */
-	public function testBatchReturns400WhenItemsEmpty(): void {
-		$this->mockRequest->method('getParam')
-			->willReturnMap(
-				[
-					['templateId', '', 'template-uuid'],
-					['items', [], []],
-					['options', [], []],
-				]
-			);
-
-		$result = $this->controller->batch();
-
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertEquals(Http::STATUS_BAD_REQUEST, $result->getStatus());
-
-	}//end testBatchReturns400WhenItemsEmpty()
+	}//end testTheDownload()
 }//end class
