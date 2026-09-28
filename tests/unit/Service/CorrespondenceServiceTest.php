@@ -136,6 +136,10 @@ class CorrespondenceServiceTest extends TestCase {
 					return $appConfig;
 				}
 
+				if ($class === \OCA\Filinq\Service\Charts\SvgRasterizer::class) {
+					return $this->rasterizer;
+				}
+
 				return null;
 			});
 
@@ -150,8 +154,7 @@ class CorrespondenceServiceTest extends TestCase {
 			$appManager,
 			$this->jobList,
 			$logger,
-			$appConfig,
-			$this->rasterizer
+			$appConfig
 		);
 
 	}//end setUp()

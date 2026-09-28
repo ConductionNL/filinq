@@ -27,13 +27,16 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Charts;
 
-use OCA\Filinq\Service\Conversion\ConversionFailedException;
+use FilesystemIterator;
+use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\Conversion\SofficeProcessRunner;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 use Psr\Log\LoggerInterface;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * Replaces inline SVG with PNG before an HTML to ODF or DOCX conversion.
@@ -113,7 +116,7 @@ class SvgRasterizer {
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
 	 */
 	public function rasterizeInlineSvg(string $html, string $format): array {
-		if (preg_match_all(self::SVG_PATTERN, $html, $matches) === 0) {
+		if (preg_match(self::SVG_PATTERN, $html) !== 1) {
 			return ['html' => $html, 'warnings' => []];
 		}
 
@@ -264,9 +267,9 @@ class SvgRasterizer {
 			return;
 		}
 
-		$items = new \RecursiveIteratorIterator(
-			new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
-			\RecursiveIteratorIterator::CHILD_FIRST
+		$items = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+			RecursiveIteratorIterator::CHILD_FIRST
 		);
 		foreach ($items as $item) {
 			if ($item->isDir() === true) {

@@ -115,7 +115,7 @@ class TemplateImageResolver {
 
 		try {
 			$bytes = $file->getContent();
-		} catch (NotPermittedException|NotFoundException|LockedException) {
+		} catch (NotPermittedException|LockedException) {
 			return $this->refuse(reason: 'not found or no access');
 		}
 

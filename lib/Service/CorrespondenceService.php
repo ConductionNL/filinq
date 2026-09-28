@@ -90,7 +90,6 @@ class CorrespondenceService {
 	 * @param IJobList $jobList Nextcloud job list for async
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IAppConfig $appConfig App configuration accessor
-	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before a DOCX conversion
 	 *
 	 * @return void
 	 */
@@ -104,7 +103,6 @@ class CorrespondenceService {
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $appConfig,
-		private readonly SvgRasterizer $svgRasterizer,
 	) {
 
 	}//end __construct()
@@ -242,7 +240,7 @@ class CorrespondenceService {
 
 		// LibreOffice drops inline SVG on its way to DOCX, so charts go in as PNG.
 		if ($format === 'docx') {
-			$rasterized = $this->svgRasterizer->rasterizeInlineSvg(html: $htmlContent, format: 'docx');
+			$rasterized = $this->container->get(SvgRasterizer::class)->rasterizeInlineSvg(html: $htmlContent, format: 'docx');
 			$htmlContent = $rasterized['html'];
 			$warnings = array_merge($warnings, $rasterized['warnings']);
 		}

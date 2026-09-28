@@ -101,6 +101,17 @@ class SvgRasterizerTest extends TestCase {
 		$this->assertSame(['chart error: the chart could not be converted for docx'], $result['warnings']);
 	}
 
+	public function testATimedOutConversionIsTheSameHonestMarker(): void {
+		$this->runner->method('run')->willThrowException(
+			new \OCA\Filinq\Exception\ConversionFailedException(message: 'soffice timed out after 60 seconds.', attempts: [])
+		);
+
+		$result = $this->rasterizer()->rasterizeInlineSvg(html: $this->chart(), format: 'odf');
+
+		$this->assertSame('<span>[chart error: the chart could not be converted for odf]</span>', $result['html']);
+		$this->assertCount(1, $result['warnings']);
+	}
+
 	public function testABusyConverterIsTheSameHonestMarker(): void {
 		$this->locking->method('acquireLock')->willThrowException(new LockedException('soffice:headless:convert'));
 		$this->runner->expects($this->never())->method('run');
