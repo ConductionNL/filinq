@@ -66,7 +66,9 @@ class PeriodicDocumentJob extends TimedJob {
 	/**
 	 * Run the due schedules.
 	 *
-	 * @param mixed $argument Unused.
+	 * @param mixed $argument Job arguments. The job is registered as a bare
+	 *                        TimedJob and takes none; it is logged with the
+	 *                        summary so an unexpected one is visible.
 	 *
 	 * @return void
 	 *
@@ -79,7 +81,7 @@ class PeriodicDocumentJob extends TimedJob {
 		if ($summary['ran'] > 0 || $summary['failed'] > 0) {
 			$this->logger->info(
 				message: '[PeriodicDocumentJob] periodic documents: {ran} produced, {failed} failed',
-				context: $summary
+				context: $summary + ['argument' => $argument]
 			);
 		}
 

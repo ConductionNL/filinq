@@ -198,7 +198,7 @@ class PeriodicDocumentService {
 				$summary['ran']++;
 			} catch (Throwable $e) {
 				$summary['failed']++;
-				$this->recordFailure(schedule: $schedule, message: $e->getMessage(), at: $now);
+				$this->recordFailure(schedule: $schedule, message: $e->getMessage(), failedAt: $now);
 			}
 		}
 
@@ -323,16 +323,16 @@ class PeriodicDocumentService {
 	 *
 	 * @param array<string, mixed> $schedule The schedule.
 	 * @param string               $message  Why the run failed.
-	 * @param DateTimeImmutable    $at       When it failed.
+	 * @param DateTimeImmutable    $failedAt When it failed.
 	 *
 	 * @return void
 	 */
-	private function recordFailure(array $schedule, string $message, DateTimeImmutable $at): void {
+	private function recordFailure(array $schedule, string $message, DateTimeImmutable $failedAt): void {
 		$this->saveSchedule(
 			schedule: $schedule,
 			changes: [
 				'lastRunError' => mb_substr($message, 0, 1000),
-				'lastRunErrorAt' => $at->format(DateTimeInterface::ATOM),
+				'lastRunErrorAt' => $failedAt->format(DateTimeInterface::ATOM),
 			]
 		);
 
