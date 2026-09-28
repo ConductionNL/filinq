@@ -79,6 +79,8 @@ export default {
 		 * The assurance, in words.
 		 *
 		 * @return {string} The label.
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		levelLabel() {
 			const labels = {
@@ -97,6 +99,8 @@ export default {
 		 * Start the step-up and follow the provider's challenge.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		async start() {
 			this.busy = true
