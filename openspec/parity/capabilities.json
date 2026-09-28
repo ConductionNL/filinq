@@ -6298,11 +6298,11 @@
 			"sourceRef": "canonical accessibility",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Corrected 2026-09-26, the earlier finding is stale. Both dropzones named by openspec/changes/filinq-upload-dropzone-keyboard-access now carry a real <button type=\"button\"> that opens the file input: src/views/anonymization/AnonymizationWidget.vue:40 and src/views/widgets/AnonymizationDashboardWidget.vue:133. The other two (AnonymizationPocWidget.vue:37, BatchAnonymizationView.vue:12) expose a focusable NcButton. No full keyboard or screen-reader audit of the app was run, so the row stays partial.",
-				"change": "openspec/changes/filinq-upload-dropzone-keyboard-access",
-				"readOn": "2026-09-26"
+				"evidence": "Both dropzones carry a real <button type=\"button\"> that opens the hidden file input (src/views/anonymization/AnonymizationWidget.vue, src/views/widgets/AnonymizationDashboardWidget.vue), and tests/vitest/uploadTriggerKeyboard.spec.js audits every component with a file input so a new one without a keyboard route fails the suite. Rating stays partial: no full keyboard or screen-reader audit of the app was run.",
+				"change": "openspec/changes/archive/2026-09-28-filinq-upload-dropzone-keyboard-access",
+				"readOn": "2026-09-28"
 			},
 			"reachedOn": "/anonymization (AnonymizationWidget.vue) and the anonymization dashboard widget, both with a keyboard-operable select-files button",
 			"provider": "filinq",
