@@ -20,11 +20,11 @@ the previous document.
 - GIVEN an active weekly periodic document "Besluitenlijst" last run seven days ago
 - WHEN the hourly job runs
 - THEN a new PDF of the besluitenlijst is stored and the schedule's last run points at it
-- @e2e exclude a cron cadence is not driven in a browser; covered by PHPUnit on PeriodicDocumentJob
+- @e2e exclude a cron cadence is not driven in a browser, covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php::testTheSweepRunsWhatIsDueAndSkipsTheRest and tests/unit/BackgroundJob/PeriodicDocumentJobTest.php)
 
 #### Scenario: A broken view is visible on the schedule
 
 - GIVEN a periodic document whose saved view was deleted
 - WHEN the job runs it
 - THEN the schedule records "The view no longer exists" and last week's document is unchanged
-- @e2e exclude a cron cadence is not driven in a browser; covered by PHPUnit on PeriodicDocumentJob
+- @e2e exclude a cron cadence is not driven in a browser, covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php::testABrokenViewIsWrittenOnTheScheduleAndLastWeeksDocumentStays)
