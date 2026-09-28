@@ -2,6 +2,7 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
+import { stepUpHint } from '../../services/signerStepUp.js'
 
 export const useSigningStore = defineStore('signing', {
 	state: () => ({
@@ -13,6 +14,8 @@ export const useSigningStore = defineStore('signing', {
 		verificationResult: null,
 		loading: false,
 		error: null,
+		// The step-up hint of the last refused signature (signer-identity-rails).
+		stepUp: null,
 	}),
 	getters: {
 		pendingRequests: (state) =>
@@ -98,6 +101,7 @@ export const useSigningStore = defineStore('signing', {
 		async signDocument(requestId, signerId) {
 			this.loading = true
 			this.error = null
+			this.stepUp = null
 			try {
 				const response = await axios.post(
 					generateUrl(
@@ -109,6 +113,7 @@ export const useSigningStore = defineStore('signing', {
 			} catch (err) {
 				console.error('Failed to sign document:', err)
 				this.error = err.message
+				this.stepUp = stepUpHint(err)
 				return null
 			} finally {
 				this.loading = false

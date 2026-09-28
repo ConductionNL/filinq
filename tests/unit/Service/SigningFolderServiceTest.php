@@ -557,4 +557,34 @@ class SigningFolderServiceTest extends TestCase {
 		);
 
 	}//end testARequestTheCallerMayNotReadIsRefusedWithoutConfirmingIt()
+	/**
+	 * A document that needs a stronger identity is reported with the step-up
+	 * hint and the signer record, so the folder can offer the step-up
+	 * (signer-identity-rails REQ-DDSIR-003, task 3.3).
+	 *
+	 * @return void
+	 */
+	public function testADocumentNeedingAStrongerIdentityCarriesTheStepUpHint(): void {
+		$this->signingService->method('getRequest')->willReturnCallback(
+			fn (string $requestId, string $callerUserId = ''): array => $this->request($requestId)
+		);
+		$this->actorResolver->method('findSignerForUser')->willReturnCallback(
+			static fn (array $signerIds, string $userId): ?string => $signerIds[0]
+		);
+		$this->signingService->method('sign')->willThrowException(
+			new \OCA\Filinq\Exception\StepUpRequiredException(reason: 'insufficient', requiredAssurance: 'substantial', heldAssurance: 'low', provider: 'oidc-broker')
+		);
+
+		$result = $this->service->signSelection(requestIds: ['a'], userId: 'wethouder');
+
+		$this->assertSame(1, $result['refused']);
+		$entry = $result['results'][0];
+		$this->assertFalse($entry['signed']);
+		$this->assertSame('substantial', $entry['stepUp']['requiredAssurance'] ?? null);
+		$this->assertTrue($entry['stepUp']['required'] ?? false);
+		$this->assertNotSame('', $entry['signerId'] ?? '');
+		$this->assertSame('This document asks for a stronger identity check', $entry['reason']);
+
+	}//end testADocumentNeedingAStrongerIdentityCarriesTheStepUpHint()
+
 }//end class
