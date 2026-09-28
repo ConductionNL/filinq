@@ -7,7 +7,8 @@
  * openspec/changes/<name>/specs/ only. In a main spec one cuts the parsed
  * `## Requirements` section short, so every requirement after it is invisible
  * to `openspec validate`, `list` and `archive`, and a change against that
- * capability cannot be archived (ConductionNL/hydra#712).
+ * capability cannot be archived (ConductionNL/hydra#712). The match ignores
+ * case, as openspec's own check does.
  */
 
 import * as fs from 'fs'
@@ -15,7 +16,7 @@ import * as path from 'path'
 import { describe, expect, it } from 'vitest'
 
 const SPECS = path.resolve(__dirname, '../../openspec/specs')
-const DELTA_HEADER = /^## (ADDED|MODIFIED|REMOVED|RENAMED) Requirements\b/
+const DELTA_HEADER = /^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\b/i
 
 /**
  * Every markdown file under openspec/specs.
