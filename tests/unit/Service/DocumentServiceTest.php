@@ -155,7 +155,8 @@ class DocumentServiceTest extends TestCase {
 				$this->renderer,
 				$this->pdfService,
 				$objectResolver,
-				$logger
+				$logger,
+				$this->passThroughRasterizer()
 			),
 			$this->storageService,
 			new \OCA\Filinq\Service\GeneratedDocumentLogger(
@@ -1083,4 +1084,18 @@ class DocumentServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('fileId', $item);
 
 	}//end testSyncBulkReturnModeUnchanged()
+
+	/**
+	 * The real SvgRasterizer's method, passing HTML through unchanged.
+	 *
+	 * @return \OCA\Filinq\Service\Charts\SvgRasterizer
+	 */
+	private function passThroughRasterizer(): \OCA\Filinq\Service\Charts\SvgRasterizer {
+		$rasterizer = $this->createMock(\OCA\Filinq\Service\Charts\SvgRasterizer::class);
+		$rasterizer->method('rasterizeInlineSvg')->willReturnCallback(
+			static fn (string $html, string $format): array => ['html' => $html, 'warnings' => []]
+		);
+		return $rasterizer;
+
+	}//end passThroughRasterizer()
 }//end class

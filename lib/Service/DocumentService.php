@@ -262,6 +262,7 @@ class DocumentService {
 			format: $format,
 			pdfOptions: $pdfOptions
 		);
+		$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
 
 		$stored = $this->storeOutputIfRequested(
 			mode: $outputMode,
@@ -731,7 +732,7 @@ class DocumentService {
 			format: $format,
 			content: $content,
 			options: $plainOptions,
-			warnings: []
+			warnings: $this->renderPipeline->getLastOutputWarnings()
 		);
 
 		$record = $this->plainRendition->recordFields(
