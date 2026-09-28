@@ -14,9 +14,9 @@
  * new upload component is checked the day it is added.
  */
 
+import { parse } from '@vue/compiler-sfc'
 import * as fs from 'fs'
 import * as path from 'path'
-import { parse } from '@vue/compiler-sfc'
 import { describe, expect, it } from 'vitest'
 
 const SRC = path.resolve(__dirname, '../../src')
@@ -108,7 +108,9 @@ function hiddenByStyle(styles, classes) {
  */
 function text(el) {
 	return (el.children || [])
-		.map((c) => (c.type === 2 ? c.content : c.type === 5 ? c.content?.content : text(c)))
+		.map((c) =>
+			c.type === 2 ? c.content : c.type === 5 ? c.content?.content : text(c),
+		)
 		.join('')
 		.trim()
 }
@@ -128,7 +130,9 @@ export function auditUploadTriggers(source) {
 	const all = elements(descriptor.template.ast)
 	const problems = []
 
-	for (const input of all.filter((el) => el.tag === 'input' && attr(el, 'type') === 'file')) {
+	for (const input of all.filter(
+		(el) => el.tag === 'input' && attr(el, 'type') === 'file',
+	)) {
 		const classes = (attr(input, 'class') || '').split(/\s+/).filter(Boolean)
 		if (!hiddenByStyle(styles, classes)) {
 			continue
@@ -146,7 +150,9 @@ export function auditUploadTriggers(source) {
 		}
 		for (const button of triggers) {
 			if (attr(button, 'tabindex') === '-1') {
-				problems.push(`the button opening "${ref}" is taken out of the tab order`)
+				problems.push(
+					`the button opening "${ref}" is taken out of the tab order`,
+				)
 			}
 			if (text(button) === '' && attr(button, 'aria-label') === null) {
 				problems.push(`the button opening "${ref}" has no accessible name`)
@@ -156,7 +162,9 @@ export function auditUploadTriggers(source) {
 
 	for (const zone of all.filter((el) => on(el, 'drop') !== null)) {
 		if (on(zone, 'click') !== null) {
-			problems.push('a drop zone carries its own click handler, so the picker can open twice')
+			problems.push(
+				'a drop zone carries its own click handler, so the picker can open twice',
+			)
 		}
 	}
 
