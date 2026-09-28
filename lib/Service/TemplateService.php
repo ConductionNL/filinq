@@ -64,6 +64,12 @@ class TemplateService {
 	 * @param TemplateVersionService $versionService Service for template version management
 	 * @param IUserSession $userSession User session for getting current user
 	 * @param IAppConfig $config App-config reader for admin-tunable knobs
+	 * @param TemplateSlugResolver|null $slugResolver Slug lookup + duplicate-slug guard,
+	 *                                                extracted to its own class to keep this
+	 *                                                one under the complexity threshold.
+	 *                                                Nullable only so existing test doubles
+	 *                                                built before this field existed keep
+	 *                                                constructing without change.
 	 *
 	 * @return void
 	 */
@@ -74,6 +80,7 @@ class TemplateService {
 		private readonly TemplateVersionService $versionService,
 		private readonly IUserSession $userSession,
 		private readonly IAppConfig $config,
+		private readonly ?TemplateSlugResolver $slugResolver = null,
 	) {
 
 	}//end __construct()
@@ -208,6 +215,14 @@ class TemplateService {
 
 		if (empty($data['content']) === true) {
 			throw new Exception(message: 'Content is required', code: 400);
+		}
+
+		if (empty($data['slug']) === false && $this->slugResolver !== null) {
+			$this->slugResolver->assertAvailable(
+				namespace: $data['namespace'],
+				slug: $data['slug'],
+				tenantId: ($data['tenantId'] ?? null)
+			);
 		}
 
 		$objectService = $this->getObjectService();
@@ -364,6 +379,7 @@ class TemplateService {
 
 		return $result['results'];
 	}//end getTemplatesByNamespace()
+
 
 	/**
 	 * Duplicate a template

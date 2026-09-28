@@ -1,0 +1,882 @@
+[
+  {
+    "row": "woo-anonymise",
+    "matrix": "opencatalogi",
+    "decision": "existing",
+    "reason": "opencatalogi matrix row, owned by filinq. Open change woo-publicatie-pipeline covers it: REQ-DDWPP-002 makes a document ready for publication only when every detected entity is reviewed, and REQ-DDWPP-009 chains anonymise, consent and publish from the document. The anonymisation itself is built in filinq; opencatalogi consumes the redacted copy through the handoff of REQ-DDWPP-005.",
+    "change": "woo-publicatie-pipeline",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "con-api",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate it yes (validsign, paperless-ngx, decos-join). Specified for the missing half: an OpenAPI document that covers every route, published with the app, where today openapi.json documents 2 of about 150 routes.",
+    "change": "connect-openapi-documentation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "con-webhook",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate it yes (validsign, paperless-ngx).",
+    "change": "connect-document-webhooks",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "con-zgw",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change zgw-document-bridge covers it: a staging register that integriq (OpenConnector) syncs ZGW Documenten API and StUF-ZDS informatieobjecten into (REQ-DDZGW-001, 002) and a write-back of the redacted copy as a new informatieobject (REQ-DDZGW-005).",
+    "change": "zgw-document-bridge",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-av",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, and detection is outside the core area (intake and generate). The archived changes ocr-document-scanning and enhanced-anonymization kept audio and video out of their scope.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-business",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only datamask rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-faces",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. image-redaction redacts text found in images, not faces or plates.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-handwriting",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. The archived ocr-document-scanning change notes Tesseract reads printed text only.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-measure",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-on-upload",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. The archived ocr-document-scanning change kept OCR on upload out of its scope.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-overview",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-scans",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change ocr-trigger-surface covers it: REQ-DDOCR-003 runs OCR as a fallback inside the anonymisation extract pipeline when a PDF or image has no text layer, and REQ-DDOCR-004 hands the recognised text to OpenRegister detection.",
+    "change": "ocr-trigger-surface",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "det-structured",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. The archived pdf-conversion-service and anonymise-output-as-pdf-by-default changes kept spreadsheets out of their scope.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "gen-attended",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (generate, the area of the matrix's first 30 rows).",
+    "change": "generate-draft-and-attended-edit",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "gen-destination",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "gen-draft",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (generate, the area of the matrix's first 30 rows).",
+    "change": "generate-draft-and-attended-edit",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "gen-plain-language",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred. The engine is built in documents-in-and-out-of-the-building; the missing half is a filinq screen.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "gen-store-case",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only smartdocuments rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-ack",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-acknowledge-and-stamp",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-basisreg",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-base-registry-enrichment",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-deadline",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-worklist-deadline-and-duplicates",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-duplicate",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-worklist-deadline-and-duplicates",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-email-suggest",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change inbound-auto-classification covers it: REQ-DDIAC-004 sets a suggested dossier on an inbound document from an explicit case reference or the correspondent, and files it only when a person confirms. email-ingestion puts mail in the inbound path; its design lists the suggestion as a follow-up, which this change is.",
+    "change": "inbound-auto-classification",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-mail-archive",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-mailbox-archive-import",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-number",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred. Numbering belongs to documents-in-and-out-of-the-building (REQ-DIO-01); the per-unit series waits on the platform sequence.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-ocr",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change inbound-documents-and-the-worklist covers the missing half: REQ-IDW-06 writes the recognised text of a scan to the document's searchable content so a scan is found by its words (task 4.2 open). ocr-trigger-surface lists searchable PDF output as its own non-goal, so this is the change that owns it.",
+    "change": "inbound-documents-and-the-worklist",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-paper-archive",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-paper-archive-digitisation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-party",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-pdf-password",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a changelog demand row (https://github.com/paperless-ngx/paperless-ngx/pull/11656) plus one competitor yes (paperless-ngx); core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-pdf-password-removal",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-route",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only paperless-ngx rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-scan-profile",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-scan-split",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change scan-intake-with-separator-sheets covers the missing half: task 3.2 points the watched-folder job at ScanBatchService::receive() and task 2.2 adds the print action on the intake page, both open. The split itself is built.",
+    "change": "scan-intake-with-separator-sheets",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "in-stamp",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: core area (intake, the area of the matrix's first 30 rows).",
+    "change": "intake-acknowledge-and-stamp",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "op-integrity",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only paperless-ngx rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rec-born-ready",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only decos-join rates it yes, no demand row, and records is outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rec-certified",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only decos-join rates it yes, no demand row, outside the core area. A certification is an audit of the organisation and the product together, not a capability to specify.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rec-dossier-index",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rec-download-alert",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change documents-in-and-out-of-the-building covers it: REQ-DIO-06 and REQ-DIO-07, task 4.1 and 4.2 still marked in progress. DocumentDownloadRecorder is built with no call site, so the open tasks are the wiring.",
+    "change": "documents-in-and-out-of-the-building",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-ai-guard",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only decos-join rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-dossier",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-folder",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-formats",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-four-eyes",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-link",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-manual",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change anonymization-review-workbench covers it: REQ-DDARW-003 lets a reviewer select text in the preview to create a manual entity. OpenRegister already has the endpoint (POST /api/files/{fileId}/manual-entities).",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-one-click",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-pdf-out",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-profiles",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only datamask rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-pseudonym",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change reversible-pseudonymization covers it: REQ-DDRPS-003 adds a mode that keeps OpenRegister's readable, consistent placeholders per entity instead of blacking them out.",
+    "change": "reversible-pseudonymization",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-reversible",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change reversible-pseudonymization covers it: an encrypted placeholder map kept apart from the document (REQ-DDRPS-001) and an audit-logged, group-gated restore (REQ-DDRPS-004, 005).",
+    "change": "reversible-pseudonymization",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-review",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Built, and dark since 18 September by live defect filinq#1178: RedactionOutputGuard refuses every write until a review mark exists, and no screen calls the only route that sets it (POST api/redaction/documents/{fileId}/checked). The screen that sets the mark is specified in open change anonymization-review-workbench (REQ-DDARW-007, 008). That change names a documentReview object and /api/review/{fileId}/check while the built gate reads redactionReviewMark, so the two need to be reconciled when it is built.",
+    "change": "anonymization-review-workbench",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-sample",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change redaction-at-scale covers it: REQ-DDRAS-007 routes an admin-configured random sample of each batch to human review.",
+    "change": "redaction-at-scale",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "red-scheduled",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. redaction-at-scale runs batches in cron work units but has no office-hours window.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-approve",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-bundle",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a changelog demand row (https://github.com/paperless-ngx/paperless-ngx/pull/11682) plus one competitor yes (paperless-ngx).",
+    "change": "share-document-links",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-channel",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-cloud",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-email",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only decos-join rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-letter",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only decos-join rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-link",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "One competitor rates it yes (paperless-ngx), which alone would defer it, but a time-limited link is the same mechanism as the bundle link of sh-bundle (a bundle may hold one document), so it is specified in the same change rather than deferred.",
+    "change": "share-document-links",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-notify",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-portal",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only decos-join rates it yes, no demand row, outside the core area. portal-contribution gives the portal the signer and data-subject views, not a list per request.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-post-register",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change documents-in-and-out-of-the-building covers the missing half: task 2.2 offers the open post list per unit as a leaf (REQ-DIO-02), still open. The three reads are built.",
+    "change": "documents-in-and-out-of-the-building",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sh-revoke",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "One competitor rates it yes (paperless-ngx), which alone would defer it, but withdrawing a shared link is part of the same link mechanism as sh-bundle, so it is specified in the same change rather than deferred.",
+    "change": "share-document-links",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-accept-only",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a changelog demand row (https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23) plus one competitor yes (validsign).",
+    "change": "signing-accept-only-recipient",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-cancel",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change signing-cancellation covers it: the cancel reaches the provider through SigningCancellationService, which is built but has no caller. The row is rated no because a ValidSign signer can still sign a request the sender withdrew.",
+    "change": "signing-cancellation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-containers",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "A featureRequest demand row (https://github.com/paperless-ngx/paperless-ngx/discussions/13604) but no competitor rates it yes, and signing is outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-field-validation",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a changelog demand row (https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-23) plus one competitor yes (validsign).",
+    "change": "signing-field-validation",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-in-generation",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only smartdocuments rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-in-person",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only validsign rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-levels",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only validsign rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-mandate",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes (validsign partial), no demand row, outside the core area. signing-folder-across-cases REQ-SFC-04 keeps mandate rules per document type, declared by the consuming app; a personal delegation for a period is not specified anywhere.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-reminders",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only validsign rates it yes). A signer with only an e-mail address gets no reminder; portaliq mints no signerEmail either (portaliq issue being filed).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "sig-trust-list",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tpl-from-doc",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tpl-retire",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tpl-test",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only smartdocuments rates it yes).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "tpl-text-blocks",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only smartdocuments rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-case-list",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change case-documents-and-the-flat-list covers the missing half: task 2.2 renders the leaf with CnFilesBrowser and the columns files-browser-columns provides (REQ-CDF-01), which gives the sortable columns; still open.",
+    "change": "case-documents-and-the-flat-list",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-final-rule",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-fulltext",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 3 competitors rate it yes (zylab, paperless-ngx, decos-join).",
+    "change": "work-content-search",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-mine",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-ml-fields",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: partial and built, with a featureRequest demand row (https://github.com/paperless-ngx/paperless-ngx/discussions/6932) for the missing half. Specified for the missing half: a model fills the fields a document type or record schema declares, not only the fixed invoice fields for one consumer.",
+    "change": "extraction-model-filled-fields",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-multi-link",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-notes",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: 2 competitors rate it yes (zylab, paperless-ngx).",
+    "change": "work-document-notes",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-office-edit",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. edit-through-the-open-editor bridges into an editor that is already open, not a filinq editing screen.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-page-edit",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only paperless-ngx rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-review-due",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "wk-watermark",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. The archived pdf-conversion-service change kept watermarks out of its scope.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-agreement",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred. The gate is built in redaction-and-what-leaves-the-building; no screen calls it.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-algorithm",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only datamask rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-consent",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-metadata-gaps",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/407973).",
+    "change": "woo-metadata-worklist",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-page-numbers",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only zylab rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-pub-list",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Partial and built, no demand row and fewer than two competitors rate it yes, so the missing half is deferred (only zylab rates it yes). The composer is built in redaction-and-what-leaves-the-building; no screen calls it.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-sar",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "No competitor rates it yes, no demand row, outside the core area. It would build on entity-search and woo-request-workflow, both open.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-unpublish-destroyed",
+    "matrix": "filinq",
+    "decision": "existing",
+    "reason": "Open change woo-publicatie-pipeline covers it: REQ-DDWPP-007 records the destruction date from the source and sets retentionExpiresAt and retentionNote on the opencatalogi publication, which opencatalogi's retention job then takes offline.",
+    "change": "woo-publicatie-pipeline",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "woo-withheld-page",
+    "matrix": "filinq",
+    "decision": "defer",
+    "reason": "Only zylab rates it yes, no demand row, outside the core area.",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "1.4",
+    "matrix": "dossiq",
+    "decision": "existing",
+    "reason": "dossiq matrix row, owned by filinq. Open change document-intake-inbox covers it: the waiting list, assign and reject are built (filinq#1119, #1132); the leaf dossiq places is task 3.2, still open. competitor-parity-2026-09 records the same match.",
+    "change": "document-intake-inbox",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "1.6",
+    "matrix": "dossiq",
+    "decision": "existing",
+    "reason": "dossiq matrix row, owned by filinq. Open change scan-intake-with-separator-sheets covers it (REQ-SCI-01 to 04): the split at separator sheets is built, the watched folder (task 3.2) and the print dialog (task 2.2) are open. competitor-parity-2026-09 records the same match.",
+    "change": "scan-intake-with-separator-sheets",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "4.14",
+    "matrix": "dossiq",
+    "decision": "existing",
+    "reason": "dossiq matrix row, owned by filinq. Open change merge-documents-to-pdf covers the merge (REQ-DMG-01 to 04, the leaf and dialog tasks 3.1 and 3.2 open); its proposal places copy to another case with the files leaf's existing copy between objects, not in filinq.",
+    "change": "merge-documents-to-pdf",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "exp-receipt-photo",
+    "matrix": "shillinq",
+    "decision": "build",
+    "reason": "shillinq matrix row, owned by filinq. Build: 4 competitors rate it yes (exact-online, moneybird, snelstart, odoo). Specified for the missing half: a phone-friendly capture that takes the photo and starts the read, where today no filinq or shillinq screen can take one.",
+    "change": "extraction-receipt-photo-and-invoice-agent",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "plt-ai-fill",
+    "matrix": "shillinq",
+    "decision": "build",
+    "reason": "shillinq matrix row, owned by filinq. Build: 2 competitors rate it yes (moneybird, odoo). Specified for the missing half: the fields of any declared record schema filled from an attached file by a model, not only purchase invoices and receipts; the free-prompt half belongs to the assistant (hermiq).",
+    "change": "extraction-model-filled-fields",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "pur-ai-agent",
+    "matrix": "shillinq",
+    "decision": "build",
+    "reason": "shillinq matrix row, owned by filinq. Build: 2 competitors rate it yes (exact-online, moneybird). Specified for the missing half: per-field confidence and an unattended verdict on each extraction, so shillinq can let a trusted supplier invoice pass without a person; the booking itself stays shillinq.",
+    "change": "extraction-receipt-photo-and-invoice-agent",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "fil-employer-statement",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "humaniq matrix row, owned by filinq. Build: 3 competitors rate it yes (afas, visma-raet, hr2day). Specified for the missing half: the standard employer statement template that humaniq discovers in namespace hrmq, category werkgeversverklaring, where today every request is skipped for want of a template.",
+    "change": "templates-employer-statement",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "td-dms-link",
+    "matrix": "humaniq",
+    "decision": "build",
+    "reason": "humaniq matrix row, owned by filinq. Build: a tender demand row (https://www.tenderned.nl/aankondigingen/overzicht/415705). Specified for the missing half: generated documents stored in the organisation's case system over the ZGW Documenten API, not only in Nextcloud Files.",
+    "change": "generate-store-in-case-system",
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "rec-confidential",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Owned by nextcloud/files_confidential: confidentiality labels and access by label are the Nextcloud Files Confidential app, outside the fleet; decided no for filinq per the openspec pass addendum. filinq reads the label (archived change 2026-07-23-files-confidential-labels).",
+    "change": null,
+    "decidedOn": "2026-09-27"
+  },
+  {
+    "row": "agenda-paper-watermark",
+    "matrix": "decidiq",
+    "decision": "build",
+    "reason": "PDF page stamping, a half the merged decidiq change agenda-paper-watermark depends on (row decidiq age-19, diligent-boards yes): decidiq serves a confidential paper only stamped with the reader's name and the date and refuses while filinq cannot stamp. No filinq change offers a stamp on every page; intake-acknowledge-and-stamp stamps page 1 of an arrived document only. filinq's own row wk-watermark stays deferred for its sharing screen.",
+    "change": "work-stamp-text-on-every-page",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "surfaces-document-house-style",
+    "matrix": "thematiq",
+    "decision": "build",
+    "reason": "Seeding and refreshing filinq's huisstijl from thematiq's document house style profile, a half the merged thematiq change surfaces-document-house-style depends on. Row thematiq sur-generated-documents has tender demand (TenderNed 404703, 415897, 298070). loadHuisstijl() applies no house style without an explicit id, and no filinq change reads the thematiq profile.",
+    "change": "templates-house-style-from-thematiq",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "people-esign-hr-documents",
+    "matrix": "humaniq",
+    "decision": "existing",
+    "reason": "E-sign request and status contract. filinq-signing-events (9 of 9 tasks) ships DocumentSigningRequestedEvent with a result slot and SigningConcludedEvent on every terminal outcome, which answers humaniq's open question on subscribing instead of polling; one-signing-rail-for-the-fleet makes it the only door, so humaniq's FilinqSigningGateway should dispatch the event rather than call SigningService duck-typed. createRequest() still needs a session user, which humaniq's user-started request has. A signer without a Nextcloud account is portal-signing-actions (11 of 15) and signer-identity-rails.",
+    "change": "filinq-signing-events",
+    "decidedOn": "2026-09-28"
+  }
+]
