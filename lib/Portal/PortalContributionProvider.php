@@ -399,6 +399,13 @@ class PortalContributionProvider {
 			// all gated `minTrust: substantial`. Handled by
 			// `PortalSigningReceiverController` +
 			// `Portal\PortalAssertionVerifier`.
+			//
+			// `sign` and `decline` are endpoint ROW actions in portaliq's
+			// contract (portaliq#804 / #833): `rowField` is the body key the
+			// portal stamps the proven row's id under, and `scopeClaim` rides
+			// in the signed X-Portal-Subject assertion. The receiver reads
+			// exactly `signingRequestId` and `signerEmail`; without these two
+			// keys portaliq drops the row buttons and the receiver refuses.
 			'actions' => [
 				[
 					'id' => 'sign',
@@ -406,6 +413,8 @@ class PortalContributionProvider {
 					'endpoint' => self::SIGN_ENDPOINT,
 					'method' => 'POST',
 					'minTrust' => self::SIGNING_MIN_TRUST,
+					'rowField' => 'signingRequestId',
+					'scopeClaim' => 'signerEmail',
 				],
 				[
 					'id' => 'decline',
@@ -413,6 +422,8 @@ class PortalContributionProvider {
 					'endpoint' => self::DECLINE_ENDPOINT,
 					'method' => 'POST',
 					'minTrust' => self::SIGNING_MIN_TRUST,
+					'rowField' => 'signingRequestId',
+					'scopeClaim' => 'signerEmail',
 				],
 				[
 					'id' => 'viewDocument',
