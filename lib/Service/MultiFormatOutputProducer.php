@@ -111,6 +111,11 @@ class MultiFormatOutputProducer {
 			throw new Exception(message: 'options.userId is required to store generated documents in Files', code: 400);
 		}
 
+		if (isset($options['templateVersion']) === true) {
+			// The formats share one head render; a pin it ignored would claim a version it did not render.
+			throw new Exception(message: 'options.templateVersion cannot be combined with options.formats yet; use options.format', code: 400);
+		}
+
 		$template = $this->templates->getTemplate(id: $templateId);
 		if ($this->plainRendition?->counterpartOf(template: $template) !== null) {
 			// A formal letter and its plain counterpart are filed together or not at all.
@@ -297,7 +302,7 @@ class MultiFormatOutputProducer {
 		);
 
 		return $this->auditLog->log(
-			template: ['id' => $template['id'], 'version' => (int) ($template['version'] ?? 1), 'name' => (string) ($template['name'] ?? '')],
+			template: ['id' => $template['id'], 'version' => ($template['version'] ?? null), 'name' => (string) ($template['name'] ?? '')],
 			dataRefs: $dataRefs,
 			format: $formats[0],
 			outcome: [

@@ -207,6 +207,7 @@ class MultiFormatOutputProducerTest extends TestCase {
 			'not a list' => [['formats' => 'pdf']],
 			'unknown format' => [['formats' => ['pdf', 'xlsx']]],
 			'no user' => [['formats' => ['pdf'], 'userId' => '']],
+			'pinned version' => [['formats' => ['pdf'], 'templateVersion' => 2]],
 		];
 	}
 

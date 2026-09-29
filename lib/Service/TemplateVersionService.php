@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use Exception;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -213,6 +215,137 @@ class TemplateVersionService {
 
 		return $result['total'] + 1;
 	}//end getNextVersionNumber()
+
+	/**
+	 * Find the stored snapshot of one version of a template, by its number.
+	 *
+	 * Snapshot N holds the content version N had while it was the head. The
+	 * head itself has no snapshot: it is the template object.
+	 *
+	 * @param string $templateId The UUID of the parent template
+	 * @param int    $number     The version number
+	 *
+	 * @return array|null The snapshot, or null when the chain has no such version
+	 *
+	 * @throws Exception If the chain cannot be read
+	 *
+	 * @spec openspec/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
+	 */
+	public function findVersionByNumber(string $templateId, int $number): ?array {
+		// The chain is read whole and matched here: a `version` search parameter
+		// could be read by OpenRegister as its own `@self.version` metadata.
+		foreach (($this->getVersions(templateId: $templateId, limit: 1000)['results'] ?? []) as $row) {
+			$row = $this->toArray(row: $row);
+			if ((int) ($row['version'] ?? 0) === $number && ($row['templateId'] ?? null) === $templateId) {
+				return $row;
+			}
+		}
+
+		return null;
+	}//end findVersionByNumber()
+
+	/**
+	 * Which version of a template was the head at a moment.
+	 *
+	 * 🔑 A snapshot is written when its version is REPLACED, so snapshot N's
+	 * creation time is the moment version N stopped being the head, and version
+	 * N+1 started. Version 1 started when the template itself was created. The
+	 * version in force at a moment is therefore the lowest N whose snapshot was
+	 * created after it, or the head when every snapshot is older. A moment
+	 * before the template existed has no version, and this method says so
+	 * rather than rounding to the oldest one.
+	 *
+	 * @param string            $templateId The UUID of the parent template
+	 * @param DateTimeInterface $moment     The moment asked about
+	 *
+	 * @return int|null The version number, or null when none was in force or the chain cannot say
+	 *
+	 * @throws Exception If the chain cannot be read
+	 *
+	 * @spec openspec/specs/template-version-provenance/spec.md#requirement-filinq-answers-which-version-was-in-force-on-a-date-req-ddtvp-004
+	 */
+	public function versionInForceAt(string $templateId, DateTimeInterface $moment): ?int {
+		$began = $this->templateCreatedAt(templateId: $templateId);
+		if ($began === null || $moment < $began) {
+			return null;
+		}
+
+		$chain = array_map(
+			fn ($row): array => $this->toArray(row: $row),
+			($this->getVersions(templateId: $templateId, limit: 1000)['results'] ?? [])
+		);
+		usort($chain, static fn (array $a, array $b): int => (int) $a['version'] <=> (int) $b['version']);
+
+		foreach ($chain as $snapshot) {
+			$ended = $this->createdAt(object: $snapshot);
+			if ($ended === null) {
+				return null;
+			}
+
+			if ($moment < $ended) {
+				return (int) $snapshot['version'];
+			}
+		}
+
+		return (count($chain) + 1);
+	}//end versionInForceAt()
+
+	/**
+	 * When the template object itself was created.
+	 *
+	 * @param string $templateId The UUID of the template
+	 *
+	 * @return DateTimeImmutable|null The creation moment, or null when unknown
+	 */
+	private function templateCreatedAt(string $templateId): ?DateTimeImmutable {
+		$config = $this->registerResolver->getRegisterAndSchema();
+		$template = $this->getObjectService()->find(
+			id: $templateId,
+			register: $config['register'],
+			schema: $config['schema']
+		);
+
+		if (empty($template) === true) {
+			return null;
+		}
+
+		return $this->createdAt(object: $this->toArray(row: $template));
+	}//end templateCreatedAt()
+
+	/**
+	 * Read an object's creation moment from its `@self` block.
+	 *
+	 * @param array $object The serialised object
+	 *
+	 * @return DateTimeImmutable|null The moment, or null when absent or unreadable
+	 */
+	private function createdAt(array $object): ?DateTimeImmutable {
+		$created = ($object['@self']['created'] ?? null);
+		if (is_string($created) === false || $created === '') {
+			return null;
+		}
+
+		try {
+			return new DateTimeImmutable($created);
+		} catch (Exception $e) {
+			return null;
+		}
+	}//end createdAt()
+
+	/**
+	 * Serialise an OpenRegister result row to an array.
+	 *
+	 * @param mixed $row An ObjectEntity or an array
+	 *
+	 * @return array The row as an array
+	 */
+	private function toArray(mixed $row): array {
+		if (is_object($row) === true && method_exists(object_or_class: $row, method: 'jsonSerialize') === true) {
+			return $row->jsonSerialize();
+		}
+
+		return (array) $row;
+	}//end toArray()
 
 	/**
 	 * Restore a template to a previous version

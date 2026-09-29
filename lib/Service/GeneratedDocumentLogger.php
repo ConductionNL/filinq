@@ -60,7 +60,7 @@ class GeneratedDocumentLogger {
 	 * outcome are each passed as one cohesive bag rather than as a dozen loose
 	 * scalars.
 	 *
-	 * @param array $template The template identity: {id: string, version: int, name: string}
+	 * @param array $template The template identity: {id: string, version: int|null, name: string}; a null version is left out of the entry
 	 * @param array $dataRefs The data references used
 	 * @param string $format The output format
 	 * @param array $outcome The generation outcome: {status: string, warnings: string[],
@@ -108,6 +108,12 @@ class GeneratedDocumentLogger {
 				'fileId' => ($outcome['fileId'] ?? null),
 				'filePath' => ($outcome['filePath'] ?? null),
 			] + $extra;
+
+			// An unknown template version is left out, never written as a number
+			// (REQ-DDTVP-002): a default that reads as a fact is the defect.
+			if ($entry['templateVersion'] === null) {
+				unset($entry['templateVersion']);
+			}
 
 			$result = $objectService->saveObject(
 				object: $entry,
