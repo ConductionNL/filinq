@@ -47,6 +47,7 @@ use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\ProhibitionGateService;
 use OCA\Filinq\Service\ProhibitionPolicyService;
+use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionIrreversibilityVerifier;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
@@ -154,6 +155,7 @@ trait BuildsAnonymizationService {
 			prohibitionPolicy: $prohibitionPolicy,
 			anonymizeRunner: $anonymizeRunner,
 			reviewGuard: ($deps['reviewGuard'] ?? $this->reviewingGuardThatAllows()),
+			ocrFallback: ($deps['ocrFallback'] ?? $this->ocrFallbackThatStandsAside()),
 			backendState: ($deps['backendState'] ?? DetectionStates::clientOver(
 				DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex')
 			))
@@ -175,6 +177,17 @@ trait BuildsAnonymizationService {
 	 *
 	 * @return RedactionOutputGuard The permissive guard.
 	 */
+	private function ocrFallbackThatStandsAside(): OcrExtractionFallback {
+		$fallback = $this->getMockBuilder(OcrExtractionFallback::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['afterExtraction'])
+			->getMock();
+		$fallback->method('afterExtraction')->willReturn([]);
+
+		return $fallback;
+
+	}//end ocrFallbackThatStandsAside()
+
 	private function reviewingGuardThatAllows(): RedactionOutputGuard {
 		$guard = $this->getMockBuilder(RedactionOutputGuard::class)
 			->disableOriginalConstructor()

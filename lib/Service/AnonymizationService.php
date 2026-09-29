@@ -42,6 +42,7 @@ use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
+use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -102,6 +103,8 @@ class AnonymizationService {
 	 *                                          refusal.
 	 * @param AnonymiserBackendStateClient $backendState OpenRegister's detection state, read
 	 *                                                   once per run: no live detector, no file.
+	 * @param OcrExtractionFallback $ocrFallback Runs OCR on a scan OpenRegister extracted no
+	 *                                           text from, and flags what detection missed.
 	 *
 	 * @return void
 	 *
@@ -119,6 +122,7 @@ class AnonymizationService {
 		private readonly DocumentAnonymizeRunner $anonymizeRunner,
 		private readonly RedactionOutputGuard $reviewGuard,
 		private readonly AnonymiserBackendStateClient $backendState,
+		private readonly OcrExtractionFallback $ocrFallback,
 	) {
 
 	}//end __construct()
@@ -199,6 +203,7 @@ class AnonymizationService {
 	 * @throws Exception If extraction or detection fails
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.3
 	 */
 	private function runExtraction(int $fileId, array $options): array {
 		$force = $options['force'];
@@ -220,6 +225,15 @@ class AnonymizationService {
 			// detection is disabled here.
 			$entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
 			$textExtractor->extractFile($fileId, $force, $entityTypes);
+
+			// OpenRegister does no OCR, so a scan comes back without text and
+			// would read as "nothing to redact". The fallback runs OCR for it
+			// and says on the result when detection could not see the scan.
+			$ocrFields = $this->ocrFallback->afterExtraction(
+				fileId: $fileId,
+				textExtractor: $textExtractor,
+				force: $force
+			);
 
 			$this->logger->debug(
 				'Text extracted from file',
@@ -261,11 +275,14 @@ class AnonymizationService {
 				entityRelationMapper: $entityRelationMapper
 			);
 
-			return $this->buildExtractionResult(
-				fileId: $fileId,
-				normalized: $normalized,
-				entityCount: count($entities),
-				dictionaryWarning: $dictionaryWarning
+			return array_merge(
+				$this->buildExtractionResult(
+					fileId: $fileId,
+					normalized: $normalized,
+					entityCount: count($entities),
+					dictionaryWarning: $dictionaryWarning
+				),
+				$ocrFields
 			);
 		} catch (Exception $e) {
 			$this->logger->error(

@@ -375,8 +375,15 @@ class ConfigurationService {
  * @link     https://www.filinq.app
  */
 class TextExtractionService {
-	public function extractFile(int $fileId, bool $force = false): void {
+	public function extractFile(int $fileId, bool $forceReExtract = false, ?array $entityTypes = null): void {
 	}//end extractFile()
+
+	/**
+	 * Mirrors OpenRegister's getExtractedText(int $fileId): ?string at development 910471dc.
+	 */
+	public function getExtractedText(int $fileId): ?string {
+		return null;
+	}//end getExtractedText()
 }//end class
 
 /**
@@ -1960,6 +1967,15 @@ interface IRootFolder {
 	 * @return \OCP\Files\Folder
 	 */
 	public function getUserFolder(string $userId): \OCP\Files\Folder;
+
+	/**
+	 * The first node with this id anywhere (the real IRootFolder has it through Folder).
+	 *
+	 * @param int $id The file id
+	 *
+	 * @return \OCP\Files\Node|null
+	 */
+	public function getFirstNodeById(int $id): ?\OCP\Files\Node;
 }//end interface
 
 // ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.
