@@ -122,6 +122,8 @@ class DocumentRenderPipeline {
 	 * @param array $options The request options
 	 *
 	 * @return array The merged PDF options
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
 	 */
 	public function buildPdfOptions(array $template, ?array $huisstijl, array $options): array {
 		$pdfOptions = [
