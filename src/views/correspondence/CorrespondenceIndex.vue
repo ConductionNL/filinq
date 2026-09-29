@@ -46,14 +46,27 @@ SPDX-License-Identifier: EUPL-1.2
 					<label
 						v-for="fmt in formats"
 						:key="fmt.value"
-						class="correspondence-index__radio-label">
+						class="correspondence-index__radio-label"
+						:class="{ 'correspondence-index__radio-label--disabled': fmt.disabled }"
+						:title="fmt.reason">
 						<input
 							v-model="store.format"
 							type="radio"
-							:value="fmt.value" />
+							:value="fmt.value"
+							:disabled="fmt.disabled"
+							:aria-describedby="fmt.disabled ? 'corr-format-reason-' + fmt.value : undefined" />
 						{{ fmt.label }}
+						<span
+							v-if="fmt.disabled"
+							:id="'corr-format-reason-' + fmt.value"
+							class="correspondence-index__format-reason">
+							({{ fmt.reason }})
+						</span>
 					</label>
 				</div>
+				<p v-if="formatsError" class="correspondence-index__format-reason">
+					{{ formatsError }}
+				</p>
 			</div>
 
 			<!-- Case reference -->
@@ -264,6 +277,7 @@ import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { fetchFormatMatrix, formatOptions, usableFormat } from '../../services/formatMatrix.js'
 import { buildPrintRequest } from '../../services/printJobs.js'
 import { useCorrespondenceStore } from '../../store/modules/correspondence.js'
 
@@ -284,13 +298,13 @@ export default {
 			batchSchema: '',
 			printing: false,
 			printResult: null,
-			formats: [
-				{ value: 'pdf', label: t('filinq', 'PDF') },
-				{ value: 'docx', label: t('filinq', 'DOCX (editable)') },
-				{ value: 'html', label: t('filinq', 'HTML') },
-				{ value: 'email', label: t('filinq', 'Email body') },
-			],
+			formats: [],
+			formatsError: '',
 		}
+	},
+
+	async mounted() {
+		await this.loadFormats()
 	},
 
 	computed: {
@@ -332,6 +346,24 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Offer the formats the server can make now.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+		 */
+		async loadFormats() {
+			try {
+				this.formats = formatOptions(await fetchFormatMatrix('correspondence'))
+				this.store.format = usableFormat(this.store.format, this.formats)
+				this.formatsError = ''
+			} catch (e) {
+				this.formats = []
+				this.formatsError = t('filinq', 'Could not load the output formats this server can make.')
+			}
+		},
+
 		t,
 
 		/**
@@ -446,6 +478,15 @@ export default {
 	display: flex;
 	gap: 16px;
 	flex-wrap: wrap;
+}
+
+.correspondence-index__radio-label--disabled {
+	color: var(--color-text-maxcontrast);
+}
+
+.correspondence-index__format-reason {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
 }
 
 .correspondence-index__radio-label {

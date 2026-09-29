@@ -1,5 +1,10 @@
 {
     "translations": {
+        "ODT (editable)": "ODT (bewerkbaar)",
+        "LibreOffice is not available on this server": "LibreOffice is niet beschikbaar op deze server",
+        "Could not load the output formats this server can make.": "De uitvoerformaten die deze server kan maken konden niet worden geladen.",
+        "Outputs": "Uitvoer",
+        "Elk formaat dat één generatie opleverde (options.formats): formaat, Nextcloud bestand-ID, status en de fout wanneer dat formaat mislukte. Ontbreekt bij een generatie in één formaat.": "Elk formaat dat één generatie opleverde (options.formats): formaat, Nextcloud bestand-ID, status en de fout wanneer dat formaat mislukte. Ontbreekt bij een generatie in één formaat.",
         "Accessibility checks": "Toegankelijkheidscontroles",
         "No tags": "Geen tags",
         "No language": "Geen taal",

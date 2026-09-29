@@ -10,7 +10,9 @@ status: in-progress
 
 ## Purpose
 Converts Nextcloud files to PDF/A-3b through a `PdfConversionService` that walks a cascade of conversion backends in order, falling through to the next on failure. It accepts any Nextcloud file, leaves the source unchanged, and on total failure throws a typed exception carrying a per-backend report of availability, supported types, and the reason each backend did not apply. This gives Filinq a single, archival-grade PDF conversion entry point usable by anonymisation, comparison, and summary flows.
+
 ## Requirements
+
 ### Requirement: A `PdfConversionService` MUST exist that converts files to PDF/A-3b
 
 The service MUST expose a single public method:
@@ -406,3 +408,34 @@ The assembly MUST NOT abandon the entire conversion on partial failures. Per the
 - **AND** all three attachments are still embedded as PDF/A-3 files
 - **AND** the conversion succeeds (returns the assembled PDF)
 
+### Requirement: The cascade exposes non-throwing capability introspection (REQ-DDMFO-005)
+
+`PdfConversionService` MUST expose a public `getCapabilities(): array` that
+returns, without performing or failing any conversion, one entry per
+configured backend in cascade order with at least `name` (the backend's
+`name()`), `available` (the backend's live `isAvailable()` result), and
+`supports` (whether the backend takes HTML, the generation intermediate),
+plus `inputs` (which of html/docx/odt it handles) — reusing the
+exact report shape already defined for the `ConversionFailedException`
+payload, so consumers and test fixtures share one structure. The method MUST
+respect the tenant configuration for backend availability and order (a
+disabled backend appears as unavailable with its reason, or per the same
+visibility rules as the exception report), MUST NOT mutate any state, and
+MUST NOT throw when a backend probe fails — a probe failure is reported as
+`available: false` with a reason.
+
+#### Scenario: Capability report matches the exception report shape
+
+- GIVEN a configured cascade with at least one available and one unavailable backend
+- WHEN `getCapabilities()` is called
+- THEN it returns entries in cascade order with `name`, `available`, and `supports` per backend
+- AND the entry structure equals the per-backend structure of a `ConversionFailedException` payload
+- @e2e exclude pure backend introspection with no UI surface — covered by PHPUnit (tests/unit/Service/PdfConversionCapabilitiesTest.php::testGetCapabilitiesShape)
+
+#### Scenario: A failing backend probe degrades to unavailable, not an exception
+
+- GIVEN a backend whose availability probe throws
+- WHEN `getCapabilities()` is called
+- THEN the method returns normally
+- AND that backend is reported `available: false` with a reason
+- @e2e exclude fault-injection on a backend probe; covered by PHPUnit (tests/unit/Service/PdfConversionCapabilitiesTest.php::testProbeFailureDegrades)

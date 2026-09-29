@@ -21,7 +21,8 @@ cascade behaviour is unchanged; this delta only ADDs.
 returns, without performing or failing any conversion, one entry per
 configured backend in cascade order with at least `name` (the backend's
 `name()`), `available` (the backend's live `isAvailable()` result), and
-`supports` (the input types/extensions the backend can handle) — reusing the
+`supports` (whether the backend takes HTML, the generation intermediate),
+plus `inputs` (which of html/docx/odt it handles) — reusing the
 exact report shape already defined for the `ConversionFailedException`
 payload, so consumers and test fixtures share one structure. The method MUST
 respect the tenant configuration for backend availability and order (a
@@ -36,7 +37,7 @@ MUST NOT throw when a backend probe fails — a probe failure is reported as
 - WHEN `getCapabilities()` is called
 - THEN it returns entries in cascade order with `name`, `available`, and `supports` per backend
 - AND the entry structure equals the per-backend structure of a `ConversionFailedException` payload
-- @e2e exclude pure backend introspection with no UI surface — covered by PHPUnit (tests/unit/Service/PdfConversionServiceTest.php::testGetCapabilitiesShape)
+- @e2e exclude pure backend introspection with no UI surface — covered by PHPUnit (tests/unit/Service/PdfConversionCapabilitiesTest.php::testGetCapabilitiesShape)
 
 #### Scenario: A failing backend probe degrades to unavailable, not an exception
 
@@ -44,4 +45,4 @@ MUST NOT throw when a backend probe fails — a probe failure is reported as
 - WHEN `getCapabilities()` is called
 - THEN the method returns normally
 - AND that backend is reported `available: false` with a reason
-- @e2e exclude fault-injection on a backend probe; covered by PHPUnit (tests/unit/Service/PdfConversionServiceTest.php::testProbeFailureDegrades)
+- @e2e exclude fault-injection on a backend probe; covered by PHPUnit (tests/unit/Service/PdfConversionCapabilitiesTest.php::testProbeFailureDegrades)

@@ -1,6 +1,11 @@
 OC.L10N.register(
     "filinq",
     {
+        "ODT (editable)": "ODT (modifiable)",
+        "LibreOffice is not available on this server": "LibreOffice n'est pas disponible sur ce serveur",
+        "Could not load the output formats this server can make.": "Impossible de charger les formats de sortie que ce serveur peut produire.",
+        "Outputs": "Sorties",
+        "Elk formaat dat één generatie opleverde (options.formats): formaat, Nextcloud bestand-ID, status en de fout wanneer dat formaat mislukte. Ontbreekt bij een generatie in één formaat.": "Chaque format produit par une génération (options.formats) : format, identifiant de fichier Nextcloud, statut et l'erreur lorsque ce format a échoué. Absent pour une génération en un seul format.",
         "Accessibility checks": "Contrôles d'accessibilité",
         "No tags": "Aucune balise",
         "No language": "Aucune langue",

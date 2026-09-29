@@ -1247,14 +1247,15 @@
 			"name": "Produce the PDF and the editable version from one generation.",
 			"source": "competitor-derived",
 			"sourceRef": "Docmosis multi-format single render",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
-				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/CorrespondenceService.php:666-687 produceOutput() switch returns exactly one format per call; lib/Service/DocumentService.php:71 VALID_FORMATS + line 500 validateFormat() same single-format constraint. openspec/changes/multi-format-output/proposal.md explicitly names this gap ('Today Filinq forces one format per render') and its tasks.md has 0/15 done.",
-				"change": "openspec/changes/multi-format-output"
+			    "state": "built",
+			    "owner": "ConductionNL/filinq",
+			    "evidence": "options.formats on POST api/documents/generate: DocumentService renders once, MultiFormatOutputProducer converts per format (pdf mPDF, docx/odf via Conversion\\HtmlToOfficeConverter -> LibreOfficeHeadlessBackend::convertBytes under the soffice lock, html passthrough), files each in Files and answers a manifest {format, status, fileId, fileName, downloadUrl, size, error?}; a failed format does not stop the others; generatedDocument 1.4.0 outputs[]. docx is a single-format generation format too. FormatMatrixService + GET api/documents/formats (?flow=correspondence) and GET api/templates/{id}/formats from PdfConversionService::getCapabilities(); CorrespondenceIndex.vue reads it. Office templates follow in office-template-authoring task 2.7.",
+			    "change": "openspec/changes/archive/2026-09-29-multi-format-output",
+			    "readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it; not built",
+			"reachedOn": "POST api/documents/generate with options.formats; GET api/documents/formats; Letters & correspondence output format choice",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "multi-format-output",
