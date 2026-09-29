@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/entity-search/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
  */
 
 import { readFileSync } from 'node:fs'

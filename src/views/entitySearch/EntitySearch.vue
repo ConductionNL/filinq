@@ -1,7 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
-@spec openspec/changes/entity-search/tasks.md#task-3.1
+@spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
 @visual exclude No pixel baseline yet: results depend on what OpenRegister's detection found on
 	the instance, and a baseline needs a seeded catalogue.
 -->

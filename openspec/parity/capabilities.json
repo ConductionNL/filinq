@@ -2775,14 +2775,15 @@
 			"name": "Find every document that mentions a given person, BSN or IBAN.",
 			"source": "category-derived",
 			"sourceRef": "user story \"Search all documents relating to a data subject\"",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/entity-search/tasks.md: all 11 tasks unchecked ([ ]); no lib/Service/EntitySearchService.php, no lib/Controller/EntitySearchController.php, no src/*EntitySearch* file exists anywhere in the tree. The proposal itself states the gap: 'an operator who is handed one BSN has no surface that returns the documents containing it.' OpenRegister already stores per-file entity occurrences (oc_openregister_entities / oc_openregister_entity_relations, GET /api/entities) that this change would query, but filinq exposes no page or endpoint over it yet.",
-				"change": "openspec/changes/entity-search"
+				"evidence": "Entity search page (src/views/entitySearch/EntitySearch.vue, manifest EntitySearch, menu entry visibleIf entitySearch.allowed from GET api/entity-search/access) -> api/entity-search (EntitySearchController) -> EntitySearchService: EntitySearchGate (admins + entity_search.allowed_groups, fail closed), EntityCatalogue (OpenRegister openregister_entities substring/type/category, organisation scoping as GdprEntitiesController #1825, refuses when organisations cannot be read), EntityOccurrences (per document with the caller's file rights: name, path, dossier by folder, anonymizationLink state both directions, OR risk level, confidence; unreadable documents a count only), EntitySearchLog (entitySearchLog register 8.30.0, sha256 digest never the query, written before the answer, refusal when it fails, processing activity filinq-entity-search). Tests: EntitySearchServiceTest (12, payloads against the real fragment), EntitySearchControllerTest, EntitySearchLogSchemaTest, vitest entitySearch.spec.js. Collecting hits into a Woo request moved to woo-request-workflow task 4.6.",
+				"change": "openspec/changes/archive/2026-09-29-entity-search",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the Entity search page (menu, for admins and entity_search.allowed_groups); GET api/entity-search",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "entity-search",

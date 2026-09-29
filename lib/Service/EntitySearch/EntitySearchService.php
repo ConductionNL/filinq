@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/entity-search/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -73,7 +73,7 @@ class EntitySearchService {
 	 *
 	 * @throws EntitySearchRefusedException When the caller may not.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
 	 */
 	public function access(string $userId): array {
 		$this->gate->assertMaySearch(userId: $userId);
@@ -96,7 +96,7 @@ class EntitySearchService {
 	 *
 	 * @throws EntitySearchRefusedException When refused, or when the log did not take the entry.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
 	public function search(string $userId, string $query, string $type, string $category, int $limit, int $offset): array {
 		$this->gate->assertMaySearch(userId: $userId);
@@ -130,7 +130,7 @@ class EntitySearchService {
 	 *
 	 * @throws EntitySearchRefusedException When refused, not visible, or not logged.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
 	 */
 	public function detail(string $userId, string $uuid): array {
 		$this->gate->assertMaySearch(userId: $userId);

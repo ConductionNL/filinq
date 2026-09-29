@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/entity-search/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
  */
 
 import axios from '@nextcloud/axios'
@@ -43,7 +43,7 @@ async function outcome(call) {
  * Whether the signed-in user may use the entity search. Anything but a 200 is no.
  *
  * @return {Promise<boolean>} True when allowed.
- * @spec openspec/changes/entity-search/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
  */
 export async function mayUseEntitySearch() {
 	const result = await outcome(() => axios.get(base() + '/access'))
@@ -55,7 +55,7 @@ export async function mayUseEntitySearch() {
  *
  * @param {object} filters query, type, category, limit, offset.
  * @return {Promise<object>} The outcome, data.results the entities and data.total the count.
- * @spec openspec/changes/entity-search/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
  */
 export function searchEntities(filters) {
 	const params = {}
@@ -72,7 +72,7 @@ export function searchEntities(filters) {
  *
  * @param {string} uuid The entity uuid.
  * @return {Promise<object>} The outcome, data the entity with documents, noAccess and other.
- * @spec openspec/changes/entity-search/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.2
  */
 export function entityDetail(uuid) {
 	return outcome(() => axios.get(base() + '/' + encodeURIComponent(uuid)))
@@ -83,7 +83,7 @@ export function entityDetail(uuid) {
  *
  * @param {string} state none, anonymised or derivative.
  * @return {string} The label.
- * @spec openspec/changes/entity-search/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.2
  */
 export function anonymisationLabel(state) {
 	if (state === 'anonymised') {
@@ -101,7 +101,7 @@ export function anonymisationLabel(state) {
  * @param {string} kind object or email.
  * @param {number} count How many.
  * @return {string} The label.
- * @spec openspec/changes/entity-search/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.2
  */
 export function otherLabel(kind, count) {
 	if (kind === 'object') {

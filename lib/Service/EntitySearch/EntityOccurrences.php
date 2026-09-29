@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/entity-search/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -76,7 +76,7 @@ class EntityOccurrences {
 	 *
 	 * @return array{documents: array<int, array<string, mixed>>, noAccess: int, other: array<int, array{kind: string, count: int}>, occurrenceCount: int}
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
 	 */
 	public function forUser(array $relations, string $userId): array {
 		$byFile = [];

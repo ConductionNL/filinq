@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/entity-search/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -87,7 +87,7 @@ class EntitySearchController extends Controller {
 	 *
 	 * @return JSONResponse {allowed: true}, or a refusal.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
 	 */
 	#[NoAdminRequired]
 	public function access(): JSONResponse {
@@ -100,7 +100,7 @@ class EntitySearchController extends Controller {
 	 *
 	 * @return JSONResponse The page, or a refusal.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -124,7 +124,7 @@ class EntitySearchController extends Controller {
 	 *
 	 * @return JSONResponse The entity, or a refusal.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
 	 */
 	#[NoAdminRequired]
 	public function show(string $entityUuid): JSONResponse {

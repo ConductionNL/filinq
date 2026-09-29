@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/entity-search/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -95,7 +95,7 @@ class EntityCatalogue {
 	 *
 	 * @throws EntitySearchRefusedException When OpenRegister is absent or the organisations cannot be read.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
 	public function scope(bool $isAdmin): ?array {
 		$this->assertAvailable();
@@ -138,7 +138,7 @@ class EntityCatalogue {
 	 *
 	 * @throws EntitySearchRefusedException When the catalogue cannot be read.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
 	public function search(?array $scope, string $query, string $type, string $category, int $limit, int $offset): array {
 		if ($scope === []) {
@@ -193,7 +193,7 @@ class EntityCatalogue {
 	 *
 	 * @throws EntitySearchRefusedException When the catalogue cannot be read.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
 	 */
 	public function find(?array $scope, string $uuid): ?array {
 		if ($scope === [] || $uuid === '') {

@@ -104,7 +104,7 @@ export default {
 			 * `visibleIf`. `entitySearch.allowed` stays false until the server
 			 * says yes, so the entry never shows to someone the gate refuses.
 			 *
-			 * @spec openspec/changes/entity-search/tasks.md#task-3.1
+			 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
 			 */
 			shellManifest: {
 				...this.manifest,

@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/entity-search/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.4
  */
 
 declare(strict_types=1);
@@ -68,7 +68,7 @@ class EntitySearchLog {
 	 *
 	 * @return string The sha256 of the lower-cased, trimmed query, '' for an empty one.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.4
 	 */
 	public static function digest(string $query): string {
 		$normal = mb_strtolower(trim($query));
@@ -93,7 +93,7 @@ class EntitySearchLog {
 	 *
 	 * @throws EntitySearchRefusedException When the row could not be written.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.4
 	 */
 	public function search(string $userId, string $query, string $type, string $category, int $results): array {
 		return $this->write(
@@ -120,7 +120,7 @@ class EntitySearchLog {
 	 *
 	 * @throws EntitySearchRefusedException When the row could not be written.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.4
 	 */
 	public function detail(string $userId, string $entityUuid, int $occurrences): array {
 		return $this->write(

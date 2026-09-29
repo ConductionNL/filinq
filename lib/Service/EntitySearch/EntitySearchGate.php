@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/entity-search/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.3
  */
 
 declare(strict_types=1);
@@ -70,7 +70,7 @@ class EntitySearchGate {
 	 *
 	 * @throws EntitySearchRefusedException When the user may not.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.3
 	 */
 	public function assertMaySearch(string $userId): void {
 		$groups = $this->groups();
@@ -109,7 +109,7 @@ class EntitySearchGate {
 	 *
 	 * @return bool True for an admin.
 	 *
-	 * @spec openspec/changes/entity-search/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.1
 	 */
 	public function isAdmin(string $userId): bool {
 		return ($userId !== '' && $this->groupManager->isAdmin($userId) === true);
