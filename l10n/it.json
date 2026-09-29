@@ -1,5 +1,9 @@
 {
     "translations": {
+        "The output format of this file.": "Il formato di output di questo file.",
+        "The Nextcloud file id of this output; absent when it failed.": "L'ID file Nextcloud di questo output; assente quando non è riuscito.",
+        "generated or failed.": "generato o non riuscito.",
+        "Why this format could not be made.": "Perché questo formato non è stato prodotto.",
         "State": "Stato",
         "preserved, degraded, not-applicable or unknown.": "conservata, persa, non applicabile o sconosciuta.",
         "Requested": "Richiesto",

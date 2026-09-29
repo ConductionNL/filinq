@@ -1,6 +1,10 @@
 OC.L10N.register(
     "filinq",
     {
+        "The output format of this file.": "Het uitvoerformaat van dit bestand.",
+        "The Nextcloud file id of this output; absent when it failed.": "Het Nextcloud bestand-ID van deze uitvoer; ontbreekt wanneer het mislukte.",
+        "generated or failed.": "gemaakt of mislukt.",
+        "Why this format could not be made.": "Waarom dit formaat niet gemaakt kon worden.",
         "State": "Status",
         "preserved, degraded, not-applicable or unknown.": "behouden, verloren, niet van toepassing of onbekend.",
         "Requested": "Gevraagd",
