@@ -177,7 +177,7 @@ class DocumentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
 	 */
 	public function testGenerateAnswersAManifestForSeveralFormats(): void {
 		$this->request->method('getParam')
@@ -187,20 +187,26 @@ class DocumentControllerTest extends TestCase {
 				['options', [], ['formats' => ['pdf', 'docx']]],
 				['filename', 'document', 'besluit'],
 			]);
-		$this->documentSvc->method('generateDocument')
+		$this->documentSvc->expects($this->never())->method('generateDocument');
+		$producer = $this->createMock(\OCA\Filinq\Service\MultiFormatOutputProducer::class);
+		$producer->expects($this->once())->method('generate')
+			->with('tmpl-1', [], ['formats' => ['pdf', 'docx'], 'userId' => 'clerk', 'filename' => 'besluit'])
 			->willReturn([
-				'content' => '',
-				'format' => 'pdf',
 				'metadata' => ['id' => 'doc-1'],
 				'warnings' => ['w'],
-				'output' => ['mode' => 'files', 'fileId' => 7, 'path' => '/clerk/files/DocuDesk/b/besluit.pdf', 'name' => 'besluit.pdf', 'size' => 9],
 				'outputs' => [
-					['format' => 'pdf', 'status' => 'generated', 'fileId' => 7, 'fileName' => 'besluit.pdf', 'path' => '/clerk/files/DocuDesk/b b/besluit.pdf', 'size' => 9],
-					['format' => 'docx', 'status' => 'failed', 'fileId' => null, 'fileName' => null, 'path' => null, 'size' => null, 'error' => 'LibreOffice is not available on this server'],
+					['format' => 'pdf', 'status' => 'generated', 'fileId' => 7, 'fileName' => 'besluit.pdf', 'downloadUrl' => '/remote.php/dav/files/clerk/DocuDesk/b%20b/besluit.pdf', 'size' => 9],
+					['format' => 'docx', 'status' => 'failed', 'fileId' => null, 'fileName' => null, 'downloadUrl' => null, 'size' => null, 'error' => 'LibreOffice is not available on this server'],
 				],
 			]);
 
-		$result = $this->controller->generate();
+		$user = $this->createMock(\OCP\IUser::class);
+		$user->method('getUID')->willReturn('clerk');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$controller = new DocumentController('filinq', $this->request, $this->documentSvc, $session, $this->logger, $this->l10n, $producer);
+
+		$result = $controller->generate();
 
 		$this->assertInstanceOf(JSONResponse::class, $result);
 		$this->assertSame(200, $result->getStatus());
@@ -221,7 +227,7 @@ class DocumentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.5
 	 */
 	public function testGenerateDownloadsADocx(): void {
 		$this->request->method('getParam')

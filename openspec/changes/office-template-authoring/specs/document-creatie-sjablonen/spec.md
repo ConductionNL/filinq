@@ -11,7 +11,7 @@ when that change was built (2026-09-29): office templates did not exist yet,
 so their DOCX passthrough, their HTML via DOCX to HTML and their row in the
 format matrix land with the office render path this change builds. The
 shared pieces already exist: `Conversion\HtmlToOfficeConverter`,
-`LibreOfficeHeadlessBackend::convertBytes()` (add `html` as a target),
+`LibreOfficeHeadlessBackend::convertHtml()` (add a DOCX-input sibling with `html` as a target),
 `FormatMatrixService::forTemplate()` (narrow it by `templateType`) and
 `MultiFormatOutputProducer`.
 

@@ -28,7 +28,7 @@
 
 - [ ] 2.6 Lifecycle parity: version snapshot + restore re-pointing `sourceFileId`/`contentHash`, lock gating source re-upload, preview via cascade, duplicate copying the source file (REQ-DDOTA-006/007)
 
-- [ ] 2.7 Office rows of multi-format output (moved from multi-format-output, built 2026-09-29): `docx` of an office template is the filled source DOCX; `html` via `LibreOfficeHeadlessBackend::convertBytes(..., 'docx', 'html')` behind the matrix; `FormatMatrixService::forTemplate()` gates office `html` on LibreOffice; `MultiFormatOutputProducer` starts from the filled DOCX for an office template (REQ-DDMFO-007 and the office scenarios in specs/document-creatie-sjablonen)
+- [ ] 2.7 Office rows of multi-format output (moved from multi-format-output, built 2026-09-29): `docx` of an office template is the filled source DOCX; `html` via a DOCX-input sibling of `LibreOfficeHeadlessBackend::convertHtml()` behind the matrix; `FormatMatrixService::forTemplate()` gates office `html` on LibreOffice; `MultiFormatOutputProducer` starts from the filled DOCX for an office template (REQ-DDMFO-007 and the office scenarios in specs/document-creatie-sjablonen)
 
 ## 3. Routes & controller
 

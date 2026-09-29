@@ -24,15 +24,22 @@ const API = '/index.php/apps/filinq/api'
 const HEADERS = { 'OCS-APIRequest': 'true' }
 
 test.describe('multi-format-output', () => {
-	test('one generation files a PDF and a DOCX from the same render', async ({ request }) => {
+	test('one generation files a PDF and a DOCX from the same render', async ({
+		request,
+	}) => {
 		// @e2e openspec/specs/document-creatie-sjablonen/spec.md#pdf-and-docx-from-one-render
-		const matrixRes = await request.get(`${API}/documents/formats`, { headers: HEADERS })
+		const matrixRes = await request.get(`${API}/documents/formats`, {
+			headers: HEADERS,
+		})
 		expect(matrixRes.status()).toBe(200)
 		expect(matrixRes.headers()['cache-control']).toContain('no-store')
 		const matrix = (await matrixRes.json()).formats
 
 		const created = await request.post(`${API}/templates`, {
-			data: { name: 'e2e multi-format', content: '<h1>Besluit</h1><p>{{ naam }}</p>' },
+			data: {
+				name: 'e2e multi-format',
+				content: '<h1>Besluit</h1><p>{{ naam }}</p>',
+			},
 			headers: HEADERS,
 		})
 		expect(created.ok(), await created.text()).toBeTruthy()
@@ -45,13 +52,19 @@ test.describe('multi-format-output', () => {
 					templateId,
 					dataRefs: [],
 					filename: 'e2e-besluit',
-					options: { formats: ['pdf', 'docx'], adHocData: { naam: 'Demostad' } },
+					options: {
+						formats: ['pdf', 'docx'],
+						adHocData: { naam: 'Demostad' },
+					},
 				},
 				headers: HEADERS,
 			})
 			expect(res.status(), await res.text()).toBe(200)
 			const body = await res.json()
-			expect(body.outputs.map((o: { format: string }) => o.format)).toEqual(['pdf', 'docx'])
+			expect(body.outputs.map((o: { format: string }) => o.format)).toEqual([
+				'pdf',
+				'docx',
+			])
 			expect(body.outputs[0].status).toBe('generated')
 			expect(body.outputs[0].downloadUrl).toContain('/remote.php/dav/files/')
 
@@ -69,11 +82,15 @@ test.describe('multi-format-output', () => {
 				expect(docx.error).toBe(matrix.docx.reason)
 			}
 		} finally {
-			await request.delete(`${API}/templates/${templateId}`, { headers: HEADERS })
+			await request.delete(`${API}/templates/${templateId}`, {
+				headers: HEADERS,
+			})
 		}
 	})
 
-	test('the correspondence view offers what the matrix offers and disables the rest', async ({ page }) => {
+	test('the correspondence view offers what the matrix offers and disables the rest', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/multi-format-output/spec.md#correspondence-view-disables-an-unavailable-format
 		// @e2e openspec/specs/multi-format-output/spec.md#available-formats-come-from-the-api-not-the-bundle
 		await page.route('**/apps/filinq/api/documents/formats**', async (route) => {
@@ -81,7 +98,10 @@ test.describe('multi-format-output', () => {
 				json: {
 					formats: {
 						pdf: { available: true },
-						docx: { available: false, reason: 'LibreOffice is not available on this server' },
+						docx: {
+							available: false,
+							reason: 'LibreOffice is not available on this server',
+						},
 						html: { available: true },
 						email: { available: true },
 					},
@@ -92,10 +112,14 @@ test.describe('multi-format-output', () => {
 		await waitForNcContentReady(page)
 		await dismissOverlays(page)
 
-		const radios = page.locator('.correspondence-index__radio-group input[type="radio"]')
+		const radios = page.locator(
+			'.correspondence-index__radio-group input[type="radio"]',
+		)
 		await expect(radios).toHaveCount(4)
 		await expect(radios.nth(1)).toBeDisabled()
-		await expect(page.locator('#corr-format-reason-docx')).toContainText('LibreOffice')
+		await expect(page.locator('#corr-format-reason-docx')).toContainText(
+			'LibreOffice',
+		)
 		await expect(radios.nth(0)).toBeEnabled()
 	})
 })

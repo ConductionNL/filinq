@@ -232,7 +232,7 @@ class DocumentRenderPipeline {
 	 * @throws Exception If output generation fails
 	 *
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.5
 	 */
 	public function produceOutput(string $htmlContent, string $format, array $pdfOptions): string {
 		$this->lastOutputWarnings = [];
@@ -279,7 +279,7 @@ class DocumentRenderPipeline {
 	 *
 	 * @throws Exception 503 with the matrix's reason when LibreOffice is unavailable.
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.5
 	 */
 	private function convertToOffice(string $htmlContent, string $format): string {
 		if ($this->officeConverter === null || $this->officeConverter->isAvailable() === false) {

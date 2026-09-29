@@ -8,7 +8,7 @@
  * a list in the bundle, so a server without LibreOffice shows DOCX and ODT
  * disabled with the reason instead of failing after the clerk submits.
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
  */
 
 import axios from '@nextcloud/axios'
@@ -26,22 +26,22 @@ const LIBREOFFICE_UNAVAILABLE = 'LibreOffice is not available on this server'
  * @param {string} format The format key.
  * @return {string}
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
  */
 export function formatLabel(format) {
 	switch (format) {
-	case 'pdf':
-		return t('filinq', 'PDF')
-	case 'docx':
-		return t('filinq', 'DOCX (editable)')
-	case 'odf':
-		return t('filinq', 'ODT (editable)')
-	case 'html':
-		return t('filinq', 'HTML')
-	case 'email':
-		return t('filinq', 'Email body')
-	default:
-		return format
+		case 'pdf':
+			return t('filinq', 'PDF')
+		case 'docx':
+			return t('filinq', 'DOCX (editable)')
+		case 'odf':
+			return t('filinq', 'ODT (editable)')
+		case 'html':
+			return t('filinq', 'HTML')
+		case 'email':
+			return t('filinq', 'Email body')
+		default:
+			return format
 	}
 }
 
@@ -51,7 +51,7 @@ export function formatLabel(format) {
  * @param {string|undefined} reason The reason from the matrix.
  * @return {string}
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
  */
 export function reasonText(reason) {
 	if (reason === LIBREOFFICE_UNAVAILABLE) {
@@ -66,7 +66,7 @@ export function reasonText(reason) {
  * @param {Object<string, {available: boolean, reason?: string}>} matrix The matrix.
  * @return {Array<{value: string, label: string, disabled: boolean, reason: string}>}
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
  */
 export function formatOptions(matrix) {
 	return Object.entries(matrix || {}).map(([value, entry]) => ({
@@ -85,7 +85,7 @@ export function formatOptions(matrix) {
  * @param {Array<{value: string, disabled: boolean}>} options The options.
  * @return {string}
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
  */
 export function usableFormat(current, options) {
 	const selected = options.find((option) => option.value === current)
@@ -102,9 +102,12 @@ export function usableFormat(current, options) {
  * @param {'documents'|'correspondence'} flow The flow.
  * @return {Promise<Object<string, {available: boolean, reason?: string}>>}
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
  */
 export async function fetchFormatMatrix(flow) {
-	const { data } = await axios.get(generateUrl('/apps/filinq/api/documents/formats'), { params: { flow } })
+	const { data } = await axios.get(
+		generateUrl('/apps/filinq/api/documents/formats'),
+		{ params: { flow } },
+	)
 	return data.formats || {}
 }

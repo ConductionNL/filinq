@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,6 +29,8 @@ use OCA\Filinq\Exception\ConversionFailedException;
 
 /**
  * Converts rendered HTML to DOCX or ODT through LibreOffice headless.
+ *
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
  *
  * @category Service
  * @package  OCA\Filinq\Service\Conversion
@@ -53,7 +55,7 @@ class HtmlToOfficeConverter {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
 	 */
 	public function isAvailable(): bool {
 		return $this->libreOffice->isAvailable();
@@ -69,10 +71,11 @@ class HtmlToOfficeConverter {
 	 *
 	 * @throws ConversionFailedException When LibreOffice is unavailable (503) or fails.
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
 	 */
 	public function toDocx(string $html): string {
-		return $this->libreOffice->convertBytes(bytes: $html, fromExtension: 'html', toExtension: 'docx');
+		$this->requireLibreOffice();
+		return $this->libreOffice->convertHtml(html: $html, toExtension: 'docx');
 
 	}//end toDocx()
 
@@ -85,10 +88,34 @@ class HtmlToOfficeConverter {
 	 *
 	 * @throws ConversionFailedException When LibreOffice is unavailable (503) or fails.
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.5
 	 */
 	public function toOdt(string $html): string {
-		return $this->libreOffice->convertBytes(bytes: $html, fromExtension: 'html', toExtension: 'odt');
+		$this->requireLibreOffice();
+		return $this->libreOffice->convertHtml(html: $html, toExtension: 'odt');
 
 	}//end toOdt()
+
+	/**
+	 * Refuse before soffice runs when LibreOffice is not usable, with the
+	 * reason the format matrix reports.
+	 *
+	 * @return void
+	 *
+	 * @throws ConversionFailedException 503.
+	 */
+	private function requireLibreOffice(): void {
+		if ($this->libreOffice->isAvailable() === true) {
+			return;
+		}
+
+		throw new ConversionFailedException(
+			message: LibreOfficeHeadlessBackend::UNAVAILABLE_REASON,
+			attempts: [
+				['name' => $this->libreOffice->name(), 'available' => false, 'supports' => true, 'reason' => LibreOfficeHeadlessBackend::UNAVAILABLE_REASON],
+			],
+			code: 503
+		);
+
+	}//end requireLibreOffice()
 }//end class

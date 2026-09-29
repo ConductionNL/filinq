@@ -92,7 +92,6 @@ class CorrespondenceService {
 	 * @param IJobList $jobList Nextcloud job list for async
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IAppConfig $appConfig App configuration accessor
-	 * @param HtmlToOfficeConverter|null $officeConverter The shared HTML to DOCX converter
 	 *
 	 * @return void
 	 */
@@ -106,7 +105,6 @@ class CorrespondenceService {
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly IAppConfig $appConfig,
-		private readonly ?HtmlToOfficeConverter $officeConverter = null,
 	) {
 
 	}//end __construct()
@@ -740,15 +738,16 @@ class CorrespondenceService {
 	 * @psalm-suppress UnusedParam $pdfOptions reserved for future page config
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-output-format-selection
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
 	 */
 	private function convertToDocx(string $htmlContent, array $pdfOptions): string {
-		if ($this->officeConverter === null || $this->officeConverter->isAvailable() === false) {
+		$converter = $this->container->get(HtmlToOfficeConverter::class);
+		if ($converter instanceof HtmlToOfficeConverter === false || $converter->isAvailable() === false) {
 			throw new Exception(message: LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, code: 503);
 		}
 
 		try {
-			return $this->officeConverter->toDocx(html: $htmlContent);
+			return $converter->toDocx(html: $htmlContent);
 		} catch (Exception $e) {
 			throw new Exception(message: 'DOCX conversion failed: ' . $e->getMessage(), code: 500, previous: $e);
 		}

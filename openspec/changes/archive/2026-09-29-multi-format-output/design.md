@@ -253,7 +253,7 @@ dossier data and asserts both files land in the output folder.
   and `specs/document-creatie-sjablonen` there). `FormatMatrixService::forTemplate()`
   returns the instance matrix until then.
 - **One soffice path for editable formats.** Instead of a class per direction,
-  `LibreOfficeHeadlessBackend::convertBytes($bytes, $from, $to)` runs soffice
+  `LibreOfficeHeadlessBackend::convertHtml($html, $to)` runs soffice
   under the cascade lock with the Writer filters (`--infilter=HTML (StarWriter)`,
   `docx:MS Word 2007 XML`, `odt:writer8`), and `Conversion\HtmlToOfficeConverter`
   (`toDocx`, `toOdt`) is what `DocumentRenderPipeline` and `CorrespondenceService`
@@ -275,5 +275,14 @@ dossier data and asserts both files land in the output folder.
   endpoint when it lands.
 - **Multi-format requests always file.** A manifest points at files, so
   `options.formats` implies output mode `files`; `options.userId` is required.
-  The download URL is the file's WebDAV address. A plain-language counterpart
-  is made in the first requested format.
+  The download URL is the file's WebDAV address.
+- **Where the job lives.** `DocumentService` sits at its class-length,
+  complexity and coupling ceilings, so the job is `MultiFormatOutputProducer::generate()`:
+  it renders through `DocumentService::generatePreview()` (the same render,
+  no audit entry), converts and files each format, and writes the one
+  `generatedDocument` entry through `GeneratedDocumentLogger`.
+  `DocumentController::generate()` sends `options.formats` requests there;
+  `DocumentService::generateDocument()` refuses `formats` (400) instead of
+  ignoring it. A template with a plain-language counterpart is refused for
+  `formats` (400): the formal letter and its counterpart are filed together
+  or not at all, and pairing N formats with a counterpart is not specified.

@@ -48,6 +48,14 @@ use Psr\Log\LoggerInterface;
 class CorrespondenceServiceTest extends TestCase {
 
 	/**
+	 * What the container answers for the shared office converter.
+	 *
+	 * @var \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter|null
+	 */
+	private ?\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter $officeConverter = null;
+
+
+	/**
 	 * The service under test
 	 *
 	 * @var CorrespondenceService
@@ -134,6 +142,10 @@ class CorrespondenceServiceTest extends TestCase {
 
 				if ($class === IAppConfig::class) {
 					return $appConfig;
+				}
+
+				if ($class === \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter::class) {
+					return $this->officeConverter;
 				}
 
 				if ($class === \OCA\Filinq\Service\Charts\SvgRasterizer::class) {
@@ -248,7 +260,7 @@ class CorrespondenceServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
 	 */
 	public function testDocxGoesThroughTheSharedConverter(): void {
 		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Test', 'content' => '<p>Hello</p>']);
@@ -262,13 +274,14 @@ class CorrespondenceServiceTest extends TestCase {
 		$office = $this->createMock(\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter::class);
 		$office->method('isAvailable')->willReturn(true);
 		$office->expects($this->once())->method('toDocx')->with('<p>Hello</p>')->willReturn('PK letter');
-		$service = $this->serviceWith(office: $office);
+		$this->officeConverter = $office;
 
-		$result = $service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+		$result = $this->service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
 		$this->assertSame('PK letter', $result['content']);
 
 		try {
-			$this->serviceWith(office: null)->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+			$this->officeConverter = null;
+			$this->service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
 			$this->fail('A DOCX letter was made without LibreOffice.');
 		} catch (\Exception $e) {
 			$this->assertSame(503, $e->getCode());
@@ -277,29 +290,6 @@ class CorrespondenceServiceTest extends TestCase {
 
 	}//end testDocxGoesThroughTheSharedConverter()
 
-	/**
-	 * The service as setUp() builds it, with the given office converter.
-	 *
-	 * @param \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter|null $office The converter.
-	 *
-	 * @return CorrespondenceService
-	 */
-	private function serviceWith(?\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter $office): CorrespondenceService {
-		$reflection = new \ReflectionClass($this->service);
-		$args = [];
-		foreach ($reflection->getConstructor()->getParameters() as $parameter) {
-			if ($parameter->getName() === 'officeConverter') {
-				$args[] = $office;
-				continue;
-			}
-
-			$property = $reflection->getProperty($parameter->getName());
-			$args[] = $property->getValue($this->service);
-		}
-
-		return new CorrespondenceService(...$args);
-
-	}//end serviceWith()
 
 	/**
 	 * Test invalid format throws exception

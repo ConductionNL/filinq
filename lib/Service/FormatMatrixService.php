@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,6 +31,8 @@ use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 
 /**
  * Reports the producible output formats per instance, template and flow.
+ *
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
  *
  * @category Service
  * @package  OCA\Filinq\Service
@@ -78,7 +80,7 @@ class FormatMatrixService {
 	 *
 	 * @return array<string, array{available: bool, reason?: string}> Keyed by format, in display order.
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
 	 */
 	public function forInstance(string $flow = 'documents'): array {
 		$formats = self::DOCUMENT_FORMATS;
@@ -112,7 +114,7 @@ class FormatMatrixService {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The template decides nothing until office templates exist.
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
 	 */
 	public function forTemplate(array $template): array {
 		return $this->forInstance(flow: 'documents');
