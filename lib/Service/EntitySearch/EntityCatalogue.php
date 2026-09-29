@@ -114,7 +114,11 @@ class EntityCatalogue {
 
 		$uuids = [];
 		foreach ((array) $organisations as $organisation) {
-			$uuid = (string) (is_object($organisation) === true && method_exists($organisation, 'getUuid') === true ? $organisation->getUuid() : '');
+			if (is_object($organisation) === false || method_exists($organisation, 'getUuid') === false) {
+				continue;
+			}
+
+			$uuid = (string) $organisation->getUuid();
 			if ($uuid !== '') {
 				$uuids[] = $uuid;
 			}
@@ -230,7 +234,12 @@ class EntityCatalogue {
 		}//end try
 
 		return [
-			'entity' => ['uuid' => (string) $row['uuid'], 'type' => (string) $row['type'], 'value' => (string) $row['value'], 'category' => (string) ($row['category'] ?? '')],
+			'entity' => [
+				'uuid' => (string) $row['uuid'],
+				'type' => (string) $row['type'],
+				'value' => (string) $row['value'],
+				'category' => (string) ($row['category'] ?? ''),
+			],
 			'relations' => $relations,
 		];
 

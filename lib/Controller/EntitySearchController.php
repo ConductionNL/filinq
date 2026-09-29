@@ -166,7 +166,9 @@ class EntitySearchController extends Controller {
 			EntitySearchRefusedException::REASON_NOT_FOUND => $this->l10n->t('Not found'),
 			EntitySearchRefusedException::REASON_INVALID => $this->l10n->t('Type a value, or choose a type or a category.'),
 			EntitySearchRefusedException::REASON_CATALOGUE_UNAVAILABLE => $this->l10n->t('The entity catalogue of OpenRegister cannot be read right now.'),
-			EntitySearchRefusedException::REASON_LOG_UNAVAILABLE => $this->l10n->t('The search could not be recorded in the processing log, so it was not run.'),
+			EntitySearchRefusedException::REASON_LOG_UNAVAILABLE => $this->l10n->t(
+				'The search could not be recorded in the processing log, so it was not run.'
+			),
 		];
 
 		return new JSONResponse(

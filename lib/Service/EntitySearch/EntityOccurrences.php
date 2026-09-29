@@ -74,7 +74,7 @@ class EntityOccurrences {
 	 * @param array<int, array<string, mixed>> $relations The catalogue's occurrence rows.
 	 * @param string                           $userId    The caller.
 	 *
-	 * @return array{documents: array<int, array<string, mixed>>, noAccess: int, other: array<int, array{kind: string, count: int}>, occurrenceCount: int}
+	 * @return array{documents: array<int, array<string, mixed>>, noAccess: int, other: list<array{kind: string, count: int}>, occurrenceCount: int}
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
 	 */

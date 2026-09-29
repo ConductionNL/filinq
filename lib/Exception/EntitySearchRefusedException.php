@@ -81,8 +81,8 @@ class EntitySearchRefusedException extends RuntimeException {
 	/**
 	 * Constructor.
 	 *
-	 * @param string   One of the REASON_* constants.
-	 * @param string  What happened, for the log.
+	 * @param string $reason  One of the REASON_* constants.
+	 * @param string $message What happened, for the log.
 	 *
 	 * @return void
 	 */
