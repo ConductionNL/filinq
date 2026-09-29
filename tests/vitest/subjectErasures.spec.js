@@ -122,8 +122,8 @@ describe('subject erasure service', () => {
 			),
 			'utf8',
 		)
-		expect(page).toContain(
-			"return ['previewed', 'partially_completed'].includes(this.selected?.status)",
+		expect(page.replace(/\s+/g, ' ')).toContain(
+			"return ['previewed', 'partially_completed'].includes( this.selected?.status, )",
 		)
 		expect(page).toContain(':disabled="!exclusionsReady"')
 		expect(page).not.toMatch(/<NcDialog|<NcModal/)
