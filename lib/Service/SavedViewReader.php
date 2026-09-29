@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class SavedViewReader {
 
@@ -89,7 +89,7 @@ class SavedViewReader {
 	 *
 	 * @return array<int, mixed>|null The records, or null when the view does not resolve.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function records(string $view, string $owner = ''): ?array {
 		if ($view === '') {
@@ -135,7 +135,7 @@ class SavedViewReader {
 	 *
 	 * @return array<string, mixed>|null The query.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function queryOf(string $view, string $owner): ?array {
 		if (in_array(

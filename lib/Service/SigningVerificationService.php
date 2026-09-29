@@ -331,7 +331,7 @@ class SigningVerificationService {
 	 *
 	 * @return array{status: string, reason: string, checked: string, keyId: ?string, means: string} The account.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function account(string $status, string $reason, string $checked, ?string $secret = null): array {
 		$means = match ($reason) {

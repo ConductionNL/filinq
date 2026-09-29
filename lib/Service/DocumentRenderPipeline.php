@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Charts\SvgRasterizer;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,12 +41,22 @@ use Psr\Log\LoggerInterface;
  */
 class DocumentRenderPipeline {
 	/**
+	 * Warnings raised by the most recent {@see produceOutput()} call, such as
+	 * a chart that could not be carried into an ODF file. Reset on every call.
+	 *
+	 * @var string[]
+	 */
+	private array $lastOutputWarnings = [];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param TemplateRenderer $templateRenderer Service for Twig rendering
 	 * @param PdfService $pdfService Service for PDF generation
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService
 	 * @param LoggerInterface $logger Logger for error reporting
+	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
+	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
 	 *
 	 * @return void
 	 */
@@ -54,6 +65,8 @@ class DocumentRenderPipeline {
 		private readonly PdfService $pdfService,
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
+		private readonly SvgRasterizer $svgRasterizer,
+		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 	) {
 
 	}//end __construct()
@@ -139,7 +152,8 @@ class DocumentRenderPipeline {
 	 *
 	 * @throws Exception If rendering fails
 	 *
-	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function renderWithHuisstijl(
 		string $templateContent,
@@ -148,6 +162,12 @@ class DocumentRenderPipeline {
 	): array {
 		$fullContent = '';
 		$warnings = [];
+
+		if ($this->objectionTerm !== null) {
+			$decision = $this->objectionTerm->addToContext(data: $data, templateContent: $templateContent);
+			$data = $decision['data'];
+			$warnings = $decision['warnings'];
+		}
 
 		if ($huisstijl !== null && empty($huisstijl['headerHtml']) === false) {
 			$headerData = array_merge($data, ['huisstijl' => $huisstijl]);
@@ -193,13 +213,19 @@ class DocumentRenderPipeline {
 	 * @return string The generated content (binary for pdf/odf, string for html)
 	 *
 	 * @throws Exception If output generation fails
+	 *
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
 	 */
 	public function produceOutput(string $htmlContent, string $format, array $pdfOptions): string {
+		$this->lastOutputWarnings = [];
+
 		switch ($format) {
 			case 'html':
 				return $htmlContent;
 			case 'odf':
-				return $this->convertToOdf(htmlContent: $htmlContent);
+				$rasterized = $this->svgRasterizer->rasterizeInlineSvg(html: $htmlContent, format: 'odf');
+				$this->lastOutputWarnings = $rasterized['warnings'];
+				return $this->convertToOdf(htmlContent: $rasterized['html']);
 			case 'pdf':
 			default:
 				return $this->pdfService->renderPdf(
@@ -210,6 +236,18 @@ class DocumentRenderPipeline {
 		}//end switch
 
 	}//end produceOutput()
+
+	/**
+	 * Warnings raised by the most recent {@see produceOutput()} call.
+	 *
+	 * @return string[]
+	 *
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
+	 */
+	public function getLastOutputWarnings(): array {
+		return $this->lastOutputWarnings;
+
+	}//end getLastOutputWarnings()
 
 	/**
 	 * Convert HTML to ODF (.odt) using LibreOffice headless.

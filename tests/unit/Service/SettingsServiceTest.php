@@ -220,6 +220,25 @@ class SettingsServiceTest extends TestCase {
 	}//end testUpdateSettingsAcceptsOcrKeys()
 
 	/**
+	 * The admin may mark LibreSign's certificate qualified.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-2.2
+	 */
+	public function testUpdateSettingsAcceptsTheLibreSignQualifiedSwitch(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'libresign_qualified', '1');
+		$this->mockConfig->method('getValueString')->willReturn('1');
+
+		$result = $this->settingsService->updateSettings(['libresign_qualified' => true]);
+
+		$this->assertSame('1', $result['libresign_qualified']);
+
+	}//end testUpdateSettingsAcceptsTheLibreSignQualifiedSwitch()
+
+	/**
 	 * Test updateSettings persists values for allowlisted keys
 	 *
 	 * @return void
@@ -258,6 +277,27 @@ class SettingsServiceTest extends TestCase {
 		$this->settingsService->updateSettings(['signing_guardian_consent_age' => '18']);
 
 	}//end testTheGuardianConsentAgeIsAWritableSettingThatDefaultsToSixteen()
+
+	/**
+	 * Reading on arrival is on by default and an admin can switch it off.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
+	 */
+	public function testReadingOnArrivalDefaultsOnAndIsWritable(): void {
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $default
+		);
+		$this->assertTrue($this->settingsService->getAllSettings()['ocr_on_arrival'] ?? null);
+
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'ocr_on_arrival', '0');
+
+		$this->settingsService->updateSettings(['ocr_on_arrival' => '0']);
+
+	}//end testReadingOnArrivalDefaultsOnAndIsWritable()
 
 	/**
 	 * Test updateSettings silently rejects unknown keys

@@ -147,7 +147,8 @@ class DocumentServicePlainRenditionTest extends TestCase {
 				$renderer,
 				$this->createMock(PdfService::class),
 				$objectResolver,
-				new NullLogger()
+				new NullLogger(),
+				$this->passThroughRasterizer()
 			),
 			$this->storage,
 			new GeneratedDocumentLogger($objectResolver, new NullLogger()),
@@ -235,4 +236,18 @@ class DocumentServicePlainRenditionTest extends TestCase {
 			]
 		);
 	}//end testARefusalFilesNeitherRendition()
+
+	/**
+	 * The real SvgRasterizer's method, passing HTML through unchanged.
+	 *
+	 * @return \OCA\Filinq\Service\Charts\SvgRasterizer
+	 */
+	private function passThroughRasterizer(): \OCA\Filinq\Service\Charts\SvgRasterizer {
+		$rasterizer = $this->createMock(\OCA\Filinq\Service\Charts\SvgRasterizer::class);
+		$rasterizer->method('rasterizeInlineSvg')->willReturnCallback(
+			static fn (string $html, string $format): array => ['html' => $html, 'warnings' => []]
+		);
+		return $rasterizer;
+
+	}//end passThroughRasterizer()
 }//end class

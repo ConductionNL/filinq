@@ -68,7 +68,7 @@ test.describe('Merge documents to one PDF', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md#dossiq-merges-the-documents-of-a-case
+	// @e2e openspec/specs/document-merge/spec.md#dossiq-merges-the-documents-of-a-case
 	// @e2e openspec/specs/document-merge/spec.md#dossiq-merges-the-documents-of-a-case
 	test('a selection becomes one PDF, recorded as a job that names its inputs', async ({
 		page,
@@ -109,7 +109,7 @@ test.describe('Merge documents to one PDF', () => {
 		}
 	})
 
-	// @e2e openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md#a-file-the-user-may-not-read-is-refused
+	// @e2e openspec/specs/document-merge/spec.md#a-file-the-user-may-not-read-is-refused
 	// @e2e openspec/specs/document-merge/spec.md#dossiq-merges-the-documents-of-a-case
 	test('a file the caller may not read is refused, and no job is created', async ({
 		page,
@@ -143,7 +143,7 @@ test.describe('Merge documents to one PDF', () => {
 		expect(countAfter, 'a refusal creates no job').toBe(countBefore)
 	})
 
-	// @e2e openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md#a-file-the-user-may-not-read-is-refused
+	// @e2e openspec/specs/document-merge/spec.md#a-file-the-user-may-not-read-is-refused
 	// @e2e openspec/specs/document-merge/spec.md#dossiq-merges-the-documents-of-a-case
 	test('a merge that names no documents is refused as a bad request', async ({
 		page,
@@ -155,7 +155,7 @@ test.describe('Merge documents to one PDF', () => {
 		expect(refused.status()).toBe(400)
 	})
 
-	// @e2e openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md#a-large-batch-is-queued-and-reports-progress
+	// @e2e openspec/specs/document-merge/spec.md#a-large-batch-is-queued-and-reports-progress
 	// @e2e openspec/specs/document-merge/spec.md#dossiq-merges-the-documents-of-a-case
 	test('a large selection answers with a queued job, and the job can be read back', async ({
 		page,
@@ -187,7 +187,7 @@ test.describe('Merge documents to one PDF', () => {
 		expect(stored).toHaveProperty('progress')
 	})
 
-	// @e2e openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md#a-large-batch-is-queued-and-reports-progress
+	// @e2e openspec/specs/document-merge/spec.md#a-large-batch-is-queued-and-reports-progress
 	// @e2e openspec/specs/document-merge/spec.md#dossiq-merges-the-documents-of-a-case
 	test('a merge nobody started answers 404 rather than an empty job', async ({
 		page,

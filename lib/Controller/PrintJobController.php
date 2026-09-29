@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use InvalidArgumentException;
 use OCA\Filinq\Service\PrintJobService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,13 +57,6 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/print-functionality/tasks.md#task-5
  */
 class PrintJobController extends Controller {
-
-	/**
-	 * Valid statuses that an external print service may report
-	 *
-	 * @var string[]
-	 */
-	private const VALID_EXTERNAL_STATUSES = ['printing', 'printed', 'failed'];
 
 	/**
 	 * Constructor for PrintJobController
@@ -162,6 +156,43 @@ class PrintJobController extends Controller {
 	}//end create()
 
 	/**
+	 * List the caller's own print jobs, newest first.
+	 *
+	 * Nobody else's jobs are listed, admins included: the page is "my print
+	 * jobs", and an admin reads another user's job by its id.
+	 *
+	 * @return JSONResponse {results: job[]} or an error
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.3
+	 */
+	public function index(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(
+				data: ['error' => 'Not authenticated'],
+				statusCode: Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		try {
+			return new JSONResponse(data: ['results' => $this->printJobSvc->listJobs(userId: $user->getUID())]);
+		} catch (Exception $e) {
+			$this->logger->error(
+				message: 'Print job list failed: ' . $e->getMessage(),
+				context: ['exception' => $e]
+			);
+
+			return new JSONResponse(
+				data: ['error' => 'Operation failed'],
+				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
+	}//end index()
+
+	/**
 	 * Get print job info
 	 *
 	 * Returns job metadata including status, manifest, and print configuration.
@@ -248,27 +279,26 @@ class PrintJobController extends Controller {
 
 			$this->authorizeJobAccess(job: $job, userId: $user->getUID());
 
-			if (($job['status'] ?? '') !== 'completed') {
+			if (($job['status'] ?? '') === 'rendering') {
 				return new JSONResponse(
-					data: ['error' => 'Job not completed yet', 'status' => $job['status'] ?? 'unknown'],
+					data: ['error' => 'Job not rendered yet', 'status' => 'rendering'],
 					statusCode: Http::STATUS_CONFLICT
 				);
 			}
 
-			$pdfContent = $this->printJobSvc->loadJobPdf(jobId: $id);
-			if ($pdfContent === null) {
+			$item = $this->request->getParam('item', null);
+			$download = $this->printJobSvc->download(job: $job, item: $this->itemIndex(item: $item));
+			if ($download === null) {
 				return new JSONResponse(
 					data: ['error' => 'PDF not found for this job'],
 					statusCode: Http::STATUS_NOT_FOUND
 				);
 			}
 
-			$filename = $job['filename'] ?? 'document.pdf';
-
 			return new DataDownloadResponse(
-				data: $pdfContent,
-				filename: $filename,
-				contentType: 'application/pdf'
+				data: $download['content'],
+				filename: $download['filename'],
+				contentType: $download['contentType']
 			);
 		} catch (OCSForbiddenException $e) {
 			return new JSONResponse(
@@ -326,21 +356,26 @@ class PrintJobController extends Controller {
 
 			$status = (string)$this->request->getParam('status', '');
 			$details = $this->request->getParam('details', null);
+			if (is_array($details) === true) {
+				$details = (string) json_encode($details);
+			}
 
-			if (in_array($status, self::VALID_EXTERNAL_STATUSES, true) === false) {
-				$validList = implode(', ', self::VALID_EXTERNAL_STATUSES);
+			if ($details !== null) {
+				$details = (string) $details;
+			}
+
+			try {
+				$job = $this->printJobSvc->recordExternalStatus(
+					job: $job,
+					externalStatus: $status,
+					details: $details
+				);
+			} catch (InvalidArgumentException $e) {
 				return new JSONResponse(
-					data: ['error' => "Invalid status. Valid values: {$validList}"],
+					data: ['error' => $e->getMessage()],
 					statusCode: Http::STATUS_BAD_REQUEST
 				);
 			}
-
-			$job['externalStatus'] = $status;
-			if ($details !== null) {
-				$job['externalDetails'] = $details;
-			}
-
-			$this->printJobSvc->storeJobStatus(jobId: $id, data: $job);
 
 			return new JSONResponse(data: $job);
 		} catch (OCSForbiddenException $e) {
@@ -415,7 +450,8 @@ class PrintJobController extends Controller {
 				templateId: (string)$templateId,
 				items: $items,
 				options: $options,
-				userId: $user->getUID()
+				userId: $user->getUID(),
+				filename: (string) $this->request->getParam('filename', 'print-job.pdf')
 			);
 
 			return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
@@ -439,6 +475,22 @@ class PrintJobController extends Controller {
 	}//end batch()
 
 	/**
+	 * Read the optional `item` query parameter as a letter index.
+	 *
+	 * @param mixed $item The raw parameter
+	 *
+	 * @return int|null The index, or null for the whole job.
+	 */
+	private function itemIndex(mixed $item): ?int {
+		if (is_numeric($item) === false || (int) $item < 0) {
+			return null;
+		}
+
+		return (int) $item;
+
+	}//end itemIndex()
+
+	/**
 	 * Authorize job access: throw OCSForbiddenException if not owner and not admin
 	 *
 	 * @param array $job Job data array including ownerUserId
@@ -451,7 +503,7 @@ class PrintJobController extends Controller {
 	 * @spec openspec/changes/print-functionality/tasks.md#task-5
 	 */
 	private function authorizeJobAccess(array $job, string $userId): void {
-		$ownerUserId = (string)($job['ownerUserId'] ?? '');
+		$ownerUserId = (string)($job['requestedBy'] ?? '');
 		$isOwner = ($userId === $ownerUserId);
 		$isAdmin = $this->groupManager->isAdmin($userId);
 

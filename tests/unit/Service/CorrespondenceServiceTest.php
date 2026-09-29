@@ -76,6 +76,13 @@ class CorrespondenceServiceTest extends TestCase {
 	private TemplateRenderer $renderer;
 
 	/**
+	 * The rasterizer the DOCX path calls.
+	 *
+	 * @var \OCA\Filinq\Service\Charts\SvgRasterizer&MockObject
+	 */
+	private \OCA\Filinq\Service\Charts\SvgRasterizer $rasterizer;
+
+	/**
 	 * Mock PDF service
 	 *
 	 * @var PdfService&MockObject
@@ -129,8 +136,14 @@ class CorrespondenceServiceTest extends TestCase {
 					return $appConfig;
 				}
 
+				if ($class === \OCA\Filinq\Service\Charts\SvgRasterizer::class) {
+					return $this->rasterizer;
+				}
+
 				return null;
 			});
+
+		$this->rasterizer = $this->createMock(\OCA\Filinq\Service\Charts\SvgRasterizer::class);
 
 		$this->service = new CorrespondenceService(
 			$this->templateSvc,
@@ -360,4 +373,52 @@ class CorrespondenceServiceTest extends TestCase {
 
 	}//end testCorrespondenceLogging()
 
+	/**
+	 * A DOCX letter sends its HTML through the rasterizer first, so a chart
+	 * reaches LibreOffice as a PNG instead of an SVG it would drop.
+	 *
+	 * @return void
+	 */
+	public function testDocxOutputRasterizesChartsBeforeConversion(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Brief', 'content' => 'x']);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<h1>Jan</h1><svg width="1" height="1"></svg>');
+
+		$this->rasterizer->expects($this->once())
+			->method('rasterizeInlineSvg')
+			->with('<h1>Jan</h1><svg width="1" height="1"></svg>', 'docx')
+			->willReturn(['html' => '<h1>Jan</h1><img src="data:image/png;base64,AA" alt="" />', 'warnings' => []]);
+
+		try {
+			$this->service->generate(templateId: 'tmpl-1', dataRefs: [], options: ['format' => 'docx']);
+		} catch (\Exception $e) {
+			// The conversion itself needs LibreOffice and answers 503 or 500 on a
+			// host without a working one. The rasterizer was asked before that,
+			// which is what the expectation above pins.
+			$this->assertContains($e->getCode(), [500, 503]);
+		}
+
+	}//end testDocxOutputRasterizesChartsBeforeConversion()
+
+	/**
+	 * A PDF letter keeps its SVG: mPDF draws it, so no rasterizing happens.
+	 *
+	 * @return void
+	 */
+	public function testPdfOutputLeavesChartsAsSvg(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Brief', 'content' => 'x']);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<svg></svg>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
+		$logEntity = $this->createMock(ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+		$this->objectSvc->method('saveObject')->willReturn($logEntity);
+
+		$this->rasterizer->expects($this->never())->method('rasterizeInlineSvg');
+
+		$result = $this->service->generate(templateId: 'tmpl-1', dataRefs: [], options: ['format' => 'pdf']);
+
+		$this->assertSame('%PDF%', $result['content']);
+
+	}//end testPdfOutputLeavesChartsAsSvg()
 }//end class

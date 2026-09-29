@@ -25,6 +25,36 @@
 							: t('filinq', 'Show anonymised')
 					}}
 				</NcButton>
+				<span
+					v-if="ocrBadge"
+					class="file-viewer-page__ocr-badge"
+					:title="
+						t('filinq', 'Text recognised by OCR, with its confidence')
+					">
+					{{ ocrBadge }}
+				</span>
+				<NcButton
+					v-if="ocrOffered"
+					variant="secondary"
+					:disabled="ocrRunning"
+					@click="runOcrNow">
+					<template #icon>
+						<NcLoadingIcon v-if="ocrRunning" :size="18" />
+						<TextRecognition v-else :size="18" />
+					</template>
+					{{
+						ocrRunning
+							? t('filinq', 'Running OCR…')
+							: t('filinq', 'Run OCR')
+					}}
+				</NcButton>
+				<NcButton
+					v-if="fileViewerStore.currentFile?.fileId"
+					variant="secondary"
+					:disabled="publishing"
+					@click="publish">
+					{{ t('filinq', 'Publish') }}
+				</NcButton>
 			</template>
 		</DdFileViewerHeader>
 
@@ -50,9 +80,10 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
@@ -60,12 +91,21 @@ import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
+import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import DdFileViewerHeader from '../../components/DdFileViewerHeader.vue'
 import OdtViewer from '../../components/viewers/OdtViewer.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
 import { emlPreviewUrl } from '../../services/fileViewerService.js'
+import {
+	fetchOcrStatus,
+	isOcrCandidate,
+	ocrBadgeLabel,
+	ocrErrorMessage,
+	runOcr,
+} from '../../services/ocr.js'
+import { startPublication } from '../../services/publications.js'
 import { fileViewerStore } from '../../store/store.js'
 
 /**
@@ -96,6 +136,8 @@ function detectViewer(file) {
 export default {
 	name: 'FileViewerPage',
 	components: {
+		NcLoadingIcon,
+		TextRecognition,
 		NcButton,
 		Eye,
 		EyeOffOutline,
@@ -114,10 +156,40 @@ export default {
 	data() {
 		return {
 			fileViewerStore,
+			publishing: false,
+			ocrAvailable: false,
+			ocrResult: null,
+			ocrRunning: false,
 		}
 	},
 
 	computed: {
+		/**
+		 * Whether Run OCR is offered: an image or PDF, and OCR can run here.
+		 * The server checks again when it is pressed.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrOffered() {
+			const file = fileViewerStore.currentFile
+			return (
+				Boolean(file?.fileId)
+				&& isOcrCandidate(file.mimeType)
+				&& this.ocrAvailable
+			)
+		},
+
+		/**
+		 * The OCR badge, when the file was OCR'd.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrBadge() {
+			return ocrBadgeLabel(this.ocrResult)
+		},
+
 		/**
 		 * Page title — current file name with a generic fallback.
 		 *
@@ -224,8 +296,98 @@ export default {
 		},
 	},
 
+	watch: {
+		'fileViewerStore.currentFile.fileId': {
+			immediate: true,
+			/**
+			 * Read the OCR status when the files on screen change.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+			 */
+			handler() {
+				this.loadOcrStatus()
+			},
+		},
+	},
+
 	methods: {
 		t,
+
+		/**
+		 * Read whether OCR can run and this file's last result.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async loadOcrStatus() {
+			const file = fileViewerStore.currentFile
+			this.ocrResult = null
+			this.ocrAvailable = false
+			if (!file?.fileId || !isOcrCandidate(file.mimeType)) {
+				return
+			}
+			try {
+				const status = await fetchOcrStatus([file.fileId])
+				this.ocrAvailable = status.capability?.available === true
+				this.ocrResult = status.results?.[String(file.fileId)] ?? null
+			} catch {
+				// No status: no button. The file itself still shows.
+			}
+		},
+
+		/**
+		 * Run OCR on the open file and show the new badge without a reload.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async runOcrNow() {
+			this.ocrRunning = true
+			try {
+				const result = await runOcr(fileViewerStore.currentFile.fileId)
+				if (result.ocrProcessed) {
+					this.ocrResult = result
+					showSuccess(
+						t('filinq', 'OCR read {length} characters.', {
+							length: result.textLength,
+						}),
+					)
+				} else {
+					showError(ocrErrorMessage(result))
+				}
+			} catch (error) {
+				showError(ocrErrorMessage(error))
+				if ([409, 503].includes(error?.response?.status)) {
+					this.ocrAvailable = false
+				}
+			} finally {
+				this.ocrRunning = false
+			}
+		},
+
+		/**
+		 * Start a Woo publication for this document and open it.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.2
+		 */
+		async publish() {
+			this.publishing = true
+			try {
+				const record = await startPublication(
+					fileViewerStore.currentFile.fileId,
+				)
+				this.$router.push({
+					name: 'Publications',
+					params: { id: record.uuid },
+				})
+			} catch {
+				showError(t('filinq', 'The publication could not be started.'))
+			} finally {
+				this.publishing = false
+			}
+		},
+
 		/** Download the currently previewed file via Nextcloud's file URL. */
 		downloadCurrent() {
 			const file = fileViewerStore.currentFile
@@ -250,6 +412,15 @@ export default {
 	overflow: auto;
 	background: var(--color-background-dark);
 	border-top: 1px solid var(--color-border);
+}
+
+.file-viewer-page__ocr-badge {
+	align-self: center;
+	padding: 2px 8px;
+	border-radius: var(--border-radius-pill);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 0.9em;
 }
 
 .file-viewer-page__unsupported {

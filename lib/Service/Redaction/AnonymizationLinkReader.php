@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\Redaction;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -103,6 +104,160 @@ class AnonymizationLinkReader {
 		return $this->normalise(row: $results[0]);
 
 	}//end forSource()
+
+	/**
+	 * The link whose redacted copy is this file, or null.
+	 *
+	 * @param int $anonymizedFileId The redacted copy's file id.
+	 *
+	 * @return array<string, mixed>|null The link, with its `uuid`.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.2
+	 */
+	public function forAnonymized(int $anonymizedFileId): ?array {
+		if ($anonymizedFileId <= 0) {
+			return null;
+		}
+
+		try {
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['anonymizedFileId' => $anonymizedFileId]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[AnonymizationLinkReader] could not read the link of a redacted copy',
+				context: ['anonymizedFileId' => $anonymizedFileId, 'error' => $e->getMessage()]
+			);
+
+			return null;
+		}
+
+		foreach ((array) $results as $row) {
+			$link = $this->withUuid(row: $row);
+			if ((int) ($link['anonymizedFileId'] ?? 0) === $anonymizedFileId) {
+				return $link;
+			}
+		}
+
+		return null;
+
+	}//end forAnonymized()
+
+	/**
+	 * The stored link object, for its OpenRegister ids only, or null.
+	 *
+	 * Read past RBAC on purpose: the answer never reaches a caller, it only
+	 * tells the audit trail which register and schema the link lives in, and a
+	 * denied caller's attempt must land on the same object as a granted one.
+	 *
+	 * @param string $linkId The link uuid.
+	 *
+	 * @return ObjectEntity|null The stored object, or null when there is none.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
+	 */
+	public function storedObject(string $linkId): ?ObjectEntity {
+		if ($linkId === '') {
+			return null;
+		}
+
+		try {
+			$entity = $this->objectResolver->resolve()->find(
+				id: $linkId,
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (Throwable $e) {
+			$this->logger->info(
+				message: '[AnonymizationLinkReader] no stored link under this id',
+				context: ['linkId' => $linkId, 'error' => $e->getMessage()]
+			);
+
+			return null;
+		}
+
+		if ($entity instanceof ObjectEntity === false) {
+			return null;
+		}
+
+		return $entity;
+
+	}//end storedObject()
+
+	/**
+	 * One link by its uuid, read as the caller, or null.
+	 *
+	 * @param string $linkId The link uuid.
+	 *
+	 * @return array<string, mixed>|null The link, with its `uuid`.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.1
+	 */
+	public function byId(string $linkId): ?array {
+		if ($linkId === '') {
+			return null;
+		}
+
+		try {
+			$entity = $this->objectResolver->resolve()->find(
+				id: $linkId,
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA
+			);
+		} catch (Throwable $e) {
+			$this->logger->info(
+				message: '[AnonymizationLinkReader] no readable link under this id',
+				context: ['linkId' => $linkId, 'error' => $e->getMessage()]
+			);
+
+			return null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		$link = $this->withUuid(row: $entity);
+		if (($link['uuid'] ?? '') === '') {
+			$link['uuid'] = $linkId;
+		}
+
+		return $link;
+
+	}//end byId()
+
+	/**
+	 * A normalised link that also carries its uuid.
+	 *
+	 * @param mixed $row The OpenRegister row.
+	 *
+	 * @return array<string, mixed> The link.
+	 *
+	 * @spec exclude Shape adapter over an OpenRegister response.
+	 */
+	private function withUuid(mixed $row): array {
+		$link = $this->normalise(row: $row);
+		$uuid = '';
+		if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
+			$uuid = (string) $row->getUuid();
+		}
+
+		if ($uuid === '' && is_array($row) === true) {
+			$uuid = (string) ($row['@self']['id'] ?? ($row['uuid'] ?? ($row['id'] ?? '')));
+		}
+
+		$link['uuid'] = (string) ($link['uuid'] ?? $uuid);
+		if ($link['uuid'] === '') {
+			$link['uuid'] = (string) ($link['@self']['id'] ?? $uuid);
+		}
+
+		return $link;
+
+	}//end withUuid()
 
 	/**
 	 * Read one OpenRegister row into the flat shape this app uses.

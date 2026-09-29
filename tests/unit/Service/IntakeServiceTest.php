@@ -19,6 +19,14 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\BackgroundJob\IntakeOcrJob;
+use OCA\Filinq\Service\Intake\IntakeOcrQueue;
+use OCA\Filinq\Service\Intake\IntakeReadingProgress;
+use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
+use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\BackgroundJob\IJobList;
+use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
@@ -51,6 +59,8 @@ use Psr\Log\LoggerInterface;
  */
 class IntakeServiceTest extends TestCase {
 
+	use OcrDoubles;
+
 	/**
 	 * Objects the fake OpenRegister was asked to store, in order.
 	 *
@@ -64,6 +74,13 @@ class IntakeServiceTest extends TestCase {
 	 * @var array<int, string|null>
 	 */
 	private array $writtenTo = [];
+
+	/**
+	 * Jobs the queue added.
+	 *
+	 * @var array<int, array{0: string, 1: mixed}>
+	 */
+	private array $queuedJobs = [];
 
 	/**
 	 * Build the service over a fake register holding the given rows.
@@ -80,6 +97,8 @@ class IntakeServiceTest extends TestCase {
 		bool $mayWriteIntake = true,
 		bool $mayWriteTarget = true,
 		?string $placedAt = null,
+		bool $readOnArrival = true,
+		string $mimeType = 'application/pdf',
 	): IntakeService {
 		$objectService = $this->createMock(ObjectService::class);
 		// 🔴 `searchObjectsBySlug`, not `searchObjects`: the repository passes
@@ -182,10 +201,91 @@ class IntakeServiceTest extends TestCase {
 			$routing,
 			$parties,
 			$session,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->ocrQueue(readOnArrival: $readOnArrival, mimeType: $mimeType)
 		);
 
 	}//end service()
+
+	/**
+	 * The real reading-on-arrival queue over a job list that records what it is given.
+	 *
+	 * @param bool $readOnArrival The admin setting.
+	 * @param string $mimeType The MIME type of every file.
+	 *
+	 * @return IntakeOcrQueue The queue.
+	 */
+	private function ocrQueue(bool $readOnArrival, string $mimeType): IntakeOcrQueue {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $key === IntakeOcrQueue::SETTING ? ($readOnArrival ? '1' : '0') : $default
+		);
+		$root = $this->createMock(IRootFolder::class);
+		$root->method('getFirstNodeById')->willReturnCallback(fn (int $id) => $this->ocrFile(id: $id, mimeType: $mimeType));
+		$jobs = $this->createMock(IJobList::class);
+		$jobs->method('add')->willReturnCallback(
+			function (string $job, mixed $argument = null): void {
+				$this->queuedJobs[] = [$job, $argument];
+			}
+		);
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getDateTime')->willReturn(new \DateTime('2026-09-29T08:00:00+00:00'));
+
+		return new IntakeOcrQueue($config, $this->ocrService(), $root, $jobs, new IntakeReadingProgress(), $time);
+
+	}//end ocrQueue()
+
+	/**
+	 * A scan that arrives is marked queued and its reading job is queued with it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
+	 */
+	public function testAnArrivingScanIsQueuedForReading(): void {
+		$stored = $this->service(rows: [])->receive(event: $this->scanArrives());
+
+		$this->assertSame('queued', $stored['readingState']);
+		$this->assertSame('2026-09-29T08:00:00+00:00', $stored['readingUpdatedAt']);
+		$this->assertSame([[IntakeOcrJob::class, ['uuid' => 'intake-new', 'fileId' => 4711]]], $this->queuedJobs);
+
+	}//end testAnArrivingScanIsQueuedForReading()
+
+	/**
+	 * Nothing is queued for a repeat delivery, with the setting off, or for a file OCR does not read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
+	 */
+	public function testNothingIsQueuedWhenThereIsNothingToRead(): void {
+		$this->service(rows: [$this->waitingRow()])->receive(event: $this->scanArrives());
+		$off = $this->service(rows: [], readOnArrival: false)->receive(event: $this->scanArrives());
+		$word = $this->service(rows: [], mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+			->receive(event: $this->scanArrives());
+
+		$this->assertSame([], $this->queuedJobs);
+		$this->assertArrayNotHasKey('readingState', $off);
+		$this->assertArrayNotHasKey('readingState', $word);
+
+	}//end testNothingIsQueuedWhenThereIsNothingToRead()
+
+	/**
+	 * The scanner's delivery of scan-0001.pdf.
+	 *
+	 * @return IntakeDocumentReceivedEvent The event.
+	 */
+	private function scanArrives(): IntakeDocumentReceivedEvent {
+		return new IntakeDocumentReceivedEvent(
+			channel: 'scan',
+			fileId: 4711,
+			fileName: 'scan-0001.pdf',
+			subject: 'Bezwaarschrift',
+			sender: 'Balie postkamer',
+			sourceRef: 'scanbatch-0001'
+		);
+
+	}//end scanArrives()
 
 	/**
 	 * One waiting intake document.

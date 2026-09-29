@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -131,6 +132,54 @@ class AnonymizationPersistenceService {
 
 		return $resultInfo;
 	}//end recordAnonymizationLink()
+
+	/**
+	 * Point a source file's anonymisation link at the key its last run kept.
+	 *
+	 * A second write after recordAnonymizationLink(), because the key names the
+	 * link and so can only be stored once the link has a uuid. The existing
+	 * record is written back whole with its `@self`, which is OpenRegister's
+	 * update path, so nothing else on the link changes and `runCount` does not
+	 * move. An empty `$mappingRef` says the last run kept no key.
+	 *
+	 * Unlike recordAnonymizationLink() this one throws: a link that points at a
+	 * deleted key, or at none while one exists, is exactly the drift the caller
+	 * has to report rather than swallow.
+	 *
+	 * @param int $fileId The source Nextcloud file id.
+	 * @param string $mappingRef The pseudonymMap uuid, or '' for none.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the link cannot be found or written.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 */
+	public function setMappingRef(int $fileId, string $mappingRef): void {
+		$objectService = $this->locator->get(className: 'OCA\OpenRegister\Service\ObjectService');
+		$results = $objectService->searchObjectsBySlug(
+			registerSlug: 'filinq',
+			schemaSlug: 'anonymizationLink',
+			filters: ['sourceFileId' => $fileId]
+		);
+
+		$existing = [];
+		if (is_array($results) === true && empty($results) === false) {
+			$existing = $this->extractLinkObjectData(candidate: $results[0]);
+		}
+
+		if ($existing === [] || (int) ($existing['sourceFileId'] ?? 0) !== $fileId) {
+			throw new RuntimeException('No anonymisation link for file ' . $fileId . ' to point at its key.');
+		}
+
+		$existing['mappingRef'] = $mappingRef;
+		$objectService->saveObject(
+			object: $existing,
+			register: 'filinq',
+			schema: 'anonymizationLink'
+		);
+
+	}//end setMappingRef()
 
 	/**
 	 * Create publicationConsent records for each unredacted entity after a successful anonymise run.

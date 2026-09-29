@@ -82,6 +82,7 @@ Features that are fully implemented and available in the current release.
 | [Entity Management](./entity-management.md) | entity-management.md | Media-behandelingcomponent | TEC-DMS-2 | Done |
 | [Advanced Template Management](./advanced-template-management.md) | advanced-template-management.md | Documentcreatiecomponent | TEC-DMS-1, TEC-DMS-8 | Done |
 | [Print Functionality](./print-functionality.md) | print-functionality.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
+| [Print jobs](./print-jobs.md) | print-jobs.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
 | [CI/CD Quality Checks](./ci-cd-quality-checks.md) | ci-cd-quality-checks.md | — | — | Done |
 | [Backend Services](./backend.md) | backend.md | — | — | Done |
 
@@ -107,8 +108,10 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 
 | Feature | Doc | GEMMA | TEC | Status |
 |---------|-----|-------|-----|--------|
+| [Woo publication pipeline](./woo-publicatie-pipeline.md) | woo-publicatie-pipeline.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |
 | [Digital Signing Integration](./digital-signing.md) | digital-signing.md | — | TEC-DMS-4 | Roadmap |
+| [Signing with LibreSign](./libresign-signing-provider.md) | libresign-signing-provider.md | — | TEC-DMS-4 | Done |
 | [Document Classification](./document-classification.md) | document-classification.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |
 | [Document Comparison](./document-comparison.md) | document-comparison.md | Documentbeheercomponent | TEC-DMS-8 | Roadmap |
 | [Document Validation](./document-validation.md) | document-validation.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |

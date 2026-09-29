@@ -18,7 +18,7 @@
  *      Custom-dictionary matching does not go through the NER backend at all —
  *      `CustomDictionaryDetectionRunner` is a pure term matcher over the
  *      extracted text. Measured on an instance reporting
- *      `anonymiserBackend.method = "regex"` with no backend installed:
+ *      `anonymiserBackend.effectiveMethod = "regex"` with no backend installed:
  *        POST api/anonymization/extract/{fileId} -> 200
  *        {"entities":[{"type":"CUSTOM_DICTIONARY","value":"Operatie Zilverreiger",
  *                      "confidence":"1.00",...}],"entityCount":1}

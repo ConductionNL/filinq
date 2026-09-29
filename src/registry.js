@@ -77,9 +77,12 @@ import DossierIndex from './views/dossier/DossierIndex.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import IntakeIndex from './views/intake/IntakeIndex.vue'
+import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
 import StandingConsentIndex from './views/policy/StandingConsentIndex.vue'
+import PrintJobs from './views/printJobs/PrintJobs.vue'
+import PublicationsPage from './views/publications/PublicationsPage.vue'
 import SignatureVerification from './views/signing/SignatureVerification.vue'
 import SigningFolder from './views/signing/SigningFolder.vue'
 import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
@@ -105,6 +108,9 @@ export default {
 	SigningRequestForm: { kind: 'page', component: SigningRequestForm },
 	SignatureVerification: { kind: 'page', component: SignatureVerification },
 	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
+	PrintJobs: { kind: 'page', component: PrintJobs },
+	LegalHolds: { kind: 'page', component: LegalHolds },
+	PublicationsPage: { kind: 'page', component: PublicationsPage },
 	PrintPreview: { kind: 'page', component: PrintPreview },
 	ComparisonView: { kind: 'page', component: ComparisonView },
 	VersionsView: { kind: 'page', component: VersionsView },

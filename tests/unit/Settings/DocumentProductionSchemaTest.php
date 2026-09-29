@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;
@@ -56,7 +56,7 @@ class DocumentProductionSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testTheThreeSchemasAreDeclaredAndListed(): void {
 		$descriptor = $this->descriptor();
@@ -76,7 +76,7 @@ class DocumentProductionSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testALayoutIsVersionedAndSaysWhatItReplaced(): void {
 		$layout = $this->descriptor()['components']['schemas']['pageLayout'];
@@ -95,7 +95,7 @@ class DocumentProductionSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAGeneratedDocumentRecordsWhatMadeItAndWhenItComesBack(): void {
 		$document = $this->descriptor()['components']['schemas']['generatedDocument'];
@@ -193,7 +193,7 @@ class DocumentProductionSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAnArchiveJobRecordsWhatWasHandedOver(): void {
 		$job = $this->descriptor()['components']['schemas']['archiveJob'];
@@ -214,7 +214,7 @@ class DocumentProductionSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testOneLayoutIsSeeded(): void {
 		$seeded = [];

@@ -101,7 +101,7 @@ class DocumentController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function generate(): DataDownloadResponse|JSONResponse {
@@ -156,7 +156,7 @@ class DocumentController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-	 * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 *
 	 * @no-admin-idor-exempt object access runs under OpenRegister's RBAC,
 	 * which is ON by default. This method passes no `_rbac: false`, and none

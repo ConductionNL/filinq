@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Ocr\OcrResultRepository;
+use OCA\Filinq\Service\Ocr\OcrRunService;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,6 +50,8 @@ class FileListingService {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param FileUploadService $fileUploadService Upload and folder management
 	 * @param FileEntityStatsService $entityStatsService Entity counts and risk levels
+	 * @param OcrResultRepository $ocrResults The ocrResult rows, for the real OCR status
+	 * @param OcrRunService $ocrRuns Which MIME types OCR reads
 	 *
 	 * @return void
 	 */
@@ -55,6 +59,8 @@ class FileListingService {
 		private readonly LoggerInterface $logger,
 		private readonly FileUploadService $fileUploadService,
 		private readonly FileEntityStatsService $entityStatsService,
+		private readonly OcrResultRepository $ocrResults,
+		private readonly OcrRunService $ocrRuns,
 	) {
 
 	}//end __construct()
@@ -69,6 +75,7 @@ class FileListingService {
 	 * @return array<string, mixed> File info
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
 	 */
 	private function buildFileInfo(
 		\OCP\Files\File $file,
@@ -80,16 +87,10 @@ class FileListingService {
 		$riskLevel = $this->entityStatsService->getFileRiskLevel($fileId, $riskLevelService);
 		$mimeType = $file->getMimeType();
 
-		// Determine if file is an OCR candidate based on MIME type.
-		$ocrMimeTypes = [
-			'image/png',
-			'image/jpeg',
-			'image/tiff',
-			'image/bmp',
-			'image/gif',
-		];
-		$isOcrCandidate = in_array($mimeType, $ocrMimeTypes, true) === true
-			|| $mimeType === 'application/pdf';
+		// OCR status comes from the ocrResult row a real run wrote, not from
+		// the MIME type: a born-digital PDF that was only extracted was never
+		// OCR'd, and saying so hid the scans that needed it.
+		$ocr = $this->ocrStatus(fileId: $fileId, mimeType: $mimeType);
 
 		return [
 			'fileId' => $fileId,
@@ -102,12 +103,45 @@ class FileListingService {
 			'status' => $entityStats['status'],
 			'riskLevel' => $riskLevel,
 			'modified' => $file->getMTime(),
-			'ocrProcessed' => $isOcrCandidate
-				&& $entityStats['status'] !== 'uploaded',
-			'ocrConfidence' => null,
+			'ocrProcessed' => $ocr['ocrProcessed'],
+			'ocrConfidence' => $ocr['ocrConfidence'],
+			'ocrAvailable' => $ocr['ocrAvailable'],
 		];
 
 	}//end buildFileInfo()
+
+	/**
+	 * A file's OCR status from its ocrResult row.
+	 *
+	 * @param int $fileId The file id.
+	 * @param string $mimeType The file's MIME type.
+	 *
+	 * @return array{ocrProcessed: bool, ocrConfidence: float|int|null, ocrAvailable: bool} The status.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
+	 */
+	private function ocrStatus(int $fileId, string $mimeType): array {
+		$status = ['ocrProcessed' => false, 'ocrConfidence' => null, 'ocrAvailable' => false];
+		if ($this->ocrRuns->isCandidate(mimeType: $mimeType) === false) {
+			return $status;
+		}
+
+		$status['ocrAvailable'] = true;
+		try {
+			$result = $this->ocrResults->findForFile(fileId: $fileId);
+		} catch (Exception $e) {
+			$this->logger->warning('OCR status could not be read', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
+			return $status;
+		}
+
+		if ($result !== null) {
+			$status['ocrProcessed'] = true;
+			$status['ocrConfidence'] = $result['confidence'] ?? null;
+		}
+
+		return $status;
+
+	}//end ocrStatus()
 
 	/**
 	 * List all processed files in the user's Filinq folder

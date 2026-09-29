@@ -104,6 +104,7 @@ $extra = [
         // (documents-from-a-template).
         ['name' => 'documentProduction#layoutVersions', 'url' => 'api/page-layouts', 'verb' => 'GET'],
         ['name' => 'documentProduction#editLayout', 'url' => 'api/page-layouts', 'verb' => 'POST'],
+        ['name' => 'documentProduction#createLayout', 'url' => 'api/page-layouts/new', 'verb' => 'POST'],
         ['name' => 'documentProduction#archivePreflight', 'url' => 'api/case-archive/preflight', 'verb' => 'GET'],
         ['name' => 'documentProduction#archiveManifest', 'url' => 'api/case-archive/manifest', 'verb' => 'POST'],
         ['name' => 'documentProduction#runPeriodic', 'url' => 'api/periodic-documents/run', 'verb' => 'POST'],
@@ -204,11 +205,39 @@ $extra = [
         ['name' => 'print#downloadPdfA', 'url' => 'api/print/pdf-a', 'verb' => 'POST'],
 
         // Print job queue routes (for external print services).
+        // OCR (ocr-trigger-surface): run on a file the caller can open, read its result.
+        ['name' => 'ocr#index', 'url' => 'api/ocr', 'verb' => 'GET'],
+        ['name' => 'ocr#run', 'url' => 'api/ocr/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'ocr#show', 'url' => 'api/ocr/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // Reversible pseudonymisation: does a redacted copy keep a key, and restore it (gated, audited).
+        ['name' => 'pseudonymisation#status', 'url' => 'api/pseudonymisation/status/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'pseudonymisation#restore', 'url' => 'api/pseudonymisation/{linkId}/restore', 'verb' => 'POST'],
+        // Legal hold cases (e-discovery-legal-hold): the hold register, gated on hold authority in the service.
+        ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#show', 'url' => 'api/legal-holds/{id}', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#addScope', 'url' => 'api/legal-holds/{id}/scope', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#retry', 'url' => 'api/legal-holds/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#release', 'url' => 'api/legal-holds/{id}/release', 'verb' => 'POST'],
+        ['name' => 'printJob#index', 'url' => 'api/print/jobs', 'verb' => 'GET'],
         ['name' => 'printJob#create', 'url' => 'api/print/jobs', 'verb' => 'POST'],
         ['name' => 'printJob#batch', 'url' => 'api/print/batch', 'verb' => 'POST'],
         ['name' => 'printJob#show', 'url' => 'api/print/jobs/{id}', 'verb' => 'GET'],
         ['name' => 'printJob#download', 'url' => 'api/print/jobs/{id}/download', 'verb' => 'GET'],
         ['name' => 'printJob#updateStatus', 'url' => 'api/print/jobs/{id}/status', 'verb' => 'PUT'],
+
+        // Woo publication pipeline (woo-publicatie-pipeline). The log has no
+        // update or delete route: an entry is written once.
+        ['name' => 'publication#index', 'url' => 'api/publications', 'verb' => 'GET'],
+        ['name' => 'publication#create', 'url' => 'api/publications', 'verb' => 'POST'],
+        ['name' => 'publication#categories', 'url' => 'api/publications/categories', 'verb' => 'GET'],
+        ['name' => 'publication#show', 'url' => 'api/publications/{id}', 'verb' => 'GET'],
+        ['name' => 'publication#readiness', 'url' => 'api/publications/{id}/readiness', 'verb' => 'POST'],
+        ['name' => 'publication#metadata', 'url' => 'api/publications/{id}/metadata', 'verb' => 'PUT'],
+        ['name' => 'publication#handoff', 'url' => 'api/publications/{id}/handoff', 'verb' => 'POST'],
+        ['name' => 'publication#withdraw', 'url' => 'api/publications/{id}/withdraw', 'verb' => 'POST'],
+        ['name' => 'publication#destructionDate', 'url' => 'api/publications/{id}/destruction-date', 'verb' => 'POST'],
 
         // Document generation routes (document-creatie-sjablonen).
         ['name' => 'document#generate', 'url' => 'api/documents/generate', 'verb' => 'POST'],

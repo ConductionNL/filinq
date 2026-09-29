@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use ZipArchive;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class CaseArchiveWriter {
 
@@ -87,7 +87,7 @@ class CaseArchiveWriter {
 	 *
 	 * @throws RuntimeException When the archive cannot be written.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function write(string $userId, array $domain, array $manifest, int $ceiling): array {
 		$userFolder = $this->rootFolder->getUserFolder($userId);
@@ -140,7 +140,7 @@ class CaseArchiveWriter {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function discard(File $file): void {
 		try {

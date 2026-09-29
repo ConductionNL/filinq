@@ -38,6 +38,8 @@ class ObjectService {
 	 * @param string $schema Schema slug
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param bool $_render False returns the stored row: no writeOnly strip, no RBAC projection.
+	 * @param bool $_audit False skips the read audit entry.
 	 *
 	 * @return mixed
 	 */
@@ -47,6 +49,8 @@ class ObjectService {
 		string $schema = '',
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
 	) {
 		return null;
 	}//end find()
@@ -375,8 +379,15 @@ class ConfigurationService {
  * @link     https://www.filinq.app
  */
 class TextExtractionService {
-	public function extractFile(int $fileId, bool $force = false): void {
+	public function extractFile(int $fileId, bool $forceReExtract = false, ?array $entityTypes = null): void {
 	}//end extractFile()
+
+	/**
+	 * Mirrors OpenRegister's getExtractedText(int $fileId): ?string at development 910471dc.
+	 */
+	public function getExtractedText(int $fileId): ?string {
+		return null;
+	}//end getExtractedText()
 }//end class
 
 /**
@@ -808,6 +819,84 @@ class ObjectEntity {
 	 *
 	 * @return array
 	 */
+	/** @var array<string, mixed>|null The retention block (legal hold lives here). */
+	protected ?array $retention = null;
+
+	/** @var string|null The owning user. */
+	protected ?string $owner = null;
+
+	/** @var int|string|null The object's folder id. */
+	protected int|string|null $folder = null;
+
+	/**
+	 * The retention block, as the real entity's magic getter returns it.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public function getRetention(): ?array {
+		return $this->retention;
+	}//end getRetention()
+
+	/**
+	 * Set the retention block.
+	 *
+	 * @param array<string, mixed>|null $retention The block.
+	 *
+	 * @return void
+	 */
+	public function setRetention(?array $retention): void {
+		$this->retention = $retention;
+	}//end setRetention()
+
+	/**
+	 * Mirrors ObjectEntity::hasActiveLegalHold().
+	 *
+	 * @return bool
+	 */
+	public function hasActiveLegalHold(): bool {
+		return (((($this->getRetention() ?? [])['legalHold'] ?? [])['active'] ?? false) === true);
+	}//end hasActiveLegalHold()
+
+	/**
+	 * The owner.
+	 *
+	 * @return string|null
+	 */
+	public function getOwner(): ?string {
+		return $this->owner;
+	}//end getOwner()
+
+	/**
+	 * Set the owner.
+	 *
+	 * @param string|null $owner The owner.
+	 *
+	 * @return void
+	 */
+	public function setOwner(?string $owner): void {
+		$this->owner = $owner;
+	}//end setOwner()
+
+	/**
+	 * The folder id.
+	 *
+	 * @return int|string|null
+	 */
+	public function getFolder(): int|string|null {
+		return $this->folder;
+	}//end getFolder()
+
+	/**
+	 * Set the folder id.
+	 *
+	 * @param int|string|null $folder The folder.
+	 *
+	 * @return void
+	 */
+	public function setFolder(int|string|null $folder): void {
+		$this->folder = $folder;
+	}//end setFolder()
+
 	public function jsonSerialize() {
 		return [];
 	}//end jsonSerialize()
@@ -974,6 +1063,9 @@ class AuditTrailMapper {
 	 * @param ObjectEntity $object The object the entry relates to.
 	 * @param string $action The action type.
 	 * @param array $context Additional context data.
+	 * @param string|null $actorId The acting user, null for the session user.
+	 * @param string|null $actorName The acting user's display name.
+	 * @param string|null $ipAddress The request's address.
 	 *
 	 * @return AuditTrail
 	 */
@@ -981,6 +1073,9 @@ class AuditTrailMapper {
 		ObjectEntity $object,
 		string $action,
 		array $context = [],
+		?string $actorId = null,
+		?string $actorName = null,
+		?string $ipAddress = null,
 	): AuditTrail {
 		$trail = new AuditTrail();
 		$trail->setObjectUuid($object->getUuid());
@@ -1879,6 +1974,16 @@ interface Node {
 	 * @return bool
 	 */
 	public function isCreatable();
+
+	/**
+	 * Whether the acting user may read this node.
+	 *
+	 * Declared because the REAL `OCP\Files\Node` declares it, untyped, and
+	 * TemplateImageResolver asks it before reading an image for a template.
+	 *
+	 * @return bool
+	 */
+	public function isReadable();
 }//end interface
 
 /**
@@ -1950,6 +2055,15 @@ interface IRootFolder {
 	 * @return \OCP\Files\Folder
 	 */
 	public function getUserFolder(string $userId): \OCP\Files\Folder;
+
+	/**
+	 * The first node with this id anywhere (the real IRootFolder has it through Folder).
+	 *
+	 * @param int $id The file id
+	 *
+	 * @return \OCP\Files\Node|null
+	 */
+	public function getFirstNodeById(int $id): ?\OCP\Files\Node;
 }//end interface
 
 // ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.
@@ -2822,5 +2936,77 @@ class RegisterLeafProvidersEvent extends Event {
 
 	public function getLeaves(): array {
 		return $this->leaves;
+	}
+}//end class
+
+namespace OCA\OpenRegister\Service\Anonymisation;
+
+/**
+ * Stub for BackendInfo: one detection backend's probe record.
+ *
+ * Mirrors the real constructor (name, available, configured, lastProbedAt,
+ * latencyMs) and jsonSerialize() in OpenRegister
+ * lib/Service/Anonymisation/BackendInfo.php at development 910471dc.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Anonymisation
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class BackendInfo implements \JsonSerializable {
+	public function __construct(
+		public readonly string $name,
+		public readonly bool $available,
+		public readonly bool $configured,
+		public readonly ?string $lastProbedAt,
+		public readonly ?int $latencyMs,
+	) {
+	}
+
+	public function jsonSerialize(): array {
+		return [
+			'name' => $this->name,
+			'available' => $this->available,
+			'configured' => $this->configured,
+			'lastProbedAt' => $this->lastProbedAt,
+			'latencyMs' => $this->latencyMs,
+		];
+	}
+}//end class
+
+/**
+ * Stub for BackendState: what AnonymisationBackendService::getState() returns.
+ *
+ * Mirrors the real constructor and jsonSerialize() in OpenRegister
+ * lib/Service/Anonymisation/BackendState.php at development 910471dc.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Anonymisation
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class BackendState implements \JsonSerializable {
+	public function __construct(
+		public readonly bool $entityRecognitionEnabled,
+		public readonly string $activeMethod,
+		public readonly string $effectiveMethod,
+		public readonly array $backends,
+	) {
+	}
+
+	public function jsonSerialize(): array {
+		$backends = [];
+		foreach ($this->backends as $name => $info) {
+			$backends[$name] = $info->jsonSerialize();
+		}
+
+		return [
+			'entityRecognitionEnabled' => $this->entityRecognitionEnabled,
+			'activeMethod' => $this->activeMethod,
+			'effectiveMethod' => $this->effectiveMethod,
+			'backends' => $backends,
+		];
 	}
 }//end class

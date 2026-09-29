@@ -9,6 +9,10 @@
 			v-if="isAdmin"
 			:showWarning="anonymiserBackend.showWarning"
 			:appApiInstalled="anonymiserBackend.appApiInstalled"
+			:warning="anonymiserBackend.warning"
+			:activeMethod="anonymiserBackend.activeMethod"
+			:effectiveMethod="anonymiserBackend.effectiveMethod"
+			:showActiveBackend="true"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<NcSettingsSection
@@ -304,6 +308,26 @@
 				</div>
 			</div>
 
+			<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'Read scans on arrival') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:aria-label="t('filinq', 'Read scans on arrival')"
+					:modelValue="settings.ocr_on_arrival"
+					type="switch"
+					@update:modelValue="settings.ocr_on_arrival = $event" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.',
+						)
+					}}
+				</div>
+			</div>
+
 			<!-- Language selection -->
 			<div class="setting-item">
 				<div class="setting-label">
@@ -576,13 +600,50 @@
 						<option value="validsign">
 							{{ t('filinq', 'ValidSign') }}
 						</option>
+						<option v-if="libresignAvailable" value="libresign">
+							{{ t('filinq', 'LibreSign (certificate)') }}
+						</option>
 					</select>
 				</div>
+				<NcNoteCard
+					v-if="
+						settings.signing_provider === 'libresign'
+						&& !libresignAvailable
+					"
+					type="error">
+					{{
+						t(
+							'filinq',
+							'LibreSign is chosen but the LibreSign app is not enabled. Signing requests fail until you enable it or choose another provider.',
+						)
+					}}
+				</NcNoteCard>
 				<div class="setting-description">
 					{{
 						t(
 							'filinq',
 							'The signing provider to use for new signing requests',
+						)
+					}}
+				</div>
+			</div>
+
+			<div
+				v-if="settings.signing_provider === 'libresign'"
+				class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'LibreSign certificate is qualified') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:aria-label="t('filinq', 'LibreSign certificate is qualified')"
+					:modelValue="settings.libresign_qualified"
+					type="switch"
+					@update:modelValue="settings.libresign_qualified = $event" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).',
 						)
 					}}
 				</div>
@@ -678,6 +739,9 @@
 
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
+
+		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
+		<PageLayoutSettings v-if="isAdmin" />
 
 		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
 		<NcSettingsSection
@@ -842,7 +906,12 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import PageLayoutSettings from './PageLayoutSettings.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import {
+	backendStateFromSettings,
+	emptyBackendState,
+} from '../../services/anonymiserBackendState.js'
 import { initialSections } from '../../services/settingsSections.js'
 
 /** The object types whose register and schema this page binds. */
@@ -865,6 +934,7 @@ export default {
 		FileExportOutline,
 		AccountSearchOutline,
 		EntityTypeSelector,
+		PageLayoutSettings,
 		SignerIdentitySettings,
 	},
 
@@ -874,12 +944,8 @@ export default {
 			saving: false,
 			isAdmin: false,
 			openRegisterInstalled: false,
-			anonymiserBackend: {
-				method: 'regex',
-				appApiInstalled: false,
-				warningDismissed: false,
-				showWarning: false,
-			},
+			libresignAvailable: false,
+			anonymiserBackend: emptyBackendState(),
 
 			settingsData: {},
 			availableRegisters: [],
@@ -902,9 +968,11 @@ export default {
 				enable_keyword_extraction: true,
 				enable_topic_classification: true,
 				ocr_enabled: true,
+				ocr_on_arrival: true,
 				ocr_dpi: 300,
 				signing_enabled: false,
 				signing_provider: 'native',
+				libresign_qualified: false,
 				signing_default_level: 'SES',
 				signing_request_expiry_days: 30,
 				signing_guardian_consent_age: 16,
@@ -1071,20 +1139,16 @@ export default {
 				.then((response) => response.json())
 				.then((data) => {
 					this.openRegisterInstalled = data.openRegisters
+					this.libresignAvailable = data.libresignAvailable === true
 					this.isAdmin = data.isAdmin ?? false
 					this.settingsData = data
 					this.availableRegisters = data.availableRegisters
 
 					// Backend warning state.
 					if (data.anonymiserBackend) {
-						this.anonymiserBackend = {
-							method: data.anonymiserBackend.method ?? 'regex',
-							appApiInstalled:
-								data.anonymiserBackend.appApiInstalled ?? false,
-							warningDismissed:
-								data.anonymiserBackend.warningDismissed ?? false,
-							showWarning: data.anonymiserBackend.showWarning ?? false,
-						}
+						this.anonymiserBackend = backendStateFromSettings(
+							data.anonymiserBackend,
+						)
 					}
 
 					// Update local settings
@@ -1097,12 +1161,16 @@ export default {
 					this.settings.enable_topic_classification =
 						data.enable_topic_classification ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
+					this.settings.ocr_on_arrival = data.ocr_on_arrival ?? true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
 					// Signing settings
 					this.settings.signing_enabled =
 						data.signing_enabled === '1' || data.signing_enabled === true
 					this.settings.signing_provider =
 						data.signing_provider || 'native'
+					this.settings.libresign_qualified =
+						data.libresign_qualified === true
+						|| data.libresign_qualified === '1'
 					this.settings.signing_default_level =
 						data.signing_default_level || 'SES'
 					this.settings.signing_request_expiry_days =
@@ -1290,10 +1358,12 @@ export default {
 					: '0',
 
 				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
+				ocr_on_arrival: this.settings.ocr_on_arrival ? '1' : '0',
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
 				signing_enabled: this.settings.signing_enabled ? '1' : '0',
 				signing_provider: this.settings.signing_provider || 'native',
+				libresign_qualified: this.settings.libresign_qualified ? '1' : '0',
 				signing_default_level: this.settings.signing_default_level || 'SES',
 				signing_request_expiry_days: String(
 					this.settings.signing_request_expiry_days || 30,
@@ -1429,7 +1499,7 @@ export default {
 				this.anonymiserBackend = {
 					...this.anonymiserBackend,
 					warningDismissed: false,
-					showWarning: true,
+					showWarning: this.anonymiserBackend.warning !== null,
 				}
 			} catch (err) {
 				showError(

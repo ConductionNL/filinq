@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class PageLayoutService {
 
@@ -81,7 +81,7 @@ class PageLayoutService {
 	 *
 	 * @return array<string, mixed>|null The layout, or null when there is none.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function resolve(string $name, ?int $version = null): ?array {
 		if ($name === '') {
@@ -114,6 +114,59 @@ class PageLayoutService {
 	}//end resolve()
 
 	/**
+	 * Every layout at its active version, for the admin list.
+	 *
+	 * @return array<int, array<string, mixed>> The active layouts, by name.
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function activeLayouts(): array {
+		$layouts = $this->search(filters: ['active' => true]);
+		usort(
+			$layouts,
+			static fn (array $left, array $right): int => strcmp((string)($left['name'] ?? ''), (string)($right['name'] ?? ''))
+		);
+
+		return $layouts;
+
+	}//end activeLayouts()
+
+	/**
+	 * Write the first version of a new layout.
+	 *
+	 * The version bookkeeping is the service's, never the caller's, exactly as
+	 * for an edit.
+	 *
+	 * @param string $name The layout name.
+	 * @param array<string, mixed> $fields The paper, margins, header, footer, logo and first-page fields.
+	 *
+	 * @return array<string, mixed> The stored version 1.
+	 *
+	 * @throws RuntimeException When the name is empty or already taken, or the write fails.
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function create(string $name, array $fields): array {
+		$name = trim($name);
+		if ($name === '') {
+			throw new RuntimeException(message: 'A page layout needs a name.');
+		}
+
+		if ($this->resolve(name: $name) !== null) {
+			throw new RuntimeException(message: 'There is already a page layout called ' . $name . '.');
+		}
+
+		unset($fields['uuid']);
+		$fields['name'] = $name;
+		$fields['layoutVersion'] = 1;
+		$fields['supersedes'] = '';
+		$fields['active'] = true;
+
+		return $this->save(layout: $fields);
+
+	}//end create()
+
+	/**
 	 * Edit a layout by writing the next version of it.
 	 *
 	 * The earlier version is left on disk and only marked inactive. Documents
@@ -127,7 +180,7 @@ class PageLayoutService {
 	 *
 	 * @throws RuntimeException When there is no such layout, or the write fails.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function edit(string $name, array $changes): array {
 		$current = $this->resolve(name: $name);
@@ -161,7 +214,7 @@ class PageLayoutService {
 	 *
 	 * @return array<string, mixed> The options, in the shape the render pipeline takes.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function pdfOptions(array $layout): array {
 		$orientation = 'P';
@@ -203,7 +256,7 @@ class PageLayoutService {
 	 *
 	 * @return array<string, mixed> The entry, naming the layout version.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function stamp(array $document, ?array $layout): array {
 		if ($layout === null) {
@@ -224,9 +277,30 @@ class PageLayoutService {
 	 *
 	 * @return array<int, array<string, mixed>> The versions.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function versionsOf(string $name): array {
+		$versions = $this->search(filters: ['name' => $name]);
+
+		usort(
+			$versions,
+			static fn (array $left, array $right): int => ((int)($right['layoutVersion'] ?? 0) <=> (int)($left['layoutVersion'] ?? 0))
+		);
+
+		return $versions;
+
+	}//end versionsOf()
+
+	/**
+	 * The stored layouts matching the filters, as plain field arrays.
+	 *
+	 * @param array<string, mixed> $filters The OpenRegister filters.
+	 *
+	 * @return array<int, array<string, mixed>> The layouts.
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	private function search(array $filters): array {
 		try {
 			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
 			// `searchObjects` answers a slug with zero rows and no error, so
@@ -235,12 +309,12 @@ class PageLayoutService {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: IntakeRepository::REGISTER,
 				schemaSlug: self::SCHEMA,
-				filters: ['name' => $name]
+				filters: $filters
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[PageLayoutService] could not read the page layouts',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'name' => $name, 'error' => $e->getMessage()]
+				context: ['file' => __FILE__, 'line' => __LINE__, 'filters' => $filters, 'error' => $e->getMessage()]
 			);
 
 			return [];
@@ -270,14 +344,10 @@ class PageLayoutService {
 			$versions[] = $fields;
 		}
 
-		usort(
-			$versions,
-			static fn (array $left, array $right): int => ((int)($right['layoutVersion'] ?? 0) <=> (int)($left['layoutVersion'] ?? 0))
-		);
-
 		return $versions;
 
-	}//end versionsOf()
+	}//end search()
+
 
 	/**
 	 * Write one layout.
@@ -289,7 +359,7 @@ class PageLayoutService {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function save(array $layout, string $uuid = ''): array {
 		unset($layout['uuid']);

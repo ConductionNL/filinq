@@ -39,8 +39,10 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
+use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -99,8 +101,14 @@ class AnonymizationService {
 	 *                                          rather than on the screen, so the API, the batch
 	 *                                          path and the folder job all reach the same
 	 *                                          refusal.
+	 * @param AnonymiserBackendStateClient $backendState OpenRegister's detection state, read
+	 *                                                   once per run: no live detector, no file.
+	 * @param OcrExtractionFallback $ocrFallback Runs OCR on a scan OpenRegister extracted no
+	 *                                           text from, and flags what detection missed.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -113,6 +121,8 @@ class AnonymizationService {
 		private readonly ProhibitionPolicyService $prohibitionPolicy,
 		private readonly DocumentAnonymizeRunner $anonymizeRunner,
 		private readonly RedactionOutputGuard $reviewGuard,
+		private readonly AnonymiserBackendStateClient $backendState,
+		private readonly OcrExtractionFallback $ocrFallback,
 	) {
 
 	}//end __construct()
@@ -193,6 +203,7 @@ class AnonymizationService {
 	 * @throws Exception If extraction or detection fails
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.3
 	 */
 	private function runExtraction(int $fileId, array $options): array {
 		$force = $options['force'];
@@ -214,6 +225,15 @@ class AnonymizationService {
 			// detection is disabled here.
 			$entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
 			$textExtractor->extractFile($fileId, $force, $entityTypes);
+
+			// OpenRegister does no OCR, so a scan comes back without text and
+			// would read as "nothing to redact". The fallback runs OCR for it
+			// and says on the result when detection could not see the scan.
+			$ocrFields = $this->ocrFallback->afterExtraction(
+				fileId: $fileId,
+				textExtractor: $textExtractor,
+				force: $force
+			);
 
 			$this->logger->debug(
 				'Text extracted from file',
@@ -255,11 +275,14 @@ class AnonymizationService {
 				entityRelationMapper: $entityRelationMapper
 			);
 
-			return $this->buildExtractionResult(
-				fileId: $fileId,
-				normalized: $normalized,
-				entityCount: count($entities),
-				dictionaryWarning: $dictionaryWarning
+			return array_merge(
+				$this->buildExtractionResult(
+					fileId: $fileId,
+					normalized: $normalized,
+					entityCount: count($entities),
+					dictionaryWarning: $dictionaryWarning
+				),
+				$ocrFields
 			);
 		} catch (Exception $e) {
 			$this->logger->error(
@@ -463,6 +486,8 @@ class AnonymizationService {
 	 * @param string|null $dossierKey Stable folder id for the dossier when
 	 *                                $scope='dossier'; null lets OpenRegister
 	 *                                fall back to the file's parent folder.
+	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
+	 *                         back into names later. False, the default, keeps nothing.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional warning/createdConsents fields
 	 *
@@ -473,12 +498,17 @@ class AnonymizationService {
 	 * @throws ProhibitionGateException When the prohibition gate fires (high-confidence matches
 	 *                                  missing or invalid overrides for high-confidence matches).
 	 * @throws RedactionNotReviewedException When nobody has checked this detection run yet.
+	 * @throws DetectionUnavailableException When no live entity detector is behind the run.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
+	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
 	public function anonymizeDocument(
 		int $fileId,
@@ -489,6 +519,7 @@ class AnonymizationService {
 		string $userId = '',
 		string $scope = 'document',
 		?string $dossierKey = null,
+		bool $reversible = false,
 	): array {
 		return $this->runAnonymize(
 			fileId: $fileId,
@@ -501,6 +532,8 @@ class AnonymizationService {
 				'unredactedEntities' => $unredactedEntities,
 				'scope' => $scope,
 				'dossierKey' => $dossierKey,
+				'reversible' => $reversible,
+				'userId' => $userId,
 			]
 		);
 
@@ -528,6 +561,8 @@ class AnonymizationService {
 	 * @param string $scope Placeholder-numbering scope forwarded to
 	 *                      OpenRegister.
 	 * @param string|null $dossierKey Stable folder id for the dossier.
+	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
+	 *                         back into names later. False, the default, keeps nothing.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional
 	 *                              warning/summaryFileId/createdConsents fields
@@ -536,9 +571,14 @@ class AnonymizationService {
 	 * @throws ConversionFailedException When the PDF cascade is exhausted.
 	 * @throws ProhibitionGateException When the prohibition gate fires.
 	 * @throws RedactionNotReviewedException When nobody has checked this detection run yet.
+	 * @throws DetectionUnavailableException When no live entity detector is behind the run.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/specs/anonymization/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
+	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
 	public function anonymizeDocumentWithBasisSummary(
 		int $fileId,
@@ -549,6 +589,7 @@ class AnonymizationService {
 		string $userId = '',
 		string $scope = 'document',
 		?string $dossierKey = null,
+		bool $reversible = false,
 	): array {
 		return $this->runAnonymize(
 			fileId: $fileId,
@@ -561,6 +602,8 @@ class AnonymizationService {
 				'unredactedEntities' => $unredactedEntities,
 				'scope' => $scope,
 				'dossierKey' => $dossierKey,
+				'reversible' => $reversible,
+				'userId' => $userId,
 			]
 		);
 
@@ -586,10 +629,12 @@ class AnonymizationService {
 	 * @throws ConversionFailedException When the PDF cascade is exhausted.
 	 * @throws ProhibitionGateException When the prohibition gate fires.
 	 * @throws RedactionNotReviewedException When nobody has checked this detection run yet.
+	 * @throws DetectionUnavailableException When no live entity detector is behind the run.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	private function runAnonymize(
 		int $fileId,
@@ -615,11 +660,65 @@ class AnonymizationService {
 		// at all rather than one nobody checked.
 		$this->reviewGuard->assertMayWrite(fileId: $fileId, entities: $entities);
 
-		return $this->anonymizeRunner->run(
+		// THE DETECTOR GATE. Zero detections from no detector look exactly like
+		// zero detections from a clean document, and the runner would file a
+		// copy of the input as the anonymised document. So the state is read
+		// once, here, and a run without a live detector writes nothing.
+		$backend = $this->requireLiveDetector();
+
+		$result = $this->anonymizeRunner->run(
 			fileId: $fileId,
 			entities: $entities,
 			options: $options
 		);
 
+		$redacted = count($entities);
+		$outcome = 'redacted';
+		if ($redacted === 0) {
+			$outcome = 'nothing_found';
+		}
+
+		$result['detection'] = [
+			'ran' => true,
+			'backend' => $backend,
+			'entitiesRedacted' => $redacted,
+			'outcome' => $outcome,
+		];
+
+		return $result;
+
 	}//end runAnonymize()
+
+	/**
+	 * Read OpenRegister's detection state and refuse unless a detector is live.
+	 *
+	 * @return string The effective backend the run will report.
+	 *
+	 * @throws DetectionUnavailableException When recognition is off, the effective
+	 *                                       backend is unavailable, or the state is unknown.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 */
+	private function requireLiveDetector(): string {
+		$state = $this->backendState->getState();
+		$reason = $this->backendState->refusalReason(state: $state);
+		$backend = (string)($state['effectiveMethod'] ?? '');
+
+		if ($reason === null) {
+			return $backend;
+		}
+
+		$messages = [
+			AnonymiserBackendStateClient::REFUSE_UNKNOWN => 'Anonymisation refused: filinq could not read which entity detector is live.',
+			AnonymiserBackendStateClient::REFUSE_DISABLED => 'Anonymisation refused: entity detection is disabled on this instance.',
+			AnonymiserBackendStateClient::REFUSE_UNAVAILABLE => 'Anonymisation refused: the entity detector "' . $backend . '" is unavailable.',
+		];
+
+		throw new DetectionUnavailableException(
+			reason: $reason,
+			message: $messages[$reason],
+			backend: $backend
+		);
+
+	}//end requireLiveDetector()
 }//end class

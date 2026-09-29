@@ -66,6 +66,8 @@ class ObjectEventRegistrar {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function register(IRegistrationContext $context): void {
 		// Register dashboard widgets.
@@ -95,6 +97,14 @@ class ObjectEventRegistrar {
 			DocumentRegistrationWriteGuard::class
 		);
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);
+
+		// A deleted anonymisation link takes its reversible-pseudonymisation
+		// key with it. Listener named by string, like the one below, to keep
+		// this class's coupling where it is.
+		$context->registerEventListener(
+			ObjectDeletedEvent::class,
+			'OCA\Filinq\EventListener\PseudonymMapLinkDeletedListener'
+		);
 
 		// REGISTERED BY STRING, NOT BY `::class`. `EntityRelationDecisionUpdatedEvent`
 		// belongs to OpenRegister, which is an OPTIONAL peer — a `use` plus

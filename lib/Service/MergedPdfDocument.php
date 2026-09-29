@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use setasign\Fpdi\Fpdi;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 class MergedPdfDocument extends Fpdi {
 	// 🔴 TWO SNIFFS ARE OFF FOR THIS FILE, AND ONLY FOR THIS FILE.
@@ -86,7 +86,7 @@ class MergedPdfDocument extends Fpdi {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function addBookmark(string $label, int $page): void {
 		$this->outlines[] = ['t' => $label, 'p' => max(1, $page), 'y' => 0];
@@ -98,7 +98,7 @@ class MergedPdfDocument extends Fpdi {
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function bookmarks(): array {
 		return $this->outlines;
@@ -113,7 +113,7 @@ class MergedPdfDocument extends Fpdi {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function putOutlines(): void {
 		$count = count($this->outlines);

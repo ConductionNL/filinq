@@ -42,6 +42,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Service\Signing\LibreSignProvider;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -153,6 +154,43 @@ class SignedArtifactProducer {
 	}//end produce()
 
 	/**
+	 * Hand a new request to a provider that runs the signer flow itself.
+	 *
+	 * Only LibreSign does today: it gets the document's bytes and the
+	 * signers, notifies them, and its request uuid becomes the request's
+	 * `externalId`. Other providers sign inside Filinq and get the request
+	 * unchanged. Runs before the request is stored, so a LibreSign that
+	 * refuses leaves nothing behind.
+	 *
+	 * @param array<string, mixed>     $request The request about to be stored
+	 * @param array<string, mixed>     $signers The signers as the caller sent them (the provider contract's type)
+	 *
+	 * @return array<string, mixed> The request, with externalId when delegated.
+	 *
+	 * @throws RuntimeException When the document cannot be read or LibreSign refuses.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function delegate(array $request, array $signers): array {
+		if (($request['provider'] ?? '') !== LibreSignProvider::IDENTIFIER) {
+			return $request;
+		}
+
+		$file = $this->resolveDocumentFile(fileId: (int)($request['documentFileId'] ?? 0), request: $request);
+		$result = $this->providerFactory->getProvider(identifier: LibreSignProvider::IDENTIFIER)->initiateSigning(
+			documentPath: '',
+			documentName: (string)($request['documentName'] ?? ''),
+			signers: $signers,
+			level: (string)($request['signatureLevel'] ?? 'SES'),
+			options: ['content' => $file->getContent()]
+		);
+		$request['externalId'] = (string)$result['externalId'];
+
+		return $request;
+
+	}//end delegate()
+
+	/**
 	 * Build the provider's evidence context.
 	 *
 	 * @param array<string, mixed> $request The completing signing-request array.
@@ -181,6 +219,12 @@ class SignedArtifactProducer {
 		// recorded identity evidence, from the stored signer records.
 		if (empty($request['signerEvidence']) === false && is_array($request['signerEvidence']) === true) {
 			$context['signerEvidence'] = $request['signerEvidence'];
+		}
+
+		// A provider that ran the signer flow itself (LibreSign) hands back
+		// the file it signed for this request.
+		if ((string)($request['externalId'] ?? '') !== '') {
+			$context['externalId'] = (string)$request['externalId'];
 		}
 
 		if ($verifiedActor === null) {

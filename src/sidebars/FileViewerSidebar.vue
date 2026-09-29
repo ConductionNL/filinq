@@ -246,6 +246,15 @@ const documentRecordId = computed(() =>
 			     Informational only — carries no action, hidden when no label resolved.
 			     Independent of the state chain above so it stays visible alongside
 			     whichever review state is currently showing. -->
+			<!-- A scan detection could not read (ocr-trigger-surface): an empty
+			     entity list here does not mean the document is clean. -->
+			<NcNoteCard
+				v-if="entry && entry.ocrWarning"
+				type="warning"
+				class="ocr-warning">
+				{{ entry.ocrWarning }}
+			</NcNoteCard>
+
 			<div
 				v-if="entry && entry.confidentialityLabel"
 				class="confidentiality-chip-row">
@@ -386,7 +395,33 @@ const documentRecordId = computed(() =>
 		<!-- Single-file review: per-file anonymise button. -->
 		<div
 			v-else-if="entry && entry.status === 'extracted'"
-			class="sidebar-action-bar">
+			class="sidebar-action-bar sidebar-action-bar--stacked">
+			<!-- Reversible pseudonymisation: irreversible stays the default, so
+			     nothing changes unless the operator chooses to keep a key. -->
+			<fieldset class="anonymise-mode">
+				<legend class="anonymise-mode__legend">
+					{{ t('filinq', 'After anonymising') }}
+				</legend>
+				<NcCheckboxRadioSwitch
+					v-model="anonymiseMode"
+					type="radio"
+					name="anonymise-mode"
+					value="irreversible">
+					{{ t('filinq', 'Keep no key (names cannot be restored)') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					v-model="anonymiseMode"
+					type="radio"
+					name="anonymise-mode"
+					value="reversible">
+					{{
+						t(
+							'filinq',
+							'Keep an encrypted key, so a permitted colleague can restore the names',
+						)
+					}}
+				</NcCheckboxRadioSwitch>
+			</fieldset>
 			<NcButton
 				variant="primary"
 				:disabled="includedCount === 0 || isAnonymising"
@@ -428,6 +463,24 @@ const documentRecordId = computed(() =>
 		<div
 			v-else-if="isViewingAnonymizedResult"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
+			<NcNoteCard v-if="keyWarningText" type="warning">
+				{{ keyWarningText }}
+			</NcNoteCard>
+			<NcButton
+				v-if="pseudonymStatus && pseudonymStatus.mayRestore"
+				wide
+				variant="secondary"
+				@click="restoreOpen = true">
+				<template #icon>
+					<KeyVariant :size="20" />
+				</template>
+				{{ t('filinq', 'Restore original') }}
+			</NcButton>
+			<RestoreOriginalDialog
+				v-if="restoreOpen && pseudonymStatus"
+				:linkId="pseudonymStatus.linkId"
+				:entryCount="pseudonymStatus.entryCount"
+				@close="restoreOpen = false" />
 			<NcButton wide variant="primary" :disabled="exporting" @click="onExport">
 				<template #icon>
 					<NcLoadingIcon v-if="exporting" :size="20" />
@@ -463,12 +516,14 @@ import { generateRemoteUrl } from '@nextcloud/router'
 import {
 	NcAppSidebar,
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
 import JSZip from 'jszip'
 import Download from 'vue-material-design-icons/Download.vue'
+import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldRefreshOutline from 'vue-material-design-icons/ShieldRefreshOutline.vue'
@@ -477,14 +532,17 @@ import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import DdToggle from '../components/DdToggle.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
+import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
+import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 
 export default {
 	name: 'FileViewerSidebar',
 	components: {
 		NcAppSidebar,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		DdToggle,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -493,6 +551,8 @@ export default {
 		DdRemovedEntitiesList,
 		DdSearchBar,
 		ProhibitionBlockedDialog,
+		RestoreOriginalDialog,
+		KeyVariant,
 		Plus,
 		ShieldLockOutline,
 		ShieldRefreshOutline,
@@ -527,6 +587,11 @@ export default {
 			exporting: false,
 			// Set when the export download could not be produced.
 			exportError: '',
+			// Reversible pseudonymisation: the mode chosen for the next run,
+			// and what the server says about the copy on screen.
+			anonymiseMode: 'irreversible',
+			pseudonymStatus: null,
+			restoreOpen: false,
 		}
 	},
 
@@ -846,6 +911,29 @@ export default {
 				this.entry?.status === 'completed'
 				&& !!this.entry?.anonymizedFilePath
 			)
+		},
+
+		/**
+		 * The file id of the redacted copy on screen, or null when none is.
+		 *
+		 * @return {number|null}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.2
+		 */
+		restoreTargetFileId() {
+			if (!this.isViewingAnonymizedResult) {
+				return null
+			}
+			return this.entry?.anonymizedFileId || this.currentFileId
+		},
+
+		/**
+		 * The warning after a reversible run that kept no key, or ''.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
+		 */
+		keyWarningText() {
+			return keyWarning(this.entry?.pseudonymisation)
 		},
 
 		/**
@@ -1179,6 +1267,28 @@ export default {
 			immediate: true,
 		},
 
+		restoreTargetFileId: {
+			/**
+			 * Ask whether the redacted copy on screen kept a key.
+			 *
+			 * @param {number|null} fileId The copy's file id.
+			 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.2
+			 */
+			async handler(fileId) {
+				this.pseudonymStatus = null
+				this.restoreOpen = false
+				if (!fileId) {
+					return
+				}
+				const status = await fetchPseudonymStatus(fileId)
+				if (this.restoreTargetFileId === fileId) {
+					this.pseudonymStatus = status
+				}
+			},
+
+			immediate: true,
+		},
+
 		/**
 		 * Push the current detected-entity values to the viewer so it can
 		 * highlight them in the rendered document (T09). Fires on load and
@@ -1291,6 +1401,7 @@ export default {
 		 * `anonymizedFileId`.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
 		 */
 		async onAnonymise() {
 			if (!this.entry) {
@@ -1299,12 +1410,13 @@ export default {
 			// When grondslagen are on, ask the backend to append the legal-grounds
 			// summary to the output. Both flags must travel together (see
 			// anonymiseEntry) or the summary is silently skipped.
-			await anonymizationStore.anonymiseEntry(
-				this.entry,
-				this.grondslagen
-					? { appendBasisSummary: true, outputFormat: 'pdf-only' }
-					: {},
-			)
+			const options = this.grondslagen
+				? { appendBasisSummary: true, outputFormat: 'pdf-only' }
+				: {}
+			if (this.anonymiseMode === 'reversible') {
+				options.reversible = true
+			}
+			await anonymizationStore.anonymiseEntry(this.entry, options)
 			if (this.entry.status === 'completed' && this.entry.anonymizedFileId) {
 				fileViewerStore.setAnonymizedVariant({
 					fileId: this.entry.anonymizedFileId,
@@ -1866,6 +1978,18 @@ export default {
 	--color-main-background: #fff;
 	flex-direction: column;
 	gap: 6px;
+}
+
+/* Reversible pseudonymisation: the mode choice above the anonymise button. */
+.anonymise-mode {
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+.anonymise-mode__legend {
+	font-weight: bold;
+	margin-bottom: var(--default-grid-baseline, 4px);
 }
 
 .dossier-batch-summary {

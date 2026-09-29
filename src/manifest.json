@@ -126,6 +126,27 @@
 			"order": 55
 		},
 		{
+			"id": "Publications",
+			"label": "Publications",
+			"icon": "Publish",
+			"route": "Publications",
+			"order": 57
+		},
+		{
+			"id": "PrintJobs",
+			"label": "Print jobs",
+			"icon": "Printer",
+			"route": "PrintJobs",
+			"order": 56
+		},
+		{
+			"id": "LegalHolds",
+			"label": "Legal holds",
+			"icon": "ScaleBalance",
+			"route": "LegalHolds",
+			"order": 58
+		},
+		{
 			"id": "SigningRequests",
 			"label": "Signing Requests",
 			"icon": "SignatureFreehand",
@@ -402,6 +423,30 @@
 			"title": "My Documents",
 			"component": "MyDocumentsIndex",
 			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
+		},
+		{
+			"id": "Publications",
+			"route": "/publications/:id?",
+			"type": "custom",
+			"title": "Publications",
+			"component": "PublicationsPage",
+			"_note": "The Woo publication pipeline (woo-publicatie-pipeline): the list and one publication with its checks, metadata, hand-off, withdrawal, destruction date and history. type:custom because it reads GET api/publications, which lists only publications whose document the caller can open, and every action is a pipeline step on that API, not an object edit."
+		},
+		{
+			"id": "PrintJobs",
+			"route": "/print-jobs",
+			"type": "custom",
+			"title": "Print jobs",
+			"component": "PrintJobs",
+			"_note": "The caller's own print jobs with status and download (print-jobs-in-the-app). type:custom because it reads GET api/print/jobs, which lists only the caller's jobs; the PDFs are in app data, not in the object."
+		},
+		{
+			"id": "LegalHolds",
+			"route": "/legal-holds",
+			"type": "custom",
+			"title": "Legal holds",
+			"component": "LegalHolds",
+			"_note": "The hold register (e-discovery-legal-hold): legal matters and the records they freeze, with placement per record, retry and release. type:custom because it reads GET api/legal-holds, which serves hold authority only (admins plus legal_hold_authority_groups); the legalHoldCase schema itself is admin-only in OpenRegister."
 		},
 		{
 			"id": "PrintPreview",

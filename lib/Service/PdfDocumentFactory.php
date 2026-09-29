@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 class PdfDocumentFactory {
 
@@ -49,7 +49,7 @@ class PdfDocumentFactory {
 	 *
 	 * @return MergedPdfDocument The document.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function create(): MergedPdfDocument {
 		return new MergedPdfDocument();
@@ -70,7 +70,7 @@ class PdfDocumentFactory {
 	 *
 	 * @throws RuntimeException When the bytes are not a PDF FPDI can read.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function appendPages(MergedPdfDocument $document, string $pdf): int {
 		if ($pdf === '') {
@@ -123,7 +123,7 @@ class PdfDocumentFactory {
 	 *
 	 * @throws RuntimeException When the bytes are not a PDF FPDI can read.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function appendCover(MergedPdfDocument $document, string $pdf, bool $withBookmark): int {
 		$pages = $this->appendPages(document: $document, pdf: $pdf);
@@ -143,7 +143,7 @@ class PdfDocumentFactory {
 	 *
 	 * @return string The PDF bytes.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function output(MergedPdfDocument $document): string {
 		// FPDI inherits Output() from FPDF, which has no stubs for static

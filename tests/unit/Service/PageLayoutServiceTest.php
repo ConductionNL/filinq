@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PageLayoutService;
 use OCA\OpenRegister\Service\ObjectService;
+use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -67,12 +68,20 @@ class PageLayoutServiceTest extends TestCase {
 		// slugs `filinq` and `pageLayout`.
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			static function (string $registerSlug, string $schemaSlug, array $filters) use ($versions): array {
-				$name = (string)($filters['name'] ?? '');
-
+				// Every filter the service passes must match, as OpenRegister's
+				// search does, so a filter on `active` is honoured too.
 				return array_values(
 					array_filter(
 						$versions,
-						static fn (array $row): bool => ((string)($row['name'] ?? '') === $name)
+						static function (array $row) use ($filters): bool {
+							foreach ($filters as $key => $value) {
+								if (($row[$key] ?? null) !== $value) {
+									return false;
+								}
+							}
+
+							return true;
+						}
 					)
 				);
 			}
@@ -121,7 +130,7 @@ class PageLayoutServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testATemplateNamingAVersionGetsThatVersion(): void {
 		$three = ($this->versionTwo() + []);
@@ -142,7 +151,7 @@ class PageLayoutServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testEditingALayoutWritesANewVersion(): void {
 		$service = $this->service(versions: [$this->versionTwo()]);
@@ -167,7 +176,7 @@ class PageLayoutServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAnEditCannotChooseItsOwnVersionNumber(): void {
 		$service = $this->service(versions: [$this->versionTwo()]);
@@ -187,7 +196,7 @@ class PageLayoutServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testEditingALayoutThatDoesNotExistIsRefused(): void {
 		$service = $this->service(versions: []);
@@ -198,11 +207,115 @@ class PageLayoutServiceTest extends TestCase {
 	}//end testEditingALayoutThatDoesNotExistIsRefused()
 
 	/**
+	 * The admin list shows each layout once, at its active version.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function testTheAdminListShowsEachLayoutAtItsActiveVersion(): void {
+		$retired = ['uuid' => 'layout-1', 'layoutVersion' => 1, 'active' => false] + $this->versionTwo();
+		$other = ['uuid' => 'layout-9', 'name' => 'Gemeente, brief', 'layoutVersion' => 1, 'active' => true];
+
+		$list = $this->service(versions: [$retired, $this->versionTwo(), $other])->activeLayouts();
+
+		$this->assertSame(['Gemeente, besluit', 'Gemeente, brief'], array_column($list, 'name'));
+		$this->assertSame([2, 1], array_column($list, 'layoutVersion'));
+
+	}//end testTheAdminListShowsEachLayoutAtItsActiveVersion()
+
+	/**
+	 * A new layout starts at version 1 and is active.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function testANewLayoutStartsAtVersionOne(): void {
+		$stored = $this->service(versions: [])->create(
+			name: 'Gemeente, brief',
+			fields: ['header' => 'Gemeente', 'layoutVersion' => 7, 'supersedes' => 'x', 'paperSize' => 'A4']
+		);
+
+		$this->assertSame('Gemeente, brief', $stored['name']);
+		$this->assertSame(1, $stored['layoutVersion']);
+		$this->assertTrue($stored['active']);
+		$this->assertSame('', $stored['supersedes']);
+		$this->assertSame('Gemeente', $stored['header']);
+		$this->assertCount(1, $this->written);
+
+	}//end testANewLayoutStartsAtVersionOne()
+
+	/**
+	 * What create() writes validates against the shipped `pageLayout` schema,
+	 * with the fields the admin form sends.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function testANewLayoutValidatesAgainstTheRegister(): void {
+		$this->service(versions: [])->create(
+			name: 'Gemeente, brief',
+			fields: [
+				'paperSize' => 'A4',
+				'orientation' => 'portrait',
+				'margins' => ['top' => 30, 'right' => 20, 'bottom' => 25, 'left' => 25],
+				'header' => 'Gemeente',
+				'footer' => 'Pagina {{page}}',
+				'firstPageDiffers' => true,
+				'firstPageHeader' => 'Gemeente, logo',
+				'firstPageFooter' => 'Postbus 1',
+			]
+		);
+
+		$raw = file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json');
+		$this->assertIsString($raw);
+		$properties = json_decode($raw)->components->schemas->pageLayout->properties;
+		foreach ($properties as $property) {
+			unset($property->required);
+		}
+
+		$schema = json_encode(['type' => 'object', 'properties' => $properties]);
+		$written = json_decode(json_encode($this->written[0]));
+		$result = (new Validator())->validate($written, $schema);
+
+		$this->assertTrue($result->isValid(), 'the written layout must validate against pageLayout');
+
+	}//end testANewLayoutValidatesAgainstTheRegister()
+
+	/**
+	 * A name that exists is edited, not created twice.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function testCreatingALayoutThatExistsIsRefused(): void {
+		$this->expectException(RuntimeException::class);
+		$this->service(versions: [$this->versionTwo()])->create(name: 'Gemeente, besluit', fields: []);
+
+	}//end testCreatingALayoutThatExistsIsRefused()
+
+	/**
+	 * A layout needs a name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function testALayoutWithoutANameIsRefused(): void {
+		$this->expectException(RuntimeException::class);
+		$this->service(versions: [])->create(name: '  ', fields: []);
+
+	}//end testALayoutWithoutANameIsRefused()
+
+	/**
 	 * A generated document records the layout version it used.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAGeneratedDocumentRecordsTheLayoutVersion(): void {
 		$service = $this->service(versions: [$this->versionTwo()]);
@@ -219,7 +332,7 @@ class PageLayoutServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testTheLayoutBecomesRenderOptions(): void {
 		$service = $this->service(versions: []);
@@ -238,7 +351,7 @@ class PageLayoutServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testALayoutWithNoSeparateFirstPageSaysSo(): void {
 		$layout = ($this->versionTwo() + []);

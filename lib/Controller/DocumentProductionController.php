@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class DocumentProductionController extends Controller {
 
@@ -83,13 +83,37 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The versions.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function layoutVersions(string $name = ''): JSONResponse {
+		if ($name === '') {
+			// No name: the admin list, every layout at its active version.
+			return $this->answer(handler: fn (): array => ['results' => $this->layouts->activeLayouts()]);
+		}
+
 		return $this->answer(handler: fn (): array => ['results' => $this->layouts->versionsOf(name: $name)]);
 
 	}//end layoutVersions()
+
+	/**
+	 * Create a layout by writing its first version.
+	 *
+	 * Writing is admin-only through the `pageLayout` authorization cascade
+	 * (create: admin), which OpenRegister enforces on the save.
+	 *
+	 * @param string $name The layout name.
+	 * @param array<string, mixed> $fields The layout fields.
+	 *
+	 * @return JSONResponse The new version 1, or the refusal.
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	#[NoAdminRequired]
+	public function createLayout(string $name = '', array $fields = []): JSONResponse {
+		return $this->answer(handler: fn (): array => $this->layouts->create(name: $name, fields: $fields));
+
+	}//end createLayout()
 
 	/**
 	 * Edit a layout by writing the next version of it.
@@ -99,7 +123,7 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The new version.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function editLayout(string $name = '', array $changes = []): JSONResponse {
@@ -120,7 +144,7 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The preflight, including whether it exceeds the ceiling.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function archivePreflight(
@@ -150,7 +174,7 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The manifest, with `archive` naming the written file.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function archiveManifest(
@@ -175,11 +199,16 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The document this run produced.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function runPeriodic(array $schedule = []): JSONResponse {
-		return $this->answer(handler: fn (): array => $this->periodic->run(schedule: $schedule));
+		// The PDF lands in the Files of the person who asked for it, never in
+		// somebody else's folder because the posted schedule named them.
+		$userId = (string)($this->userSession->getUser()?->getUID() ?? '');
+
+		return $this->answer(handler: fn (): array => $this->periodic->run(schedule: $schedule, userId: $userId));
 
 	}//end runPeriodic()
 
@@ -190,7 +219,7 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The due documents.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function dueForReview(string $day = ''): JSONResponse {
@@ -211,7 +240,7 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The document, no longer due.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	#[NoAdminRequired]
 	public function markReviewed(string $uuid): JSONResponse {
@@ -226,7 +255,7 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @return JSONResponse The answer, or the failure.
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	private function answer(callable $handler): JSONResponse {
 		if ($this->userSession->getUser() === null) {

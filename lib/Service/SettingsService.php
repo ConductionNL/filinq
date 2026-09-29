@@ -145,11 +145,30 @@ class SettingsService {
 	}//end getFeatureToggles()
 
 	/**
+	 * The OCR settings: tenant-wide toggles read by OcrService, and whether
+	 * an arriving intake scan is read in the background.
+	 *
+	 * @return array{ocr_enabled: bool, ocr_languages: string, ocr_dpi: int, ocr_on_arrival: bool} The settings.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
+	 */
+	private function loadOcrSettings(): array {
+		return [
+			'ocr_enabled' => $this->config->getValueString($this->appName, 'ocr_enabled', '1') === '1',
+			'ocr_languages' => $this->config->getValueString($this->appName, 'ocr_languages', 'nld+eng'),
+			'ocr_dpi' => (int)$this->config->getValueString($this->appName, 'ocr_dpi', '300'),
+			'ocr_on_arrival' => $this->config->getValueString($this->appName, 'ocr_on_arrival', '1') === '1',
+		];
+
+	}//end loadOcrSettings()
+
+	/**
 	 * Load feature toggle settings from app config
 	 *
 	 * @return array<string, mixed> Feature toggle settings
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
 	 */
 	private function loadFeatureToggles(): array {
 		return [
@@ -178,16 +197,13 @@ class SettingsService {
 				'signing_enabled',
 				'0'
 			) === '1',
-			'signing_provider' => $this->config->getValueString(
-				$this->appName,
-				'signing_provider',
-				'native'
-			),
+			'signing_provider' => $this->config->getValueString($this->appName, 'signing_provider', 'native'),
 			'signing_default_level' => $this->config->getValueString(
 				$this->appName,
 				'signing_default_level',
 				'SES'
 			),
+			'libresign_qualified' => $this->config->getValueString($this->appName, 'libresign_qualified', '0') === '1',
 			'signing_request_expiry_days' => (int)$this->config->getValueString(
 				$this->appName,
 				'signing_request_expiry_days',
@@ -206,22 +222,20 @@ class SettingsService {
 				'filinq.anonymisation.default_output_format',
 				'pdf-only'
 			),
-			// OCR document scanning (ocr-document-scanning) — tenant-wide
-			// toggles read by OcrService for scanned-PDF text extraction.
-			'ocr_enabled' => $this->config->getValueString(
-				$this->appName,
-				'ocr_enabled',
-				'1'
-			) === '1',
-			'ocr_languages' => $this->config->getValueString(
-				$this->appName,
-				'ocr_languages',
-				'nld+eng'
+			// OCR document scanning (ocr-document-scanning) and reading on
+			// arrival (intake-ocr-on-arrival).
+			...$this->loadOcrSettings(),
+			// Reversible pseudonymisation: the groups that may restore names,
+			// besides admins. A list that does not decode reads as [] here;
+			// PseudonymRestoreGate reads the raw value and refuses everyone.
+			'pseudonymisation_restore_allowed_groups' => $this->decodeList(
+				raw: $this->config->getValueString($this->appName, 'pseudonymisation_restore_allowed_groups', '[]')
 			),
-			'ocr_dpi' => (int)$this->config->getValueString(
-				$this->appName,
-				'ocr_dpi',
-				'300'
+			// Legal holds: the groups that may place and release them, besides
+			// admins. LegalHoldAuthority reads the raw value and refuses everyone
+			// when it does not decode.
+			'legal_hold_authority_groups' => $this->decodeList(
+				raw: $this->config->getValueString($this->appName, 'legal_hold_authority_groups', '[]')
 			),
 			// Propose-grondslag-per-entity-type — instance-global map of
 			// entity type → base slug(s), used to pre-fill a proposed
@@ -302,6 +316,7 @@ class SettingsService {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.3
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
 	 */
 	public function getAllSettings(): array {
 		$data = [
@@ -348,6 +363,25 @@ class SettingsService {
 	}//end getAllSettings()
 
 	/**
+	 * A stored JSON list of strings, or [] when it is not one.
+	 *
+	 * @param string $raw The stored value.
+	 *
+	 * @return array<int, string> The strings in it.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
+	 */
+	private function decodeList(string $raw): array {
+		$decoded = json_decode($raw, true);
+		if (is_array($decoded) === false) {
+			return [];
+		}
+
+		return array_values(array_filter($decoded, 'is_string'));
+
+	}//end decodeList()
+
+	/**
 	 * Convert a setting value to string for storage
 	 *
 	 * @param mixed $value The value to convert
@@ -386,11 +420,15 @@ class SettingsService {
 		'signing_enabled',
 		'signing_provider',
 		'signing_default_level',
+		'libresign_qualified',
 		'signing_request_expiry_days',
 		'signing_guardian_consent_age',
 		'ocr_enabled',
 		'ocr_languages',
 		'ocr_dpi',
+		'ocr_on_arrival',
+		'pseudonymisation_restore_allowed_groups',
+		'legal_hold_authority_groups',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 	];

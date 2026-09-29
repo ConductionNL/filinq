@@ -55,6 +55,14 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 					:colorMap="channelColorMap" />
 			</template>
 
+			<template #column-readingState="{ row }">
+				<CnStatusBadge
+					v-if="readingLabel(row.readingState)"
+					:label="readingLabel(row.readingState)"
+					:colorMap="readingColorMap"
+					:title="row.readingError || ''" />
+			</template>
+
 			<template #column-receivedAt="{ row }">
 				{{ formatDate(row.receivedAt) }}
 			</template>
@@ -108,6 +116,7 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
+import { readingColorMap, readingLabel } from '../../services/intakeReading.js'
 import {
 	assignIntakeDocument,
 	listDetachedDocuments,
@@ -141,6 +150,7 @@ export default {
 			rejectTarget: null,
 			actionError: '',
 			loadError: '',
+			readingColorMap: readingColorMap(),
 			channelColorMap: {
 				[t('filinq', 'Scan')]: 'primary',
 				[t('filinq', 'Mail')]: 'warning',
@@ -169,6 +179,12 @@ export default {
 			)
 		},
 
+		/**
+		 * The inbox columns, with the reading state of an arriving scan.
+		 *
+		 * @return {Array<object>} The columns.
+		 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-2.2
+		 */
 		tableColumns() {
 			const columns = [
 				{ key: 'channel', label: t('filinq', 'Channel'), sortable: true },
@@ -179,6 +195,7 @@ export default {
 					label: t('filinq', 'Received'),
 					sortable: true,
 				},
+				{ key: 'readingState', label: t('filinq', 'Text') },
 			]
 			if (this.mode === 'detached') {
 				columns.push({ key: 'detachReason', label: t('filinq', 'Reason') })
@@ -233,6 +250,8 @@ export default {
 			this.closeDialogs()
 			await this.load()
 		},
+
+		readingLabel,
 
 		channelLabel(channel) {
 			const labels = {

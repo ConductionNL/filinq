@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -89,7 +89,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAReviewIntervalComputesAReviewDate(): void {
 		$service = $this->service(documents: []);
@@ -105,7 +105,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAnIntervalThatIsNotADurationIsRefused(): void {
 		$service = $this->service(documents: []);
@@ -120,7 +120,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testADueDocumentStaysDueUntilSomebodyReviewsIt(): void {
 		$service = $this->service(documents: []);
@@ -145,7 +145,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testAReviewFromBeforeTheDateDoesNotClearIt(): void {
 		$service = $this->service(documents: []);
@@ -164,7 +164,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testTheDueListHoldsOnlyWhatIsDue(): void {
 		$service = $this->service(
@@ -187,7 +187,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testReviewingSetsTheNextDate(): void {
 		$service = $this->service(
@@ -218,7 +218,7 @@ class DocumentReviewServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function testSchedulingComputesFromTheMomentItWasGenerated(): void {
 		$service = $this->service(documents: []);

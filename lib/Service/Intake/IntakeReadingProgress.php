@@ -111,7 +111,10 @@ class IntakeReadingProgress {
 		$progress = ['readingState' => $reached, 'readingUpdatedAt' => $moment];
 
 		if ($reached !== self::FAILED) {
-			$progress['readingError'] = null;
+			// '' clears an earlier failure. Not null: `readingError` is a
+			// string in the register and hardValidation refuses null, which
+			// would refuse the whole document (intake-ocr-on-arrival).
+			$progress['readingError'] = '';
 
 			return $progress;
 		}

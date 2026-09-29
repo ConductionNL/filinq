@@ -22,7 +22,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md
+ * @spec openspec/specs/document-creatie-sjablonen/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -113,6 +113,21 @@ class DocumentProductionControllerContractTest extends TestCase {
 				$this->asked[] = ['call' => 'edit', 'name' => $name, 'changes' => $changes];
 
 				return ['name' => $name, 'version' => 3];
+			}
+		);
+
+		$this->layouts->method('activeLayouts')->willReturnCallback(
+			function (): array {
+				$this->asked[] = ['call' => 'activeLayouts'];
+
+				return [['name' => 'Gemeente, besluit', 'layoutVersion' => 2]];
+			}
+		);
+		$this->layouts->method('create')->willReturnCallback(
+			function (string $name, array $fields): array {
+				$this->asked[] = ['call' => 'create', 'name' => $name, 'fields' => $fields];
+
+				return ['name' => $name, 'layoutVersion' => 1];
 			}
 		);
 
@@ -217,6 +232,37 @@ class DocumentProductionControllerContractTest extends TestCase {
 		$this->assertSame('Gemeente, besluit', ($this->asked[0]['name'] ?? ''), 'the layout name reaches the service');
 
 	}//end testLayoutVersionsAnswersTheVersionsUnderResults()
+
+	/**
+	 * Without a name the versions endpoint lists every active layout, for the
+	 * admin list.
+	 *
+	 * @return void
+	 */
+	public function testLayoutVersionsWithoutANameListsTheActiveLayouts(): void {
+		$response = $this->controller()->layoutVersions();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('activeLayouts', ($this->asked[0]['call'] ?? ''));
+		$this->assertSame(['Gemeente, besluit'], array_column($response->getData()['results'], 'name'));
+
+	}//end testLayoutVersionsWithoutANameListsTheActiveLayouts()
+
+	/**
+	 * Creating a layout hands the fields through and answers version 1.
+	 *
+	 * @return void
+	 */
+	public function testCreateLayoutPassesTheFieldsThrough(): void {
+		$fields = ['paperSize' => 'A4', 'header' => 'Gemeente'];
+
+		$response = $this->controller()->createLayout(name: 'Gemeente, brief', fields: $fields);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['call' => 'create', 'name' => 'Gemeente, brief', 'fields' => $fields], ($this->asked[0] ?? []));
+		$this->assertSame(1, $response->getData()['layoutVersion']);
+
+	}//end testCreateLayoutPassesTheFieldsThrough()
 
 	/**
 	 * Editing a layout hands the changes through and answers the new version.

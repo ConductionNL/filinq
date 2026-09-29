@@ -14,11 +14,12 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;
 
+use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -70,7 +71,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testTheRegisterListsTheMergeJob(): void {
 		$descriptor = $this->descriptor();
@@ -88,7 +89,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testDoneAndFailedAreBothTerminal(): void {
 		$lifecycle = $this->mergeJob()['x-openregister-lifecycle'];
@@ -120,7 +121,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testEveryFieldTheSpecNamesIsDeclared(): void {
 		$properties = $this->mergeJob()['properties'];
@@ -151,7 +152,7 @@ class MergeJobSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function testTheJobSaysWhatTheResultActuallyIs(): void {
 		$conformance = $this->mergeJob()['properties']['conformance'];
@@ -160,4 +161,25 @@ class MergeJobSchemaTest extends TestCase {
 		$this->assertSame('pdf', $conformance['default'], 'The safe default is the weaker claim.');
 
 	}//end testTheJobSaysWhatTheResultActuallyIs()
+
+	/**
+	 * The host object the merge leaf sends validates against the declared
+	 * property, so a hard-validated mergeJob accepts the leaf's job.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-merge/spec.md
+	 */
+	public function testTheLeafHostObjectValidates(): void {
+		$raw = file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json');
+		$this->assertIsString($raw);
+		$property = json_decode($raw)->components->schemas->mergeJob->properties->hostObject;
+		unset($property->required);
+
+		$leafSends = json_decode('{"register":"dossiq","schema":"case","id":"case-42"}');
+		$result = (new Validator())->validate($leafSends, json_encode($property));
+
+		$this->assertTrue($result->isValid());
+
+	}//end testTheLeafHostObjectValidates()
 }//end class

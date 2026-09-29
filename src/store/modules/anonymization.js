@@ -33,6 +33,7 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 import { extractDocumentText } from '../../services/fileViewerService.js'
+import { applyOcrFlags } from '../../services/ocr.js'
 
 let fileCounter = 0
 
@@ -591,8 +592,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				// A scan detection could not read is not "nothing to anonymise".
+				const unseen = applyOcrFlags(entry, extractResponse.data)
 
-				if (entities.length === 0) {
+				if (entities.length === 0 && !unseen) {
 					// Nothing to anonymise; skip review and mark done.
 					entry.status = 'completed'
 					return
@@ -620,8 +623,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   both flags before it generates and appends the summary.
 		 * @param {string} [options.outputFormat] Output document format
 		 *   (e.g. `pdf`). Required alongside `appendBasisSummary`.
+		 * @param {boolean} [options.reversible] Keep an encrypted key so a
+		 *   permitted user can restore the names later.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
 		 */
 		async anonymiseEntry(entry, options = {}) {
 			if (entry.status !== 'extracted') {
@@ -722,6 +728,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					anonymizePayload.appendBasisSummary = true
 					anonymizePayload.outputFormat = options.outputFormat
 				}
+				// Reversible pseudonymisation: only sent when chosen, so the
+				// default run stays irreversible and keeps no key.
+				if (options.reversible === true) {
+					anonymizePayload.reversible = true
+				}
 				const anonymizeResponse = await axios.post(
 					generateUrl(
 						`/apps/filinq/api/anonymization/anonymize/${entry.fileId}`,
@@ -740,6 +751,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.residualCount = anonymizeResponse.data.residualCount || 0
 				entry.residualEntities =
 					anonymizeResponse.data.residualEntities || []
+				// Whether a reversible run kept its key (and why not), so the
+				// sidebar can warn instead of implying the names can come back.
+				entry.pseudonymisation =
+					anonymizeResponse.data.pseudonymisation || null
 				// The re-anonymise sub-flow (if any) is done — clear the marker
 				// so the dossier footer returns to its batch state.
 				entry.reanonymize = false
@@ -889,7 +904,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, extractResponse.data)
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -926,7 +943,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.entityCount = entry.entities.length
 				entry.confidentialityLabel = res.data.confidentialityLabel ?? null
 				entry.confidentialityLevel = res.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, res.data)
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				entry.error = err.response?.data?.error || err.message
 				entry.status = 'error'
@@ -1001,6 +1020,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				applyOcrFlags(entry, extractResponse.data)
 				// Drop the read-only anonymised view so the editable review
 				// list + "Anonymize" button take over. Keep anonymizedFile*
 				// so the viewer toggle can still show the current result until

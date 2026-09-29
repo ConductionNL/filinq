@@ -50,16 +50,20 @@ import InboxArrowDown from 'vue-material-design-icons/InboxArrowDown.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Printer from 'vue-material-design-icons/Printer.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
+import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import Scanner from 'vue-material-design-icons/Scanner.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
+import ShieldKeyOutline from 'vue-material-design-icons/ShieldKeyOutline.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import Stamper from 'vue-material-design-icons/Stamper.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
+import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
 export default {
@@ -110,13 +114,19 @@ export default {
 	MapMarkerPath,
 	Palette,
 	Plus,
+	Printer,
 	// The two publication-policy menu entries. Both pages existed and were
 	// routable for months with no way in: an unregistered icon renders NOTHING
 	// in the navigation (rule 3 above), so adding the menu entry without these
 	// two lines would have put a nameless blank row where each entry belongs.
 	Publish,
+	// The Legal holds menu entry (e-discovery-legal-hold).
+	ScaleBalance,
 	PublishOff,
 	ShieldCheck,
+	// The register's pseudonymMap and ocrResult schemas name these two.
+	ShieldKeyOutline,
+	TextRecognition,
 	ShieldLockOutline,
 	SignatureFreehand,
 	Sitemap,

@@ -804,6 +804,96 @@ class SigningServiceTest extends TestCase {
 	}//end testSignHappyPath()
 
 	/**
+	 * A portal signature records its assurance level, capped by the session
+	 * trust and never QES (portal-signing-surface REQ-DDPSS-005).
+	 *
+	 * @return void
+	 */
+	public function testPortalSignatureRecordsAssuranceNoHigherThanTheSession(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'AES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'email' => 'mark@home.example',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$requestData,
+			$signerData,
+			$requestData,
+			$signerData
+		);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+
+				return $object;
+			}
+		);
+
+		$result = $this->service->sign(
+			requestId: 'req-001',
+			signerId: 'signer-001',
+			verifiedActor: [
+				'email' => 'mark@home.example',
+				'subjectRef' => 'sub-1',
+				'identityRef' => 'sub-1',
+				'trust' => 'low',
+				'jti' => 'jti-1',
+			]
+		);
+
+		$this->assertSame('SES', $result['signatureAssurance'] ?? null, 'A low session caps an AES request at SES.');
+		$this->assertSame('SES', $saved[0]['signatureAssurance'] ?? null, 'The capped level is what is stored.');
+
+	}//end testPortalSignatureRecordsAssuranceNoHigherThanTheSession()
+
+	/**
+	 * An in-app signature carries no portal assurance field.
+	 *
+	 * @return void
+	 */
+	public function testInAppSignatureRecordsNoPortalAssurance(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls(
+			$requestData,
+			$signerData,
+			$requestData,
+			$signerData
+		);
+		$this->objectService->method('saveObject')->willReturnArgument(0);
+
+		$result = $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+		$this->assertArrayNotHasKey('signatureAssurance', $result);
+
+	}//end testInAppSignatureRecordsNoPortalAssurance()
+
+	/**
 	 * The completing signature produces + stores a signed artifact and sets
 	 * signedDocumentRef to that artifact (native-ses-signature-embedding).
 	 *
@@ -1514,4 +1604,153 @@ class SigningServiceTest extends TestCase {
 
 	}//end testCreateRequestHoldsTheAssuranceAtTheFloor()
 
+	/**
+	 * A LibreSign request is handed to LibreSign before it is stored, with the
+	 * document's bytes, and keeps LibreSign's uuid as its externalId.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testALibreSignRequestIsDelegatedAndKeepsItsExternalId(): void {
+		$client = new class implements \OCA\Filinq\Service\Signing\LibreSignClient {
+			/**
+			 * The requests LibreSign received.
+			 *
+			 * @var array<int, array<int, mixed>>
+			 */
+			public array $requests = [];
+
+			public function requestSignature(array $file, string $name, array $signers): array {
+				$this->requests[] = [$file, $name, $signers];
+				return ['uuid' => 'ls-uuid-9', 'status' => 1];
+			}
+
+			public function validate(string $uuid): array {
+				return ['uuid' => $uuid, 'status' => 1];
+			}
+
+			public function downloadSigned(string $uuid): string {
+				return '';
+			}
+
+			public function deleteRequest(int $nodeId): void {
+			}
+		};
+		$provider = new \OCA\Filinq\Service\Signing\LibreSignProvider(config: $this->config, client: $client);
+		$this->providerFactory->method('getProvider')->with('libresign')->willReturn($provider);
+
+		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getContent')->willReturn('%PDF-1.7 besluit');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->with(42)->willReturn([$document]);
+		$this->rootFolder->method('getUserFolder')->with('alice')->willReturn($folder);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-ls' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'AdES',
+				'provider' => 'libresign',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame('ls-uuid-9', $saved[0]['externalId']);
+		$this->assertSame('libresign', $saved[0]['provider']);
+		$this->assertCount(1, $client->requests);
+		$this->assertSame(['base64' => base64_encode('%PDF-1.7 besluit'), 'name' => 'besluit.pdf'], $client->requests[0][0]);
+		$this->assertSame('bea@example.org', $client->requests[0][2][0]['identifyMethods'][0]['value']);
+
+	}//end testALibreSignRequestIsDelegatedAndKeepsItsExternalId()
+
+	/**
+	 * A native request is not handed to any provider at creation.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testANativeRequestIsNotDelegated(): void {
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('supportsLevel')->willReturn(true);
+		$provider->expects($this->never())->method('initiateSigning');
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = 'req-n';
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'besluit.pdf',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertArrayNotHasKey('externalId', $saved[0]);
+
+	}//end testANativeRequestIsNotDelegated()
+
+	/**
+	 * At completion the provider is told which LibreSign request to take the signed file from.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testCompletionHandsTheProviderItsExternalId(): void {
+		$contexts = [];
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $content, array $context) use (&$contexts): string {
+				$contexts[] = $context;
+				return '%PDF-signed';
+			}
+		);
+		$this->providerFactory->method('getProvider')->with('libresign')->willReturn($provider);
+
+		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getContent')->willReturn('%PDF-original');
+		$document->expects($this->once())->method('putContent')->with('%PDF-signed');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$document]);
+		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+
+		$producer = new SignedArtifactProducer(
+			providerFactory: $this->providerFactory,
+			userSession: $this->userSession,
+			request: $this->request,
+			rootFolder: $this->rootFolder,
+			finalDocuments: $this->createMock(FinalDocumentService::class)
+		);
+		$producer->produce(
+			request: [
+				'documentFileId' => 42,
+				'initiatorUserId' => 'alice',
+				'provider' => 'libresign',
+				'signatureLevel' => 'AdES',
+				'externalId' => 'ls-uuid-9',
+			]
+		);
+
+		$this->assertSame('ls-uuid-9', $contexts[0]['externalId']);
+		$this->assertSame('AdES', $contexts[0]['level']);
+
+	}//end testCompletionHandsTheProviderItsExternalId()
 }//end class

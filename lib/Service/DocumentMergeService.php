@@ -25,7 +25,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -52,7 +52,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+ * @spec openspec/specs/document-merge/spec.md
  */
 class DocumentMergeService {
 
@@ -129,7 +129,7 @@ class DocumentMergeService {
 	 *
 	 * @throws MergeRefusedException When the caller may not read an input or write the target.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function merge(array $inputs, array $options = [], array $hostObject = []): array {
 		$resolved = $this->resolveInputs(inputs: $inputs);
@@ -165,7 +165,7 @@ class DocumentMergeService {
 	 *
 	 * @throws MergeRefusedException When the caller may not read an input or write the target.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function queue(array $inputs, array $options = [], array $hostObject = []): array {
 		$resolved = $this->resolveInputs(inputs: $inputs);
@@ -198,7 +198,7 @@ class DocumentMergeService {
 	 *
 	 * @throws MergeRefusedException When the inputs no longer resolve for that person.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function resume(array $job): array {
 		$owner = (string)($job['requestedBy'] ?? '');
@@ -236,7 +236,7 @@ class DocumentMergeService {
 	 *
 	 * @return bool True when the merge should be queued.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	public function shouldQueue(array $inputs, int $threshold): bool {
 		if ($threshold <= 0) {
@@ -269,7 +269,7 @@ class DocumentMergeService {
 	 *
 	 * @return array<string, mixed> The finished job.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function run(array $job, array $resolved, Folder $folder, array $options): array {
 		$uuid = (string)($job['uuid'] ?? '');
@@ -379,7 +379,7 @@ class DocumentMergeService {
 	 *
 	 * @return string `pdfa-3b` or `pdf`.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function toArchival(File $file): string {
 		try {
@@ -422,7 +422,7 @@ class DocumentMergeService {
 	 *
 	 * @return array<string, mixed> The failed job.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function fail(string $uuid, array $job, string $reason): array {
 		$job['status'] = self::STATUS_FAILED;
@@ -447,7 +447,7 @@ class DocumentMergeService {
 	 *
 	 * @throws MergeRefusedException When an input is missing, unreadable or absent from the request.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function resolveInputs(array $inputs, string $owner = ''): array {
 		if ($inputs === []) {
@@ -509,7 +509,7 @@ class DocumentMergeService {
 	 *
 	 * @throws MergeRefusedException When the caller may not write there.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function resolveTarget(array $options, File $first, string $owner): Folder {
 		$path = trim((string)($options['targetFolder'] ?? ''));
@@ -550,7 +550,7 @@ class DocumentMergeService {
 	 *
 	 * @throws MergeRefusedException When it is not writable.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function requireWritable(Folder $folder): void {
 		if ($folder->isCreatable() === true) {
@@ -590,7 +590,7 @@ class DocumentMergeService {
 	 *
 	 * @return string The file name, always ending in .pdf.
 	 *
-	 * @spec openspec/changes/merge-documents-to-pdf/specs/document-merge/spec.md
+	 * @spec openspec/specs/document-merge/spec.md
 	 */
 	private function resultName(array $options): string {
 		$name = trim((string)($options['name'] ?? ''));

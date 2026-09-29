@@ -27,6 +27,7 @@ use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
+use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
 use RuntimeException;
 
 /**
@@ -185,10 +186,7 @@ class SigningService {
 		// with 400 BEFORE any object is persisted, so a QES request can never
 		// be routed to a provider that will later silently complete it with a
 		// lower-assurance (e.g. native SES) artifact.
-		$this->validator->validateProviderLevelPair(
-			provider: (string)$request['provider'],
-			level: (string)$request['signatureLevel']
-		);
+		$this->validator->validateProviderLevelPair(provider: (string)$request['provider'], level: (string)$request['signatureLevel']);
 
 		// Guardian consent (signer-identity-rails REQ-DDSIR-008/009): every
 		// request records the age of consent that governs it, and the signer
@@ -220,6 +218,7 @@ class SigningService {
 				$request[$field] = $data[$field];
 			}
 		}
+		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
@@ -536,11 +535,11 @@ class SigningService {
 		$signer['signedAt'] = $now->format(DateTimeInterface::ATOM);
 		$signer['ipAddress'] = $this->actorResolver->getClientIp();
 		if ($signatureData !== null) {
-			// Portal-signing-surface REQ-DDPSS-002: consent confirmation +
-			// optional drawn signature, recorded into the existing
-			// `visible:false` field — never used for identity.
+			// Portal-signing-surface REQ-DDPSS-002: consent and an optional drawn
+			// signature, in the `visible:false` field, never used for identity.
 			$signer['signatureData'] = $signatureData;
 		}
+		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
 
 		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 

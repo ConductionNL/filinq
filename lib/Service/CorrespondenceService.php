@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -185,6 +186,7 @@ class CorrespondenceService {
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
 	 * @spec openspec/changes/filinq-mcp-adoption/tasks.md#task-2-1
+	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
 	 */
 	#[McpTool(
 		name: 'generateCorrespondence',
@@ -235,6 +237,13 @@ class CorrespondenceService {
 			data: $data,
 			huisstijl: $huisstijl
 		);
+
+		// LibreOffice drops inline SVG on its way to DOCX, so charts go in as PNG.
+		if ($format === 'docx') {
+			$rasterized = $this->container->get(SvgRasterizer::class)->rasterizeInlineSvg(html: $htmlContent, format: 'docx');
+			$htmlContent = $rasterized['html'];
+			$warnings = array_merge($warnings, $rasterized['warnings']);
+		}
 
 		// Produce output in requested format.
 		$content = $this->produceOutput(

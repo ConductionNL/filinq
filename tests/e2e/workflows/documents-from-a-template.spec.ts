@@ -59,7 +59,7 @@ test.describe('Documents from a template', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md#a-layout-change-does-not-rewrite-history
+	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-layout-change-does-not-rewrite-history
 	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-layout-change-does-not-rewrite-history
 	test('editing a layout writes a new version and leaves the old one readable', async ({
 		page,
@@ -92,7 +92,7 @@ test.describe('Documents from a template', () => {
 		expect(one.active).toBe(false)
 	})
 
-	// @e2e openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md#a-besluit-on-the-right-briefpapier
+	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-besluit-on-the-right-briefpapier
 	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-besluit-on-the-right-briefpapier
 	test('editing a layout nobody declared is refused', async ({ page }) => {
 		const refused = await page.request.post(`${API}/page-layouts`, {
@@ -102,7 +102,7 @@ test.describe('Documents from a template', () => {
 		expect(refused.status()).toBe(400)
 	})
 
-	// @e2e openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md#nothing-is-dropped-silently
+	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#nothing-is-dropped-silently
 	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#nothing-is-dropped-silently
 	test('a bundle says before it starts whether it fits, and its manifest says what did not', async ({
 		page,
@@ -141,7 +141,7 @@ test.describe('Documents from a template', () => {
 		}
 	})
 
-	// @e2e openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md#a-deleted-view-fails-loudly
+	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-deleted-view-fails-loudly
 	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-deleted-view-fails-loudly
 	test('a run against a view nobody has fails, naming the view', async ({
 		page,
@@ -161,7 +161,7 @@ test.describe('Documents from a template', () => {
 		expect(body.error).toContain(`${TEST_PREFIX}-verwijderde-view`)
 	})
 
-	// @e2e openspec/changes/documents-from-a-template/specs/document-creatie-sjablonen/spec.md#a-beleidsregel-comes-back
+	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-beleidsregel-comes-back
 	// @e2e openspec/specs/document-creatie-sjablonen/spec.md#a-beleidsregel-comes-back
 	test('a document past its review date is listed as due, and stays due until it is reviewed', async ({
 		page,

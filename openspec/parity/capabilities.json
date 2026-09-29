@@ -890,9 +890,11 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/OcrService.php (Tesseract wrapper: extractTextFromPdf/Image, needsOcr, isTesseractAvailable) has an admin toggle in src/views/settings/Settings.vue:257-303 ('OCR Document Scanning', ocr_enabled, languages) reached via settings#index/create (FE). But OcrService is only invoked internally by lib/Service/FinancialExtractionService.php (invoice text acquisition) and lib/Service/ScanPageReader.php (separator-sheet page reading) - never to add a text layer back to a document or make it generally searchable. openspec/changes/ocr-trigger-surface/tasks.md (the change that would add a user-facing 'Run OCR' action and OCR fallback inside anonymisation/entity-detection) is entirely unchecked; grep of src/ for 'ocr' outside settings/status display finds only a validation-finding cross-link (MyDocumentsIndex.vue onOcrRequested()) that navigates to Anonymization, it does not call OCR."
+				"evidence": "Run OCR on My documents (MyDocumentsIndex.vue row action) and in the file viewer (FileViewerPage.vue), POST/GET api/ocr/{fileId} and GET api/ocr?fileIds= (OcrController, caller's own files only), OcrRunService + ocrResult schema (confidence, languages, dpi, textLength, never the text); the file listing reads ocrProcessed/ocrConfidence from ocrResult. Still partial: the recognised text is not written back as a text layer, so the file itself does not become searchable.",
+				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "settings toggle only (Settings.vue); actual OCR execution is internal to FinancialExtractionService and ScanPageReader, not directly user-triggered",
+			"reachedOn": "Run OCR on My documents and in the file viewer; OCR badge with confidence",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "ocr-trigger-surface",
@@ -916,13 +918,15 @@
 			"name": "Run OCR automatically when a file lands in a folder, without anyone starting it.",
 			"source": "competitor-derived",
 			"sourceRef": "Workflow OCR (Nextcloud app) flow-triggered OCR; Paperless-ngx consumer",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "none",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No watched-folder job triggers OCR (lib/BackgroundJob/ has no such job; scan-intake-with-separator-sheets task 3.2 confirms none exists). openspec/changes/ocr-trigger-surface (which would add automatic OCR fallback inside AnonymizationService::extractAndDetectEntities()) is entirely unchecked - task 2.3 unimplemented."
+				"evidence": "IntakeService::receive() (the one door every intake channel uses) asks IntakeOcrQueue to mark a new document with an image or PDF file `queued` and queues IntakeOcrJob after the save; the job runs Tesseract through OcrService::processNode() with the admin's languages/DPI, stores contentText on intakeDocument (1.2.0) and moves readingState to read, or failed with the reason, via IntakeReadingProgress. Admin setting ocr_on_arrival (default on). IntakeIndex.vue shows the reading state per row. Tests: IntakeServiceTest::testAnArrivingScanIsQueuedForReading / testNothingIsQueuedWhenThereIsNothingToRead, IntakeOcrJobTest (every payload validated against the real intakeDocument fragment), OcrServiceProcessFileTest, vitest intakeReading.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-intake-ocr-on-arrival",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it (unbuilt)",
+			"reachedOn": "any document arriving in the intake inbox (scanner folder, mail, digital post); the Text column on the inbox",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "ocr-trigger-surface",
@@ -1444,9 +1448,10 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DataResolverService.php:158 resolve(dataRefs, listRefs, adHocData) and lib/Service/TemplateRenderer.php:290 buildDataTableFunction() (data_table() Twig fn) are fully implemented (openspec/changes/document-generation-list-refs/tasks.md: 14/14 done). But lib/Service/CorrespondenceService.php's generate() calls dataResolver->resolve() WITHOUT listRefs, and TemplatePreviewController/TemplateDetail.vue's preview path never sends listRefs either -- only DocumentService::generateDocument()/generatePreview() accept it, and that controller has no verified FE or machine caller (dossiq's FilinqTemplateEngineAdapter passes only dataRefs+adHocData, no listRefs)."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-document-generation-list-refs (archived 2026-09-28, 14 of 14 tasks): POST api/documents/generate and generate/preview accept options.listRefs (DocumentController -> DocumentService::generateDocument/generatePreview -> DataResolverService::resolve -> ListReferenceResolver), and templates render the collection with data_table(). Rated partial because the change scoped listRefs to those two endpoints (REQ-DDLR-004): CorrespondenceService::generate() and the template preview screen do not pass listRefs, and dossiq's FilinqTemplateEngineAdapter sends only dataRefs and adHocData. Before: lib/Service/DataResolverService.php:158 resolve(dataRefs, listRefs, adHocData) and lib/Service/TemplateRenderer.php:290 buildDataTableFunction() (data_table() Twig fn) are fully implemented (openspec/changes/document-generation-list-refs/tasks.md: 14/14 done). But lib/Service/CorrespondenceService.php's generate() calls dataResolver->resolve() WITHOUT listRefs, and TemplatePreviewController/TemplateDetail.vue's preview path never sends listRefs either -- only DocumentService::generateDocument()/generatePreview() accept it, and that controller has no verified FE or machine caller (dossiq's FilinqTemplateEngineAdapter passes only dataRefs+adHocData, no listRefs).",
+				"change": "openspec/changes/archive/2026-09-28-document-generation-list-refs"
 			},
 			"reachedOn": "nothing reaches the listRefs path; data_table() Twig fn is technically usable via TemplateDetail.vue's raw-HTML toggle but only against fields already in a single resolved dataRef object",
 			"provider": "filinq",
@@ -1472,12 +1477,12 @@
 			"sourceRef": "Carbone charts and pivot tables",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/TemplateRenderer.php:233 buildChartFunction() registers a sandboxed chart() Twig function via ChartSvgRenderer (lib/Service/Charts/). openspec/changes/template-charts/tasks.md: 5/12 done. No toolbar button in TemplateDetail.vue inserts chart(); only reachable by an author manually typing Twig into the 'Edit HTML' raw-content textarea (TemplateDetail.vue showRaw toggle), which is then rendered through the same pipeline used by Correspondence/Document generation.",
-				"change": "openspec/changes/template-charts"
+				"evidence": "lib/Service/TemplateRenderer.php registers the sandboxed chart(), data_table() and nc_image() Twig functions (lib/Service/Charts/ChartSvgRenderer, TableHtmlRenderer, TemplateImageResolver). Charts reach HTML and PDF as SVG, and ODT documents (DocumentRenderPipeline) and DOCX letters (CorrespondenceService) as PNG through lib/Service/Charts/SvgRasterizer. Rating stays partial: office templates (${chart:key}, ${image:key}) wait on openspec/changes/office-charts-and-images, and there is no editor button, an author types the function in Edit HTML.",
+				"change": "openspec/changes/archive/2026-09-28-template-charts"
 			},
-			"reachedOn": "/templates/:id raw-HTML edit (no dedicated UI affordance)",
+			"reachedOn": "/templates/:id Edit HTML, then Preview with Sample data (JSON)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "template-charts",
@@ -1498,11 +1503,13 @@
 			"name": "Include the legal basis and the decision deadline in a decision letter.",
 			"source": "category-derived",
 			"sourceRef": "user story \"Include legal basis reference in decision letter\"",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Generic templating lets any resolved dataRef field (including a 'base'/grondslag object) be inserted as a merge field, so a template author can manually type a legal-basis field. But there is no dedicated feature computing/inserting an objection deadline into a decision letter: lib/Service/ObjectionDeadlineChecker.php:96-133 (getObjectionPeriodDays/calculateDeadline/checkObjectionDeadline) is used only by ConsentService/PolicyController for publication-objection flows, never by CorrespondenceService or DocumentService."
+				"evidence": "lib/Service/ObjectionTermCalculator.php computes the objection deadline (Awb 6:7, bezwaar_termijn_weken weeks, default 6, from the day after besluitDatum/decisionDate, weekend moved to Monday). ObjectionTermCalculator::addToContext, called from DocumentRenderPipeline::renderWithHuisstijl, puts it in the template context as bezwaar (uiterlijk, vanaf, termijnWeken) on every render (generation, preview, bulk), offers a resolved base object as grondslag, and warns when a template uses bezwaar without a decision date. src/dialogs/MergeFieldDialog.vue offers grondslag.name, grondslag.description and the bezwaar fields. Public holidays are not moved (documented limit).",
+				"change": "openspec/changes/archive/2026-09-28-decision-letter-legal-basis-and-deadline",
+				"readOn": "2026-09-28"
 			},
 			"reachedOn": "templates can reference legal-basis fields generically via merge fields; no dedicated 'legal basis + deadline in decision letter' computation in filinq",
 			"provider": "filinq",
@@ -1611,11 +1618,13 @@
 			"area": "generate",
 			"name": "Regenerate a recurring document on a schedule.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/PeriodicDocumentService.php:88 run(array $schedule) is fully implemented (write/recordRun at lines 160/198). Only trigger is documentProduction#runPeriodic POST api/periodic-documents/run (routes.php:109), tagged 'none' in route-reach.txt. appinfo/info.xml <background-jobs> lists only SigningExpirationJob, DomainFolderReconciliationJob, UploadFragmentReaperJob -- no periodic-document job registered; lib/Command/ has only OfficeProbeCommand.php (no occ command); no caller found in dossiq/shillinq/opencatalogi/scholiq."
+				"evidence": "lib/BackgroundJob/PeriodicDocumentJob.php (hourly, appinfo/info.xml) runs every active periodicDocument whose cadence has come round (lib/Service/PeriodicCadence.php). PeriodicDocumentService::run renders the template over the saved view's records through DocumentService::generateDocument, stores the PDF in the owner's Files and points lastRunDocument at the entry; a failed run writes lastRunError. On demand: POST api/periodic-documents/run.",
+				"change": "openspec/changes/archive/2026-09-28-periodic-documents-on-a-schedule",
+				"readOn": "2026-09-28"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -1665,13 +1674,15 @@
 			"area": "generate",
 			"name": "Send generated documents to print, one by one or as a batch, and follow the print job.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PrintJobController.php implements create/show/download/updateStatus/batch (lines 106,178,231,307,382) in full, routes registered at routes.php:207-211 with the comment 'for external print services'. No FE calls any print/jobs or print/batch endpoint (only PrintPreview.vue calls print/preview and print/pdf-a); no caller found in dossiq/shillinq/opencatalogi/scholiq."
+				"evidence": "src/views/correspondence/CorrespondenceIndex.vue Send to print posts one api/print/batch job for one letter or a batch of recipients; src/views/printJobs/PrintJobs.vue (manifest route PrintJobs, menu Print jobs) lists GET api/print/jobs, the caller's own jobs only (PrintJobController::index), with status, last change and download. Job state is a printJob object (lib/Service/PrintJobRepository.php), PDFs in IAppData print-jobs (lib/Service/PrintJobFileStore.php); repair step lib/Repair/MigratePrintJobsOutOfAppConfig.php moves the old print_job_* app-config entries. The print service reports through PUT api/print/jobs/{id}/status.",
+				"change": "openspec/changes/archive/2026-09-29-print-jobs-in-the-app",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it; designed for an external print service that could not be located",
+			"reachedOn": "Letters & correspondence (Send to print) and the Print jobs menu entry; a print service through PUT api/print/jobs/{id}/status",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "print-preview",
@@ -1749,13 +1760,14 @@
 			"name": "Merge several documents into one PDF.",
 			"source": "competitor-derived",
 			"sourceRef": "dossiq gap register 4.14; Gotenberg merge/split",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/MergeController.php:107 create() -> lib/Service/DocumentMergeService.php:134 merge()/170 queue() (background via BackgroundJob/MergeDocumentsJob.php) fully implemented; route merge#create api/merge (routes.php:114). No FE literal '/apps/filinq/api/merge' found anywhere in src/; no caller in dossiq/shillinq/opencatalogi/scholiq."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-merge-documents-to-pdf (archived 2026-09-28): src/integrations/CnFilinqMergeToPdfWidget.vue (leaf filinq-merge-to-pdf, registered by src/integrations/registerMergeToPdfLeaf.js in main.js and the filinq-leaves bundle, server half lib/EventListener/RegisterMergeToPdfLeafListener.php) lists an object's documents, orders them and calls POST api/merge -> MergeController::create() -> DocumentMergeService::merge()/queue(). Reached on any host page that places the leaf; dossiq placement asked in ConductionNL/dossiq#3185. Before: lib/Controller/MergeController.php:107 create() -> lib/Service/DocumentMergeService.php:134 merge()/170 queue() (background via BackgroundJob/MergeDocumentsJob.php) fully implemented; route merge#create api/merge (routes.php:114). No FE literal '/apps/filinq/api/merge' found anywhere in src/; no caller in dossiq/shillinq/opencatalogi/scholiq.",
+				"change": "openspec/changes/archive/2026-09-28-merge-documents-to-pdf"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the filinq-merge-to-pdf leaf on a host object page (detail-page, single-entity)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "merge-documents-to-pdf",
@@ -1775,13 +1787,14 @@
 			"area": "generate",
 			"name": "Download all documents of a case as one archive with a manifest.",
 			"source": "own-code",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php builds the manifest (:142 manifestFor) and records the job (:195 record), but writes no archive. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. No FE literal 'case-archive' found in src/; no caller in dossiq/shillinq/opencatalogi/scholiq. Corrections round 8 (2026-09-28), filinq#1210: archiveManifest() (lib/Controller/DocumentProductionController.php:151-167) returns the manifest and calls record(), which stores fileId 0 and status completed (lib/Service/CaseArchiveService.php:195-206) with no archive file behind it; nothing in lib/ writes a zip for it, and task 3.2, the page, is open (openspec/changes/documents-from-a-template/tasks.md:19), at 9fd042f."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/integrations/CnFilinqDownloadAllFilesWidget.vue (leaf filinq-download-all-files, server half lib/EventListener/RegisterDownloadAllFilesLeafListener.php) calls GET api/case-archive/preflight, warns when exceedsCeiling, then POST api/case-archive/manifest -> CaseArchiveService::build() writes the archive and returns its fileId with the manifest of included and excluded files by reason. Before: lib/Controller/DocumentProductionController.php:123 archivePreflight()/151 archiveManifest() -> lib/Service/CaseArchiveService.php builds the manifest (:142 manifestFor) and records the job (:195 record), but writes no archive. Routes api/case-archive/preflight, api/case-archive/manifest (routes.php:107-108), tagged 'none' in route-reach.txt. No FE literal 'case-archive' found in src/; no caller in dossiq/shillinq/opencatalogi/scholiq. Corrections round 8 (2026-09-28), filinq#1210: archiveManifest() (lib/Controller/DocumentProductionController.php:151-167) returns the manifest and calls record(), which stores fileId 0 and status completed (lib/Service/CaseArchiveService.php:195-206) with no archive file behind it; nothing in lib/ writes a zip for it, and task 3.2, the page, is open (openspec/changes/documents-from-a-template/tasks.md:19), at 9fd042f.",
+				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the filinq-download-all-files leaf on a host object page (detail-page, single-entity)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "documents-from-a-template",
@@ -1862,9 +1875,9 @@
 			"sourceRef": "user story \"Create template from existing document\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No 'save as template' / 'create template from document' code found in lib/ or src/ (grep for saveAsTemplate/createTemplateFrom/useAsTemplate returns only unrelated false-positive matches on the word 'template'). Only a template's own duplicate() action exists (copies a template into a new template, not a stored document into a template)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No 'save as template' / 'create template from document' code found in lib/ or src/ (grep for saveAsTemplate/createTemplateFrom/useAsTemplate returns only unrelated false-positive matches on the word 'template'). Only a template's own duplicate() action exists (copies a template into a new template, not a stored document into a template)."
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",
@@ -1889,9 +1902,9 @@
 			"sourceRef": "user story \"Define variable fields in a template\"",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/dialogs/MergeFieldDialog.vue inserts a free-text '{{ fieldname }}' placeholder into the editor (no dropdown bound to actual OpenRegister schema properties). The only structured field-requirement declaration is template.plainLanguage.requiredStatements (lib/Settings/filinq_register.json ~line 690s), scoped to the plain-language feature only, not general template fields."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: a merge field dialog inserts free-text fields. Reversible when demand or a second competitor appears. Before: src/dialogs/MergeFieldDialog.vue inserts a free-text '{{ fieldname }}' placeholder into the editor (no dropdown bound to actual OpenRegister schema properties). The only structured field-requirement declaration is template.plainLanguage.requiredStatements (lib/Settings/filinq_register.json ~line 690s), scoped to the plain-language feature only, not general template fields."
 			},
 			"reachedOn": "/templates/:id (Insert merge field dialog)",
 			"provider": "filinq",
@@ -1944,9 +1957,9 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplateVersionsController.php:157 diffVersions() -> lib/Service/TemplateVersionService.php:279 getDiff() fully implemented; route templateVersions#diffVersions (routes.php:232). No call to a 'diff' endpoint anywhere in src/store/modules/template.js or TemplateDetail.vue (only fetchVersions/restoreVersion exist); the versions tab lists versions and offers restore only, no diff view."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: TemplateVersionService::getDiff and its route, with no screen. Reversible when demand or a second competitor appears. Before: lib/Controller/TemplateVersionsController.php:157 diffVersions() -> lib/Service/TemplateVersionService.php:279 getDiff() fully implemented; route templateVersions#diffVersions (routes.php:232). No call to a 'diff' endpoint anywhere in src/store/modules/template.js or TemplateDetail.vue (only fetchVersions/restoreVersion exist); the versions tab lists versions and offers restore only, no diff view."
 			},
 			"reachedOn": "nothing reaches it; backend built, no UI",
 			"provider": "filinq",
@@ -2054,9 +2067,9 @@
 			"sourceRef": "SmartDocuments templates mapped to zaaktypes (ZAC integration); user story \"Assign template to document type\"",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "template schema has only a free-text 'category' property (lib/Settings/filinq_register.json, e.g. 'beschikkingen, brieven'), filterable in src/views/templates/TemplateIndex.vue:13-14/152-154 categoryOptions. There is no formal binding from a template to a case-type/document-type enum on a consuming app's records; dossiq's own BeschikkingComposerDialog.vue lets a user pick any filinq template via NcSelect with no case-type filtering visible in filinq's own code."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). The built half: a free-text category filter on the templates list. Reversible when demand or a second competitor appears. Before: template schema has only a free-text 'category' property (lib/Settings/filinq_register.json, e.g. 'beschikkingen, brieven'), filterable in src/views/templates/TemplateIndex.vue:13-14/152-154 categoryOptions. There is no formal binding from a template to a case-type/document-type enum on a consuming app's records; dossiq's own BeschikkingComposerDialog.vue lets a user pick any filinq template via NcSelect with no case-type filtering visible in filinq's own code."
 			},
 			"reachedOn": "/templates (category filter dropdown, an unenforced free-text convention, not a real type binding)",
 			"provider": "filinq",
@@ -2082,9 +2095,9 @@
 			"sourceRef": "Xential central template governance and huisstijl enforcement",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "huisstijl is applied automatically during rendering (CorrespondenceService::loadHuisstijl/buildPdfOptions, ~lines 540-602) and is a full OpenRegister schema, but there is NO dedicated UI anywhere in src/views to create/edit a huisstijl (grep for huisstijl/Huisstijl across src/views/*.vue returns nothing); an admin would have to edit the huisstijl object via OpenRegister's generic object UI."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). The built half: huisstijl is applied to every generation; it is edited through the generic OpenRegister object screen. Reversible when demand or a second competitor appears. Before: huisstijl is applied automatically during rendering (CorrespondenceService::loadHuisstijl/buildPdfOptions, ~lines 540-602) and is a full OpenRegister schema, but there is NO dedicated UI anywhere in src/views to create/edit a huisstijl (grep for huisstijl/Huisstijl across src/views/*.vue returns nothing); an admin would have to edit the huisstijl object via OpenRegister's generic object UI."
 			},
 			"reachedOn": "nothing in filinq's own UI manages huisstijl directly; applied automatically at render time once a huisstijlId is configured",
 			"provider": "filinq",
@@ -2107,13 +2120,14 @@
 			"area": "templates",
 			"name": "Change the letterhead and page layout once, and keep its earlier versions.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/DocumentProductionController.php:89 layoutVersions(), :105 editLayout() -> lib/Service/PageLayoutService.php (versioned page layouts, per documents-from-a-template's pageLayout schema). Route documentProduction#layoutVersions/editLayout api/page-layouts (routes.php:105-106), tagged 'none' in route-reach.txt; no FE literal '/api/page-layouts' found anywhere in src/."
+				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/views/settings/PageLayoutSettings.vue on the admin settings page lists active layouts (GET api/page-layouts), creates one (POST api/page-layouts/new -> PageLayoutService::create()), saves an edit as the next version (POST api/page-layouts -> edit()) and lists the versions, with a drawn preview of the first and following pages. Earlier versions stay resolvable for templates that name them. Before: lib/Controller/DocumentProductionController.php:89 layoutVersions(), :105 editLayout() -> lib/Service/PageLayoutService.php (versioned page layouts, per documents-from-a-template's pageLayout schema). Route documentProduction#layoutVersions/editLayout api/page-layouts (routes.php:105-106), tagged 'none' in route-reach.txt; no FE literal '/api/page-layouts' found anywhere in src/.",
+				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "admin settings, Page layouts section (PageLayoutSettings.vue)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "documents-from-a-template",
@@ -2137,9 +2151,9 @@
 			"sourceRef": "iWRITER 365 text-block libraries",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No reusable text-block library found: grep for 'textBlock'/'TextBlock' across lib/ and src/ returns only an unrelated hit in lib/Service/Editing/DocumentAgentService.php. No schema for a text-block corpus exists in lib/Settings/filinq_register.json."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No reusable text-block library found: grep for 'textBlock'/'TextBlock' across lib/ and src/ returns only an unrelated hit in lib/Service/Editing/DocumentAgentService.php. No schema for a text-block corpus exists in lib/Settings/filinq_register.json."
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",
@@ -2165,9 +2179,9 @@
 			"sourceRef": "user story \"Retire an obsolete template\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "template schema properties (lib/Settings/filinq_register.json) are exactly: name, description, content, namespace, format, orientation, category, tags, lockedBy, lockedAt, plainLanguage -- no status/retired/active flag. The only removal path is templates#destroy (hard delete, lib/Controller/TemplatesController.php:234), which conflicts with keeping version history rather than providing a soft-retire."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: template schema properties (lib/Settings/filinq_register.json) are exactly: name, description, content, namespace, format, orientation, category, tags, lockedBy, lockedAt, plainLanguage -- no status/retired/active flag. The only removal path is templates#destroy (hard delete, lib/Controller/TemplatesController.php:234), which conflicts with keeping version history rather than providing a soft-retire."
 			},
 			"reachedOn": "nothing reaches a soft-retire; only hard delete exists",
 			"provider": "filinq",
@@ -2191,9 +2205,9 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "template schema properties (name, description, content) are declared translatable:true, and OpenRegister's TranslationHandler / register-i18n mechanism can store per-language variants (per register-i18n change). But filinq's own UI never exercises it: src/components/LanguageSelector.vue exists but is imported nowhere (grep across src/ finds zero usages), and src/store/modules/template.js:29 setLanguage() (which would drive buildLanguageHeaders(), used at lines 84/108) is never called from any view, so selectedLanguage is always null and the Accept-Language override never fires."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, and it is outside the core area (intake and generate). The built half: template name, description and content are translatable in the register. Reversible when demand or a second competitor appears. Before: template schema properties (name, description, content) are declared translatable:true, and OpenRegister's TranslationHandler / register-i18n mechanism can store per-language variants (per register-i18n change). But filinq's own UI never exercises it: src/components/LanguageSelector.vue exists but is imported nowhere (grep across src/ finds zero usages), and src/store/modules/template.js:29 setLanguage() (which would drive buildLanguageHeaders(), used at lines 84/108) is never called from any view, so selectedLanguage is always null and the Accept-Language override never fires."
 			},
 			"reachedOn": "nothing in the UI reaches per-language editing; the register-i18n plumbing exists but is unused dead code in this app",
 			"provider": "filinq",
@@ -2434,9 +2448,9 @@
 			"source": "own-code",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Searched for a live embedded office-editor session (WOPI iframe / richdocuments Viewer integration) in src/: none found. lib/Service/Editing/EditSessionService.php:10-32 explicitly documents why it is NOT a WOPI client (a WOPI client's lock would be indistinguishable from the office suite's own lock in richdocuments 11.1.0); it does in-process package edits instead. src/components/viewers/{Word,Odt}Viewer.vue are read-only previews (document-preview spec), not editors. openspec/changes/edit-through-the-open-editor is an unbuilt change proposing an agent-mediated bridge into an ALREADY-open external editor, not a filinq-hosted editing screen.",
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). edit-through-the-open-editor bridges into an editor that is already open. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Searched for a live embedded office-editor session (WOPI iframe / richdocuments Viewer integration) in src/: none found. lib/Service/Editing/EditSessionService.php:10-32 explicitly documents why it is NOT a WOPI client (a WOPI client's lock would be indistinguishable from the office suite's own lock in richdocuments 11.1.0); it does in-process package edits instead. src/components/viewers/{Word,Odt}Viewer.vue are read-only previews (document-preview spec), not editors. openspec/changes/edit-through-the-open-editor is an unbuilt change proposing an agent-mediated bridge into an ALREADY-open external editor, not a filinq-hosted editing screen.",
 				"change": "openspec/changes/edit-through-the-open-editor"
 			},
 			"reachedOn": "nothing reaches it",
@@ -2544,9 +2558,9 @@
 			"sourceRef": "user story \"Apply watermark to shared documents\"; canonical watermarking",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep for 'watermark' across lib/ and src/ (excluding tests) found zero hits. Two archived proposals explicitly list watermarking as OUT OF SCOPE: openspec/changes/archive/2026-06-14-pdf-conversion-service/proposal.md:33 ('Logo / header / footer / watermark') and openspec/changes/archive/2026-06-03-anonymise-output-as-pdf-by-default/proposal.md:43 ('out of scope; the conversion is content-faithful')."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived pdf-conversion-service change kept watermarks out of its scope. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: grep for 'watermark' across lib/ and src/ (excluding tests) found zero hits. Two archived proposals explicitly list watermarking as OUT OF SCOPE: openspec/changes/archive/2026-06-14-pdf-conversion-service/proposal.md:33 ('Logo / header / footer / watermark') and openspec/changes/archive/2026-06-03-anonymise-output-as-pdf-by-default/proposal.md:43 ('out of scope; the conversion is content-faithful')."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -2938,13 +2952,15 @@
 			"name": "Detect personal data in scanned PDFs and photographed pages.",
 			"source": "competitor-derived",
 			"sourceRef": "Presidio image redaction; CaseGuard handwriting OCR",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/ocr-trigger-surface (an open change found in the openspec pass on 2026-09-27). Before: OpenRegister's TextExtractionService (the class filinq calls for detection, AnonymizationService.php:202) has no OCR code path (git grep on origin/development openregister for ocr/tesseract in that file returned nothing). Filinq's own OcrService/Tesseract integration exists only inside FinancialExtractionService.php (a different feature, 'scan-en-herken'), not called from the anonymisation pipeline (AnonymizationService.php / DocumentAnonymizeRunner.php have no OcrService references)."
+				"evidence": "lib/Service/Ocr/OcrExtractionFallback.php runs in AnonymizationService::runExtraction() after OpenRegister's extractFile(): when OcrService::needsOcr(mime, getExtractedText()) says a scan has no text, OcrRunService runs Tesseract (admin languages/DPI) and stores an ocrResult row; the text goes to OpenRegister's extractFromProvidedText when it exists. OpenRegister development has no such seam yet (ConductionNL/openregister#2033), so on today's OpenRegister every scan answers ocrDetectionPending: true and the review (FileViewerSidebar, anonymization store) keeps it open with a warning instead of marking it clean. Partial: entities in scans are not detected until OpenRegister takes the text. Tests: AnonymizationServiceOcrFallbackTest, jest anonymization.spec.js reanalyseEntry.",
+				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches OCR-then-detect for the anonymisation pipeline",
+			"reachedOn": "anonymisation upload and review (POST api/anonymization/extract/{fileId}); the warning shows in the file viewer sidebar",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
@@ -2969,9 +2985,9 @@
 			"sourceRef": "CaseGuard video redaction; Presidio image redaction",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No face/licence-plate image-blurring code anywhere: grepped lib/ and src/ for face|blur|kenteken|license_plate, no hits. 'image-redaction' openspec change exists but is about redacting image-origin PERSON entities found via OCR text, not face/plate detection in the image itself (openspec/changes/image-redaction/specs/image-redaction/spec.md references a 'detected image-origin PERSON entity', a text-level concept).",
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). image-redaction redacts text found in images, not faces or plates. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No face/licence-plate image-blurring code anywhere: grepped lib/ and src/ for face|blur|kenteken|license_plate, no hits. 'image-redaction' openspec change exists but is about redacting image-origin PERSON entities found via OCR text, not face/plate detection in the image itself (openspec/changes/image-redaction/specs/image-redaction/spec.md references a 'detected image-origin PERSON entity', a text-level concept).",
 				"change": "openspec/changes/image-redaction"
 			},
 			"reachedOn": "nothing reaches it",
@@ -2997,9 +3013,9 @@
 			"sourceRef": "CaseGuard handwriting OCR redaction",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No handwriting-OCR code or spec anywhere in filinq (grepped lib/, src/, openspec/changes for handwrit*, no hits besides this row's own absence)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Tesseract reads printed text only. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No handwriting-OCR code or spec anywhere in filinq (grepped lib/, src/, openspec/changes for handwrit*, no hits besides this row's own absence)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3024,9 +3040,9 @@
 			"sourceRef": "CaseGuard audio and video redaction",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No audio/video redaction code or spec anywhere (grepped lib/, src/, openspec/changes for audio/video redaction terms, no hits). ALLOWED_EXTENSIONS in src/services/anonymizationUpload.js is docx/odt/txt/pdf/eml only — no audio/video formats accepted at all."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived ocr-document-scanning and enhanced-anonymization changes kept audio and video out. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No audio/video redaction code or spec anywhere (grepped lib/, src/, openspec/changes for audio/video redaction terms, no hits). ALLOWED_EXTENSIONS in src/services/anonymizationUpload.js is docx/odt/txt/pdf/eml only — no audio/video formats accepted at all."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3048,14 +3064,15 @@
 			"area": "detect",
 			"name": "Refuse to anonymise when no detector is set up, rather than pass a document through untouched.",
 			"source": "own-code",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md: 0 of 16 tasks checked. Its own proposal.md documents the CURRENT bug: AnonymiserBackendStateClient::OR_SERVICE (lib/Service/AnonymiserBackendStateClient.php:49) names 'OCA\\OpenRegister\\Service\\AnonymisationBackendService', but OR's real class (confirmed by git grep on openregister origin/development) is one segment deeper at 'OCA\\OpenRegister\\Service\\Anonymisation\\AnonymisationBackendService'; the container resolve throws, the catch silently falls back to method='regex', and runAnonymize() (AnonymizationService.php:594) never consults backend state at all before writing an output file. dq-flow (dossiq) independently documents the identical class-name bug in its own FilinqRedactionClient.php docblock ('filinq's own client omits it and has been silently falling back to a hardcoded answer ever since').",
-				"change": "openspec/changes/anonymisation-fails-closed-without-a-detector"
+				"evidence": "lib/Service/AnonymiserBackendStateClient.php reads OpenRegister's OCA\\OpenRegister\\Service\\Anonymisation\\AnonymisationBackendService::getState() (BackendState jsonSerialize shape) and reports unknown, never regex, when it cannot; AnonymizationService::runAnonymize() -> requireLiveDetector() throws DetectionUnavailableException before DocumentAnonymizeRunner writes anything when recognition is disabled, the effective backend is unavailable or the state is unknown; AnonymizeRequestService maps it to 503 detectionUnavailable; every result, batch entry and folder entry carries detection {backend, entitiesRedacted, outcome redacted|nothing_found}; SettingsController derives the banner warning from the same read. Tests: AnonymiserBackendStateClientTest, AnonymizationServiceDetectorTest, AnonymizeRequestServiceDetectorTest, SettingsControllerTest::testTheAdminWarningSaysWhatIsActuallyConfigured.",
+				"change": "openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "the refusal this row asks for does not exist in code",
+			"reachedOn": "every anonymise path: POST api/anonymization/{fileId}, batch anonymise, folder analysis job; banner on admin settings and dashboard",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
@@ -3079,9 +3096,9 @@
 			"sourceRef": "Presidio recognizer evaluation harness",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/, src/, openspec for precision/recall/f1/benchmark/evaluation-of-detection terms; no recognizer evaluation harness anywhere."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/, src/, openspec for precision/recall/f1/benchmark/evaluation-of-detection terms; no recognizer evaluation harness anywhere."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3106,9 +3123,9 @@
 			"sourceRef": "Presidio structured-data anonymization",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/services/anonymizationUpload.js ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'] and ALLOWED_MIMES has no spreadsheet/CSV mime; the upload widget's accept attribute (ACCEPT_ATTR) excludes xlsx/xls/csv. No spreadsheet-cell-level anonymisation code exists."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived pdf-conversion-service change kept spreadsheets out of its scope. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: src/services/anonymizationUpload.js ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'] and ALLOWED_MIMES has no spreadsheet/CSV mime; the upload widget's accept attribute (ACCEPT_ATTR) excludes xlsx/xls/csv. No spreadsheet-cell-level anonymisation code exists."
 			},
 			"reachedOn": "the upload dialog rejects spreadsheet files outright",
 			"provider": "filinq",
@@ -3161,9 +3178,9 @@
 			"sourceRef": "user story \"Automatically scan uploaded documents for PII\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No file-upload event listener registered anywhere: lib/AppInfo/Application.php has no registerEventListener for a Nextcloud file-created/node-written event, and lib/EventListener/ contains only signing-related listeners (DocumentSigningRequestedListener, SigningTaskListener). Detection only runs when a user explicitly opens a file in /anonymization and clicks extract."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). intake-ocr-on-arrival reads arriving intake documents; detection on upload is not part of it. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No file-upload event listener registered anywhere: lib/AppInfo/Application.php has no registerEventListener for a Nextcloud file-created/node-written event, and lib/EventListener/ contains only signing-related listeners (DocumentSigningRequestedListener, SigningTaskListener). Detection only runs when a user explicitly opens a file in /anonymization and clicks extract."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3366,13 +3383,15 @@
 			"name": "Replace each person with a consistent pseudonym so the text stays readable.",
 			"source": "competitor-derived",
 			"sourceRef": "Cloak Anonymizer seven methods; canonical pseudonymization",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/reversible-pseudonymization (an open change found in the openspec pass on 2026-09-27). Before: No pseudonym-replacement mode for document text anonymisation exists in filinq. The only 'pseudonym' concept in the codebase is OpenRegister's Archival AnonymisationService::pseudonymFor() for database-field-level GDPR erasure/archival (origin/development lib/Service/Archival/AnonymisationService.php:164), and filinq's own lib/Service/SubjectErasure/SubjectErasureRules.php explicitly says its erasure NEVER applies 'pseudonym' treatment ('the pseudonym is the opposite requirement... an erasure never applies pseudonym'). No 'redactionMode'/'treatment' parameter accepting a pseudonym value exists in AnonymizeRequestValidator or DocumentAnonymizeRunner."
+				"evidence": "OpenRegister's DocumentProcessingHandler replaces each detected value with a stable, scope-local numbered placeholder ([PERSOON: 1], [ADRES: 2]; per document or per dossier) and filinq reads the exact strings through FileService::getLastPlaceholderMap(). The file-viewer sidebar now offers the choice between keeping no key and keeping an encrypted key (FileViewerSidebar.vue anonymiseMode -> anonymization store reversible -> AnonymizeRequestValidator -> DocumentAnonymizeRunner -> PseudonymMapRecorder). Partial: the pseudonym is a numbered type label, not a realistic replacement name. Tests: PseudonymPairsTest::testThePlaceholderIsTheKeyOpenRegisterEmitted, DocumentAnonymizeRunnerPseudonymTest, vitest pseudonymisation.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-reversible-pseudonymization",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the anonymise step in the file-viewer sidebar (After anonymising); POST api/anonymization/anonymize/{fileId} with reversible",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
@@ -3395,13 +3414,15 @@
 			"name": "Reverse a pseudonymisation later under control, with the key kept apart.",
 			"source": "competitor-derived",
 			"sourceRef": "canonical pseudonymization (keyed tokenisation)",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/reversible-pseudonymization (an open change found in the openspec pass on 2026-09-27). Before: No reverse-pseudonymisation / re-identification-under-control feature exists for document redaction (grepped for 'reversible'/'reverse pseudonym' — only unrelated hits: a migration comment, a key-naming comment, and SubjectErasureRules' note that it 'destroys any reversible mapping it finds'). Since red-pseudonym itself is not built, there is nothing to reverse."
+				"evidence": "A reversible run stores a pseudonymMap (register 8.27.0) per anonymizationLink: the placeholder-to-value mapping encrypted with ICrypto (PseudonymMapService), writeOnly and admin-only in the schema, written with _rbac false, read back only through ObjectService::find(_render false) on the restore path, deleted with its link (PseudonymMapLinkDeletedListener). POST api/pseudonymisation/{linkId}/restore (PseudonymisationController -> PseudonymRestoreService) checks PseudonymRestoreGate (admins plus pseudonymisation_restore_allowed_groups, fail closed), the caller's access to the anonymised copy, audits denied/failed/granted/restored in OpenRegister's audit trail and refuses when the granted entry cannot be written; text formats get a _restored copy, others a report. Tests: PseudonymRestoreServiceTest (refusals first), PseudonymisationControllerTest, PseudonymMapServiceTest, PseudonymMapRecorderTest, PseudonymMapSchemaTest (every payload validated against the real fragments), vitest pseudonymisation.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-reversible-pseudonymization",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Restore original on an anonymised copy in the file-viewer sidebar; GET api/pseudonymisation/status/{fileId}, POST api/pseudonymisation/{linkId}/restore",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
@@ -3680,9 +3701,9 @@
 			"sourceRef": "CaseGuard scheduled batch redaction jobs",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/BackgroundJob/BatchDocumentJob.php is a QueuedJob (runs once, immediately after being queued), not a TimedJob with a configurable off-hours schedule. No UI or setting found for scheduling bulk redaction to run at a specific time or outside office hours."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). redaction-at-scale runs batches in cron work units without an office-hours window. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: lib/BackgroundJob/BatchDocumentJob.php is a QueuedJob (runs once, immediately after being queued), not a TimedJob with a configurable off-hours schedule. No UI or setting found for scheduling bulk redaction to run at a specific time or outside office hours."
 			},
 			"reachedOn": "nothing reaches a scheduling UI",
 			"provider": "filinq",
@@ -3735,9 +3756,9 @@
 			"sourceRef": "procest round 4 C-access-and-privacy-3 (Decos JOIN Joni)",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped for PII-stripping-before-LLM-call patterns; found only WOOAnonymisationAssistService/WOOAssessmentController in dq-flow (dossiq), which is AI ASSISTING detection decisions (woo-llm-anonymisation), not stripping PII from a document before an AI model processes it. No such guard exists in filinq."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped for PII-stripping-before-LLM-call patterns; found only WOOAnonymisationAssistService/WOOAssessmentController in dq-flow (dossiq), which is AI ASSISTING detection decisions (woo-llm-anonymisation), not stripping PII from a document before an AI model processes it. No such guard exists in filinq."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4125,7 +4146,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/opencatalogi",
 				"evidence": "openspec/changes/woo-publicatie-pipeline/proposal.md (0 of 16 tasks done) states: 'sibling apps own the endpoint: OpenCatalogi publishes OR publication objects with DiWoo/TOOI-validated Woo-index sitemaps...What is missing is the pipeline that chains them: nothing today answers is this document ready to publish, assembles the DiWoo metadata, [or] hands the redacted result off to the publication endpoint.' lib/Service/DossierContextService.php:286 comment confirms: 'The woo-publicatie-pipeline has not shipped.'",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "opencatalogi",
@@ -4156,7 +4177,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/opencatalogi",
 				"evidence": "Same as woo-publish: openspec/changes/woo-publicatie-pipeline/proposal.md confirms OpenCatalogi already produces DiWoo/TOOI-validated Woo-index sitemaps for objects IT publishes, but since filinq has no built pipeline handing documents to OpenCatalogi at all (0/16 tasks), filinq users get no Woo-index feed through filinq today.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "opencatalogi",
@@ -4179,14 +4200,15 @@
 			"name": "See which documents must be published actively and what is still outstanding.",
 			"source": "category-derived",
 			"sourceRef": "journey \"Publish Documents for Active Disclosure\"",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/woo-publicatie-pipeline/proposal.md: 'nothing today answers \"is this document ready to publish?\"' is listed as the core missing piece (0 of 16 tasks done). No readiness/outstanding-items view exists in src/ for active-disclosure tracking.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"evidence": "lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. The list shows every publication the caller can open with its status and checks; it does not yet derive which documents the Woo requires to be published actively.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Publications menu entry (/publications) and Publish on a document in My documents",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
@@ -4210,9 +4232,9 @@
 			"sourceRef": "xxllnc Anonimiseren algorithm register presence",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep for 'algoritmeregister' across lib/, src/ and openspec found it used only as competitive-research motivation in seven proposals/specs (image-redaction, ocr-trigger-surface, anonymization-review-workbench, redaction-at-scale, custom-dictionary-recognition), never as an actual feature that lists filinq's own anonymisation algorithm in the public register. No admin page or export for this exists in src/views/settings/Settings.vue."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (datamask rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: grep for 'algoritmeregister' across lib/, src/ and openspec found it used only as competitive-research motivation in seven proposals/specs (image-redaction, ocr-trigger-surface, anonymization-review-workbench, redaction-at-scale, custom-dictionary-recognition), never as an actual feature that lists filinq's own anonymisation algorithm in the public register. No admin page or export for this exists in src/views/settings/Settings.vue."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4266,9 +4288,9 @@
 			"sourceRef": "journey \"Handle Subject Access Request with Document Redaction\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No dedicated subject-access-request change or schema exists (grep for 'subject access request'/'inzageverzoek'/AVG-art-15 across lib/, src/, openspec found nothing; no matching entry in openspec/changes/*). The building blocks it would need are themselves unbuilt: entity-search (find every document mentioning a person, 0/11 tasks) and the collection/packaging half of woo-request-workflow (0/15 tasks)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). It would build on entity-search and woo-request-workflow, both still open. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No dedicated subject-access-request change or schema exists (grep for 'subject access request'/'inzageverzoek'/AVG-art-15 across lib/, src/, openspec found nothing; no matching entry in openspec/changes/*). The building blocks it would need are themselves unbuilt: entity-search (find every document mentioning a person, 0/11 tasks) and the collection/packaging half of woo-request-workflow (0/15 tasks)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4382,9 +4404,9 @@
 			"sourceRef": "Zynyo QTSP qualified certificates; Signhost remote qualified signing",
 			"filinq": "no",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "ValidSignProvider.php is the only path to QES (NativeSigningProvider only supports SES). ValidSignProvider's constructor takes only IAppConfig — no HTTP client at all (grepped for IClient/curl/guzzle, no hits). Its own docblocks: produceSignedArtifact() 'Always throws — the ValidSign artifact flow is not wired' (line ~207), downloadSignedDocument() 'Always throws - not yet implemented' (line ~136)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (validsign rates it yes). The built half: the ValidSign provider seam; the artifact flow is not wired. libresign-signing-provider covers QES through a qualified LibreSign. Reversible when demand or a second competitor appears. Before: ValidSignProvider.php is the only path to QES (NativeSigningProvider only supports SES). ValidSignProvider's constructor takes only IAppConfig — no HTTP client at all (grepped for IClient/curl/guzzle, no hits). Its own docblocks: produceSignedArtifact() 'Always throws — the ValidSign artifact flow is not wired' (line ~207), downloadSignedDocument() 'Always throws - not yet implemented' (line ~136)."
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue) can select QES via ValidSign, but the request can never complete",
 			"provider": "filinq",
@@ -4470,7 +4492,7 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/portal-signing-surface/tasks.md: 9/11 done. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes."
+				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/archive/2026-09-28-portal-signing-surface: every task done (T06, the SES/AES cap with signerRecord.signatureAssurance, landed 2026-09-28). Still building because portal-signing-actions waits on the portaliq signerEmail claim and its Newman collection. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes."
 			},
 			"reachedOn": "external: portaliq's shared external portal (cross-app), calling filinq's api/portal/signing/* routes",
 			"provider": "filinq",
@@ -4610,9 +4632,9 @@
 			"sourceRef": "user story \"Check certificate against EU Trusted List\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/, src/, openspec/specs, openspec/changes for 'trusted list'/'eu trust'/'LOTL'/certificate-chain-against-a-list terms; zero hits."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/, src/, openspec/specs, openspec/changes for 'trusted list'/'eu trust'/'LOTL'/certificate-chain-against-a-list terms; zero hits."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4808,9 +4830,9 @@
 			"sourceRef": "ValidSign face-to-face signing mode",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/, src/, openspec for 'face to face'/'in person'/'same device'/kiosk-style signing terms; zero hits."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (validsign rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/, src/, openspec for 'face to face'/'in person'/'same device'/kiosk-style signing terms; zero hits."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4863,14 +4885,15 @@
 			"name": "Sign through an outside provider such as LibreSign or ValidSign.",
 			"source": "competitor-derived",
 			"sourceRef": "BCT Corsa ValidSign integration; LibreSign self-hosted CA",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "ValidSignProvider.php implements SigningProviderInterface and is selectable via SigningProviderFactory, but its constructor takes only IAppConfig (no HTTP client anywhere in the 245-line file), initiateSigning() returns a result without a real external call unless already configured, produceSignedArtifact() and downloadSignedDocument() both unconditionally throw ('not yet implemented' / 'not wired', per their own docblocks). libresign-signing-provider (LibreSign support) is a separate proposal, 0/10 tasks done — LibreSign has no provider class in filinq at all today.",
-				"change": "openspec/changes/libresign-signing-provider"
+				"evidence": "lib/Service/Signing/LibreSignProvider.php signs through the LibreSign app over its own OCS API (lib/Service/Signing/OcsLibreSignClient.php, routes from LibreSign's openapi.json). SigningProviderFactory registers it only when LibreSign is enabled and fails closed when it is configured but absent; SES and AdES always, QES only with libresign_qualified. SignedArtifactProducer::delegate() hands a new libresign request to LibreSign with the document bytes and stores the uuid as signingRequest.externalId (1.7.0); LibreSignCompletionJob (every 10 min) completes a signed request with the signed PDF as a new version and an audit entry, and cancels one withdrawn in LibreSign. ValidSign is still a stub (initiateSigning returns a made-up id, produceSignedArtifact throws).",
+				"change": "openspec/changes/archive/2026-09-29-libresign-signing-provider",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "/signing/new (SigningRequestForm.vue) can select ValidSign, but signing never completes; LibreSign is not selectable at all",
+			"reachedOn": "Admin settings, Digital signing: LibreSign (certificate) as the provider when LibreSign is enabled; then every signing request (/signing/new, the cross-app DocumentSigningRequestedEvent) goes to LibreSign",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-signing",
@@ -4925,9 +4948,9 @@
 			"sourceRef": "SmartDocuments built-in digital signature step; Docupilot",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped openspec/specs/*/spec.md and lib/Service/DocumentMergeService.php for a sign-as-a-step-of-generation flow; no hits linking template/document generation directly to a signing step. Signing is a wholly separate action initiated from a generated document afterwards (SigningRequestForm), not a step inside the generation flow itself."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped openspec/specs/*/spec.md and lib/Service/DocumentMergeService.php for a sign-as-a-step-of-generation flow; no hits linking template/document generation directly to a signing step. Signing is a wholly separate action initiated from a generated document afterwards (SigningRequestForm), not a step inside the generation flow itself."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5064,14 +5087,15 @@
 			"name": "Put documents on legal hold so they cannot be destroyed.",
 			"source": "category-derived",
 			"sourceRef": "user story \"Exclude document from destruction due to legal hold\"",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
-				"owner": "ConductionNL/openregister",
-				"evidence": "Same source: OpenRegister's per-object retention metadata includes a `legalHold` field (archiefwet-retention-engine/proposal.md), but filinq has 'no retention surface at all' of its own and does not set or expose legalHold on any filinq schema (grep for legalHold/legal-hold across lib/ and src/ found no hits outside the proposal text).",
-				"change": "openspec/changes/archiefwet-retention-engine"
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Legal holds page (src/views/legalHolds/LegalHolds.vue, manifest LegalHolds) -> api/legal-holds (LegalHoldCaseController) -> LegalHoldCaseService: a legalHoldCase (register 8.28.0) freezes its explicit documents and dossiers through OpenRegister's LegalHoldService::placeHold (reason filinq-hold-case:<uuid>; DestructionCheckJob leaves held objects off every destruction list), locks their files with ILockManager TYPE_APP where files_lock is installed, records placement per record with retry, releases overlap-safe (derived coverage, re-stamp to a surviving case, never another party's hold), notifies owners and custodian, gated by LegalHoldAuthority (admins + legal_hold_authority_groups, fail closed). DossierDetail shows a hold badge and switches off removal. Tests: LegalHoldCaseServiceTest (refusals first, overlap both orders, partial fan-out + retry, lock provider absent, every payload against the real fragment), LegalHoldCaseControllerTest, LegalHoldCaseSchemaTest, LegalHoldNotifierTest, vitest legalHolds.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-e-discovery-legal-hold",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the Legal holds page (menu); the hold badge on a dossier; GET/POST api/legal-holds",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "archiefwet-retention-engine",
@@ -5151,9 +5175,9 @@
 			"sourceRef": "procest round 4 C-documents-39",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/PdfService.php:267-289 buildMpdfConfig(): PDF/A mode ($config['PDFA']=true, PDFAversion 3-B) is only applied when `$options['pdfa'] === true`, and this flag is caller-supplied via pdfOptions -- it is not set anywhere by default in lib/Service/DocumentRenderPipeline.php or DocumentController::generate(). A document produced by POST /api/documents/generate with format=pdf and no explicit pdfOptions.pdfa is therefore an ordinary PDF, not archive-ready, unless a caller opts in or the file is later run through print-preview's separate /api/print/pdf-a download."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: lib/Service/PdfService.php:267-289 buildMpdfConfig(): PDF/A mode ($config['PDFA']=true, PDFAversion 3-B) is only applied when `$options['pdfa'] === true`, and this flag is caller-supplied via pdfOptions -- it is not set anywhere by default in lib/Service/DocumentRenderPipeline.php or DocumentController::generate(). A document produced by POST /api/documents/generate with format=pdf and no explicit pdfOptions.pdfa is therefore an ordinary PDF, not archive-ready, unless a caller opts in or the file is later run through print-preview's separate /api/print/pdf-a download."
 			},
 			"reachedOn": "n/a (this is the negative finding: the default generation path is NOT archive-ready at creation)",
 			"provider": "filinq",
@@ -5262,9 +5286,9 @@
 			"sourceRef": "user story \"Generate printable dossier index\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5376,9 +5400,9 @@
 			"sourceRef": "procest round 4 C-integrations-24",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep for 'certif' across lib/Controller, lib/Service, src/views and openspec/specs found only digital-SIGNATURE certificates (X.509 signing certs in document-signing/portal-signing-surface specs), not certification against a records-management standard (e.g. ISO 15489, NEN 2082). No such change exists among openspec/changes/* names either."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). A certification audits the organisation and the product together, it is not a capability to specify. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: grep for 'certif' across lib/Controller, lib/Service, src/views and openspec/specs found only digital-SIGNATURE certificates (X.509 signing certs in document-signing/portal-signing-surface specs), not certification against a records-management standard (e.g. ISO 15489, NEN 2082). No such change exists among openspec/changes/* names either."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5519,9 +5543,9 @@
 			"sourceRef": "user story \"Automatically archive sent correspondence in case dossier\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ for IMailer/OCP\\Mail: no match anywhere in the app. The register comment (filinq_register.json v8.16.0) says correspondence carries a linkedTypes 'mail' leaf + mailObjectTemplate so 'an objection mail or an inbound case mail can seed a record from the NC Mail sidebar' - this is INBOUND (creating a filinq record from a received email in NC Mail), not outbound sending from filinq with an archived sent copy."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/ for IMailer/OCP\\Mail: no match anywhere in the app. The register comment (filinq_register.json v8.16.0) says correspondence carries a linkedTypes 'mail' leaf + mailObjectTemplate so 'an objection mail or an inbound case mail can seed a record from the NC Mail sidebar' - this is INBOUND (creating a filinq record from a received email in NC Mail), not outbound sending from filinq with an archived sent copy."
 			},
 			"reachedOn": "nothing reaches it (no send mechanism; the only mail integration found is inbound record-seeding, not outbound send-and-archive)",
 			"provider": "filinq",
@@ -5630,9 +5654,9 @@
 			"sourceRef": "journey \"Approve Outgoing Correspondence\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/Controller/CorrespondenceController.php, lib/Service/CorrespondenceService.php and filinq_register.json for 'approv*': only hit is the unrelated signingRequest/signerRecord multi-signer approval CHAIN (being migrated to OR task sequences per migrate-signing-to-or-tasks) - that gates a signature, not an outgoing letter/correspondence before it is sent."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/Controller/CorrespondenceController.php, lib/Service/CorrespondenceService.php and filinq_register.json for 'approv*': only hit is the unrelated signingRequest/signerRecord multi-signer approval CHAIN (being migrated to OR task sequences per migrate-signing-to-or-tasks) - that gates a signature, not an outgoing letter/correspondence before it is sent."
 			},
 			"reachedOn": "nothing reaches it (not built for correspondence)",
 			"provider": "filinq",
@@ -5657,9 +5681,9 @@
 			"sourceRef": "user story \"Send acknowledgement via the sender's preferred channel\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/Service/CorrespondenceService.php and lib/Controller/CorrespondenceController.php for preferredChannel/channel-preference/digitalPost: no match. Format selection (pdf/docx/html/email) is chosen by the operator per-generation, not derived from a recipient's stored channel preference."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/Service/CorrespondenceService.php and lib/Controller/CorrespondenceController.php for preferredChannel/channel-preference/digitalPost: no match. Format selection (pdf/docx/html/email) is chosen by the operator per-generation, not derived from a recipient's stored channel preference."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5684,9 +5708,9 @@
 			"sourceRef": "user story \"Receive notification when document status changes\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped filinq_register.json for follow/subscri*: no per-user 'follow this document' subscription feature found (the only related mechanism is the 7 x-openregister-notifications rules addressed to fixed groups, e.g. readingFailed and SigningConcludedEvent-driven ones - none is a user opting to follow an individual document)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped filinq_register.json for follow/subscri*: no per-user 'follow this document' subscription feature found (the only related mechanism is the 7 x-openregister-notifications rules addressed to fixed groups, e.g. readingFailed and SigningConcludedEvent-driven ones - none is a user opting to follow an individual document)."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5711,9 +5735,9 @@
 			"sourceRef": "Redactable cloud storage connectors",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ and src/ for 'google.*drive|onedrive|dropbox': no match anywhere."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/ and src/ for 'google.*drive|onedrive|dropbox': no match anywhere."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -6293,11 +6317,11 @@
 			"sourceRef": "canonical accessibility",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Corrected 2026-09-26, the earlier finding is stale. Both dropzones named by openspec/changes/filinq-upload-dropzone-keyboard-access now carry a real <button type=\"button\"> that opens the file input: src/views/anonymization/AnonymizationWidget.vue:40 and src/views/widgets/AnonymizationDashboardWidget.vue:133. The other two (AnonymizationPocWidget.vue:37, BatchAnonymizationView.vue:12) expose a focusable NcButton. No full keyboard or screen-reader audit of the app was run, so the row stays partial.",
-				"change": "openspec/changes/filinq-upload-dropzone-keyboard-access",
-				"readOn": "2026-09-26"
+				"evidence": "Both dropzones carry a real <button type=\"button\"> that opens the hidden file input (src/views/anonymization/AnonymizationWidget.vue, src/views/widgets/AnonymizationDashboardWidget.vue), and tests/vitest/uploadTriggerKeyboard.spec.js audits every component with a file input so a new one without a keyboard route fails the suite. Rating stays partial: no full keyboard or screen-reader audit of the app was run.",
+				"change": "openspec/changes/archive/2026-09-28-filinq-upload-dropzone-keyboard-access",
+				"readOn": "2026-09-28"
 			},
 			"reachedOn": "/anonymization (AnonymizationWidget.vue) and the anonymization dashboard widget, both with a keyboard-operable select-files button",
 			"provider": "filinq",
@@ -6436,14 +6460,15 @@
 			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (requirement VPB-02)",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/woo-metadata-worklist on 2026-09-27. Before: no DiWoo metadata or readiness view: grep -ri 'diwoo|informatiecategorie' lib src finds nothing; the only Woo-named service, lib/Service/WooProfileService.php:40, holds the anonymisation entity profile. DiWoo metadata assembly and the readiness check exist only as design: openspec/changes/woo-publicatie-pipeline/proposal.md:26 and :37 (0 of 16 tasks done). opencatalogi@a00f9f84 lib/Controller/WooReadinessController.php:46 checks catalog harvester readiness, not per-document metadata.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"evidence": "lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. The list has a Missing metadata column and the detail names the missing Woo fields; a hand-off is refused while officieleTitel, wooCategory or publicatiedatum is missing.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Publications menu entry (/publications), Missing metadata column",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
@@ -6467,14 +6492,15 @@
 			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (requirement VPB-10)",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/woo-publicatie-pipeline (an open change found in the openspec pass on 2026-09-27). Before: no destruction-date propagation: grep -ri 'vernietigingsdatum|destructionDate|retentionExpiresAt' lib src finds nothing. Designed only: openspec/changes/woo-publicatie-pipeline/design.md:171 (filinq records the source system's destruction date and propagates it as retentionExpiresAt; 0 of 16 tasks done). opencatalogi@a00f9f84 lib/Service/RetentionService.php:531 evaluates retentionExpiresAt on its own publications (lib/BackgroundJob/RetentionEvaluation.php), but no filinq document reaches it.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"evidence": "lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. A destruction date recorded on the publication is passed to OpenCatalogi as retentionExpiresAt with a retentionNote (RET-003), so OpenCatalogi's retention job takes it offline; the date is entered by hand, not yet read from the source system.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Publications detail, Destruction date",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
@@ -6591,9 +6617,9 @@
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/13604",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no ASiC or CAdES handling: grep -ri 'asic|cades|p7m|p7s|pkcs7|xades' lib src finds nothing. Signature verification reads PDFs only: lib/Service/SigningVerificationService.php:153 extractSignatures(pdfContent) pattern-matches inside the PDF bytes. A container can sit in Nextcloud Files like any file, but filinq neither opens nor verifies it."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: A featureRequest demand row (https://github.com/paperless-ngx/paperless-ngx/discussions/13604) but no competitor rates it yes, and signing is outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no ASiC or CAdES handling: grep -ri 'asic|cades|p7m|p7s|pkcs7|xades' lib src finds nothing. Signature verification reads PDFs only: lib/Service/SigningVerificationService.php:153 extractSignatures(pdfContent) pattern-matches inside the PDF bytes. A container can sit in Nextcloud Files like any file, but filinq neither opens nor verifies it."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6799,9 +6825,9 @@
 			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no PDF page operations: grep -ri 'rotate|splitPdf|reorder|deletePage|removePage|extractPages' lib src finds none on PDFs (hits are GL-account reordering and signing-secret rotation). openspec/changes/document-editing-tools/proposal.md covers conversion and text edits by an agent, not pages. lib/Controller/MergeController.php:107 merges several documents into one PDF, the only page-level operation."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (paperless-ngx rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no PDF page operations: grep -ri 'rotate|splitPdf|reorder|deletePage|removePage|extractPages' lib src finds none on PDFs (hits are GL-account reordering and signing-secret rotation). openspec/changes/document-editing-tools/proposal.md covers conversion and text edits by an agent, not pages. lib/Controller/MergeController.php:107 merges several documents into one PDF, the only page-level operation."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6914,9 +6940,9 @@
 			"sourceRef": "https://www.binnenlandsbestuur.nl/juridisch/reveal-zylab/lakken-bij-woo-verzoeken-kan-veel-vriendelijker",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no withheld-page replacement: grep -ri 'withheld|whole page|full page|geweigerd' lib finds nothing; the redaction output modes (lib/Service/Redaction/RedactionOutputModes.php) redact passages in place. The only placeholder pages are for unrenderable email attachments (lib/Service/EmlPdfAssemblyService.php:451). No openspec change specifies it (grep -rli 'withheld|entire page' openspec/changes/*/proposal.md: none)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (zylab rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no withheld-page replacement: grep -ri 'withheld|whole page|full page|geweigerd' lib finds nothing; the redaction output modes (lib/Service/Redaction/RedactionOutputModes.php) redact passages in place. The only placeholder pages are for unrenderable email attachments (lib/Service/EmlPdfAssemblyService.php:451). No openspec change specifies it (grep -rli 'withheld|entire page' openspec/changes/*/proposal.md: none)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6942,9 +6968,9 @@
 			"sourceRef": "https://docs.zylab.com/01/ZyLAB/Woo-Dutch/707001.html",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no numbering of a disclosure set: grep -ri 'page number|paginanummer|bates|PAGENO' lib finds nothing; the grondslagen PDF (lib/Service/GrondslagenPdfWriter.php:334 importAllPages) appends a summary without numbering. Registration numbers per document exist as in-number (partial, unreached) but are not a set or page numbering."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (zylab rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no numbering of a disclosure set: grep -ri 'page number|paginanummer|bates|PAGENO' lib finds nothing; the grondslagen PDF (lib/Service/GrondslagenPdfWriter.php:334 importAllPages) appends a summary without numbering. Registration numbers per document exist as in-number (partial, unreached) but are not a set or page numbering."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

@@ -33,7 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.2.4-unstable.20260919135934</version>
+    <version>0.2.5-unstable.20260929120402</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
@@ -105,6 +105,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <job>OCA\Filinq\BackgroundJob\SigningExpirationJob</job>
         <job>OCA\Filinq\BackgroundJob\DomainFolderReconciliationJob</job>
         <job>OCA\Filinq\BackgroundJob\UploadFragmentReaperJob</job>
+        <job>OCA\Filinq\BackgroundJob\PeriodicDocumentJob</job>
+        <job>OCA\Filinq\BackgroundJob\LibreSignCompletionJob</job>
     </background-jobs>
     <!--
         info.xsd fixes the order of these elements: background-jobs, repair-steps,
@@ -225,6 +227,10 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
                  the old one in place, REFUSES two sources targeting one
                  destination, deletes nothing, and a re-run is a no-op. -->
             <step>OCA\Filinq\Repair\RenameDutchColumns</step>
+            <!-- Needs the printJob schema, which the register import creates on
+                 boot after the repair steps: the first pass moves nothing and
+                 keeps the entries, a later pass moves them. -->
+            <step>OCA\Filinq\Repair\MigratePrintJobsOutOfAppConfig</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>

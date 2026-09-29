@@ -178,9 +178,12 @@ class PortalSigningReceiverController extends Controller {
 			return $this->downstreamFailure(context: 'signDocument', exception: $e);
 		}
 
+		// REQ-DDPSS-005: the answer names the assurance the signature
+		// recorded, which is never above the session trust and never QES.
 		return new JSONResponse(
 			[
 				'status' => ($signer['status'] ?? 'signed'),
+				'assurance' => ($signer['signatureAssurance'] ?? 'SES'),
 			]
 		);
 

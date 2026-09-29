@@ -95,6 +95,14 @@ if (is_dir($ocpMigrationDir) === true) {
 	}
 }
 
+// The real ICrypto contract (reversible-pseudonymization): the key store
+// encrypts with it, and a double of the real interface cannot grow a method
+// Nextcloud does not have.
+$ocpCryptoPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Security/ICrypto.php';
+if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto') === false) {
+	require_once $ocpCryptoPath;
+}
+
 $ocpDbExceptionDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/AppFramework/Db';
 if (is_dir($ocpDbExceptionDir) === true) {
 	foreach (['IMapperException.php', 'DoesNotExistException.php'] as $ocpDbFile) {
@@ -140,6 +148,16 @@ foreach (['ISession.php', 'Security/ISecureRandom.php'] as $ocpSessionFile) {
 	$ocpSessionPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpSessionFile;
 	if (is_file($ocpSessionPath) === true && interface_exists('\\OCP\\' . str_replace(['/', '.php'], ['\\', ''], $ocpSessionFile)) === false) {
 		require_once $ocpSessionPath;
+	}
+}
+
+// Load OCP's app data contracts (print jobs keep their PDFs in the app data
+// folder) — same "real file, not classmapped" situation as the contracts
+// above. NotFoundException and NotPermittedException come from the stubs.
+foreach (['Files/SimpleFS/ISimpleFile.php', 'Files/SimpleFS/InMemoryFile.php', 'Files/SimpleFS/ISimpleFolder.php', 'Files/SimpleFS/ISimpleRoot.php', 'Files/IAppData.php'] as $ocpAppDataFile) {
+	$ocpAppDataPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpAppDataFile;
+	if (is_file($ocpAppDataPath) === true) {
+		require_once $ocpAppDataPath;
 	}
 }
 
@@ -232,6 +250,21 @@ if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false)
 // tests/unit/ directory segment, so non-test helper classes under tests/unit
 // are required explicitly (PHPUnit loads *Test.php files by path).
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
+require_once __DIR__ . '/unit/Service/DetectionStates.php';
+require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
+require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';
+// The real OCP contracts the legal hold notifier implements and uses
+// (e-discovery-legal-hold), so its double cannot drift from Nextcloud's.
+foreach (['Notification/INotifier', 'Notification/UnknownNotificationException', 'L10N/IFactory'] as $ocpPath) {
+	$ocpFile = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpPath . '.php';
+	$ocpName = 'OCP\\' . str_replace('/', '\\', $ocpPath);
+	if (is_file($ocpFile) === true && interface_exists($ocpName) === false && class_exists($ocpName) === false) {
+		require_once $ocpFile;
+	}
+}
+
+require_once __DIR__ . '/unit/Service/LegalHold/FakeLegalHoldService.php';
+require_once __DIR__ . '/unit/Service/LegalHold/LegalHoldDoubles.php';
 
 // Batch-state fakes (NullCache / in-memory OpenRegister ObjectService) shared
 // by BatchStateServicePersistenceTest and BatchStateRepositoryTest. Same

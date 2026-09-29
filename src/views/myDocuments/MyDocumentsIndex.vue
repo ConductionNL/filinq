@@ -51,6 +51,17 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							:size="18"
 							class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
+						<span
+							v-if="ocrBadgeFor(row)"
+							class="my-documents-ocr-badge"
+							:title="
+								t(
+									'filinq',
+									'Text recognised by OCR, with its confidence',
+								)
+							">
+							{{ ocrBadgeFor(row) }}
+						</span>
 					</div>
 				</template>
 
@@ -161,6 +172,20 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							{{ t('filinq', 'Validate') }}
 						</NcActionButton>
 						<NcActionButton
+							v-if="ocrOfferedFor(row)"
+							:disabled="Boolean(ocrRunning[row.fileId])"
+							closeAfterClick
+							@click="runOcrOn(row)">
+							<template #icon>
+								<TextRecognition :size="20" />
+							</template>
+							{{
+								ocrRunning[row.fileId]
+									? t('filinq', 'Running OCR…')
+									: t('filinq', 'Run OCR')
+							}}
+						</NcActionButton>
+						<NcActionButton
 							v-if="!row.isFolder"
 							closeAfterClick
 							@click="compareDocument(row)">
@@ -239,6 +264,7 @@ import Eye from 'vue-material-design-icons/Eye.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import History from 'vue-material-design-icons/History.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
+import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
@@ -247,6 +273,13 @@ import DdSearchBar from '../../components/DdSearchBar.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
+import {
+	fetchOcrStatus,
+	isOcrCandidate,
+	ocrBadgeLabel,
+	ocrErrorMessage,
+	runOcr,
+} from '../../services/ocr.js'
 import { validateFile } from '../../services/validationService.js'
 
 const VIEW_MODE_STORAGE_KEY = 'filinq:myDocuments:viewMode'
@@ -290,6 +323,7 @@ export default {
 		// EyeOffOutline,
 		Download,
 		ShieldCheckOutline,
+		TextRecognition,
 		Compare,
 		History,
 		Delete,
@@ -323,6 +357,12 @@ export default {
 			deleteTarget: null, // row awaiting delete confirmation, or null
 			bulkDeleteNames: [], // file names awaiting bulk-delete confirmation
 			deleting: false,
+
+			// OCR (ocr-trigger-surface): whether it can run here, the last
+			// result per file id, and which files are running now.
+			ocrAvailable: false,
+			ocrResults: {},
+			ocrRunning: {},
 		}
 	},
 
@@ -418,6 +458,19 @@ export default {
 	/**
 	 * @spec exclude Lifecycle bootstrap (fetch + keyboard listener wiring).
 	 */
+	watch: {
+		paginatedDocuments: {
+			/**
+			 * Read the OCR status when the files on screen change.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+			 */
+			handler(rows) {
+				this.loadOcrStatus(rows)
+			},
+		},
+	},
+
 	mounted() {
 		myDocumentsStore.fetchDocuments()
 		window.addEventListener('keydown', this.onKeydown)
@@ -428,6 +481,88 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Read whether OCR can run, and the results for the images and PDFs on this page.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async loadOcrStatus(rows) {
+			const ids = (rows || [])
+				.filter(
+					(row) =>
+						!row.isFolder && row.fileId && isOcrCandidate(row.mimeType),
+				)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const status = await fetchOcrStatus(ids)
+				this.ocrAvailable = status.capability?.available === true
+				this.ocrResults = { ...this.ocrResults, ...(status.results || {}) }
+			} catch {
+				// No status: no action and no badge. The list itself still shows.
+			}
+		},
+
+		/**
+		 * Whether Run OCR is offered on a row. The server checks again.
+		 *
+		 * @param {object} row The row.
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrOfferedFor(row) {
+			return this.ocrAvailable && !row.isFolder && isOcrCandidate(row.mimeType)
+		},
+
+		/**
+		 * The OCR badge for a row.
+		 *
+		 * @param {object} row The row.
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrBadgeFor(row) {
+			return ocrBadgeLabel(this.ocrResults[String(row.fileId)] ?? null)
+		},
+
+		/**
+		 * Run OCR on a row and update its badge without a reload.
+		 *
+		 * @param {object} row The row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async runOcrOn(row) {
+			this.ocrRunning = { ...this.ocrRunning, [row.fileId]: true }
+			try {
+				const result = await runOcr(row.fileId)
+				if (result.ocrProcessed) {
+					this.ocrResults = {
+						...this.ocrResults,
+						[String(row.fileId)]: result,
+					}
+					showSuccess(
+						t('filinq', 'OCR read {length} characters.', {
+							length: result.textLength,
+						}),
+					)
+				} else {
+					showError(ocrErrorMessage(result))
+				}
+			} catch (error) {
+				showError(ocrErrorMessage(error))
+				if ([409, 503].includes(error?.response?.status)) {
+					this.ocrAvailable = false
+				}
+			} finally {
+				this.ocrRunning = { ...this.ocrRunning, [row.fileId]: false }
+			}
+		},
+
 		/**
 		 * Global keydown handler. Escape cancels bulk-selection mode so the
 		 * user can bail out of a bulk action without reaching for the menu.
@@ -950,5 +1085,14 @@ export default {
 	.my-documents-name__icon {
 		transition: none;
 	}
+}
+
+.my-documents-ocr-badge {
+	margin-inline-start: 8px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 0.85em;
 }
 </style>

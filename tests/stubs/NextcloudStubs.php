@@ -1463,6 +1463,15 @@ interface IAppManager {
 	public function isEnabledForUser(string $appId, $user = null): bool;
 
 	/**
+	 * Whether the app is enabled for at least one user (OCP since 32.0.0).
+	 *
+	 * @param string $appId The app id.
+	 *
+	 * @return bool
+	 */
+	public function isEnabledForAnyone(string $appId): bool;
+
+	/**
 	 * Get the version of an installed app.
 	 *
 	 * @param string $appId App identifier
@@ -1546,6 +1555,30 @@ interface INotification {
 	 * @return INotification
 	 */
 	public function setSubject(string $subject, array $parameters = []): INotification;
+
+	/** Real OCP method. @param \DateTime $dateTime When. @return INotification */
+	public function setDateTime(\DateTime $dateTime): INotification;
+
+	/** Real OCP method. @return string */
+	public function getApp(): string;
+
+	/** Real OCP method. @return string */
+	public function getUser(): string;
+
+	/** Real OCP method. @return string */
+	public function getSubject(): string;
+
+	/** Real OCP method. @return array */
+	public function getSubjectParameters(): array;
+
+	/** Real OCP method. @param string $subject The text. @return INotification */
+	public function setParsedSubject(string $subject): INotification;
+
+	/** Real OCP method. @param string $icon Absolute URL. @return INotification */
+	public function setIcon(string $icon): INotification;
+
+	/** Real OCP method. @param string $link Absolute URL. @return INotification */
+	public function setLink(string $link): INotification;
 }//end interface
 
 /**
@@ -2160,6 +2193,16 @@ interface IClient {
 	 * @return IResponse
 	 */
 	public function post(string $uri, array $options = []): IResponse;
+
+	/**
+	 * Issue a DELETE request (signature as in vendor/nextcloud/ocp IClient).
+	 *
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function delete(string $uri, array $options = []): IResponse;
 }//end interface
 
 /**

@@ -373,6 +373,7 @@ class BatchAnonymizeService {
 	 * @return array<string, mixed> The entry with the anonymised status and result fields applied.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
 	 */
 	private function applyAnonymizedResult(array $entry, array $result): array {
 		$entry['status'] = 'anonymized';
@@ -390,6 +391,12 @@ class BatchAnonymizeService {
 
 		if (isset($result['createdConsents']) === true) {
 			$entry['createdConsents'] = $result['createdConsents'];
+		}
+
+		// Which backend looked and what it found, so a batch reader can tell
+		// "nothing to redact" from "nothing looked".
+		if (isset($result['detection']) === true) {
+			$entry['detection'] = $result['detection'];
 		}
 
 		return $entry;
