@@ -1533,11 +1533,11 @@
 			"area": "generate",
 			"name": "See which template version a generated document was made from.",
 			"source": "own-code",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DocumentService.php:250 logs 'version' => (int)($template['version'] ?? 1); TemplateService::getTemplate() returns OpenRegister's ObjectEntity::jsonSerialize(), which keeps the version under '@self', and the 'template' schema in lib/Settings/filinq_register.json declares no top-level version property -- so the coalesce to 1 always fires. openspec/changes/generated-document-names-its-template-version/proposal.md documents this exact defect and its tasks.md is 0/23 done. Independently corroborated by dossiq's own docblock (procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php ~140-160: 'THIS USED TO ANSWER v1, ALWAYS'), which now works around it via TemplateVersionService::getVersions() directly rather than trusting filinq's own generatedDocument.templateVersion field.",
+				"evidence": "Built on feat/generated-document-template-version: TemplateService::getTemplate() returns the chain version (snapshots + 1), generateDocument() takes options.templateVersion and renders the stored snapshot (404 naming template and version when absent), the generatedDocument record names that version and leaves it out when unknown (templateVersion optional from generatedDocument 1.5.0), TemplateVersionService::versionInForceAt() answers from the chain's timestamps, and the result carries sha256 and a PDF pageCount (tests/unit/Service/TemplateVersionProvenanceTest.php). Open: the dossiq counterpart (task 7.2) is drafted, not filed, and the live check (task 6.4).",
 				"change": "openspec/changes/generated-document-names-its-template-version"
 			},
 			"reachedOn": "every generated document logs template version 1, always",
