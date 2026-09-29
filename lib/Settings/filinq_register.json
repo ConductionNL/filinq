@@ -8192,7 +8192,7 @@
                 "description": "The key to one reversibly anonymised copy: which placeholder stands for which original value. The mapping is encrypted with the server secret before it is written and declared writeOnly, so no read through OpenRegister returns it, not even to an admin. Filinq decrypts it only to restore the original for someone in the allowed groups, and records every attempt in the audit trail. One map per anonymisation link; deleting the link deletes the map.",
                 "version": "1.0.0",
                 "summary": "",
-                "icon": "KeyChainVariant",
+                "icon": "ShieldKeyOutline",
                 "required": [
                     "anonymizationLink",
                     "sourceFileId",
