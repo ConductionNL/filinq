@@ -108,7 +108,7 @@ class ArchivalChecksTest extends TestCase {
 		$this->assertSame([], $this->archivalFindings(result: $result));
 		$this->assertSame([], $this->rows[ConformanceReportRepository::SCHEMA] ?? []);
 		foreach ($result['validationFindings'] as $finding) {
-			$this->assertSame('document', $finding['category']);
+			$this->assertNotSame('archival', $finding['category']);
 		}
 
 	}//end testShippedDefaultsLeaveArchivalChecksOff()

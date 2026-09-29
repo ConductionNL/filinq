@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Validation\AccessibilityChecks;
 use OCA\Filinq\Service\Validation\ArchivalChecks;
 use OCA\Filinq\Service\Validation\DocumentFileInspector;
 use OCA\Filinq\Service\Validation\ValidationProfileResolver;
@@ -82,6 +83,26 @@ class DocumentValidationService {
 	public const CHECK_ARCHIVAL_UNAVAILABLE = 'archival-validator-unavailable';
 
 	/**
+	 * Accessibility: the PDF has no structure tags.
+	 */
+	public const CHECK_PDF_NOT_TAGGED = 'pdf-not-tagged';
+
+	/**
+	 * Accessibility: the PDF catalog names no language.
+	 */
+	public const CHECK_PDF_LANGUAGE_MISSING = 'pdf-language-missing';
+
+	/**
+	 * Accessibility: the PDF has no title.
+	 */
+	public const CHECK_PDF_TITLE_MISSING = 'pdf-title-missing';
+
+	/**
+	 * Accessibility: a tagged PDF does not say it follows PDF/UA.
+	 */
+	public const CHECK_PDFUA_IDENTIFIER_MISSING = 'pdfua-identifier-missing';
+
+	/**
 	 * The category of the content and metadata checks.
 	 */
 	public const CATEGORY_DOCUMENT = 'document';
@@ -122,6 +143,13 @@ class DocumentValidationService {
 	private readonly ArchivalChecks $archival;
 
 	/**
+	 * The accessibility checks (presence heuristics).
+	 *
+	 * @var AccessibilityChecks
+	 */
+	private readonly AccessibilityChecks $accessibility;
+
+	/**
 	 * Constructor.
 	 *
 	 * The two collaborators are composed here rather than injected so the
@@ -141,6 +169,7 @@ class DocumentValidationService {
 		$this->profiles = new ValidationProfileResolver(logger: $logger, appConfig: $appConfig);
 		$this->inspector = new DocumentFileInspector(appConfig: $appConfig);
 		$this->archival = new ArchivalChecks(conformance: $conformance);
+		$this->accessibility = new AccessibilityChecks();
 
 	}//end __construct()
 
@@ -171,6 +200,7 @@ class DocumentValidationService {
 			$this->encryptionFindings(profile: $profile, mime: $mime, content: $read['content']),
 			$this->textLayerFindings(profile: $profile, mime: $mime, content: $read['content']),
 			$this->metadataFindings(profile: $profile, record: $record),
+			$this->accessibility->findings(profile: $profile, mime: $mime, content: $read['content']),
 			$this->archival->findings(profile: $profile, mime: $mime, file: $file)
 		);
 
