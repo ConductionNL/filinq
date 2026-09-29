@@ -243,6 +243,7 @@ if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false)
 // are required explicitly (PHPUnit loads *Test.php files by path).
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
 require_once __DIR__ . '/unit/Service/DetectionStates.php';
+require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
 
 // Batch-state fakes (NullCache / in-memory OpenRegister ObjectService) shared
 // by BatchStateServicePersistenceTest and BatchStateRepositoryTest. Same

@@ -5650,6 +5650,51 @@
         "snapshot": {
           "status": "handed_off"
         }
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "ocrResult",
+          "slug": "ocrresult-1"
+        },
+        "fileId": 812004,
+        "confidence": 91.4,
+        "languages": "nld+eng",
+        "dpi": 300,
+        "textLength": 4231,
+        "ocrProcessedAt": "2026-07-16T10:05:00+00:00",
+        "triggeredBy": "manual",
+        "engineVersion": "tesseract 5.3.0"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "ocrResult",
+          "slug": "ocrresult-2"
+        },
+        "fileId": 812005,
+        "confidence": 78.9,
+        "languages": "nld+eng",
+        "dpi": 300,
+        "textLength": 1876,
+        "ocrProcessedAt": "2026-07-16T10:06:12+00:00",
+        "triggeredBy": "fallback",
+        "engineVersion": "tesseract 5.3.0"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "ocrResult",
+          "slug": "ocrresult-3"
+        },
+        "fileId": 812006,
+        "confidence": 64.2,
+        "languages": "nld+deu",
+        "dpi": 200,
+        "textLength": 912,
+        "ocrProcessedAt": "2026-07-17T08:30:00+00:00",
+        "triggeredBy": "manual",
+        "engineVersion": "tesseract 5.3.0"
       }
     ]
   }
