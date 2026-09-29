@@ -10,7 +10,9 @@
  * recording for get veraPDF's own "could not parse" report and exit code 7.
  *
  * FAKE_VERAPDF_SLEEP=<seconds> delays the answer; FAKE_VERAPDF_ARGV=<file>
- * records the arguments, one run per line.
+ * records the arguments, one run per line; FAKE_VERAPDF_REPORT=<report.json>
+ * answers bytes it has no recording for (a fresh conversion's output) with
+ * that recorded report.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,19 +25,20 @@ if (getenv('FAKE_VERAPDF_ARGV') !== false) {
 	file_put_contents((string) getenv('FAKE_VERAPDF_ARGV'), json_encode($args) . "\n", FILE_APPEND);
 }
 
-if (getenv('FAKE_VERAPDF_SLEEP') !== false) {
-	sleep((int) getenv('FAKE_VERAPDF_SLEEP'));
-}
-
 if ($args === ['--version']) {
 	echo "veraPDF 1.30.2\nBuilt: Wed Jun 03 10:55:00 GMT 2026\nDeveloped and released by the veraPDF Consortium.\n";
 	exit(0);
 }
 
+// Only a validation is slow; the version probe answers at once.
+if (getenv('FAKE_VERAPDF_SLEEP') !== false) {
+	sleep((int) getenv('FAKE_VERAPDF_SLEEP'));
+}
+
 $dir = __DIR__;
 $map = json_decode((string) file_get_contents($dir . '/reports.json'), true);
 $hash = hash_file('sha256', (string) end($args));
-$report = ($map[$hash] ?? null);
+$report = ($map[$hash] ?? (getenv('FAKE_VERAPDF_REPORT') === false ? null : (string) getenv('FAKE_VERAPDF_REPORT')));
 if ($report === null) {
 	echo file_get_contents($dir . '/unreadable.json');
 	exit(7);

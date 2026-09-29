@@ -62,11 +62,12 @@ trait VeraPdfDoubles {
 	}//end pdf()
 
 	/**
-	 * The real service; the binary is the recorded veraPDF unless configured.
+	 * App config over $this->config; the veraPDF binary is the recorded one
+	 * unless configured.
 	 *
-	 * @return VeraPdfService The service.
+	 * @return IAppConfig The config.
 	 */
-	protected function veraPdf(): VeraPdfService {
+	protected function appConfig(): IAppConfig {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => ($this->config[$key] ?? ($key === VeraPdfService::CFG_BINARY_PATH ? $this->fakeBinary() : $default))
@@ -74,6 +75,18 @@ trait VeraPdfDoubles {
 		$config->method('getValueInt')->willReturnCallback(
 			fn (string $app, string $key, int $default = 0): int => (int) ($this->config[$key] ?? $default)
 		);
+
+		return $config;
+
+	}//end appConfig()
+
+	/**
+	 * The real service; the binary is the recorded veraPDF unless configured.
+	 *
+	 * @return VeraPdfService The service.
+	 */
+	protected function veraPdf(): VeraPdfService {
+		$config = $this->appConfig();
 		$temp = $this->createMock(ITempManager::class);
 		$temp->method('getTemporaryFile')->willReturnCallback(
 			function (string $postFix = ''): string {
