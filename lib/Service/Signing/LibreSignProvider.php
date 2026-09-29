@@ -109,7 +109,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	 * @param string               $documentName The name LibreSign shows
 	 * @param array<string, mixed> $signers      Signers with userId or email, and displayName
 	 * @param string               $level        The requested level
-	 * @param array<string, mixed> $options      `fileId`: the Nextcloud file id of the PDF
+	 * @param array<string, mixed> $options      `content`: the PDF bytes, or `fileId`: a file LibreSign's service account can read
 	 *
 	 * @return array<string, mixed> success, externalId (the LibreSign file uuid), message
 	 *
@@ -127,10 +127,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	): array {
 		$this->assertLevel(level: $level);
 
-		$file = ['path' => $documentPath];
-		if ((int) ($options['fileId'] ?? 0) > 0) {
-			$file = ['nodeId' => (int) $options['fileId']];
-		}
+		$file = $this->toLibreSignFile(documentPath: $documentPath, documentName: $documentName, options: $options);
 
 		$entries = [];
 		foreach (array_values($signers) as $signer) {
@@ -291,6 +288,32 @@ class LibreSignProvider implements SigningProviderInterface {
 		}
 
 	}//end assertLevel()
+
+	/**
+	 * The document as LibreSign's NewFile.
+	 *
+	 * The bytes are the default: LibreSign acts as its service account, which
+	 * cannot read a file in the initiator's folder by id. A file id or a path
+	 * is for a file the service account can read itself.
+	 *
+	 * @param string               $documentPath The path, the last resort
+	 * @param string               $documentName The name LibreSign stores the copy under
+	 * @param array<string, mixed> $options      content or fileId
+	 *
+	 * @return array<string, mixed> The NewFile.
+	 */
+	private function toLibreSignFile(string $documentPath, string $documentName, array $options): array {
+		if (is_string($options['content'] ?? null) === true && $options['content'] !== '') {
+			return ['base64' => base64_encode($options['content']), 'name' => $documentName];
+		}
+
+		if ((int) ($options['fileId'] ?? 0) > 0) {
+			return ['nodeId' => (int) $options['fileId']];
+		}
+
+		return ['path' => $documentPath];
+
+	}//end toLibreSignFile()
 
 	/**
 	 * One signer as LibreSign's NewSigner.

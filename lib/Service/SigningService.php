@@ -222,6 +222,9 @@ class SigningService {
 			}
 		}
 
+		// LibreSign runs the signer flow itself: it gets the request first.
+		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
+
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
 		$createdRequest = $this->toArray(object: $savedRequest);
