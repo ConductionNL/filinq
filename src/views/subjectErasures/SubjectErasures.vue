@@ -236,6 +236,19 @@ SPDX-License-Identifier: EUPL-1.2
 			<template v-if="(selected.results || []).length > 0">
 				<h4>{{ t('filinq', 'Results') }}</h4>
 				<table class="subject-erasures__table">
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ t('filinq', 'Document') }}
+							</th>
+							<th scope="col">
+								{{ t('filinq', 'Outcome') }}
+							</th>
+							<th scope="col">
+								{{ t('filinq', 'Reason') }}
+							</th>
+						</tr>
+					</thead>
 					<tbody>
 						<tr
 							v-for="result in selected.results"
