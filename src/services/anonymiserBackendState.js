@@ -23,6 +23,7 @@ export const REFUSING_WARNINGS = ['unknown', 'disabled', 'unavailable']
  * The state before the settings endpoint has answered: no banner, no method.
  *
  * @return {object} The empty state.
+ * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
  */
 export function emptyBackendState() {
 	return {
@@ -41,6 +42,7 @@ export function emptyBackendState() {
  *
  * @param {object|undefined} payload The block, or undefined when absent.
  * @return {object} The state the banner reads.
+ * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
  */
 export function backendStateFromSettings(payload) {
 	if (!payload || typeof payload !== 'object') {
@@ -63,6 +65,7 @@ export function backendStateFromSettings(payload) {
  *
  * @param {string|null} warning The warning kind.
  * @return {boolean} True when every run is refused.
+ * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
  */
 export function isRefusing(warning) {
 	return REFUSING_WARNINGS.includes(warning)
