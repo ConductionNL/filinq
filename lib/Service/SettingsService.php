@@ -145,6 +145,24 @@ class SettingsService {
 	}//end getFeatureToggles()
 
 	/**
+	 * The OCR settings: tenant-wide toggles read by OcrService, and whether
+	 * an arriving intake scan is read in the background.
+	 *
+	 * @return array{ocr_enabled: bool, ocr_languages: string, ocr_dpi: int, ocr_on_arrival: bool} The settings.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
+	 */
+	private function loadOcrSettings(): array {
+		return [
+			'ocr_enabled' => $this->config->getValueString($this->appName, 'ocr_enabled', '1') === '1',
+			'ocr_languages' => $this->config->getValueString($this->appName, 'ocr_languages', 'nld+eng'),
+			'ocr_dpi' => (int)$this->config->getValueString($this->appName, 'ocr_dpi', '300'),
+			'ocr_on_arrival' => $this->config->getValueString($this->appName, 'ocr_on_arrival', '1') === '1',
+		];
+
+	}//end loadOcrSettings()
+
+	/**
 	 * Load feature toggle settings from app config
 	 *
 	 * @return array<string, mixed> Feature toggle settings
@@ -204,29 +222,9 @@ class SettingsService {
 				'filinq.anonymisation.default_output_format',
 				'pdf-only'
 			),
-			// OCR document scanning (ocr-document-scanning) — tenant-wide
-			// toggles read by OcrService for scanned-PDF text extraction.
-			'ocr_enabled' => $this->config->getValueString(
-				$this->appName,
-				'ocr_enabled',
-				'1'
-			) === '1',
-			'ocr_languages' => $this->config->getValueString(
-				$this->appName,
-				'ocr_languages',
-				'nld+eng'
-			),
-			'ocr_dpi' => (int)$this->config->getValueString(
-				$this->appName,
-				'ocr_dpi',
-				'300'
-			),
-			// Read an arriving intake scan in the background (intake-ocr-on-arrival).
-			'ocr_on_arrival' => $this->config->getValueString(
-				$this->appName,
-				'ocr_on_arrival',
-				'1'
-			) === '1',
+			// OCR document scanning (ocr-document-scanning) and reading on
+			// arrival (intake-ocr-on-arrival).
+			...$this->loadOcrSettings(),
 			// Propose-grondslag-per-entity-type — instance-global map of
 			// entity type → base slug(s), used to pre-fill a proposed
 			// grondslag onto freshly-detected entities. Decoded to an

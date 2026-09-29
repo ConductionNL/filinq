@@ -29,8 +29,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
@@ -503,7 +501,7 @@ class IntakeService {
 	 * @spec exclude Clock accessor with no behaviour of its own.
 	 */
 	private function now(): string {
-		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeImmutable::ATOM);
+		return gmdate(DATE_ATOM);
 
 	}//end now()
 }//end class

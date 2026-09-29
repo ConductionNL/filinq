@@ -58,7 +58,7 @@ class IntakeOcrJob extends QueuedJob {
 	/**
 	 * Constructor.
 	 *
-	 * @param ITimeFactory $time The clock.
+	 * @param ITimeFactory $clock The clock.
 	 * @param IntakeRepository $repository The intake documents.
 	 * @param OcrService $ocr The Tesseract engine and the admin's OCR settings.
 	 * @param IRootFolder $rootFolder Resolves the file without a user session.
