@@ -388,6 +388,41 @@
 			</div>
 		</NcSettingsSection>
 
+		<NcSettingsSection
+			:name="t('filinq', 'PDF/A validation')"
+			:description="
+				t(
+					'filinq',
+					'Check documents against the PDF/A standard with veraPDF, installed on this server. Documents are never sent elsewhere.',
+				)
+			">
+			<div class="setting-item" data-testid="verapdf-status">
+				<NcNoteCard v-if="veraPdfStatus.available" type="success">
+					{{
+						t('filinq', 'The PDF/A validator is installed: {version}', {
+							version: veraPdfStatus.version,
+						})
+					}}
+				</NcNoteCard>
+				<NcNoteCard v-else-if="!veraPdfStatus.enabled" type="info">
+					{{
+						t(
+							'filinq',
+							'The PDF/A validator is switched off in the app config (filinq.verapdf.enabled).',
+						)
+					}}
+				</NcNoteCard>
+				<NcNoteCard v-else type="warning">
+					{{
+						t(
+							'filinq',
+							'The PDF/A validator (veraPDF) is not installed. Without it, Filinq only checks that a PDF claims to be PDF/A, not that it is.',
+						)
+					}}
+				</NcNoteCard>
+			</div>
+		</NcSettingsSection>
+
 		<!-- files-confidential-labels — read-only signal ingested from
 		     files_confidential (TSCP/BAILS system tags). No policy/enforcement
 		     of its own: the vocabulary controls which tag names are recognised,
@@ -1003,6 +1038,12 @@ export default {
 				tesseractAvailable: false,
 				tesseractVersion: null,
 			},
+
+			veraPdfStatus: {
+				enabled: true,
+				available: false,
+				version: '',
+			},
 		}
 	},
 
@@ -1215,6 +1256,13 @@ export default {
 					this.ocrStatus = data.ocrStatus || {
 						tesseractAvailable: false,
 						tesseractVersion: null,
+					}
+
+					// PDF/A validator status
+					this.veraPdfStatus = data.veraPdfStatus || {
+						enabled: true,
+						available: false,
+						version: '',
 					}
 
 					// Grondslag-per-entity-type: selectable types, available

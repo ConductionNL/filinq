@@ -5699,6 +5699,91 @@
       {
         "@self": {
           "register": "filinq",
+          "schema": "conformanceReport",
+          "slug": "conformancereport-1"
+        },
+        "fileId": 814001,
+        "subject": "conversionOutput",
+        "flavour": "3b",
+        "compliant": true,
+        "failedRuleCount": 0,
+        "failedRules": [],
+        "fontsNotEmbedded": [],
+        "guidance": "none",
+        "validatorVersion": "veraPDF 1.30.2",
+        "validatedAt": "2026-09-29T10:12:00+00:00",
+        "trigger": "conversion",
+        "checksumSha256": "5f2c8e0b9a4d7c3e1f6a8b2d4c9e7f1a3b5d8c2e4f6a9b1c3d5e7f9a2b4c6d8e",
+        "elapsedMs": 1840
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "conformanceReport",
+          "slug": "conformancereport-2"
+        },
+        "fileId": 814002,
+        "subject": "file",
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 1,
+        "failedRules": [
+          {
+            "ruleId": "ISO19005-3_6.2.11.4.1-1",
+            "specification": "ISO 19005-3:2012",
+            "clause": "6.2.11.4.1",
+            "testNumber": 1,
+            "checksFailed": 1
+          }
+        ],
+        "fontsNotEmbedded": [
+          "Helvetica"
+        ],
+        "guidance": "reconvertFromSource",
+        "validatorVersion": "veraPDF 1.30.2",
+        "validatedAt": "2026-09-29T10:14:30+00:00",
+        "trigger": "manual",
+        "checksumSha256": "a3e1c5f7b9d2e4a6c8f0b1d3e5a7c9f2b4d6e8a0c1e3f5a7b9d2c4e6f8a0b1d3",
+        "elapsedMs": 2210
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "conformanceReport",
+          "slug": "conformancereport-3"
+        },
+        "fileId": 814003,
+        "subject": "file",
+        "flavour": "3b",
+        "compliant": false,
+        "failedRuleCount": 2,
+        "failedRules": [
+          {
+            "ruleId": "ISO19005-3_6.2.4.3-2",
+            "specification": "ISO 19005-3:2012",
+            "clause": "6.2.4.3",
+            "testNumber": 2,
+            "checksFailed": 2
+          },
+          {
+            "ruleId": "ISO19005-3_6.1.3-1",
+            "specification": "ISO 19005-3:2012",
+            "clause": "6.1.3",
+            "testNumber": 1,
+            "checksFailed": 1
+          }
+        ],
+        "fontsNotEmbedded": [],
+        "guidance": "ruleReferences",
+        "validatorVersion": "veraPDF 1.30.2",
+        "validatedAt": "2026-09-29T10:20:05+00:00",
+        "trigger": "validation",
+        "checksumSha256": "c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9a1b3c5d7e9f1a3b5c7d9",
+        "elapsedMs": 1395
+      },
+      {
+        "@self": {
+          "register": "filinq",
           "schema": "intakeDocument",
           "slug": "intakedocument-1"
         },

@@ -48,6 +48,8 @@ use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Mpdf\Output\Destination;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
+use OCA\Filinq\Service\VeraPdf\ConformanceGuidance;
+use OCA\Filinq\Service\VeraPdf\Pdfa3OutputVerifier;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -136,6 +138,10 @@ class Pdfa3ConversionService {
 	 * @param PdfStreamReaderFactory|null $streamReaderFactory FPDI stream-reader seam; autowired in
 	 *                                                         production, defaulted here so existing
 	 *                                                         call sites stay source-compatible.
+	 * @param Pdfa3OutputVerifier|null $outputVerifier veraPDF check of the output; null keeps the
+	 *                                                 marker guard only (header `skipped`).
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.5
 	 */
 	public function __construct(
 		private readonly PdfService $pdfService,
@@ -143,6 +149,7 @@ class Pdfa3ConversionService {
 		private readonly LoggerInterface $logger,
 		?Pdfa3MetadataAssembler $metadataAssembler = null,
 		?PdfStreamReaderFactory $streamReaderFactory = null,
+		private readonly ?Pdfa3OutputVerifier $outputVerifier = null,
 	) {
 		$this->metadataAssembler = ($metadataAssembler ?? new Pdfa3MetadataAssembler($appConfig));
 		$this->streamReaderFactory = ($streamReaderFactory ?? new PdfStreamReaderFactory());
@@ -168,7 +175,7 @@ class Pdfa3ConversionService {
 	 *                                                    AFRelationship?}.
 	 * @param array<string,mixed> $options {format?, orientation?}.
 	 *
-	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string}
+	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} verified is the veraPDF verdict: true, false or skipped.
 	 *
 	 * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
 	 *
@@ -206,7 +213,7 @@ class Pdfa3ConversionService {
 
 		$deadline = $this->deadline();
 
-		return $this->buildPdfa3(
+		$result = $this->buildPdfa3(
 			pageBuilder: function (Mpdf $mpdf) use ($raw, $deadline): void {
 				$this->importAllPages(mpdf: $mpdf, raw: $raw, deadline: $deadline);
 			},
@@ -216,6 +223,11 @@ class Pdfa3ConversionService {
 			defaultTitle: $this->stripExtension(name: $source->getName()),
 			deadline: $deadline
 		);
+
+		// Imported pages keep the fonts their source had.
+		$result['verified'] = $this->verifyOutput(bytes: $result['content'], origin: ConformanceGuidance::ORIGIN_IMPORTED, sourceFileId: (int) $source->getId());
+
+		return $result;
 
 	}//end convertExistingPdf()
 
@@ -233,7 +245,7 @@ class Pdfa3ConversionService {
 	 * @param array<int,array<string,mixed>> $attachments Files to embed; see convertExistingPdf().
 	 * @param array<string,mixed> $options {format?, orientation?, margin?}.
 	 *
-	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string}
+	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} verified is the veraPDF verdict: true, false or skipped.
 	 *
 	 * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
 	 *
@@ -244,7 +256,7 @@ class Pdfa3ConversionService {
 
 		$deadline = $this->deadline();
 
-		return $this->buildPdfa3(
+		$result = $this->buildPdfa3(
 			pageBuilder: function (Mpdf $mpdf) use ($html): void {
 				$mpdf->WriteHTML(html: $html);
 			},
@@ -254,6 +266,11 @@ class Pdfa3ConversionService {
 			defaultTitle: (string)($metadata['title'] ?? ''),
 			deadline: $deadline
 		);
+
+		// Rendered output has no stored source file to keep a report on.
+		$result['verified'] = $this->verifyOutput(bytes: $result['content'], origin: ConformanceGuidance::ORIGIN_RENDERED, sourceFileId: null);
+
+		return $result;
 
 	}//end convertHtml()
 
@@ -502,6 +519,26 @@ class Pdfa3ConversionService {
 		);
 
 	}//end timeLimitExceeded()
+
+	/**
+	 * The veraPDF verdict on the output: `true`, `false` or `skipped`.
+	 *
+	 * @param string   $bytes        The output.
+	 * @param string   $origin       Where its pages came from.
+	 * @param int|null $sourceFileId The converted file, when there is one.
+	 *
+	 * @return string The X-Docudesk-Pdfa3-Verified value.
+	 *
+	 * @throws Pdfa3ConversionException In strict mode, when the output fails.
+	 */
+	private function verifyOutput(string $bytes, string $origin, ?int $sourceFileId): string {
+		if ($this->outputVerifier === null) {
+			return Pdfa3OutputVerifier::SKIPPED;
+		}
+
+		return $this->outputVerifier->verify(bytes: $bytes, origin: $origin, sourceFileId: $sourceFileId);
+
+	}//end verifyOutput()
 
 	/**
 	 * No-silent-passthrough guardrail: assert the assembled bytes carry

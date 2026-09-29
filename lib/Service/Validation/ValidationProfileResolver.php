@@ -62,6 +62,17 @@ class ValidationProfileResolver {
 		DocumentValidationService::CHECK_PDF_ENCRYPTED,
 		DocumentValidationService::CHECK_TEXT_LAYER_MISSING,
 		DocumentValidationService::CHECK_METADATA_INCOMPLETE,
+		DocumentValidationService::CHECK_PDFA_CONFORMANCE,
+		DocumentValidationService::CHECK_PDFA_FONTS,
+	];
+
+	/**
+	 * The validator-backed checks: off until an admin switches them on, so
+	 * an instance without veraPDF sees no "not checked" noise.
+	 */
+	private const ARCHIVAL_CHECKS = [
+		DocumentValidationService::CHECK_PDFA_CONFORMANCE,
+		DocumentValidationService::CHECK_PDFA_FONTS,
 	];
 
 	/**
@@ -204,6 +215,9 @@ class ValidationProfileResolver {
 		$severities = [];
 		foreach (self::ALL_CHECKS as $check) {
 			$severities[$check] = DocumentValidationService::SEVERITY_WARNING;
+			if (in_array($check, self::ARCHIVAL_CHECKS, true) === true) {
+				$severities[$check] = DocumentValidationService::SEVERITY_OFF;
+			}
 		}
 
 		return [
