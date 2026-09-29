@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SettingsController;
 use OCA\Filinq\Service\AnonymiserBackendStateClient;
+use OCA\Filinq\Tests\Unit\Service\DetectionStates;
 use OCA\Filinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IConfig;
@@ -183,6 +184,53 @@ class SettingsControllerTest extends TestCase {
 	}//end testIndexSaysWhetherLibreSignIsAvailable()
 
 	/**
+	 * The settings surface names the backend OpenRegister reports, and warns
+	 * only when it is weaker than a real detector, or missing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+	 */
+	public function testTheAdminWarningSaysWhatIsActuallyConfigured(): void {
+		$cases = [
+			'openanonymiser' => [
+				DetectionStates::orState(
+					enabled: true,
+					active: 'openanonymiser',
+					effective: 'openanonymiser',
+					available: ['openanonymiser' => true]
+				),
+				null,
+				false,
+			],
+			'regex' => [DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex'), 'regex', true],
+			'unknown' => [null, 'unknown', true],
+			'disabled' => [DetectionStates::orState(enabled: false, active: 'regex', effective: 'regex'), 'disabled', true],
+		];
+
+		foreach ($cases as $name => [$state, $warning, $shown]) {
+			$settingsService = $this->createMock(SettingsService::class);
+			$settingsService->method('getAllSettings')->willReturn([]);
+			$appManager = $this->createMock(IAppManager::class);
+			$appManager->method('getInstalledApps')->willReturn([]);
+
+			$backend = $this->controller(
+				settingsService: $settingsService,
+				appManager: $appManager,
+				backendClient: DetectionStates::clientOver($state)
+			)->index()->getData()['anonymiserBackend'];
+
+			$this->assertSame($warning, $backend['warning'], $name);
+			$this->assertSame($shown, $backend['showWarning'], $name);
+			$this->assertArrayNotHasKey('method', $backend, $name);
+			if ($state !== null) {
+				$this->assertSame($state->effectiveMethod, $backend['effectiveMethod'], $name);
+			}
+		}
+
+	}//end testTheAdminWarningSaysWhatIsActuallyConfigured()
+
+	/**
 	 * Build a SettingsController over doubles.
 	 *
 	 * @param SettingsService $settingsService The settings service double.
@@ -196,6 +244,7 @@ class SettingsControllerTest extends TestCase {
 		bool $isAdmin = true,
 		?string $user = 'alice',
 		?IAppManager $appManager = null,
+		?AnonymiserBackendStateClient $backendClient = null,
 	): SettingsController {
 		$userSession = $this->createMock(IUserSession::class);
 		if ($user === null) {
@@ -220,7 +269,7 @@ class SettingsControllerTest extends TestCase {
 			$userSession,
 			new NullLogger(),
 			$settingsService,
-			$this->createMock(AnonymiserBackendStateClient::class),
+			($backendClient ?? $this->createMock(AnonymiserBackendStateClient::class)),
 			$this->createMock(IConfig::class)
 		);
 

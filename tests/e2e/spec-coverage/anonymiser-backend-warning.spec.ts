@@ -18,7 +18,7 @@
  * -------------------------------------------------------
  * Every scenario here is conditioned on `method = 'regex'` — i.e. NO anonymiser
  * backend installed. On a seeded CI instance that is the state (`GET
- * /api/settings` returns `anonymiserBackend.method = "regex"`,
+ * /api/settings` returns `anonymiserBackend.effectiveMethod = "regex"`,
  * `showWarning = true`), but it is a property of the ENVIRONMENT, not of the
  * app. If a backend were ever installed on the runner, the banner would
  * correctly disappear and these tests would go red for a reason that is not a
@@ -41,7 +41,8 @@ const SETTINGS = '/index.php/settings/admin/filinq'
 const API_SETTINGS = '/index.php/apps/filinq/api/settings'
 
 interface BackendState {
-	method: string
+	effectiveMethod: string
+	warning: string | null
 	appApiInstalled: boolean
 	warningDismissed: boolean
 	showWarning: boolean
@@ -74,9 +75,9 @@ test.describe('anonymization — admin warning when no anonymiser backend is ava
 	test.beforeAll(async ({ request }) => {
 		const state = await readBackendState(request)
 		expect(
-			state.method,
+			state.warning,
 			'PRECONDITION: these scenarios are all conditioned on regex-only mode. '
-				+ `This instance reports method="${state.method}", so an anonymiser backend IS `
+				+ `This instance reports effectiveMethod="${state.effectiveMethod}", warning="${state.warning}", so an anonymiser backend IS `
 				+ 'configured and the banner is CORRECTLY hidden. Nothing below is a defect — '
 				+ 'remove the backend, or run this suite on a clean instance.',
 		).toBe('regex')

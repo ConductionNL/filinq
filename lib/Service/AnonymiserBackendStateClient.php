@@ -162,6 +162,38 @@ class AnonymiserBackendStateClient {
 	}//end refusalReason()
 
 	/**
+	 * Which admin warning this state calls for, or null when a real detector is live.
+	 *
+	 * `unknown`, `disabled` and `unavailable` mean anonymisation is refused;
+	 * `regex` means it runs with pattern matching only, which finds numbers and
+	 * addresses of a known shape but no names.
+	 *
+	 * @param array<string, mixed> $state A state from {@see getState()}.
+	 *
+	 * @return string|null One of unknown, disabled, unavailable, regex, or null.
+	 *
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+	 */
+	public function warningFor(array $state): ?string {
+		$kinds = [
+			self::REFUSE_UNKNOWN => 'unknown',
+			self::REFUSE_DISABLED => 'disabled',
+			self::REFUSE_UNAVAILABLE => 'unavailable',
+		];
+		$reason = $this->refusalReason(state: $state);
+		if ($reason !== null) {
+			return $kinds[$reason];
+		}
+
+		if ($state['effectiveMethod'] === 'regex') {
+			return 'regex';
+		}
+
+		return null;
+
+	}//end warningFor()
+
+	/**
 	 * The state when OpenRegister could not be read.
 	 *
 	 * @return array{known: false, entityRecognitionEnabled: null, activeMethod: null,

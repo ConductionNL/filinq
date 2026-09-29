@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Open the OpenRegister settings": "Abrir la configuración de OpenRegister",
+        "OpenRegister is set to {active}, but that detector is unavailable.": "OpenRegister está configurado con {active}, pero ese detector no está disponible.",
+        "Entity detection runs on {method}. It finds fixed patterns such as BSN, IBAN and email addresses, but no names.": "La detección de entidades funciona con {method}. Encuentra patrones fijos como BSN, IBAN y direcciones de correo, pero no nombres.",
+        "For better anonymisation, install one of these detectors:": "Para una mejor anonimización, instale uno de estos detectores:",
+        "Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.": "La detección de entidades está desactivada en OpenRegister. Filinq se niega a anonimizar hasta que la active.",
+        "The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.": "El detector de entidades {method} no está disponible. Filinq se niega a anonimizar hasta que vuelva.",
+        "Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.": "Filinq no puede leer qué detector de entidades usa OpenRegister. Filinq se niega a anonimizar hasta que pueda.",
+        "Entity detector in use: {method}": "Detector de entidades en uso: {method}",
+        "Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.": "Anonimización rechazada: la detección de entidades está desactivada en esta instancia, así que no se encontraría nada. No se ha escrito ningún archivo.",
+        "Anonymisation refused: the entity detector %s is unavailable. No file was written.": "Anonimización rechazada: el detector de entidades %s no está disponible. No se ha escrito ningún archivo.",
+        "Anonymisation refused: filinq could not read which entity detector is live. No file was written.": "Anonimización rechazada: filinq no pudo leer qué detector de entidades está activo. No se ha escrito ningún archivo.",
         "Resolve this": "Resolver",
         "Choose a category": "Elija una categoría",
         "All publications": "Todas las publicaciones",

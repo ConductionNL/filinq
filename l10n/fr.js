@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Open the OpenRegister settings": "Ouvrir les paramètres d'OpenRegister",
+        "OpenRegister is set to {active}, but that detector is unavailable.": "OpenRegister est réglé sur {active}, mais ce détecteur n'est pas disponible.",
+        "Entity detection runs on {method}. It finds fixed patterns such as BSN, IBAN and email addresses, but no names.": "La détection d'entités fonctionne avec {method}. Elle trouve des motifs fixes comme le BSN, l'IBAN et les adresses e-mail, mais pas les noms.",
+        "For better anonymisation, install one of these detectors:": "Pour une meilleure anonymisation, installez l'un de ces détecteurs :",
+        "Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.": "La détection d'entités est désactivée dans OpenRegister. Filinq refuse d'anonymiser tant que vous ne l'activez pas.",
+        "The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.": "Le détecteur d'entités {method} n'est pas disponible. Filinq refuse d'anonymiser tant qu'il n'est pas revenu.",
+        "Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.": "Filinq ne peut pas lire quel détecteur d'entités OpenRegister utilise. Filinq refuse d'anonymiser tant qu'il ne le peut pas.",
+        "Entity detector in use: {method}": "Détecteur d'entités utilisé : {method}",
+        "Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.": "Anonymisation refusée : la détection d'entités est désactivée sur cette instance, rien ne serait donc trouvé. Aucun fichier n'a été écrit.",
+        "Anonymisation refused: the entity detector %s is unavailable. No file was written.": "Anonymisation refusée : le détecteur d'entités %s n'est pas disponible. Aucun fichier n'a été écrit.",
+        "Anonymisation refused: filinq could not read which entity detector is live. No file was written.": "Anonymisation refusée : filinq n'a pas pu lire quel détecteur d'entités est actif. Aucun fichier n'a été écrit.",
         "Resolve this": "Résoudre",
         "Choose a category": "Choisissez une catégorie",
         "All publications": "Toutes les publications",

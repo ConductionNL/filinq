@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Open the OpenRegister settings": "OpenRegister-Einstellungen öffnen",
+        "OpenRegister is set to {active}, but that detector is unavailable.": "OpenRegister ist auf {active} eingestellt, aber dieser Detektor ist nicht verfügbar.",
+        "Entity detection runs on {method}. It finds fixed patterns such as BSN, IBAN and email addresses, but no names.": "Die Entitätserkennung läuft mit {method}. Sie findet feste Muster wie BSN, IBAN und E-Mail-Adressen, aber keine Namen.",
+        "For better anonymisation, install one of these detectors:": "Für eine bessere Anonymisierung installieren Sie einen dieser Detektoren:",
+        "Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.": "Die Entitätserkennung ist in OpenRegister ausgeschaltet. Filinq verweigert die Anonymisierung, bis Sie sie einschalten.",
+        "The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.": "Der Entitätsdetektor {method} ist nicht verfügbar. Filinq verweigert die Anonymisierung, bis er wieder da ist.",
+        "Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.": "Filinq kann nicht lesen, welchen Entitätsdetektor OpenRegister verwendet. Filinq verweigert die Anonymisierung, bis das möglich ist.",
+        "Entity detector in use: {method}": "Verwendeter Entitätsdetektor: {method}",
+        "Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.": "Anonymisierung verweigert: Die Entitätserkennung ist auf dieser Instanz ausgeschaltet, es würde also nichts gefunden. Es wurde keine Datei geschrieben.",
+        "Anonymisation refused: the entity detector %s is unavailable. No file was written.": "Anonymisierung verweigert: Der Entitätsdetektor %s ist nicht verfügbar. Es wurde keine Datei geschrieben.",
+        "Anonymisation refused: filinq could not read which entity detector is live. No file was written.": "Anonymisierung verweigert: filinq konnte nicht lesen, welcher Entitätsdetektor aktiv ist. Es wurde keine Datei geschrieben.",
         "Resolve this": "Beheben",
         "Choose a category": "Kategorie wählen",
         "All publications": "Alle Veröffentlichungen",

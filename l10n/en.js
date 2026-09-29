@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Open the OpenRegister settings": "Open the OpenRegister settings",
+        "OpenRegister is set to {active}, but that detector is unavailable.": "OpenRegister is set to {active}, but that detector is unavailable.",
+        "Entity detection runs on {method}. It finds fixed patterns such as BSN, IBAN and email addresses, but no names.": "Entity detection runs on {method}. It finds fixed patterns such as BSN, IBAN and email addresses, but no names.",
+        "For better anonymisation, install one of these detectors:": "For better anonymisation, install one of these detectors:",
+        "Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.": "Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.",
+        "The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.": "The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.",
+        "Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.": "Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.",
+        "Entity detector in use: {method}": "Entity detector in use: {method}",
+        "Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.": "Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.",
+        "Anonymisation refused: the entity detector %s is unavailable. No file was written.": "Anonymisation refused: the entity detector %s is unavailable. No file was written.",
+        "Anonymisation refused: filinq could not read which entity detector is live. No file was written.": "Anonymisation refused: filinq could not read which entity detector is live. No file was written.",
         "Resolve this": "Resolve this",
         "Choose a category": "Choose a category",
         "All publications": "All publications",

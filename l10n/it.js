@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Open the OpenRegister settings": "Apri le impostazioni di OpenRegister",
+        "OpenRegister is set to {active}, but that detector is unavailable.": "OpenRegister è impostato su {active}, ma quel rilevatore non è disponibile.",
+        "Entity detection runs on {method}. It finds fixed patterns such as BSN, IBAN and email addresses, but no names.": "Il riconoscimento delle entità usa {method}. Trova schemi fissi come BSN, IBAN e indirizzi email, ma non i nomi.",
+        "For better anonymisation, install one of these detectors:": "Per un'anonimizzazione migliore, installa uno di questi rilevatori:",
+        "Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.": "Il riconoscimento delle entità è disattivato in OpenRegister. Filinq rifiuta di anonimizzare finché non lo attivi.",
+        "The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.": "Il rilevatore di entità {method} non è disponibile. Filinq rifiuta di anonimizzare finché non torna.",
+        "Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.": "Filinq non riesce a leggere quale rilevatore di entità usa OpenRegister. Filinq rifiuta di anonimizzare finché non ci riesce.",
+        "Entity detector in use: {method}": "Rilevatore di entità in uso: {method}",
+        "Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.": "Anonimizzazione rifiutata: il riconoscimento delle entità è disattivato su questa istanza, quindi non verrebbe trovato nulla. Nessun file è stato scritto.",
+        "Anonymisation refused: the entity detector %s is unavailable. No file was written.": "Anonimizzazione rifiutata: il rilevatore di entità %s non è disponibile. Nessun file è stato scritto.",
+        "Anonymisation refused: filinq could not read which entity detector is live. No file was written.": "Anonimizzazione rifiutata: filinq non è riuscito a leggere quale rilevatore di entità è attivo. Nessun file è stato scritto.",
         "Resolve this": "Risolvi",
         "Choose a category": "Scegli una categoria",
         "All publications": "Tutte le pubblicazioni",

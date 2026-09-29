@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Open the OpenRegister settings": "Open de OpenRegister-instellingen",
+        "OpenRegister is set to {active}, but that detector is unavailable.": "OpenRegister staat ingesteld op {active}, maar die detector is niet beschikbaar.",
+        "Entity detection runs on {method}. It finds fixed patterns such as BSN, IBAN and email addresses, but no names.": "Entiteitherkenning draait op {method}. Die vindt vaste patronen zoals BSN, IBAN en e-mailadressen, maar geen namen.",
+        "For better anonymisation, install one of these detectors:": "Installeer voor betere anonimisering een van deze detectoren:",
+        "Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.": "Entiteitherkenning staat uit in OpenRegister. Filinq weigert te anonimiseren tot u die aanzet.",
+        "The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.": "De entiteitdetector {method} is niet beschikbaar. Filinq weigert te anonimiseren tot die terug is.",
+        "Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.": "Filinq kan niet lezen welke entiteitdetector OpenRegister gebruikt. Filinq weigert te anonimiseren tot dat wel kan.",
+        "Entity detector in use: {method}": "Entiteitdetector in gebruik: {method}",
+        "Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.": "Anonimisering geweigerd: entiteitherkenning staat uit op deze omgeving, dus er zou niets gevonden worden. Er is geen bestand geschreven.",
+        "Anonymisation refused: the entity detector %s is unavailable. No file was written.": "Anonimisering geweigerd: de entiteitdetector %s is niet beschikbaar. Er is geen bestand geschreven.",
+        "Anonymisation refused: filinq could not read which entity detector is live. No file was written.": "Anonimisering geweigerd: filinq kon niet lezen welke entiteitdetector actief is. Er is geen bestand geschreven.",
         "Resolve this": "Oplossen",
         "Choose a category": "Kies een categorie",
         "All publications": "Alle publicaties",

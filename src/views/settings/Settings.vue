@@ -9,6 +9,10 @@
 			v-if="isAdmin"
 			:showWarning="anonymiserBackend.showWarning"
 			:appApiInstalled="anonymiserBackend.appApiInstalled"
+			:warning="anonymiserBackend.warning"
+			:activeMethod="anonymiserBackend.activeMethod"
+			:effectiveMethod="anonymiserBackend.effectiveMethod"
+			:showActiveBackend="true"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<NcSettingsSection
@@ -884,6 +888,10 @@ import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import {
+	backendStateFromSettings,
+	emptyBackendState,
+} from '../../services/anonymiserBackendState.js'
 import { initialSections } from '../../services/settingsSections.js'
 
 /** The object types whose register and schema this page binds. */
@@ -917,12 +925,7 @@ export default {
 			isAdmin: false,
 			openRegisterInstalled: false,
 			libresignAvailable: false,
-			anonymiserBackend: {
-				method: 'regex',
-				appApiInstalled: false,
-				warningDismissed: false,
-				showWarning: false,
-			},
+			anonymiserBackend: emptyBackendState(),
 
 			settingsData: {},
 			availableRegisters: [],
@@ -1122,14 +1125,9 @@ export default {
 
 					// Backend warning state.
 					if (data.anonymiserBackend) {
-						this.anonymiserBackend = {
-							method: data.anonymiserBackend.method ?? 'regex',
-							appApiInstalled:
-								data.anonymiserBackend.appApiInstalled ?? false,
-							warningDismissed:
-								data.anonymiserBackend.warningDismissed ?? false,
-							showWarning: data.anonymiserBackend.showWarning ?? false,
-						}
+						this.anonymiserBackend = backendStateFromSettings(
+							data.anonymiserBackend,
+						)
 					}
 
 					// Update local settings
@@ -1478,7 +1476,7 @@ export default {
 				this.anonymiserBackend = {
 					...this.anonymiserBackend,
 					warningDismissed: false,
-					showWarning: true,
+					showWarning: this.anonymiserBackend.warning !== null,
 				}
 			} catch (err) {
 				showError(

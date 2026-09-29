@@ -10,6 +10,9 @@ import { consentStore } from '../../store/store.js'
 			v-if="isAdmin"
 			:showWarning="anonymiserBackend.showWarning"
 			:appApiInstalled="anonymiserBackend.appApiInstalled"
+			:warning="anonymiserBackend.warning"
+			:activeMethod="anonymiserBackend.activeMethod"
+			:effectiveMethod="anonymiserBackend.effectiveMethod"
 			@dismissed="onAnonymiserWarningDismissed" />
 
 		<CnDashboardPage
@@ -125,6 +128,10 @@ import {
 import { NcEmptyContent } from '@nextcloud/vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
+import {
+	backendStateFromSettings,
+	emptyBackendState,
+} from '../../services/anonymiserBackendState.js'
 
 export default {
 	name: 'DashboardIndex',
@@ -140,12 +147,7 @@ export default {
 	data() {
 		return {
 			isAdmin: false,
-			anonymiserBackend: {
-				method: 'regex',
-				appApiInstalled: false,
-				warningDismissed: false,
-				showWarning: false,
-			},
+			anonymiserBackend: emptyBackendState(),
 
 			dashboardLayout: [
 				{
@@ -266,16 +268,9 @@ export default {
 				const data = await response.json()
 				this.isAdmin = data.isAdmin ?? false
 				if (data.anonymiserBackend) {
-					this.anonymiserBackend = {
-						method: data.anonymiserBackend.method ?? 'regex',
-						appApiInstalled:
-							data.anonymiserBackend.appApiInstalled ?? false,
-
-						warningDismissed:
-							data.anonymiserBackend.warningDismissed ?? false,
-
-						showWarning: data.anonymiserBackend.showWarning ?? false,
-					}
+					this.anonymiserBackend = backendStateFromSettings(
+						data.anonymiserBackend,
+					)
 				}
 			} catch (_err) {
 				// Non-critical — dashboard still works without the warning.

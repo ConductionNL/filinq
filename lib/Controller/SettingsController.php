@@ -97,7 +97,6 @@ class SettingsController extends Controller {
 			$user = $this->userSession->getUser();
 			$isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
 
-			$backendState = $this->anonymiserClient->getState();
 			$dismissed = false;
 			if ($user !== null) {
 				$dismissed = $this->config->getUserValue(
@@ -117,13 +116,7 @@ class SettingsController extends Controller {
 						// The signing provider picker offers LibreSign only when it can sign.
 						'libresignAvailable' => $this->appManager->isEnabledForAnyone('libresign'),
 						'isAdmin' => $isAdmin,
-						'anonymiserBackend' => array_merge(
-							$backendState,
-							[
-								'warningDismissed' => $dismissed,
-								'showWarning' => ($backendState['method'] ?? 'regex') === 'regex' && $dismissed === false,
-							]
-						),
+						'anonymiserBackend' => $this->anonymiserBackendPayload(dismissed: $dismissed),
 					]
 				)
 			);
@@ -138,6 +131,40 @@ class SettingsController extends Controller {
 		}//end try
 
 	}//end index()
+
+	/**
+	 * The detection backend OpenRegister reports, and the warning it calls for.
+	 *
+	 * A dismissal hides only the regex warning. Unknown, disabled and
+	 * unavailable mean every anonymisation is refused, so those stay up.
+	 *
+	 * @param bool $dismissed Whether this admin dismissed the regex warning.
+	 *
+	 * @return array<string, mixed> The state plus warning, showWarning,
+	 *                              warningDismissed and appApiInstalled.
+	 *
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+	 */
+	private function anonymiserBackendPayload(bool $dismissed): array {
+		$state = $this->anonymiserClient->getState();
+		$warning = $this->anonymiserClient->warningFor(state: $state);
+
+		$shown = $warning !== null;
+		if ($warning === 'regex' && $dismissed === true) {
+			$shown = false;
+		}
+
+		return array_merge(
+			$state,
+			[
+				'warning' => $warning,
+				'warningDismissed' => $dismissed,
+				'showWarning' => $shown,
+				'appApiInstalled' => $this->appManager->isInstalled('app_api'),
+			]
+		);
+
+	}//end anonymiserBackendPayload()
 
 	/**
 	 * Handle the post request to update settings
