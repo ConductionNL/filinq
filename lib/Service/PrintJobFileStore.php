@@ -138,6 +138,8 @@ class PrintJobFileStore {
 	 * @param int    $index The letter's place in the job
 	 *
 	 * @return string The file name.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public static function fileName(string $jobId, int $index): string {
 		return preg_replace('/[^A-Za-z0-9-]/', '', $jobId) . '-' . $index . '.pdf';

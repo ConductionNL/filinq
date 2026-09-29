@@ -104,11 +104,21 @@ export default {
 		return { jobs: [], loading: false, error: '', timer: null }
 	},
 
+	/**
+	 * Load the jobs and read them again once a minute.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
+	 */
 	mounted() {
 		this.load()
 		this.timer = setInterval(this.load, REFRESH_MS)
 	},
 
+	/**
+	 * Stop reading the list when the page closes.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
+	 */
 	beforeUnmount() {
 		clearInterval(this.timer)
 	},
