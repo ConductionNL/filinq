@@ -157,6 +157,7 @@ class FolderExtractionJob extends QueuedJob {
 	 * @return array<string, mixed> The updated file entry.
 	 *
 	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-3
 	 */
 	private function processFileEntry(array $fileEntry, string $batchId, string $userId): array {
 		$fileName = ($fileEntry['fileName'] ?? '');
@@ -196,6 +197,7 @@ class FolderExtractionJob extends QueuedJob {
 
 		$fileEntry['status'] = 'anonymized';
 		$fileEntry['anonymizedFilePath'] = ($anonResult['anonymizedFilePath'] ?? null);
+		$fileEntry['detection'] = ($anonResult['detection'] ?? null);
 
 		// Apply the output-folder layout: move the redacted copy into the
 		// configured subfolder, recording the new path or a move-failure

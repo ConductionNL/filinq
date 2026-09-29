@@ -153,7 +153,10 @@ trait BuildsAnonymizationService {
 			confidentialityLabel: ($deps['confidentialityLabel'] ?? $this->createMock(ConfidentialityLabelService::class)),
 			prohibitionPolicy: $prohibitionPolicy,
 			anonymizeRunner: $anonymizeRunner,
-			reviewGuard: ($deps['reviewGuard'] ?? $this->reviewingGuardThatAllows())
+			reviewGuard: ($deps['reviewGuard'] ?? $this->reviewingGuardThatAllows()),
+			backendState: ($deps['backendState'] ?? DetectionStates::clientOver(
+				DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex')
+			))
 		);
 
 	}//end makeAnonymizationServiceFrom()

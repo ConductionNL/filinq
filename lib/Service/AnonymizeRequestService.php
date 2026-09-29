@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCP\AppFramework\Http;
 use OCP\Files\File;
@@ -227,6 +228,7 @@ class AnonymizeRequestService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	public function executeAnonymize(
 		int $fileId,
@@ -266,6 +268,8 @@ class AnonymizeRequestService {
 			);
 		} catch (ProhibitionGateException $e) {
 			return $this->prohibitionGateResponse(gateError: $e, fileId: $fileId);
+		} catch (DetectionUnavailableException $e) {
+			return $this->detectionUnavailableResponse(refusal: $e, fileId: $fileId);
 		}
 
 		if ($request['hasStrayBases'] === true) {
@@ -382,6 +386,48 @@ class AnonymizeRequestService {
 		}//end try
 
 	}//end applyRelationDecision()
+
+	/**
+	 * Map a refused run with no live detector onto its response payload.
+	 *
+	 * 503: the instance cannot anonymise until an admin turns a detector on or
+	 * brings it back. No file was written.
+	 *
+	 * @param DetectionUnavailableException $refusal The refusal.
+	 * @param int $fileId The Nextcloud file ID (for the log context).
+	 *
+	 * @return array{status: int, body: array<string, mixed>} The response payload.
+	 *
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 */
+	private function detectionUnavailableResponse(DetectionUnavailableException $refusal, int $fileId): array {
+		$this->logger->warning(
+			$refusal->getMessage(),
+			['fileId' => $fileId, 'reason' => $refusal->getReason()]
+		);
+
+		$messages = [
+			AnonymiserBackendStateClient::REFUSE_DISABLED => $this->l10n->t(
+				'Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.'
+			),
+			AnonymiserBackendStateClient::REFUSE_UNAVAILABLE => $this->l10n->t(
+				'Anonymisation refused: the entity detector %s is unavailable. No file was written.',
+				[$refusal->getBackend()]
+			),
+		];
+
+		return [
+			'status' => Http::STATUS_SERVICE_UNAVAILABLE,
+			'body' => [
+				'error' => ($messages[$refusal->getReason()] ?? $this->l10n->t(
+					'Anonymisation refused: filinq could not read which entity detector is live. No file was written.'
+				)),
+				'detectionUnavailable' => $refusal->getReason(),
+				'detectionBackend' => $refusal->getBackend(),
+			],
+		];
+
+	}//end detectionUnavailableResponse()
 
 	/**
 	 * Map a ProhibitionGateException onto its response payload.
