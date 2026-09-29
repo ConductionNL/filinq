@@ -1127,6 +1127,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the settings and the PDF/A validator's status.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+	 */
 	mounted() {
 		this.fetchAll()
 		this.fetchValidatorStatus()
