@@ -46,12 +46,15 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return SigningCancellationService The service.
 	 */
-	private function service(?array $request, object $provider): SigningCancellationService {
+	private function service(?array $request, object $provider, ?object $named = null): SigningCancellationService {
 		$requests = $this->createMock(SigningService::class);
 		$requests->method('getRequest')->willReturn($request);
 
 		$factory = $this->createMock(SigningProviderFactory::class);
 		$factory->method('getActiveProvider')->willReturn($provider);
+		if ($named !== null) {
+			$factory->method('getProvider')->with('libresign')->willReturn($named);
+		}
 
 		return new SigningCancellationService(
 			providers: $factory,
@@ -245,4 +248,20 @@ class SigningCancellationServiceTest extends TestCase {
 
 		$this->assertTrue($result['alreadyCancelled']);
 	}//end testAlreadyCancelledIsIdempotent()
+	/**
+	 * A LibreSign request is withdrawn at LibreSign, whatever the active provider is now.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function testARequestIsWithdrawnAtTheProviderItNames(): void {
+		$active = $this->provider();
+		$active->expects($this->never())->method('cancelSigning');
+		$libreSign = $this->provider();
+		$libreSign->expects($this->once())->method('cancelSigning')->with('ext-1');
+
+		$this->service($this->request() + ['provider' => 'libresign'], $active, $libreSign)->cancel(uid: 'alice', requestId: 'req-1');
+
+	}//end testARequestIsWithdrawnAtTheProviderItNames()
 }//end class
