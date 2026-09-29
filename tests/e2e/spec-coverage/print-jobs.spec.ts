@@ -12,8 +12,8 @@
  * last changed.
  */
 
-// @e2e openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md#three-letters-go-to-print-as-one-job
-// @e2e openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md#the-print-service-reports-back
+// @e2e openspec/specs/print-preview/spec.md#three-letters-go-to-print-as-one-job
+// @e2e openspec/specs/print-preview/spec.md#the-print-service-reports-back
 
 import { expect, test } from '@playwright/test'
 import { go } from './_helpers.ts'
@@ -41,7 +41,7 @@ function job(status: string) {
 
 test.describe('print jobs', () => {
 	test('three letters go to print as one job', async ({ page }) => {
-		// @e2e openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md#three-letters-go-to-print-as-one-job
+		// @e2e openspec/specs/print-preview/spec.md#three-letters-go-to-print-as-one-job
 		const posted: Array<Record<string, unknown>> = []
 		await page.route('**/apps/filinq/api/print/batch', async (route) => {
 			posted.push(route.request().postDataJSON())
@@ -75,7 +75,7 @@ test.describe('print jobs', () => {
 	})
 
 	test('the print service reports back', async ({ page }) => {
-		// @e2e openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md#the-print-service-reports-back
+		// @e2e openspec/specs/print-preview/spec.md#the-print-service-reports-back
 		await page.route('**/apps/filinq/api/print/jobs', (route) =>
 			route.fulfill({ json: { results: [job('printed')] } }),
 		)

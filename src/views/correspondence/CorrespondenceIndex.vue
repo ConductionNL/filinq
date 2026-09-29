@@ -377,7 +377,7 @@ export default {
 		 * Send the letter, or one letter per recipient, to print as one job.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+		 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
 		 */
 		async sendToPrint() {
 			const body = buildPrintRequest({

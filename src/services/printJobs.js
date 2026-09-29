@@ -9,7 +9,7 @@
  * a generation) and the download name. One request is one job, however many
  * letters it holds.
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -27,7 +27,7 @@ import { translate as t } from '@nextcloud/l10n'
  * @param {string} form.caseReference The case reference, used in the file names
  * @return {{templateId: string, items: Array<object>, filename: string}} The request body.
  *
- * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+ * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
  */
 export function buildPrintRequest(form) {
 	const base = 'brief-' + (form.caseReference || 'correspondentie')
@@ -59,7 +59,7 @@ export function buildPrintRequest(form) {
  * @param {string} status The stored status
  * @return {string} The label.
  *
- * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+ * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
  */
 export function printJobStatusLabel(status) {
 	const labels = {
@@ -78,7 +78,7 @@ export function printJobStatusLabel(status) {
  * @param {object} job The job
  * @return {boolean} True when at least one PDF is ready.
  *
- * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+ * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
  */
 export function canDownload(job) {
 	return job.status !== 'rendering' && (job.rendered || 0) > 0

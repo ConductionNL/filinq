@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use OCP\Files\SimpleFS\ISimpleFolder;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  */
 class PrintJobFileStore {
 
@@ -69,7 +69,7 @@ class PrintJobFileStore {
 	 *
 	 * @return string The stored file name, to keep on the job.
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function put(string $jobId, int $index, string $content): string {
 		$name = self::fileName(jobId: $jobId, index: $index);
@@ -92,7 +92,7 @@ class PrintJobFileStore {
 	 *
 	 * @return string|null The bytes, or null when the file is not there.
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function get(string $name): ?string {
 		try {

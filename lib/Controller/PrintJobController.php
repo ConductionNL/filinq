@@ -165,7 +165,7 @@ class PrintJobController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.3
 	 */
 	public function index(): JSONResponse {
 		$user = $this->userSession->getUser();

@@ -19,7 +19,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use ZipArchive;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  */
 class PrintJobService {
 
@@ -108,7 +108,7 @@ class PrintJobService {
 	 *
 	 * @throws Exception If template retrieval or storing the job fails
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function createJob(
 		string $templateId,
@@ -144,7 +144,7 @@ class PrintJobService {
 	 *
 	 * @throws Exception If storing the job fails
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function createBatchJob(
 		string $templateId,
@@ -205,7 +205,7 @@ class PrintJobService {
 	 *
 	 * @throws Exception If the job cannot be read or stored
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function renderJob(string $jobId, string $templateId, array $items, array $options): array {
 		$job = $this->jobs->find(uuid: $jobId);
@@ -246,7 +246,7 @@ class PrintJobService {
 	 *
 	 * @return array|null Job data or null if not found
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function getJob(string $jobId): ?array {
 		return $this->jobs->find(uuid: $jobId);
@@ -260,7 +260,7 @@ class PrintJobService {
 	 *
 	 * @return array<int, array<string, mixed>> The jobs.
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.3
 	 */
 	public function listJobs(string $userId): array {
 		return $this->jobs->findForUser(userId: $userId);
@@ -278,7 +278,7 @@ class PrintJobService {
 	 *
 	 * @throws InvalidArgumentException When the status is not one a print service may report
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function recordExternalStatus(array $job, string $externalStatus, ?string $details): array {
 		if (isset(self::EXTERNAL_STATUSES[$externalStatus]) === false) {
@@ -299,7 +299,7 @@ class PrintJobService {
 	 * @return array{content: string, filename: string, contentType: string}|null
 	 *         The download, or null when there is nothing to download.
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function download(array $job, ?int $item = null): ?array {
 		$names = array_values((array) ($job['files'] ?? []));
@@ -338,7 +338,7 @@ class PrintJobService {
 	 *
 	 * @return array Manifest array
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function buildManifest(array $items, array $printConfig = []): array {
 		$manifest = [];
@@ -363,7 +363,7 @@ class PrintJobService {
 	 *
 	 * @return array{duplex: bool, color: bool, paperTray: string, stapling: bool}
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function buildPrintConfig(array $options): array {
 		return [

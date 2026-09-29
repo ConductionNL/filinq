@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  */
 class PrintJobRepository {
 
@@ -69,7 +69,7 @@ class PrintJobRepository {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function save(array $job, ?string $uuid = null): array {
 		unset($job['uuid']);
@@ -111,7 +111,7 @@ class PrintJobRepository {
 	 *
 	 * @throws RuntimeException When the read failed, as opposed to finding nothing.
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function find(string $uuid): ?array {
 		if ($uuid === '') {
@@ -149,7 +149,7 @@ class PrintJobRepository {
 	 *
 	 * @throws RuntimeException When the read failed, as opposed to finding nothing.
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.3
 	 */
 	public function findForUser(string $userId): array {
 		if ($userId === '') {

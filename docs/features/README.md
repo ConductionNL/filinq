@@ -82,6 +82,7 @@ Features that are fully implemented and available in the current release.
 | [Entity Management](./entity-management.md) | entity-management.md | Media-behandelingcomponent | TEC-DMS-2 | Done |
 | [Advanced Template Management](./advanced-template-management.md) | advanced-template-management.md | Documentcreatiecomponent | TEC-DMS-1, TEC-DMS-8 | Done |
 | [Print Functionality](./print-functionality.md) | print-functionality.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
+| [Print jobs](./print-jobs.md) | print-jobs.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
 | [CI/CD Quality Checks](./ci-cd-quality-checks.md) | ci-cd-quality-checks.md | — | — | Done |
 | [Backend Services](./backend.md) | backend.md | — | — | Done |
 

@@ -19,7 +19,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  */
 class BatchPrintJob extends QueuedJob {
 
@@ -73,7 +73,7 @@ class BatchPrintJob extends QueuedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	protected function run(mixed $argument): void {
 		$jobId = (string) ($argument['jobId'] ?? '');

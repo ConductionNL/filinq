@@ -1670,14 +1670,15 @@
 			"area": "generate",
 			"name": "Send generated documents to print, one by one or as a batch, and follow the print job.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Missing half specified in openspec/changes/print-jobs-in-the-app on 2026-09-28 in the build-all pass. Before: lib/Controller/PrintJobController.php implements create/show/download/updateStatus/batch (lines 106,178,231,307,382) in full, routes registered at routes.php:207-211 with the comment 'for external print services'. No FE calls any print/jobs or print/batch endpoint (only PrintPreview.vue calls print/preview and print/pdf-a); no caller found in dossiq/shillinq/opencatalogi/scholiq.",
-				"change": "openspec/changes/print-jobs-in-the-app"
+				"evidence": "src/views/correspondence/CorrespondenceIndex.vue Send to print posts one api/print/batch job for one letter or a batch of recipients; src/views/printJobs/PrintJobs.vue (manifest route PrintJobs, menu Print jobs) lists GET api/print/jobs, the caller's own jobs only (PrintJobController::index), with status, last change and download. Job state is a printJob object (lib/Service/PrintJobRepository.php), PDFs in IAppData print-jobs (lib/Service/PrintJobFileStore.php); repair step lib/Repair/MigratePrintJobsOutOfAppConfig.php moves the old print_job_* app-config entries. The print service reports through PUT api/print/jobs/{id}/status.",
+				"change": "openspec/changes/archive/2026-09-29-print-jobs-in-the-app",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it; designed for an external print service that could not be located",
+			"reachedOn": "Letters & correspondence (Send to print) and the Print jobs menu entry; a print service through PUT api/print/jobs/{id}/status",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "print-preview",

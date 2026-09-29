@@ -1,7 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
-@spec openspec/changes/print-jobs-in-the-app/specs/print-preview/spec.md
+@spec openspec/specs/print-preview/spec.md
 -->
 <template>
 	<div class="print-jobs">
@@ -121,7 +121,7 @@ export default {
 		 * Read the caller's own jobs.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+		 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
 		 */
 		async load() {
 			this.loading = true
@@ -143,7 +143,7 @@ export default {
 		 *
 		 * @param {string} status The stored status
 		 * @return {string} The label.
-		 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+		 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
 		 */
 		statusLabel(status) {
 			return printJobStatusLabel(status)
@@ -154,7 +154,7 @@ export default {
 		 *
 		 * @param {object} job The job
 		 * @return {string} The URL.
-		 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+		 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
 		 */
 		downloadUrl(job) {
 			return generateUrl('/apps/filinq/api/print/jobs/{id}/download', {
@@ -167,7 +167,7 @@ export default {
 		 *
 		 * @param {string} value An ISO date-time
 		 * @return {string} The time, or an empty string.
-		 * @spec openspec/changes/print-jobs-in-the-app/tasks.md#task-1.4
+		 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
 		 */
 		formatTime(value) {
 			if (!value) {
