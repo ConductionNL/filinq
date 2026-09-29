@@ -942,5 +942,253 @@
     "reason": "Single competitor, no demand, outside the core area (intake and generate) (validsign rates it yes). The built half: the ValidSign provider seam; the artifact flow is not wired. libresign-signing-provider covers QES through a qualified LibreSign. Reversible when demand or a second competitor appears.",
     "change": null,
     "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "in-ocr-auto",
+    "matrix": "filinq",
+    "decision": "build",
+    "reason": "In the core area (intake), and paperless-ngx rates it yes. No open or archived change reads an arriving document without a user action: ocr-trigger-surface is a manual action and an anonymisation fallback, and scan-intake-with-separator-sheets and inbound-documents-and-the-worklist each hand the OCR step to the other.",
+    "change": "intake-ocr-on-arrival",
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-from-doc",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-text-blocks",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "tpl-retire",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "wk-office-edit",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). edit-through-the-open-editor bridges into an editor that is already open. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "wk-watermark",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived pdf-conversion-service change kept watermarks out of its scope. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "det-faces",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). image-redaction redacts text found in images, not faces or plates. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "det-handwriting",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Tesseract reads printed text only. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "det-av",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived ocr-document-scanning and enhanced-anonymization changes kept audio and video out. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "det-measure",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "det-structured",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived pdf-conversion-service change kept spreadsheets out of its scope. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "det-on-upload",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). intake-ocr-on-arrival reads arriving intake documents; detection on upload is not part of it. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "red-scheduled",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). redaction-at-scale runs batches in cron work units without an office-hours window. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "red-ai-guard",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "woo-algorithm",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (datamask rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "woo-sar",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). It would build on entity-search and woo-request-workflow, both still open. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sig-trust-list",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sig-in-person",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (validsign rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sig-in-generation",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "rec-born-ready",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "rec-dossier-index",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "rec-certified",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). A certification audits the organisation and the product together, it is not a capability to specify. Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sh-email",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sh-approve",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sh-channel",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sh-notify",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sh-cloud",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "sig-containers",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "A featureRequest demand row (https://github.com/paperless-ngx/paperless-ngx/discussions/13604) but no competitor rates it yes, and signing is outside the core area (intake and generate). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "wk-page-edit",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (paperless-ngx rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "woo-withheld-page",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (zylab rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
+  },
+  {
+    "row": "woo-page-numbers",
+    "matrix": "filinq",
+    "decision": "decided-no",
+    "reason": "Single competitor, no demand, outside the core area (intake and generate) (zylab rates it yes). Reversible when demand or a second competitor appears.",
+    "change": null,
+    "decidedOn": "2026-09-28"
   }
 ]

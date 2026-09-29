@@ -920,9 +920,10 @@
 			"sourceRef": "Workflow OCR (Nextcloud app) flow-triggered OCR; Paperless-ngx consumer",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No watched-folder job triggers OCR (lib/BackgroundJob/ has no such job; scan-intake-with-separator-sheets task 3.2 confirms none exists). openspec/changes/ocr-trigger-surface (which would add automatic OCR fallback inside AnonymizationService::extractAndDetectEntities()) is entirely unchecked - task 2.3 unimplemented."
+				"evidence": "Specified in openspec/changes/intake-ocr-on-arrival on 2026-09-28 in the build-all pass. Before: No watched-folder job triggers OCR (lib/BackgroundJob/ has no such job; scan-intake-with-separator-sheets task 3.2 confirms none exists). openspec/changes/ocr-trigger-surface (which would add automatic OCR fallback inside AnonymizationService::extractAndDetectEntities()) is entirely unchecked - task 2.3 unimplemented.",
+				"change": "openspec/changes/intake-ocr-on-arrival"
 			},
 			"reachedOn": "nothing reaches it (unbuilt)",
 			"provider": "filinq",
@@ -1873,9 +1874,9 @@
 			"sourceRef": "user story \"Create template from existing document\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No 'save as template' / 'create template from document' code found in lib/ or src/ (grep for saveAsTemplate/createTemplateFrom/useAsTemplate returns only unrelated false-positive matches on the word 'template'). Only a template's own duplicate() action exists (copies a template into a new template, not a stored document into a template)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No 'save as template' / 'create template from document' code found in lib/ or src/ (grep for saveAsTemplate/createTemplateFrom/useAsTemplate returns only unrelated false-positive matches on the word 'template'). Only a template's own duplicate() action exists (copies a template into a new template, not a stored document into a template)."
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",
@@ -2149,9 +2150,9 @@
 			"sourceRef": "iWRITER 365 text-block libraries",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No reusable text-block library found: grep for 'textBlock'/'TextBlock' across lib/ and src/ returns only an unrelated hit in lib/Service/Editing/DocumentAgentService.php. No schema for a text-block corpus exists in lib/Settings/filinq_register.json."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No reusable text-block library found: grep for 'textBlock'/'TextBlock' across lib/ and src/ returns only an unrelated hit in lib/Service/Editing/DocumentAgentService.php. No schema for a text-block corpus exists in lib/Settings/filinq_register.json."
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",
@@ -2177,9 +2178,9 @@
 			"sourceRef": "user story \"Retire an obsolete template\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "template schema properties (lib/Settings/filinq_register.json) are exactly: name, description, content, namespace, format, orientation, category, tags, lockedBy, lockedAt, plainLanguage -- no status/retired/active flag. The only removal path is templates#destroy (hard delete, lib/Controller/TemplatesController.php:234), which conflicts with keeping version history rather than providing a soft-retire."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: template schema properties (lib/Settings/filinq_register.json) are exactly: name, description, content, namespace, format, orientation, category, tags, lockedBy, lockedAt, plainLanguage -- no status/retired/active flag. The only removal path is templates#destroy (hard delete, lib/Controller/TemplatesController.php:234), which conflicts with keeping version history rather than providing a soft-retire."
 			},
 			"reachedOn": "nothing reaches a soft-retire; only hard delete exists",
 			"provider": "filinq",
@@ -2446,9 +2447,9 @@
 			"source": "own-code",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Searched for a live embedded office-editor session (WOPI iframe / richdocuments Viewer integration) in src/: none found. lib/Service/Editing/EditSessionService.php:10-32 explicitly documents why it is NOT a WOPI client (a WOPI client's lock would be indistinguishable from the office suite's own lock in richdocuments 11.1.0); it does in-process package edits instead. src/components/viewers/{Word,Odt}Viewer.vue are read-only previews (document-preview spec), not editors. openspec/changes/edit-through-the-open-editor is an unbuilt change proposing an agent-mediated bridge into an ALREADY-open external editor, not a filinq-hosted editing screen.",
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). edit-through-the-open-editor bridges into an editor that is already open. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Searched for a live embedded office-editor session (WOPI iframe / richdocuments Viewer integration) in src/: none found. lib/Service/Editing/EditSessionService.php:10-32 explicitly documents why it is NOT a WOPI client (a WOPI client's lock would be indistinguishable from the office suite's own lock in richdocuments 11.1.0); it does in-process package edits instead. src/components/viewers/{Word,Odt}Viewer.vue are read-only previews (document-preview spec), not editors. openspec/changes/edit-through-the-open-editor is an unbuilt change proposing an agent-mediated bridge into an ALREADY-open external editor, not a filinq-hosted editing screen.",
 				"change": "openspec/changes/edit-through-the-open-editor"
 			},
 			"reachedOn": "nothing reaches it",
@@ -2556,9 +2557,9 @@
 			"sourceRef": "user story \"Apply watermark to shared documents\"; canonical watermarking",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep for 'watermark' across lib/ and src/ (excluding tests) found zero hits. Two archived proposals explicitly list watermarking as OUT OF SCOPE: openspec/changes/archive/2026-06-14-pdf-conversion-service/proposal.md:33 ('Logo / header / footer / watermark') and openspec/changes/archive/2026-06-03-anonymise-output-as-pdf-by-default/proposal.md:43 ('out of scope; the conversion is content-faithful')."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived pdf-conversion-service change kept watermarks out of its scope. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: grep for 'watermark' across lib/ and src/ (excluding tests) found zero hits. Two archived proposals explicitly list watermarking as OUT OF SCOPE: openspec/changes/archive/2026-06-14-pdf-conversion-service/proposal.md:33 ('Logo / header / footer / watermark') and openspec/changes/archive/2026-06-03-anonymise-output-as-pdf-by-default/proposal.md:43 ('out of scope; the conversion is content-faithful')."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -2983,9 +2984,9 @@
 			"sourceRef": "CaseGuard video redaction; Presidio image redaction",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No face/licence-plate image-blurring code anywhere: grepped lib/ and src/ for face|blur|kenteken|license_plate, no hits. 'image-redaction' openspec change exists but is about redacting image-origin PERSON entities found via OCR text, not face/plate detection in the image itself (openspec/changes/image-redaction/specs/image-redaction/spec.md references a 'detected image-origin PERSON entity', a text-level concept).",
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). image-redaction redacts text found in images, not faces or plates. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No face/licence-plate image-blurring code anywhere: grepped lib/ and src/ for face|blur|kenteken|license_plate, no hits. 'image-redaction' openspec change exists but is about redacting image-origin PERSON entities found via OCR text, not face/plate detection in the image itself (openspec/changes/image-redaction/specs/image-redaction/spec.md references a 'detected image-origin PERSON entity', a text-level concept).",
 				"change": "openspec/changes/image-redaction"
 			},
 			"reachedOn": "nothing reaches it",
@@ -3011,9 +3012,9 @@
 			"sourceRef": "CaseGuard handwriting OCR redaction",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No handwriting-OCR code or spec anywhere in filinq (grepped lib/, src/, openspec/changes for handwrit*, no hits besides this row's own absence)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Tesseract reads printed text only. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No handwriting-OCR code or spec anywhere in filinq (grepped lib/, src/, openspec/changes for handwrit*, no hits besides this row's own absence)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3038,9 +3039,9 @@
 			"sourceRef": "CaseGuard audio and video redaction",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No audio/video redaction code or spec anywhere (grepped lib/, src/, openspec/changes for audio/video redaction terms, no hits). ALLOWED_EXTENSIONS in src/services/anonymizationUpload.js is docx/odt/txt/pdf/eml only — no audio/video formats accepted at all."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived ocr-document-scanning and enhanced-anonymization changes kept audio and video out. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No audio/video redaction code or spec anywhere (grepped lib/, src/, openspec/changes for audio/video redaction terms, no hits). ALLOWED_EXTENSIONS in src/services/anonymizationUpload.js is docx/odt/txt/pdf/eml only — no audio/video formats accepted at all."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3094,9 +3095,9 @@
 			"sourceRef": "Presidio recognizer evaluation harness",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/, src/, openspec for precision/recall/f1/benchmark/evaluation-of-detection terms; no recognizer evaluation harness anywhere."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/, src/, openspec for precision/recall/f1/benchmark/evaluation-of-detection terms; no recognizer evaluation harness anywhere."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3121,9 +3122,9 @@
 			"sourceRef": "Presidio structured-data anonymization",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/services/anonymizationUpload.js ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'] and ALLOWED_MIMES has no spreadsheet/CSV mime; the upload widget's accept attribute (ACCEPT_ATTR) excludes xlsx/xls/csv. No spreadsheet-cell-level anonymisation code exists."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). The archived pdf-conversion-service change kept spreadsheets out of its scope. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: src/services/anonymizationUpload.js ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'] and ALLOWED_MIMES has no spreadsheet/CSV mime; the upload widget's accept attribute (ACCEPT_ATTR) excludes xlsx/xls/csv. No spreadsheet-cell-level anonymisation code exists."
 			},
 			"reachedOn": "the upload dialog rejects spreadsheet files outright",
 			"provider": "filinq",
@@ -3176,9 +3177,9 @@
 			"sourceRef": "user story \"Automatically scan uploaded documents for PII\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No file-upload event listener registered anywhere: lib/AppInfo/Application.php has no registerEventListener for a Nextcloud file-created/node-written event, and lib/EventListener/ contains only signing-related listeners (DocumentSigningRequestedListener, SigningTaskListener). Detection only runs when a user explicitly opens a file in /anonymization and clicks extract."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). intake-ocr-on-arrival reads arriving intake documents; detection on upload is not part of it. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No file-upload event listener registered anywhere: lib/AppInfo/Application.php has no registerEventListener for a Nextcloud file-created/node-written event, and lib/EventListener/ contains only signing-related listeners (DocumentSigningRequestedListener, SigningTaskListener). Detection only runs when a user explicitly opens a file in /anonymization and clicks extract."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3695,9 +3696,9 @@
 			"sourceRef": "CaseGuard scheduled batch redaction jobs",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/BackgroundJob/BatchDocumentJob.php is a QueuedJob (runs once, immediately after being queued), not a TimedJob with a configurable off-hours schedule. No UI or setting found for scheduling bulk redaction to run at a specific time or outside office hours."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). redaction-at-scale runs batches in cron work units without an office-hours window. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: lib/BackgroundJob/BatchDocumentJob.php is a QueuedJob (runs once, immediately after being queued), not a TimedJob with a configurable off-hours schedule. No UI or setting found for scheduling bulk redaction to run at a specific time or outside office hours."
 			},
 			"reachedOn": "nothing reaches a scheduling UI",
 			"provider": "filinq",
@@ -3750,9 +3751,9 @@
 			"sourceRef": "procest round 4 C-access-and-privacy-3 (Decos JOIN Joni)",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped for PII-stripping-before-LLM-call patterns; found only WOOAnonymisationAssistService/WOOAssessmentController in dq-flow (dossiq), which is AI ASSISTING detection decisions (woo-llm-anonymisation), not stripping PII from a document before an AI model processes it. No such guard exists in filinq."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped for PII-stripping-before-LLM-call patterns; found only WOOAnonymisationAssistService/WOOAssessmentController in dq-flow (dossiq), which is AI ASSISTING detection decisions (woo-llm-anonymisation), not stripping PII from a document before an AI model processes it. No such guard exists in filinq."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4226,9 +4227,9 @@
 			"sourceRef": "xxllnc Anonimiseren algorithm register presence",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep for 'algoritmeregister' across lib/, src/ and openspec found it used only as competitive-research motivation in seven proposals/specs (image-redaction, ocr-trigger-surface, anonymization-review-workbench, redaction-at-scale, custom-dictionary-recognition), never as an actual feature that lists filinq's own anonymisation algorithm in the public register. No admin page or export for this exists in src/views/settings/Settings.vue."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (datamask rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: grep for 'algoritmeregister' across lib/, src/ and openspec found it used only as competitive-research motivation in seven proposals/specs (image-redaction, ocr-trigger-surface, anonymization-review-workbench, redaction-at-scale, custom-dictionary-recognition), never as an actual feature that lists filinq's own anonymisation algorithm in the public register. No admin page or export for this exists in src/views/settings/Settings.vue."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4282,9 +4283,9 @@
 			"sourceRef": "journey \"Handle Subject Access Request with Document Redaction\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No dedicated subject-access-request change or schema exists (grep for 'subject access request'/'inzageverzoek'/AVG-art-15 across lib/, src/, openspec found nothing; no matching entry in openspec/changes/*). The building blocks it would need are themselves unbuilt: entity-search (find every document mentioning a person, 0/11 tasks) and the collection/packaging half of woo-request-workflow (0/15 tasks)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). It would build on entity-search and woo-request-workflow, both still open. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No dedicated subject-access-request change or schema exists (grep for 'subject access request'/'inzageverzoek'/AVG-art-15 across lib/, src/, openspec found nothing; no matching entry in openspec/changes/*). The building blocks it would need are themselves unbuilt: entity-search (find every document mentioning a person, 0/11 tasks) and the collection/packaging half of woo-request-workflow (0/15 tasks)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4626,9 +4627,9 @@
 			"sourceRef": "user story \"Check certificate against EU Trusted List\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/, src/, openspec/specs, openspec/changes for 'trusted list'/'eu trust'/'LOTL'/certificate-chain-against-a-list terms; zero hits."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/, src/, openspec/specs, openspec/changes for 'trusted list'/'eu trust'/'LOTL'/certificate-chain-against-a-list terms; zero hits."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4824,9 +4825,9 @@
 			"sourceRef": "ValidSign face-to-face signing mode",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/, src/, openspec for 'face to face'/'in person'/'same device'/kiosk-style signing terms; zero hits."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (validsign rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/, src/, openspec for 'face to face'/'in person'/'same device'/kiosk-style signing terms; zero hits."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4942,9 +4943,9 @@
 			"sourceRef": "SmartDocuments built-in digital signature step; Docupilot",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped openspec/specs/*/spec.md and lib/Service/DocumentMergeService.php for a sign-as-a-step-of-generation flow; no hits linking template/document generation directly to a signing step. Signing is a wholly separate action initiated from a generated document afterwards (SigningRequestForm), not a step inside the generation flow itself."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (smartdocuments rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped openspec/specs/*/spec.md and lib/Service/DocumentMergeService.php for a sign-as-a-step-of-generation flow; no hits linking template/document generation directly to a signing step. Signing is a wholly separate action initiated from a generated document afterwards (SigningRequestForm), not a step inside the generation flow itself."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5168,9 +5169,9 @@
 			"sourceRef": "procest round 4 C-documents-39",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/PdfService.php:267-289 buildMpdfConfig(): PDF/A mode ($config['PDFA']=true, PDFAversion 3-B) is only applied when `$options['pdfa'] === true`, and this flag is caller-supplied via pdfOptions -- it is not set anywhere by default in lib/Service/DocumentRenderPipeline.php or DocumentController::generate(). A document produced by POST /api/documents/generate with format=pdf and no explicit pdfOptions.pdfa is therefore an ordinary PDF, not archive-ready, unless a caller opts in or the file is later run through print-preview's separate /api/print/pdf-a download."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: lib/Service/PdfService.php:267-289 buildMpdfConfig(): PDF/A mode ($config['PDFA']=true, PDFAversion 3-B) is only applied when `$options['pdfa'] === true`, and this flag is caller-supplied via pdfOptions -- it is not set anywhere by default in lib/Service/DocumentRenderPipeline.php or DocumentController::generate(). A document produced by POST /api/documents/generate with format=pdf and no explicit pdfOptions.pdfa is therefore an ordinary PDF, not archive-ready, unless a caller opts in or the file is later run through print-preview's separate /api/print/pdf-a download."
 			},
 			"reachedOn": "n/a (this is the negative finding: the default generation path is NOT archive-ready at creation)",
 			"provider": "filinq",
@@ -5279,9 +5280,9 @@
 			"sourceRef": "user story \"Generate printable dossier index\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5393,9 +5394,9 @@
 			"sourceRef": "procest round 4 C-integrations-24",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep for 'certif' across lib/Controller, lib/Service, src/views and openspec/specs found only digital-SIGNATURE certificates (X.509 signing certs in document-signing/portal-signing-surface specs), not certification against a records-management standard (e.g. ISO 15489, NEN 2082). No such change exists among openspec/changes/* names either."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). A certification audits the organisation and the product together, it is not a capability to specify. Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: grep for 'certif' across lib/Controller, lib/Service, src/views and openspec/specs found only digital-SIGNATURE certificates (X.509 signing certs in document-signing/portal-signing-surface specs), not certification against a records-management standard (e.g. ISO 15489, NEN 2082). No such change exists among openspec/changes/* names either."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5536,9 +5537,9 @@
 			"sourceRef": "user story \"Automatically archive sent correspondence in case dossier\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ for IMailer/OCP\\Mail: no match anywhere in the app. The register comment (filinq_register.json v8.16.0) says correspondence carries a linkedTypes 'mail' leaf + mailObjectTemplate so 'an objection mail or an inbound case mail can seed a record from the NC Mail sidebar' - this is INBOUND (creating a filinq record from a received email in NC Mail), not outbound sending from filinq with an archived sent copy."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (decos-join rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/ for IMailer/OCP\\Mail: no match anywhere in the app. The register comment (filinq_register.json v8.16.0) says correspondence carries a linkedTypes 'mail' leaf + mailObjectTemplate so 'an objection mail or an inbound case mail can seed a record from the NC Mail sidebar' - this is INBOUND (creating a filinq record from a received email in NC Mail), not outbound sending from filinq with an archived sent copy."
 			},
 			"reachedOn": "nothing reaches it (no send mechanism; the only mail integration found is inbound record-seeding, not outbound send-and-archive)",
 			"provider": "filinq",
@@ -5647,9 +5648,9 @@
 			"sourceRef": "journey \"Approve Outgoing Correspondence\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/Controller/CorrespondenceController.php, lib/Service/CorrespondenceService.php and filinq_register.json for 'approv*': only hit is the unrelated signingRequest/signerRecord multi-signer approval CHAIN (being migrated to OR task sequences per migrate-signing-to-or-tasks) - that gates a signature, not an outgoing letter/correspondence before it is sent."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/Controller/CorrespondenceController.php, lib/Service/CorrespondenceService.php and filinq_register.json for 'approv*': only hit is the unrelated signingRequest/signerRecord multi-signer approval CHAIN (being migrated to OR task sequences per migrate-signing-to-or-tasks) - that gates a signature, not an outgoing letter/correspondence before it is sent."
 			},
 			"reachedOn": "nothing reaches it (not built for correspondence)",
 			"provider": "filinq",
@@ -5674,9 +5675,9 @@
 			"sourceRef": "user story \"Send acknowledgement via the sender's preferred channel\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/Service/CorrespondenceService.php and lib/Controller/CorrespondenceController.php for preferredChannel/channel-preference/digitalPost: no match. Format selection (pdf/docx/html/email) is chosen by the operator per-generation, not derived from a recipient's stored channel preference."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/Service/CorrespondenceService.php and lib/Controller/CorrespondenceController.php for preferredChannel/channel-preference/digitalPost: no match. Format selection (pdf/docx/html/email) is chosen by the operator per-generation, not derived from a recipient's stored channel preference."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5701,9 +5702,9 @@
 			"sourceRef": "user story \"Receive notification when document status changes\"",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped filinq_register.json for follow/subscri*: no per-user 'follow this document' subscription feature found (the only related mechanism is the 7 x-openregister-notifications rules addressed to fixed groups, e.g. readingFailed and SigningConcludedEvent-driven ones - none is a user opting to follow an individual document)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped filinq_register.json for follow/subscri*: no per-user 'follow this document' subscription feature found (the only related mechanism is the 7 x-openregister-notifications rules addressed to fixed groups, e.g. readingFailed and SigningConcludedEvent-driven ones - none is a user opting to follow an individual document)."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5728,9 +5729,9 @@
 			"sourceRef": "Redactable cloud storage connectors",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Grepped lib/ and src/ for 'google.*drive|onedrive|dropbox': no match anywhere."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: Grepped lib/ and src/ for 'google.*drive|onedrive|dropbox': no match anywhere."
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -6610,9 +6611,9 @@
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/13604",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no ASiC or CAdES handling: grep -ri 'asic|cades|p7m|p7s|pkcs7|xades' lib src finds nothing. Signature verification reads PDFs only: lib/Service/SigningVerificationService.php:153 extractSignatures(pdfContent) pattern-matches inside the PDF bytes. A container can sit in Nextcloud Files like any file, but filinq neither opens nor verifies it."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: A featureRequest demand row (https://github.com/paperless-ngx/paperless-ngx/discussions/13604) but no competitor rates it yes, and signing is outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no ASiC or CAdES handling: grep -ri 'asic|cades|p7m|p7s|pkcs7|xades' lib src finds nothing. Signature verification reads PDFs only: lib/Service/SigningVerificationService.php:153 extractSignatures(pdfContent) pattern-matches inside the PDF bytes. A container can sit in Nextcloud Files like any file, but filinq neither opens nor verifies it."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6818,9 +6819,9 @@
 			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no PDF page operations: grep -ri 'rotate|splitPdf|reorder|deletePage|removePage|extractPages' lib src finds none on PDFs (hits are GL-account reordering and signing-secret rotation). openspec/changes/document-editing-tools/proposal.md covers conversion and text edits by an agent, not pages. lib/Controller/MergeController.php:107 merges several documents into one PDF, the only page-level operation."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (paperless-ngx rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no PDF page operations: grep -ri 'rotate|splitPdf|reorder|deletePage|removePage|extractPages' lib src finds none on PDFs (hits are GL-account reordering and signing-secret rotation). openspec/changes/document-editing-tools/proposal.md covers conversion and text edits by an agent, not pages. lib/Controller/MergeController.php:107 merges several documents into one PDF, the only page-level operation."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6933,9 +6934,9 @@
 			"sourceRef": "https://www.binnenlandsbestuur.nl/juridisch/reveal-zylab/lakken-bij-woo-verzoeken-kan-veel-vriendelijker",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no withheld-page replacement: grep -ri 'withheld|whole page|full page|geweigerd' lib finds nothing; the redaction output modes (lib/Service/Redaction/RedactionOutputModes.php) redact passages in place. The only placeholder pages are for unrenderable email attachments (lib/Service/EmlPdfAssemblyService.php:451). No openspec change specifies it (grep -rli 'withheld|entire page' openspec/changes/*/proposal.md: none)."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (zylab rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no withheld-page replacement: grep -ri 'withheld|whole page|full page|geweigerd' lib finds nothing; the redaction output modes (lib/Service/Redaction/RedactionOutputModes.php) redact passages in place. The only placeholder pages are for unrenderable email attachments (lib/Service/EmlPdfAssemblyService.php:451). No openspec change specifies it (grep -rli 'withheld|entire page' openspec/changes/*/proposal.md: none)."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6961,9 +6962,9 @@
 			"sourceRef": "https://docs.zylab.com/01/ZyLAB/Woo-Dutch/707001.html",
 			"filinq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "no numbering of a disclosure set: grep -ri 'page number|paginanummer|bates|PAGENO' lib finds nothing; the grondslagen PDF (lib/Service/GrondslagenPdfWriter.php:334 importAllPages) appends a summary without numbering. Registration numbers per document exist as in-number (partial, unreached) but are not a set or page numbering."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: Single competitor, no demand, outside the core area (intake and generate) (zylab rates it yes). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: no numbering of a disclosure set: grep -ri 'page number|paginanummer|bates|PAGENO' lib finds nothing; the grondslagen PDF (lib/Service/GrondslagenPdfWriter.php:334 importAllPages) appends a summary without numbering. Registration numbers per document exist as in-number (partial, unreached) but are not a set or page numbering."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
