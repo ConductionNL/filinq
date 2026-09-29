@@ -5,7 +5,7 @@
  * The accessibility lint of a template preview, as sentences an author can
  * act on: what is wrong and where.
  *
- * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -15,7 +15,7 @@ import { translate as t } from '@nextcloud/l10n'
  *
  * @param {object} item A lint finding: rule, position, text, and from/to for a jump.
  * @return {string} The sentence.
- * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
  */
 export function lintMessage(item) {
 	switch (item.rule) {

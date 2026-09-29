@@ -96,7 +96,7 @@ class TemplatePreviewService {
 	 *
 	 * @throws Exception If rendering fails
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
 	 */
 	public function previewWithLint(string $content, array $data): array {
 		$html = $this->preview(content: $content, data: $data);

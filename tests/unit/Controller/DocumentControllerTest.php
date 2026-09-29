@@ -304,7 +304,7 @@ class DocumentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
 	 */
 	public function testAnAccessibleRequestThatCannotBeMetNamesTheAttempts(): void {
 		$this->request->method('getParam')

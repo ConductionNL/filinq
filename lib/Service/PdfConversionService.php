@@ -83,7 +83,7 @@ class PdfConversionService {
 	 * @throws ConversionFailedException When no backend in the cascade succeeded.
 	 *
 	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
 	 */
 	public function convertToPdf(File $source, array $opts = []): File {
 		return $this->convertToPdfReporting(source: $source, opts: $opts)['file'];
@@ -211,7 +211,7 @@ class PdfConversionService {
 	 *
 	 * @throws ConversionFailedException When no tagged PDF can be made.
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
 	 */
 	private function convertTagged(File $source, bool $pdfa): array {
 		$attempts = [];

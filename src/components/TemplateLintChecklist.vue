@@ -5,7 +5,7 @@ SPDX-License-Identifier: EUPL-1.2
 The accessibility checklist beside a template preview: advice, never a
 block on saving or previewing.
 
-@spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.3
+@spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
 -->
 
 <template>
@@ -42,7 +42,7 @@ export default {
 		 *
 		 * @param {object} item The lint finding.
 		 * @return {string} The sentence.
-		 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
 		 */
 		message(item) {
 			return lintMessage(item)

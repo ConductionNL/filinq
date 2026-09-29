@@ -267,7 +267,7 @@ export const useTemplateStore = defineStore('template', {
 		 * @param data
 		 * @return {Promise<{html: string, lint: Array<object>}|null>} The preview, null on failure.
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
-		 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
 		 */
 		async previewTemplate(content, data = {}) {
 			this.error = null

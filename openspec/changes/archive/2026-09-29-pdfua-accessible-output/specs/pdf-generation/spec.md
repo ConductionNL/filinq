@@ -39,7 +39,7 @@ conformance alongside tagging.
 - WHEN the PDF is generated
 - THEN the output contains a structure tree (`/StructTreeRoot`) and `/MarkInfo` with `/Marked true`
 - AND the export used the `PDFUACompliance=true` filter mode
-- @e2e tests/e2e/spec-coverage/pdfua-accessible-output.spec.ts
+- @e2e exclude needs LibreOffice on the test instance; covered by PHPUnit (tests/unit/Service/Conversion/AccessiblePdfRendererTest.php, tests/unit/Service/Conversion/LibreOfficeTaggedExportTest.php)
 
 #### Scenario: Accessible request fails closed without a tagged-capable backend
 
@@ -47,7 +47,7 @@ conformance alongside tagging.
 - WHEN a generation with `accessible: true` is requested
 - THEN the request fails with a structured error listing the attempted backends
 - AND no untagged PDF is returned for the request
-- @e2e exclude backend-outage fault injection is not browser-drivable; covered by PHPUnit (tests/unit/Service/PdfConversionServiceTest.php)
+- @e2e exclude backend-outage fault injection is not browser-drivable; covered by PHPUnit (tests/unit/Service/PdfConversionServiceTaggedTest.php)
 
 ### Requirement: Accessible output carries mandatory language and title metadata (REQ-DDPUA-002)
 
@@ -67,7 +67,7 @@ MUST be preserved into the tagged output rather than flattened.
 - WHEN the PDF is generated
 - THEN the PDF catalog carries `/Lang` with the Dutch language tag
 - AND the document title metadata equals "Besluit parkeervergunning"
-- @e2e tests/e2e/spec-coverage/pdfua-accessible-output.spec.ts
+- @e2e exclude needs LibreOffice on the test instance; covered by PHPUnit (tests/unit/Service/Conversion/AccessiblePdfRendererTest.php, tests/unit/Service/Conversion/LibreOfficeTaggedExportTest.php)
 
 #### Scenario: Unresolvable language fails the accessible request
 
@@ -75,7 +75,7 @@ MUST be preserved into the tagged output rather than flattened.
 - WHEN generation with `accessible: true` is requested
 - THEN the request fails naming the missing language
 - AND no PDF without `/Lang` is produced for the request
-- @e2e exclude locale-resolution permutation; covered by PHPUnit (tests/unit/Service/PdfServiceTest.php)
+- @e2e exclude locale-resolution permutation; covered by PHPUnit (tests/unit/Service/Conversion/AccessiblePdfRendererTest.php)
 
 #### Scenario: Heading structure survives into the tag tree
 
@@ -83,4 +83,4 @@ MUST be preserved into the tagged output rather than flattened.
 - WHEN an accessible PDF is generated
 - THEN the structure tree contains corresponding heading elements in order
 - AND the image carries the alternative text
-- @e2e exclude tag-tree introspection requires a PDF parser in the test harness; covered by PHPUnit against the tagged fixture set (tests/unit/Service/PdfConversionServiceTest.php)
+- @e2e exclude tag-tree introspection requires a PDF parser in the test harness; covered by PHPUnit: AccessiblePdfRendererTest proves the HTML structure (headings, alt text) reaches the tagged export unchanged, and the output is refused without tags (tests/unit/Service/Conversion/AccessiblePdfRendererTest.php)

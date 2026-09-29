@@ -498,7 +498,7 @@ class PdfService {
 	 *
 	 * @throws ConversionFailedException When no tagged output can be made.
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.2
 	 */
 	private function accessiblePdf(string $html, array $options): string {
 		if ($this->accessibleRenderer === null) {

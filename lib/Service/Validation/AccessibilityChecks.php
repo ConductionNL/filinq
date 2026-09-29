@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,7 +48,7 @@ class AccessibilityChecks {
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
 	public function findings(array $profile, string $mime, mixed $content): array {
 		if ($mime !== 'application/pdf' || is_string($content) === false || $content === '') {
@@ -103,7 +103,7 @@ class AccessibilityChecks {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
 	public static function isTagged(string $bytes): bool {
 		return str_contains($bytes, '/StructTreeRoot') === true
@@ -118,7 +118,7 @@ class AccessibilityChecks {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
 	public static function hasLanguage(string $bytes): bool {
 		return preg_match('#/Lang\s*(\([^)\s]+\)|<[0-9A-Fa-f]{2,}>)#', $bytes) === 1;
@@ -132,7 +132,7 @@ class AccessibilityChecks {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
 	public static function hasTitle(string $bytes): bool {
 		if (preg_match('#<dc:title>.*?<rdf:li[^>]*>\s*[^<\s][^<]*</rdf:li>#s', $bytes) === 1) {
@@ -152,7 +152,7 @@ class AccessibilityChecks {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
 	public static function hasPdfUaIdentifier(string $bytes): bool {
 		return preg_match('#pdfuaid:part\s*(=\s*["\']\d|>\s*\d)#', $bytes) === 1;

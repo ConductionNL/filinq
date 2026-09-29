@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

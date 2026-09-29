@@ -6,7 +6,7 @@ Before a document goes to publication: its open accessibility findings,
 and the choice to publish anyway. Only a finding an admin set to blocking
 takes that choice away.
 
-@spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.2
+@spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.2
 -->
 
 <template>

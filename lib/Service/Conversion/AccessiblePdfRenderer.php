@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -68,7 +68,7 @@ class AccessiblePdfRenderer {
 	 * @throws ConversionFailedException Without a language or title, without LibreOffice,
 	 *                                   or when the PDF lacks tags, language or title.
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
 	 */
 	public function render(string $html, array $options): string {
 		$lang = $this->language(options: $options);

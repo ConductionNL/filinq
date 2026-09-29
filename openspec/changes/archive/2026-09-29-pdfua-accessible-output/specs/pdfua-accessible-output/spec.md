@@ -88,4 +88,4 @@ require the author to read generated output to locate the problem.
 - GIVEN a template with alt-texted images, ordered headings, and a language variant
 - WHEN preview runs
 - THEN the lint checklist is empty
-- @e2e exclude lint-computation permutations; covered by PHPUnit (tests/unit/Service/TemplatePreviewServiceTest.php)
+- @e2e exclude lint-computation permutations; covered by PHPUnit (tests/unit/Service/Validation/TemplateAccessibilityLintTest.php)

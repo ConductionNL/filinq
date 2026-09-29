@@ -303,7 +303,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 *
 	 * @throws ConversionFailedException When soffice is unavailable or fails.
 	 *
-	 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
 	 */
 	public function convertTagged(string $bytes, string $extension, bool $pdfa): string {
 		if ($this->isAvailable() === false) {

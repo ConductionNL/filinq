@@ -89,7 +89,7 @@ export function groupFindings(findings) {
  *
  * @param {number} fileId The file id.
  * @return {Promise<{checked: boolean, findings: Array<object>, blocking: boolean}>} The signal.
- * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.2
  */
 export async function publicationReadiness(fileId) {
 	try {

@@ -8,7 +8,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.1
  */
 
 import { readFileSync } from 'node:fs'

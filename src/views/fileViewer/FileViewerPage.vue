@@ -411,7 +411,7 @@ export default {
 		 * warning; without any, straight on.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.2
 		 */
 		async publish() {
 			this.publishing = true
