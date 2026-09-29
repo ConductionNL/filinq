@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
 use OCA\Filinq\Service\Publication\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
@@ -55,6 +56,7 @@ class PublicationController extends Controller {
 	 * @param IRequest                   $request  The request
 	 * @param PublicationPipelineService $pipeline The pipeline
 	 * @param PublicationStore           $store    The records and log
+	 * @param OpenCatalogiPlatform       $platform Whether OpenCatalogi is there, its categories
 	 * @param PublicationAccess          $access   Who may act
 	 * @param IUserSession               $session  The caller
 	 * @param LoggerInterface            $logger   Logger
@@ -66,6 +68,7 @@ class PublicationController extends Controller {
 		IRequest $request,
 		private readonly PublicationPipelineService $pipeline,
 		private readonly PublicationStore $store,
+		private readonly OpenCatalogiPlatform $platform,
 		private readonly PublicationAccess $access,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
@@ -91,7 +94,7 @@ class PublicationController extends Controller {
 			}
 		}
 
-		return new JSONResponse(['results' => $results, 'platformAvailable' => $this->store->platformAvailable()]);
+		return new JSONResponse(['results' => $results, 'platformAvailable' => $this->platform->available()]);
 
 	}//end index()
 
@@ -104,7 +107,7 @@ class PublicationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function categories(): JSONResponse {
-		return new JSONResponse(['results' => $this->store->categories()]);
+		return new JSONResponse(['results' => $this->platform->categories()]);
 
 	}//end categories()
 
@@ -123,13 +126,13 @@ class PublicationController extends Controller {
 		}
 
 		return $this->run(
-			fn (): array => $this->pipeline->create(
+			step: fn (): array => $this->pipeline->create(
 				documentFileRef: $fileId,
 				subjectType: (string) $this->request->getParam('subjectType', 'document'),
 				dossierRef: (string) $this->request->getParam('dossierRef', ''),
 				actor: $this->uid()
 			),
-			Http::STATUS_CREATED
+			status: Http::STATUS_CREATED
 		);
 
 	}//end create()
@@ -152,7 +155,7 @@ class PublicationController extends Controller {
 
 		$record = $this->pipeline->sync(record: $record);
 		$record['log'] = $this->store->logFor(recordUuid: $id);
-		$record['platformAvailable'] = $this->store->platformAvailable();
+		$record['platformAvailable'] = $this->platform->available();
 
 		return new JSONResponse($record);
 
@@ -174,7 +177,7 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		return $this->run(fn (): array => $this->pipeline->evaluate(record: $record, actor: $this->uid()));
+		return $this->run(step: fn (): array => $this->pipeline->evaluate(record: $record, actor: $this->uid()));
 
 	}//end readiness()
 
@@ -194,7 +197,9 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		return $this->run(fn (): array => $this->pipeline->updateMetadata(record: $record, metadata: $this->request->getParams(), actor: $this->uid()));
+		$metadata = $this->request->getParams();
+
+		return $this->run(step: fn (): array => $this->pipeline->updateMetadata(record: $record, metadata: $metadata, actor: $this->uid()));
 
 	}//end metadata()
 
@@ -214,7 +219,7 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		return $this->run(fn (): array => $this->pipeline->handoff(record: $record, actor: $this->uid()));
+		return $this->run(step: fn (): array => $this->pipeline->handoff(record: $record, actor: $this->uid()));
 
 	}//end handoff()
 
@@ -234,7 +239,9 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		return $this->run(fn (): array => $this->pipeline->withdraw(record: $record, reason: (string) $this->request->getParam('reason', ''), actor: $this->uid()));
+		$reason = (string) $this->request->getParam('reason', '');
+
+		return $this->run(step: fn (): array => $this->pipeline->withdraw(record: $record, reason: $reason, actor: $this->uid()));
 
 	}//end withdraw()
 
@@ -255,7 +262,7 @@ class PublicationController extends Controller {
 		}
 
 		return $this->run(
-			fn (): array => $this->pipeline->setDestructionDate(
+			step: fn (): array => $this->pipeline->setDestructionDate(
 				record: $record,
 				date: (string) $this->request->getParam('date', ''),
 				source: (string) $this->request->getParam('source', ''),

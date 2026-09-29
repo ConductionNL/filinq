@@ -96,25 +96,54 @@ class ConsentClearance {
 		}
 
 		if ($status === 'objection_received') {
-			if (in_array($decision, self::RESOLVING_DECISIONS, true) === true) {
-				return null;
-			}
-
-			return 'an objection was received and no decision to anonymise was taken';
+			return $this->objection(decision: $decision);
 		}
 
-		$deadline = $this->deadline(consent: $consent);
-		if ($status === 'no_response' && $deadline !== null && $deadline <= $now) {
-			return null;
+		return $this->waiting(status: $status, deadline: $this->deadline(consent: $consent), now: $now);
+
+	}//end blocker()
+
+	/**
+	 * Why a record without a reaction blocks, or null when its window has closed.
+	 *
+	 * @param string                 $status   pending or no_response
+	 * @param DateTimeImmutable|null $deadline The objection deadline
+	 * @param DateTimeImmutable      $now      The moment
+	 *
+	 * @return string|null The reason.
+	 */
+	private function waiting(string $status, ?DateTimeImmutable $deadline, DateTimeImmutable $now): ?string {
+		if ($deadline === null) {
+			return 'no reaction recorded yet';
 		}
 
-		if ($deadline !== null && $deadline > $now) {
+		if ($deadline > $now) {
 			return 'waiting for a reaction until ' . $deadline->format('Y-m-d');
+		}
+
+		if ($status === 'no_response') {
+			return null;
 		}
 
 		return 'no reaction recorded yet';
 
-	}//end blocker()
+	}//end waiting()
+
+	/**
+	 * Why an objection blocks, or null when the decision resolves it.
+	 *
+	 * @param string $decision The publication decision
+	 *
+	 * @return string|null The reason.
+	 */
+	private function objection(string $decision): ?string {
+		if (in_array($decision, self::RESOLVING_DECISIONS, true) === true) {
+			return null;
+		}
+
+		return 'an objection was received and no decision to anonymise was taken';
+
+	}//end objection()
 
 	/**
 	 * The objection deadline of a record, or null when it has none or it cannot be read.

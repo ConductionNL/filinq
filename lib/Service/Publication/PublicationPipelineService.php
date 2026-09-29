@@ -23,8 +23,6 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\Files\File;
-use OCP\Files\IRootFolder;
 use RuntimeException;
 
 /**
@@ -55,7 +53,7 @@ class PublicationPipelineService {
 	 * @param PublicationStore           $store      Records, log and the platform object
 	 * @param PublicationReadiness       $readiness  The three checks
 	 * @param OpenCatalogiPublicationMap $map        The platform's field names
-	 * @param IRootFolder                $rootFolder The redacted copy's bytes
+	 * @param OpenCatalogiPlatform       $platform   Whether it is there, its categories, attachments
 	 * @param ITimeFactory               $clock      The moment
 	 *
 	 * @return void
@@ -64,7 +62,7 @@ class PublicationPipelineService {
 		private readonly PublicationStore $store,
 		private readonly PublicationReadiness $readiness,
 		private readonly OpenCatalogiPublicationMap $map,
-		private readonly IRootFolder $rootFolder,
+		private readonly OpenCatalogiPlatform $platform,
 		private readonly ITimeFactory $clock,
 	) {
 
@@ -87,9 +85,14 @@ class PublicationPipelineService {
 			throw new InvalidArgumentException('A publication needs a document', 400);
 		}
 
+		$subject = 'document';
+		if ($subjectType === 'dossier') {
+			$subject = 'dossier';
+		}
+
 		$record = $this->store->saveRecord(
 			record: [
-				'subjectType' => ($subjectType === 'dossier') ? 'dossier' : 'document',
+				'subjectType' => $subject,
 				'documentFileRef' => $documentFileRef,
 				'dossierRef' => $dossierRef,
 				'status' => 'draft',
@@ -145,7 +148,7 @@ class PublicationPipelineService {
 	 */
 	public function updateMetadata(array $record, array $metadata, string $actor): array {
 		$category = (string) ($metadata['wooCategory'] ?? '');
-		$codes = array_column($this->store->categories(), 'code');
+		$codes = array_column($this->platform->categories(), 'code');
 		if ($category !== '' && $codes !== [] && in_array($category, $codes, true) === false) {
 			throw new InvalidArgumentException('Unknown Woo information category: ' . $category, 400);
 		}
@@ -177,12 +180,14 @@ class PublicationPipelineService {
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
 	 */
 	public function handoff(array $record, string $actor): array {
-		if ($this->store->platformAvailable() === false) {
+		if ($this->platform->available() === false) {
 			throw new RuntimeException('The publication platform (OpenCatalogi) is not installed, so nothing can be handed off', 503);
 		}
 
 		$record = $this->evaluate(record: $record, actor: $actor);
-		$missing = array_values(array_filter(['officieleTitel', 'wooCategory', 'publicatiedatum'], static fn (string $f): bool => (string) ($record[$f] ?? '') === ''));
+		$missing = array_values(
+			array_filter(['officieleTitel', 'wooCategory', 'publicatiedatum'], static fn (string $f): bool => (string) ($record[$f] ?? '') === '')
+		);
 		if ($record['status'] !== 'ready' || $missing !== []) {
 			$reasons = (array) $record['readinessReasons'];
 			if ($missing !== []) {
@@ -192,12 +197,12 @@ class PublicationPipelineService {
 			throw new PublicationNotReadyException(reasons: $reasons);
 		}
 
-		$copy = $this->readCopy(fileId: (string) $record['redactedFileRef'], actor: $actor);
+		$copy = $this->platform->readCopy(fileId: (string) $record['redactedFileRef'], actor: $actor);
 		$publication = $this->store->savePlatformPublication(
 			publication: $this->map->toPublication(record: $record),
 			uuid: (string) ($record['endpointPublicationRef'] ?? '')
 		);
-		$this->store->attachToPlatformPublication(publicationUuid: (string) $publication['uuid'], fileName: $copy->getName(), content: $copy->getContent());
+		$this->platform->attach(publicationUuid: (string) $publication['uuid'], fileName: $copy->getName(), content: $copy->getContent());
 
 		$record['endpointPublicationRef'] = (string) $publication['uuid'];
 		$record['handoffAt'] = $this->now()->format(DateTimeInterface::ATOM);
@@ -267,7 +272,10 @@ class PublicationPipelineService {
 		$record['destructionDate'] = $date;
 		$record['destructionDateSource'] = trim($source);
 		if ((string) ($record['endpointPublicationRef'] ?? '') !== '') {
-			$this->store->savePlatformPublication(publication: $this->map->destruction(date: $date, source: trim($source)), uuid: (string) $record['endpointPublicationRef']);
+			$this->store->savePlatformPublication(
+				publication: $this->map->destruction(date: $date, source: trim($source)),
+				uuid: (string) $record['endpointPublicationRef']
+			);
 		}
 
 		$record = $this->store->saveRecord(record: $record, uuid: (string) $record['uuid']);
@@ -295,7 +303,8 @@ class PublicationPipelineService {
 			$next = 'published';
 		}
 
-		if ($status === 'depublication_requested' && (string) ($record['depublicationRequestedAt'] ?? '9999') <= $this->now()->format(DateTimeInterface::ATOM)) {
+		$requestedAt = (string) ($record['depublicationRequestedAt'] ?? '9999');
+		if ($status === 'depublication_requested' && $requestedAt <= $this->now()->format(DateTimeInterface::ATOM)) {
 			$next = 'depublished';
 		}
 
@@ -323,17 +332,22 @@ class PublicationPipelineService {
 	 */
 	private function log(array $record, string $action, string $actor, string $details): void {
 		$snapshot = [];
-		foreach (['status', 'entitiesReviewed', 'consentClear', 'prohibitionsClear', 'wooCategory', 'publicatiedatum', 'endpointPublicationRef'] as $field) {
+		$fields = ['status', 'entitiesReviewed', 'consentClear', 'prohibitionsClear', 'wooCategory', 'publicatiedatum', 'endpointPublicationRef'];
+		foreach ($fields as $field) {
 			if (array_key_exists($field, $record) === true) {
 				$snapshot[$field] = $record[$field];
 			}
+		}
+
+		if ($actor === '') {
+			$actor = 'system';
 		}
 
 		$this->store->appendLog(
 			entry: [
 				'publicationRecordRef' => (string) $record['uuid'],
 				'action' => $action,
-				'actor' => ($actor === '') ? 'system' : $actor,
+				'actor' => $actor,
 				'timestamp' => $this->now()->format(DateTimeInterface::ATOM),
 				'details' => mb_substr($details, 0, 4096),
 				'snapshot' => $snapshot,
@@ -341,27 +355,6 @@ class PublicationPipelineService {
 		);
 
 	}//end log()
-
-	/**
-	 * The redacted copy, read from the actor's files.
-	 *
-	 * @param string $fileId The copy's file id
-	 * @param string $actor  Whose files
-	 *
-	 * @return File The copy.
-	 *
-	 * @throws RuntimeException When the actor cannot read it.
-	 */
-	private function readCopy(string $fileId, string $actor): File {
-		foreach ($this->rootFolder->getUserFolder($actor)->getById((int) $fileId) as $node) {
-			if ($node instanceof File) {
-				return $node;
-			}
-		}
-
-		throw new RuntimeException('The redacted copy ' . $fileId . ' cannot be read', 404);
-
-	}//end readCopy()
 
 	/**
 	 * The moment.

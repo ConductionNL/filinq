@@ -30,6 +30,7 @@ use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\Filinq\Service\Publication\ConsentClearance;
+use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
 use OCA\Filinq\Service\Publication\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
@@ -176,7 +177,7 @@ class PublicationPipelineServiceTest extends TestCase {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('getInstalledApps')->willReturn(['openregister']);
 		$apps->method('isEnabledForAnyone')->willReturnCallback(fn (string $app): bool => $app === 'opencatalogi' && $this->platform);
-		$store = new PublicationStore(objects: new DocumentObjectServiceResolver($container, $apps), appManager: $apps, container: $container);
+		$store = new PublicationStore(objects: new DocumentObjectServiceResolver($container, $apps));
 
 		$consentService = $this->createMock(ConsentService::class);
 		$consentService->method('getConsentsByDocument')->willReturnCallback(fn (): array => $this->consents);
@@ -207,7 +208,7 @@ class PublicationPipelineServiceTest extends TestCase {
 			store: $store,
 			readiness: new PublicationReadiness(consents: $consentService, consentConfig: $consentConfig, policies: $policies, marks: $marks, store: $store),
 			map: new OpenCatalogiPublicationMap(),
-			rootFolder: $root,
+			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
 			clock: $clock
 		);
 

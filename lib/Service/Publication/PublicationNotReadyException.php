@@ -44,7 +44,7 @@ class PublicationNotReadyException extends RuntimeException {
 	public function __construct(
 		private readonly array $reasons,
 	) {
-		parent::__construct('The publication is not ready to hand off', 409);
+		parent::__construct(message: 'The publication is not ready to hand off', code: 409);
 
 	}//end __construct()
 

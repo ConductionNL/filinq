@@ -20,8 +20,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Publication;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCP\App\IAppManager;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Throwable;
 
@@ -59,28 +57,14 @@ class PublicationStore {
 	public const LOG = 'publicationLogEntry';
 
 	/**
-	 * OpenRegister's file service, by name so Filinq loads without it.
-	 */
-	private const FILE_SERVICE = 'OCA\OpenRegister\Service\FileService';
-
-	/**
-	 * OpenCatalogi's TOOI value lists, by name so Filinq loads without it.
-	 */
-	private const TOOI = 'OCA\OpenCatalogi\Service\TooiVocabularyService';
-
-	/**
 	 * Constructor
 	 *
-	 * @param DocumentObjectServiceResolver $objects    OpenRegister's object service
-	 * @param IAppManager                   $appManager Whether OpenCatalogi is there
-	 * @param ContainerInterface            $container  OpenRegister's file service
+	 * @param DocumentObjectServiceResolver $objects OpenRegister's object service
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objects,
-		private readonly IAppManager $appManager,
-		private readonly ContainerInterface $container,
 	) {
 
 	}//end __construct()
@@ -181,45 +165,6 @@ class PublicationStore {
 	}//end findRedactedCopy()
 
 	/**
-	 * Whether the publication platform (OpenCatalogi) is there.
-	 *
-	 * @return bool True when OpenCatalogi is enabled.
-	 *
-	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
-	 */
-	public function platformAvailable(): bool {
-		return $this->appManager->isEnabledForAnyone('opencatalogi');
-
-	}//end platformAvailable()
-
-	/**
-	 * The Woo information categories, from OpenCatalogi's own TOOI value list.
-	 *
-	 * @return list<array{code: string, label: string}> The categories, empty when OpenCatalogi is not there.
-	 *
-	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
-	 */
-	public function categories(): array {
-		if ($this->platformAvailable() === false) {
-			return [];
-		}
-
-		try {
-			$list = $this->container->get(self::TOOI)->informatiecategorieList();
-		} catch (Throwable) {
-			return [];
-		}
-
-		$categories = [];
-		foreach ((array) $list as $entry) {
-			$categories[] = ['code' => basename((string) ($entry['uri'] ?? '')), 'label' => (string) ($entry['label'] ?? '')];
-		}
-
-		return $categories;
-
-	}//end categories()
-
-	/**
 	 * Create or update the platform's publication object.
 	 *
 	 * @param array<string, mixed> $publication The fields to write
@@ -245,33 +190,6 @@ class PublicationStore {
 		);
 
 	}//end savePlatformPublication()
-
-	/**
-	 * Attach the redacted copy to the platform's publication, shared so the public sees it.
-	 *
-	 * @param string $publicationUuid The platform's publication
-	 * @param string $fileName        The file name
-	 * @param string $content         The bytes
-	 *
-	 * @return void
-	 *
-	 * @throws RuntimeException When OpenRegister cannot attach it.
-	 *
-	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
-	 */
-	public function attachToPlatformPublication(string $publicationUuid, string $fileName, string $content): void {
-		try {
-			$this->container->get(self::FILE_SERVICE)->addFile(
-				objectEntity: $publicationUuid,
-				fileName: $fileName,
-				content: $content,
-				share: true
-			);
-		} catch (Throwable $e) {
-			throw new RuntimeException('The redacted copy could not be attached to the publication: ' . $e->getMessage(), 0, $e);
-		}
-
-	}//end attachToPlatformPublication()
 
 	/**
 	 * One save.
