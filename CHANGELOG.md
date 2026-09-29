@@ -3,11 +3,14 @@
 ## Unreleased
 
 ### Behavior changes
+- **An anonymisation with no live entity detector is now refused instead of producing a file (`anonymisation-fails-closed-without-a-detector`).** Before this, a run on an instance with entity detection switched off, with its detector down, or where filinq could not read OpenRegister's detector state wrote an "anonymised" copy with nothing removed and reported success. It now answers 503 with `detectionUnavailable` (`detection_disabled`, `detection_backend_unavailable` or `detection_state_unknown`) and writes nothing. Batch and folder runs mark the file as an error. If you anonymised documents while detection was off, run them again: those copies may still hold names.
 - **Folder-analysis anonymisation outputs now land in a subfolder.** Redacted files are written to `<source-folder>/anonymised/<original-filename>` instead of `<source-folder>/<base>_anonymized.<ext>`. The subfolder name is tenant-configurable via `docudesk.anonymisation.output_subfolder_name` (default `anonymised`). Single-file anonymisation is unchanged. (`anonymisation-folder-output-folder-layout`)
 - **Folder source-discovery excludes `_anonymized`-suffixed files.** Legacy redacted outputs from pre-layout runs are no longer included as sources for re-anonymisation; they are left as-is for operator cleanup. (`anonymisation-folder-output-folder-layout`)
 - **Response field `anonymizedFilePath` reflects the subfolder location.** After a successful post-process move, `anonymizedFilePath` in the batch file entry points into the `anonymised/` subfolder. On move failure (permissions, disk error), the path is the legacy location and a `warning` field with `code: "MOVE_FAILED"` is attached to the file entry. (`anonymisation-folder-output-folder-layout`)
 
 ### Added
+
+- **Every anonymisation result names the detector that looked (`anonymisation-fails-closed-without-a-detector`).** The result, each batch entry and each folder entry carry `detection`: `backend` (the method OpenRegister ran), `entitiesRedacted`, and `outcome` (`redacted`, or `nothing_found` when a live detector found nothing; the file is still written). The admin banner names the detector in use, warns by name on regex, and shows a refusal that cannot be dismissed when anonymisation is off.
 
 - **A pupil under the age of consent signs only with a parent or guardian beside them (`signer-identity-rails`, guardian consent).** A request names the guardian as a signer entry with `role: guardian` and `guardianFor` the pupil; the guardian co-signs, or consents against a statement the requesting app supplies. The age is an admin setting, 16 by default (the Dutch age of consent); a request can raise it, for example to 18 on a praktijkovereenkomst, and never lower it.
 

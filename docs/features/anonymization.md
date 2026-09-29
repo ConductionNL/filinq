@@ -24,6 +24,28 @@ Filinq provides a 4-step document anonymization pipeline for GDPR-compliant proc
 | POST | `/api/anonymization/extract/{fileId}` | Extract text and detect entities |
 | POST | `/api/anonymization/anonymize/{fileId}` | Anonymize document |
 
+## No detector, no file
+
+Filinq asks OpenRegister which entity detector is live before it writes an anonymised copy. OpenRegister owns the detectors (regex, Presidio, OpenAnonymiser, LLM, hybrid) and reports the one it will run.
+
+Filinq refuses the run, with HTTP 503 and no file, when:
+
+| `detectionUnavailable` | When |
+|---|---|
+| `detection_disabled` | Entity recognition is switched off in OpenRegister. |
+| `detection_backend_unavailable` | The detector OpenRegister would run says it is unavailable. |
+| `detection_state_unknown` | Filinq cannot read OpenRegister's detector state at all. |
+
+A run that goes ahead carries `detection` on its result:
+
+```json
+"detection": { "ran": true, "backend": "presidio", "entitiesRedacted": 0, "outcome": "nothing_found" }
+```
+
+`nothing_found` means a live detector looked and found nothing, so the file is written. `redacted` means it removed at least one entity. A caller that expects something to remove, such as a Woo request assessed as deels openbaar, can refuse a `nothing_found` result itself. Batch entries and folder entries carry the same `detection` field.
+
+Before this change a run with no detector wrote a copy of the input as the anonymised document. If you anonymised documents while detection was off, run them again.
+
 ## Per-Entity Legal Bases (grondslagen)
 
 Legal bases for detected entities are set per-relation via OpenRegister's own
