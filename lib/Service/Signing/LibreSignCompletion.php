@@ -42,7 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/libresign-signing-provider/specs/libresign-signing-provider/spec.md
+ * @spec openspec/specs/libresign-signing-provider/spec.md
  */
 class LibreSignCompletion {
 
@@ -74,7 +74,7 @@ class LibreSignCompletion {
 	 *
 	 * @return int How many requests concluded (completed or cancelled).
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
 	 */
 	public function syncAll(): int {
 		$objects = $this->settings->getObjectService();

@@ -9,7 +9,7 @@
  * enabled, the qualified switch only when LibreSign is the provider, and a
  * configured-but-missing LibreSign shows an error instead of an empty choice.
  *
- * @spec openspec/changes/libresign-signing-provider/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-2.2
  */
 
 import { readFileSync } from 'node:fs'

@@ -48,7 +48,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/libresign-signing-provider/specs/libresign-signing-provider/spec.md
+ * @spec openspec/specs/libresign-signing-provider/spec.md
  */
 class OcsLibreSignClient implements LibreSignClient {
 
@@ -84,7 +84,7 @@ class OcsLibreSignClient implements LibreSignClient {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function requestSignature(array $file, string $name, array $signers): array {
 		// Status 1 (ABLE_TO_SIGN): LibreSign notifies the signers straight away.
@@ -97,7 +97,7 @@ class OcsLibreSignClient implements LibreSignClient {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function validate(string $uuid): array {
 		return $this->ocs(verb: 'get', path: 'file/validate/uuid/' . rawurlencode($uuid), body: null);
@@ -107,7 +107,7 @@ class OcsLibreSignClient implements LibreSignClient {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function downloadSigned(string $uuid): string {
 		return $this->send(verb: 'get', url: '/index.php/apps/libresign/p/pdf/' . rawurlencode($uuid), body: null);
@@ -117,7 +117,7 @@ class OcsLibreSignClient implements LibreSignClient {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function deleteRequest(int $nodeId): void {
 		$this->ocs(verb: 'delete', path: 'sign/file_id/' . $nodeId, body: null);

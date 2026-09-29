@@ -13,7 +13,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/libresign-signing-provider/specs/libresign-signing-provider/spec.md
+ * @spec openspec/specs/libresign-signing-provider/spec.md
  */
 
 declare(strict_types=1);

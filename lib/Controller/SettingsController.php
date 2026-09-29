@@ -114,6 +114,8 @@ class SettingsController extends Controller {
 					$data,
 					[
 						'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+						// The signing provider picker offers LibreSign only when it can sign.
+						'libresignAvailable' => $this->appManager->isEnabledForAnyone('libresign'),
 						'isAdmin' => $isAdmin,
 						'anonymiserBackend' => array_merge(
 							$backendState,

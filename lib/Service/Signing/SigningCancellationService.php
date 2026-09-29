@@ -265,7 +265,7 @@ class SigningCancellationService {
 	 *
 	 * @return SigningProviderInterface The provider.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
 	 */
 	private function providerFor(array $request): SigningProviderInterface {
 		$named = (string)($request['provider'] ?? '');

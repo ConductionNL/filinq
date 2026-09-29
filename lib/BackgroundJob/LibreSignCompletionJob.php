@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/libresign-signing-provider/specs/libresign-signing-provider/spec.md
+ * @spec openspec/specs/libresign-signing-provider/spec.md
  */
 class LibreSignCompletionJob extends TimedJob {
 
@@ -70,7 +70,7 @@ class LibreSignCompletionJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
 	 */
 	protected function run(mixed $argument): void {
 		$concluded = $this->completion->syncAll();

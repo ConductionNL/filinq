@@ -82,7 +82,7 @@ class SigningProviderFactory {
 	 * @throws RuntimeException When LibreSign is configured but not enabled
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-2.1
 	 */
 	public function getActiveProvider(): SigningProviderInterface {
 		$providerName = $this->config->getValueString('filinq', 'signing_provider', 'native');

@@ -224,7 +224,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-2.2
 	 */
 	public function testUpdateSettingsAcceptsTheLibreSignQualifiedSwitch(): void {
 		$this->mockConfig->expects($this->once())

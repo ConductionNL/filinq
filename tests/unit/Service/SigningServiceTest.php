@@ -1610,7 +1610,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
 	 */
 	public function testALibreSignRequestIsDelegatedAndKeepsItsExternalId(): void {
 		$client = new class implements \OCA\Filinq\Service\Signing\LibreSignClient {
@@ -1678,7 +1678,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
 	 */
 	public function testANativeRequestIsNotDelegated(): void {
 		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
@@ -1712,7 +1712,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
 	 */
 	public function testCompletionHandsTheProviderItsExternalId(): void {
 		$contexts = [];

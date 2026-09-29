@@ -33,7 +33,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/libresign-signing-provider/specs/libresign-signing-provider/spec.md
+ * @spec openspec/specs/libresign-signing-provider/spec.md
  */
 interface LibreSignClient {
 	/**
@@ -47,7 +47,7 @@ interface LibreSignClient {
 	 *
 	 * @throws RuntimeException When LibreSign cannot be reached or refuses.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function requestSignature(array $file, string $name, array $signers): array;
 
@@ -60,7 +60,7 @@ interface LibreSignClient {
 	 *
 	 * @throws RuntimeException When LibreSign cannot be reached or refuses.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function validate(string $uuid): array;
 
@@ -73,7 +73,7 @@ interface LibreSignClient {
 	 *
 	 * @throws RuntimeException When LibreSign cannot be reached or refuses.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function downloadSigned(string $uuid): string;
 
@@ -86,7 +86,7 @@ interface LibreSignClient {
 	 *
 	 * @throws RuntimeException When LibreSign cannot be reached or refuses.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
 	public function deleteRequest(int $nodeId): void;
 }//end interface

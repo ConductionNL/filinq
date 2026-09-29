@@ -4873,14 +4873,15 @@
 			"name": "Sign through an outside provider such as LibreSign or ValidSign.",
 			"source": "competitor-derived",
 			"sourceRef": "BCT Corsa ValidSign integration; LibreSign self-hosted CA",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "ValidSignProvider.php implements SigningProviderInterface and is selectable via SigningProviderFactory, but its constructor takes only IAppConfig (no HTTP client anywhere in the 245-line file), initiateSigning() returns a result without a real external call unless already configured, produceSignedArtifact() and downloadSignedDocument() both unconditionally throw ('not yet implemented' / 'not wired', per their own docblocks). libresign-signing-provider (LibreSign support) is a separate proposal, 0/10 tasks done — LibreSign has no provider class in filinq at all today.",
-				"change": "openspec/changes/libresign-signing-provider"
+				"evidence": "lib/Service/Signing/LibreSignProvider.php signs through the LibreSign app over its own OCS API (lib/Service/Signing/OcsLibreSignClient.php, routes from LibreSign's openapi.json). SigningProviderFactory registers it only when LibreSign is enabled and fails closed when it is configured but absent; SES and AdES always, QES only with libresign_qualified. SignedArtifactProducer::delegate() hands a new libresign request to LibreSign with the document bytes and stores the uuid as signingRequest.externalId (1.7.0); LibreSignCompletionJob (every 10 min) completes a signed request with the signed PDF as a new version and an audit entry, and cancels one withdrawn in LibreSign. ValidSign is still a stub (initiateSigning returns a made-up id, produceSignedArtifact throws).",
+				"change": "openspec/changes/archive/2026-09-29-libresign-signing-provider",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "/signing/new (SigningRequestForm.vue) can select ValidSign, but signing never completes; LibreSign is not selectable at all",
+			"reachedOn": "Admin settings, Digital signing: LibreSign (certificate) as the provider when LibreSign is enabled; then every signing request (/signing/new, the cross-app DocumentSigningRequestedEvent) goes to LibreSign",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-signing",

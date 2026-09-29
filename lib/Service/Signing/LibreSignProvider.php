@@ -45,7 +45,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/libresign-signing-provider/specs/libresign-signing-provider/spec.md
+ * @spec openspec/specs/libresign-signing-provider/spec.md
  */
 class LibreSignProvider implements SigningProviderInterface {
 
@@ -95,7 +95,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	 *
 	 * @return string Always `libresign`.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.1
 	 */
 	public function getIdentifier(): string {
 		return self::IDENTIFIER;
@@ -116,7 +116,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	 * @throws RuntimeException         When the level is not supported or LibreSign answers without a uuid
 	 * @throws InvalidArgumentException When a signer has neither an account nor an email address
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.1
 	 */
 	public function initiateSigning(
 		string $documentPath,
@@ -155,7 +155,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	 *
 	 * @return array<string, mixed> status (a signing-request state), libresignStatus, nodeId, signers
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.1
 	 */
 	public function checkStatus(string $externalId): array {
 		$data = $this->client->validate(uuid: $externalId);
@@ -187,7 +187,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	 *
 	 * @throws RuntimeException When the request is not signed, or what came back is not a PDF.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.1
 	 */
 	public function downloadSignedDocument(string $externalId): string {
 		$status = $this->checkStatus(externalId: $externalId);
@@ -215,7 +215,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	 *
 	 * @throws RuntimeException When LibreSign does not know the file or refuses.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.1
 	 */
 	public function cancelSigning(string $externalId): void {
 		$nodeId = $this->checkStatus(externalId: $externalId)['nodeId'];
@@ -234,14 +234,15 @@ class LibreSignProvider implements SigningProviderInterface {
 	 *
 	 * @return bool True for SES and AdES; QES only with a qualified certificate.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.2
 	 */
 	public function supportsLevel(string $level): bool {
 		if ($level === 'SES' || $level === 'AdES') {
 			return true;
 		}
 
-		return $level === 'QES' && $this->config->getValueBool('filinq', 'libresign_qualified', false) === true;
+		// Stored as '1' by the admin settings, like every other switch there.
+		return $level === 'QES' && $this->config->getValueString('filinq', 'libresign_qualified', '0') === '1';
 
 	}//end supportsLevel()
 
@@ -257,7 +258,7 @@ class LibreSignProvider implements SigningProviderInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The interface hands every provider the original.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.2
 	 */
 	public function produceSignedArtifact(string $documentContent, array $context): string {
 		$this->assertLevel(level: (string) ($context['level'] ?? 'SES'));

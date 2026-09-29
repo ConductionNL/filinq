@@ -188,6 +188,8 @@ class SettingsService {
 				'signing_default_level',
 				'SES'
 			),
+			// LibreSign offers QES only when its certificate is qualified (libresign-signing-provider REQ-DDLSP-002).
+			'libresign_qualified' => $this->config->getValueString($this->appName, 'libresign_qualified', '0') === '1',
 			'signing_request_expiry_days' => (int)$this->config->getValueString(
 				$this->appName,
 				'signing_request_expiry_days',
@@ -386,6 +388,7 @@ class SettingsService {
 		'signing_enabled',
 		'signing_provider',
 		'signing_default_level',
+		'libresign_qualified',
 		'signing_request_expiry_days',
 		'signing_guardian_consent_age',
 		'ocr_enabled',

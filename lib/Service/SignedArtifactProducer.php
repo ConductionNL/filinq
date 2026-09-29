@@ -169,7 +169,7 @@ class SignedArtifactProducer {
 	 *
 	 * @throws RuntimeException When the document cannot be read or LibreSign refuses.
 	 *
-	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
 	 */
 	public function delegate(array $request, array $signers): array {
 		if (($request['provider'] ?? '') !== LibreSignProvider::IDENTIFIER) {
