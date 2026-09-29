@@ -2,6 +2,9 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
+@visual exclude No pixel baseline yet: the page is driven through its /legal-holds route by
+	tests/e2e/workflows/e-discovery-legal-hold.spec.ts (register, filters, partial placement, release), which
+	reaches it by URL rather than by component name. A baseline needs a seeded instance with held records.
 -->
 <template>
 	<div class="legal-holds">
