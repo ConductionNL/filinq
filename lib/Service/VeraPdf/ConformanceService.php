@@ -76,6 +76,21 @@ class ConformanceService {
 	}//end isAvailable()
 
 	/**
+	 * The validator's status for the admin settings row: switched on,
+	 * installed, and which version. Not its path on the server.
+	 *
+	 * @return array{enabled: bool, available: bool, version: string} The status.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+	 */
+	public function status(): array {
+		$status = $this->veraPdf->status();
+
+		return ['enabled' => $status['enabled'], 'available' => $status['available'], 'version' => $status['version']];
+
+	}//end status()
+
+	/**
 	 * Check a stored file and store the report.
 	 *
 	 * @param File   $file    The PDF.

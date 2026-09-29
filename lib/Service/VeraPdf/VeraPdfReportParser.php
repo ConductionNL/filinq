@@ -51,7 +51,9 @@ class VeraPdfReportParser {
 	 *
 	 * @param string $json The report veraPDF printed with --format json.
 	 *
-	 * @return array{flavour: string, compliant: bool, failedRuleCount: int, failedRules: array<int, array<string, mixed>>, fontsNotEmbedded: array<int, string>, fontsInImportedPages: bool, onlyFontRulesFailed: bool, validatorVersion: string} The verdict.
+	 * @return array{flavour: string, compliant: bool, failedRuleCount: int, failedRules: array<int, array<string, mixed>>,
+	 *         fontsNotEmbedded: array<int, string>, fontsInImportedPages: bool, onlyFontRulesFailed: bool,
+	 *         validatorVersion: string} The verdict.
 	 *
 	 * @throws VeraPdfException When the report holds no verdict.
 	 *
@@ -71,16 +73,7 @@ class VeraPdfReportParser {
 			);
 		}
 
-		// veraPDF 1.24 and later print a list (one per profile), older ones one object.
-		$result = ($job['validationResult'] ?? null);
-		if (is_array($result) === true && array_is_list($result) === true) {
-			$result = ($result[0] ?? null);
-		}
-
-		if (is_array($result) === false || is_bool($result['compliant'] ?? null) === false) {
-			throw new VeraPdfException(reason: VeraPdfException::REASON_FAILED, message: 'The veraPDF report has no verdict.');
-		}
-
+		$result = $this->validationResult(job: $job);
 		$rules = $this->failedRules(summaries: (array) ($result['details']['ruleSummaries'] ?? []));
 
 		return [
@@ -95,6 +88,30 @@ class VeraPdfReportParser {
 		];
 
 	}//end parse()
+
+	/**
+	 * The validation result of a job, with its verdict.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 *
+	 * @return array<string, mixed> The result.
+	 *
+	 * @throws VeraPdfException When it holds no verdict.
+	 */
+	private function validationResult(array $job): array {
+		// Since 1.24 veraPDF prints a list (one per profile), older versions one object.
+		$result = ($job['validationResult'] ?? null);
+		if (is_array($result) === true && array_is_list($result) === true) {
+			$result = ($result[0] ?? null);
+		}
+
+		if (is_array($result) === false || is_bool($result['compliant'] ?? null) === false) {
+			throw new VeraPdfException(reason: VeraPdfException::REASON_FAILED, message: 'The veraPDF report has no verdict.');
+		}
+
+		return $result;
+
+	}//end validationResult()
 
 	/**
 	 * The failed rules as references, and the fonts the embedding rules name.

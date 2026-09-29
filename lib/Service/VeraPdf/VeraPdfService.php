@@ -169,7 +169,9 @@ class VeraPdfService {
 		try {
 			$run = $this->process->run(argv: $this->arguments(flavour: $flavour, path: $path), seconds: $this->maxSeconds());
 		} finally {
-			@unlink($path);
+			if (is_file($path) === true) {
+				unlink($path);
+			}
 		}
 
 		if ($run['timedOut'] === true) {
@@ -205,12 +207,13 @@ class VeraPdfService {
 	 */
 	private function arguments(?string $flavour, string $path): array {
 		$argv = [$this->binaryPath(), '--format', 'json', '--maxfailuresdisplayed', self::CHECKS_PER_RULE];
+		// Validate what the document claims; a document claiming nothing gets 3b.
+		$flavourArgs = ['--flavour', '0', '--defaultflavour', self::DEFAULT_FLAVOUR];
 		if ($flavour !== null && preg_match('/^[1-3][abu]$/', $flavour) === 1) {
-			array_push($argv, '--flavour', $flavour);
-		} else {
-			// Validate what the document claims; a document claiming nothing gets 3b.
-			array_push($argv, '--flavour', '0', '--defaultflavour', self::DEFAULT_FLAVOUR);
+			$flavourArgs = ['--flavour', $flavour];
 		}
+
+		array_push($argv, ...$flavourArgs);
 
 		$argv[] = $path;
 
@@ -263,7 +266,11 @@ class VeraPdfService {
 	private function binaryPath(): string {
 		$path = trim($this->appConfig->getValueString(self::APP_ID, self::CFG_BINARY_PATH, 'verapdf'));
 
-		return ($path === '' ? 'verapdf' : $path);
+		if ($path === '') {
+			return 'verapdf';
+		}
+
+		return $path;
 
 	}//end binaryPath()
 

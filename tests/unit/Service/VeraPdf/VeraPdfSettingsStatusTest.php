@@ -19,13 +19,16 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\VeraPdf;
 
-use OCA\Filinq\Service\LegalBasisProposalService;
-use OCA\Filinq\Service\OcrService;
-use OCA\Filinq\Service\OpenRegisterAvailabilityService;
-use OCA\Filinq\Service\RegisterDiscoveryService;
-use OCA\Filinq\Service\SettingsInitializer;
-use OCA\Filinq\Service\SettingsService;
+use OCA\Filinq\Controller\ConformanceController;
+use OCA\Filinq\Service\VeraPdf\ConformanceGuidance;
+use OCA\Filinq\Service\VeraPdf\ConformanceReportRepository;
+use OCA\Filinq\Service\VeraPdf\ConformanceService;
 use OCA\Filinq\Service\VeraPdf\VeraPdfService;
+use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\Files\IRootFolder;
+use OCP\IL10N;
+use OCP\IRequest;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -33,41 +36,45 @@ class VeraPdfSettingsStatusTest extends TestCase {
 	use VeraPdfDoubles;
 
 	/**
-	 * The settings service, with the validator when given.
+	 * What GET api/validation/conformance-status answers.
 	 *
-	 * @param VeraPdfService|null $veraPdf The validator.
-	 *
-	 * @return SettingsService The service.
+	 * @return array<string, mixed> The status.
 	 */
-	private function settings(?VeraPdfService $veraPdf): SettingsService {
-		return new SettingsService(
-			$this->appConfig(),
-			new NullLogger(),
-			$this->createMock(RegisterDiscoveryService::class),
-			$this->createMock(SettingsInitializer::class),
-			$this->createMock(OcrService::class),
-			$this->createMock(LegalBasisProposalService::class),
-			$this->createMock(OpenRegisterAvailabilityService::class),
-			$veraPdf
+	private function statusRow(): array {
+		$conformance = new ConformanceService(
+			$this->veraPdf(),
+			new ConformanceGuidance(),
+			$this->createMock(ConformanceReportRepository::class),
+			$this->createMock(ITimeFactory::class)
+		);
+		$controller = new ConformanceController(
+			'filinq',
+			$this->createMock(IRequest::class),
+			$conformance,
+			$this->createMock(IRootFolder::class),
+			$this->createMock(IUserSession::class),
+			$this->createMock(IL10N::class),
+			new NullLogger()
 		);
 
-	}//end settings()
+		return $controller->status()->getData();
+
+	}//end statusRow()
 
 	/**
-	 * Installed, switched off, absent, and not wired each read as such.
+	 * Installed, absent, and switched off each read as such; the binary's
+	 * path on the server is not sent.
 	 *
 	 * @return void
 	 */
 	public function testTheRowReadsTheProbe(): void {
-		$this->assertSame(['enabled' => true, 'available' => true, 'version' => 'veraPDF 1.30.2'], array_slice($this->settings(veraPdf: $this->veraPdf())->getVeraPdfStatus(), 0, 3));
+		$this->assertSame(['enabled' => true, 'available' => true, 'version' => 'veraPDF 1.30.2'], $this->statusRow());
 
 		$this->config[VeraPdfService::CFG_BINARY_PATH] = '/nonexistent/verapdf';
-		$this->assertSame(['enabled' => true, 'available' => false, 'version' => ''], array_slice($this->settings(veraPdf: $this->veraPdf())->getVeraPdfStatus(), 0, 3));
+		$this->assertSame(['enabled' => true, 'available' => false, 'version' => ''], $this->statusRow());
 
 		$this->config[VeraPdfService::CFG_ENABLED] = 'false';
-		$this->assertFalse($this->settings(veraPdf: $this->veraPdf())->getVeraPdfStatus()['enabled']);
-
-		$this->assertFalse($this->settings(veraPdf: null)->getVeraPdfStatus()['available']);
+		$this->assertFalse($this->statusRow()['enabled']);
 
 	}//end testTheRowReadsTheProbe()
 }//end class

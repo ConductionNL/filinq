@@ -48,7 +48,6 @@ use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Mpdf\Output\Destination;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
-use OCA\Filinq\Service\VeraPdf\ConformanceGuidance;
 use OCA\Filinq\Service\VeraPdf\Pdfa3OutputVerifier;
 use OCP\Files\File;
 use OCP\IAppConfig;
@@ -175,7 +174,8 @@ class Pdfa3ConversionService {
 	 *                                                    AFRelationship?}.
 	 * @param array<string,mixed> $options {format?, orientation?}.
 	 *
-	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} verified is the veraPDF verdict: true, false or skipped.
+	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} The PDF;
+	 *         verified is the veraPDF verdict: true, false or skipped.
 	 *
 	 * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
 	 *
@@ -225,7 +225,11 @@ class Pdfa3ConversionService {
 		);
 
 		// Imported pages keep the fonts their source had.
-		$result['verified'] = $this->verifyOutput(bytes: $result['content'], origin: ConformanceGuidance::ORIGIN_IMPORTED, sourceFileId: (int) $source->getId());
+		$result['verified'] = $this->verifyOutput(
+			bytes: $result['content'],
+			origin: Pdfa3OutputVerifier::ORIGIN_IMPORTED,
+			sourceFileId: (int) $source->getId()
+		);
 
 		return $result;
 
@@ -245,7 +249,8 @@ class Pdfa3ConversionService {
 	 * @param array<int,array<string,mixed>> $attachments Files to embed; see convertExistingPdf().
 	 * @param array<string,mixed> $options {format?, orientation?, margin?}.
 	 *
-	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} verified is the veraPDF verdict: true, false or skipped.
+	 * @return array{content:string,checksumSha256:string,pages:int,conformance:string,verified:string} The PDF;
+	 *         verified is the veraPDF verdict: true, false or skipped.
 	 *
 	 * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
 	 *
@@ -268,7 +273,7 @@ class Pdfa3ConversionService {
 		);
 
 		// Rendered output has no stored source file to keep a report on.
-		$result['verified'] = $this->verifyOutput(bytes: $result['content'], origin: ConformanceGuidance::ORIGIN_RENDERED, sourceFileId: null);
+		$result['verified'] = $this->verifyOutput(bytes: $result['content'], origin: Pdfa3OutputVerifier::ORIGIN_RENDERED, sourceFileId: null);
 
 		return $result;
 

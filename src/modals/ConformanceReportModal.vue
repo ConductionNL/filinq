@@ -42,11 +42,14 @@ the rules and fonts behind it, what to do, and a way to check again.
 					<p
 						class="conformance-report__verdict"
 						:class="{
-							'conformance-report__verdict--pass': entry.report.compliant,
+							'conformance-report__verdict--pass':
+								entry.report.compliant,
 						}">
 						{{ verdict(entry.report) }}
 					</p>
-					<p v-if="advice(entry.report)" class="conformance-report__advice">
+					<p
+						v-if="advice(entry.report)"
+						class="conformance-report__advice">
 						{{ advice(entry.report) }}
 					</p>
 					<div
@@ -75,7 +78,9 @@ the rules and fonts behind it, what to do, and a way to check again.
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="rule in entry.report.failedRules" :key="rule.ruleId">
+							<tr
+								v-for="rule in entry.report.failedRules"
+								:key="rule.ruleId">
 								<td>{{ rule.specification }}</td>
 								<td>{{ rule.clause }}</td>
 								<td>{{ rule.testNumber }}</td>
@@ -93,8 +98,15 @@ the rules and fonts behind it, what to do, and a way to check again.
 					</p>
 				</section>
 
-				<p v-if="available && entries.length === 0" class="conformance-report__empty">
-					{{ t('filinq', 'This document has not been checked against PDF/A yet.') }}
+				<p
+					v-if="available && entries.length === 0"
+					class="conformance-report__empty">
+					{{
+						t(
+							'filinq',
+							'This document has not been checked against PDF/A yet.',
+						)
+					}}
 				</p>
 
 				<div class="conformance-report__actions">
@@ -106,7 +118,11 @@ the rules and fonts behind it, what to do, and a way to check again.
 						<template #icon>
 							<NcLoadingIcon v-if="checking" :size="18" />
 						</template>
-						{{ checking ? t('filinq', 'Checking…') : t('filinq', 'Check against PDF/A') }}
+						{{
+							checking
+								? t('filinq', 'Checking…')
+								: t('filinq', 'Check against PDF/A')
+						}}
 					</NcButton>
 				</div>
 			</template>
@@ -221,9 +237,12 @@ export default {
 				const report = await checkConformance(this.fileId)
 				this.reports = { ...this.reports, file: report }
 			} catch (e) {
-				this.error
-					= e?.response?.data?.error
-					|| t('filinq', 'The document could not be checked against PDF/A.')
+				this.error =
+					e?.response?.data?.error
+					|| t(
+						'filinq',
+						'The document could not be checked against PDF/A.',
+					)
 			} finally {
 				this.checking = false
 			}

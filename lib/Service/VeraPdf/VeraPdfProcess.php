@@ -50,8 +50,12 @@ class VeraPdfProcess {
 	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.1
 	 */
 	public function run(array $argv, int $seconds): array {
+		if ($this->isRunnable(binary: (string) ($argv[0] ?? '')) === false) {
+			throw new VeraPdfException(reason: VeraPdfException::REASON_UNAVAILABLE, message: 'veraPDF could not be started: ' . $argv[0]);
+		}
+
 		$pipes = [];
-		$proc = @proc_open($argv, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+		$proc = proc_open($argv, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
 		if (is_resource($proc) === false) {
 			throw new VeraPdfException(reason: VeraPdfException::REASON_UNAVAILABLE, message: 'veraPDF could not be started: ' . $argv[0]);
 		}
@@ -128,4 +132,31 @@ class VeraPdfProcess {
 		return (string) fread($stream, 65536);
 
 	}//end chunk()
+
+	/**
+	 * Whether the binary exists and may run: a path, or a name on the PATH.
+	 * Checked first so a missing binary is an answer, not a PHP warning.
+	 *
+	 * @param string $binary The binary.
+	 *
+	 * @return bool
+	 */
+	private function isRunnable(string $binary): bool {
+		if ($binary === '') {
+			return false;
+		}
+
+		if (str_contains($binary, '/') === true) {
+			return is_file($binary) === true && is_executable($binary) === true;
+		}
+
+		foreach (explode(PATH_SEPARATOR, (string) getenv('PATH')) as $dir) {
+			if ($dir !== '' && is_file($dir . '/' . $binary) === true && is_executable($dir . '/' . $binary) === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end isRunnable()
 }//end class

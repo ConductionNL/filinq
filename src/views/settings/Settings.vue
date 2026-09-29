@@ -947,6 +947,7 @@ import {
 	backendStateFromSettings,
 	emptyBackendState,
 } from '../../services/anonymiserBackendState.js'
+import { fetchValidatorStatus } from '../../services/conformance.js'
 import { initialSections } from '../../services/settingsSections.js'
 
 /** The object types whose register and schema this page binds. */
@@ -1128,9 +1129,23 @@ export default {
 
 	mounted() {
 		this.fetchAll()
+		this.fetchValidatorStatus()
 	},
 
 	methods: {
+		/**
+		 * Read the PDF/A validator's status for its row.
+		 *
+		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+		 */
+		async fetchValidatorStatus() {
+			try {
+				this.veraPdfStatus = await fetchValidatorStatus()
+			} catch {
+				// Left as "not installed": the row then says so.
+			}
+		},
+
 		// Currently-selected base options for an entity type, derived from
 		// the slug[] mapping so the multi-select reflects saved state.
 		selectedBasesFor(entityType) {
@@ -1256,13 +1271,6 @@ export default {
 					this.ocrStatus = data.ocrStatus || {
 						tesseractAvailable: false,
 						tesseractVersion: null,
-					}
-
-					// PDF/A validator status
-					this.veraPdfStatus = data.veraPdfStatus || {
-						enabled: true,
-						available: false,
-						version: '',
 					}
 
 					// Grondslag-per-entity-type: selectable types, available

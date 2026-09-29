@@ -57,6 +57,7 @@ $extra = [
         // Document validation route.
         ['name' => 'validation#validate', 'url' => 'api/validation/validate', 'verb' => 'POST'],
         // PDF/A conformance reports (veraPDF).
+        ['name' => 'conformance#status', 'url' => 'api/validation/conformance-status', 'verb' => 'GET'],
         ['name' => 'conformance#show', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\d+']],
         ['name' => 'conformance#check', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
 
