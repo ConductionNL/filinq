@@ -392,19 +392,10 @@ export default {
 			this.printing = true
 			this.printResult = null
 			try {
-				const response = await axios.post(
-					generateUrl('/apps/filinq/api/print/batch'),
-					body,
-				)
+				await axios.post(generateUrl('/apps/filinq/api/print/batch'), body)
 				this.printResult = {
 					type: 'success',
-					message: t(
-						'filinq',
-						'Sent {count} letter(s) to print as one job.',
-						{
-							count: response.data.total,
-						},
-					),
+					message: t('filinq', 'Your letters went to print as one job.'),
 				}
 			} catch {
 				this.printResult = {
