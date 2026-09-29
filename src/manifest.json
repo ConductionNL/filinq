@@ -126,6 +126,13 @@
 			"order": 55
 		},
 		{
+			"id": "Publications",
+			"label": "Publications",
+			"icon": "Publish",
+			"route": "Publications",
+			"order": 57
+		},
+		{
 			"id": "PrintJobs",
 			"label": "Print jobs",
 			"icon": "Printer",
@@ -409,6 +416,14 @@
 			"title": "My Documents",
 			"component": "MyDocumentsIndex",
 			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
+		},
+		{
+			"id": "Publications",
+			"route": "/publications/:id?",
+			"type": "custom",
+			"title": "Publications",
+			"component": "PublicationsPage",
+			"_note": "The Woo publication pipeline (woo-publicatie-pipeline): the list and one publication with its checks, metadata, hand-off, withdrawal, destruction date and history. type:custom because it reads GET api/publications, which lists only publications whose document the caller can open, and every action is a pipeline step on that API, not an object edit."
 		},
 		{
 			"id": "PrintJobs",

@@ -25,6 +25,13 @@
 							: t('filinq', 'Show anonymised')
 					}}
 				</NcButton>
+				<NcButton
+					v-if="fileViewerStore.currentFile?.fileId"
+					variant="secondary"
+					:disabled="publishing"
+					@click="publish">
+					{{ t('filinq', 'Publish') }}
+				</NcButton>
 			</template>
 		</DdFileViewerHeader>
 
@@ -50,6 +57,7 @@
 </template>
 
 <script>
+import { showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
@@ -66,6 +74,7 @@ import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
 import { emlPreviewUrl } from '../../services/fileViewerService.js'
+import { startPublication } from '../../services/publications.js'
 import { fileViewerStore } from '../../store/store.js'
 
 /**
@@ -114,6 +123,7 @@ export default {
 	data() {
 		return {
 			fileViewerStore,
+			publishing: false,
 		}
 	},
 
@@ -226,6 +236,29 @@ export default {
 
 	methods: {
 		t,
+		/**
+		 * Start a Woo publication for this document and open it.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.2
+		 */
+		async publish() {
+			this.publishing = true
+			try {
+				const record = await startPublication(
+					fileViewerStore.currentFile.fileId,
+				)
+				this.$router.push({
+					name: 'Publications',
+					params: { id: record.uuid },
+				})
+			} catch {
+				showError(t('filinq', 'The publication could not be started.'))
+			} finally {
+				this.publishing = false
+			}
+		},
+
 		/** Download the currently previewed file via Nextcloud's file URL. */
 		downloadCurrent() {
 			const file = fileViewerStore.currentFile
