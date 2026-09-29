@@ -223,3 +223,16 @@ remain (encrypted, unreadable without the restore path).
   `archiefwet-retention-engine` (active); recorded, not built here.
 - **Restore of image/redacted-at-scale outputs** — out of scope; those paths
   are irreversible by nature (`image-redaction` / `redaction-at-scale`).
+
+## Resolved at apply (2026-09-29)
+
+- **Setting key.** The group list lives under `pseudonymisation_restore_allowed_groups` (a JSON array), not `filinq.pseudonymisation.restore_allowed_groups`: the app's other settings use plain keys and the settings endpoint allowlists them. Only a real admin can write it (`SettingsController::create` checks `isAdmin`). A value that is not a JSON list of strings refuses everyone, admins included (`PseudonymRestoreGate`).
+- **Render boundary.** OpenRegister's mechanism is the JSON-Schema `writeOnly` flag, stripped on every render for every reader (PropertyRbacHandler, openregister#389/#460); there is no per-property `_render:false`. The restore path reads the ciphertext with `ObjectService::find(_render: false)`, which returns the stored row. The schema itself is admin-only for read, create, update and delete, and the store writes with `_rbac: false`.
+- **Where the key is recorded.** Not in `AnonymizationService` but in `DocumentAnonymizeRunner::finaliseResult`, right after `recordAnonymizationLink`, through `PseudonymMapRecorder`: the key names the link, so it can only be written once the link exists. An irreversible rerun deletes the key an earlier reversible run left and clears `mappingRef`.
+- **Original values.** The pairing joins OpenRegister's `getLastPlaceholderMap()` (entity id to placeholder) with `EntityRelationMapper::findEntityIdsByValueForFile()` (value to entity id), the same lookup OpenRegister uses to number placeholders, and the request's values. A reversible run with no numbered placeholder keeps no key and says so (`reason: no_placeholders`).
+- **Audit.** `AuditTrailMapper::createAuditTrailEntry()` with the link uuid as object uuid. Actions: `restore_denied`, `restore_failed`, `restore_granted` (must succeed or nothing is restored: 503), `restored`. A denial the trail cannot record is logged as an error; the refusal still stands.
+- **Restore output.** A copy only for text formats (plain, Markdown, CSV, HTML, JSON, XML); everything else, including the default PDF output, gets the report. Reversal is one `strtr` pass, which takes the longest placeholder first and never rewrites a value it already put back.
+- **Deletion.** `PseudonymMapLinkDeletedListener` on OpenRegister's `ObjectDeletedEvent` deletes the key of a deleted link.
+- **UI.** The mode choice is a radio pair in the file-viewer sidebar (the anonymise step lives there, not in a separate dialog); the restore action sits on the anonymised copy in the same sidebar and is shown only when `GET api/pseudonymisation/status/{fileId}` says `mayRestore`. The confirmation is `src/dialogs/RestoreOriginalDialog.vue`.
+- **Seed data.** Three demo `pseudonymMap` rows exist for the demo-data gate; their `mappings` is a plain sentence that decrypts to nothing, so they hold no key and no personal data.
+

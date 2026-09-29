@@ -3383,13 +3383,15 @@
 			"name": "Replace each person with a consistent pseudonym so the text stays readable.",
 			"source": "competitor-derived",
 			"sourceRef": "Cloak Anonymizer seven methods; canonical pseudonymization",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/reversible-pseudonymization (an open change found in the openspec pass on 2026-09-27). Before: No pseudonym-replacement mode for document text anonymisation exists in filinq. The only 'pseudonym' concept in the codebase is OpenRegister's Archival AnonymisationService::pseudonymFor() for database-field-level GDPR erasure/archival (origin/development lib/Service/Archival/AnonymisationService.php:164), and filinq's own lib/Service/SubjectErasure/SubjectErasureRules.php explicitly says its erasure NEVER applies 'pseudonym' treatment ('the pseudonym is the opposite requirement... an erasure never applies pseudonym'). No 'redactionMode'/'treatment' parameter accepting a pseudonym value exists in AnonymizeRequestValidator or DocumentAnonymizeRunner."
+				"evidence": "OpenRegister's DocumentProcessingHandler replaces each detected value with a stable, scope-local numbered placeholder ([PERSOON: 1], [ADRES: 2]; per document or per dossier) and filinq reads the exact strings through FileService::getLastPlaceholderMap(). The file-viewer sidebar now offers the choice between keeping no key and keeping an encrypted key (FileViewerSidebar.vue anonymiseMode -> anonymization store reversible -> AnonymizeRequestValidator -> DocumentAnonymizeRunner -> PseudonymMapRecorder). Partial: the pseudonym is a numbered type label, not a realistic replacement name. Tests: PseudonymPairsTest::testThePlaceholderIsTheKeyOpenRegisterEmitted, DocumentAnonymizeRunnerPseudonymTest, vitest pseudonymisation.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-reversible-pseudonymization",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the anonymise step in the file-viewer sidebar (After anonymising); POST api/anonymization/anonymize/{fileId} with reversible",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
@@ -3412,13 +3414,15 @@
 			"name": "Reverse a pseudonymisation later under control, with the key kept apart.",
 			"source": "competitor-derived",
 			"sourceRef": "canonical pseudonymization (keyed tokenisation)",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/reversible-pseudonymization (an open change found in the openspec pass on 2026-09-27). Before: No reverse-pseudonymisation / re-identification-under-control feature exists for document redaction (grepped for 'reversible'/'reverse pseudonym' — only unrelated hits: a migration comment, a key-naming comment, and SubjectErasureRules' note that it 'destroys any reversible mapping it finds'). Since red-pseudonym itself is not built, there is nothing to reverse."
+				"evidence": "A reversible run stores a pseudonymMap (register 8.27.0) per anonymizationLink: the placeholder-to-value mapping encrypted with ICrypto (PseudonymMapService), writeOnly and admin-only in the schema, written with _rbac false, read back only through ObjectService::find(_render false) on the restore path, deleted with its link (PseudonymMapLinkDeletedListener). POST api/pseudonymisation/{linkId}/restore (PseudonymisationController -> PseudonymRestoreService) checks PseudonymRestoreGate (admins plus pseudonymisation_restore_allowed_groups, fail closed), the caller's access to the anonymised copy, audits denied/failed/granted/restored in OpenRegister's audit trail and refuses when the granted entry cannot be written; text formats get a _restored copy, others a report. Tests: PseudonymRestoreServiceTest (refusals first), PseudonymisationControllerTest, PseudonymMapServiceTest, PseudonymMapRecorderTest, PseudonymMapSchemaTest (every payload validated against the real fragments), vitest pseudonymisation.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-reversible-pseudonymization",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Restore original on an anonymised copy in the file-viewer sidebar; GET api/pseudonymisation/status/{fileId}, POST api/pseudonymisation/{linkId}/restore",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
