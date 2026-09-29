@@ -246,6 +246,15 @@ const documentRecordId = computed(() =>
 			     Informational only — carries no action, hidden when no label resolved.
 			     Independent of the state chain above so it stays visible alongside
 			     whichever review state is currently showing. -->
+			<!-- A scan detection could not read (ocr-trigger-surface): an empty
+			     entity list here does not mean the document is clean. -->
+			<NcNoteCard
+				v-if="entry && entry.ocrWarning"
+				type="warning"
+				class="ocr-warning">
+				{{ entry.ocrWarning }}
+			</NcNoteCard>
+
 			<div
 				v-if="entry && entry.confidentialityLabel"
 				class="confidentiality-chip-row">

@@ -653,3 +653,52 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		expect(entry.error).toBe('boom')
 	})
 })
+
+describe('reanalyseEntry — a scan detection could not read', () => {
+	// @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.2
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+	})
+
+	it('keeps a scan with pending detection open for review instead of marking it done', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		entry.entities = []
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [], ocrDetectionPending: true, ocr: { ran: true } },
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.status).toBe('extracted')
+		expect(entry.ocrWarning).toContain('scan')
+	})
+
+	it('keeps a scan OCR could not run on open, and names why', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [], ocrSkipped: 'tesseract_unavailable' },
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.status).toBe('extracted')
+		expect(entry.ocrWarning).toContain('not installed')
+	})
+
+	it('still marks a born-digital document with nothing to redact as done', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({ data: { entities: [] } })
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.status).toBe('completed')
+		expect(entry.ocrWarning).toBeNull()
+	})
+})

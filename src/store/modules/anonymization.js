@@ -33,6 +33,7 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  */
 import { defineStore } from 'pinia'
 import { extractDocumentText } from '../../services/fileViewerService.js'
+import { applyOcrFlags } from '../../services/ocr.js'
 
 let fileCounter = 0
 
@@ -591,8 +592,10 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				// A scan detection could not read is not "nothing to anonymise".
+				const unseen = applyOcrFlags(entry, extractResponse.data)
 
-				if (entities.length === 0) {
+				if (entities.length === 0 && !unseen) {
 					// Nothing to anonymise; skip review and mark done.
 					entry.status = 'completed'
 					return
@@ -889,7 +892,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, extractResponse.data)
+				entry.status
+					= entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -926,7 +931,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.entityCount = entry.entities.length
 				entry.confidentialityLabel = res.data.confidentialityLabel ?? null
 				entry.confidentialityLevel = res.data.confidentialityLevel ?? null
-				entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				const unseen = applyOcrFlags(entry, res.data)
+				entry.status
+					= entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				entry.error = err.response?.data?.error || err.message
 				entry.status = 'error'
@@ -1001,6 +1008,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					extractResponse.data.confidentialityLabel ?? null
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
+				applyOcrFlags(entry, extractResponse.data)
 				// Drop the read-only anonymised view so the editable review
 				// list + "Anonymize" button take over. Keep anonymizedFile*
 				// so the viewer toggle can still show the current result until
