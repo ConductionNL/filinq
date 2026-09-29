@@ -460,6 +460,11 @@ export default {
 	 */
 	watch: {
 		paginatedDocuments: {
+			/**
+			 * Read the OCR status when the files on screen change.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+			 */
 			handler(rows) {
 				this.loadOcrStatus(rows)
 			},
