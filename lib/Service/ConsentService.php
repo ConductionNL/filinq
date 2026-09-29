@@ -42,8 +42,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
+use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCP\IUser;
 use Psr\Log\LoggerInterface;
 
@@ -437,4 +439,26 @@ class ConsentService {
 		$this->recordWriter->validatePublicationConsentData(data: $data);
 
 	}//end validatePublicationConsentData()
+	/**
+	 * Whether a document's consent requests allow publication. Reads only.
+	 *
+	 * Reads every record for the document, not only the caller's: the verdict
+	 * names record ids and never personal data, and a clearance that skipped
+	 * someone else's objection would clear too much.
+	 *
+	 * @param string            $documentId The document
+	 * @param string            $register   The consent register
+	 * @param string            $schema     The consent schema
+	 * @param DateTimeImmutable $now        The moment deadlines are judged at
+	 *
+	 * @return array{clear: bool, reasons: list<string>} The verdict.
+	 *
+	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.1
+	 */
+	public function isDocumentConsentClear(string $documentId, string $register, string $schema, DateTimeImmutable $now): array {
+		$consents = $this->updateHandler->getConsentsByDocument(documentId: $documentId, register: $register, schema: $schema);
+
+		return (new ConsentClearance())->evaluate(consents: $consents, now: $now);
+
+	}//end isDocumentConsentClear()
 }//end class
