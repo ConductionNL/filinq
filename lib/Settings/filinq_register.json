@@ -8638,7 +8638,7 @@
                 "organisation": null,
                 "groups": null,
                 "deleted": null,
-                "searchable": true,
+                "searchable": false,
                 "authorization": {
                     "read": [
                         "admin"

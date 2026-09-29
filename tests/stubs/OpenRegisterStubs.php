@@ -819,6 +819,84 @@ class ObjectEntity {
 	 *
 	 * @return array
 	 */
+	/** @var array<string, mixed>|null The retention block (legal hold lives here). */
+	protected ?array $retention = null;
+
+	/** @var string|null The owning user. */
+	protected ?string $owner = null;
+
+	/** @var int|string|null The object's folder id. */
+	protected int|string|null $folder = null;
+
+	/**
+	 * The retention block, as the real entity's magic getter returns it.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public function getRetention(): ?array {
+		return $this->retention;
+	}//end getRetention()
+
+	/**
+	 * Set the retention block.
+	 *
+	 * @param array<string, mixed>|null $retention The block.
+	 *
+	 * @return void
+	 */
+	public function setRetention(?array $retention): void {
+		$this->retention = $retention;
+	}//end setRetention()
+
+	/**
+	 * Mirrors ObjectEntity::hasActiveLegalHold().
+	 *
+	 * @return bool
+	 */
+	public function hasActiveLegalHold(): bool {
+		return (((($this->getRetention() ?? [])['legalHold'] ?? [])['active'] ?? false) === true);
+	}//end hasActiveLegalHold()
+
+	/**
+	 * The owner.
+	 *
+	 * @return string|null
+	 */
+	public function getOwner(): ?string {
+		return $this->owner;
+	}//end getOwner()
+
+	/**
+	 * Set the owner.
+	 *
+	 * @param string|null $owner The owner.
+	 *
+	 * @return void
+	 */
+	public function setOwner(?string $owner): void {
+		$this->owner = $owner;
+	}//end setOwner()
+
+	/**
+	 * The folder id.
+	 *
+	 * @return int|string|null
+	 */
+	public function getFolder(): int|string|null {
+		return $this->folder;
+	}//end getFolder()
+
+	/**
+	 * Set the folder id.
+	 *
+	 * @param int|string|null $folder The folder.
+	 *
+	 * @return void
+	 */
+	public function setFolder(int|string|null $folder): void {
+		$this->folder = $folder;
+	}//end setFolder()
+
 	public function jsonSerialize() {
 		return [];
 	}//end jsonSerialize()

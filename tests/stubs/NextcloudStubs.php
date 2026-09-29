@@ -1555,6 +1555,30 @@ interface INotification {
 	 * @return INotification
 	 */
 	public function setSubject(string $subject, array $parameters = []): INotification;
+
+	/** Real OCP method. @param \DateTime $dateTime When. @return INotification */
+	public function setDateTime(\DateTime $dateTime): INotification;
+
+	/** Real OCP method. @return string */
+	public function getApp(): string;
+
+	/** Real OCP method. @return string */
+	public function getUser(): string;
+
+	/** Real OCP method. @return string */
+	public function getSubject(): string;
+
+	/** Real OCP method. @return array */
+	public function getSubjectParameters(): array;
+
+	/** Real OCP method. @param string $subject The text. @return INotification */
+	public function setParsedSubject(string $subject): INotification;
+
+	/** Real OCP method. @param string $icon Absolute URL. @return INotification */
+	public function setIcon(string $icon): INotification;
+
+	/** Real OCP method. @param string $link Absolute URL. @return INotification */
+	public function setLink(string $link): INotification;
 }//end interface
 
 /**

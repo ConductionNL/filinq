@@ -142,6 +142,7 @@ deliberately.
 
 | `ocrResult` | authenticated | authenticated | admins | A handler runs OCR on a file they can open, and the anonymisation pipeline runs it for them, so `create` and `update` are theirs. The OCR routes only answer for a file in the caller's own folder (404 otherwise), and the row holds no text: confidence, settings and length only. Only an admin deletes one. |
 
+| `legalHoldCase` | admins | admins | admins | A legal matter and the records it freezes. Whether a lawsuit exists is not everybody's business, so the REST API offers cases to admins only; Filinq serves the hold register itself after `LegalHoldAuthority` (admins plus `legal_hold_authority_groups`, fail-closed; see the bypass table). |
 | `pseudonymMap` | admins | admins | admins | The key that turns a reversibly anonymised copy back into names. Nobody but an admin reaches it through the OpenRegister API, and an admin gets the metadata only: `mappings` is `writeOnly` and encrypted with the server secret. Filinq reads and writes it itself, past the cascade, after its own checks (see the bypass table). |
 
 | `printJob` | authenticated | authenticated | admins | A handler sends their own letters to print, and a print service reports back with that handler's account, so `create` and `update` are theirs. The endpoints only show a job to the person in `requestedBy` or an admin, and the list is always the caller's own. Only an admin deletes one: the job is the trace of what went to the printer. |
@@ -151,7 +152,7 @@ deliberately.
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
-`findAll()` accept `_rbac: false`, and Filinq passes it at **29 call sites in 11
+`findAll()` accept `_rbac: false`, and Filinq passes it at **32 call sites in 13
 files**. Each is paired with a compensating control rather than being an oversight,
 and the coverage test pins the set: **a new bypass fails the test until it is added
 here with a reason.**
@@ -168,6 +169,8 @@ here with a reason.**
 | `Service/BaseLabelResolver.php` | 1 | Resolves a legal-basis label for display; `base` is organisation-readable anyway. |
 | `Service/BasesResolverService.php` | 1 | Same. |
 | `Service/LegalBasisCatalog.php` | 1 | Static Woo Art. 5 catalogue. |
+| `Service/LegalHold/LegalHoldCaseRepository.php` | 2 | The schema grants admins only. The app reads and writes cases only from `LegalHoldCaseService`, and every public method there starts with `LegalHoldAuthority::assertAuthority()` (admins plus `legal_hold_authority_groups`; a setting that does not parse refuses everyone). The status route reads cases only to name the matter to someone who passed the same check. |
+| `Service/LegalHold/LegalHoldRecordFreeze.php` | 1 | Loads a record in a case's scope to place or lift OpenRegister's legal hold on it, after the authority check; the case owner is not the record owner, so the read cannot be the caller's. The one read for somebody without authority (`heldAsSeenBy`) keeps RBAC on. |
 | `Service/Pseudonymisation/PseudonymMapRepository.php` | 4 | The schema grants admins only, so the REST API offers the key to nobody else. The app writes it during an anonymise the operator is already allowed to run, deletes it with its link, and reads the ciphertext only inside `PseudonymRestoreService`, after `PseudonymRestoreGate` (admins plus `pseudonymisation_restore_allowed_groups`, fail-closed) and a check that the caller can open the anonymised copy, and after the audit trail has taken the grant. |
 | `Controller/PortalSigningReceiverController.php` | 1 | The signer portal is anonymous by design and binds a `signerRecord` to a token **and** an email **and** a signing-request id, refusing with the same `null` for a wrong email, a wrong request, and an unresolvable register — so no new signal is exposed. |
 

@@ -253,6 +253,18 @@ require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
 require_once __DIR__ . '/unit/Service/DetectionStates.php';
 require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
 require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';
+// The real OCP contracts the legal hold notifier implements and uses
+// (e-discovery-legal-hold), so its double cannot drift from Nextcloud's.
+foreach (['Notification/INotifier', 'Notification/UnknownNotificationException', 'L10N/IFactory'] as $ocpPath) {
+	$ocpFile = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpPath . '.php';
+	$ocpName = 'OCP\\' . str_replace('/', '\\', $ocpPath);
+	if (is_file($ocpFile) === true && interface_exists($ocpName) === false && class_exists($ocpName) === false) {
+		require_once $ocpFile;
+	}
+}
+
+require_once __DIR__ . '/unit/Service/LegalHold/FakeLegalHoldService.php';
+require_once __DIR__ . '/unit/Service/LegalHold/LegalHoldDoubles.php';
 
 // Batch-state fakes (NullCache / in-memory OpenRegister ObjectService) shared
 // by BatchStateServicePersistenceTest and BatchStateRepositoryTest. Same
