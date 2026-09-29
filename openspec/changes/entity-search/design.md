@@ -244,3 +244,12 @@ remain readable.
 - Fuzzy/normalised matching (e.g. BSN with/without dots-spaces) — would need
   an OR-side normalised-value column; out of scope for v1 verbatim-substring
   search.
+
+## Resolved at apply
+
+- **Register.** The `document` register was folded into the single `filinq` register (v8.0.0); `entitySearchLog` lives there (register 8.30.0) with three demo rows, digests only. Update and delete are granted to nobody; read to admins.
+- **Setting key.** `entity_search.allowed_groups` in the `filinq` app config (the spec's `filinq.entity_search.allowed_groups` is app plus key).
+- **Catalogue reads.** `EntityCatalogue` queries `openregister_entities` and counts `openregister_entity_relations` with `IDBConnection`, mirroring `GdprEntitiesController` (substring on `value` with `iLike`, exact type and category, organisation scoping); relations for one entity come from OR's `EntityRelationMapper::findByEntityId`. Organisations that cannot be resolved refuse with 503 rather than widen.
+- **Page.** A `type: custom` page with `CnDataTable` for results and occurrences, not `CnIndexPage`: `CnIndexPage` is bound to an OpenRegister schema, and the results come from Filinq's gated endpoint. The menu entry uses `visibleIf: {"entitySearch.allowed": true}` against `manifest.runtime`, which `App.vue` sets from `GET api/entity-search/access` (403 keeps it hidden).
+- **Woo collection (REQ-DDESR-006, task 2.5 and the collect dialog in 3.2).** `woo-request-workflow` is not built, so there is no `wooRequest` in `collecting` and no collection step to hand to. The action is hidden, which is what the spec requires without the workflow. The handoff and `collectedInto` move to `woo-request-workflow`; the schema already carries `collectedInto`.
+- **Other occurrences.** Relations on objects and emails are reported as a count per kind, without ids, so the detail cannot be used to probe objects the caller cannot open.
