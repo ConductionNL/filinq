@@ -186,10 +186,7 @@ class SigningService {
 		// with 400 BEFORE any object is persisted, so a QES request can never
 		// be routed to a provider that will later silently complete it with a
 		// lower-assurance (e.g. native SES) artifact.
-		$this->validator->validateProviderLevelPair(
-			provider: (string)$request['provider'],
-			level: (string)$request['signatureLevel']
-		);
+		$this->validator->validateProviderLevelPair(provider: (string)$request['provider'], level: (string)$request['signatureLevel']);
 
 		// Guardian consent (signer-identity-rails REQ-DDSIR-008/009): every
 		// request records the age of consent that governs it, and the signer
@@ -221,8 +218,6 @@ class SigningService {
 				$request[$field] = $data[$field];
 			}
 		}
-
-		// LibreSign runs the signer flow itself: it gets the request first.
 		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();

@@ -82,7 +82,13 @@ class OcsLibreSignClient implements LibreSignClient {
 	}//end __construct()
 
 	/**
-	 * {@inheritDoc}
+	 * Create a signature request (POST request-signature).
+	 *
+	 * @param array<string, mixed>             $file    LibreSign's NewFile: base64 and name, nodeId or path
+	 * @param string                           $name    The document name
+	 * @param array<int, array<string, mixed>> $signers LibreSign's NewSigner entries
+	 *
+	 * @return array<string, mixed> The `ocs.data` of the answer.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
@@ -95,7 +101,11 @@ class OcsLibreSignClient implements LibreSignClient {
 	}//end requestSignature()
 
 	/**
-	 * {@inheritDoc}
+	 * Read a request's state (GET file/validate/uuid/{uuid}).
+	 *
+	 * @param string $uuid The LibreSign file uuid
+	 *
+	 * @return array<string, mixed> The `ocs.data` of the answer.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
@@ -105,7 +115,11 @@ class OcsLibreSignClient implements LibreSignClient {
 	}//end validate()
 
 	/**
-	 * {@inheritDoc}
+	 * Fetch the signed PDF (GET /apps/libresign/p/pdf/{uuid}).
+	 *
+	 * @param string $uuid The LibreSign file uuid
+	 *
+	 * @return string The bytes LibreSign serves.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */
@@ -115,7 +129,11 @@ class OcsLibreSignClient implements LibreSignClient {
 	}//end downloadSigned()
 
 	/**
-	 * {@inheritDoc}
+	 * Withdraw every sign request on a file (DELETE sign/file_id/{fileId}).
+	 *
+	 * @param int $nodeId The file id LibreSign keeps the request under
+	 *
+	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-1.3
 	 */

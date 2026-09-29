@@ -163,7 +163,7 @@ class SignedArtifactProducer {
 	 * refuses leaves nothing behind.
 	 *
 	 * @param array<string, mixed>     $request The request about to be stored
-	 * @param array<int|string, mixed> $signers The signers as the caller sent them
+	 * @param array<string, mixed>     $signers The signers as the caller sent them (the provider contract's type)
 	 *
 	 * @return array<string, mixed> The request, with externalId when delegated.
 	 *
@@ -180,7 +180,7 @@ class SignedArtifactProducer {
 		$result = $this->providerFactory->getProvider(identifier: LibreSignProvider::IDENTIFIER)->initiateSigning(
 			documentPath: '',
 			documentName: (string)($request['documentName'] ?? ''),
-			signers: array_values($signers),
+			signers: $signers,
 			level: (string)($request['signatureLevel'] ?? 'SES'),
 			options: ['content' => $file->getContent()]
 		);
