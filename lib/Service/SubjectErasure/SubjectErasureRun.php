@@ -83,9 +83,15 @@ class SubjectErasureRun {
 			$request['results'] = [];
 		}
 
-		$this->audit->record(requestUuid: $uuid, action: SubjectErasureAudit::ACTION_RUN_STARTED, userId: $userId, details: ['resumeAt' => (string) ($progress['lastDocument'] ?? '')]);
+		$this->audit->record(
+			requestUuid: $uuid,
+			action: SubjectErasureAudit::ACTION_RUN_STARTED,
+			userId: $userId,
+			details: ['resumeAt' => (string) ($progress['lastDocument'] ?? '')]
+		);
 
-		$documents = array_column($this->obligations->assess(located: $this->locator->locate(identifiers: (array) ($request['identifiers'] ?? []))), null, 'id');
+		$located = $this->locator->locate(identifiers: (array) ($request['identifiers'] ?? []));
+		$documents = array_column($this->obligations->assess(located: $located), null, 'id');
 		$scope = array_map('strval', array_keys($documents));
 		$progress['documentsTotal'] = count($scope);
 		$results = array_column((array) ($request['results'] ?? []), null, 'document');
@@ -95,11 +101,15 @@ class SubjectErasureRun {
 
 		try {
 			foreach ($this->job->resumeFrom(documents: $scope, progress: $progress) as $documentId) {
-				$result = $this->step->process(document: $documents[$documentId], exclusions: (array) ($request['excluded'] ?? []), requestUuid: $uuid, userId: $userId);
-				$results[$documentId] = $result;
+				$results[$documentId] = $this->step->process(
+					document: $documents[$documentId],
+					exclusions: (array) ($request['excluded'] ?? []),
+					requestUuid: $uuid,
+					userId: $userId
+				);
 				$progress['lastDocument'] = $documentId;
 				$progress['documentsDone'] = ((int) array_search($documentId, $scope, true) + 1);
-				$progress['occurrencesErased'] = array_sum(array_column(array_filter($results, static fn (array $row): bool => $row['outcome'] === SubjectErasureDocumentStep::ERASED), 'occurrences'));
+				$progress['occurrencesErased'] = $this->erasedOccurrences(results: $results);
 				$request = $this->saveProgress(request: $request, progress: $progress, results: $results);
 			}
 		} catch (Throwable $e) {
@@ -136,7 +146,10 @@ class SubjectErasureRun {
 		$request = $this->requests->load(uuid: $uuid);
 		$certificate = $this->store->find(schema: SubjectErasureStore::CERTIFICATE, uuid: (string) ($request['certificate'] ?? ''));
 		if ($certificate === null) {
-			throw new SubjectErasureRefusedException(reason: SubjectErasureRefusedException::REASON_NOT_FOUND, message: 'This request has no certificate yet.');
+			throw new SubjectErasureRefusedException(
+				reason: SubjectErasureRefusedException::REASON_NOT_FOUND,
+				message: 'This request has no certificate yet.'
+			);
 		}
 
 		return $certificate;
@@ -164,4 +177,23 @@ class SubjectErasureRun {
 		return $this->store->save(schema: SubjectErasureStore::REQUEST, row: $request);
 
 	}//end saveProgress()
+
+	/**
+	 * How many occurrences the erased documents held.
+	 *
+	 * @param array<string, array<string, mixed>> $results The results by document.
+	 *
+	 * @return int The count.
+	 */
+	private function erasedOccurrences(array $results): int {
+		$count = 0;
+		foreach ($results as $row) {
+			if ($row['outcome'] === SubjectErasureDocumentStep::ERASED) {
+				$count += (int) $row['occurrences'];
+			}
+		}
+
+		return $count;
+
+	}//end erasedOccurrences()
 }//end class

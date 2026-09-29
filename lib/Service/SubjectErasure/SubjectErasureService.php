@@ -80,7 +80,12 @@ class SubjectErasureService {
 		try {
 			$this->authority->assertMayErase(userId: $userId);
 		} catch (SubjectErasureRefusedException $refusal) {
-			$this->audit->record(requestUuid: $requestUuid, action: SubjectErasureAudit::ACTION_DENIED, userId: $userId, details: ['reason' => $refusal->getReason()]);
+			$this->audit->record(
+				requestUuid: $requestUuid,
+				action: SubjectErasureAudit::ACTION_DENIED,
+				userId: $userId,
+				details: ['reason' => $refusal->getReason()]
+			);
 			throw $refusal;
 		}
 
@@ -338,7 +343,8 @@ class SubjectErasureService {
 	 * @return string The due moment.
 	 */
 	private function dueAt(string $input, DateTimeImmutable $from): string {
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $input) === 1 && checkdate((int) substr($input, 5, 2), (int) substr($input, 8, 2), (int) substr($input, 0, 4)) === true) {
+		$parts = array_map('intval', explode('-', $input));
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $input) === 1 && checkdate($parts[1], $parts[2], $parts[0]) === true) {
 			return (new DateTimeImmutable($input . 'T00:00:00+00:00'))->format(DateTimeInterface::ATOM);
 		}
 

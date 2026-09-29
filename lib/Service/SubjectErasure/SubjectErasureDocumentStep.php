@@ -202,7 +202,7 @@ class SubjectErasureDocumentStep {
 						requestUuid: $requestUuid,
 						action: SubjectErasureAudit::ACTION_MAPPING_DESTROYED,
 						userId: $userId,
-						details: ['fileId' => $fileId, 'maps' => $destroyed['maps'], 'entriesDestroyed' => $destroyed['entriesDestroyed'], 'mapsDeleted' => $destroyed['mapsDeleted']]
+						details: array_merge(['fileId' => $fileId], $destroyed)
 					);
 				}
 			} catch (RuntimeException $e) {
@@ -222,7 +222,12 @@ class SubjectErasureDocumentStep {
 				requestUuid: $requestUuid,
 				action: $action,
 				userId: $userId,
-				details: ['fileId' => $fileId, 'occurrences' => $result['occurrences'], 'newVersionFileId' => $result['newVersionFileId'], 'reason' => $result['reason']]
+				details: [
+					'fileId' => $fileId,
+					'occurrences' => $result['occurrences'],
+					'newVersionFileId' => $result['newVersionFileId'],
+					'reason' => $result['reason'],
+				]
 			);
 		}
 

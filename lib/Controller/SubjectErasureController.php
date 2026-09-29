@@ -206,7 +206,10 @@ class SubjectErasureController extends Controller {
 			return $this->refused(refusal: $refusal);
 		} catch (Throwable $e) {
 			$this->logger->error(message: '[SubjectErasureController] an erasure step failed', context: ['error' => $e->getMessage()]);
-			return new JSONResponse(['error' => $this->l10n->t('The erasure step failed. Nothing further was changed. Try again later.')], Http::STATUS_INTERNAL_SERVER_ERROR);
+			return new JSONResponse(
+				['error' => $this->l10n->t('The erasure step failed. Nothing further was changed. Try again later.')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
 		}
 
 	}//end answer()
@@ -225,8 +228,12 @@ class SubjectErasureController extends Controller {
 			SubjectErasureRefusedException::REASON_CONFIG_UNREADABLE => $this->l10n->t('You are not allowed to handle erasure requests.'),
 			SubjectErasureRefusedException::REASON_NOT_FOUND => $this->l10n->t('Not found'),
 			SubjectErasureRefusedException::REASON_INVALID => $this->l10n->t('Fill in the person and the legal ground. Every exclusion needs a reason.'),
-			SubjectErasureRefusedException::REASON_WRONG_STATE => $this->l10n->t('This step is not possible now. Build the preview first; a completed request cannot run again.'),
-			SubjectErasureRefusedException::REASON_CATALOGUE_UNAVAILABLE => $this->l10n->t('The entity catalogue cannot be read, so nobody can say where the person appears. Nothing was changed.'),
+			SubjectErasureRefusedException::REASON_WRONG_STATE => $this->l10n->t(
+				'This step is not possible now. Build the preview first; a completed request cannot run again.'
+			),
+			SubjectErasureRefusedException::REASON_CATALOGUE_UNAVAILABLE => $this->l10n->t(
+				'The entity catalogue cannot be read, so nobody can say where the person appears. Nothing was changed.'
+			),
 			SubjectErasureRefusedException::REASON_AUDIT_UNAVAILABLE => $this->l10n->t('The audit trail could not record this step, so it was not done.'),
 		];
 

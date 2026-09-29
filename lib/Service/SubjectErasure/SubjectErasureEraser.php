@@ -21,7 +21,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\SubjectErasure;
 
 use DateTimeInterface;
-use OCA\Filinq\Service\DocumentVersionService;
 use OCA\Filinq\Service\FinalDocumentRepository;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
@@ -61,17 +60,17 @@ class SubjectErasureEraser {
 
 	private const PROCESSOR = 'OCA\OpenRegister\Service\File\DocumentProcessingHandler';
 
+	private const VERSION_MANAGER = 'OCA\Files_Versions\Versions\IVersionManager';
+
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface      $container      Resolves OpenRegister's document processor.
-	 * @param DocumentVersionService  $versions       Deletes the earlier Nextcloud versions.
+	 * @param ContainerInterface      $container      Resolves OpenRegister's document processor and Nextcloud's versions.
 	 * @param FinalDocumentRepository $finalDocuments The finalisation records.
 	 * @param ITimeFactory            $time           The clock.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly DocumentVersionService $versions,
 		private readonly FinalDocumentRepository $finalDocuments,
 		private readonly ITimeFactory $time,
 	) {
@@ -101,7 +100,7 @@ class SubjectErasureEraser {
 			$this->discard(copy: $copy);
 		}
 
-		return ['versionsDeleted' => $this->versions->purgeEarlierVersions(file: $file)];
+		return ['versionsDeleted' => $this->purgeEarlierVersions(file: $file)];
 
 	}//end erase()
 
@@ -151,7 +150,7 @@ class SubjectErasureEraser {
 			$this->discard(copy: $copy);
 		}
 
-		$deleted = $this->versions->purgeEarlierVersions(file: $file);
+		$deleted = $this->purgeEarlierVersions(file: $file);
 
 		unset($record['uuid'], $record['@self'], $record['id']);
 		$record['supersededBy'] = (string) ($successorRecord['uuid'] ?? ($successorRecord['@self']['id'] ?? ''));
@@ -202,6 +201,50 @@ class SubjectErasureEraser {
 		return $copy;
 
 	}//end erasedCopy()
+
+	/**
+	 * Delete every earlier Nextcloud version of a rewritten file.
+	 *
+	 * Nextcloud keeps the previous bytes as a version, with the person still in
+	 * them; the erasure is not done until those are gone. The versions are read
+	 * as the file's owner: the caller was already allowed to erase.
+	 *
+	 * @param File $file The rewritten file.
+	 *
+	 * @return int How many versions were deleted.
+	 *
+	 * @throws RuntimeException When versions exist and one could not be deleted.
+	 */
+	private function purgeEarlierVersions(File $file): int {
+		try {
+			$manager = $this->container->get(self::VERSION_MANAGER);
+		} catch (Throwable) {
+			// No versioning app, so no earlier bytes were kept.
+			return 0;
+		}
+
+		$owner = $file->getOwner();
+		if ($owner === null) {
+			throw new RuntimeException('The content was erased, but the file has no owner, so its earlier versions could not be removed.');
+		}
+
+		$deleted = 0;
+		try {
+			foreach ($manager->getVersionsForFile($owner, $file) as $version) {
+				$manager->deleteVersion($version);
+				$deleted++;
+			}
+		} catch (Throwable $e) {
+			throw new RuntimeException(
+				'The content was erased, but an earlier version with the person in it could not be removed: ' . $e->getMessage(),
+				0,
+				$e
+			);
+		}
+
+		return $deleted;
+
+	}//end purgeEarlierVersions()
 
 	/**
 	 * The first value still readable in the copy, or null. PDF is checked by

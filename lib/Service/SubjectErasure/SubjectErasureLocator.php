@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service\SubjectErasure;
 use OCA\Filinq\Exception\SubjectErasureRefusedException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -74,7 +75,7 @@ class SubjectErasureLocator {
 	public function locate(array $identifiers): array {
 		try {
 			if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-				throw new \RuntimeException('OpenRegister is not installed.');
+				throw new RuntimeException('OpenRegister is not installed.');
 			}
 
 			$entities = $this->container->get(self::ENTITY_MAPPER);
