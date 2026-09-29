@@ -41,6 +41,8 @@ use Throwable;
 
 /**
  * POST api/ocr/{fileId}, GET api/ocr/{fileId} and GET api/ocr.
+ *
+ * @spec openspec/specs/ocr-trigger-surface/spec.md#requirement-ocr-api-route-req-ddocr-001
  */
 class OcrController extends Controller {
 
@@ -252,7 +254,10 @@ class OcrController extends Controller {
 	private function refused(int $fileId, string $reason): JSONResponse {
 		$answers = [
 			OcrRunService::SKIP_DISABLED => [Http::STATUS_CONFLICT, $this->l10n->t('OCR is switched off by an administrator.')],
-			OcrRunService::SKIP_NO_TESSERACT => [Http::STATUS_SERVICE_UNAVAILABLE, $this->l10n->t('OCR is not available: Tesseract is not installed on the server.')],
+			OcrRunService::SKIP_NO_TESSERACT => [
+				Http::STATUS_SERVICE_UNAVAILABLE,
+				$this->l10n->t('OCR is not available: Tesseract is not installed on the server.'),
+			],
 			OcrRunService::SKIP_NOT_CANDIDATE => [Http::STATUS_BAD_REQUEST, $this->l10n->t('OCR reads images and PDF files only.')],
 			OcrRunService::SKIP_NO_TEXT => [Http::STATUS_OK, $this->l10n->t('OCR found no text in this file.')],
 			OcrRunService::SKIP_FAILED => [Http::STATUS_INTERNAL_SERVER_ERROR, $this->l10n->t('OCR failed on this file.')],

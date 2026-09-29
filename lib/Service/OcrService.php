@@ -517,12 +517,13 @@ class OcrService {
 		$dpi = $this->getOcrDpi();
 		$tempFile = $this->writeToTemp(file: $file);
 
+		$isImage = in_array($file->getMimeType(), self::IMAGE_MIME_TYPES, true);
+
 		try {
-			if (in_array($file->getMimeType(), self::IMAGE_MIME_TYPES, true) === true) {
-				$result = $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
-			} else {
-				$result = $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
-			}
+			$result = match ($isImage) {
+				true => $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi),
+				false => $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi),
+			};
 		} finally {
 			if (file_exists($tempFile) === true) {
 				unlink($tempFile);

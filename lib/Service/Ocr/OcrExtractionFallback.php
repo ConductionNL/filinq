@@ -37,6 +37,8 @@ use Throwable;
 
 /**
  * The OCR step between OpenRegister's extraction and reading the entities back.
+ *
+ * @spec openspec/specs/ocr-trigger-surface/spec.md#requirement-automatic-ocr-fallback-in-the-anonymisation-extract-pipeline-req-ddocr-003
  */
 class OcrExtractionFallback {
 
@@ -81,17 +83,8 @@ class OcrExtractionFallback {
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.3
 	 */
 	public function afterExtraction(int $fileId, object $textExtractor, bool $force): array {
-		$file = $this->resolve(fileId: $fileId);
+		$file = $this->scanWithoutText(fileId: $fileId, textExtractor: $textExtractor);
 		if ($file === null) {
-			return [];
-		}
-
-		$extracted = null;
-		if (method_exists($textExtractor, 'getExtractedText') === true) {
-			$extracted = $textExtractor->getExtractedText($fileId);
-		}
-
-		if ($this->ocr->needsOcr(mimeType: $file->getMimeType(), existingText: $extracted) === false) {
 			return [];
 		}
 
@@ -111,6 +104,47 @@ class OcrExtractionFallback {
 			];
 		}
 
+		return $this->ingest(fileId: $fileId, textExtractor: $textExtractor, outcome: $outcome);
+
+	}//end afterExtraction()
+
+	/**
+	 * The file, when it is a candidate whose extraction left no text; else null.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 * @param object $textExtractor OpenRegister's TextExtractionService.
+	 *
+	 * @return File|null The scan.
+	 */
+	private function scanWithoutText(int $fileId, object $textExtractor): ?File {
+		$file = $this->resolve(fileId: $fileId);
+		if ($file === null) {
+			return null;
+		}
+
+		$extracted = null;
+		if (method_exists($textExtractor, 'getExtractedText') === true) {
+			$extracted = $textExtractor->getExtractedText($fileId);
+		}
+
+		if ($this->ocr->needsOcr(mimeType: $file->getMimeType(), existingText: $extracted) === false) {
+			return null;
+		}
+
+		return $file;
+
+	}//end scanWithoutText()
+
+	/**
+	 * Hand the recovered text to OpenRegister, or say detection is pending.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 * @param object $textExtractor OpenRegister's TextExtractionService.
+	 * @param array<string, mixed> $outcome The run: text and result.
+	 *
+	 * @return array<string, mixed> The fields for the extraction result.
+	 */
+	private function ingest(int $fileId, object $textExtractor, array $outcome): array {
 		if ($this->canIngest(textExtractor: $textExtractor) === false) {
 			return $this->pending(result: $outcome['result']);
 		}
@@ -130,7 +164,7 @@ class OcrExtractionFallback {
 			'ocrDetectionPending' => false,
 		];
 
-	}//end afterExtraction()
+	}//end ingest()
 
 	/**
 	 * Whether OpenRegister has the provided-text seam.
