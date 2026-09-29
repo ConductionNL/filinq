@@ -32,7 +32,9 @@ SPDX-License-Identifier: EUPL-1.2
 				<NcTextField
 					v-model="dueAt"
 					type="date"
-					:label="t('filinq', 'Answer due (optional, default one month)')" />
+					:label="
+						t('filinq', 'Answer due (optional, default one month)')
+					" />
 				<NcNoteCard v-if="error" type="error">
 					{{ error }}
 				</NcNoteCard>
@@ -55,7 +57,13 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcNoteCard, NcTextArea, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDialog,
+	NcNoteCard,
+	NcTextArea,
+	NcTextField,
+} from '@nextcloud/vue'
 import { createRequest, parseLines } from '../services/subjectErasures.js'
 
 /**

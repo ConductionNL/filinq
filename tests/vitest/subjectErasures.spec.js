@@ -56,13 +56,25 @@ describe('subject erasure service', () => {
 	})
 
 	it('leaves one identifier in one document, with the row reason', () => {
-		const exclusions = buildExclusions(rows, { 11: { 'jan@voorbeeld.example': false } }, { 11: 'Gedeeld adres' })
-		expect(exclusions).toEqual([{ occurrence: '11:jan@voorbeeld.example', reason: 'Gedeeld adres' }])
+		const exclusions = buildExclusions(
+			rows,
+			{ 11: { 'jan@voorbeeld.example': false } },
+			{ 11: 'Gedeeld adres' },
+		)
+		expect(exclusions).toEqual([
+			{ occurrence: '11:jan@voorbeeld.example', reason: 'Gedeeld adres' },
+		])
 	})
 
 	it('leaves a whole document when every identifier in it is unticked', () => {
-		const exclusions = buildExclusions(rows, { 12: { 'Jan Jansen': false } }, { 12: 'Andere Jan Jansen' })
-		expect(exclusions).toEqual([{ occurrence: '12', reason: 'Andere Jan Jansen' }])
+		const exclusions = buildExclusions(
+			rows,
+			{ 12: { 'Jan Jansen': false } },
+			{ 12: 'Andere Jan Jansen' },
+		)
+		expect(exclusions).toEqual([
+			{ occurrence: '12', reason: 'Andere Jan Jansen' },
+		])
 	})
 
 	it('is not complete while an exclusion has no reason', () => {
@@ -77,20 +89,42 @@ describe('subject erasure service', () => {
 		await runRequest('req-1')
 		expect(calls).toEqual([
 			['post', '/apps/filinq/api/subject-erasures/req-1/preview', undefined],
-			['put', '/apps/filinq/api/subject-erasures/req-1/exclusions', { exclusions: [{ occurrence: '12', reason: 'x' }] }],
+			[
+				'put',
+				'/apps/filinq/api/subject-erasures/req-1/exclusions',
+				{ exclusions: [{ occurrence: '12', reason: 'x' }] },
+			],
 			['post', '/apps/filinq/api/subject-erasures/req-1/run', undefined],
 		])
 	})
 
 	it('shows the server refusal', async () => {
-		answer = () => Promise.reject({ response: { status: 409, data: { error: 'Build the preview first' } } })
+		answer = () =>
+			Promise.reject({
+				response: {
+					status: 409,
+					data: { error: 'Build the preview first' },
+				},
+			})
 		const outcome = await runRequest('req-1')
-		expect(outcome).toEqual({ ok: false, status: 409, error: 'Build the preview first' })
+		expect(outcome).toEqual({
+			ok: false,
+			status: 409,
+			error: 'Build the preview first',
+		})
 	})
 
 	it('offers the run only from previewed or partially completed, and the save only with every reason', () => {
-		const page = readFileSync(new URL('../../src/views/subjectErasures/SubjectErasures.vue', import.meta.url), 'utf8')
-		expect(page).toContain("return ['previewed', 'partially_completed'].includes(this.selected?.status)")
+		const page = readFileSync(
+			new URL(
+				'../../src/views/subjectErasures/SubjectErasures.vue',
+				import.meta.url,
+			),
+			'utf8',
+		)
+		expect(page.replace(/\s+/g, ' ')).toContain(
+			"return ['previewed', 'partially_completed'].includes( this.selected?.status, )",
+		)
 		expect(page).toContain(':disabled="!exclusionsReady"')
 		expect(page).not.toMatch(/<NcDialog|<NcModal/)
 	})

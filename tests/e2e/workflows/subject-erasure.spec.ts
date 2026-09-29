@@ -41,21 +41,46 @@ const REQUEST = {
 	requestedAt: '2026-09-29T10:00:00+00:00',
 	dueAt: '2026-10-29T10:00:00+00:00',
 	status: 'previewed',
-	progress: { documentsTotal: 3, documentsDone: 0, lastDocument: '', occurrencesErased: 0 },
+	progress: {
+		documentsTotal: 3,
+		documentsDone: 0,
+		lastDocument: '',
+		occurrencesErased: 0,
+	},
 	excluded: [],
 	results: [],
 }
 
 const PREVIEW = {
 	documents: [
-		{ document: '11', name: 'aanvraag.txt', occurrences: 2, finalVersion: false, obligations: [], values: ['Jan Jansen', 'jan@voorbeeld.example'] },
-		{ document: '12', name: 'besluit.pdf', occurrences: 1, finalVersion: true, obligations: [], values: ['Jan Jansen'] },
+		{
+			document: '11',
+			name: 'aanvraag.txt',
+			occurrences: 2,
+			finalVersion: false,
+			obligations: [],
+			values: ['Jan Jansen', 'jan@voorbeeld.example'],
+		},
+		{
+			document: '12',
+			name: 'besluit.pdf',
+			occurrences: 1,
+			finalVersion: true,
+			obligations: [],
+			values: ['Jan Jansen'],
+		},
 		{
 			document: '13',
 			name: 'dagvaarding.pdf',
 			occurrences: 1,
 			finalVersion: false,
-			obligations: [{ obligation: 'legal_hold', reason: 'This document is under a legal hold (Rechtszaak 2025-117), so it is kept exactly as it is.', decidedBy: 'the legal department that placed the hold' }],
+			obligations: [
+				{
+					obligation: 'legal_hold',
+					reason: 'This document is under a legal hold (Rechtszaak 2025-117), so it is kept exactly as it is.',
+					decidedBy: 'the legal department that placed the hold',
+				},
+			],
 			values: ['Jan Jansen'],
 		},
 	],
@@ -77,8 +102,18 @@ const CERTIFICATE = {
 	issuedAt: '2026-09-29T11:00:00+00:00',
 	actor: 'petra',
 	ground: REQUEST.ground,
-	erased: [{ document: '11', occurrences: 2 }, { document: '12', occurrences: 1 }],
-	refused: [{ document: '13', obligation: 'legal_hold', reason: 'This document is under a legal hold (Rechtszaak 2025-117), so it is kept exactly as it is.', decidedBy: 'the legal department that placed the hold' }],
+	erased: [
+		{ document: '11', occurrences: 2 },
+		{ document: '12', occurrences: 1 },
+	],
+	refused: [
+		{
+			document: '13',
+			obligation: 'legal_hold',
+			reason: 'This document is under a legal hold (Rechtszaak 2025-117), so it is kept exactly as it is.',
+			decidedBy: 'the legal department that placed the hold',
+		},
+	],
 	excluded: [],
 	needsRepublishing: ['11', '12'],
 	mappingEntriesDestroyed: 1,
@@ -102,16 +137,36 @@ async function api(page: Page, sent: unknown[][], runStops = false): Promise<voi
 			return route.fulfill({ json: PREVIEW })
 		}
 		if (path.endsWith('/exclusions')) {
-			return route.fulfill({ json: { ...REQUEST, excluded: request.postDataJSON().exclusions } })
+			return route.fulfill({
+				json: { ...REQUEST, excluded: request.postDataJSON().exclusions },
+			})
 		}
 		if (path.endsWith('/run')) {
 			if (runStops) {
-				return route.fulfill({ status: 503, json: { error: 'The audit trail could not record this step, so it was not done.', reason: 'audit_unavailable' } })
+				return route.fulfill({
+					status: 503,
+					json: {
+						error: 'The audit trail could not record this step, so it was not done.',
+						reason: 'audit_unavailable',
+					},
+				})
 			}
-			return route.fulfill({ json: { request: { ...REQUEST, status: 'completed', certificate: 'cert-1' }, certificate: CERTIFICATE } })
+			return route.fulfill({
+				json: {
+					request: {
+						...REQUEST,
+						status: 'completed',
+						certificate: 'cert-1',
+					},
+					certificate: CERTIFICATE,
+				},
+			})
 		}
 		if (request.method() === 'POST') {
-			return route.fulfill({ status: 201, json: { ...REQUEST, status: 'received' } })
+			return route.fulfill({
+				status: 201,
+				json: { ...REQUEST, status: 'received' },
+			})
 		}
 		return route.fulfill({ json: { results: [REQUEST] } })
 	})
@@ -123,7 +178,9 @@ async function api(page: Page, sent: unknown[][], runStops = false): Promise<voi
  * @param page The page
  */
 async function openPreview(page: Page): Promise<void> {
-	await page.goto(await appUrl(page, 'subject-erasures'), { waitUntil: 'domcontentloaded' })
+	await page.goto(await appUrl(page, 'subject-erasures'), {
+		waitUntil: 'domcontentloaded',
+	})
 	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.getByRole('button', { name: 'Jan Jansen' }).click()
@@ -131,11 +188,15 @@ async function openPreview(page: Page): Promise<void> {
 }
 
 test.describe('subject erasure', () => {
-	test('a request records the person and the ground before anything is looked up', async ({ page }) => {
+	test('a request records the person and the ground before anything is looked up', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/anonymization-link/spec.md#a-request-is-a-record-not-a-button
 		const sent: unknown[][] = []
 		await api(page, sent)
-		await page.goto(await appUrl(page, 'subject-erasures'), { waitUntil: 'domcontentloaded' })
+		await page.goto(await appUrl(page, 'subject-erasures'), {
+			waitUntil: 'domcontentloaded',
+		})
 		await waitForAppReady(page)
 		await dismissOverlays(page)
 
@@ -144,12 +205,20 @@ test.describe('subject erasure', () => {
 		await page.getByLabel('Legal ground').fill('AVG artikel 17 lid 1 onder a')
 		await page.getByTestId('subject-erasure-create').click()
 
-		const create = sent.find((call) => call[0] === 'POST' && String(call[1]).endsWith('/subject-erasures'))
-		expect(create?.[2]).toMatchObject({ subject: 'Jan Jansen', ground: 'AVG artikel 17 lid 1 onder a' })
+		const create = sent.find(
+			(call) =>
+				call[0] === 'POST' && String(call[1]).endsWith('/subject-erasures'),
+		)
+		expect(create?.[2]).toMatchObject({
+			subject: 'Jan Jansen',
+			ground: 'AVG artikel 17 lid 1 onder a',
+		})
 		expect(sent.some((call) => String(call[1]).endsWith('/preview'))).toBe(false)
 	})
 
-	test('the preview shows every document, the cap and the hold before anything changes', async ({ page }) => {
+	test('the preview shows every document, the cap and the hold before anything changes', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/anonymization-link/spec.md#the-operator-sees-the-blast-radius-first
 		// @e2e openspec/specs/anonymization-link/spec.md#the-cap-is-stated-not-hidden
 		// @e2e openspec/specs/anonymization-link/spec.md#a-legal-hold-wins
@@ -158,14 +227,18 @@ test.describe('subject erasure', () => {
 		await api(page, sent)
 		await openPreview(page)
 
-		await expect(page.getByText('Showing the first 200 of 250 documents.')).toBeVisible()
+		await expect(
+			page.getByText('Showing the first 200 of 250 documents.'),
+		).toBeVisible()
 		await expect(page.getByText('aanvraag.txt')).toBeVisible()
 		await expect(page.getByText('Yes, a new version is written')).toBeVisible()
 		await expect(page.getByText('Rechtszaak 2025-117')).toBeVisible()
 		expect(sent.some((call) => String(call[1]).endsWith('/run'))).toBe(false)
 	})
 
-	test('a common surname is left in place only with a reason', async ({ page }) => {
+	test('a common surname is left in place only with a reason', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/anonymization-link/spec.md#a-common-surname-is-not-erased-wholesale
 		const sent: unknown[][] = []
 		await api(page, sent)
@@ -174,14 +247,25 @@ test.describe('subject erasure', () => {
 		await page.getByText('jan@voorbeeld.example').click()
 		const save = page.getByRole('button', { name: 'Save what is left in place' })
 		await expect(save).toBeDisabled()
-		await page.getByLabel('Why is this left in place?').fill('Gedeeld adres van een andere Jan')
+		await page
+			.getByLabel('Why is this left in place?')
+			.fill('Gedeeld adres van een andere Jan')
 		await save.click()
 
 		const call = sent.find((c) => String(c[1]).endsWith('/exclusions'))
-		expect(call?.[2]).toEqual({ exclusions: [{ occurrence: '11:jan@voorbeeld.example', reason: 'Gedeeld adres van een andere Jan' }] })
+		expect(call?.[2]).toEqual({
+			exclusions: [
+				{
+					occurrence: '11:jan@voorbeeld.example',
+					reason: 'Gedeeld adres van een andere Jan',
+				},
+			],
+		})
 	})
 
-	test('the certificate names what was erased, what was refused, and what to republish', async ({ page }) => {
+	test('the certificate names what was erased, what was refused, and what to republish', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/anonymization-link/spec.md#the-zaak-survives-the-erasure
 		// @e2e openspec/specs/anonymization-link/spec.md#the-data-subject-can-be-told-what-happened
 		// @e2e openspec/specs/anonymization-link/spec.md#the-archivist-can-see-the-records-stayed
@@ -192,7 +276,9 @@ test.describe('subject erasure', () => {
 		await page.getByTestId('subject-erasure-run').click()
 
 		await expect(page.getByText('Not everything was erased.')).toBeVisible()
-		await expect(page.getByText('2 documents erased, 1 refused, 2 to republish.')).toBeVisible()
+		await expect(
+			page.getByText('2 documents erased, 1 refused, 2 to republish.'),
+		).toBeVisible()
 		expect(CERTIFICATE.documentRecordsDeleted).toBe(0)
 	})
 
@@ -203,6 +289,10 @@ test.describe('subject erasure', () => {
 		await page.getByRole('button', { name: 'Erase' }).first().click()
 		await page.getByTestId('subject-erasure-run').click()
 
-		await expect(page.getByText('The audit trail could not record this step, so it was not done.')).toBeVisible()
+		await expect(
+			page.getByText(
+				'The audit trail could not record this step, so it was not done.',
+			),
+		).toBeVisible()
 	})
 })
