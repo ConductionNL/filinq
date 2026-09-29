@@ -302,22 +302,47 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The publication in the route, or empty for the list.
+		 *
+		 * @spec openspec/specs/woo-publicatie-pipeline/spec.md
+		 */
 		id() {
 			return this.$route.params.id || ''
 		},
 
+		/**
+		 * The three checks of the shown record.
+		 *
+		 * @spec openspec/specs/woo-publicatie-pipeline/spec.md
+		 */
 		checks() {
 			return readinessChecks(this.record || {})
 		},
 
+		/**
+		 * The Woo metadata still missing, counting unsaved form input.
+		 *
+		 * @spec openspec/specs/woo-publicatie-pipeline/spec.md
+		 */
 		missing() {
 			return missingMetadata({ ...this.record, ...this.form })
 		},
 
+		/**
+		 * Whether the hand-off button can be used.
+		 *
+		 * @spec openspec/specs/woo-publicatie-pipeline/spec.md
+		 */
 		handOffAllowed() {
 			return canHandOff(this.record || {}, this.platformAvailable)
 		},
 
+		/**
+		 * Whether the record can be withdrawn.
+		 *
+		 * @spec openspec/specs/woo-publicatie-pipeline/spec.md
+		 */
 		withdrawAllowed() {
 			return canWithdraw(this.record || {})
 		},

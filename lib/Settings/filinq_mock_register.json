@@ -5532,6 +5532,124 @@
         "unfrozenBy": "Voorbeeld Unfrozenby 3",
         "unfrozenAt": "2026-03-03T09:00:00+00:00",
         "unfrozenReason": "Voorbeeld Unfrozenreason 3"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "publicationRecord",
+          "slug": "publicationrecord-1"
+        },
+        "subjectType": "document",
+        "documentFileRef": "9001",
+        "dossierRef": "voorbeeld-woo-2025",
+        "redactedFileRef": "9101",
+        "entitiesReviewed": true,
+        "consentClear": true,
+        "prohibitionsClear": true,
+        "readinessEvaluatedAt": "2026-09-21T10:00:00+00:00",
+        "readinessReasons": [],
+        "wooCategory": "c_8c840238",
+        "documentsoort": "besluit",
+        "publisher": "https://identifier.overheid.nl/tooi/id/gemeente/gm0000",
+        "officieleTitel": "Besluit subsidie cultuur 2025-031",
+        "creatiedatum": "2025-03-15",
+        "publicatiedatum": "2026-10-01",
+        "status": "published",
+        "endpointPublicationRef": "00000000-0000-0000-0000-000000000001",
+        "handoffAt": "2026-09-21T10:05:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "publicationRecord",
+          "slug": "publicationrecord-2"
+        },
+        "subjectType": "document",
+        "documentFileRef": "9002",
+        "dossierRef": "voorbeeld-woo-2025",
+        "redactedFileRef": "9102",
+        "entitiesReviewed": true,
+        "consentClear": false,
+        "prohibitionsClear": true,
+        "readinessEvaluatedAt": "2026-09-22T10:00:00+00:00",
+        "readinessReasons": [
+          "Consent request voorbeeld-consent-2: waiting for a reaction until 2026-11-02"
+        ],
+        "wooCategory": "c_8c840238",
+        "documentsoort": "besluit",
+        "publisher": "https://identifier.overheid.nl/tooi/id/gemeente/gm0000",
+        "officieleTitel": "Advies bezwaarcommissie 2025-044",
+        "creatiedatum": "2025-04-15",
+        "publicatiedatum": "2026-10-02",
+        "status": "draft"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "publicationRecord",
+          "slug": "publicationrecord-3"
+        },
+        "subjectType": "document",
+        "documentFileRef": "9003",
+        "dossierRef": "voorbeeld-woo-2025",
+        "redactedFileRef": "9103",
+        "entitiesReviewed": true,
+        "consentClear": true,
+        "prohibitionsClear": true,
+        "readinessEvaluatedAt": "2026-09-23T10:00:00+00:00",
+        "readinessReasons": [],
+        "wooCategory": "c_8c840238",
+        "documentsoort": "besluit",
+        "publisher": "https://identifier.overheid.nl/tooi/id/gemeente/gm0000",
+        "officieleTitel": "Verslag raadscommissie 2025-052",
+        "creatiedatum": "2025-05-15",
+        "publicatiedatum": "2026-10-03",
+        "status": "ready"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "publicationLogEntry",
+          "slug": "publicationlogentry-1"
+        },
+        "publicationRecordRef": "publicationrecord-1",
+        "action": "created",
+        "actor": "admin",
+        "timestamp": "2026-09-21T10:01:00+00:00",
+        "details": "Gestart vanuit Mijn documenten",
+        "snapshot": {
+          "status": "draft"
+        }
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "publicationLogEntry",
+          "slug": "publicationlogentry-2"
+        },
+        "publicationRecordRef": "publicationrecord-1",
+        "action": "readiness_evaluated",
+        "actor": "admin",
+        "timestamp": "2026-09-21T10:02:00+00:00",
+        "details": "",
+        "snapshot": {
+          "status": "ready"
+        }
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "publicationLogEntry",
+          "slug": "publicationlogentry-3"
+        },
+        "publicationRecordRef": "publicationrecord-1",
+        "action": "handed_off",
+        "actor": "admin",
+        "timestamp": "2026-09-21T10:03:00+00:00",
+        "details": "Publicatie bij OpenCatalogi",
+        "snapshot": {
+          "status": "handed_off"
+        }
       }
     ]
   }

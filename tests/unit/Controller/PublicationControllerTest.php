@@ -54,7 +54,7 @@ class PublicationControllerTest extends TestCase {
 	 *
 	 * @return PublicationController
 	 */
-	private function controller(PublicationPipelineService $pipeline, ?array $record): PublicationController {
+	private function controller(PublicationPipelineService $pipeline, ?array $record, ?OpenCatalogiPlatform $platform = null): PublicationController {
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRecord')->willReturn($record);
 		$store->method('listRecords')->willReturn([['uuid' => 'mine', 'documentFileRef' => '42'], ['uuid' => 'theirs', 'documentFileRef' => '99']]);
@@ -76,7 +76,7 @@ class PublicationControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$pipeline,
 			$store,
-			$this->createMock(OpenCatalogiPlatform::class),
+			($platform ?? $this->createMock(OpenCatalogiPlatform::class)),
 			new PublicationAccess(rootFolder: $root, groups: $groups),
 			$session,
 			new NullLogger()
@@ -121,6 +121,30 @@ class PublicationControllerTest extends TestCase {
 		$this->assertSame(['Consent request c-9: an objection was received'], $response->getData()['reasons']);
 
 	}//end testANotReadyHandoffAnswersWithTheReasons()
+
+	/**
+	 * The categories, a new check and a destruction date answer through their routes.
+	 *
+	 * @return void
+	 */
+	public function testCategoriesReadinessAndDestructionDate(): void {
+		$platform = $this->createMock(OpenCatalogiPlatform::class);
+		$platform->method('categories')->willReturn([['code' => 'c_8c840238', 'label' => 'Adviezen']]);
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$pipeline->method('evaluate')->willReturn(['uuid' => 'mine', 'status' => 'ready']);
+		$pipeline->method('setDestructionDate')->willThrowException(new \InvalidArgumentException('A destruction date needs a date (YYYY-MM-DD) and its source', 400));
+
+		$controller = $this->controller(pipeline: $pipeline, record: ['uuid' => 'mine', 'documentFileRef' => '42'], platform: $platform);
+
+		$this->assertSame('c_8c840238', $controller->categories()->getData()['results'][0]['code']);
+		$this->assertSame('ready', $controller->readiness('mine')->getData()['status']);
+		$this->assertSame(400, $controller->destructionDate('mine')->getStatus());
+
+		$theirs = $this->controller(pipeline: $pipeline, record: ['uuid' => 'theirs', 'documentFileRef' => '99']);
+		$this->assertSame(404, $theirs->readiness('theirs')->getStatus());
+		$this->assertSame(404, $theirs->destructionDate('theirs')->getStatus());
+
+	}//end testCategoriesReadinessAndDestructionDate()
 
 	/**
 	 * The log can be written by the pipeline only: no route changes or removes an entry.

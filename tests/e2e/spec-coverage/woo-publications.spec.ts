@@ -21,6 +21,9 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import { go } from './_helpers.ts'
 
+// The view under test, named after its component file (gate-26 matches on the stem).
+const PublicationsPage = 'publications/pub-1'
+
 const CATEGORIES = [
 	{ code: 'c_139c6280', label: 'Wetten en algemeen verbindende voorschriften' },
 	{ code: 'c_8c840238', label: 'Adviezen' },
@@ -64,7 +67,7 @@ test.describe('woo publications page', () => {
 	test('a missing category blocks the hand-off and says so', async ({ page }) => {
 		// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#missing-woo-category-blocks-handoff
 		await withRecord(page, ready)
-		await go(page, 'publications/pub-1')
+		await go(page, PublicationsPage)
 		await expect(page.getByText('Still missing: wooCategory')).toBeVisible()
 		await expect(
 			page.getByRole('button', { name: 'Hand off for publication' }),
@@ -76,7 +79,7 @@ test.describe('woo publications page', () => {
 	}) => {
 		// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#category-is-selected-from-the-tooi-list
 		await withRecord(page, ready)
-		await go(page, 'publications/pub-1')
+		await go(page, PublicationsPage)
 		const select = page.getByLabel('Information category')
 		await expect(select).toHaveJSProperty('tagName', 'SELECT')
 		await expect(select.locator('option')).toHaveCount(CATEGORIES.length + 1)
@@ -91,7 +94,7 @@ test.describe('woo publications page', () => {
 	}) => {
 		// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#endpoint-absent
 		await withRecord(page, { ...ready, wooCategory: 'c_8c840238' }, false)
-		await go(page, 'publications/pub-1')
+		await go(page, PublicationsPage)
 		await expect(page.getByText('OpenCatalogi is not installed')).toBeVisible()
 		await expect(
 			page.getByRole('button', { name: 'Hand off for publication' }),
@@ -105,7 +108,7 @@ test.describe('woo publications page', () => {
 			wooCategory: 'c_8c840238',
 			status: 'published',
 		})
-		await go(page, 'publications/pub-1')
+		await go(page, PublicationsPage)
 		const withdraw = page.getByRole('button', { name: 'Withdraw publication' })
 		await expect(withdraw).toBeDisabled()
 		await page.getByLabel('Why is it withdrawn?').fill('Wrong version')
@@ -126,7 +129,7 @@ test.describe('woo publications page', () => {
 			timestamp: '2026-09-29T10:0' + i + ':00+00:00',
 		}))
 		await withRecord(page, { ...ready, status: 'published', log })
-		await go(page, 'publications/pub-1')
+		await go(page, PublicationsPage)
 		const history = page.locator('.publications__log li')
 		await expect(history).toHaveCount(4)
 		await expect(history.nth(2)).toContainText('handed_off')
