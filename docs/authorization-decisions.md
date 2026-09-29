@@ -140,6 +140,8 @@ deliberately.
 
 | `publicationRecord` | authenticated | authenticated | admins | A handler starts and moves a publication for a document they can open, so `create` and `update` are theirs; the publication API refuses anyone who cannot open the document (404, the same as not found). Only an admin deletes one: the record is the trace of what was handed to the publication platform. |
 
+| `ocrResult` | authenticated | authenticated | admins | A handler runs OCR on a file they can open, and the anonymisation pipeline runs it for them, so `create` and `update` are theirs. The OCR routes only answer for a file in the caller's own folder (404 otherwise), and the row holds no text: confidence, settings and length only. Only an admin deletes one. |
+
 | `printJob` | authenticated | authenticated | admins | A handler sends their own letters to print, and a print service reports back with that handler's account, so `create` and `update` are theirs. The endpoints only show a job to the person in `requestedBy` or an admin, and the list is always the caller's own. Only an admin deletes one: the job is the trace of what went to the printer. |
 
 | `scanBatch` | authenticated | authenticated | admins | The batch is created by the watched-folder job on behalf of the instance and read by the clerk who sorts out what came off the scanner, so both are open. Only an admin deletes one: the batch is the trace that says which documents a delivered PDF was cut into, and a missing segment is only findable through it. |
