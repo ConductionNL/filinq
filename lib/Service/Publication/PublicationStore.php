@@ -64,6 +64,11 @@ class PublicationStore {
 	private const FILE_SERVICE = 'OCA\OpenRegister\Service\FileService';
 
 	/**
+	 * OpenCatalogi's TOOI value lists, by name so Filinq loads without it.
+	 */
+	private const TOOI = 'OCA\OpenCatalogi\Service\TooiVocabularyService';
+
+	/**
 	 * Constructor
 	 *
 	 * @param DocumentObjectServiceResolver $objects    OpenRegister's object service
@@ -186,6 +191,33 @@ class PublicationStore {
 		return $this->appManager->isEnabledForAnyone('opencatalogi');
 
 	}//end platformAvailable()
+
+	/**
+	 * The Woo information categories, from OpenCatalogi's own TOOI value list.
+	 *
+	 * @return list<array{code: string, label: string}> The categories, empty when OpenCatalogi is not there.
+	 *
+	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+	 */
+	public function categories(): array {
+		if ($this->platformAvailable() === false) {
+			return [];
+		}
+
+		try {
+			$list = $this->container->get(self::TOOI)->informatiecategorieList();
+		} catch (Throwable) {
+			return [];
+		}
+
+		$categories = [];
+		foreach ((array) $list as $entry) {
+			$categories[] = ['code' => basename((string) ($entry['uri'] ?? '')), 'label' => (string) ($entry['label'] ?? '')];
+		}
+
+		return $categories;
+
+	}//end categories()
 
 	/**
 	 * Create or update the platform's publication object.

@@ -66,3 +66,13 @@ export async function publicationStep(id, step, body = {}) {
 			: await axios.post(url, body)
 	return response.data
 }
+
+/**
+ * The Woo information categories, from OpenCatalogi's TOOI list.
+ *
+ * @return {Promise<Array<{code: string, label: string}>>}
+ * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ */
+export async function listCategories() {
+	return (await axios.get(base() + '/categories')).data.results || []
+}

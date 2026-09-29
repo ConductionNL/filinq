@@ -36,6 +36,11 @@ describe('a publication record', () => {
 			'prohibitionsClear',
 		])
 		expect(checks.map((c) => c.ok)).toEqual([true, false, true])
+		expect(checks.map((c) => c.route)).toEqual([
+			'Anonymization',
+			'Consent',
+			'Prohibitions',
+		])
 	})
 
 	it('names the metadata a hand-off still needs', () => {

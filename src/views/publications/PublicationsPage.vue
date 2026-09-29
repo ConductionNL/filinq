@@ -101,15 +101,18 @@ SPDX-License-Identifier: EUPL-1.2
 
 			<section>
 				<h3>{{ t('filinq', 'May it be published?') }}</h3>
-				<ul class="publications__checks">
+				<ol class="publications__checks">
 					<li
 						v-for="check in checks"
 						:key="check.key"
 						:data-ok="check.ok ? 'yes' : 'no'">
 						{{ check.ok ? t('filinq', 'Yes') : t('filinq', 'No') }}:
 						{{ check.label }}
+						<router-link v-if="!check.ok" :to="{ name: check.route }">
+							{{ t('filinq', 'Resolve this') }}
+						</router-link>
 					</li>
-				</ul>
+				</ol>
 				<ul v-if="record.readinessReasons && record.readinessReasons.length">
 					<li v-for="reason in record.readinessReasons" :key="reason">
 						{{ reason }}
@@ -133,10 +136,20 @@ SPDX-License-Identifier: EUPL-1.2
 					<NcTextField
 						v-model="form.officieleTitel"
 						:label="t('filinq', 'Official title')" />
-					<NcTextField
-						v-model="form.wooCategory"
-						:label="t('filinq', 'Information category (TOOI code)')"
-						:helperText="t('filinq', 'For example c_8c840238')" />
+					<label for="publication-category">{{
+						t('filinq', 'Information category')
+					}}</label>
+					<select id="publication-category" v-model="form.wooCategory">
+						<option value="">
+							{{ t('filinq', 'Choose a category') }}
+						</option>
+						<option
+							v-for="category in categories"
+							:key="category.code"
+							:value="category.code">
+							{{ category.label }}
+						</option>
+					</select>
 					<NcTextField
 						v-model="form.documentsoort"
 						:label="t('filinq', 'Document type')" />
@@ -254,6 +267,7 @@ import {
 } from '../../services/publicationRecord.js'
 import {
 	getPublication,
+	listCategories,
 	listPublications,
 	publicationStep,
 } from '../../services/publications.js'
@@ -275,6 +289,7 @@ export default {
 		return {
 			records: [],
 			record: null,
+			categories: [],
 			platformAvailable: true,
 			loading: false,
 			busy: false,
@@ -383,6 +398,7 @@ export default {
 			try {
 				if (this.id) {
 					this.show(await getPublication(this.id))
+					this.categories = await listCategories()
 				} else {
 					const data = await listPublications()
 					this.records = data.results || []

@@ -1,6 +1,8 @@
 OC.L10N.register(
     "filinq",
     {
+        "Resolve this": "Beheben",
+        "Choose a category": "Kategorie wählen",
         "All publications": "Alle Veröffentlichungen",
         "Check again": "Erneut prüfen",
         "Checked at {time}": "Geprüft am {time}",

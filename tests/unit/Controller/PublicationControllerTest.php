@@ -129,7 +129,7 @@ class PublicationControllerTest extends TestCase {
 		$routes = require __DIR__ . '/../../../appinfo/routes.php';
 		$publication = array_values(array_filter($routes['routes'], static fn (array $r): bool => str_starts_with($r['name'], 'publication#')));
 
-		$this->assertCount(8, $publication);
+		$this->assertCount(9, $publication);
 		foreach ($publication as $route) {
 			$this->assertStringNotContainsString('log', $route['url']);
 			$this->assertNotSame('DELETE', $route['verb']);

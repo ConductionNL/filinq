@@ -37,7 +37,7 @@ export function publicationStatusLabel(status) {
  * The three readiness checks of a record, in order.
  *
  * @param {object} record The record
- * @return {Array<{key: string, label: string, ok: boolean}>} The checks.
+ * @return {Array<{key: string, label: string, ok: boolean, route: string}>} The checks, each with the page where it is resolved.
  * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export function readinessChecks(record) {
@@ -46,16 +46,19 @@ export function readinessChecks(record) {
 			key: 'entitiesReviewed',
 			label: t('filinq', 'Detected entities checked by a person'),
 			ok: record.entitiesReviewed === true,
+			route: 'Anonymization',
 		},
 		{
 			key: 'consentClear',
 			label: t('filinq', 'Consent requests allow publication'),
 			ok: record.consentClear === true,
+			route: 'Consent',
 		},
 		{
 			key: 'prohibitionsClear',
 			label: t('filinq', 'No publication prohibition applies'),
 			ok: record.prohibitionsClear === true,
+			route: 'Prohibitions',
 		},
 	]
 }

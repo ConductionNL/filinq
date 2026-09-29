@@ -96,6 +96,19 @@ class PublicationController extends Controller {
 	}//end index()
 
 	/**
+	 * The Woo information categories to choose from.
+	 *
+	 * @return JSONResponse {results: [{code, label}]}
+	 *
+	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+	 */
+	#[NoAdminRequired]
+	public function categories(): JSONResponse {
+		return new JSONResponse(['results' => $this->store->categories()]);
+
+	}//end categories()
+
+	/**
 	 * Start a publication for a document the caller can open.
 	 *
 	 * @return JSONResponse The record, 201

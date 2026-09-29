@@ -1,6 +1,8 @@
 OC.L10N.register(
     "filinq",
     {
+        "Resolve this": "Oplossen",
+        "Choose a category": "Kies een categorie",
         "All publications": "Alle publicaties",
         "Check again": "Opnieuw controleren",
         "Checked at {time}": "Gecontroleerd op {time}",

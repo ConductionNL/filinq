@@ -1,6 +1,8 @@
 OC.L10N.register(
     "filinq",
     {
+        "Resolve this": "Resolve this",
+        "Choose a category": "Choose a category",
         "All publications": "All publications",
         "Check again": "Check again",
         "Checked at {time}": "Checked at {time}",

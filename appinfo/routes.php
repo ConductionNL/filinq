@@ -216,6 +216,7 @@ $extra = [
         // update or delete route: an entry is written once.
         ['name' => 'publication#index', 'url' => 'api/publications', 'verb' => 'GET'],
         ['name' => 'publication#create', 'url' => 'api/publications', 'verb' => 'POST'],
+        ['name' => 'publication#categories', 'url' => 'api/publications/categories', 'verb' => 'GET'],
         ['name' => 'publication#show', 'url' => 'api/publications/{id}', 'verb' => 'GET'],
         ['name' => 'publication#readiness', 'url' => 'api/publications/{id}/readiness', 'verb' => 'POST'],
         ['name' => 'publication#metadata', 'url' => 'api/publications/{id}/metadata', 'verb' => 'PUT'],

@@ -139,9 +139,17 @@ class PublicationPipelineService {
 	 *
 	 * @return array<string, mixed> The stored record.
 	 *
+	 * @throws InvalidArgumentException When the category is not one of OpenCatalogi's TOOI categories.
+	 *
 	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
 	 */
 	public function updateMetadata(array $record, array $metadata, string $actor): array {
+		$category = (string) ($metadata['wooCategory'] ?? '');
+		$codes = array_column($this->store->categories(), 'code');
+		if ($category !== '' && $codes !== [] && in_array($category, $codes, true) === false) {
+			throw new InvalidArgumentException('Unknown Woo information category: ' . $category, 400);
+		}
+
 		foreach (self::METADATA as $field) {
 			if (array_key_exists($field, $metadata) === true) {
 				$record[$field] = (string) $metadata[$field];

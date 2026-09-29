@@ -152,9 +152,26 @@ class PublicationPipelineServiceTest extends TestCase {
 				$this->test->recordAttachment(uuid: $objectEntity, name: $fileName, share: $share);
 			}
 		};
+		$tooi = new class {
+			/**
+			 * Two entries in OpenCatalogi's shape.
+			 *
+			 * @return array<string, array{uri: string, label: string}>
+			 */
+			public function informatiecategorieList(): array {
+				return [
+					'infocat001' => ['uri' => 'https://identifier.overheid.nl/tooi/def/thes/kern/c_139c6280', 'label' => 'Wetten en algemeen verbindende voorschriften'],
+					'infocat009' => ['uri' => 'https://identifier.overheid.nl/tooi/def/thes/kern/c_8c840238', 'label' => 'Adviezen'],
+				];
+			}
+		};
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static fn (string $id): object => ($id === 'OCA\OpenRegister\Service\FileService') ? $fileService : $objects
+			static fn (string $id): object => match ($id) {
+				'OCA\OpenRegister\Service\FileService' => $fileService,
+				'OCA\OpenCatalogi\Service\TooiVocabularyService' => $tooi,
+				default => $objects,
+			}
 		);
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('getInstalledApps')->willReturn(['openregister']);
@@ -326,6 +343,23 @@ class PublicationPipelineServiceTest extends TestCase {
 		$pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
 
 	}//end testMissingMetadataOrPlatformBlocks()
+
+	/**
+	 * The category is one of OpenCatalogi's TOOI categories, never free text.
+	 *
+	 * @return void
+	 */
+	public function testTheCategoryComesFromOpenCatalogisList(): void {
+		$pipeline = $this->pipeline();
+		$record = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+
+		$this->assertSame('c_8c840238', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'c_8c840238'], actor: 'anna')['wooCategory']);
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionCode(400);
+		$pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'besluiten'], actor: 'anna');
+
+	}//end testTheCategoryComesFromOpenCatalogisList()
 
 	/**
 	 * Withdrawing needs a reason, sets the depublication date and never deletes.
