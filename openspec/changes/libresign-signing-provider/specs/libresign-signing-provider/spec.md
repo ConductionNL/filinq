@@ -78,27 +78,27 @@ advertise QES on a non-qualified certificate.
 
 The provider MUST delegate the signing flow to LibreSign's signing API —
 create a signature request, drive the signer flow, retrieve the signed file,
-and validate — through a `LibreSignClient` seam resolved lazily so Filinq
-stays loadable without LibreSign. The provider MUST persist the LibreSign
-request identifier as the session `externalId` with `provider: libresign` on
-the existing `signingSession` object. The concrete LibreSign OCS endpoints MUST
-be confirmed against LibreSign's documented API before implementation is
-considered complete (recorded as a design Open Question, this instance having
-no LibreSign installed).
+and validate — through a `LibreSignClient` seam that loads no LibreSign class,
+so Filinq stays loadable without LibreSign. The LibreSign request identifier
+(its file uuid) MUST be persisted as the `externalId` of the `signingRequest`
+object, whose `provider` is `libresign`. The request MUST be handed to
+LibreSign before it is stored, so a LibreSign that refuses leaves no request
+behind. The LibreSign routes MUST be the ones LibreSign's own `openapi.json`
+declares.
 
 #### Scenario: A signing request is delegated to LibreSign
 
 - GIVEN LibreSign is enabled and selected as the provider
 - WHEN a signing request is initiated for a document
-- THEN a LibreSign signature request is created and its identifier is stored as the session `externalId` with `provider: libresign`
-- @e2e exclude requires a live LibreSign instance absent from this environment — covered by PHPUnit with a fake LibreSignClient (tests/unit/Service/Signing/LibreSignProviderTest.php)
+- THEN a LibreSign signature request is created with the document's bytes and its identifier is stored as the request's `externalId`, with `provider: libresign`
+- @e2e exclude requires a live LibreSign instance absent from this environment, covered by PHPUnit (tests/unit/Service/SigningServiceTest.php::testALibreSignRequestIsDelegatedAndKeepsItsExternalId, tests/unit/Service/Signing/OcsLibreSignClientTest.php)
 
 #### Scenario: Signer flow status is read from LibreSign
 
 - GIVEN an in-progress LibreSign signature request
 - WHEN the provider checks status
 - THEN it reports LibreSign's current signer state without mutating step state itself
-- @e2e exclude live-instance dependency — covered by PHPUnit with a fake LibreSignClient (tests/unit/Service/Signing/LibreSignProviderTest.php)
+- @e2e exclude live-instance dependency, covered by PHPUnit (tests/unit/Service/Signing/LibreSignProviderTest.php::testSignerFlowStatusIsReadFromLibreSign)
 
 ### Requirement: Signed-artifact and audit round-trip into OpenRegister with an honest-completion gate (REQ-DDLSP-004)
 
@@ -106,6 +106,9 @@ The signed PDF LibreSign produces MUST be stored as a new document version
 through Filinq's existing OpenRegister-backed completion path, and every
 provider action MUST be recorded through `SigningAuditService` (OpenRegister
 hash-chained `AuditTrailMapper`) — Filinq MUST NOT keep a local audit store.
+A background job MUST read every open LibreSign request back from LibreSign:
+a request LibreSign reports signed MUST complete with the signed PDF stored,
+and a request withdrawn in LibreSign MUST be cancelled.
 `produceSignedArtifact()` and `downloadSignedDocument()` MUST throw when
 LibreSign has not produced a verifiable signed file (request incomplete,
 LibreSign unreachable, or validation failed) and MUST NOT return the unsigned
@@ -117,7 +120,14 @@ original.
 - WHEN the provider retrieves the signed file
 - THEN the signed PDF is stored as a new document version via the OR-backed path
 - AND an immutable audit entry is recorded through OR's hash-chained audit trail
-- @e2e exclude live-instance dependency — covered by PHPUnit with a fake LibreSignClient and a fake audit service (tests/unit/Service/Signing/LibreSignProviderTest.php)
+- @e2e exclude live-instance dependency, covered by PHPUnit (tests/unit/Service/Signing/LibreSignCompletionTest.php::testACompletedLibreSignSignatureIsStoredAndAudited)
+
+#### Scenario: A request withdrawn in LibreSign is cancelled
+
+- GIVEN an open LibreSign request that was withdrawn in LibreSign
+- WHEN the background job reads it back
+- THEN the request is cancelled and the audit trail records it, and the document is untouched
+- @e2e exclude live-instance dependency, covered by PHPUnit (tests/unit/Service/Signing/LibreSignCompletionTest.php::testARequestCancelledInLibreSignIsCancelled)
 
 #### Scenario: Incomplete LibreSign result never yields the unsigned original
 

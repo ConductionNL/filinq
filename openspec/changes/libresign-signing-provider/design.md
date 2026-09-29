@@ -213,3 +213,43 @@ unaffected.
 - **QES qualification**: which qualified-certificate/QTSP configuration
   LibreSign exposes to mark a signature QES — provisional: admin boolean
   `libresign_qualified`, refined when the QTSP path is confirmed.
+
+## Resolved at apply (29 Sep 2026)
+
+The open questions are closed, and four decisions changed because the code at
+HEAD did not fit them.
+
+- **Endpoints**, read from LibreSign's own `openapi.json` (LibreSign/libresign
+  main, 16.0.0-dev): `POST /ocs/v2.php/apps/libresign/api/v1/request-signature`
+  (body `file`, `name`, `signers` as `identifyMethods`, `status: 1`),
+  `GET .../file/validate/uuid/{uuid}` (FileStatus 0 draft, 1 able to sign,
+  2 partially signed, 3 signed, 4 deleted, 5 signing, 6 cancelled),
+  `DELETE .../sign/file_id/{fileId}` to withdraw, and the page route
+  `GET /index.php/apps/libresign/p/pdf/{uuid}`, which serves the signed copy
+  once the status is partially signed or signed. All in
+  `lib/Service/Signing/OcsLibreSignClient.php`.
+- **Completion is polled.** LibreSign accepts a `callback` URL, but that needs
+  a public route with its own secret. `LibreSignCompletionJob` (every ten
+  minutes) reads each open LibreSign request back: signed completes it
+  through `SignedArtifactProducer::produce()` (the same new-version path an
+  in-app signature takes) and writes a COMPLETED audit entry; withdrawn in
+  LibreSign cancels it.
+- **The document goes as bytes (changed).** LibreSign acts as the account
+  that calls it, a service account (`libresign_service_uid`,
+  `libresign_service_app_password`, set with `occ config:app:set --sensitive`),
+  which cannot read a file in the initiator's folder by id. Filinq reads the
+  file and sends it as `base64`.
+- **`externalId` lives on `signingRequest` (changed).** The request is the
+  session here: `SigningCancellationService` already reads
+  `request['externalId']`, and nothing writes `signingSession` for an external
+  provider. `signingRequest` moves to 1.7.0 with an optional `externalId`.
+- **Only LibreSign is delegated at creation (changed).**
+  `SignedArtifactProducer::delegate()` hands a new request to the provider
+  before it is stored, for `libresign` only: `ValidSignProvider::initiateSigning`
+  still returns a made-up id, and delegating it would store that.
+- **A withdrawal goes to the request's own provider (changed).**
+  `SigningCancellationService` used the active provider, so a LibreSign
+  request made before the admin switched providers would have been withdrawn
+  at the wrong one.
+- `libresign_qualified` is stored as `'1'`/`'0'` like every other switch the
+  admin settings write, and read as a string.

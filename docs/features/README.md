@@ -110,6 +110,7 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 |---------|-----|-------|-----|--------|
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |
 | [Digital Signing Integration](./digital-signing.md) | digital-signing.md | — | TEC-DMS-4 | Roadmap |
+| [Signing with LibreSign](./libresign-signing-provider.md) | libresign-signing-provider.md | — | TEC-DMS-4 | Done |
 | [Document Classification](./document-classification.md) | document-classification.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |
 | [Document Comparison](./document-comparison.md) | document-comparison.md | Documentbeheercomponent | TEC-DMS-8 | Roadmap |
 | [Document Validation](./document-validation.md) | document-validation.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |
