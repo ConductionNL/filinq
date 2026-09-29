@@ -49,6 +49,16 @@
 					}}
 				</NcButton>
 				<NcButton
+					v-if="pdfaOffered"
+					variant="secondary"
+					data-testid="open-conformance-report"
+					@click="conformanceOpen = true">
+					<template #icon>
+						<FileCheckOutline :size="18" />
+					</template>
+					{{ t('filinq', 'PDF/A report') }}
+				</NcButton>
+				<NcButton
 					v-if="fileViewerStore.currentFile?.fileId"
 					variant="secondary"
 					:disabled="publishing"
@@ -76,6 +86,10 @@
 				</NcButton>
 			</div>
 		</div>
+		<ConformanceReportModal
+			:show="conformanceOpen"
+			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
+			@close="conformanceOpen = false" />
 	</div>
 </template>
 
@@ -88,6 +102,7 @@ import Download from 'vue-material-design-icons/Download.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
+import FileCheckOutline from 'vue-material-design-icons/FileCheckOutline.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
@@ -97,6 +112,7 @@ import OdtViewer from '../../components/viewers/OdtViewer.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
+import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
 import { emlPreviewUrl } from '../../services/fileViewerService.js'
 import {
 	fetchOcrStatus,
@@ -146,6 +162,8 @@ export default {
 		FileWordBox,
 		FileDocumentOutline,
 		FileAlertOutline,
+		FileCheckOutline,
+		ConformanceReportModal,
 		DdFileViewerHeader,
 		PdfViewer,
 		WordViewer,
@@ -160,10 +178,22 @@ export default {
 			ocrAvailable: false,
 			ocrResult: null,
 			ocrRunning: false,
+			conformanceOpen: false,
 		}
 	},
 
 	computed: {
+		/**
+		 * Whether the PDF/A report is offered: a stored PDF.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.1
+		 */
+		pdfaOffered() {
+			const file = fileViewerStore.currentFile
+			return Boolean(file?.fileId) && detectViewer(file) === 'pdf'
+		},
+
 		/**
 		 * Whether Run OCR is offered: an image or PDF, and OCR can run here.
 		 * The server checks again when it is pressed.
