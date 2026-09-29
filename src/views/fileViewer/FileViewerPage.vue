@@ -86,6 +86,13 @@
 				</NcButton>
 			</div>
 		</div>
+		<AccessibilityPublishWarningModal
+			:show="publishWarning.show"
+			:checked="publishWarning.checked"
+			:findings="publishWarning.findings"
+			:blocking="publishWarning.blocking"
+			@close="publishWarning.show = false"
+			@confirm="startPublishing" />
 		<ConformanceReportModal
 			:show="conformanceOpen"
 			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
@@ -112,6 +119,7 @@ import OdtViewer from '../../components/viewers/OdtViewer.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
+import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
 import { emlPreviewUrl } from '../../services/fileViewerService.js'
 import {
@@ -122,6 +130,7 @@ import {
 	runOcr,
 } from '../../services/ocr.js'
 import { startPublication } from '../../services/publications.js'
+import { publicationReadiness } from '../../services/validationService.js'
 import { fileViewerStore } from '../../store/store.js'
 
 /**
@@ -163,6 +172,7 @@ export default {
 		FileDocumentOutline,
 		FileAlertOutline,
 		FileCheckOutline,
+		AccessibilityPublishWarningModal,
 		ConformanceReportModal,
 		DdFileViewerHeader,
 		PdfViewer,
@@ -179,6 +189,7 @@ export default {
 			ocrResult: null,
 			ocrRunning: false,
 			conformanceOpen: false,
+			publishWarning: { show: false, checked: true, findings: [], blocking: false },
 		}
 	},
 
@@ -396,12 +407,31 @@ export default {
 		},
 
 		/**
+		 * Publish: first the document's open accessibility findings, as a
+		 * warning; without any, straight on.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.2
+		 */
+		async publish() {
+			this.publishing = true
+			const readiness = await publicationReadiness(fileViewerStore.currentFile.fileId)
+			this.publishing = false
+			if (readiness.checked && readiness.findings.length === 0) {
+				await this.startPublishing()
+				return
+			}
+			this.publishWarning = { show: true, ...readiness }
+		},
+
+		/**
 		 * Start a Woo publication for this document and open it.
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.2
 		 */
-		async publish() {
+		async startPublishing() {
+			this.publishWarning.show = false
 			this.publishing = true
 			try {
 				const record = await startPublication(

@@ -93,8 +93,8 @@ export default {
 		},
 
 		/**
-		 * Findings grouped by category: document checks first, then the
-		 * archival (PDF/A) checks veraPDF answers.
+		 * Findings grouped by category: document checks first, then
+		 * accessibility, then the archival (PDF/A) checks veraPDF answers.
 		 *
 		 * @return {Array<{category: string, title: string, findings: Array}>} The groups.
 		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.1
@@ -123,6 +123,10 @@ export default {
 				'pdfa-conformance-failed': t('filinq', 'Not PDF/A'),
 				'pdfa-font-not-embedded': t('filinq', 'Fonts not embedded'),
 				'archival-validator-unavailable': t('filinq', 'Not checked against PDF/A'),
+				'pdf-not-tagged': t('filinq', 'No tags'),
+				'pdf-language-missing': t('filinq', 'No language'),
+				'pdf-title-missing': t('filinq', 'No title'),
+				'pdfua-identifier-missing': t('filinq', 'Not marked as PDF/UA'),
 			}
 			return map[finding.checkId] || finding.checkId
 		},

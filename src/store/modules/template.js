@@ -260,11 +260,14 @@ export const useTemplateStore = defineStore('template', {
 			}
 		},
 		/**
-		 * Render a live preview of template content with sample data.
+		 * Render a live preview of template content with sample data, with
+		 * its accessibility lint.
 		 *
 		 * @param content
 		 * @param data
+		 * @return {Promise<{html: string, lint: Array<object>}|null>} The preview, null on failure.
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
+		 * @spec openspec/changes/pdfua-accessible-output/tasks.md#task-3.3
 		 */
 		async previewTemplate(content, data = {}) {
 			this.error = null
@@ -273,7 +276,7 @@ export const useTemplateStore = defineStore('template', {
 					generateUrl('/apps/filinq/api/templates/preview'),
 					{ content, data },
 				)
-				return response.data.html
+				return { html: response.data.html, lint: response.data.lint || [] }
 			} catch (err) {
 				console.error('Failed to preview template:', err)
 				this.error = err.message
