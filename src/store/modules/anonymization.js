@@ -893,8 +893,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.confidentialityLevel =
 					extractResponse.data.confidentialityLevel ?? null
 				const unseen = applyOcrFlags(entry, extractResponse.data)
-				entry.status
-					= entities.length === 0 && !unseen ? 'completed' : 'extracted'
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				console.error(`Failed to load entities for ${entry.name}:`, err)
 				entry.error = err.response?.data?.error || err.message
@@ -932,8 +932,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.confidentialityLabel = res.data.confidentialityLabel ?? null
 				entry.confidentialityLevel = res.data.confidentialityLevel ?? null
 				const unseen = applyOcrFlags(entry, res.data)
-				entry.status
-					= entities.length === 0 && !unseen ? 'completed' : 'extracted'
+				entry.status =
+					entities.length === 0 && !unseen ? 'completed' : 'extracted'
 			} catch (err) {
 				entry.error = err.response?.data?.error || err.message
 				entry.status = 'error'

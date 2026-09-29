@@ -28,7 +28,9 @@
 				<span
 					v-if="ocrBadge"
 					class="file-viewer-page__ocr-badge"
-					:title="t('filinq', 'Text recognised by OCR, with its confidence')">
+					:title="
+						t('filinq', 'Text recognised by OCR, with its confidence')
+					">
 					{{ ocrBadge }}
 				</span>
 				<NcButton
@@ -40,7 +42,11 @@
 						<NcLoadingIcon v-if="ocrRunning" :size="18" />
 						<TextRecognition v-else :size="18" />
 					</template>
-					{{ ocrRunning ? t('filinq', 'Running OCR…') : t('filinq', 'Run OCR') }}
+					{{
+						ocrRunning
+							? t('filinq', 'Running OCR…')
+							: t('filinq', 'Run OCR')
+					}}
 				</NcButton>
 				<NcButton
 					v-if="fileViewerStore.currentFile?.fileId"
@@ -167,7 +173,11 @@ export default {
 		 */
 		ocrOffered() {
 			const file = fileViewerStore.currentFile
-			return Boolean(file?.fileId) && isOcrCandidate(file.mimeType) && this.ocrAvailable
+			return (
+				Boolean(file?.fileId)
+				&& isOcrCandidate(file.mimeType)
+				&& this.ocrAvailable
+			)
 		},
 
 		/**
