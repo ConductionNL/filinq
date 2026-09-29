@@ -28,6 +28,7 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Service\MultiFormatOutputProducer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -59,6 +60,7 @@ class DocumentController extends Controller {
 	 * @param IUserSession $userSession User session for authentication
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
+	 * @param MultiFormatOutputProducer|null $multiFormat Answers a request with options.formats
 	 *
 	 * @return void
 	 */
@@ -69,6 +71,7 @@ class DocumentController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
+		private readonly ?MultiFormatOutputProducer $multiFormat = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -104,6 +107,7 @@ class DocumentController extends Controller {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
 	 */
 	public function generate(): DataDownloadResponse|JSONResponse {
 		try {
@@ -122,6 +126,15 @@ class DocumentController extends Controller {
 
 			$params['options']['userId'] = $user->getUID();
 			$params['options']['filename'] = $params['filename'];
+
+			if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
+				$result = $this->multiFormat->generate(
+					templateId: $params['templateId'],
+					dataRefs: $params['dataRefs'],
+					options: $params['options']
+				);
+				return $this->buildDocumentResponse(result: $result, filename: $params['filename']);
+			}
 
 			$result = $this->documentSvc->generateDocument(
 				templateId: $params['templateId'],
@@ -396,6 +409,17 @@ class DocumentController extends Controller {
 		array $result,
 		string $filename,
 	): DataDownloadResponse|JSONResponse {
+		if (isset($result['outputs']) === true) {
+			return new JSONResponse(
+				data: [
+					'outputs' => $result['outputs'],
+					'metadata' => $result['metadata'],
+					'warnings' => $result['warnings'],
+				],
+				statusCode: Http::STATUS_OK
+			);
+		}
+
 		$format = $result['format'];
 		$output = $result['output'] ?? ['mode' => 'return'];
 		$mode = $output['mode'] ?? 'return';
@@ -432,6 +456,9 @@ class DocumentController extends Controller {
 		if ($format === 'odf') {
 			$extension = '.odt';
 			$contentType = 'application/vnd.oasis.opendocument.text';
+		} elseif ($format === 'docx') {
+			$extension = '.docx';
+			$contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 		}
 
 		$basename = pathinfo($filename, PATHINFO_FILENAME);

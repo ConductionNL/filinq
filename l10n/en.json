@@ -1,5 +1,14 @@
 {
     "translations": {
+        "The output format of this file.": "The output format of this file.",
+        "The Nextcloud file id of this output; absent when it failed.": "The Nextcloud file id of this output; absent when it failed.",
+        "generated or failed.": "generated or failed.",
+        "Why this format could not be made.": "Why this format could not be made.",
+        "ODT (editable)": "ODT (editable)",
+        "LibreOffice is not available on this server": "LibreOffice is not available on this server",
+        "Could not load the output formats this server can make.": "Could not load the output formats this server can make.",
+        "Outputs": "Outputs",
+        "Elk formaat dat één generatie opleverde (options.formats): formaat, Nextcloud bestand-ID, status en de fout wanneer dat formaat mislukte. Ontbreekt bij een generatie in één formaat.": "Elk formaat dat één generatie opleverde (options.formats): formaat, Nextcloud bestand-ID, status en de fout wanneer dat formaat mislukte. Ontbreekt bij een generatie in één formaat.",
         "Accessibility checks": "Accessibility checks",
         "No tags": "No tags",
         "No language": "No language",

@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
-use Exception;
 use OCA\Filinq\Service\Charts\ChartSvgRenderer;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Charts\TableHtmlRenderer;
@@ -27,6 +26,7 @@ use OCA\Filinq\Service\DocumentRenderPipeline;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCP\App\IAppManager;
+use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -43,7 +43,7 @@ class DocumentRenderPipelineOdfTest extends TestCase {
 	 *
 	 * @return DocumentRenderPipeline
 	 */
-	private function pipeline(SvgRasterizer $rasterizer): DocumentRenderPipeline {
+	private function pipeline(SvgRasterizer $rasterizer, ?HtmlToOfficeConverter $office = null): DocumentRenderPipeline {
 		$container = $this->createMock(ContainerInterface::class);
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn([]);
@@ -54,7 +54,9 @@ class DocumentRenderPipelineOdfTest extends TestCase {
 			$this->createMock(PdfService::class),
 			new DocumentObjectServiceResolver($container, $appManager),
 			new NullLogger(),
-			$rasterizer
+			$rasterizer,
+			null,
+			$office
 		);
 	}
 
@@ -70,15 +72,12 @@ class DocumentRenderPipelineOdfTest extends TestCase {
 			->method('rasterizeInlineSvg')
 			->with('<p>a</p><svg></svg>', 'odf')
 			->willReturn(['html' => '<p>a</p><span>[x]</span>', 'warnings' => ['chart error: the chart could not be converted for odf']]);
-		$pipeline = $this->pipeline(rasterizer: $rasterizer);
+		$office = $this->createMock(HtmlToOfficeConverter::class);
+		$office->method('isAvailable')->willReturn(true);
+		$office->expects($this->once())->method('toOdt')->with('<p>a</p><span>[x]</span>')->willReturn('ODT');
+		$pipeline = $this->pipeline(rasterizer: $rasterizer, office: $office);
 
-		try {
-			$pipeline->produceOutput(htmlContent: '<p>a</p><svg></svg>', format: 'odf', pdfOptions: []);
-		} catch (Exception $e) {
-			// The ODT conversion needs LibreOffice; on a host without it the call
-			// answers 503 after the rasterizer ran. The warning is set either way.
-			$this->assertContains($e->getCode(), [500, 503]);
-		}
+		$this->assertSame('ODT', $pipeline->produceOutput(htmlContent: '<p>a</p><svg></svg>', format: 'odf', pdfOptions: []));
 
 		$this->assertSame(['chart error: the chart could not be converted for odf'], $pipeline->getLastOutputWarnings());
 	}

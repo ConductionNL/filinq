@@ -123,8 +123,8 @@ class DocumentProductionSchemaTest extends TestCase {
 		// purpose — an importer will skip a schema whose `properties`,
 		// `required` and `authorization` are all unchanged, so a number that
 		// never moves is how a property edit lands on one instance and not on
-		// the next.
-		$this->assertSame('1.3.0', $document['version']);
+		// the next. 1.4.0 since `multi-format-output` (`outputs`).
+		$this->assertSame('1.4.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],

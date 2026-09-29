@@ -33,6 +33,8 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
+use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
+use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -718,74 +720,37 @@ class CorrespondenceService {
 	}//end stripPageStyling()
 
 	/**
-	 * Convert HTML to DOCX using LibreOffice headless
+	 * Convert HTML to DOCX through the shared LibreOffice converter.
+	 *
+	 * The one HTML to DOCX path in the app (document generation uses it
+	 * too), under the conversion lock. Unavailable is a 503 with the reason
+	 * the format matrix reports.
 	 *
 	 * @param string $htmlContent The HTML content to convert
 	 * @param array $pdfOptions The page configuration options
 	 *
 	 * @return string The DOCX binary content
 	 *
-	 * @throws Exception If LibreOffice is not available or conversion fails
+	 * @throws Exception If LibreOffice is not available (503) or conversion fails (500)
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $pdfOptions reserved for future page config
 	 *
 	 * @psalm-suppress UnusedParam $pdfOptions reserved for future page config
-	 * @psalm-suppress ForbiddenCode shell_exec is required to locate the LibreOffice binary
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-output-format-selection
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
 	 */
 	private function convertToDocx(string $htmlContent, array $pdfOptions): string {
-		// Check if LibreOffice is available.
-		$soffice = trim(shell_exec('which soffice 2>/dev/null') ?? '');
-		if (empty($soffice) === true) {
-			throw new Exception(
-				message: 'DOCX conversion service unavailable: LibreOffice is not installed',
-				code: 503
-			);
+		$converter = $this->container->get(HtmlToOfficeConverter::class);
+		if ($converter instanceof HtmlToOfficeConverter === false || $converter->isAvailable() === false) {
+			throw new Exception(message: LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, code: 503);
 		}
-
-		// Write HTML to temp file.
-		$tempDir = '/tmp/filinq_convert';
-		if (file_exists($tempDir) === false) {
-			mkdir($tempDir, 0777, true);
-		}
-
-		$tempFile = $tempDir . '/' . uniqid('conv_') . '.html';
-		file_put_contents($tempFile, $htmlContent);
 
 		try {
-			$outDir = escapeshellarg($tempDir);
-			$inFile = escapeshellarg($tempFile);
-			$command = escapeshellcmd($soffice) . " --headless --convert-to docx --outdir {$outDir} {$inFile} 2>&1";
-
-			$output = [];
-			$returnCode = 0;
-			exec($command, $output, $returnCode);
-
-			if ($returnCode !== 0) {
-				throw new Exception(
-					message: 'DOCX conversion failed: ' . implode("\n", $output),
-					code: 500
-				);
-			}
-
-			$docxFile = preg_replace('/\.html$/', '.docx', $tempFile);
-			if (file_exists($docxFile) === false) {
-				throw new Exception(
-					message: 'DOCX output file not found after conversion',
-					code: 500
-				);
-			}
-
-			$content = file_get_contents($docxFile);
-			unlink($docxFile);
-
-			return $content;
-		} finally {
-			if (file_exists($tempFile) === true) {
-				unlink($tempFile);
-			}
-		}//end try
+			return $converter->toDocx(html: $htmlContent);
+		} catch (Exception $e) {
+			throw new Exception(message: 'DOCX conversion failed: ' . $e->getMessage(), code: 500, previous: $e);
+		}
 
 	}//end convertToDocx()
 

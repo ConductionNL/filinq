@@ -68,7 +68,7 @@ class DocumentService {
 	 *
 	 * @var string[]
 	 */
-	private const VALID_FORMATS = ['pdf', 'odf', 'html'];
+	private const VALID_FORMATS = ['pdf', 'odf', 'html', 'docx'];
 
 	/**
 	 * Default output destination mode.
@@ -140,7 +140,7 @@ class DocumentService {
 	 *
 	 * @param string $templateId The UUID of the template to use
 	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
-	 * @param array $options Options: format (pdf|odf|html), huisstijlId,
+	 * @param array $options Options: format (pdf|odf|html|docx), huisstijlId,
 	 *                       zaakId, adHocData, listRefs, pdfOptions, userId,
 	 *                       filename, output.
 	 *                       listRefs: [{register, schema, filter?, limit?,
@@ -171,6 +171,10 @@ class DocumentService {
 		array $options = [],
 		array $recordFields = [],
 	): array {
+		if (isset($options['formats']) === true) {
+			throw new Exception(message: 'options.formats is answered by MultiFormatOutputProducer::generate()', code: 400);
+		}
+
 		$format = $options['format'] ?? self::DEFAULT_FORMAT;
 		$this->validateFormat(format: $format);
 		$this->resolveOutputMode(options: $options);
@@ -645,6 +649,8 @@ class DocumentService {
 			$extension = '.odt';
 		} elseif ($format === 'html') {
 			$extension = '.html';
+		} elseif ($format === 'docx') {
+			$extension = '.docx';
 		}
 
 		return $basename . $extension;

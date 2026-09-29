@@ -48,6 +48,14 @@ use Psr\Log\LoggerInterface;
 class CorrespondenceServiceTest extends TestCase {
 
 	/**
+	 * What the container answers for the shared office converter.
+	 *
+	 * @var \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter|null
+	 */
+	private ?\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter $officeConverter = null;
+
+
+	/**
 	 * The service under test
 	 *
 	 * @var CorrespondenceService
@@ -134,6 +142,10 @@ class CorrespondenceServiceTest extends TestCase {
 
 				if ($class === IAppConfig::class) {
 					return $appConfig;
+				}
+
+				if ($class === \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter::class) {
+					return $this->officeConverter;
 				}
 
 				if ($class === \OCA\Filinq\Service\Charts\SvgRasterizer::class) {
@@ -241,6 +253,43 @@ class CorrespondenceServiceTest extends TestCase {
 		$this->assertEquals('<p>Hello</p>', $result['content']);
 
 	}//end testGenerateHtml()
+
+	/**
+	 * A DOCX letter goes through the shared converter; without LibreOffice it
+	 * is a 503 with the matrix's reason, as before the extraction.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
+	 */
+	public function testDocxGoesThroughTheSharedConverter(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Test', 'content' => '<p>Hello</p>']);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>Hello</p>');
+		$this->rasterizer->method('rasterizeInlineSvg')->willReturn(['html' => '<p>Hello</p>', 'warnings' => []]);
+		$logEntity = $this->createMock(ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+		$this->objectSvc->method('saveObject')->willReturn($logEntity);
+
+		$office = $this->createMock(\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter::class);
+		$office->method('isAvailable')->willReturn(true);
+		$office->expects($this->once())->method('toDocx')->with('<p>Hello</p>')->willReturn('PK letter');
+		$this->officeConverter = $office;
+
+		$result = $this->service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+		$this->assertSame('PK letter', $result['content']);
+
+		try {
+			$this->officeConverter = null;
+			$this->service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+			$this->fail('A DOCX letter was made without LibreOffice.');
+		} catch (\Exception $e) {
+			$this->assertSame(503, $e->getCode());
+			$this->assertSame(\OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, $e->getMessage());
+		}
+
+	}//end testDocxGoesThroughTheSharedConverter()
+
 
 	/**
 	 * Test invalid format throws exception

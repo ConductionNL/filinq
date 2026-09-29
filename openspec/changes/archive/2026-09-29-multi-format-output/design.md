@@ -243,3 +243,46 @@ dossier data and asserts both files land in the output folder.
 - [Matrix says available but conversion still fails (race, corrupt input)] →
   per-output `status: failed` + error in manifest and audit object; matrix is
   advisory, the job report is truth.
+
+## Resolved at apply (2026-09-29)
+
+- **No office templates exist at HEAD** (`templateType` appears nowhere in
+  `lib/`; office-template-authoring is unbuilt). The office row of the D1
+  table, the DOCX to HTML converter (task 2.7, REQ-DDMFO-007) and the office
+  scenarios of REQ-DDMFO-002/003 moved to office-template-authoring (task 2.7
+  and `specs/document-creatie-sjablonen` there). `FormatMatrixService::forTemplate()`
+  returns the instance matrix until then.
+- **One soffice path for editable formats.** Instead of a class per direction,
+  `LibreOfficeHeadlessBackend::convertHtml($html, $to)` runs soffice
+  under the cascade lock with the Writer filters (`--infilter=HTML (StarWriter)`,
+  `docx:MS Word 2007 XML`, `odt:writer8`), and `Conversion\HtmlToOfficeConverter`
+  (`toDocx`, `toOdt`) is what `DocumentRenderPipeline` and `CorrespondenceService`
+  call. The two private `shell_exec('which soffice')` + `exec()` copies (ODT in
+  the pipeline, DOCX in correspondence) are gone, so the configured binary path,
+  the enable switch and the lock now apply to them too.
+- **One reason string.** `LibreOfficeHeadlessBackend::UNAVAILABLE_REASON` is
+  what the matrix reports and what a forced `docx`/`odf` fails with (503). The
+  correspondence DOCX error changed from "DOCX conversion service unavailable:
+  LibreOffice is not installed" to that sentence; the status (503) is the same.
+- **Capability shape.** `getCapabilities()` entries carry the exception
+  report's keys (`name`, `available`, `supports`, `reason`) with `supports`
+  meaning "takes HTML" (a boolean, as in the exception), plus `inputs` (which
+  of html/docx/odt the backend handles).
+- **Correspondence formats.** Correspondence has `email`, generation has `odf`,
+  so the instance endpoint takes `?flow=correspondence`. There is no
+  generation review screen in the frontend yet (the guided wizard is unbuilt),
+  so the correspondence view is the one consumer; the wizard reads the same
+  endpoint when it lands.
+- **Multi-format requests always file.** A manifest points at files, so
+  `options.formats` implies output mode `files`; `options.userId` is required.
+  The download URL is the file's WebDAV address.
+- **Where the job lives.** `DocumentService` sits at its class-length,
+  complexity and coupling ceilings, so the job is `MultiFormatOutputProducer::generate()`:
+  it renders through `DocumentService::generatePreview()` (the same render,
+  no audit entry), converts and files each format, and writes the one
+  `generatedDocument` entry through `GeneratedDocumentLogger`.
+  `DocumentController::generate()` sends `options.formats` requests there;
+  `DocumentService::generateDocument()` refuses `formats` (400) instead of
+  ignoring it. A template with a plain-language counterpart is refused for
+  `formats` (400): the formal letter and its counterpart are filed together
+  or not at all, and pairing N formats with a counterpart is not specified.

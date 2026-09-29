@@ -65,7 +65,9 @@ class DiskLikeSofficeRunner extends SofficeProcessRunner {
 		$input = (string) end($argv);
 		$this->inputs[] = (string) file_get_contents($input);
 		$outdir = $argv[(int) array_search('--outdir', $argv, true) + 1];
-		file_put_contents($outdir . '/' . pathinfo($input, PATHINFO_FILENAME) . '.pdf', $this->pdf);
+		// Like soffice: the output is named after the input, with the target's extension.
+		$target = strtok($argv[(int) array_search('--convert-to', $argv, true) + 1], ':');
+		file_put_contents($outdir . '/' . pathinfo($input, PATHINFO_FILENAME) . '.' . $target, $this->pdf);
 		return 0;
 	}//end run()
 }//end class
