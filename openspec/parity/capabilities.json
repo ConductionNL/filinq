@@ -5087,14 +5087,15 @@
 			"name": "Put documents on legal hold so they cannot be destroyed.",
 			"source": "category-derived",
 			"sourceRef": "user story \"Exclude document from destruction due to legal hold\"",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
-				"owner": "ConductionNL/openregister",
-				"evidence": "Same source: OpenRegister's per-object retention metadata includes a `legalHold` field (archiefwet-retention-engine/proposal.md), but filinq has 'no retention surface at all' of its own and does not set or expose legalHold on any filinq schema (grep for legalHold/legal-hold across lib/ and src/ found no hits outside the proposal text).",
-				"change": "openspec/changes/archiefwet-retention-engine"
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Legal holds page (src/views/legalHolds/LegalHolds.vue, manifest LegalHolds) -> api/legal-holds (LegalHoldCaseController) -> LegalHoldCaseService: a legalHoldCase (register 8.28.0) freezes its explicit documents and dossiers through OpenRegister's LegalHoldService::placeHold (reason filinq-hold-case:<uuid>; DestructionCheckJob leaves held objects off every destruction list), locks their files with ILockManager TYPE_APP where files_lock is installed, records placement per record with retry, releases overlap-safe (derived coverage, re-stamp to a surviving case, never another party's hold), notifies owners and custodian, gated by LegalHoldAuthority (admins + legal_hold_authority_groups, fail closed). DossierDetail shows a hold badge and switches off removal. Tests: LegalHoldCaseServiceTest (refusals first, overlap both orders, partial fan-out + retry, lock provider absent, every payload against the real fragment), LegalHoldCaseControllerTest, LegalHoldCaseSchemaTest, LegalHoldNotifierTest, vitest legalHolds.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-e-discovery-legal-hold",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the Legal holds page (menu); the hold badge on a dossier; GET/POST api/legal-holds",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "archiefwet-retention-engine",
