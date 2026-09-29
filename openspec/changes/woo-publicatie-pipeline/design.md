@@ -304,3 +304,46 @@ already handed off live in OpenCatalogi and are unaffected by rollback.
 - Whether `published`/`depublished` confirmation should be event-driven
   (OpenCatalogi → Filinq notification) instead of checked-on-read — deferred
   until OpenCatalogi emits such events.
+
+## Resolved at apply (29 Sep 2026)
+
+What the code at HEAD changed in this design, and what was left out.
+
+- **Register.** Everything lives in the single `filinq` register now (the
+  `document` register was consolidated into it); both schemas are there, with
+  three seed publications and three log entries.
+- **OpenCatalogi's field names changed.** Its `publication` schema on
+  development (0.0.4) has `publicationDate` and `depublicationDate`, not
+  `publicatiedatum`/`depublicatiedatum`. `OpenCatalogiPublicationMap` is the
+  one place that names them, and `testTheFieldMapMatchesOpenCatalogi` pins it
+  against `tests/fixtures/opencatalogi-publication-schema.json`, a copy of
+  that schema.
+- **The Woo metadata is not written into OpenCatalogi.** Its `publication`
+  schema has no category, document type or publisher fields. Filinq keeps
+  them on its record and writes only the fields OpenCatalogi declares
+  (`title`, `summary`, `publicationDate`, `depublicationDate`,
+  `retentionExpiresAt`, `retentionNote`). Getting them into the Woo index is
+  OpenCatalogi's `woo-index` row.
+- **The attachment** goes through OpenRegister's `FileService::addFile()` on
+  the platform's publication object, shared, which is how OpenCatalogi's own
+  upload dialog attaches files. The service is resolved by name, so Filinq
+  loads without it.
+- **The category list** is OpenCatalogi's `TooiVocabularyService::
+  informatiecategorieList()`, served as `GET api/publications/categories`,
+  and the server refuses a category that is not on it.
+- **The gate is the service plus the declared lifecycle**, not a lifecycle
+  guard: OpenRegister refuses undeclared status moves on save, `draft ↔ ready`
+  is written only by the readiness evaluation, and a hand-off runs the checks
+  again. No filinq schema uses lifecycle guards, and one here would have
+  needed a tagged guard class for a check the service already makes.
+- **Entities reviewed** means a redacted copy exists (from the document's
+  `anonymizationLink`) and a `redactionReviewMark` covers the document.
+- **Prohibitions** are checked against the people and organisations the
+  document's consent requests name, through `PolicyMatchService::
+  matchProhibition()`; detected entities are not stored anywhere else.
+- **Access.** Every route acts only on a publication whose document the
+  caller can open, or for an admin; someone else's publication answers 404.
+- **Left out:** the Publish entry on a dossier (the dossier fan-out is this
+  design's own open question); the entry is on the document viewer. The
+  published and withdrawn states are checked when a record is read, as the
+  design planned.

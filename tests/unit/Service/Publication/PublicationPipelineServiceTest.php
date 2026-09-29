@@ -430,6 +430,9 @@ class PublicationPipelineServiceTest extends TestCase {
 			$edges[] = $t['from'] . '>' . $t['to'];
 		}
 
+		$this->assertNotContains('draft>handed_off', $edges, 'A draft must not jump to the platform');
+		$this->assertNotContains('draft>published', $edges);
+
 		$status = [];
 		foreach ($this->saves as [$schema, $object]) {
 			$this->assertValid(schema: $schemas[$schema], payload: $object, label: $schema);

@@ -20,11 +20,11 @@ or search surface (OpenCatalogi/OpenWoo own those).
 
 ### Requirement: Publication record and log schemas (REQ-DDWPP-001)
 
-The app MUST declare two schemas in the `document` register:
+The app MUST declare two schemas in the `filinq` register:
 `publicationRecord` (`subjectType` enum `document`|`dossier`,
 `documentFileRef`, `dossierRef`, `redactedFileRef`, readiness booleans
 `entitiesReviewed`/`consentClear`/`prohibitionsClear` +
-`readinessEvaluatedAt`, DiWoo block `wooCategory`/`documentsoort`/
+`readinessEvaluatedAt` + `readinessReasons`, DiWoo block `wooCategory`/`documentsoort`/
 `publisher`/`officieleTitel`/`creatiedatum`/`publicatiedatum`, `status`,
 `endpointPublicationRef`, `handoffAt`, `depublicationReason`,
 `depublicationRequestedAt`, `destructionDate`, `destructionDateSource`) and
@@ -37,7 +37,7 @@ objects (ADR-001), with a register version bump for boot import.
 - GIVEN Filinq and OpenRegister installed
 - WHEN `ConfigurationService::importFromApp()` runs on boot
 - THEN `publicationRecord` and `publicationLogEntry` exist in the `document` register with the seeded demo objects queryable
-- @e2e exclude boot-time register import with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
+- @e2e exclude boot-time register import with no UI surface of its own, covered by PHPUnit (tests/unit/Service/Publication/PublicationPipelineServiceTest.php::testEveryPayloadValidatesAndEveryMoveIsDeclared validates every write against both schemas)
 
 ### Requirement: Publication readiness evaluation (REQ-DDWPP-002)
 
@@ -72,19 +72,19 @@ AVG Art. 5(1)(c)).
 The `publicationRecord` schema MUST declare an `x-openregister-lifecycle`
 annotation (canonical `initial: draft`) with transitions `draft → ready`,
 `ready → draft` (readiness regression), `ready → handed_off`, `handed_off →
-published`, `published → depublication_requested`,
-`depublication_requested → depublished`. The `draft → ready` transition MUST
-be guarded on all three readiness booleans being true, and handoff MUST only
-be possible from `ready`, so the gate cannot be bypassed by a direct status
-write. Readiness MUST be re-evaluated on every handoff attempt and the record
-demoted to `draft` when it has regressed.
+published`, `handed_off → depublication_requested`, `published →
+depublication_requested`, `depublication_requested → depublished`, so
+OpenRegister refuses any other status move on save. The `draft ↔ ready` move
+MUST only be made by the readiness evaluation, and a handoff MUST re-evaluate
+readiness first and demote the record to `draft` when it has regressed, so a
+status written directly never reaches the publication platform.
 
 #### Scenario: Direct status write cannot skip the gate
 
 - GIVEN a publication record in `draft` with `consentClear` false
 - WHEN a save attempts `status = handed_off`
 - THEN OpenRegister's lifecycle guard rejects the transition
-- @e2e exclude server-side lifecycle guard — covered by PHPUnit transition tests (tests/unit/Service/PublicationPipelineServiceTest.php)
+- @e2e exclude server-side lifecycle, covered by PHPUnit (tests/unit/Service/Publication/PublicationPipelineServiceTest.php::testEveryPayloadValidatesAndEveryMoveIsDeclared, ::testAHandoffChecksAgainAndDemotes)
 
 #### Scenario: Regressed readiness demotes the record at handoff
 
@@ -97,12 +97,14 @@ demoted to `draft` when it has regressed.
 
 The publication record MUST carry an operator-completed DiWoo metadata block
 before handoff: `wooCategory` (one of the 17 TOOI Woo informatiecategorie
-codes, selected from OpenCatalogi's bundled TOOI value list — never free
-text), `documentsoort`, `publisher` (TOOI organisatie URI), `officieleTitel`,
+codes, selected from OpenCatalogi's bundled TOOI value list, read through
+its `TooiVocabularyService` and checked on the server — never free text), `documentsoort`, `publisher` (TOOI organisatie URI), `officieleTitel`,
 `creatiedatum` and `publicatiedatum`. Handoff MUST be blocked while any
 mandatory DiWoo field is missing. Filinq assembles and passes these values;
 TOOI validation and `diwoo:Document` emission remain OpenCatalogi's
-(WOO-TOOI-001/002).
+(WOO-TOOI-001/002). OpenCatalogi's `publication` schema has no fields for the
+category, document type or publisher yet, so those stay on the Filinq record
+until it does.
 
 #### Scenario: Missing Woo category blocks handoff
 
@@ -123,7 +125,10 @@ TOOI validation and `diwoo:Document` emission remain OpenCatalogi's
 On handoff of a `ready` record, the app MUST create (or update, when
 `endpointPublicationRef` already exists) an OpenRegister object addressed to
 OpenCatalogi's register slug `publication`, schema slug `publication`,
-mapping the record's title/summary/dates/DiWoo block, and attach the redacted
+mapping `officieleTitel` to `title`, `documentsoort` to `summary` and
+`publicatiedatum` to `publicationDate` (the fields OpenCatalogi's
+`publication` schema declares; the field map is pinned against a copy of it
+by a unit test), and attach the redacted
 derivative (`redactedFileRef`) — NEVER the original file. It MUST store
 `endpointPublicationRef` + `handoffAt`, transition to `handed_off` and append
 a `handed_off` log entry. Filinq MUST NOT render any public
@@ -149,7 +154,7 @@ authorization failure on the endpoint write MUST surface to the operator.
 ### Requirement: De-publication with mandatory reason (REQ-DDWPP-006)
 
 An operator MUST be able to withdraw a published record only with a
-non-empty `depublicationReason`. Withdrawal MUST set `depublicatiedatum` on
+non-empty `depublicationReason`. Withdrawal MUST set `depublicationDate` on
 the endpoint publication object (OpenCatalogi's published-predicate removes
 it from all public surfaces), transition the record through
 `depublication_requested` to `depublished`, and append log entries carrying
@@ -160,7 +165,7 @@ trace is retained.
 
 - GIVEN a record in `published`
 - WHEN the operator withdraws it with reason "Onterecht gepubliceerd: lopend bezwaar"
-- THEN the endpoint publication's `depublicatiedatum` is set and the record reaches `depublished`
+- THEN the endpoint publication's `depublicationDate` is set and the record reaches `depublished`
 - AND the log shows `depublication_requested` and `depublished` entries with the reason
 - @e2e tests/e2e/workflows/woo-publicatie-pipeline.spec.ts
 
@@ -189,7 +194,7 @@ log entry.
 - WHEN the destruction date is propagated
 - THEN the endpoint publication carries `retentionExpiresAt` 2034-11-03 and a `retentionNote` naming the source
 - AND the record's log shows a `destruction_date_propagated` entry
-- @e2e exclude endpoint-side retention fields are not rendered in Filinq UI — covered by PHPUnit handoff-mapping tests (tests/unit/Service/PublicationPipelineServiceTest.php); the log entry is covered under REQ-DDWPP-008
+- @e2e exclude endpoint-side retention fields are not rendered in Filinq, covered by PHPUnit (tests/unit/Service/Publication/PublicationPipelineServiceTest.php::testADestructionDateReachesThePlatform)
 
 ### Requirement: Append-only publication log (REQ-DDWPP-008)
 
@@ -213,12 +218,12 @@ accountability (Woo Art. 3.3 verantwoording; AVG Art. 5(2) accountability).
 - GIVEN an existing log entry
 - WHEN the route table is inspected for `publicationLogEntry` update/delete endpoints
 - THEN none exist
-- @e2e exclude route-surface property — covered by a PHPUnit route-table assertion, not a browser flow
+- @e2e exclude route-surface property, covered by PHPUnit (tests/unit/Controller/PublicationControllerTest.php::testNoRouteChangesTheLog)
 
 ### Requirement: Publish wizard chains the pipeline from document and dossier context (REQ-DDWPP-009)
 
-MyDocuments document detail and dossier context MUST offer a "Publiceren"
-action that creates (or opens) the publication record and presents the chain
+The document viewer (MyDocuments) MUST offer a "Publish" action that creates
+the publication record and opens it, and the record MUST present the chain
 anonymize → consent → publish as a stepped wizard: each step shows its gate
 state and deep-links to the existing capability surface (anonymisation
 review, consent records, this pipeline) — the wizard orchestrates and MUST

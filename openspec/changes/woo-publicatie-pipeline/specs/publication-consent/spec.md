@@ -34,25 +34,25 @@ alter how `objectionDeadline` is computed.
 - GIVEN a document with two consent records: one `consent_given` and one `no_response` whose `objectionDeadline` was yesterday
 - WHEN the clearance query runs
 - THEN the verdict is clear
-- @e2e exclude pure read-only query consumed by the pipeline UI — covered exhaustively by PHPUnit table tests (tests/unit/Service/ConsentServiceTest.php); the consuming surface is covered by REQ-DDWPP-002 scenarios
+- @e2e exclude pure read-only query, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php::testEveryCombination)
 
 #### Scenario: Unresolved objection blocks clearance
 
 - GIVEN a document with a consent record in `objection_received` and `publicationDecision` `pending`
 - WHEN the clearance query runs
 - THEN the verdict is not clear and the reasons name that record's UUID and status
-- @e2e exclude pure read-only query — covered by PHPUnit (tests/unit/Service/ConsentServiceTest.php); UI consumption covered under REQ-DDWPP-002
+- @e2e exclude pure read-only query, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php::testEveryCombination)
 
 #### Scenario: Rejection decision blocks clearance regardless of status
 
 - GIVEN a document with a consent record whose `publicationDecision` is `reject`
 - WHEN the clearance query runs
 - THEN the verdict is not clear
-- @e2e exclude pure read-only query — covered by PHPUnit (tests/unit/Service/ConsentServiceTest.php)
+- @e2e exclude pure read-only query, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php::testEveryCombination)
 
 #### Scenario: Objection window computation is untouched
 
 - GIVEN the clearance query implementation
 - WHEN it evaluates `no_response` records
 - THEN it compares against the stored `objectionDeadline` computed by `ObjectionDeadlineChecker` and introduces no alternative deadline computation
-- @e2e exclude architectural boundary assertion — covered by PHPUnit and code review, not a browser flow
+- @e2e exclude architectural boundary, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php: the clearance reads objectionDeadline and never computes it)
