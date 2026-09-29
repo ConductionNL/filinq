@@ -45,7 +45,7 @@ class PublicationPipelineService {
 	/**
 	 * The Woo metadata an operator may set.
 	 */
-	public const METADATA = ['wooCategory', 'documentsoort', 'publisher', 'officieleTitel', 'creatiedatum', 'publicatiedatum'];
+	public const METADATA = ['wooCategory', 'documentsoort', 'publisher', 'officieleTitel', 'creatiedatum', 'publicatiedatum', 'accessibilityOverrideReason'];
 
 	/**
 	 * Constructor
@@ -145,6 +145,7 @@ class PublicationPipelineService {
 	 * @throws InvalidArgumentException When the category is not one of OpenCatalogi's TOOI categories.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
+	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function updateMetadata(array $record, array $metadata, string $actor): array {
 		$category = (string) ($metadata['wooCategory'] ?? '');
@@ -160,7 +161,13 @@ class PublicationPipelineService {
 		}
 
 		$record = $this->store->saveRecord(record: $record, uuid: (string) $record['uuid']);
-		$this->log(record: $record, action: 'metadata_assembled', actor: $actor, details: '');
+		$details = '';
+		if (trim((string) ($metadata['accessibilityOverrideReason'] ?? '')) !== '') {
+			// The reason to publish a copy that lost its accessibility goes in the log as well.
+			$details = 'accessibility override: ' . trim((string) $metadata['accessibilityOverrideReason']);
+		}
+
+		$this->log(record: $record, action: 'metadata_assembled', actor: $actor, details: $details);
 
 		return $record;
 

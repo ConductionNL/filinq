@@ -209,7 +209,7 @@ class VeraPdfService {
 		$argv = [$this->binaryPath(), '--format', 'json', '--maxfailuresdisplayed', self::CHECKS_PER_RULE];
 		// Validate what the document claims; a document claiming nothing gets 3b.
 		$flavourArgs = ['--flavour', '0', '--defaultflavour', self::DEFAULT_FLAVOUR];
-		if ($flavour !== null && preg_match('/^[1-3][abu]$/', $flavour) === 1) {
+		if ($flavour !== null && preg_match('/^([1-3][abu]|ua1)$/', $flavour) === 1) {
 			$flavourArgs = ['--flavour', $flavour];
 		}
 

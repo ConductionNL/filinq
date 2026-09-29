@@ -354,6 +354,11 @@ class AnonymizationPersistenceService {
 			$object['verifiedAt'] = date(format: 'c');
 		}
 
+		// Tag counts and loss reasons only, never an entity value.
+		if (is_array($resultInfo['structurePreservation'] ?? null) === true) {
+			$object['structurePreservation'] = $resultInfo['structurePreservation'];
+		}
+
 		return $object;
 	}//end buildLinkObject()
 

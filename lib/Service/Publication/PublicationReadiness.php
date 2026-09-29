@@ -24,6 +24,7 @@ use DateTimeInterface;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
 
 /**
@@ -58,6 +59,7 @@ class PublicationReadiness {
 	 * @param PolicyMatchService             $policies      The publication prohibitions
 	 * @param RedactionReviewMarkRepository  $marks         Who checked the detected entities
 	 * @param PublicationStore               $store         The redacted copy
+	 * @param RedactionAccessibilityService|null $accessibility Whether the redacted copy kept its accessibility, and what that means for the hand-off
 	 *
 	 * @return void
 	 */
@@ -67,6 +69,7 @@ class PublicationReadiness {
 		private readonly PolicyMatchService $policies,
 		private readonly RedactionReviewMarkRepository $marks,
 		private readonly PublicationStore $store,
+		private readonly ?RedactionAccessibilityService $accessibility = null,
 	) {
 
 	}//end __construct()
@@ -82,6 +85,7 @@ class PublicationReadiness {
 	 *                              and, when found, redactedFileRef.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function evaluate(array $record, DateTimeImmutable $now): array {
 		$fileId = (string) ($record['documentFileRef'] ?? '');
@@ -103,6 +107,18 @@ class PublicationReadiness {
 
 		[$consentClear, $prohibitionsClear, $more] = $this->consentAndProhibitions(fileId: $fileId, now: $now);
 
+		if ($redacted !== '' && $this->accessibility !== null) {
+			$link = $this->store->findRedactionLink(fileId: $fileId);
+			$record['accessibilityState'] = (string) ($link['structurePreservation']['state'] ?? 'unknown');
+			$gate = $this->accessibility->gate(
+				state: $record['accessibilityState'],
+				overrideReason: (string) ($record['accessibilityOverrideReason'] ?? '')
+			);
+			if ($gate['clear'] === false) {
+				$reasons[] = (string) $gate['warning'];
+			}
+		}
+
 		$record['redactedFileRef'] = $redacted;
 		$record['entitiesReviewed'] = $redacted !== '' && $reviewed === true;
 		$record['consentClear'] = $consentClear;
@@ -122,11 +138,21 @@ class PublicationReadiness {
 	 * @return bool True when the document may be handed off.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function isReady(array $record): bool {
+		$accessible = true;
+		if ($this->accessibility !== null && isset($record['accessibilityState']) === true) {
+			$accessible = $this->accessibility->gate(
+				state: (string) $record['accessibilityState'],
+				overrideReason: (string) ($record['accessibilityOverrideReason'] ?? '')
+			)['clear'];
+		}
+
 		return ($record['entitiesReviewed'] ?? false) === true
 			&& ($record['consentClear'] ?? false) === true
-			&& ($record['prohibitionsClear'] ?? false) === true;
+			&& ($record['prohibitionsClear'] ?? false) === true
+			&& $accessible === true;
 
 	}//end isReady()
 
