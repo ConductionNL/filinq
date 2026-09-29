@@ -205,6 +205,10 @@ $extra = [
         ['name' => 'print#downloadPdfA', 'url' => 'api/print/pdf-a', 'verb' => 'POST'],
 
         // Print job queue routes (for external print services).
+        // OCR (ocr-trigger-surface): run on a file the caller can open, read its result.
+        ['name' => 'ocr#index', 'url' => 'api/ocr', 'verb' => 'GET'],
+        ['name' => 'ocr#run', 'url' => 'api/ocr/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'ocr#show', 'url' => 'api/ocr/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'printJob#index', 'url' => 'api/print/jobs', 'verb' => 'GET'],
         ['name' => 'printJob#create', 'url' => 'api/print/jobs', 'verb' => 'POST'],
         ['name' => 'printJob#batch', 'url' => 'api/print/batch', 'verb' => 'POST'],

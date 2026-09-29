@@ -128,12 +128,25 @@ trait OcrDoubles {
 	 * @return OcrRunService The service.
 	 */
 	protected function ocrRunService(OcrService $ocr): OcrRunService {
+		return $this->ocrRunServiceOver(ocr: $ocr, repository: $this->ocrResultRepository());
+
+	}//end ocrRunService()
+
+	/**
+	 * The run service over the given engine and repository.
+	 *
+	 * @param OcrService $ocr The engine.
+	 * @param OcrResultRepository $repository The rows.
+	 *
+	 * @return OcrRunService The service.
+	 */
+	protected function ocrRunServiceOver(OcrService $ocr, OcrResultRepository $repository): OcrRunService {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-09-29T10:00:00+00:00'));
 
-		return new OcrRunService($ocr, $this->ocrResultRepository(), $time, new NullLogger());
+		return new OcrRunService($ocr, $repository, $time, new NullLogger());
 
-	}//end ocrRunService()
+	}//end ocrRunServiceOver()
 
 	/**
 	 * A file node.
@@ -149,6 +162,7 @@ trait OcrDoubles {
 		$file->method('getMimeType')->willReturn($mimeType);
 		$file->method('getName')->willReturn('scan-' . $id . '.pdf');
 		$file->method('getContent')->willReturn('%PDF-1.4 scanned');
+		$file->method('isReadable')->willReturn(true);
 
 		return $file;
 
