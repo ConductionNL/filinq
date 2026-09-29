@@ -1,0 +1,46 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Stands in for the veraPDF command line in unit tests.
+ *
+ * It answers --version like veraPDF 1.30.2, and for a PDF it prints the
+ * report the real veraPDF 1.30.2 printed for the same bytes (recorded under
+ * tests/fixtures/verapdf, keyed by sha256 in reports.json). Bytes it has no
+ * recording for get veraPDF's own "could not parse" report and exit code 7.
+ *
+ * FAKE_VERAPDF_SLEEP=<seconds> delays the answer; FAKE_VERAPDF_ARGV=<file>
+ * records the arguments, one run per line.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+$args = array_slice($argv, 1);
+if (getenv('FAKE_VERAPDF_ARGV') !== false) {
+	file_put_contents((string) getenv('FAKE_VERAPDF_ARGV'), json_encode($args) . "\n", FILE_APPEND);
+}
+
+if (getenv('FAKE_VERAPDF_SLEEP') !== false) {
+	sleep((int) getenv('FAKE_VERAPDF_SLEEP'));
+}
+
+if ($args === ['--version']) {
+	echo "veraPDF 1.30.2\nBuilt: Wed Jun 03 10:55:00 GMT 2026\nDeveloped and released by the veraPDF Consortium.\n";
+	exit(0);
+}
+
+$dir = __DIR__;
+$map = json_decode((string) file_get_contents($dir . '/reports.json'), true);
+$hash = hash_file('sha256', (string) end($args));
+$report = ($map[$hash] ?? null);
+if ($report === null) {
+	echo file_get_contents($dir . '/unreadable.json');
+	exit(7);
+}
+
+$json = (string) file_get_contents($dir . '/' . $report);
+echo $json;
+exit(str_contains($json, '"compliant" : false') === true || str_contains($json, '"compliant":false') === true ? 1 : 0);
