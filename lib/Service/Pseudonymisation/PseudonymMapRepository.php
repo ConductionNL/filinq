@@ -101,6 +101,43 @@ class PseudonymMapRepository {
 	}//end findForLink()
 
 	/**
+	 * Every map kept for anonymised copies of one source document, without `mappings`.
+	 *
+	 * @param int $sourceFileId The original document's file id.
+	 *
+	 * @return array<int, array<string, mixed>> The rows, each with its uuid.
+	 *
+	 * @throws RuntimeException When OpenRegister cannot be read.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.3
+	 */
+	public function findForSource(int $sourceFileId): array {
+		try {
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: IntakeRepository::REGISTER,
+				schemaSlug: self::SCHEMA,
+				filters: ['sourceFileId' => $sourceFileId],
+				_rbac: false
+			);
+		} catch (Throwable $e) {
+			throw new RuntimeException(message: 'The pseudonym maps could not be read: ' . $e->getMessage(), code: 0, previous: $e);
+		}
+
+		$rows = [];
+		foreach ((array) $results as $result) {
+			$row = $this->normalise(row: $result);
+			// The filter is the search's; the match is ours.
+			if ((int) ($row['sourceFileId'] ?? 0) === $sourceFileId && (string) ($row['uuid'] ?? '') !== '') {
+				unset($row['mappings']);
+				$rows[] = $row;
+			}
+		}
+
+		return $rows;
+
+	}//end findForSource()
+
+	/**
 	 * The stored ciphertext of one map.
 	 *
 	 * The only unrendered read in this class, and the only way to the payload.

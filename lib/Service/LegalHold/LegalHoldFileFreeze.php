@@ -171,6 +171,23 @@ class LegalHoldFileFreeze {
 	}//end lockedByUs()
 
 	/**
+	 * The ids of the files behind a record, whether or not they could be locked.
+	 *
+	 * A hold placed while file locks were unavailable records no file ids, yet
+	 * its files are held all the same; a subject erasure asks this to know which.
+	 *
+	 * @param object $entity The record.
+	 *
+	 * @return array<int, int> The file ids.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
+	 */
+	public function fileIdsOf(object $entity): array {
+		return array_map(static fn (File $file): int => (int) $file->getId(), $this->files(entity: $entity));
+
+	}//end fileIdsOf()
+
+	/**
 	 * The files behind a record: its `fileId` property and the files in its folder.
 	 *
 	 * @param object $entity The record.

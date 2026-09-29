@@ -11,7 +11,9 @@ status: in-progress
 
 ## Purpose
 Runs a catalogue of document quality checks covering format allowlisting, extension/mime consistency, file integrity, PDF encryption, text-layer presence, and metadata completeness, returning structured findings keyed by a stable check ID and severity. It is a pure computation backend that reads document content and records but never writes fields, creates objects, or modifies files. This lets Filinq flag documents that are unreadable, scan-only, encrypted, or missing required metadata before further processing.
+
 ## Requirements
+
 ### Requirement: The check catalogue MUST cover format, integrity, encryption, text-layer, and metadata completeness
 
 `DocumentValidationService` MUST implement these checks, each identified by a stable `checkId`:
@@ -62,7 +64,15 @@ The service is a pure computation backend: it MUST NOT write fields, create obje
 
 ### Requirement: Validation profiles MUST be configurable per document type with per-check severity
 
-Profiles live in app config `filinq.validation.profiles`: per document type an allowed-mime list, required metadata fields, and a severity per check from `off | warning | blocking`. Unknown document types MUST resolve to the `default` profile. Shipped defaults MUST set every check to `warning` (no blocking out of the box). Profile reads happen at validation time so config changes propagate without restart.
+Profiles MUST live in app config `filinq.validation.profiles`: per
+document type an allowed-mime list, required metadata fields, and a severity
+per check from `off | warning | blocking`. Unknown document types MUST resolve
+to the `default` profile. Shipped defaults MUST set every content and
+metadata check to `warning` and every validator-backed `archival`-category
+check to `off` (no blocking out of the box; validator-backed checks are an
+explicit admin opt-in so instances without the validator binary see no
+unavailable-validator noise). Profile reads happen at validation time so
+config changes propagate without restart.
 
 @e2e exclude Profile resolution, per-check severity, default fallback, off-skip — config-driven service logic. Covered by PHPUnit (DocumentValidationServiceTest).
 
@@ -93,6 +103,13 @@ Profiles live in app config `filinq.validation.profiles`: per document type an a
 - **AND** a file with a mismatching extension
 - **WHEN** validation runs
 - **THEN** no `extension-mime-mismatch` finding is produced
+
+#### Scenario: Shipped defaults leave archival checks off
+
+- **GIVEN** an instance where the admin has never edited validation settings
+- **WHEN** any PDF is validated
+- **THEN** no `archival`-category finding of any kind is produced
+- @e2e exclude default-profile resolution — covered by PHPUnit (tests/unit/Service/DocumentValidationServiceTest.php)
 
 ### Requirement: The verdict MUST be stored as an OR calculation, not an ad-hoc write
 
@@ -192,3 +209,47 @@ The document listing and detail views MUST show a verdict chip (`passed` / `warn
 - **WHEN** the admin opens Filinq validation settings
 - **THEN** a summary banner states that blocking checks are active and names them
 
+### Requirement: The check catalogue MUST include a validator-backed archival category (REQ-DDVPV-005)
+
+`DocumentValidationService` MUST implement archival checks grouped under
+finding category `archival` (sibling of `accessibility`; existing findings
+keep their categories), riding the existing catalogue/profile/severity
+mechanism:
+
+- `pdfa-conformance-failed` — veraPDF reports the PDF non-compliant with
+  its claimed (or the profile-requested) PDF/A flavour; finding params carry
+  the flavour, the failed-rule count and the top rule references
+  (`verapdf-validation` REQ-DDVPV-002).
+- `pdfa-font-not-embedded` — veraPDF font rules fail; finding params name
+  the fonts (REQ-DDVPV-003).
+- `archival-validator-unavailable` — an archival check is enabled in the
+  resolved profile but the validator is absent or disabled; an explicit
+  "not validated" finding so absence is visible, never a silent skip.
+
+The archival checks MUST run only for PDF files and only when the resolved
+profile enables them (per-profile opt-in — validator invocations cost a JVM
+start per document). Findings MUST carry rule references and font names only
+— never document content. Aggregation (`validationStatus`) and the 422
+blocking gate apply to archival findings exactly as to existing checks.
+
+#### Scenario: Non-conformant PDF fires the archival finding
+
+- GIVEN a profile with `pdfa-conformance-failed` at severity `warning`, an available validator, and a PDF claiming PDF/A-3b that violates ISO 19005-3 rules
+- WHEN validation runs
+- THEN the findings contain `{checkId: "pdfa-conformance-failed", category: "archival"}` with the flavour and failed-rule references in params
+- @e2e tests/e2e/spec-coverage/verapdf-validation.spec.ts
+
+#### Scenario: Missing validator is an explicit finding, not a silent skip
+
+- GIVEN a profile enabling `pdfa-conformance-failed` and no veraPDF binary on the instance
+- WHEN validation runs on a PDF
+- THEN the findings contain `{checkId: "archival-validator-unavailable", category: "archival", severity: "warning"}`
+- AND no `pdfa-conformance-failed` or `pdfa-font-not-embedded` finding is fabricated
+- @e2e exclude degradation branch — covered by PHPUnit (tests/unit/Service/DocumentValidationServiceTest.php)
+
+#### Scenario: Escalated conformance check gates intake
+
+- GIVEN a profile with `pdfa-conformance-failed` set to `blocking` and a non-conformant PDF upload
+- WHEN intake runs
+- THEN the existing 422 gate rejects it listing the archival finding
+- @e2e exclude gate reuse without modification — covered by PHPUnit (tests/unit/Service/DocumentValidationServiceTest.php)

@@ -388,6 +388,41 @@
 			</div>
 		</NcSettingsSection>
 
+		<NcSettingsSection
+			:name="t('filinq', 'PDF/A validation')"
+			:description="
+				t(
+					'filinq',
+					'Check documents against the PDF/A standard with veraPDF, installed on this server. Documents are never sent elsewhere.',
+				)
+			">
+			<div class="setting-item" data-testid="verapdf-status">
+				<NcNoteCard v-if="veraPdfStatus.available" type="success">
+					{{
+						t('filinq', 'The PDF/A validator is installed: {version}', {
+							version: veraPdfStatus.version,
+						})
+					}}
+				</NcNoteCard>
+				<NcNoteCard v-else-if="!veraPdfStatus.enabled" type="info">
+					{{
+						t(
+							'filinq',
+							'The PDF/A validator is switched off in the app config (filinq.verapdf.enabled).',
+						)
+					}}
+				</NcNoteCard>
+				<NcNoteCard v-else type="warning">
+					{{
+						t(
+							'filinq',
+							'The PDF/A validator (veraPDF) is not installed. Without it, Filinq only checks that a PDF claims to be PDF/A, not that it is.',
+						)
+					}}
+				</NcNoteCard>
+			</div>
+		</NcSettingsSection>
+
 		<!-- files-confidential-labels — read-only signal ingested from
 		     files_confidential (TSCP/BAILS system tags). No policy/enforcement
 		     of its own: the vocabulary controls which tag names are recognised,
@@ -912,6 +947,7 @@ import {
 	backendStateFromSettings,
 	emptyBackendState,
 } from '../../services/anonymiserBackendState.js'
+import { fetchValidatorStatus } from '../../services/conformance.js'
 import { initialSections } from '../../services/settingsSections.js'
 
 /** The object types whose register and schema this page binds. */
@@ -1003,6 +1039,12 @@ export default {
 				tesseractAvailable: false,
 				tesseractVersion: null,
 			},
+
+			veraPdfStatus: {
+				enabled: true,
+				available: false,
+				version: '',
+			},
 		}
 	},
 
@@ -1085,11 +1127,30 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the settings and the PDF/A validator's status.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+	 */
 	mounted() {
 		this.fetchAll()
+		this.fetchValidatorStatus()
 	},
 
 	methods: {
+		/**
+		 * Read the PDF/A validator's status for its row.
+		 *
+		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+		 */
+		async fetchValidatorStatus() {
+			try {
+				this.veraPdfStatus = await fetchValidatorStatus()
+			} catch {
+				// Left as "not installed": the row then says so.
+			}
+		},
+
 		// Currently-selected base options for an entity type, derived from
 		// the slug[] mapping so the multi-select reflects saved state.
 		selectedBasesFor(entityType) {

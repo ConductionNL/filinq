@@ -11,27 +11,41 @@ SPDX-License-Identifier: EUPL-1.2
 			<CnStatusBadge :label="verdictLabel" :colorMap="colorMap" />
 		</div>
 
-		<ul v-if="findings.length > 0" class="validation-findings__list">
-			<li
-				v-for="(finding, index) in findings"
-				:key="index"
-				class="validation-findings__item">
-				<span class="validation-findings__check">{{
-					checkLabel(finding)
-				}}</span>
-				<span class="validation-findings__message">{{
-					findingMessage(finding)
-				}}</span>
-				<a
-					v-if="finding.suggestedAction === 'ocr'"
-					class="validation-findings__ocr"
-					href="#/anonymization"
-					@click="$emit('ocr', finding)">
-					{{ t('filinq', 'Run OCR') }}
-				</a>
-			</li>
-		</ul>
-		<p v-else class="validation-findings__empty">
+		<section
+			v-for="group in groups"
+			:key="group.category"
+			class="validation-findings__group"
+			:data-testid="'findings-' + group.category">
+			<h3 v-if="groups.length > 1" class="validation-findings__group-title">
+				{{ group.title }}
+			</h3>
+			<ul class="validation-findings__list">
+				<li
+					v-for="(finding, index) in group.findings"
+					:key="index"
+					class="validation-findings__item">
+					<span class="validation-findings__check">{{
+						checkLabel(finding)
+					}}</span>
+					<span class="validation-findings__message">{{
+						findingMessage(finding)
+					}}</span>
+					<span
+						v-if="adviceFor(finding)"
+						class="validation-findings__advice"
+						>{{ adviceFor(finding) }}</span
+					>
+					<a
+						v-if="finding.suggestedAction === 'ocr'"
+						class="validation-findings__ocr"
+						href="#/anonymization"
+						@click="$emit('ocr', finding)">
+						{{ t('filinq', 'Run OCR') }}
+					</a>
+				</li>
+			</ul>
+		</section>
+		<p v-if="findings.length === 0" class="validation-findings__empty">
 			{{ t('filinq', 'No validation findings.') }}
 		</p>
 	</div>
@@ -39,7 +53,8 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
-import { verdictColor } from '../services/validationService.js'
+import { guidanceText } from '../services/conformance.js'
+import { groupFindings, verdictColor } from '../services/validationService.js'
 
 export default {
 	name: 'ValidationFindingsPanel',
@@ -78,6 +93,17 @@ export default {
 		colorMap() {
 			return { [this.verdictLabel]: verdictColor(this.status) }
 		},
+
+		/**
+		 * Findings grouped by category: document checks first, then the
+		 * archival (PDF/A) checks veraPDF answers.
+		 *
+		 * @return {Array<{category: string, title: string, findings: Array}>} The groups.
+		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.1
+		 */
+		groups() {
+			return groupFindings(this.findings)
+		},
 	},
 
 	methods: {
@@ -96,6 +122,12 @@ export default {
 				'pdf-encrypted': t('filinq', 'Encrypted PDF'),
 				'text-layer-missing': t('filinq', 'Missing text layer'),
 				'metadata-incomplete': t('filinq', 'Incomplete metadata'),
+				'pdfa-conformance-failed': t('filinq', 'Not PDF/A'),
+				'pdfa-font-not-embedded': t('filinq', 'Fonts not embedded'),
+				'archival-validator-unavailable': t(
+					'filinq',
+					'Not checked against PDF/A',
+				),
 			}
 			return map[finding.checkId] || finding.checkId
 		},
@@ -110,6 +142,17 @@ export default {
 		 */
 		findingMessage(finding) {
 			return t('filinq', finding.message || '', finding.params || {})
+		},
+
+		/**
+		 * The advice an archival finding carries.
+		 *
+		 * @param {object} finding A validation finding.
+		 * @return {string} The advice, '' for none.
+		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.1
+		 */
+		adviceFor(finding) {
+			return guidanceText(finding.guidance || '')
 		},
 	},
 }
@@ -137,6 +180,17 @@ export default {
 
 .validation-findings__check {
 	font-weight: bold;
+}
+
+.validation-findings__group-title {
+	font-size: 1em;
+	font-weight: bold;
+	margin: 4px 0;
+}
+
+.validation-findings__advice {
+	flex-basis: 100%;
+	color: var(--color-text-maxcontrast);
 }
 
 .validation-findings__ocr {

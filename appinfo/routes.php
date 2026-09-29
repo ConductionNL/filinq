@@ -56,6 +56,10 @@ $extra = [
 
         // Document validation route.
         ['name' => 'validation#validate', 'url' => 'api/validation/validate', 'verb' => 'POST'],
+        // PDF/A conformance reports (veraPDF).
+        ['name' => 'conformance#status', 'url' => 'api/validation/conformance-status', 'verb' => 'GET'],
+        ['name' => 'conformance#show', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\d+']],
+        ['name' => 'conformance#check', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
 
         // Document comparison route.
         ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
@@ -220,6 +224,18 @@ $extra = [
         ['name' => 'legalHoldCase#addScope', 'url' => 'api/legal-holds/{id}/scope', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#retry', 'url' => 'api/legal-holds/{id}/retry', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#release', 'url' => 'api/legal-holds/{id}/release', 'verb' => 'POST'],
+        // Entity search (entity-search): gate, log and enrichment in EntitySearchService; access before {entityUuid}.
+        ['name' => 'entitySearch#access', 'url' => 'api/entity-search/access', 'verb' => 'GET'],
+        ['name' => 'entitySearch#index', 'url' => 'api/entity-search', 'verb' => 'GET'],
+        ['name' => 'entitySearch#show', 'url' => 'api/entity-search/{entityUuid}', 'verb' => 'GET'],
+        // Subject erasure (erase-a-person-while-the-records-stay): authority checked in the services.
+        ['name' => 'subjectErasure#index', 'url' => 'api/subject-erasures', 'verb' => 'GET'],
+        ['name' => 'subjectErasure#create', 'url' => 'api/subject-erasures', 'verb' => 'POST'],
+        ['name' => 'subjectErasure#show', 'url' => 'api/subject-erasures/{id}', 'verb' => 'GET'],
+        ['name' => 'subjectErasure#preview', 'url' => 'api/subject-erasures/{id}/preview', 'verb' => 'POST'],
+        ['name' => 'subjectErasure#exclude', 'url' => 'api/subject-erasures/{id}/exclusions', 'verb' => 'PUT'],
+        ['name' => 'subjectErasure#run', 'url' => 'api/subject-erasures/{id}/run', 'verb' => 'POST'],
+        ['name' => 'subjectErasure#certificate', 'url' => 'api/subject-erasures/{id}/certificate', 'verb' => 'GET'],
         ['name' => 'printJob#index', 'url' => 'api/print/jobs', 'verb' => 'GET'],
         ['name' => 'printJob#create', 'url' => 'api/print/jobs', 'verb' => 'POST'],
         ['name' => 'printJob#batch', 'url' => 'api/print/batch', 'verb' => 'POST'],

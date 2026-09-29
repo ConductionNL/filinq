@@ -47,6 +47,7 @@ import FormatPageBreak from 'vue-material-design-icons/FormatPageBreak.vue'
 import Gavel from 'vue-material-design-icons/Gavel.vue'
 import History from 'vue-material-design-icons/History.vue'
 import InboxArrowDown from 'vue-material-design-icons/InboxArrowDown.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -63,6 +64,7 @@ import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import Stamper from 'vue-material-design-icons/Stamper.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
+import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
@@ -108,6 +110,7 @@ export default {
 	FolderZip,
 	FormatPageBreak,
 	History,
+	Magnify,
 	Scanner,
 	InboxArrowDown,
 	Stamper,
@@ -126,6 +129,7 @@ export default {
 	ShieldCheck,
 	// The register's pseudonymMap and ocrResult schemas name these two.
 	ShieldKeyOutline,
+	TextBoxOutline,
 	TextRecognition,
 	ShieldLockOutline,
 	SignatureFreehand,

@@ -147,6 +147,23 @@
 			"order": 58
 		},
 		{
+			"id": "SubjectErasures",
+			"label": "Erasure requests",
+			"icon": "AccountRemove",
+			"route": "SubjectErasures",
+			"order": 59
+		},
+		{
+			"id": "EntitySearch",
+			"label": "Entity search",
+			"icon": "Magnify",
+			"route": "EntitySearch",
+			"order": 59,
+			"visibleIf": {
+				"entitySearch.allowed": true
+			}
+		},
+		{
 			"id": "SigningRequests",
 			"label": "Signing Requests",
 			"icon": "SignatureFreehand",
@@ -447,6 +464,22 @@
 			"title": "Legal holds",
 			"component": "LegalHolds",
 			"_note": "The hold register (e-discovery-legal-hold): legal matters and the records they freeze, with placement per record, retry and release. type:custom because it reads GET api/legal-holds, which serves hold authority only (admins plus legal_hold_authority_groups); the legalHoldCase schema itself is admin-only in OpenRegister."
+		},
+		{
+			"id": "SubjectErasures",
+			"route": "/subject-erasures",
+			"type": "custom",
+			"title": "Erasure requests",
+			"component": "SubjectErasures",
+			"_note": "Subject erasure (erase-a-person-while-the-records-stay): record a request, read the capped preview, leave occurrences in place with a reason, run, read the certificate. type:custom because the preview and the run are computed by api/subject-erasures, which checks the erasure authority (admins plus subject_erasure_groups) before anything is read."
+		},
+		{
+			"id": "EntitySearch",
+			"route": "/entity-search",
+			"type": "custom",
+			"title": "Entity search",
+			"component": "EntitySearch",
+			"_note": "Entity search (entity-search): search OpenRegister's detected-entity catalogue and see per document where a value occurs. type:custom because api/entity-search checks the gate (admins plus entity_search.allowed_groups), scopes by organisation and writes the processing log before it answers; the menu entry shows only when GET api/entity-search/access answers 200 (manifest.runtime.entitySearch.allowed, set in App.vue)."
 		},
 		{
 			"id": "PrintPreview",
