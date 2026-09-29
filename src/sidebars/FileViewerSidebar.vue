@@ -475,7 +475,6 @@ const documentRecordId = computed(() =>
 				v-if="restoreOpen && pseudonymStatus"
 				:linkId="pseudonymStatus.linkId"
 				:entryCount="pseudonymStatus.entryCount"
-				@restored="onRestored"
 				@close="restoreOpen = false" />
 			<NcButton wide variant="primary" :disabled="exporting" @click="onExport">
 				<template #icon>
@@ -910,17 +909,10 @@ export default {
 		},
 
 		/**
-		 * True when the anonymised result of a standalone (non-dossier) file is
-		 * currently on screen — the state in which the "Export files" footer
-		 * appears. Two paths reach it:
-		 *  - a file just anonymised this session (`isCompletedResult`), but only
-		 *    while its anonymised variant is the one shown (not after toggling
-		 *    back to the original, where "Re-anonymize" takes over);
-		 *  - an already-anonymised file re-opened from the list
-		 *    (`viewMode === 'anonymized'`).
-		 * In a dossier the batch footer's "Download all" covers this instead.
+		 * The file id of the redacted copy on screen, or null when none is.
 		 *
-		 * @return {boolean}
+		 * @return {number|null}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.2
 		 */
 		restoreTargetFileId() {
 			if (!this.isViewingAnonymizedResult) {
@@ -940,7 +932,17 @@ export default {
 		},
 
 		/**
-		 * PLACEHOLDER_DOC
+		 * True when the anonymised result of a standalone (non-dossier) file is
+		 * currently on screen — the state in which the "Export files" footer
+		 * appears. Two paths reach it:
+		 *  - a file just anonymised this session (`isCompletedResult`), but only
+		 *    while its anonymised variant is the one shown (not after toggling
+		 *    back to the original, where "Re-anonymize" takes over);
+		 *  - an already-anonymised file re-opened from the list
+		 *    (`viewMode === 'anonymized'`).
+		 * In a dossier the batch footer's "Download all" covers this instead.
+		 *
+		 * @return {boolean}
 		 */
 		isViewingAnonymizedResult() {
 			if (this.inDossier) {
@@ -1260,13 +1262,6 @@ export default {
 			immediate: true,
 		},
 
-		/**
-		 * Push the current detected-entity values to the viewer so it can
-		 * highlight them in the rendered document (T09). Fires on load and
-		 * whenever the entity list changes.
-		 *
-		 * @param {Array<{value: string, type: string}>} list Entities to mark.
-		 */
 		restoreTargetFileId: {
 			/**
 			 * Ask whether the redacted copy on screen kept a key.
@@ -1289,6 +1284,13 @@ export default {
 			immediate: true,
 		},
 
+		/**
+		 * Push the current detected-entity values to the viewer so it can
+		 * highlight them in the rendered document (T09). Fires on load and
+		 * whenever the entity list changes.
+		 *
+		 * @param {Array<{value: string, type: string}>} list Entities to mark.
+		 */
 		highlightList: {
 			handler(list) {
 				fileViewerStore.setHighlightEntities(list)
@@ -1394,6 +1396,7 @@ export default {
 		 * `anonymizedFileId`.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
 		 */
 		async onAnonymise() {
 			if (!this.entry) {
@@ -1970,6 +1973,18 @@ export default {
 	--color-main-background: #fff;
 	flex-direction: column;
 	gap: 6px;
+}
+
+/* Reversible pseudonymisation: the mode choice above the anonymise button. */
+.anonymise-mode {
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+.anonymise-mode__legend {
+	font-weight: bold;
+	margin-bottom: var(--default-grid-baseline, 4px);
 }
 
 .dossier-batch-summary {

@@ -623,8 +623,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   both flags before it generates and appends the summary.
 		 * @param {string} [options.outputFormat] Output document format
 		 *   (e.g. `pdf`). Required alongside `appendBasisSummary`.
+		 * @param {boolean} [options.reversible] Keep an encrypted key so a
+		 *   permitted user can restore the names later.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
 		 */
 		async anonymiseEntry(entry, options = {}) {
 			if (entry.status !== 'extracted') {
@@ -725,6 +728,11 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					anonymizePayload.appendBasisSummary = true
 					anonymizePayload.outputFormat = options.outputFormat
 				}
+				// Reversible pseudonymisation: only sent when chosen, so the
+				// default run stays irreversible and keeps no key.
+				if (options.reversible === true) {
+					anonymizePayload.reversible = true
+				}
 				const anonymizeResponse = await axios.post(
 					generateUrl(
 						`/apps/filinq/api/anonymization/anonymize/${entry.fileId}`,
@@ -743,6 +751,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				entry.residualCount = anonymizeResponse.data.residualCount || 0
 				entry.residualEntities =
 					anonymizeResponse.data.residualEntities || []
+				// Whether a reversible run kept its key (and why not), so the
+				// sidebar can warn instead of implying the names can come back.
+				entry.pseudonymisation = anonymizeResponse.data.pseudonymisation || null
 				// The re-anonymise sub-flow (if any) is done — clear the marker
 				// so the dossier footer returns to its batch state.
 				entry.reanonymize = false
