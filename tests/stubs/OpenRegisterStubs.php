@@ -2834,3 +2834,75 @@ class RegisterLeafProvidersEvent extends Event {
 		return $this->leaves;
 	}
 }//end class
+
+namespace OCA\OpenRegister\Service\Anonymisation;
+
+/**
+ * Stub for BackendInfo: one detection backend's probe record.
+ *
+ * Mirrors the real constructor (name, available, configured, lastProbedAt,
+ * latencyMs) and jsonSerialize() in OpenRegister
+ * lib/Service/Anonymisation/BackendInfo.php at development 910471dc.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Anonymisation
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class BackendInfo implements \JsonSerializable {
+	public function __construct(
+		public readonly string $name,
+		public readonly bool $available,
+		public readonly bool $configured,
+		public readonly ?string $lastProbedAt,
+		public readonly ?int $latencyMs,
+	) {
+	}
+
+	public function jsonSerialize(): array {
+		return [
+			'name' => $this->name,
+			'available' => $this->available,
+			'configured' => $this->configured,
+			'lastProbedAt' => $this->lastProbedAt,
+			'latencyMs' => $this->latencyMs,
+		];
+	}
+}//end class
+
+/**
+ * Stub for BackendState: what AnonymisationBackendService::getState() returns.
+ *
+ * Mirrors the real constructor and jsonSerialize() in OpenRegister
+ * lib/Service/Anonymisation/BackendState.php at development 910471dc.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Anonymisation
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class BackendState implements \JsonSerializable {
+	public function __construct(
+		public readonly bool $entityRecognitionEnabled,
+		public readonly string $activeMethod,
+		public readonly string $effectiveMethod,
+		public readonly array $backends,
+	) {
+	}
+
+	public function jsonSerialize(): array {
+		$backends = [];
+		foreach ($this->backends as $name => $info) {
+			$backends[$name] = $info->jsonSerialize();
+		}
+
+		return [
+			'entityRecognitionEnabled' => $this->entityRecognitionEnabled,
+			'activeMethod' => $this->activeMethod,
+			'effectiveMethod' => $this->effectiveMethod,
+			'backends' => $backends,
+		];
+	}
+}//end class

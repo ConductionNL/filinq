@@ -3,11 +3,14 @@
 /**
  * Anonymiser Backend State Client
  *
- * Delegates backend-state queries to OpenRegister's AnonymisationBackendService.
- * Filinq must not query IAppManager or AppAPI directly — all detection is
- * centralised in OpenRegister per ADR-017. If the companion service is not yet
- * deployed (e.g. during a phased rollout), falls back to method='regex' so the
- * admin warning is shown rather than silently suppressed.
+ * Reads OpenRegister's AnonymisationBackendService, which owns the choice of
+ * entity-detection backend, its probes and their availability (ADR-017).
+ * Filinq never asks IAppManager or AppAPI itself.
+ *
+ * When OpenRegister cannot answer, the client says the state is unknown. It
+ * used to say `regex`, which is a real backend that finds real BSNs, so an
+ * instance with no detector at all read as one with a weak detector, and an
+ * anonymisation run had no way to tell (anonymisation-fails-closed-without-a-detector).
  *
  * @category Service
  * @package  OCA\Filinq\Service
@@ -18,13 +21,14 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-1
+ * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-1
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use JsonSerializable;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -37,16 +41,37 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
  *
- * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-1
+ * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-1
  */
 class AnonymiserBackendStateClient {
 
 	/**
-	 * Fully-qualified class name of the OpenRegister backend service.
+	 * The class OpenRegister declares, under its Anonymisation namespace.
 	 *
 	 * @var string
 	 */
-	private const OR_SERVICE = 'OCA\OpenRegister\Service\AnonymisationBackendService';
+	public const OR_SERVICE = 'OCA\OpenRegister\Service\Anonymisation\AnonymisationBackendService';
+
+	/**
+	 * Refusal: filinq could not read which detector is live.
+	 *
+	 * @var string
+	 */
+	public const REFUSE_UNKNOWN = 'detection_state_unknown';
+
+	/**
+	 * Refusal: entity recognition is switched off on this instance.
+	 *
+	 * @var string
+	 */
+	public const REFUSE_DISABLED = 'detection_disabled';
+
+	/**
+	 * Refusal: the backend OpenRegister would use says it is unavailable.
+	 *
+	 * @var string
+	 */
+	public const REFUSE_UNAVAILABLE = 'detection_backend_unavailable';
 
 	/**
 	 * Constructor.
@@ -63,35 +88,94 @@ class AnonymiserBackendStateClient {
 	/**
 	 * Retrieve the current anonymisation backend state.
 	 *
-	 * Delegates to `OCA\OpenRegister\Service\AnonymisationBackendService::getState()`.
-	 * Falls back to `['method' => 'regex', 'appApiInstalled' => false]` when the
-	 * companion service is not yet deployed, so the admin warning is shown rather
-	 * than silently suppressed.
+	 * Keys: `known` (bool, false when OpenRegister could not be read),
+	 * `entityRecognitionEnabled` (bool|null), `activeMethod` and
+	 * `effectiveMethod` (string|null, OpenRegister's own values),
+	 * `effectiveAvailable` (bool, the probe of the effective backend) and
+	 * `backends` (array, OpenRegister's per-backend records).
 	 *
-	 * The returned array contains at least:
-	 * - `method`         (string) — one of 'regex', 'openanonymiser', 'presidio', 'llm', or a URL.
-	 * - `appApiInstalled` (bool)  — whether the app_api ExApp host is installed on this instance.
+	 * @return array{known: bool, entityRecognitionEnabled: bool|null, activeMethod: string|null,
+	 *               effectiveMethod: string|null, effectiveAvailable: bool, backends: array<string, mixed>}
 	 *
-	 * @return array<string, mixed> State array from OpenRegister, or safe defaults.
-	 *
-	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-1
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-1
 	 */
 	public function getState(): array {
 		try {
 			$service = $this->container->get(self::OR_SERVICE);
-			// @phpstan-ignore-next-line
-			$state = $service->getState();
-			return $state;
+			$raw = $service->getState();
 		} catch (\Throwable $e) {
-			$this->logger->debug(
-				'AnonymisationBackendService not available; defaulting to regex state',
+			$this->logger->warning(
+				'OpenRegister AnonymisationBackendService could not be read; the detection state is unknown',
 				['exception' => $e->getMessage()]
 			);
-			return [
-				'method' => 'regex',
-				'appApiInstalled' => false,
-			];
-		}//end try
+			return $this->unknownState();
+		}
+
+		if ($raw instanceof JsonSerializable === true) {
+			$raw = $raw->jsonSerialize();
+		}
+
+		if (is_array($raw) === false || isset($raw['effectiveMethod']) === false) {
+			$this->logger->warning('OpenRegister AnonymisationBackendService answered in a shape filinq does not know');
+			return $this->unknownState();
+		}
+
+		$backends = (array)($raw['backends'] ?? []);
+		$effective = (string)$raw['effectiveMethod'];
+
+		return [
+			'known' => true,
+			'entityRecognitionEnabled' => (bool)($raw['entityRecognitionEnabled'] ?? false),
+			'activeMethod' => (string)($raw['activeMethod'] ?? $effective),
+			'effectiveMethod' => $effective,
+			'effectiveAvailable' => (($backends[$effective]['available'] ?? false) === true),
+			'backends' => $backends,
+		];
 
 	}//end getState()
+
+	/**
+	 * Why an anonymisation run must be refused under this state, or null when a
+	 * detector is live.
+	 *
+	 * @param array<string, mixed> $state A state from {@see getState()}.
+	 *
+	 * @return string|null One of the REFUSE_* reasons, or null.
+	 *
+	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 */
+	public function refusalReason(array $state): ?string {
+		if (($state['known'] ?? false) !== true) {
+			return self::REFUSE_UNKNOWN;
+		}
+
+		if (($state['entityRecognitionEnabled'] ?? false) !== true) {
+			return self::REFUSE_DISABLED;
+		}
+
+		if (($state['effectiveAvailable'] ?? false) !== true) {
+			return self::REFUSE_UNAVAILABLE;
+		}
+
+		return null;
+
+	}//end refusalReason()
+
+	/**
+	 * The state when OpenRegister could not be read.
+	 *
+	 * @return array{known: false, entityRecognitionEnabled: null, activeMethod: null,
+	 *               effectiveMethod: null, effectiveAvailable: false, backends: array<string, mixed>}
+	 */
+	private function unknownState(): array {
+		return [
+			'known' => false,
+			'entityRecognitionEnabled' => null,
+			'activeMethod' => null,
+			'effectiveMethod' => null,
+			'effectiveAvailable' => false,
+			'backends' => [],
+		];
+
+	}//end unknownState()
 }//end class
