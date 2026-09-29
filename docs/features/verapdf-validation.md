@@ -63,11 +63,12 @@ They are off until a validation profile gives them a severity, in the
 `validation.profiles` app config, keyed by document type (here `archive`):
 
 ```json
-{ "archive": { "severities": { "pdfa-conformance-failed": "error", "pdfa-font-not-embedded": "warning", "archival-validator-unavailable": "warning" } } }
+{ "archive": { "severities": { "pdfa-conformance-failed": "blocking", "pdfa-font-not-embedded": "warning" } } }
 ```
 
-At severity `error` the finding stops intake the same way the other checks
-do.
+At severity `blocking` the finding stops intake the same way the other checks
+do. `archival-validator-unavailable` is always a warning, and appears only
+when one of the other two is on.
 
 ## PDF/A-3 conversion
 

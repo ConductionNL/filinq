@@ -27,6 +27,23 @@ export async function fetchConformance(fileId) {
 }
 
 /**
+ * The validator's status for the admin settings row (admins only).
+ *
+ * @return {Promise<{enabled: boolean, available: boolean, version: string}>} The status.
+ * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+ */
+export async function fetchValidatorStatus() {
+	const { data } = await axios.get(
+		generateUrl('/apps/filinq/api/validation/conformance-status'),
+	)
+	return {
+		enabled: Boolean(data.enabled),
+		available: Boolean(data.available),
+		version: data.version || '',
+	}
+}
+
+/**
  * Run veraPDF on a file now; the server stores the report.
  *
  * @param {number} fileId The file id.

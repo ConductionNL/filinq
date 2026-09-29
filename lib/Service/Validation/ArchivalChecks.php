@@ -71,7 +71,8 @@ class ArchivalChecks {
 	public function findings(array $profile, string $mime, File $file): array {
 		$conformance = $this->severity(profile: $profile, check: DocumentValidationService::CHECK_PDFA_CONFORMANCE);
 		$fonts = $this->severity(profile: $profile, check: DocumentValidationService::CHECK_PDFA_FONTS);
-		if ($mime !== 'application/pdf' || ($conformance === DocumentValidationService::SEVERITY_OFF && $fonts === DocumentValidationService::SEVERITY_OFF)) {
+		$bothOff = ($conformance === DocumentValidationService::SEVERITY_OFF && $fonts === DocumentValidationService::SEVERITY_OFF);
+		if ($mime !== 'application/pdf' || $bothOff === true) {
 			return [];
 		}
 
@@ -85,6 +86,20 @@ class ArchivalChecks {
 			return [$this->unavailable()];
 		}
 
+		return $this->reportFindings(report: $report, conformance: $conformance, fonts: $fonts);
+
+	}//end findings()
+
+	/**
+	 * The findings a conformance report gives under the two severities.
+	 *
+	 * @param array<string, mixed> $report      The conformance report.
+	 * @param string               $conformance The severity of the conformance check.
+	 * @param string               $fonts       The severity of the font check.
+	 *
+	 * @return array<int, array<string, mixed>> The findings.
+	 */
+	private function reportFindings(array $report, string $conformance, string $fonts): array {
 		$findings = [];
 		if ($report['compliant'] === false && $conformance !== DocumentValidationService::SEVERITY_OFF) {
 			$findings[] = $this->finding(
@@ -112,7 +127,7 @@ class ArchivalChecks {
 
 		return $findings;
 
-	}//end findings()
+	}//end reportFindings()
 
 	/**
 	 * The "not checked" finding.

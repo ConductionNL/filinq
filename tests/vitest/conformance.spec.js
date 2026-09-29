@@ -24,11 +24,17 @@ vi.mock('@nextcloud/axios', () => ({
 	default: {
 		get: (url) => {
 			calls.push(['get', url])
-			return Promise.resolve({ data: { available: true, reports: { file: { compliant: true } } } })
+			return Promise.resolve({
+				data: { available: true, reports: { file: { compliant: true } } },
+			})
 		},
 		post: (url) => {
 			calls.push(['post', url])
-			return Promise.resolve({ data: { report: { compliant: false, fontsNotEmbedded: ['Helvetica'] } } })
+			return Promise.resolve({
+				data: {
+					report: { compliant: false, fontsNotEmbedded: ['Helvetica'] },
+				},
+			})
 		},
 	},
 }))
@@ -41,7 +47,9 @@ describe('conformance service', () => {
 		expect(read.available).toBe(true)
 		expect(read.reports.file.compliant).toBe(true)
 		expect(report.fontsNotEmbedded).toEqual(['Helvetica'])
-		expect(calls.map(([verb, url]) => [verb, url.replace(/^.*\/apps/, '/apps')])).toEqual([
+		expect(
+			calls.map(([verb, url]) => [verb, url.replace(/^.*\/apps/, '/apps')]),
+		).toEqual([
 			['get', '/apps/filinq/api/validation/conformance/42'],
 			['post', '/apps/filinq/api/validation/conformance/42'],
 		])
@@ -49,10 +57,12 @@ describe('conformance service', () => {
 
 	it('says what the verdict is', () => {
 		expect(verdictText(null)).toBe('Not checked yet')
-		expect(verdictText({ compliant: true, flavour: '3b' })).toBe('Meets PDF/A-3b')
-		expect(verdictText({ compliant: false, flavour: '3b', failedRuleCount: 2 })).toBe(
-			'Does not meet PDF/A-3b. Rules failed: 2',
+		expect(verdictText({ compliant: true, flavour: '3b' })).toBe(
+			'Meets PDF/A-3b',
 		)
+		expect(
+			verdictText({ compliant: false, flavour: '3b', failedRuleCount: 2 }),
+		).toBe('Does not meet PDF/A-3b. Rules failed: 2')
 	})
 
 	it('gives advice that fits the failure and never promises a font repair on imported pages', () => {
@@ -73,16 +83,37 @@ describe('grouped validation findings', () => {
 		])
 
 		expect(groups.map((g) => g.category)).toEqual(['document', 'archival'])
-		expect(groups[0].findings.map((f) => f.checkId)).toEqual(['pdf-encrypted', 'text-layer-missing'])
+		expect(groups[0].findings.map((f) => f.checkId)).toEqual([
+			'pdf-encrypted',
+			'text-layer-missing',
+		])
 		expect(groups[1].title).toBe('Archival checks (PDF/A)')
 	})
 
 	it('labels every archival check id the server sends', () => {
-		const panel = readFileSync(new URL('../../src/components/ValidationFindingsPanel.vue', import.meta.url), 'utf8')
-		const server = readFileSync(new URL('../../lib/Service/DocumentValidationService.php', import.meta.url), 'utf8')
-		const ids = [...server.matchAll(/CHECK_(?:PDFA_\w+|ARCHIVAL_\w+) = '([a-z-]+)'/g)].map((m) => m[1])
+		const panel = readFileSync(
+			new URL(
+				'../../src/components/ValidationFindingsPanel.vue',
+				import.meta.url,
+			),
+			'utf8',
+		)
+		const server = readFileSync(
+			new URL(
+				'../../lib/Service/DocumentValidationService.php',
+				import.meta.url,
+			),
+			'utf8',
+		)
+		const ids = [
+			...server.matchAll(/CHECK_(?:PDFA_\w+|ARCHIVAL_\w+) = '([a-z-]+)'/g),
+		].map((m) => m[1])
 
-		expect(ids).toEqual(['pdfa-conformance-failed', 'pdfa-font-not-embedded', 'archival-validator-unavailable'])
+		expect(ids).toEqual([
+			'pdfa-conformance-failed',
+			'pdfa-font-not-embedded',
+			'archival-validator-unavailable',
+		])
 		for (const id of ids) {
 			expect(panel).toContain(`'${id}':`)
 		}

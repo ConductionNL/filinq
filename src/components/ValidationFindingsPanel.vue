@@ -32,7 +32,9 @@ SPDX-License-Identifier: EUPL-1.2
 					}}</span>
 					<span
 						v-if="adviceFor(finding)"
-						class="validation-findings__advice">{{ adviceFor(finding) }}</span>
+						class="validation-findings__advice"
+						>{{ adviceFor(finding) }}</span
+					>
 					<a
 						v-if="finding.suggestedAction === 'ocr'"
 						class="validation-findings__ocr"
@@ -122,7 +124,10 @@ export default {
 				'metadata-incomplete': t('filinq', 'Incomplete metadata'),
 				'pdfa-conformance-failed': t('filinq', 'Not PDF/A'),
 				'pdfa-font-not-embedded': t('filinq', 'Fonts not embedded'),
-				'archival-validator-unavailable': t('filinq', 'Not checked against PDF/A'),
+				'archival-validator-unavailable': t(
+					'filinq',
+					'Not checked against PDF/A',
+				),
 			}
 			return map[finding.checkId] || finding.checkId
 		},

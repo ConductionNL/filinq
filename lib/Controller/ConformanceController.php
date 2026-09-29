@@ -27,8 +27,10 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\VeraPdfException;
 use OCA\Filinq\Service\VeraPdf\ConformanceService;
+use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -71,6 +73,21 @@ class ConformanceController extends Controller {
 	}//end __construct()
 
 	/**
+	 * The PDF/A validator's status for the admin settings row.
+	 *
+	 * GET /api/validation/conformance-status
+	 *
+	 * @return JSONResponse {enabled, available, version}
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
+	 */
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
+	public function status(): JSONResponse {
+		return new JSONResponse($this->conformance->status());
+
+	}//end status()
+
+	/**
 	 * The stored reports for a file, and whether a new check can run.
 	 *
 	 * @param int $fileId The file id.
@@ -89,8 +106,14 @@ class ConformanceController extends Controller {
 		try {
 			$reports = $this->conformance->reportsFor(fileId: $fileId);
 		} catch (Throwable $e) {
-			$this->logger->error(message: '[ConformanceController] reports could not be read', context: ['fileId' => $fileId, 'error' => $e->getMessage()]);
-			return new JSONResponse(['error' => $this->l10n->t('The conformance report could not be read. Try again later.')], Http::STATUS_INTERNAL_SERVER_ERROR);
+			$this->logger->error(
+				message: '[ConformanceController] reports could not be read',
+				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				['error' => $this->l10n->t('The conformance report could not be read. Try again later.')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
 		}
 
 		return new JSONResponse(['available' => $this->conformance->isAvailable(), 'reports' => (object) $reports]);
@@ -122,11 +145,23 @@ class ConformanceController extends Controller {
 		try {
 			$report = $this->conformance->checkFile(file: $file, trigger: ConformanceService::TRIGGER_MANUAL);
 		} catch (VeraPdfException $e) {
-			$this->logger->warning(message: '[ConformanceController] no verdict', context: ['fileId' => $fileId, 'reason' => $e->getReason(), 'error' => $e->getMessage()]);
-			return new JSONResponse(['reason' => $e->getReason(), 'error' => $this->unavailableMessage(reason: $e->getReason())], Http::STATUS_SERVICE_UNAVAILABLE);
+			$this->logger->warning(
+				message: '[ConformanceController] no verdict',
+				context: ['fileId' => $fileId, 'reason' => $e->getReason(), 'error' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				['reason' => $e->getReason(), 'error' => $this->unavailableMessage(reason: $e->getReason())],
+				Http::STATUS_SERVICE_UNAVAILABLE
+			);
 		} catch (Throwable $e) {
-			$this->logger->error(message: '[ConformanceController] the report could not be stored', context: ['fileId' => $fileId, 'error' => $e->getMessage()]);
-			return new JSONResponse(['error' => $this->l10n->t('The check ran, but its report could not be stored. Try again later.')], Http::STATUS_INTERNAL_SERVER_ERROR);
+			$this->logger->error(
+				message: '[ConformanceController] the report could not be stored',
+				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				['error' => $this->l10n->t('The check ran, but its report could not be stored. Try again later.')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
 		}
 
 		return new JSONResponse(['report' => $report]);
@@ -153,8 +188,11 @@ class ConformanceController extends Controller {
 		}
 
 		$node = ($nodes[0] ?? null);
+		if ($node instanceof File) {
+			return $node;
+		}
 
-		return ($node instanceof File) ? $node : null;
+		return null;
 
 	}//end ownFile()
 

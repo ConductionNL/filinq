@@ -31,7 +31,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\Filinq\Service\VeraPdf\VeraPdfService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -67,7 +66,6 @@ class SettingsService {
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
-	 * @param VeraPdfService|null $veraPdf The PDF/A validator, for its status row
 	 *
 	 * @return void
 	 *
@@ -81,7 +79,6 @@ class SettingsService {
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
-		private readonly ?VeraPdfService $veraPdf = null,
 	) {
 		$this->appName = 'filinq';
 
@@ -311,22 +308,6 @@ class SettingsService {
 	}//end getOcrStatus()
 
 	/**
-	 * The PDF/A validator's status for the admin settings row.
-	 *
-	 * @return array{enabled: bool, available: bool, version: string, binaryPath: string} The status.
-	 *
-	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.2
-	 */
-	public function getVeraPdfStatus(): array {
-		if ($this->veraPdf === null) {
-			return ['enabled' => false, 'available' => false, 'version' => '', 'binaryPath' => ''];
-		}
-
-		return $this->veraPdf->status();
-
-	}//end getVeraPdfStatus()
-
-	/**
 	 * Retrieve all settings
 	 *
 	 * @return array<string, mixed> The current settings configuration
@@ -362,7 +343,6 @@ class SettingsService {
 			);
 			$data = array_merge($data, $this->loadFeatureToggles());
 			$data['ocrStatus'] = $this->getOcrStatus();
-			$data['veraPdfStatus'] = $this->getVeraPdfStatus();
 
 			// Data for the grondslag-per-entity-type selector: the curated
 			// entity types and the available `base` records (slug + name).

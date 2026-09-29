@@ -48,6 +48,16 @@ class Pdfa3OutputVerifier {
 	public const SKIPPED = 'skipped';
 
 	/**
+	 * Output whose pages Filinq rendered itself.
+	 */
+	public const ORIGIN_RENDERED = ConformanceGuidance::ORIGIN_RENDERED;
+
+	/**
+	 * Output whose pages were imported whole from another PDF.
+	 */
+	public const ORIGIN_IMPORTED = ConformanceGuidance::ORIGIN_IMPORTED;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ConformanceService $conformance The conformance check.
@@ -85,7 +95,10 @@ class Pdfa3OutputVerifier {
 		try {
 			$report = $this->conformance->checkConversion(bytes: $bytes, origin: $origin, sourceFileId: $sourceFileId);
 		} catch (VeraPdfException $e) {
-			$this->logger->warning(message: '[Pdfa3OutputVerifier] veraPDF gave no verdict on the conversion output', context: ['reason' => $e->getReason(), 'error' => $e->getMessage()]);
+			$this->logger->warning(
+				message: '[Pdfa3OutputVerifier] veraPDF gave no verdict on the conversion output',
+				context: ['reason' => $e->getReason(), 'error' => $e->getMessage()]
+			);
 			if ($this->isStrict() === true) {
 				throw $this->refusal(detail: 'veraPDF could not check the output (' . $e->getReason() . ').');
 			}
@@ -103,7 +116,11 @@ class Pdfa3OutputVerifier {
 
 		$this->logger->warning(
 			message: '[Pdfa3OutputVerifier] conversion output fails PDF/A',
-			context: ['fileId' => $sourceFileId, 'failedRules' => array_column((array) $report['failedRules'], 'ruleId'), 'fonts' => $report['fontsNotEmbedded']]
+			context: [
+				'fileId' => $sourceFileId,
+				'failedRules' => array_column((array) $report['failedRules'], 'ruleId'),
+				'fonts' => $report['fontsNotEmbedded'],
+			]
 		);
 		if ($this->isStrict() === true) {
 			throw $this->refusal(detail: sprintf('veraPDF found %d failed rules.', (int) $report['failedRuleCount']));
@@ -134,7 +151,10 @@ class Pdfa3OutputVerifier {
 		return new Pdfa3ConversionException(
 			reason: Pdfa3ConversionException::REASON_OUTPUT_VALIDATION_FAILED,
 			message: 'The PDF/A-3 output does not pass veraPDF, and strict verification is on: ' . $detail,
-			adminHint: sprintf('See the conformanceReport of the source file, or set %s to "false" to return failing output with X-Docudesk-Pdfa3-Verified: false.', self::CFG_STRICT),
+			adminHint: sprintf(
+				'See the conformanceReport of the source file, or set %s to "false" to return failing output with X-Docudesk-Pdfa3-Verified: false.',
+				self::CFG_STRICT
+			),
 			code: 422
 		);
 

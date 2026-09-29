@@ -91,16 +91,14 @@ async function openSeededPdf(page: Page): Promise<void> {
 }
 
 test('the admin sees whether the PDF/A validator is installed', async ({ page }) => {
-	await page.route('**/apps/filinq/api/settings', async (route) => {
-		if (route.request().method() !== 'GET') {
-			await route.continue()
-			return
-		}
-		const response = await route.fetch()
-		const body = await response.json()
-		body.veraPdfStatus = { enabled: true, available: true, version: 'veraPDF 1.30.2' }
-		await route.fulfill({ response, json: body })
-	})
+	await page.route(
+		'**/apps/filinq/api/validation/conformance-status',
+		async (route) => {
+			await route.fulfill({
+				json: { enabled: true, available: true, version: 'veraPDF 1.30.2' },
+			})
+		},
+	)
 	await page.goto(SETTINGS)
 	await waitForNcContentReady(page)
 
@@ -109,16 +107,24 @@ test('the admin sees whether the PDF/A validator is installed', async ({ page })
 	)
 })
 
-test('the PDF/A report shows the stored verdict, the fonts and the honest advice', async ({ page }) => {
-	await page.route('**/apps/filinq/api/validation/conformance/*', async (route) => {
-		if (route.request().method() === 'POST') {
-			await route.fulfill({ json: { report: IMPORTED_REPORT } })
-			return
-		}
-		await route.fulfill({
-			json: { available: true, reports: { conversionOutput: CONVERSION_REPORT } },
-		})
-	})
+test('the PDF/A report shows the stored verdict, the fonts and the honest advice', async ({
+	page,
+}) => {
+	await page.route(
+		'**/apps/filinq/api/validation/conformance/*',
+		async (route) => {
+			if (route.request().method() === 'POST') {
+				await route.fulfill({ json: { report: IMPORTED_REPORT } })
+				return
+			}
+			await route.fulfill({
+				json: {
+					available: true,
+					reports: { conversionOutput: CONVERSION_REPORT },
+				},
+			})
+		},
+	)
 	await openSeededPdf(page)
 	const stem = PDF_FILE.replace(/\.pdf$/, '')
 	await page.locator('tr').filter({ hasText: stem }).first().click()
@@ -141,7 +147,9 @@ test('the PDF/A report shows the stored verdict, the fonts and the honest advice
 	await expect(own).toContainText('Convert again from the original file')
 })
 
-test('archival findings sit in their own group after the document checks', async ({ page }) => {
+test('archival findings sit in their own group after the document checks', async ({
+	page,
+}) => {
 	await page.route('**/apps/filinq/api/validation/validate', async (route) => {
 		await route.fulfill({
 			json: {
@@ -158,8 +166,13 @@ test('archival findings sit in their own group after the document checks', async
 						checkId: 'pdfa-conformance-failed',
 						category: 'archival',
 						severity: 'warning',
-						message: 'The PDF does not meet PDF/A-{flavour}: {failedRuleCount} rules fail, such as {rules}.',
-						params: { flavour: '3b', failedRuleCount: 1, rules: '6.2.11.4.1' },
+						message:
+							'The PDF does not meet PDF/A-{flavour}: {failedRuleCount} rules fail, such as {rules}.',
+						params: {
+							flavour: '3b',
+							failedRuleCount: 1,
+							rules: '6.2.11.4.1',
+						},
 						guidance: 'reconvertFromSource',
 					},
 				],
