@@ -4,6 +4,9 @@
  *
  * Gate-19 e2e spec-coverage: e-discovery-legal-hold.
  *
+ * Drives the LegalHolds page component (the Legal holds menu entry) and the
+ * LegalHoldBadge on the dossier detail.
+ *
  * The register page is driven through its API with route handlers, because
  * the dev fixture has no held records and no second user. The server half of
  * each scenario (fan-out, overlap, refusals, notifications) is proven by

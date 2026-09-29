@@ -379,6 +379,7 @@ export default {
 		 *
 		 * @param {string} id The type.
 		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
 		 */
 		typeLabel(id) {
 			return this.typeOptions.find((o) => o.id === id)?.label || id
@@ -389,6 +390,7 @@ export default {
 		 *
 		 * @param {object} holdCase The case.
 		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
 		 */
 		statusLabel(holdCase) {
 			if (holdCase.status === 'released') {
@@ -404,6 +406,7 @@ export default {
 		 *
 		 * @param {string} value An ISO 8601 date-time.
 		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
 		 */
 		formatTime(value) {
 			return value ? new Date(value).toLocaleString() : ''

@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Record error": "Record error",
+        "File ids": "File ids",
+        "File error": "File error",
+        "The uuid of the record in scope.": "The uuid of the record in scope.",
+        "Whether the record is a document or a dossier.": "Whether the record is a document or a dossier.",
+        "What happened to the record's OpenRegister legal hold.": "What happened to the record's OpenRegister legal hold.",
+        "Why the record hold failed.": "Why the record hold failed.",
+        "What happened to the file locks.": "What happened to the file locks.",
+        "The files that were locked or unlocked.": "The files that were locked or unlocked.",
+        "Why the file lock failed.": "Why the file lock failed.",
+        "When this record was last handled.": "When this record was last handled.",
         "Active, not every record frozen": "Active, not every record frozen",
         "Add document record ids, one per line": "Add document record ids, one per line",
         "Add to hold": "Add to hold",

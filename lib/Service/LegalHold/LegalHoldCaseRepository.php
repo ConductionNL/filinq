@@ -136,13 +136,18 @@ class LegalHoldCaseRepository {
 	 */
 	public function save(array $case): array {
 		$uuid = (string) ($case['uuid'] ?? '');
+		$existing = null;
+		if ($uuid !== '') {
+			$existing = $uuid;
+		}
+
 		unset($case['uuid'], $case['@self'], $case['id']);
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $case,
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
-				uuid: ($uuid === '' ? null : $uuid),
+				uuid: $existing,
 				_rbac: false
 			);
 		} catch (Throwable $e) {

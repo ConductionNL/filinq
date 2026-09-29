@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Record error": "Fehler beim Datensatz",
+        "File ids": "Datei-IDs",
+        "File error": "Fehler bei den Dateien",
+        "The uuid of the record in scope.": "Die UUID des Datensatzes im Umfang.",
+        "Whether the record is a document or a dossier.": "Ob der Datensatz ein Dokument oder ein Dossier ist.",
+        "What happened to the record's OpenRegister legal hold.": "Was mit der rechtlichen Aufbewahrung des Datensatzes in OpenRegister geschah.",
+        "Why the record hold failed.": "Warum die Aufbewahrung des Datensatzes fehlschlug.",
+        "What happened to the file locks.": "Was mit den Dateisperren geschah.",
+        "The files that were locked or unlocked.": "Die Dateien, die gesperrt oder entsperrt wurden.",
+        "Why the file lock failed.": "Warum die Dateisperre fehlschlug.",
+        "When this record was last handled.": "Wann dieser Datensatz zuletzt bearbeitet wurde.",
         "Active, not every record frozen": "Aktiv, nicht jeder Datensatz eingefroren",
         "Add document record ids, one per line": "Dokument-Datensatz-IDs hinzufügen, eine pro Zeile",
         "Add to hold": "Zur Aufbewahrung hinzufügen",

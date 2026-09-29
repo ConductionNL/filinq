@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Record error": "Error del registro",
+        "File ids": "Ids de archivos",
+        "File error": "Error de los archivos",
+        "The uuid of the record in scope.": "El uuid del registro del alcance.",
+        "Whether the record is a document or a dossier.": "Si el registro es un documento o un expediente.",
+        "What happened to the record's OpenRegister legal hold.": "Qué pasó con la retención legal del registro en OpenRegister.",
+        "Why the record hold failed.": "Por qué falló la retención del registro.",
+        "What happened to the file locks.": "Qué pasó con los bloqueos de archivos.",
+        "The files that were locked or unlocked.": "Los archivos que se bloquearon o desbloquearon.",
+        "Why the file lock failed.": "Por qué falló el bloqueo de archivos.",
+        "When this record was last handled.": "Cuándo se trató este registro por última vez.",
         "Active, not every record frozen": "Activo, no todos los registros congelados",
         "Add document record ids, one per line": "Añadir ids de registros de documentos, uno por línea",
         "Add to hold": "Añadir a la retención",

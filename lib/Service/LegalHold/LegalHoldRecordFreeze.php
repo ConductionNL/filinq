@@ -69,6 +69,8 @@ class LegalHoldRecordFreeze {
 	 * @param string $caseUuid The case.
 	 *
 	 * @return string The reason.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.1
 	 */
 	public static function reasonFor(string $caseUuid): string {
 		return self::REASON_PREFIX . $caseUuid;

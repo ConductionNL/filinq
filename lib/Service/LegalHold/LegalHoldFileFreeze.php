@@ -171,7 +171,7 @@ class LegalHoldFileFreeze {
 	}//end lockedByUs()
 
 	/**
-	 * The files behind a record.
+	 * The files behind a record: its `fileId` property and the files in its folder.
 	 *
 	 * @param object $entity The record.
 	 *
@@ -184,34 +184,44 @@ class LegalHoldFileFreeze {
 			$data = (array) $entity->getObject();
 		}
 
-		if (is_int($data['fileId'] ?? null) === true || ctype_digit((string) ($data['fileId'] ?? '')) === true) {
-			$node = $this->node(id: (int) $data['fileId']);
-			if ($node instanceof File) {
-				$files[$node->getId()] = $node;
-			}
+		$named = $this->node(id: (int) ($data['fileId'] ?? 0));
+		if ($named instanceof File) {
+			$files[$named->getId()] = $named;
 		}
 
-		$folderId = null;
-		if (method_exists($entity, 'getFolder') === true) {
-			$folderId = $entity->getFolder();
-		}
-
-		$folder = null;
-		if (is_numeric($folderId) === true) {
-			$folder = $this->node(id: (int) $folderId);
-		}
-
-		if ($folder instanceof Folder) {
-			foreach ($folder->getDirectoryListing() as $node) {
-				if ($node instanceof File) {
-					$files[$node->getId()] = $node;
-				}
-			}
+		foreach ($this->folderFiles(entity: $entity) as $file) {
+			$files[$file->getId()] = $file;
 		}
 
 		return array_values($files);
 
 	}//end files()
+
+	/**
+	 * The files directly in the record's OpenRegister folder.
+	 *
+	 * @param object $entity The record.
+	 *
+	 * @return array<int, File> The files.
+	 */
+	private function folderFiles(object $entity): array {
+		$folderId = null;
+		if (method_exists($entity, 'getFolder') === true) {
+			$folderId = $entity->getFolder();
+		}
+
+		if (is_numeric($folderId) === false) {
+			return [];
+		}
+
+		$folder = $this->node(id: (int) $folderId);
+		if (($folder instanceof Folder) === false) {
+			return [];
+		}
+
+		return array_values(array_filter($folder->getDirectoryListing(), static fn ($node): bool => $node instanceof File));
+
+	}//end folderFiles()
 
 	/**
 	 * A node by id anywhere in the tree, or null.

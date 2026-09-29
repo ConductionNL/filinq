@@ -52,6 +52,7 @@ export default {
 		 * The names of the holding matters, when the server gave them.
 		 *
 		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.2
 		 */
 		caseNames() {
 			return (this.status?.cases || []).map((c) => c.name).join(', ')

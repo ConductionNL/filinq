@@ -124,7 +124,7 @@ class RegistrationBootstrap {
 		// objects to the right variant.
 		$context->registerMiddleware(LanguageNegotiationMiddleware::class);
 
-		// e-discovery-legal-hold: renders the place and release notifications.
+		// Legal holds (e-discovery-legal-hold): renders the place and release notifications.
 		// Named by string to keep this class's coupling where it is.
 		$context->registerNotifierService('OCA\\Filinq\\Notification\\LegalHoldNotifier');
 

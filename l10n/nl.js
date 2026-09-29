@@ -1,6 +1,17 @@
 OC.L10N.register(
     "filinq",
     {
+        "Record error": "Fout bij het record",
+        "File ids": "Bestands-id's",
+        "File error": "Fout bij de bestanden",
+        "The uuid of the record in scope.": "De uuid van het record in de reikwijdte.",
+        "Whether the record is a document or a dossier.": "Of het record een document of een dossier is.",
+        "What happened to the record's OpenRegister legal hold.": "Wat er met de juridische bewaring van het record in OpenRegister gebeurde.",
+        "Why the record hold failed.": "Waarom de bewaring van het record mislukte.",
+        "What happened to the file locks.": "Wat er met de bestandsvergrendelingen gebeurde.",
+        "The files that were locked or unlocked.": "De bestanden die vergrendeld of ontgrendeld zijn.",
+        "Why the file lock failed.": "Waarom de bestandsvergrendeling mislukte.",
+        "When this record was last handled.": "Wanneer dit record voor het laatst is behandeld.",
         "Active, not every record frozen": "Actief, niet elk record bevroren",
         "Add document record ids, one per line": "Documentrecord-id's toevoegen, één per regel",
         "Add to hold": "Toevoegen aan bewaring",

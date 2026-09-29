@@ -8495,11 +8495,15 @@
                             "type": "object",
                             "properties": {
                                 "ref": {
+                                    "title": "Record",
+                                    "description": "The uuid of the record in scope.",
                                     "type": "string",
                                     "minLength": 1,
                                     "maxLength": 64
                                 },
                                 "kind": {
+                                    "title": "Kind",
+                                    "description": "Whether the record is a document or a dossier.",
                                     "type": "string",
                                     "enum": [
                                         "document",
@@ -8507,6 +8511,8 @@
                                     ]
                                 },
                                 "record": {
+                                    "title": "Record hold",
+                                    "description": "What happened to the record's OpenRegister legal hold.",
                                     "type": "string",
                                     "enum": [
                                         "held",
@@ -8518,10 +8524,14 @@
                                     ]
                                 },
                                 "recordError": {
+                                    "title": "Record error",
+                                    "description": "Why the record hold failed.",
                                     "type": "string",
                                     "maxLength": 500
                                 },
                                 "file": {
+                                    "title": "Files",
+                                    "description": "What happened to the file locks.",
                                     "type": "string",
                                     "enum": [
                                         "locked",
@@ -8533,16 +8543,22 @@
                                     ]
                                 },
                                 "fileIds": {
+                                    "title": "File ids",
+                                    "description": "The files that were locked or unlocked.",
                                     "type": "array",
                                     "items": {
                                         "type": "integer"
                                     }
                                 },
                                 "fileError": {
+                                    "title": "File error",
+                                    "description": "Why the file lock failed.",
                                     "type": "string",
                                     "maxLength": 500
                                 },
                                 "at": {
+                                    "title": "At",
+                                    "description": "When this record was last handled.",
                                     "type": "string",
                                     "format": "date-time"
                                 }

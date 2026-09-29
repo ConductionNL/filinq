@@ -1,5 +1,16 @@
 {
     "translations": {
+        "Record error": "Erreur de l'enregistrement",
+        "File ids": "Identifiants de fichiers",
+        "File error": "Erreur des fichiers",
+        "The uuid of the record in scope.": "L'uuid de l'enregistrement du périmètre.",
+        "Whether the record is a document or a dossier.": "Si l'enregistrement est un document ou un dossier.",
+        "What happened to the record's OpenRegister legal hold.": "Ce qu'il est advenu de la conservation légale de l'enregistrement dans OpenRegister.",
+        "Why the record hold failed.": "Pourquoi la conservation de l'enregistrement a échoué.",
+        "What happened to the file locks.": "Ce qu'il est advenu des verrous de fichiers.",
+        "The files that were locked or unlocked.": "Les fichiers verrouillés ou déverrouillés.",
+        "Why the file lock failed.": "Pourquoi le verrouillage de fichiers a échoué.",
+        "When this record was last handled.": "Quand cet enregistrement a été traité pour la dernière fois.",
         "Active, not every record frozen": "Active, tous les enregistrements ne sont pas gelés",
         "Add document record ids, one per line": "Ajouter des identifiants d'enregistrements de documents, un par ligne",
         "Add to hold": "Ajouter à la conservation",

@@ -110,6 +110,7 @@ export default {
 		 * Whether everything the server requires is filled in.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
 		 */
 		complete() {
 			return (

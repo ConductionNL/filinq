@@ -52,6 +52,7 @@ import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Printer from 'vue-material-design-icons/Printer.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
+import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import Scanner from 'vue-material-design-icons/Scanner.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
@@ -117,6 +118,8 @@ export default {
 	// in the navigation (rule 3 above), so adding the menu entry without these
 	// two lines would have put a nameless blank row where each entry belongs.
 	Publish,
+	// The Legal holds menu entry (e-discovery-legal-hold).
+	ScaleBalance,
 	PublishOff,
 	ShieldCheck,
 	ShieldLockOutline,

@@ -23,6 +23,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\LegalHold\LegalHoldAuthority;
 use OCA\Filinq\Service\LegalHold\LegalHoldCaseRepository;
 use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
+use OCA\Filinq\Service\LegalHold\LegalHoldCaseShape;
 use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
 use OCA\Filinq\Service\LegalHold\LegalHoldFileFreeze;
 use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
@@ -160,6 +161,7 @@ trait LegalHoldDoubles {
 				time: $time,
 				logger: new NullLogger()
 			),
+			shape: new LegalHoldCaseShape(),
 			time: $time
 		);
 

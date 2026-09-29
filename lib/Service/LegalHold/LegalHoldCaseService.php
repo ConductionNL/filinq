@@ -42,7 +42,7 @@ class LegalHoldCaseService {
 	 *
 	 * @var array<int, string>
 	 */
-	public const HOLD_TYPES = ['litigation', 'audit', 'woo-appeal', 'other'];
+	public const HOLD_TYPES = LegalHoldCaseShape::HOLD_TYPES;
 
 	/**
 	 * Constructor.
@@ -51,6 +51,7 @@ class LegalHoldCaseService {
 	 * @param LegalHoldCaseRepository $cases         The hold register.
 	 * @param LegalHoldFanOut         $fanOut        Freezes and unfreezes one record.
 	 * @param LegalHoldNotifications  $notifications Tells owners and the custodian.
+	 * @param LegalHoldCaseShape      $shape         The rules over a case array.
 	 * @param ITimeFactory            $time          The clock.
 	 *
 	 * @return void
@@ -60,6 +61,7 @@ class LegalHoldCaseService {
 		private readonly LegalHoldCaseRepository $cases,
 		private readonly LegalHoldFanOut $fanOut,
 		private readonly LegalHoldNotifications $notifications,
+		private readonly LegalHoldCaseShape $shape,
 		private readonly ITimeFactory $time,
 	) {
 
@@ -124,11 +126,11 @@ class LegalHoldCaseService {
 	public function place(array $input, string $userId): array {
 		$this->authority->assertAuthority(userId: $userId);
 		$case = [
-			'name' => $this->required(input: $input, field: 'name', max: 255),
-			'holdType' => $this->holdType(input: $input),
-			'reason' => $this->required(input: $input, field: 'reason', max: 2000),
-			'scopeDocuments' => $this->refs(value: ($input['scopeDocuments'] ?? [])),
-			'scopeDossiers' => $this->refs(value: ($input['scopeDossiers'] ?? [])),
+			'name' => $this->shape->required(input: $input, field: 'name', max: 255),
+			'holdType' => $this->shape->holdType(input: $input),
+			'reason' => $this->shape->required(input: $input, field: 'reason', max: 2000),
+			'scopeDocuments' => $this->shape->refs(value: ($input['scopeDocuments'] ?? [])),
+			'scopeDossiers' => $this->shape->refs(value: ($input['scopeDossiers'] ?? [])),
 			'status' => 'active',
 			'placedBy' => $userId,
 			'placedAt' => $this->now(),
@@ -150,7 +152,7 @@ class LegalHoldCaseService {
 		// sees this one and keeps these records frozen.
 		$case = $this->cases->save(case: $case);
 
-		return $this->freezeRefs(case: $case, refs: $this->scope(case: $case));
+		return $this->freezeRefs(case: $case, refs: $this->shape->scope(case: $case), subject: LegalHoldNotifications::SUBJECT_PLACED);
 
 	}//end place()
 
@@ -173,7 +175,7 @@ class LegalHoldCaseService {
 		$added = [];
 		foreach (['scopeDocuments' => 'document', 'scopeDossiers' => 'dossier'] as $field => $kind) {
 			$current = (array) ($case[$field] ?? []);
-			foreach ($this->refs(value: ($input[$field] ?? [])) as $ref) {
+			foreach ($this->shape->refs(value: ($input[$field] ?? [])) as $ref) {
 				if (in_array($ref, $current, true) === false) {
 					$current[] = $ref;
 					$added[$ref] = $kind;
@@ -189,7 +191,7 @@ class LegalHoldCaseService {
 
 		$case = $this->cases->save(case: $case);
 
-		return $this->freezeRefs(case: $case, refs: $added);
+		return $this->freezeRefs(case: $case, refs: $added, subject: LegalHoldNotifications::SUBJECT_PLACED);
 
 	}//end addScope()
 
@@ -216,8 +218,8 @@ class LegalHoldCaseService {
 		}
 
 		// A record in scope with no entry at all was never reached.
-		foreach ($this->scope(case: $case) as $ref => $kind) {
-			if ($this->entryFor(case: $case, ref: $ref) === null) {
+		foreach ($this->shape->scope(case: $case) as $ref => $kind) {
+			if ($this->shape->entryFor(case: $case, ref: $ref) === null) {
 				$pending[$ref] = $kind;
 			}
 		}
@@ -227,10 +229,10 @@ class LegalHoldCaseService {
 		}
 
 		if ($case['status'] === 'released') {
-			return $this->unfreezeRefs(case: $case, refs: $pending, notify: false);
+			return $this->unfreezeRefs(case: $case, refs: $pending, subject: '');
 		}
 
-		return $this->freezeRefs(case: $case, refs: $pending, notify: false);
+		return $this->freezeRefs(case: $case, refs: $pending, subject: '');
 
 	}//end retry()
 
@@ -264,7 +266,7 @@ class LegalHoldCaseService {
 		// safe side, and retry finishes the job.
 		$case = $this->cases->save(case: $case);
 
-		return $this->unfreezeRefs(case: $case, refs: $this->scope(case: $case), notify: true);
+		return $this->unfreezeRefs(case: $case, refs: $this->shape->scope(case: $case), subject: LegalHoldNotifications::SUBJECT_RELEASED);
 
 	}//end release()
 
@@ -292,7 +294,7 @@ class LegalHoldCaseService {
 
 		$cases = [];
 		if ($this->authority->hasAuthority(userId: $userId) === true) {
-			foreach ($this->covering(ref: $ref, exceptUuid: '', activeCases: $this->cases->search(filters: ['status' => 'active'])) as $case) {
+			foreach ($this->shape->covering(ref: $ref, exceptUuid: '', activeCases: $this->cases->search(filters: ['status' => 'active'])) as $case) {
 				$cases[] = ['uuid' => (string) $case['uuid'], 'name' => (string) ($case['name'] ?? '')];
 			}
 		}
@@ -302,50 +304,23 @@ class LegalHoldCaseService {
 	}//end statusFor()
 
 	/**
-	 * The active cases other than this one that list a record.
-	 *
-	 * @param string $ref         The record uuid.
-	 * @param string $exceptUuid  The case to leave out.
-	 * @param array  $activeCases The active cases, read once per run.
-	 *
-	 * @return array<int, array<string, mixed>> The covering cases.
-	 *
-	 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-2.2
-	 */
-	public function covering(string $ref, string $exceptUuid, array $activeCases): array {
-		$covering = [];
-		foreach ($activeCases as $case) {
-			if (($case['uuid'] ?? '') === $exceptUuid || ($case['status'] ?? '') !== 'active') {
-				continue;
-			}
-
-			if (array_key_exists($ref, $this->scope(case: $case)) === true) {
-				$covering[] = $case;
-			}
-		}
-
-		return $covering;
-
-	}//end covering()
-
-	/**
 	 * Freeze records, record the outcome on the case, and notify.
 	 *
 	 * @param array<string, mixed>  $case   The saved case.
 	 * @param array<string, string> $refs   Record uuid => kind.
-	 * @param bool                  $notify Whether to notify owners and custodian.
+	 * @param string                $subject The notification subject, '' for none.
 	 *
 	 * @return array<string, mixed> The case as saved.
 	 */
-	private function freezeRefs(array $case, array $refs, bool $notify = true): array {
+	private function freezeRefs(array $case, array $refs, string $subject): array {
 		$owners = [];
 		foreach ($refs as $ref => $kind) {
 			$result = $this->fanOut->freeze(ref: (string) $ref, kind: $kind, caseUuid: (string) $case['uuid']);
-			$case = $this->withEntry(case: $case, entry: $result['entry']);
+			$case = $this->shape->withEntry(case: $case, entry: $result['entry']);
 			$owners[] = $result['owner'];
 		}
 
-		return $this->finish(case: $case, owners: $owners, subject: ($notify === true ? LegalHoldNotifications::SUBJECT_PLACED : ''));
+		return $this->finish(case: $case, owners: $owners, subject: $subject);
 
 	}//end freezeRefs()
 
@@ -354,26 +329,26 @@ class LegalHoldCaseService {
 	 *
 	 * @param array<string, mixed>  $case   The released case.
 	 * @param array<string, string> $refs   Record uuid => kind.
-	 * @param bool                  $notify Whether to notify owners and custodian.
+	 * @param string                $subject The notification subject, '' for none.
 	 *
 	 * @return array<string, mixed> The case as saved.
 	 */
-	private function unfreezeRefs(array $case, array $refs, bool $notify): array {
+	private function unfreezeRefs(array $case, array $refs, string $subject): array {
 		$active = $this->cases->search(filters: ['status' => 'active']);
 		$owners = [];
 		foreach ($refs as $ref => $kind) {
-			$survivors = $this->covering(ref: (string) $ref, exceptUuid: (string) $case['uuid'], activeCases: $active);
+			$survivors = $this->shape->covering(ref: (string) $ref, exceptUuid: (string) $case['uuid'], activeCases: $active);
 			$survivor = null;
 			if ($survivors !== []) {
 				$survivor = (string) $survivors[0]['uuid'];
 			}
 
 			$result = $this->fanOut->unfreeze(ref: (string) $ref, kind: $kind, survivorUuid: $survivor, releaseReason: (string) $case['releaseReason']);
-			$case = $this->withEntry(case: $case, entry: $result['entry']);
+			$case = $this->shape->withEntry(case: $case, entry: $result['entry']);
 			$owners[] = $result['owner'];
 		}
 
-		return $this->finish(case: $case, owners: $owners, subject: ($notify === true ? LegalHoldNotifications::SUBJECT_RELEASED : ''));
+		return $this->finish(case: $case, owners: $owners, subject: $subject);
 
 	}//end unfreezeRefs()
 
@@ -387,8 +362,12 @@ class LegalHoldCaseService {
 	 * @return array<string, mixed> The case as saved.
 	 */
 	private function finish(array $case, array $owners, string $subject): array {
-		$case['fileLockBackstop'] = ($this->fanOut->fileLocksAvailable() === true ? 'available' : 'unavailable');
-		$case['protection'] = $this->protection(case: $case);
+		$case['fileLockBackstop'] = 'unavailable';
+		if ($this->fanOut->fileLocksAvailable() === true) {
+			$case['fileLockBackstop'] = 'available';
+		}
+
+		$case['protection'] = $this->shape->protection(case: $case);
 		if ($subject !== '') {
 			$notified = $this->notifications->notify(
 				userIds: array_merge($owners, [(string) ($case['custodian'] ?? '')]),
@@ -401,92 +380,6 @@ class LegalHoldCaseService {
 		return $this->cases->save(case: $case);
 
 	}//end finish()
-
-	/**
-	 * Complete only when every record in scope is verifiably frozen by this app.
-	 *
-	 * @param array<string, mixed> $case The case.
-	 *
-	 * @return string complete or partial.
-	 */
-	private function protection(array $case): string {
-		if ($case['status'] !== 'active') {
-			return (string) ($case['protection'] ?? 'complete');
-		}
-
-		foreach (array_keys($this->scope(case: $case)) as $ref) {
-			$entry = $this->entryFor(case: $case, ref: (string) $ref);
-			if ($entry === null || ($entry['record'] ?? '') !== 'held' || ($entry['file'] ?? '') === 'failed') {
-				return 'partial';
-			}
-		}
-
-		return 'complete';
-
-	}//end protection()
-
-	/**
-	 * Replace or add the fan-out entry for one record.
-	 *
-	 * @param array<string, mixed> $case  The case.
-	 * @param array<string, mixed> $entry The entry.
-	 *
-	 * @return array<string, mixed> The case.
-	 */
-	private function withEntry(array $case, array $entry): array {
-		$entries = [];
-		foreach ((array) ($case['fanOut'] ?? []) as $existing) {
-			if (($existing['ref'] ?? '') !== $entry['ref']) {
-				$entries[] = $existing;
-			}
-		}
-
-		$entries[] = $entry;
-		$case['fanOut'] = $entries;
-
-		return $case;
-
-	}//end withEntry()
-
-	/**
-	 * The fan-out entry for a record, or null.
-	 *
-	 * @param array<string, mixed> $case The case.
-	 * @param string               $ref  The record uuid.
-	 *
-	 * @return array<string, mixed>|null The entry.
-	 */
-	private function entryFor(array $case, string $ref): ?array {
-		foreach ((array) ($case['fanOut'] ?? []) as $entry) {
-			if (($entry['ref'] ?? '') === $ref) {
-				return $entry;
-			}
-		}
-
-		return null;
-
-	}//end entryFor()
-
-	/**
-	 * Every record in the case's scope.
-	 *
-	 * @param array<string, mixed> $case The case.
-	 *
-	 * @return array<string, string> Record uuid => document|dossier.
-	 */
-	private function scope(array $case): array {
-		$scope = [];
-		foreach ((array) ($case['scopeDocuments'] ?? []) as $ref) {
-			$scope[(string) $ref] = 'document';
-		}
-
-		foreach ((array) ($case['scopeDossiers'] ?? []) as $ref) {
-			$scope[(string) $ref] = 'dossier';
-		}
-
-		return $scope;
-
-	}//end scope()
 
 	/**
 	 * A case that exists.
@@ -528,70 +421,6 @@ class LegalHoldCaseService {
 		return $case;
 
 	}//end active()
-
-	/**
-	 * A required text field.
-	 *
-	 * @param array<string, mixed> $input The input.
-	 * @param string               $field The field.
-	 * @param int                  $max   The longest allowed value.
-	 *
-	 * @return string The value.
-	 *
-	 * @throws LegalHoldRefusedException When it is empty.
-	 */
-	private function required(array $input, string $field, int $max): string {
-		$value = trim((string) ($input[$field] ?? ''));
-		if ($value === '') {
-			throw new LegalHoldRefusedException(reason: LegalHoldRefusedException::REASON_INVALID, message: 'A hold needs a ' . $field . '.');
-		}
-
-		return mb_substr($value, 0, $max);
-
-	}//end required()
-
-	/**
-	 * The matter type.
-	 *
-	 * @param array<string, mixed> $input The input.
-	 *
-	 * @return string The type.
-	 *
-	 * @throws LegalHoldRefusedException When it is not a known type.
-	 */
-	private function holdType(array $input): string {
-		$type = (string) ($input['holdType'] ?? '');
-		if (in_array($type, self::HOLD_TYPES, true) === false) {
-			throw new LegalHoldRefusedException(reason: LegalHoldRefusedException::REASON_INVALID, message: 'Unknown matter type ' . $type . '.');
-		}
-
-		return $type;
-
-	}//end holdType()
-
-	/**
-	 * Clean record references: strings, trimmed, each once.
-	 *
-	 * @param mixed $value The submitted list.
-	 *
-	 * @return array<int, string> The references.
-	 */
-	private function refs(mixed $value): array {
-		if (is_array($value) === false) {
-			return [];
-		}
-
-		$refs = [];
-		foreach ($value as $ref) {
-			$ref = trim((string) (is_scalar($ref) === true ? $ref : ''));
-			if ($ref !== '' && mb_strlen($ref) <= 64 && in_array($ref, $refs, true) === false) {
-				$refs[] = $ref;
-			}
-		}
-
-		return $refs;
-
-	}//end refs()
 
 	/**
 	 * Now, as stored.

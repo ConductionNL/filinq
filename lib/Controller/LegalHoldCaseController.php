@@ -87,7 +87,7 @@ class LegalHoldCaseController extends Controller {
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
 		return $this->answer(
-			fn (): array => [
+			action: fn (): array => [
 				'results' => $this->holds->list(
 					filters: [
 						'status' => (string) $this->request->getParam('status', ''),
@@ -112,7 +112,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		return $this->answer(fn (): array => $this->holds->get(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->get(uuid: $id, userId: $this->userId()));
 
 	}//end show()
 
@@ -125,7 +125,10 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
-		return $this->answer(fn (): array => $this->holds->place(input: $this->request->getParams(), userId: $this->userId()), Http::STATUS_CREATED);
+		return $this->answer(
+			action: fn (): array => $this->holds->place(input: $this->request->getParams(), userId: $this->userId()),
+			okStatus: Http::STATUS_CREATED
+		);
 
 	}//end create()
 
@@ -140,7 +143,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function addScope(string $id): JSONResponse {
-		return $this->answer(fn (): array => $this->holds->addScope(uuid: $id, input: $this->request->getParams(), userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->addScope(uuid: $id, input: $this->request->getParams(), userId: $this->userId()));
 
 	}//end addScope()
 
@@ -155,7 +158,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function retry(string $id): JSONResponse {
-		return $this->answer(fn (): array => $this->holds->retry(uuid: $id, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->retry(uuid: $id, userId: $this->userId()));
 
 	}//end retry()
 
@@ -171,7 +174,7 @@ class LegalHoldCaseController extends Controller {
 	#[NoAdminRequired]
 	public function release(string $id): JSONResponse {
 		return $this->answer(
-			fn (): array => $this->holds->release(
+			action: fn (): array => $this->holds->release(
 				uuid: $id,
 				releaseReason: (string) $this->request->getParam('releaseReason', ''),
 				userId: $this->userId()
@@ -191,7 +194,7 @@ class LegalHoldCaseController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function status(string $objectId): JSONResponse {
-		return $this->answer(fn (): array => $this->holds->statusFor(ref: $objectId, userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->holds->statusFor(ref: $objectId, userId: $this->userId()));
 
 	}//end status()
 
@@ -228,7 +231,9 @@ class LegalHoldCaseController extends Controller {
 			LegalHoldRefusedException::REASON_NOT_ALLOWED => $this->l10n->t('You are not allowed to place or release legal holds.'),
 			LegalHoldRefusedException::REASON_CONFIG_UNREADABLE => $this->l10n->t('You are not allowed to place or release legal holds.'),
 			LegalHoldRefusedException::REASON_NOT_FOUND => $this->l10n->t('Not found'),
-			LegalHoldRefusedException::REASON_INVALID => $this->l10n->t('Fill in a name, a matter type, a reason and at least one document or dossier. A release needs a reason.'),
+			LegalHoldRefusedException::REASON_INVALID => $this->l10n->t(
+				'Fill in a name, a matter type, a reason and at least one document or dossier. A release needs a reason.'
+			),
 			LegalHoldRefusedException::REASON_RELEASED => $this->l10n->t('This legal hold is released. A released hold is final: open a new one.'),
 		];
 
