@@ -20,23 +20,38 @@ import { translate as t } from '@nextcloud/l10n'
 export function lintMessage(item) {
 	switch (item.rule) {
 		case 'image-missing-alt':
-			return t('filinq', 'Image {position} ({name}) has no alternative text.', {
-				position: item.position,
-				name: item.text || '?',
-			})
+			return t(
+				'filinq',
+				'Image {position} ({name}) has no alternative text.',
+				{
+					position: item.position,
+					name: item.text || '?',
+				},
+			)
 		case 'heading-order-jump':
-			return t('filinq', 'Heading "{text}" is {to} straight after {from}: a level is skipped.', {
-				text: item.text,
-				from: item.from,
-				to: item.to,
-			})
+			return t(
+				'filinq',
+				'Heading "{text}" is {to} straight after {from}: a level is skipped.',
+				{
+					text: item.text,
+					from: item.from,
+					to: item.to,
+				},
+			)
 		case 'table-without-headers':
-			return t('filinq', 'Table {position} (starting with "{text}") has no header cells.', {
-				position: item.position,
-				text: item.text,
-			})
+			return t(
+				'filinq',
+				'Table {position} (starting with "{text}") has no header cells.',
+				{
+					position: item.position,
+					text: item.text,
+				},
+			)
 		case 'language-unresolved':
-			return t('filinq', 'No language is set for this template or for this Nextcloud, so an accessible PDF cannot say what language it is in.')
+			return t(
+				'filinq',
+				'No language is set for this template or for this Nextcloud, so an accessible PDF cannot say what language it is in.',
+			)
 		default:
 			return item.rule
 	}

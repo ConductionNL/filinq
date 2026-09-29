@@ -3,8 +3,8 @@
 /**
  * Accessible (tagged, PDF/UA-1 target) PDF output for generated documents.
  *
- * mPDF cannot write structure tags, so an `accessible: true` request never
- * goes there. The rendered HTML gets a document language and a title and
+ * The mPDF engine cannot write structure tags, so an `accessible: true`
+ * request never goes there. The rendered HTML gets a document language and a title and
  * goes to LibreOffice's tagged export. What comes back is checked for tags,
  * language and title before it is returned: a PDF without them is refused,
  * never passed off as accessible. No LibreOffice means no PDF, not an
@@ -43,6 +43,13 @@ class AccessiblePdfRenderer {
 	private const LANGUAGE_TAG = '/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/';
 
 	/**
+	 * The same presence checks document validation runs.
+	 *
+	 * @var AccessibilityChecks
+	 */
+	private readonly AccessibilityChecks $checks;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LibreOfficeHeadlessBackend $libreOffice The tagged export.
@@ -54,6 +61,7 @@ class AccessiblePdfRenderer {
 		private readonly LibreOfficeHeadlessBackend $libreOffice,
 		private readonly IConfig $config,
 	) {
+		$this->checks = new AccessibilityChecks();
 
 	}//end __construct()
 
@@ -81,15 +89,15 @@ class AccessiblePdfRenderer {
 		);
 
 		$missing = [];
-		if (AccessibilityChecks::isTagged(bytes: $pdf) === false) {
+		if ($this->checks->isTagged(bytes: $pdf) === false) {
 			$missing[] = 'tags';
 		}
 
-		if (AccessibilityChecks::hasLanguage(bytes: $pdf) === false) {
+		if ($this->checks->hasLanguage(bytes: $pdf) === false) {
 			$missing[] = 'language';
 		}
 
-		if (AccessibilityChecks::hasTitle(bytes: $pdf) === false) {
+		if ($this->checks->hasTitle(bytes: $pdf) === false) {
 			$missing[] = 'title';
 		}
 
@@ -136,7 +144,8 @@ class AccessiblePdfRenderer {
 		}
 
 		throw new ConversionFailedException(
-			message: 'Accessible PDF output needs a document language: pass pdfOptions.lang, give the template a language, or set default_language for this Nextcloud.',
+			message: 'Accessible PDF output needs a document language: pass pdfOptions.lang, '
+				. 'give the template a language, or set default_language for this Nextcloud.',
 			code: 422
 		);
 
@@ -158,7 +167,10 @@ class AccessiblePdfRenderer {
 			}
 		}
 
-		throw new ConversionFailedException(message: 'Accessible PDF output needs a document title: pass pdfOptions.title or use a named template.', code: 422);
+		throw new ConversionFailedException(
+			message: 'Accessible PDF output needs a document title: pass pdfOptions.title or use a named template.',
+			code: 422
+		);
 
 	}//end title()
 
@@ -184,7 +196,8 @@ class AccessiblePdfRenderer {
 			return (string) preg_replace_callback('/<head\b[^>]*>/i', static fn (array $m): string => $m[0] . '<meta charset="utf-8">' . $titleTag, $html, 1);
 		}
 
-		return (string) preg_replace_callback('/<html\b[^>]*>/i', static fn (array $m): string => $m[0] . '<head><meta charset="utf-8">' . $titleTag . '</head>', $html, 1);
+		$head = '<head><meta charset="utf-8">' . $titleTag . '</head>';
+		return (string) preg_replace_callback('/<html\b[^>]*>/i', static fn (array $m): string => $m[0] . $head, $html, 1);
 
 	}//end document()
 }//end class

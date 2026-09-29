@@ -55,23 +55,23 @@ class AccessibilityChecks {
 			return [];
 		}
 
-		$tagged = self::isTagged(bytes: $content);
+		$tagged = $this->isTagged(bytes: $content);
 		$checks = [
 			DocumentValidationService::CHECK_PDF_NOT_TAGGED => [
 				$tagged === false,
 				'The PDF has no tags, so a screen reader cannot follow its structure.',
 			],
 			DocumentValidationService::CHECK_PDF_LANGUAGE_MISSING => [
-				self::hasLanguage(bytes: $content) === false,
+				$this->hasLanguage(bytes: $content) === false,
 				'The PDF does not say which language it is in.',
 			],
 			DocumentValidationService::CHECK_PDF_TITLE_MISSING => [
-				self::hasTitle(bytes: $content) === false,
+				$this->hasTitle(bytes: $content) === false,
 				'The PDF has no title.',
 			],
 			// Only meaningful on a tagged PDF: an untagged one already fails above.
 			DocumentValidationService::CHECK_PDFUA_IDENTIFIER_MISSING => [
-				$tagged === true && self::hasPdfUaIdentifier(bytes: $content) === false,
+				$tagged === true && $this->hasPdfUaIdentifier(bytes: $content) === false,
 				'The PDF does not say it follows PDF/UA.',
 			],
 		];
@@ -105,7 +105,7 @@ class AccessibilityChecks {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
-	public static function isTagged(string $bytes): bool {
+	public function isTagged(string $bytes): bool {
 		return str_contains($bytes, '/StructTreeRoot') === true
 			&& preg_match('#/MarkInfo\s*<<[^>]*/Marked\s+true#', $bytes) === 1;
 
@@ -120,7 +120,7 @@ class AccessibilityChecks {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
-	public static function hasLanguage(string $bytes): bool {
+	public function hasLanguage(string $bytes): bool {
 		return preg_match('#/Lang\s*(\([^)\s]+\)|<[0-9A-Fa-f]{2,}>)#', $bytes) === 1;
 
 	}//end hasLanguage()
@@ -134,7 +134,7 @@ class AccessibilityChecks {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
-	public static function hasTitle(string $bytes): bool {
+	public function hasTitle(string $bytes): bool {
 		if (preg_match('#<dc:title>.*?<rdf:li[^>]*>\s*[^<\s][^<]*</rdf:li>#s', $bytes) === 1) {
 			return true;
 		}
@@ -154,7 +154,7 @@ class AccessibilityChecks {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-2.1
 	 */
-	public static function hasPdfUaIdentifier(string $bytes): bool {
+	public function hasPdfUaIdentifier(string $bytes): bool {
 		return preg_match('#pdfuaid:part\s*(=\s*["\']\d|>\s*\d)#', $bytes) === 1;
 
 	}//end hasPdfUaIdentifier()

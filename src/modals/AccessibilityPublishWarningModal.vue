@@ -33,13 +33,13 @@ takes that choice away.
 					{{
 						blocking
 							? t(
-								'filinq',
-								'This document has open accessibility findings that your organisation set to block publication. Fix them first.',
-							)
+									'filinq',
+									'This document has open accessibility findings that your organisation set to block publication. Fix them first.',
+								)
 							: t(
-								'filinq',
-								'This document has open accessibility findings. People who use a screen reader may not be able to read it.',
-							)
+									'filinq',
+									'This document has open accessibility findings. People who use a screen reader may not be able to read it.',
+								)
 					}}
 				</NcNoteCard>
 				<ValidationFindingsPanel status="warnings" :findings="findings" />

@@ -38,8 +38,21 @@ const PDF_FILE = `${TEST_PREFIX}-pdfua.pdf`
 const PDF_PATH = `${DOCS_FOLDER}/${PDF_FILE}`
 
 const UNTAGGED = [
-	{ checkId: 'pdf-not-tagged', category: 'accessibility', severity: 'warning', message: 'The PDF has no tags, so a screen reader cannot follow its structure.', params: {} },
-	{ checkId: 'pdf-language-missing', category: 'accessibility', severity: 'warning', message: 'The PDF does not say which language it is in.', params: {} },
+	{
+		checkId: 'pdf-not-tagged',
+		category: 'accessibility',
+		severity: 'warning',
+		message:
+			'The PDF has no tags, so a screen reader cannot follow its structure.',
+		params: {},
+	},
+	{
+		checkId: 'pdf-language-missing',
+		category: 'accessibility',
+		severity: 'warning',
+		message: 'The PDF does not say which language it is in.',
+		params: {},
+	},
 ]
 
 test.afterAll(async ({ request }) => {
@@ -55,7 +68,10 @@ test.afterAll(async ({ request }) => {
 async function validationSays(page: Page, findings: object[]): Promise<void> {
 	await page.route('**/apps/filinq/api/validation/validate', async (route) => {
 		await route.fulfill({
-			json: { validationStatus: findings.length > 0 ? 'warnings' : 'passed', validationFindings: findings },
+			json: {
+				validationStatus: findings.length > 0 ? 'warnings' : 'passed',
+				validationFindings: findings,
+			},
 		})
 	})
 }
@@ -67,8 +83,15 @@ async function validationSays(page: Page, findings: object[]): Promise<void> {
  */
 async function myDocumentsWithPdf(page: Page): Promise<void> {
 	const token = await harvestToken(page)
-	expect([201, 405]).toContain(await createDavFolder(page.request, token, DOCS_FOLDER))
-	const seeded = await createDavFile(page.request, token, PDF_PATH, '%PDF-1.7\n%%EOF\n')
+	expect([201, 405]).toContain(
+		await createDavFolder(page.request, token, DOCS_FOLDER),
+	)
+	const seeded = await createDavFile(
+		page.request,
+		token,
+		PDF_PATH,
+		'%PDF-1.7\n%%EOF\n',
+	)
 	expect(seeded.status).toBeLessThan(300)
 	await go(page, 'my-documents')
 	await dismissOverlays(page)
@@ -77,7 +100,10 @@ async function myDocumentsWithPdf(page: Page): Promise<void> {
 test('the validation result shows an accessibility group', async ({ page }) => {
 	await validationSays(page, UNTAGGED)
 	await myDocumentsWithPdf(page)
-	const row = page.locator('tr').filter({ hasText: PDF_FILE.replace(/\.pdf$/, '') }).first()
+	const row = page
+		.locator('tr')
+		.filter({ hasText: PDF_FILE.replace(/\.pdf$/, '') })
+		.first()
 	await row.getByRole('button', { name: /actions/i }).click()
 	await page.getByRole('menuitem', { name: 'Validate' }).click()
 
@@ -88,7 +114,9 @@ test('the validation result shows an accessibility group', async ({ page }) => {
 	await expect(page.getByText(/certified/i)).toHaveCount(0)
 })
 
-test('publishing a document with accessibility findings warns first', async ({ page }) => {
+test('publishing a document with accessibility findings warns first', async ({
+	page,
+}) => {
 	await validationSays(page, UNTAGGED)
 	let started = false
 	await page.route('**/apps/filinq/api/publications', async (route) => {
@@ -96,7 +124,11 @@ test('publishing a document with accessibility findings warns first', async ({ p
 		await route.fulfill({ json: { uuid: 'pub-1' } })
 	})
 	await myDocumentsWithPdf(page)
-	await page.locator('tr').filter({ hasText: PDF_FILE.replace(/\.pdf$/, '') }).first().click()
+	await page
+		.locator('tr')
+		.filter({ hasText: PDF_FILE.replace(/\.pdf$/, '') })
+		.first()
+		.click()
 	await page.getByRole('button', { name: 'Publish' }).click()
 
 	const warning = page.getByTestId('accessibility-publish-warning')
@@ -116,36 +148,56 @@ test('publishing a clean document shows no warning', async ({ page }) => {
 		await route.fulfill({ json: { uuid: 'pub-2' } })
 	})
 	await myDocumentsWithPdf(page)
-	await page.locator('tr').filter({ hasText: PDF_FILE.replace(/\.pdf$/, '') }).first().click()
+	await page
+		.locator('tr')
+		.filter({ hasText: PDF_FILE.replace(/\.pdf$/, '') })
+		.first()
+		.click()
 	await page.getByRole('button', { name: 'Publish' }).click()
 
 	await expect.poll(() => started).toBe(true)
 	await expect(page.getByTestId('accessibility-publish-warning')).toHaveCount(0)
 })
 
-test('the template preview lists what to fix for accessibility', async ({ page }) => {
+test('the template preview lists what to fix for accessibility', async ({
+	page,
+}) => {
 	const token = await harvestToken(page)
-	const tmpl = await createTemplate(page.request, token, { name: `${TEST_PREFIX}-pdfua-lint` })
+	const tmpl = await createTemplate(page.request, token, {
+		name: `${TEST_PREFIX}-pdfua-lint`,
+	})
 	await page.route('**/apps/filinq/api/templates/preview', async (route) => {
 		await route.fulfill({
 			json: {
 				html: '<h1>Besluit parkeervergunning Demostad</h1><img src="wapen.png"><h3>Overwegingen</h3>',
 				lint: [
 					{ rule: 'image-missing-alt', position: 1, text: 'wapen.png' },
-					{ rule: 'heading-order-jump', position: 2, text: 'Overwegingen', from: 'h1', to: 'h3' },
+					{
+						rule: 'heading-order-jump',
+						position: 2,
+						text: 'Overwegingen',
+						from: 'h1',
+						to: 'h3',
+					},
 				],
 			},
 		})
 	})
-	await page.goto(await appUrl(page, `templates/${tmpl.id}`), { waitUntil: 'domcontentloaded' })
+	await page.goto(await appUrl(page, `templates/${tmpl.id}`), {
+		waitUntil: 'domcontentloaded',
+	})
 	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.getByRole('button', { name: 'Preview', exact: true }).click()
 
 	const lint = page.getByTestId('template-lint')
 	await expect(lint).toContainText('Image 1 (wapen.png) has no alternative text.')
-	await expect(lint).toContainText('Heading "Overwegingen" is h3 straight after h1')
+	await expect(lint).toContainText(
+		'Heading "Overwegingen" is h3 straight after h1',
+	)
 	// Advice only: saving stays possible.
 	await page.getByRole('button', { name: 'Editor', exact: true }).click()
-	await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeEnabled()
+	await expect(
+		page.getByRole('button', { name: 'Save', exact: true }),
+	).toBeEnabled()
 })

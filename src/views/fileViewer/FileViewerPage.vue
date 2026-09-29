@@ -189,7 +189,12 @@ export default {
 			ocrResult: null,
 			ocrRunning: false,
 			conformanceOpen: false,
-			publishWarning: { show: false, checked: true, findings: [], blocking: false },
+			publishWarning: {
+				show: false,
+				checked: true,
+				findings: [],
+				blocking: false,
+			},
 		}
 	},
 
@@ -415,7 +420,9 @@ export default {
 		 */
 		async publish() {
 			this.publishing = true
-			const readiness = await publicationReadiness(fileViewerStore.currentFile.fileId)
+			const readiness = await publicationReadiness(
+				fileViewerStore.currentFile.fileId,
+			)
 			this.publishing = false
 			if (readiness.checked && readiness.findings.length === 0) {
 				await this.startPublishing()

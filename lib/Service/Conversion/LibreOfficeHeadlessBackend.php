@@ -93,6 +93,15 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	private const INPUT_STEM = 'input';
 
 	/**
+	 * How soffice opens a source for tagged export: HTML in Writer, not
+	 * Writer/Web, whose PDF export does not write the structure tree.
+	 */
+	private const INPUT_FILTERS = [
+		'html' => ['--infilter=HTML (StarWriter)'],
+		'htm' => ['--infilter=HTML (StarWriter)'],
+	];
+
+	/**
 	 * The --convert-to argument of the default (archival) conversion.
 	 */
 	private const FILTER_PDFA = 'pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2';
@@ -316,10 +325,12 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 			);
 		}
 
+		// SelectPdfVersion 3 is PDF/A-3b, 0 is plain PDF.
+		$pdfVersion = ['0', '3'][(int) $pdfa];
 		$filter = [
 			'UseTaggedPDF' => ['type' => 'boolean', 'value' => 'true'],
 			'PDFUACompliance' => ['type' => 'boolean', 'value' => 'true'],
-			'SelectPdfVersion' => ['type' => 'long', 'value' => ($pdfa === true ? '3' : '0')],
+			'SelectPdfVersion' => ['type' => 'long', 'value' => $pdfVersion],
 		];
 		$ext = strtolower($extension);
 		$binary = $this->resolveBinaryPath();
@@ -332,7 +343,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 				convertTo: 'pdf:writer_pdf_Export:' . json_encode($filter),
 				binary: $binary,
 				timeout: $timeout,
-				htmlInWriter: in_array($ext, ['html', 'htm'], true)
+				inputFilter: (self::INPUT_FILTERS[$ext] ?? [])
 			)
 		);
 
@@ -394,28 +405,30 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 * @param string $convertTo    The --convert-to argument.
 	 * @param string $binary       Path to the soffice binary.
 	 * @param int    $timeout      Timeout in seconds.
-	 * @param bool   $htmlInWriter Open HTML in Writer rather than Writer/Web.
+	 * @param array<int, string> $inputFilter Extra arguments that choose how soffice opens the source.
 	 *
 	 * @return string The PDF bytes.
 	 *
 	 * @throws ConversionFailedException On soffice failure, timeout, or file I/O error.
 	 */
-	private function exportPdfBytes(string $bytes, string $extension, string $convertTo, string $binary, int $timeout, bool $htmlInWriter = false): string {
+	private function exportPdfBytes(
+		string $bytes,
+		string $extension,
+		string $convertTo,
+		string $binary,
+		int $timeout,
+		array $inputFilter = [],
+	): string {
 		$tmpDir = sys_get_temp_dir() . '/filinq_libreoffice_' . bin2hex(random_bytes(8));
 		mkdir($tmpDir, 0700, true);
 
-		$srcPath = $tmpDir . '/' . self::INPUT_STEM;
-		if ($extension !== '') {
-			$srcPath .= '.' . $extension;
-		}
+		$srcPath = $tmpDir . '/' . rtrim(self::INPUT_STEM . '.' . $extension, '.');
 
 		try {
 			file_put_contents($srcPath, $bytes);
 
 			$argv = $this->buildArgv(binary: $binary, tmpDir: $tmpDir, srcPath: $srcPath, convertTo: $convertTo);
-			if ($htmlInWriter === true) {
-				array_splice($argv, 4, 0, ['--infilter=HTML (StarWriter)']);
-			}
+			array_splice($argv, 4, 0, $inputFilter);
 
 			$exitCode = $this->processRunner->run(argv: $argv, timeout: $timeout, tmpDir: $tmpDir, backendName: $this->name());
 			if ($exitCode !== 0) {

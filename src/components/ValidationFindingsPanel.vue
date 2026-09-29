@@ -124,14 +124,14 @@ export default {
 				'metadata-incomplete': t('filinq', 'Incomplete metadata'),
 				'pdfa-conformance-failed': t('filinq', 'Not PDF/A'),
 				'pdfa-font-not-embedded': t('filinq', 'Fonts not embedded'),
-				'archival-validator-unavailable': t(
-					'filinq',
-					'Not checked against PDF/A',
-				),
 				'pdf-not-tagged': t('filinq', 'No tags'),
 				'pdf-language-missing': t('filinq', 'No language'),
 				'pdf-title-missing': t('filinq', 'No title'),
 				'pdfua-identifier-missing': t('filinq', 'Not marked as PDF/UA'),
+				'archival-validator-unavailable': t(
+					'filinq',
+					'Not checked against PDF/A',
+				),
 			}
 			return map[finding.checkId] || finding.checkId
 		},

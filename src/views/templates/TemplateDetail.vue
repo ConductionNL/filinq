@@ -204,7 +204,9 @@
 					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
 			</div>
-			<TemplateLintChecklist v-if="!previewLoading && previewHtml" :lint="previewLint" />
+			<TemplateLintChecklist
+				v-if="!previewLoading && previewHtml"
+				:lint="previewLint" />
 			<NcLoadingIcon v-if="previewLoading" />
 			<div v-else-if="previewError" class="template-detail__error">
 				{{ previewError }}

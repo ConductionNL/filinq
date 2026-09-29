@@ -9,7 +9,10 @@ block on saving or previewing.
 -->
 
 <template>
-	<section class="template-lint" data-testid="template-lint" :aria-label="t('filinq', 'Accessibility checklist')">
+	<section
+		class="template-lint"
+		data-testid="template-lint"
+		:aria-label="t('filinq', 'Accessibility checklist')">
 		<h4 class="template-lint__title">
 			{{ t('filinq', 'Accessibility checklist') }}
 		</h4>
