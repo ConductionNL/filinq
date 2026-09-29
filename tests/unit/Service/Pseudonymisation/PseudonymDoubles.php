@@ -133,8 +133,7 @@ trait PseudonymDoubles {
 
 					// A rendered read: writeOnly stripped, as OpenRegister does.
 					unset($row['mappings']);
-					// OpenRegister's render shape carries the uuid as `@self.id` and as top-level `id`.
-					$hits[] = array_merge($row, ['@self' => ['id' => $uuid, 'schema' => $schemaSlug], 'id' => $uuid]);
+					$hits[] = array_merge($row, ['@self' => ['id' => $uuid, 'schema' => $schemaSlug]]);
 				}
 
 				return $hits;

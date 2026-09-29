@@ -93,8 +93,9 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/PolicyCrudService.php' => 5,
 		'lib/Service/PolicyMatchService.php' => 2,
 		'lib/Service/PolicyRetroactiveService.php' => 2,
-		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 4,
+		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 5,
 		'lib/Service/Redaction/AnonymizationLinkReader.php' => 1,
+		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 3,
 	];
 
 	/**

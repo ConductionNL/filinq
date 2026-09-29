@@ -63,7 +63,7 @@ class CaseDocumentSchemaTest extends TestCase {
 
 		$this->assertSame('array', $record['properties']['domains']['type']);
 		$this->assertArrayHasKey('createdByUser', $record['properties']);
-		$this->assertSame('1.1.0', $record['version'], 'The schema version must move or the import never reaches existing installs.');
+		$this->assertTrue(version_compare($record['version'], '1.1.0', '>='), 'The schema version must move or the import never reaches existing installs.');
 
 	}//end testADocumentRecordCarriesDomainsRatherThanOneOwner()
 

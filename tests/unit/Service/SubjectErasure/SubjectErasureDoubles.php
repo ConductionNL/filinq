@@ -43,6 +43,7 @@ use OCA\Filinq\Tests\Unit\Service\Pseudonymisation\PseudonymDoubles;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -276,7 +277,19 @@ trait SubjectErasureDoubles {
 	 * @return ContainerInterface The container.
 	 */
 	protected function erasureContainer(): ContainerInterface {
-		$objects = $this->objectService();
+		$inner = $this->objectService();
+		// OpenRegister's search rows carry the uuid as top-level `id` too, which
+		// FinalDocumentRepository reads; the shared double leaves it out.
+		$objects = $this->createMock(ObjectService::class);
+		$objects->method('searchObjectsBySlug')->willReturnCallback(
+			static fn (...$args): array => array_map(
+				static fn (array $row): array => array_merge($row, ['id' => $row['@self']['id']]),
+				$inner->searchObjectsBySlug(...$args)
+			)
+		);
+		$objects->method('find')->willReturnCallback(static fn (...$args) => $inner->find(...$args));
+		$objects->method('saveObject')->willReturnCallback(static fn (...$args) => $inner->saveObject(...$args));
+		$objects->method('deleteObject')->willReturnCallback(static fn (...$args) => $inner->deleteObject(...$args));
 		$test = $this;
 		$entities = new class ($test) {
 			/**
