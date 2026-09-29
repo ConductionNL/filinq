@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service;
 use OCP\Files\IAppData;
 use OCP\Files\NotFoundException;
 use OCP\Files\SimpleFS\ISimpleFolder;
+use ZipArchive;
 
 /**
  * Stores and reads the PDFs of print jobs.
@@ -102,6 +103,33 @@ class PrintJobFileStore {
 		}
 
 	}//end get()
+
+	/**
+	 * Pack the PDFs of a job and its manifest into one ZIP.
+	 *
+	 * @param array<int, string> $names    The stored file names
+	 * @param array              $manifest The job manifest
+	 *
+	 * @return string The ZIP bytes.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
+	 */
+	public function zip(array $names, array $manifest): string {
+		$path = tempnam(sys_get_temp_dir(), 'filinq-print-');
+		$zip = new ZipArchive();
+		$zip->open($path, ZipArchive::OVERWRITE);
+		foreach ($names as $name) {
+			$zip->addFromString($name, (string) $this->get(name: $name));
+		}
+
+		$zip->addFromString('manifest.json', (string) json_encode($manifest, JSON_PRETTY_PRINT));
+		$zip->close();
+		$content = (string) file_get_contents($path);
+		unlink($path);
+
+		return $content;
+
+	}//end zip()
 
 	/**
 	 * The file name of one letter of a job.

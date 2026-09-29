@@ -89,6 +89,8 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 	 * The name shown during the repair run.
 	 *
 	 * @return string The name.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function getName(): string {
 		return 'Move Filinq print jobs out of app configuration';
@@ -114,11 +116,12 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 				continue;
 			}
 
-			if ($this->moveJob(jobId: substr($key, strlen(self::JOB_PREFIX)), keys: $keys) === true) {
-				$moved++;
-			} else {
+			if ($this->moveJob(jobId: substr($key, strlen(self::JOB_PREFIX)), keys: $keys) === false) {
 				$left++;
+				continue;
 			}
+
+			$moved++;
 		}
 
 		$output->info('Print jobs moved out of app configuration: ' . $moved . ', left for a later run: ' . $left);
@@ -200,6 +203,8 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 	 * @param array<int, string>   $files  The PDFs stored for it
 	 *
 	 * @return array<string, mixed> The object.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.2
 	 */
 	public function toPrintJob(array $legacy, array $files): array {
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
@@ -219,7 +224,11 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 
 		$details = $legacy['externalDetails'] ?? ($legacy['error'] ?? null);
 		if ($details !== null) {
-			$job['statusDetails'] = mb_substr(is_string($details) === true ? $details : (string) json_encode($details), 0, 4096);
+			if (is_string($details) === false) {
+				$details = (string) json_encode($details);
+			}
+
+			$job['statusDetails'] = mb_substr($details, 0, 4096);
 		}
 
 		return $job;
@@ -253,7 +262,7 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 			return 'failed';
 		}
 
-		// queued or processing: the background job still holds the letters
+		// Queued or processing: the background job still holds the letters
 		// and renders them into this object under the same id.
 		return 'rendering';
 

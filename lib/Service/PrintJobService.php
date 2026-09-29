@@ -36,7 +36,6 @@ use InvalidArgumentException;
 use OCA\Filinq\BackgroundJob\BatchPrintJob;
 use OCP\BackgroundJob\IJobList;
 use Psr\Log\LoggerInterface;
-use ZipArchive;
 
 /**
  * Service for managing print jobs and batch print generation.
@@ -172,13 +171,15 @@ class PrintJobService {
 			]
 		);
 
+		if (count($items) <= self::SYNC_BATCH_LIMIT) {
+			$job = $this->renderJob(jobId: $job['uuid'], templateId: $templateId, items: $items, options: $options);
+		}
+
 		if (count($items) > self::SYNC_BATCH_LIMIT) {
 			$this->jobList->add(
 				BatchPrintJob::class,
 				['jobId' => $job['uuid'], 'templateId' => $templateId, 'items' => $items, 'options' => $options]
 			);
-		} else {
-			$job = $this->renderJob(jobId: $job['uuid'], templateId: $templateId, items: $items, options: $options);
 		}
 
 		return [
@@ -323,7 +324,7 @@ class PrintJobService {
 		}
 
 		return [
-			'content' => $this->zip(names: $names, manifest: (array) ($job['manifest'] ?? [])),
+			'content' => $this->files->zip(names: $names, manifest: (array) ($job['manifest'] ?? [])),
 			'filename' => preg_replace('/\.pdf$/i', '', $filename) . '.zip',
 			'contentType' => 'application/zip',
 		];
@@ -485,31 +486,6 @@ class PrintJobService {
 		return $this->jobs->save(job: $job, uuid: $uuid);
 
 	}//end changeStatus()
-
-	/**
-	 * Pack the PDFs of a job and its manifest into one ZIP.
-	 *
-	 * @param array<int, string> $names    The stored file names
-	 * @param array              $manifest The job manifest
-	 *
-	 * @return string The ZIP bytes.
-	 */
-	private function zip(array $names, array $manifest): string {
-		$path = tempnam(sys_get_temp_dir(), 'filinq-print-');
-		$zip = new ZipArchive();
-		$zip->open($path, ZipArchive::OVERWRITE);
-		foreach ($names as $name) {
-			$zip->addFromString($name, (string) $this->files->get(name: $name));
-		}
-
-		$zip->addFromString('manifest.json', (string) json_encode($manifest, JSON_PRETTY_PRINT));
-		$zip->close();
-		$content = (string) file_get_contents($path);
-		unlink($path);
-
-		return $content;
-
-	}//end zip()
 
 	/**
 	 * The current time as the register stores it.

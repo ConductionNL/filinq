@@ -360,11 +360,15 @@ class PrintJobController extends Controller {
 				$details = (string) json_encode($details);
 			}
 
+			if ($details !== null) {
+				$details = (string) $details;
+			}
+
 			try {
 				$job = $this->printJobSvc->recordExternalStatus(
 					job: $job,
 					externalStatus: $status,
-					details: ($details === null) ? null : (string) $details
+					details: $details
 				);
 			} catch (InvalidArgumentException $e) {
 				return new JSONResponse(
