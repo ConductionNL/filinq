@@ -39,7 +39,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 class PublicationStore {
 
@@ -93,7 +93,7 @@ class PublicationStore {
 	 *
 	 * @return array<string, mixed> The stored record, with uuid.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 */
 	public function saveRecord(array $record, ?string $uuid = null): array {
 		return $this->save(register: self::REGISTER, schema: self::RECORD, object: $record, uuid: $uuid);
@@ -107,7 +107,7 @@ class PublicationStore {
 	 *
 	 * @return array<string, mixed>|null The record.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 */
 	public function findRecord(string $uuid): ?array {
 		return $this->find(register: self::REGISTER, schema: self::RECORD, uuid: $uuid);
@@ -121,7 +121,7 @@ class PublicationStore {
 	 *
 	 * @return array<int, array<string, mixed>> The records.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 	 */
 	public function listRecords(array $filters = []): array {
 		return $this->search(schema: self::RECORD, filters: $filters);
@@ -135,7 +135,7 @@ class PublicationStore {
 	 *
 	 * @return array<string, mixed> The stored entry.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	public function appendLog(array $entry): array {
 		return $this->save(register: self::REGISTER, schema: self::LOG, object: $entry, uuid: null);
@@ -149,7 +149,7 @@ class PublicationStore {
 	 *
 	 * @return array<int, array<string, mixed>> The entries.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	public function logFor(string $recordUuid): array {
 		$entries = $this->search(schema: self::LOG, filters: ['publicationRecordRef' => $recordUuid]);
@@ -166,7 +166,7 @@ class PublicationStore {
 	 *
 	 * @return string|null The redacted copy's file id.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 */
 	public function findRedactedCopy(string $fileId): ?string {
 		foreach ($this->search(schema: 'anonymizationLink', filters: ['sourceFileId' => $fileId]) as $link) {
@@ -185,7 +185,7 @@ class PublicationStore {
 	 *
 	 * @return bool True when OpenCatalogi is enabled.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
 	 */
 	public function platformAvailable(): bool {
 		return $this->appManager->isEnabledForAnyone('opencatalogi');
@@ -197,7 +197,7 @@ class PublicationStore {
 	 *
 	 * @return list<array{code: string, label: string}> The categories, empty when OpenCatalogi is not there.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 	 */
 	public function categories(): array {
 		if ($this->platformAvailable() === false) {
@@ -229,7 +229,7 @@ class PublicationStore {
 	 *
 	 * @throws RuntimeException When OpenRegister refuses, for example for a missing right.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
 	 */
 	public function savePlatformPublication(array $publication, ?string $uuid = null): array {
 		if ($uuid !== null && $uuid !== '') {
@@ -257,7 +257,7 @@ class PublicationStore {
 	 *
 	 * @throws RuntimeException When OpenRegister cannot attach it.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
 	 */
 	public function attachToPlatformPublication(string $publicationUuid, string $fileName, string $content): void {
 		try {

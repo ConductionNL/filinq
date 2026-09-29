@@ -38,7 +38,7 @@ namespace OCA\Filinq\Service\Publication;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 class OpenCatalogiPublicationMap {
 
@@ -71,7 +71,7 @@ class OpenCatalogiPublicationMap {
 	 *
 	 * @return array<string, mixed> The fields to write, only those in FIELDS.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
 	 */
 	public function toPublication(array $record): array {
 		$publication = [
@@ -95,7 +95,7 @@ class OpenCatalogiPublicationMap {
 	 *
 	 * @return array<string, string> depublicationDate.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.4
 	 */
 	public function withdrawal(string $now): array {
 		return ['depublicationDate' => $now];
@@ -111,7 +111,7 @@ class OpenCatalogiPublicationMap {
 	 *
 	 * @return array<string, string> retentionExpiresAt and retentionNote.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.4
 	 */
 	public function destruction(string $date, string $source): array {
 		return [

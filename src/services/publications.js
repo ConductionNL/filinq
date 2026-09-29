@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -16,7 +16,7 @@ const base = () => generateUrl('/apps/filinq/api/publications')
  * The publications the caller can see.
  *
  * @return {Promise<{results: object[], platformAvailable: boolean}>}
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export async function listPublications() {
 	return (await axios.get(base())).data
@@ -27,7 +27,7 @@ export async function listPublications() {
  *
  * @param {string} id The record
  * @return {Promise<object>}
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export async function getPublication(id) {
 	return (await axios.get(base() + '/' + encodeURIComponent(id))).data
@@ -38,7 +38,7 @@ export async function getPublication(id) {
  *
  * @param {number|string} fileId The document
  * @return {Promise<object>} The record.
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.2
  */
 export async function startPublication(fileId) {
 	return (
@@ -56,7 +56,7 @@ export async function startPublication(fileId) {
  * @param {string} step readiness, metadata, handoff, withdraw or destruction-date
  * @param {object} body The body
  * @return {Promise<object>} The record.
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export async function publicationStep(id, step, body = {}) {
 	const url = base() + '/' + encodeURIComponent(id) + '/' + step
@@ -71,7 +71,7 @@ export async function publicationStep(id, step, body = {}) {
  * The Woo information categories, from OpenCatalogi's TOOI list.
  *
  * @return {Promise<Array<{code: string, label: string}>>}
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export async function listCategories() {
 	return (await axios.get(base() + '/categories')).data.results || []

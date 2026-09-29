@@ -40,7 +40,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/publication-consent/spec.md
+ * @spec openspec/specs/publication-consent/spec.md
  */
 class ConsentClearance {
 
@@ -57,7 +57,7 @@ class ConsentClearance {
 	 *
 	 * @return array{clear: bool, reasons: list<string>} Clear, or why not. Reasons name record ids only.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.1
 	 */
 	public function evaluate(array $consents, DateTimeImmutable $now): array {
 		$reasons = [];

@@ -1,7 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
-@spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+@spec openspec/specs/woo-publicatie-pipeline/spec.md
 -->
 <template>
 	<div class="publications">
@@ -328,7 +328,7 @@ export default {
 			/**
 			 * Load the list or the record when the route changes.
 			 *
-			 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+			 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 			 */
 			handler() {
 				this.load()
@@ -346,7 +346,7 @@ export default {
 		 *
 		 * @param {string} status The status
 		 * @return {string} The label.
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		statusLabel(status) {
 			return publicationStatusLabel(status)
@@ -357,7 +357,7 @@ export default {
 		 *
 		 * @param {object} record The record
 		 * @return {number} 0 to 3.
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		passed(record) {
 			return readinessChecks(record).filter((check) => check.ok).length
@@ -368,7 +368,7 @@ export default {
 		 *
 		 * @param {object} row The record
 		 * @return {string[]} The missing fields.
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		missingOf(row) {
 			return missingMetadata(row)
@@ -379,7 +379,7 @@ export default {
 		 *
 		 * @param {string} value An ISO date-time
 		 * @return {string} The time.
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		formatTime(value) {
 			return value ? new Date(value).toLocaleString() : ''
@@ -389,7 +389,7 @@ export default {
 		 * Load the list, or one record.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		async load() {
 			this.loading = true
@@ -415,7 +415,7 @@ export default {
 		 * Show a record and fill the form from it.
 		 *
 		 * @param {object} record The record
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		show(record) {
 			this.record = record
@@ -429,7 +429,7 @@ export default {
 		 * Save the Woo metadata.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		async saveMetadata() {
 			await this.step('metadata', this.form)
@@ -441,7 +441,7 @@ export default {
 		 * @param {string} name The step
 		 * @param {object} body The body
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		async step(name, body = {}) {
 			this.busy = true

@@ -453,7 +453,7 @@ class ConsentService {
 	 *
 	 * @return array{clear: bool, reasons: list<string>} The verdict.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.1
 	 */
 	public function isDocumentConsentClear(string $documentId, string $register, string $schema, DateTimeImmutable $now): array {
 		$consents = $this->updateHandler->getConsentsByDocument(documentId: $documentId, register: $register, schema: $schema);

@@ -30,7 +30,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 class PublicationNotReadyException extends RuntimeException {
 
@@ -53,7 +53,7 @@ class PublicationNotReadyException extends RuntimeException {
 	 *
 	 * @return list<string> The reasons.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
 	 */
 	public function getReasons(): array {
 		return $this->reasons;

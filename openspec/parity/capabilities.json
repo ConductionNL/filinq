@@ -4135,7 +4135,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/opencatalogi",
 				"evidence": "openspec/changes/woo-publicatie-pipeline/proposal.md (0 of 16 tasks done) states: 'sibling apps own the endpoint: OpenCatalogi publishes OR publication objects with DiWoo/TOOI-validated Woo-index sitemaps...What is missing is the pipeline that chains them: nothing today answers is this document ready to publish, assembles the DiWoo metadata, [or] hands the redacted result off to the publication endpoint.' lib/Service/DossierContextService.php:286 comment confirms: 'The woo-publicatie-pipeline has not shipped.'",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "opencatalogi",
@@ -4166,7 +4166,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/opencatalogi",
 				"evidence": "Same as woo-publish: openspec/changes/woo-publicatie-pipeline/proposal.md confirms OpenCatalogi already produces DiWoo/TOOI-validated Woo-index sitemaps for objects IT publishes, but since filinq has no built pipeline handing documents to OpenCatalogi at all (0/16 tasks), filinq users get no Woo-index feed through filinq today.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "opencatalogi",
@@ -4189,14 +4189,15 @@
 			"name": "See which documents must be published actively and what is still outstanding.",
 			"source": "category-derived",
 			"sourceRef": "journey \"Publish Documents for Active Disclosure\"",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/woo-publicatie-pipeline/proposal.md: 'nothing today answers \"is this document ready to publish?\"' is listed as the core missing piece (0 of 16 tasks done). No readiness/outstanding-items view exists in src/ for active-disclosure tracking.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"evidence": "lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. The list shows every publication the caller can open with its status and checks; it does not yet derive which documents the Woo requires to be published actively.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Publications menu entry (/publications) and Publish on a document in My documents",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
@@ -6447,14 +6448,15 @@
 			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (requirement VPB-02)",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/woo-metadata-worklist on 2026-09-27. Before: no DiWoo metadata or readiness view: grep -ri 'diwoo|informatiecategorie' lib src finds nothing; the only Woo-named service, lib/Service/WooProfileService.php:40, holds the anonymisation entity profile. DiWoo metadata assembly and the readiness check exist only as design: openspec/changes/woo-publicatie-pipeline/proposal.md:26 and :37 (0 of 16 tasks done). opencatalogi@a00f9f84 lib/Controller/WooReadinessController.php:46 checks catalog harvester readiness, not per-document metadata.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"evidence": "lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. The list has a Missing metadata column and the detail names the missing Woo fields; a hand-off is refused while officieleTitel, wooCategory or publicatiedatum is missing.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Publications menu entry (/publications), Missing metadata column",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
@@ -6478,14 +6480,15 @@
 			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (requirement VPB-10)",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/woo-publicatie-pipeline (an open change found in the openspec pass on 2026-09-27). Before: no destruction-date propagation: grep -ri 'vernietigingsdatum|destructionDate|retentionExpiresAt' lib src finds nothing. Designed only: openspec/changes/woo-publicatie-pipeline/design.md:171 (filinq records the source system's destruction date and propagates it as retentionExpiresAt; 0 of 16 tasks done). opencatalogi@a00f9f84 lib/Service/RetentionService.php:531 evaluates retentionExpiresAt on its own publications (lib/BackgroundJob/RetentionEvaluation.php), but no filinq document reaches it.",
-				"change": "openspec/changes/woo-publicatie-pipeline"
+				"evidence": "lib/Service/Publication/PublicationPipelineService.php with PublicationReadiness (redaction review mark + anonymizationLink, ConsentClearance over the document's publicationConsent records, PolicyMatchService prohibitions) and PublicationStore (publicationRecord + append-only publicationLogEntry in the filinq register, OpenCatalogi publication object via OpenRegister); PublicationController api/publications/*; src/views/publications/PublicationsPage.vue. A destruction date recorded on the publication is passed to OpenCatalogi as retentionExpiresAt with a retentionNote (RET-003), so OpenCatalogi's retention job takes it offline; the date is entered by hand, not yet read from the source system.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Publications detail, Destruction date",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",

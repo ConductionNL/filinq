@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -19,7 +19,7 @@ export const REQUIRED_METADATA = ['officieleTitel', 'wooCategory', 'publicatieda
  *
  * @param {string} status The stored status
  * @return {string} The label.
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export function publicationStatusLabel(status) {
 	const labels = {
@@ -38,7 +38,7 @@ export function publicationStatusLabel(status) {
  *
  * @param {object} record The record
  * @return {Array<{key: string, label: string, ok: boolean, route: string}>} The checks, each with the page where it is resolved.
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export function readinessChecks(record) {
 	return [
@@ -68,7 +68,7 @@ export function readinessChecks(record) {
  *
  * @param {object} record The record
  * @return {string[]} The missing field names.
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export function missingMetadata(record) {
 	return REQUIRED_METADATA.filter((field) => !record[field])
@@ -80,7 +80,7 @@ export function missingMetadata(record) {
  * @param {object} record The record
  * @param {boolean} platformAvailable Whether OpenCatalogi is installed
  * @return {boolean} True when the record is ready, complete, and there is a platform.
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export function canHandOff(record, platformAvailable) {
 	return (
@@ -95,7 +95,7 @@ export function canHandOff(record, platformAvailable) {
  *
  * @param {object} record The record
  * @return {boolean} True once it was handed off and not yet withdrawn.
- * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
 export function canWithdraw(record) {
 	return ['handed_off', 'published'].includes(record.status)

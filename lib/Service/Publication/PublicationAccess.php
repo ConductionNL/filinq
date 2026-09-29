@@ -33,7 +33,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 class PublicationAccess {
 
@@ -60,7 +60,7 @@ class PublicationAccess {
 	 *
 	 * @return bool True for an admin, or when the user can open the document.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	public function mayAct(string $uid, string $fileId): bool {
 		if ($uid === '') {

@@ -3,11 +3,13 @@
 **Status**: in-progress
 **Scope**: filinq
 **OpenSpec changes**:
-- [woo-publicatie-pipeline](../../changes/woo-publicatie-pipeline/) _(active)_ — adds the read-only document consent-clearance signal (REQ-DDWPP-020) consumed by the publication-readiness gate; objection-window rules and consent CRUD unchanged (kind: code)
+- [woo-publicatie-pipeline](../../changes/archive/2026-09-29-woo-publicatie-pipeline/) _(archived 2026-09-29)_ — adds the read-only document consent-clearance signal (REQ-DDWPP-020) consumed by the publication-readiness gate; objection-window rules and consent CRUD unchanged (kind: code)
 
 ## Purpose
 TBD - created by archiving change filinq-consent-to-or-gdpr. Update Purpose after archive.
+
 ## Requirements
+
 ### Requirement: Publication Consent Is A Distinct Domain From OR GDPR Data-Subject Rights
 
 The filinq publication-consent stack SHALL remain app-owned and SHALL NOT be
@@ -59,3 +61,44 @@ would change a legal control.
 - WHEN the publication-consent boundary is recorded
 - THEN the anonymisation pipeline SHALL remain present and unchanged
 
+### Requirement: Document consent-clearance signal (REQ-DDWPP-020)
+
+`ConsentService` MUST expose a read-only clearance query
+`isDocumentConsentClear(string $documentId): array` returning a boolean
+verdict plus per-record reasons. A document is consent-clear if and only if
+every `publicationConsent` record for it satisfies one of: `consentStatus =
+consent_given`; `consentStatus = anonymized`; or `consentStatus =
+no_response` with `objectionDeadline` in the past (WOO active-disclosure
+objection window elapsed). A document is NOT clear while any record has
+`consentStatus` `pending` or `objection_received`, or `publicationDecision =
+reject`. A document with zero consent records is clear (no affected entities
+require consent). The query MUST NOT modify any consent record and MUST NOT
+alter how `objectionDeadline` is computed.
+
+#### Scenario: All consents terminal and permitting
+
+- GIVEN a document with two consent records: one `consent_given` and one `no_response` whose `objectionDeadline` was yesterday
+- WHEN the clearance query runs
+- THEN the verdict is clear
+- @e2e exclude pure read-only query, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php::testEveryCombination)
+
+#### Scenario: Unresolved objection blocks clearance
+
+- GIVEN a document with a consent record in `objection_received` and `publicationDecision` `pending`
+- WHEN the clearance query runs
+- THEN the verdict is not clear and the reasons name that record's UUID and status
+- @e2e exclude pure read-only query, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php::testEveryCombination)
+
+#### Scenario: Rejection decision blocks clearance regardless of status
+
+- GIVEN a document with a consent record whose `publicationDecision` is `reject`
+- WHEN the clearance query runs
+- THEN the verdict is not clear
+- @e2e exclude pure read-only query, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php::testEveryCombination)
+
+#### Scenario: Objection window computation is untouched
+
+- GIVEN the clearance query implementation
+- WHEN it evaluates `no_response` records
+- THEN it compares against the stored `objectionDeadline` computed by `ObjectionDeadlineChecker` and introduces no alternative deadline computation
+- @e2e exclude architectural boundary, covered by PHPUnit (tests/unit/Service/Publication/ConsentClearanceTest.php: the clearance reads objectionDeadline and never computes it)

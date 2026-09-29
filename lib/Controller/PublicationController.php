@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 class PublicationController extends Controller {
 
@@ -79,7 +79,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse {results: record[]}
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -100,7 +100,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse {results: [{code, label}]}
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 	 */
 	#[NoAdminRequired]
 	public function categories(): JSONResponse {
@@ -113,7 +113,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse The record, 201
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -141,7 +141,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse The record with `log`
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -165,7 +165,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse The record
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function readiness(string $id): JSONResponse {
@@ -185,7 +185,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse The record
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function metadata(string $id): JSONResponse {
@@ -205,7 +205,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse The record, or 409 with the reasons
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function handoff(string $id): JSONResponse {
@@ -225,7 +225,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse The record
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function withdraw(string $id): JSONResponse {
@@ -245,7 +245,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse The record
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.5
 	 */
 	#[NoAdminRequired]
 	public function destructionDate(string $id): JSONResponse {

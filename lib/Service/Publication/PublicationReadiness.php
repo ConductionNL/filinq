@@ -46,7 +46,7 @@ use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 class PublicationReadiness {
 
@@ -81,7 +81,7 @@ class PublicationReadiness {
 	 *                              prohibitionsClear, readinessReasons, readinessEvaluatedAt
 	 *                              and, when found, redactedFileRef.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 */
 	public function evaluate(array $record, DateTimeImmutable $now): array {
 		$fileId = (string) ($record['documentFileRef'] ?? '');
@@ -121,7 +121,7 @@ class PublicationReadiness {
 	 *
 	 * @return bool True when the document may be handed off.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 */
 	public function isReady(array $record): bool {
 		return ($record['entitiesReviewed'] ?? false) === true

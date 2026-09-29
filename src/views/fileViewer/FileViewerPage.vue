@@ -240,7 +240,7 @@ export default {
 		 * Start a Woo publication for this document and open it.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.2
 		 */
 		async publish() {
 			this.publishing = true

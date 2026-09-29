@@ -40,7 +40,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/woo-publicatie-pipeline/specs/woo-publicatie-pipeline/spec.md
+ * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
 class PublicationPipelineService {
 
@@ -80,7 +80,7 @@ class PublicationPipelineService {
 	 *
 	 * @return array<string, mixed> The record.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 */
 	public function create(string $documentFileRef, string $subjectType, string $dossierRef, string $actor): array {
 		if ($documentFileRef === '') {
@@ -110,7 +110,7 @@ class PublicationPipelineService {
 	 *
 	 * @return array<string, mixed> The stored record.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 */
 	public function evaluate(array $record, string $actor): array {
 		$uuid = (string) $record['uuid'];
@@ -141,7 +141,7 @@ class PublicationPipelineService {
 	 *
 	 * @throws InvalidArgumentException When the category is not one of OpenCatalogi's TOOI categories.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 	 */
 	public function updateMetadata(array $record, array $metadata, string $actor): array {
 		$category = (string) ($metadata['wooCategory'] ?? '');
@@ -174,7 +174,7 @@ class PublicationPipelineService {
 	 * @throws PublicationNotReadyException When a check fails now, or the metadata is incomplete.
 	 * @throws RuntimeException             When the platform is not there or refuses.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
 	 */
 	public function handoff(array $record, string $actor): array {
 		if ($this->store->platformAvailable() === false) {
@@ -221,7 +221,7 @@ class PublicationPipelineService {
 	 *
 	 * @throws InvalidArgumentException When there is no reason, or nothing was handed off.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.4
 	 */
 	public function withdraw(array $record, string $reason, string $actor): array {
 		if (trim($reason) === '') {
@@ -257,7 +257,7 @@ class PublicationPipelineService {
 	 *
 	 * @throws InvalidArgumentException When the date or its source is missing.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.4
 	 */
 	public function setDestructionDate(array $record, string $date, string $source, string $actor): array {
 		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1 || trim($source) === '') {
@@ -285,7 +285,7 @@ class PublicationPipelineService {
 	 *
 	 * @return array<string, mixed> The record, stored again when it moved.
 	 *
-	 * @spec openspec/changes/woo-publicatie-pipeline/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.4
 	 */
 	public function sync(array $record): array {
 		$today = $this->now()->format('Y-m-d');
