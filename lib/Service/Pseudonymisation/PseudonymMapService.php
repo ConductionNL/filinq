@@ -163,6 +163,62 @@ class PseudonymMapService {
 	}//end readPairs()
 
 	/**
+	 * Destroy the entries for these values in every map kept for one source
+	 * document. A map left with no entries is deleted; one with other people's
+	 * entries is re-encrypted without these.
+	 *
+	 * An erasure that leaves a way back is not an erasure (design D6).
+	 *
+	 * @param int                $sourceFileId The original document's file id.
+	 * @param array<int, string> $values       The erased person's identifiers.
+	 *
+	 * @return array{maps: array<int, string>, entriesDestroyed: int, mapsDeleted: int} What was destroyed.
+	 *
+	 * @throws RuntimeException When a map cannot be read, decrypted or rewritten: the
+	 *                          way back is then still open, and the caller must say so.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.3
+	 */
+	public function forgetValues(int $sourceFileId, array $values): array {
+		$needles = array_map(static fn (string $value): string => mb_strtolower(trim($value)), $values);
+		$result = ['maps' => [], 'entriesDestroyed' => 0, 'mapsDeleted' => 0];
+		foreach ($this->repository->findForSource(sourceFileId: $sourceFileId) as $map) {
+			$uuid = (string) $map['uuid'];
+			try {
+				$pairs = json_decode(json: $this->crypto->decrypt($this->repository->readCiphertext(uuid: $uuid)), associative: true, flags: JSON_THROW_ON_ERROR);
+			} catch (Throwable $e) {
+				throw new RuntimeException(message: 'The pseudonym map ' . $uuid . ' could not be decrypted: ' . $e->getMessage(), code: 0, previous: $e);
+			}
+
+			$kept = array_values(
+				array_filter(
+					(array) $pairs,
+					static fn (mixed $pair): bool => in_array(mb_strtolower(trim((string) ($pair['originalValue'] ?? ''))), $needles, true) === false
+				)
+			);
+			$removed = (count((array) $pairs) - count($kept));
+			if ($removed === 0) {
+				continue;
+			}
+
+			$result['maps'][] = $uuid;
+			$result['entriesDestroyed'] += $removed;
+			if ($kept === []) {
+				$this->repository->delete(uuid: $uuid);
+				$result['mapsDeleted']++;
+				continue;
+			}
+
+			$map['mappings'] = $this->crypto->encrypt(json_encode(value: $kept, flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
+			$map['entryCount'] = count($kept);
+			$this->repository->save(row: $map, uuid: $uuid);
+		}//end foreach
+
+		return $result;
+
+	}//end forgetValues()
+
+	/**
 	 * Delete the link's map, if it has one.
 	 *
 	 * @param string $linkId The anonymisation link uuid.

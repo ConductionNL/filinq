@@ -6109,7 +6109,7 @@
         "refused": [
           {
             "document": "00000000-0000-0000-0000-000000000001",
-            "obligation": "archiefwet",
+            "obligation": "retention",
             "reason": "Het dossier is als blijvend te bewaren gewaardeerd.",
             "decidedBy": "seed-user-dia"
           }

@@ -227,6 +227,49 @@ class DocumentVersionService {
 	}//end restoreVersion()
 
 	/**
+	 * Delete every earlier Nextcloud version of a file, keeping the current content.
+	 *
+	 * A subject erasure rewrites a file; Nextcloud then keeps the previous bytes
+	 * as a version, with the person still in them. The erasure is not done until
+	 * those are gone too. The caller has already decided the file may be erased,
+	 * so the versions are read as the file's owner, not as the caller.
+	 *
+	 * @param File $file The rewritten file.
+	 *
+	 * @return int How many versions were deleted.
+	 *
+	 * @throws \RuntimeException When versions exist and one could not be deleted.
+	 *
+	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.2
+	 */
+	public function purgeEarlierVersions(File $file): int {
+		try {
+			$versionManager = $this->resolveVersionManager();
+		} catch (ComparisonException) {
+			// No versioning app, so no earlier bytes were kept.
+			return 0;
+		}
+
+		$owner = $file->getOwner();
+		if ($owner === null) {
+			throw new \RuntimeException('The file has no owner, so its versions cannot be read.');
+		}
+
+		$deleted = 0;
+		try {
+			foreach ($versionManager->getVersionsForFile($owner, $file) as $version) {
+				$versionManager->deleteVersion($version);
+				$deleted++;
+			}
+		} catch (Throwable $e) {
+			throw new \RuntimeException('An earlier version could not be deleted: ' . $e->getMessage(), 0, $e);
+		}
+
+		return $deleted;
+
+	}//end purgeEarlierVersions()
+
+	/**
 	 * Resolve a file through the requesting user's folder, enforcing read or
 	 * write access. Returns the File node or throws 404 — without distinguishing
 	 * "does not exist" from "no access" (ADR-005).
