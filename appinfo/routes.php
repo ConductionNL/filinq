@@ -212,6 +212,17 @@ $extra = [
         ['name' => 'printJob#download', 'url' => 'api/print/jobs/{id}/download', 'verb' => 'GET'],
         ['name' => 'printJob#updateStatus', 'url' => 'api/print/jobs/{id}/status', 'verb' => 'PUT'],
 
+        // Woo publication pipeline (woo-publicatie-pipeline). The log has no
+        // update or delete route: an entry is written once.
+        ['name' => 'publication#index', 'url' => 'api/publications', 'verb' => 'GET'],
+        ['name' => 'publication#create', 'url' => 'api/publications', 'verb' => 'POST'],
+        ['name' => 'publication#show', 'url' => 'api/publications/{id}', 'verb' => 'GET'],
+        ['name' => 'publication#readiness', 'url' => 'api/publications/{id}/readiness', 'verb' => 'POST'],
+        ['name' => 'publication#metadata', 'url' => 'api/publications/{id}/metadata', 'verb' => 'PUT'],
+        ['name' => 'publication#handoff', 'url' => 'api/publications/{id}/handoff', 'verb' => 'POST'],
+        ['name' => 'publication#withdraw', 'url' => 'api/publications/{id}/withdraw', 'verb' => 'POST'],
+        ['name' => 'publication#destructionDate', 'url' => 'api/publications/{id}/destruction-date', 'verb' => 'POST'],
+
         // Document generation routes (document-creatie-sjablonen).
         ['name' => 'document#generate', 'url' => 'api/documents/generate', 'verb' => 'POST'],
         ['name' => 'document#preview', 'url' => 'api/documents/generate/preview', 'verb' => 'POST'],
