@@ -29,7 +29,11 @@ const SETTINGS = '/index.php/settings/admin/filinq'
  * @param effectiveMethod The method OpenRegister will run
  * @param warning The warning the server derived
  */
-async function withBackend(page: Page, effectiveMethod: string, warning: string | null): Promise<void> {
+async function withBackend(
+	page: Page,
+	effectiveMethod: string,
+	warning: string | null,
+): Promise<void> {
 	await page.route('**/apps/filinq/api/settings', async (route) => {
 		if (route.request().method() !== 'GET') {
 			await route.continue()
@@ -73,7 +77,9 @@ test.describe('anonymisation detector honesty', () => {
 
 		const banner = page.locator('.anonymiser-backend-warning')
 		await expect(banner).toContainText('Entity detector in use: openanonymiser')
-		await expect(banner.locator('.anonymiser-backend-warning__card')).toHaveCount(0)
+		await expect(
+			banner.locator('.anonymiser-backend-warning__card'),
+		).toHaveCount(0)
 	})
 
 	test('a regex-only instance is warned by name', async ({ page }) => {

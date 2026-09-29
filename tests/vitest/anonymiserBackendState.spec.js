@@ -34,7 +34,9 @@ describe('backendStateFromSettings', () => {
 	})
 
 	it('ignores the retired method key', () => {
-		expect(backendStateFromSettings({ method: 'regex' }).effectiveMethod).toBe('')
+		expect(backendStateFromSettings({ method: 'regex' }).effectiveMethod).toBe(
+			'',
+		)
 	})
 })
 
@@ -48,7 +50,10 @@ describe('isRefusing', () => {
 
 describe('the views', () => {
 	it('read the state through backendStateFromSettings, not a method key', () => {
-		for (const view of ['src/views/settings/Settings.vue', 'src/views/dashboard/DashboardIndex.vue']) {
+		for (const view of [
+			'src/views/settings/Settings.vue',
+			'src/views/dashboard/DashboardIndex.vue',
+		]) {
 			const source = readFileSync(view, 'utf8')
 			expect(source).toContain('backendStateFromSettings(')
 			expect(source).not.toMatch(/anonymiserBackend\.method/)

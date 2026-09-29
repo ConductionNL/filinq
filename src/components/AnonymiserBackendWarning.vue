@@ -198,7 +198,10 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 		 */
 		fellBack() {
-			return this.activeMethod !== '' && this.activeMethod !== this.effectiveMethod
+			return (
+				this.activeMethod !== ''
+				&& this.activeMethod !== this.effectiveMethod
+			)
 		},
 
 		/**
@@ -209,12 +212,22 @@ export default {
 		 */
 		refusalLine() {
 			if (this.warning === 'disabled') {
-				return t('filinq', 'Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.')
+				return t(
+					'filinq',
+					'Entity detection is switched off in OpenRegister. Filinq refuses to anonymise until you switch it on.',
+				)
 			}
 			if (this.warning === 'unavailable') {
-				return t('filinq', 'The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.', { method: this.effectiveMethod })
+				return t(
+					'filinq',
+					'The entity detector {method} is unavailable. Filinq refuses to anonymise until it is back.',
+					{ method: this.effectiveMethod },
+				)
 			}
-			return t('filinq', 'Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.')
+			return t(
+				'filinq',
+				'Filinq cannot read which entity detector OpenRegister uses. Filinq refuses to anonymise until it can.',
+			)
 		},
 
 		/**
@@ -224,10 +237,16 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 		 */
 		activeLine() {
-			if (!this.showActiveBackend || this.effectiveMethod === '' || this.refusing) {
+			if (
+				!this.showActiveBackend
+				|| this.effectiveMethod === ''
+				|| this.refusing
+			) {
 				return ''
 			}
-			return t('filinq', 'Entity detector in use: {method}', { method: this.effectiveMethod })
+			return t('filinq', 'Entity detector in use: {method}', {
+				method: this.effectiveMethod,
+			})
 		},
 	},
 
