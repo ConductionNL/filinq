@@ -200,6 +200,53 @@ class PseudonymRestoreServiceTest extends TestCase {
 	}//end testAPermittedUserGetsARestoredCopy()
 
 	/**
+	 * Every entry of a restore sits on the anonymisation link as OpenRegister
+	 * stores it: its uuid, its register id and its schema id, so the link's
+	 * own audit view lists the restore.
+	 *
+	 * @return void
+	 */
+	public function testRestoreEntriesCarryTheLinksRegisterAndSchema(): void {
+		$container = $this->container();
+		$linkId = $this->seedReversibleRun(container: $container, pairs: $this->twoPeople());
+		$written = [];
+		$service = $this->restoreService(
+			gate: $this->gate(allowedGroups: '["privacy-officers"]', membership: self::MEMBERS),
+			copy: $this->anonymisedCopy(mimeType: 'text/plain', content: '[PERSOON: 1]', written: $written),
+			container: $container
+		);
+
+		$service->restore(linkId: $linkId, userId: 'petra');
+		$this->refusal(fn () => $service->restore(linkId: $linkId, userId: 'bob'));
+
+		$this->assertCount(3, $this->auditEntries);
+		foreach ($this->auditEntries as $entry) {
+			$this->assertSame([$linkId, self::REGISTER_ID, self::SCHEMA_IDS['anonymizationLink']], [$entry[1], $entry[3], $entry[4]], $entry[0]);
+		}
+
+	}//end testRestoreEntriesCarryTheLinksRegisterAndSchema()
+
+	/**
+	 * A guessed link id has no stored object: the denial is still written,
+	 * under the id that was tried.
+	 *
+	 * @return void
+	 */
+	public function testADenialForAnUnknownLinkIsStillWritten(): void {
+		$written = [];
+		$service = $this->restoreService(
+			gate: $this->gate(allowedGroups: '["privacy-officers"]', membership: self::MEMBERS),
+			copy: $this->anonymisedCopy(mimeType: 'text/plain', content: '[PERSOON: 1]', written: $written),
+			container: $this->container()
+		);
+
+		$this->refusal(fn () => $service->restore(linkId: 'no-such-link', userId: 'petra'));
+
+		$this->assertSame([[PseudonymRestoreAudit::ACTION_DENIED, 'no-such-link', null, null]], array_map(static fn (array $entry): array => [$entry[0], $entry[1], $entry[3], $entry[4]], $this->auditEntries));
+
+	}//end testADenialForAnUnknownLinkIsStillWritten()
+
+	/**
 	 * A PDF cannot be rewritten safely: the answer is the placeholder list, and no file.
 	 *
 	 * @return void

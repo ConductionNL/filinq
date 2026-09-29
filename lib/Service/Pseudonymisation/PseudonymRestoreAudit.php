@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Pseudonymisation;
 
+use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -56,10 +57,12 @@ class PseudonymRestoreAudit {
 	 *
 	 * @param AuditTrailMapper $auditTrail OpenRegister's audit trail.
 	 * @param ITimeFactory $time The clock.
+	 * @param AnonymizationLinkReader $links Finds the stored link the entry belongs on.
 	 */
 	public function __construct(
 		private readonly AuditTrailMapper $auditTrail,
 		private readonly ITimeFactory $time,
+		private readonly AnonymizationLinkReader $links,
 	) {
 
 	}//end __construct()
@@ -80,8 +83,14 @@ class PseudonymRestoreAudit {
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
 	 */
 	public function record(string $linkId, string $action, string $userId, array $details = []): void {
-		$subject = new ObjectEntity();
-		$subject->setUuid($linkId);
+		// The entry sits on the stored link (id, uuid, register, schema), so the
+		// link's own audit view lists it. A guessed id has no stored object; the
+		// attempt is still recorded, under the id that was tried.
+		$subject = $this->links->storedObject(linkId: $linkId);
+		if ($subject === null) {
+			$subject = new ObjectEntity();
+			$subject->setUuid($linkId);
+		}
 
 		try {
 			$this->auditTrail->createAuditTrailEntry(

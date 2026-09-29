@@ -66,6 +66,16 @@ use RuntimeException;
 trait PseudonymDoubles {
 
 	/**
+	 * The register id OpenRegister stores objects under in these doubles.
+	 */
+	protected const REGISTER_ID = '12';
+
+	/**
+	 * Schema ids by slug in these doubles.
+	 */
+	protected const SCHEMA_IDS = ['anonymizationLink' => '41', 'pseudonymMap' => '57'];
+
+	/**
 	 * Stored rows per schema, keyed by uuid.
 	 *
 	 * @var array<string, array<string, array<string, mixed>>>
@@ -80,9 +90,9 @@ trait PseudonymDoubles {
 	protected array $bypasses = [];
 
 	/**
-	 * Audit entries written: [action, uuid, context].
+	 * Audit entries written: [action, uuid, context, register id, schema id].
 	 *
-	 * @var array<int, array{0: string, 1: string, 2: array<string, mixed>}>
+	 * @var array<int, array{0: string, 1: string, 2: array<string, mixed>, 3: string|null, 4: string|null}>
 	 */
 	protected array $auditEntries = [];
 
@@ -140,7 +150,12 @@ trait PseudonymDoubles {
 					unset($row['mappings']);
 				}
 
-				return $this->entity(uuid: $id, row: $row);
+				$entity = $this->entity(uuid: $id, row: $row);
+				// OpenRegister answers with the stored ids, not the slugs it was asked by.
+				$entity->setRegister(self::REGISTER_ID);
+				$entity->setSchema((self::SCHEMA_IDS[$schema] ?? '99'));
+
+				return $entity;
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
@@ -341,9 +356,11 @@ trait PseudonymDoubles {
 	/**
 	 * An audit trail that records, and throws for the actions listed in $failingAuditActions.
 	 *
+	 * @param ContainerInterface|null $container The container holding the register; a fresh one when null.
+	 *
 	 * @return PseudonymRestoreAudit The audit service.
 	 */
-	protected function audit(): PseudonymRestoreAudit {
+	protected function audit(?ContainerInterface $container = null): PseudonymRestoreAudit {
 		$mapper = $this->createMock(AuditTrailMapper::class);
 		$mapper->method('createAuditTrailEntry')->willReturnCallback(
 			function (ObjectEntity $object, string $action, array $context = []) {
@@ -351,13 +368,15 @@ trait PseudonymDoubles {
 					throw new RuntimeException('audit table unavailable');
 				}
 
-				$this->auditEntries[] = [$action, (string) $object->getUuid(), $context];
+				$this->auditEntries[] = [$action, (string) $object->getUuid(), $context, $object->getRegister(), $object->getSchema()];
 
 				return new AuditTrail();
 			}
 		);
 
-		return new PseudonymRestoreAudit($mapper, $this->clock());
+		$resolver = new DocumentObjectServiceResolver(($container ?? $this->container()), $this->apps());
+
+		return new PseudonymRestoreAudit($mapper, $this->clock(), new AnonymizationLinkReader($resolver, new NullLogger()));
 
 	}//end audit()
 
@@ -398,7 +417,7 @@ trait PseudonymDoubles {
 
 		return new PseudonymRestoreService(
 			$gate,
-			$this->audit(),
+			$this->audit(container: $container),
 			$this->mapService(container: $container),
 			new PseudonymPairs(),
 			new AnonymizationLinkReader($resolver, new NullLogger()),

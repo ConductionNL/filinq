@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\Redaction;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -143,6 +144,49 @@ class AnonymizationLinkReader {
 		return null;
 
 	}//end forAnonymized()
+
+	/**
+	 * The stored link object, for its OpenRegister ids only, or null.
+	 *
+	 * Read past RBAC on purpose: the answer never reaches a caller, it only
+	 * tells the audit trail which register and schema the link lives in, and a
+	 * denied caller's attempt must land on the same object as a granted one.
+	 *
+	 * @param string $linkId The link uuid.
+	 *
+	 * @return ObjectEntity|null The stored object, or null when there is none.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
+	 */
+	public function storedObject(string $linkId): ?ObjectEntity {
+		if ($linkId === '') {
+			return null;
+		}
+
+		try {
+			$entity = $this->objectResolver->resolve()->find(
+				id: $linkId,
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (Throwable $e) {
+			$this->logger->info(
+				message: '[AnonymizationLinkReader] no stored link under this id',
+				context: ['linkId' => $linkId, 'error' => $e->getMessage()]
+			);
+
+			return null;
+		}
+
+		if ($entity instanceof ObjectEntity === false) {
+			return null;
+		}
+
+		return $entity;
+
+	}//end storedObject()
 
 	/**
 	 * One link by its uuid, read as the caller, or null.
