@@ -1,26 +1,57 @@
 <template>
-	<NcDialog :name="t('filinq', 'Restore original')" :canClose="!busy" @closing="$emit('close')">
+	<NcDialog
+		:name="t('filinq', 'Restore original')"
+		:noClose="busy"
+		@closing="$emit('close')">
 		<template #default>
 			<div class="restore-original-dialog">
 				<NcNoteCard v-if="!result" type="warning">
-					{{ t('filinq', 'Restoring puts the real names back. Your name, the time and this document are written to the audit trail before anything is restored.') }}
+					{{
+						t(
+							'filinq',
+							'Restoring puts the real names back. Your name, the time and this document are written to the audit trail before anything is restored.',
+						)
+					}}
 				</NcNoteCard>
 				<p v-if="!result" class="restore-original-dialog__count">
-					{{ n('filinq', 'This copy has a key for %n placeholder.', 'This copy has a key for %n placeholders.', entryCount) }}
+					{{
+						n(
+							'filinq',
+							'This copy has a key for %n placeholder.',
+							'This copy has a key for %n placeholders.',
+							entryCount,
+						)
+					}}
 				</p>
 				<NcNoteCard v-if="error" type="error">
 					{{ error }}
 				</NcNoteCard>
 				<p v-if="result && result.mode === 'copy'">
-					{{ t('filinq', 'Saved as {name}, next to the anonymised copy. The anonymised copy is unchanged.', { name: result.fileName }) }}
+					{{
+						t(
+							'filinq',
+							'Saved as {name}, next to the anonymised copy. The anonymised copy is unchanged.',
+							{ name: result.fileName },
+						)
+					}}
 				</p>
 				<template v-if="result && result.mode === 'report'">
 					<p>
-						{{ t('filinq', 'This format cannot be rewritten safely, so no file was made. These are the names behind the placeholders.') }}
+						{{
+							t(
+								'filinq',
+								'This format cannot be rewritten safely, so no file was made. These are the names behind the placeholders.',
+							)
+						}}
 					</p>
 					<table class="restore-original-dialog__report">
 						<caption class="hidden-visually">
-							{{ t('filinq', 'Placeholders and the values they replaced') }}
+							{{
+								t(
+									'filinq',
+									'Placeholders and the values they replaced',
+								)
+							}}
 						</caption>
 						<thead>
 							<tr>
@@ -33,7 +64,9 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="entry in result.entries" :key="entry.placeholder">
+							<tr
+								v-for="entry in result.entries"
+								:key="entry.placeholder">
 								<td>{{ entry.placeholder }}</td>
 								<td>{{ entry.originalValue }}</td>
 							</tr>
@@ -61,8 +94,8 @@
 </template>
 
 <script>
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { restoreOriginal } from '../services/pseudonymisation.js'
 
 /**

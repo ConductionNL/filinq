@@ -414,7 +414,12 @@ const documentRecordId = computed(() =>
 					type="radio"
 					name="anonymise-mode"
 					value="reversible">
-					{{ t('filinq', 'Keep an encrypted key, so a permitted colleague can restore the names') }}
+					{{
+						t(
+							'filinq',
+							'Keep an encrypted key, so a permitted colleague can restore the names',
+						)
+					}}
 				</NcCheckboxRadioSwitch>
 			</fieldset>
 			<NcButton

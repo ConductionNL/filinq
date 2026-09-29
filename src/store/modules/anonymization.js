@@ -753,7 +753,8 @@ export const useAnonymizationStore = defineStore('anonymization', {
 					anonymizeResponse.data.residualEntities || []
 				// Whether a reversible run kept its key (and why not), so the
 				// sidebar can warn instead of implying the names can come back.
-				entry.pseudonymisation = anonymizeResponse.data.pseudonymisation || null
+				entry.pseudonymisation =
+					anonymizeResponse.data.pseudonymisation || null
 				// The re-anonymise sub-flow (if any) is done — clear the marker
 				// so the dossier footer returns to its batch state.
 				entry.reanonymize = false

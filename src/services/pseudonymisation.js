@@ -28,9 +28,11 @@ export async function fetchPseudonymStatus(fileId) {
 		return null
 	}
 	try {
-		const { data } = await axios.get(generateUrl(`/apps/filinq/api/pseudonymisation/status/${fileId}`))
+		const { data } = await axios.get(
+			generateUrl(`/apps/filinq/api/pseudonymisation/status/${fileId}`),
+		)
 		return data
-	} catch (error) {
+	} catch {
 		return null
 	}
 }
@@ -44,12 +46,18 @@ export async function fetchPseudonymStatus(fileId) {
  */
 export async function restoreOriginal(linkId) {
 	try {
-		const { data } = await axios.post(generateUrl(`/apps/filinq/api/pseudonymisation/${encodeURIComponent(linkId)}/restore`))
+		const { data } = await axios.post(
+			generateUrl(
+				`/apps/filinq/api/pseudonymisation/${encodeURIComponent(linkId)}/restore`,
+			),
+		)
 		return { ok: true, result: data }
 	} catch (error) {
 		return {
 			ok: false,
-			error: error.response?.data?.error || t('filinq', 'The names could not be restored.'),
+			error:
+				error.response?.data?.error
+				|| t('filinq', 'The names could not be restored.'),
 		}
 	}
 }
@@ -62,13 +70,26 @@ export async function restoreOriginal(linkId) {
  * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
  */
 export function keyWarning(pseudonymisation) {
-	if (!pseudonymisation || pseudonymisation.reversible !== true || pseudonymisation.keyKept === true) {
+	if (
+		!pseudonymisation
+		|| pseudonymisation.reversible !== true
+		|| pseudonymisation.keyKept === true
+	) {
 		return ''
 	}
 	const reasons = {
-		no_placeholders: t('filinq', 'No key was kept: none of the replaced values got a numbered placeholder. This copy cannot be restored.'),
-		link_not_recorded: t('filinq', 'No key was kept, because the link between the original and this copy could not be saved. This copy cannot be restored.'),
-		store_failed: t('filinq', 'No key was kept, because it could not be saved. This copy cannot be restored.'),
+		no_placeholders: t(
+			'filinq',
+			'No key was kept: none of the replaced values got a numbered placeholder. This copy cannot be restored.',
+		),
+		link_not_recorded: t(
+			'filinq',
+			'No key was kept, because the link between the original and this copy could not be saved. This copy cannot be restored.',
+		),
+		store_failed: t(
+			'filinq',
+			'No key was kept, because it could not be saved. This copy cannot be restored.',
+		),
 	}
 	return reasons[pseudonymisation.reason] ?? reasons.store_failed
 }

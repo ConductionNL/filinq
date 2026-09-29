@@ -159,9 +159,13 @@ class PseudonymisationController extends Controller {
 			PseudonymRestoreRefusedException::REASON_CONFIG_UNREADABLE => $this->l10n->t('You are not allowed to restore names.'),
 			PseudonymRestoreRefusedException::REASON_NOT_FOUND => $this->l10n->t('Document not found'),
 			PseudonymRestoreRefusedException::REASON_NO_MAP => $this->l10n->t('This copy was anonymised without a key, so the names cannot be restored.'),
-			PseudonymRestoreRefusedException::REASON_MAP_UNREADABLE => $this->l10n->t('The key of this copy could not be read, so the names cannot be restored.'),
+			PseudonymRestoreRefusedException::REASON_MAP_UNREADABLE => $this->l10n->t(
+				'The key of this copy could not be read, so the names cannot be restored.'
+			),
 			PseudonymRestoreRefusedException::REASON_WRITE_FAILED => $this->l10n->t('The restored copy could not be saved.'),
-			PseudonymRestoreRefusedException::REASON_AUDIT_UNAVAILABLE => $this->l10n->t('Nothing was restored, because the audit trail could not record it. Try again later.'),
+			PseudonymRestoreRefusedException::REASON_AUDIT_UNAVAILABLE => $this->l10n->t(
+				'Nothing was restored, because the audit trail could not record it. Try again later.'
+			),
 		];
 
 		// The 403 bodies carry no reason: whether the list is empty or
