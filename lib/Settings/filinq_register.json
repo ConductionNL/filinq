@@ -1502,6 +1502,8 @@
                             ],
                             "properties": {
                                 "format": {
+                                    "title": "Format",
+                                    "description": "The output format of this file.",
                                     "type": "string",
                                     "enum": [
                                         "pdf",
@@ -1511,9 +1513,13 @@
                                     ]
                                 },
                                 "fileId": {
+                                    "title": "File ID",
+                                    "description": "The Nextcloud file id of this output; absent when it failed.",
                                     "type": "integer"
                                 },
                                 "status": {
+                                    "title": "Status",
+                                    "description": "generated or failed.",
                                     "type": "string",
                                     "enum": [
                                         "generated",
@@ -1521,6 +1527,8 @@
                                     ]
                                 },
                                 "error": {
+                                    "title": "Error",
+                                    "description": "Why this format could not be made.",
                                     "type": "string"
                                 }
                             }

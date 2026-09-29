@@ -1,6 +1,10 @@
 OC.L10N.register(
     "filinq",
     {
+        "The output format of this file.": "Le format de sortie de ce fichier.",
+        "The Nextcloud file id of this output; absent when it failed.": "L'identifiant de fichier Nextcloud de cette sortie ; absent en cas d'échec.",
+        "generated or failed.": "généré ou échoué.",
+        "Why this format could not be made.": "Pourquoi ce format n'a pas pu être produit.",
         "ODT (editable)": "ODT (modifiable)",
         "LibreOffice is not available on this server": "LibreOffice n'est pas disponible sur ce serveur",
         "Could not load the output formats this server can make.": "Impossible de charger les formats de sortie que ce serveur peut produire.",
