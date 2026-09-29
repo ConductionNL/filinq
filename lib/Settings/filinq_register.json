@@ -4437,6 +4437,8 @@
                         "title": "Accessibility after redaction",
                         "properties": {
                             "state": {
+                                "title": "State",
+                                "description": "preserved, degraded, not-applicable or unknown.",
                                 "type": "string",
                                 "enum": [
                                     "preserved",
@@ -4446,20 +4448,30 @@
                                 ]
                             },
                             "requested": {
+                                "title": "Requested",
+                                "description": "Whether the redaction asked OpenRegister to keep the tag structure.",
                                 "type": "boolean"
                             },
                             "preserved": {
+                                "title": "Preserved",
+                                "description": "Whether OpenRegister reported the tag structure kept.",
                                 "type": "boolean"
                             },
                             "tagCountBefore": {
+                                "title": "Tags before",
+                                "description": "Tags in the original.",
                                 "type": "integer",
                                 "minimum": 0
                             },
                             "tagCountAfter": {
+                                "title": "Tags after",
+                                "description": "Tags in the redacted copy.",
                                 "type": "integer",
                                 "minimum": 0
                             },
                             "lossReasons": {
+                                "title": "Loss reasons",
+                                "description": "Why tags were lost, as codes.",
                                 "type": "array",
                                 "items": {
                                     "type": "string",
@@ -4467,6 +4479,8 @@
                                 }
                             },
                             "veraPdfVerified": {
+                                "title": "Checked by veraPDF",
+                                "description": "Whether veraPDF confirmed the PDF/UA claim; absent when it did not run.",
                                 "type": "boolean"
                             }
                         }
