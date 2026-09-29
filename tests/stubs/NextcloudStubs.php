@@ -1463,6 +1463,15 @@ interface IAppManager {
 	public function isEnabledForUser(string $appId, $user = null): bool;
 
 	/**
+	 * Whether the app is enabled for at least one user (OCP since 32.0.0).
+	 *
+	 * @param string $appId The app id.
+	 *
+	 * @return bool
+	 */
+	public function isEnabledForAnyone(string $appId): bool;
+
+	/**
 	 * Get the version of an installed app.
 	 *
 	 * @param string $appId App identifier
@@ -2160,6 +2169,16 @@ interface IClient {
 	 * @return IResponse
 	 */
 	public function post(string $uri, array $options = []): IResponse;
+
+	/**
+	 * Issue a DELETE request (signature as in vendor/nextcloud/ocp IClient).
+	 *
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function delete(string $uri, array $options = []): IResponse;
 }//end interface
 
 /**

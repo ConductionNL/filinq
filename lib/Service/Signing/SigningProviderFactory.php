@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Signing;
 
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use RuntimeException;
 
@@ -50,6 +51,8 @@ class SigningProviderFactory {
 	 * @param IAppConfig $config The app config
 	 * @param NativeSigningProvider $nativeProvider The native signing provider
 	 * @param ValidSignProvider $validSignProvider The ValidSign provider
+	 * @param LibreSignProvider $libreSignProvider The LibreSign provider, registered only when LibreSign is enabled
+	 * @param IAppManager $appManager Tells whether the LibreSign app is enabled
 	 *
 	 * @return void
 	 */
@@ -57,9 +60,17 @@ class SigningProviderFactory {
 		private readonly IAppConfig $config,
 		NativeSigningProvider $nativeProvider,
 		ValidSignProvider $validSignProvider,
+		LibreSignProvider $libreSignProvider,
+		IAppManager $appManager,
 	) {
 		$this->providers['native'] = $nativeProvider;
 		$this->providers['validsign'] = $validSignProvider;
+
+		// Offered only when the LibreSign app is there to sign
+		// (libresign-signing-provider REQ-DDLSP-001).
+		if ($appManager->isEnabledForAnyone(LibreSignProvider::IDENTIFIER) === true) {
+			$this->providers[LibreSignProvider::IDENTIFIER] = $libreSignProvider;
+		}
 
 	}//end __construct()
 
@@ -68,10 +79,22 @@ class SigningProviderFactory {
 	 *
 	 * @return SigningProviderInterface The active signing provider
 	 *
+	 * @throws RuntimeException When LibreSign is configured but not enabled
+	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
+	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-2.1
 	 */
 	public function getActiveProvider(): SigningProviderInterface {
 		$providerName = $this->config->getValueString('filinq', 'signing_provider', 'native');
+
+		// Configured as LibreSign while LibreSign is gone: fail closed. The
+		// native provider signs at SES only, so falling back would quietly
+		// sign at a lower level than the admin chose.
+		if ($providerName === LibreSignProvider::IDENTIFIER && isset($this->providers[$providerName]) === false) {
+			throw new RuntimeException(
+				'The signing provider is set to LibreSign, but the LibreSign app is not enabled. Enable LibreSign or choose another provider.'
+			);
+		}
 
 		if (isset($this->providers[$providerName]) === false) {
 			return $this->providers['native'];

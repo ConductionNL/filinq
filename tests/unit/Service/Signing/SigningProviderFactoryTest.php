@@ -23,9 +23,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Signing;
 
+use OCA\Filinq\Service\Signing\LibreSignClient;
+use OCA\Filinq\Service\Signing\LibreSignProvider;
 use OCA\Filinq\Service\Signing\NativeSigningProvider;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\Signing\ValidSignProvider;
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -60,6 +63,13 @@ class SigningProviderFactoryTest extends TestCase {
 	private ValidSignProvider|MockObject $validSignProvider;
 
 	/**
+	 * The real LibreSign provider over a mocked client.
+	 *
+	 * @var LibreSignProvider
+	 */
+	private LibreSignProvider $libreSignProvider;
+
+	/**
 	 * Set up test environment
 	 *
 	 * @return void
@@ -84,15 +94,27 @@ class SigningProviderFactoryTest extends TestCase {
 	 *
 	 * @return SigningProviderFactory
 	 */
-	private function buildFactory(string $configuredProvider = 'native'): SigningProviderFactory {
+	private function buildFactory(string $configuredProvider = 'native', bool $libreSignEnabled = false): SigningProviderFactory {
 		$this->config->method('getValueString')
 			->with('filinq', 'signing_provider', 'native')
 			->willReturn($configuredProvider);
 
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('isEnabledForAnyone')->willReturnCallback(
+			static fn (string $appId): bool => $appId === 'libresign' && $libreSignEnabled
+		);
+
+		$this->libreSignProvider = new LibreSignProvider(
+			config: $this->createMock(IAppConfig::class),
+			client: $this->createMock(LibreSignClient::class)
+		);
+
 		return new SigningProviderFactory(
 			config: $this->config,
 			nativeProvider: $this->nativeProvider,
-			validSignProvider: $this->validSignProvider
+			validSignProvider: $this->validSignProvider,
+			libreSignProvider: $this->libreSignProvider,
+			appManager: $appManager
 		);
 
 	}//end buildFactory()
@@ -183,4 +205,45 @@ class SigningProviderFactoryTest extends TestCase {
 		$this->assertCount(2, $providers);
 
 	}//end testGetAvailableProvidersListsBothProviders()
+	/**
+	 * LibreSign is offered only when the LibreSign app is enabled.
+	 *
+	 * @return void
+	 */
+	public function testLibreSignIsOfferedOnlyWhenTheAppIsEnabled(): void {
+		$enabled = $this->buildFactory(libreSignEnabled: true);
+		$this->assertContains('libresign', $enabled->getAvailableProviders());
+		$this->assertSame($this->libreSignProvider, $enabled->getProvider(identifier: 'libresign'));
+
+		$this->setUp();
+		$absent = $this->buildFactory(libreSignEnabled: false);
+		$this->assertNotContains('libresign', $absent->getAvailableProviders());
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Signing provider not available: libresign');
+		$absent->getProvider(identifier: 'libresign');
+
+	}//end testLibreSignIsOfferedOnlyWhenTheAppIsEnabled()
+
+	/**
+	 * Configured as LibreSign while LibreSign is gone: an error, never native.
+	 *
+	 * @return void
+	 */
+	public function testConfiguredButAbsentLibreSignFailsClosed(): void {
+		$factory = $this->buildFactory(configuredProvider: 'libresign', libreSignEnabled: false);
+
+		try {
+			$factory->getActiveProvider();
+			$this->fail('A missing LibreSign must not be served by the native provider');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('LibreSign app is not enabled', $e->getMessage());
+		}
+
+		$this->setUp();
+		$this->assertSame(
+			$this->buildFactory(configuredProvider: 'libresign', libreSignEnabled: true)->getActiveProvider(),
+			$this->libreSignProvider
+		);
+
+	}//end testConfiguredButAbsentLibreSignFailsClosed()
 }//end class
