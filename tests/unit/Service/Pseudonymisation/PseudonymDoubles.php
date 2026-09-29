@@ -83,6 +83,14 @@ trait PseudonymDoubles {
 	protected array $rows = [];
 
 	/**
+	 * Whether the register refuses every write, as a failed validation or
+	 * an unreachable database would.
+	 *
+	 * @var boolean
+	 */
+	protected bool $registerRefusesWrites = false;
+
+	/**
 	 * Every call that passed `_rbac: false`, as "method:schema".
 	 *
 	 * @var array<int, string>
@@ -160,6 +168,10 @@ trait PseudonymDoubles {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) {
+				if ($this->registerRefusesWrites === true) {
+					throw new \RuntimeException('database is unreachable');
+				}
+
 				if ($_rbac === false) {
 					$this->bypasses[] = 'save:' . $schema;
 				}

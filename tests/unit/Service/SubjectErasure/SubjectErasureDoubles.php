@@ -113,6 +113,41 @@ trait SubjectErasureDoubles {
 	protected bool $rewriteMisses = false;
 
 	/**
+	 * Rewrites the bytes instead of the plain replace, for binary formats.
+	 *
+	 * @var callable|null
+	 */
+	protected $rewriter = null;
+
+	/**
+	 * File ids whose putContent fails, as a locked or read-only file would.
+	 *
+	 * @var array<int, int>
+	 */
+	protected array $unwritable = [];
+
+	/**
+	 * File ids that have no owner, as an orphaned node would.
+	 *
+	 * @var array<int, int>
+	 */
+	protected array $ownerless = [];
+
+	/**
+	 * Container ids that are not registered (app not installed).
+	 *
+	 * @var array<int, string>
+	 */
+	protected array $absent = [];
+
+	/**
+	 * A pattern of new file names the folder refuses (quota, a name rule).
+	 *
+	 * @var string|null
+	 */
+	protected ?string $refusedNewFiles = null;
+
+	/**
 	 * Decides per audit entry whether it fails: fn (action, context): bool.
 	 *
 	 * @var callable|null
@@ -210,9 +245,13 @@ trait SubjectErasureDoubles {
 		$file->method('getId')->willReturn($fileId);
 		$file->method('getName')->willReturnCallback(fn (): string => (string) $this->files[$fileId]['name']);
 		$file->method('getContent')->willReturnCallback(fn (): string => (string) $this->files[$fileId]['content']);
-		$file->method('isUpdateable')->willReturn(true);
+		$file->method('isUpdateable')->willReturnCallback(fn (): bool => in_array($fileId, $this->unwritable, true) === false);
 		$file->method('putContent')->willReturnCallback(
 			function ($data) use ($fileId): void {
+				if (in_array($fileId, $this->unwritable, true) === true) {
+					throw new RuntimeException('The file is locked.');
+				}
+
 				// Nextcloud keeps the previous bytes as a version.
 				$this->files[$fileId]['versions'][] = $this->files[$fileId]['content'];
 				$this->files[$fileId]['content'] = (string) $data;
@@ -225,7 +264,7 @@ trait SubjectErasureDoubles {
 		);
 		$owner = $this->createMock(IUser::class);
 		$owner->method('getUID')->willReturn('alice');
-		$file->method('getOwner')->willReturn($owner);
+		$file->method('getOwner')->willReturnCallback(fn (): ?IUser => in_array($fileId, $this->ownerless, true) === true ? null : $owner);
 		$file->method('getParent')->willReturnCallback(fn (): Folder => $this->folder(name: (string) ($this->files[$fileId]['parent'] ?? 'Documents')));
 
 		return $file;
@@ -257,6 +296,10 @@ trait SubjectErasureDoubles {
 		);
 		$folder->method('newFile')->willReturnCallback(
 			function (string $path, mixed $content = null): File {
+				if ($this->refusedNewFiles !== null && preg_match($this->refusedNewFiles, $path) === 1) {
+					throw new RuntimeException('Not enough free space.');
+				}
+
 				$fileId = (max(array_keys($this->files)) + 1);
 				$this->files[$fileId] = ['name' => $path, 'content' => (string) $content, 'versions' => [], 'deleted' => false];
 
@@ -408,7 +451,7 @@ trait SubjectErasureDoubles {
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static fn (string $id) => match ($id) {
+			fn (string $id) => in_array($id, $this->absent, true) === true ? throw new RuntimeException($id . ' is not registered.') : match ($id) {
 				'OCA\OpenRegister\Db\GdprEntityMapper' => $entities,
 				'OCA\OpenRegister\Db\EntityRelationMapper' => $relations,
 				'OCA\OpenRegister\Service\File\DocumentProcessingHandler' => $processor,
@@ -506,7 +549,9 @@ trait SubjectErasureDoubles {
 	 */
 	public function rewrite(File $node, array $replacements, string $outputName, bool $strict): File {
 		$content = $node->getContent();
-		if ($this->rewriteMisses === false) {
+		if ($this->rewriter !== null) {
+			$content = ($this->rewriter)($content, $replacements);
+		} else if ($this->rewriteMisses === false) {
 			$content = strtr($content, $replacements);
 		}
 

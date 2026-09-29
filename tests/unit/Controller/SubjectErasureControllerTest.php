@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SubjectErasureController;
+use OCA\Filinq\Service\SubjectErasure\SubjectErasureStore;
 use OCA\Filinq\Tests\Unit\Service\SubjectErasure\SubjectErasureDoubles;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -141,6 +142,23 @@ class SubjectErasureControllerTest extends TestCase {
 		$this->assertSame('catalogue_unavailable', $response->getData()['reason']);
 
 	}//end testAnUnreadableCatalogueIs503()
+
+	/**
+	 * A failure that is not a refusal answers 500 with a plain sentence and
+	 * does not pass the underlying error to the caller.
+	 *
+	 * @return void
+	 */
+	public function testAnUnexpectedFailureIs500WithoutItsDetail(): void {
+		$this->registerRefusesWrites = true;
+
+		$response = $this->controller(userId: 'petra', params: ['subject' => self::PERSON, 'ground' => 'AVG artikel 17'])->create();
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertSame(['error' => 'The erasure step failed. Nothing further was changed. Try again later.'], $response->getData());
+		$this->assertSame([], $this->rows[SubjectErasureStore::REQUEST] ?? []);
+
+	}//end testAnUnexpectedFailureIs500WithoutItsDetail()
 
 	/**
 	 * Record, preview, run and certificate answer 201, 200, 200, 200 and the person is gone.
