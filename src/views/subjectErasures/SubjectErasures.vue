@@ -103,17 +103,16 @@ SPDX-License-Identifier: EUPL-1.2
 				<NcButton v-if="canPreview" @click="onPreview">
 					{{ t('filinq', 'Build preview') }}
 				</NcButton>
-				<NcButton
-					v-if="canRun"
-					variant="error"
-					@click="running = true">
+				<NcButton v-if="canRun" variant="error" @click="running = true">
 					{{
 						selected.status === 'partially_completed'
 							? t('filinq', 'Resume erasure')
 							: t('filinq', 'Erase')
 					}}
 				</NcButton>
-				<NcButton v-if="selected.status === 'completed'" @click="onCertificate">
+				<NcButton
+					v-if="selected.status === 'completed'"
+					@click="onCertificate">
 					{{ t('filinq', 'Show certificate') }}
 				</NcButton>
 			</div>
@@ -148,10 +147,14 @@ SPDX-License-Identifier: EUPL-1.2
 					:key="`u-${item.document}`"
 					type="warning">
 					{{
-						t('filinq', 'Document {document} cannot be processed: {reason}', {
-							document: item.document,
-							reason: item.reason,
-						})
+						t(
+							'filinq',
+							'Document {document} cannot be processed: {reason}',
+							{
+								document: item.document,
+								reason: item.reason,
+							},
+						)
 					}}
 				</NcNoteCard>
 				<table class="subject-erasures__table">
@@ -176,7 +179,14 @@ SPDX-License-Identifier: EUPL-1.2
 							<td>{{ row.name || row.document }}</td>
 							<td>{{ row.occurrences }}</td>
 							<td>
-								{{ row.finalVersion ? t('filinq', 'Yes, a new version is written') : t('filinq', 'No') }}
+								{{
+									row.finalVersion
+										? t(
+												'filinq',
+												'Yes, a new version is written',
+											)
+										: t('filinq', 'No')
+								}}
 							</td>
 							<td>
 								<template v-if="row.obligations.length > 0">
@@ -184,7 +194,11 @@ SPDX-License-Identifier: EUPL-1.2
 										v-for="obligation in row.obligations"
 										:key="obligation.obligation">
 										{{ obligation.reason }}
-										{{ t('filinq', 'Decided by: {who}', { who: obligation.decidedBy }) }}
+										{{
+											t('filinq', 'Decided by: {who}', {
+												who: obligation.decidedBy,
+											})
+										}}
 									</p>
 								</template>
 								<template v-else>
@@ -192,14 +206,20 @@ SPDX-License-Identifier: EUPL-1.2
 										v-for="value in row.values"
 										:key="value"
 										:modelValue="isErased(row.document, value)"
-										@update:modelValue="setErased(row.document, value, $event)">
+										@update:modelValue="
+											setErased(row.document, value, $event)
+										">
 										{{ value }}
 									</NcCheckboxRadioSwitch>
 									<NcTextField
 										v-if="leavesSomething(row)"
 										:modelValue="reasons[row.document] || ''"
-										:label="t('filinq', 'Why is this left in place?')"
-										@update:modelValue="setReason(row.document, $event)" />
+										:label="
+											t('filinq', 'Why is this left in place?')
+										"
+										@update:modelValue="
+											setReason(row.document, $event)
+										" />
 								</template>
 							</td>
 						</tr>
@@ -217,7 +237,9 @@ SPDX-License-Identifier: EUPL-1.2
 				<h4>{{ t('filinq', 'Results') }}</h4>
 				<table class="subject-erasures__table">
 					<tbody>
-						<tr v-for="result in selected.results" :key="`r-${result.document}`">
+						<tr
+							v-for="result in selected.results"
+							:key="`r-${result.document}`">
 							<td>{{ result.name || result.document }}</td>
 							<td>{{ outcomeLabel(result.outcome) }}</td>
 							<td>{{ result.reason }}</td>
@@ -231,25 +253,40 @@ SPDX-License-Identifier: EUPL-1.2
 				<NcNoteCard :type="certificate.complete ? 'success' : 'warning'">
 					{{
 						certificate.complete
-							? t('filinq', 'The person was erased from every document. No document was deleted.')
-							: t('filinq', 'Not everything was erased. The refused documents below need a decision.')
+							? t(
+									'filinq',
+									'The person was erased from every document. No document was deleted.',
+								)
+							: t(
+									'filinq',
+									'Not everything was erased. The refused documents below need a decision.',
+								)
 					}}
 				</NcNoteCard>
 				<p>
 					{{
-						t('filinq', 'Issued {date} by {actor}. {erased} documents erased, {refused} refused, {republish} to republish.', {
-							date: formatTime(certificate.issuedAt),
-							actor: certificate.actor,
-							erased: (certificate.erased || []).length,
-							refused: (certificate.refused || []).length,
-							republish: (certificate.needsRepublishing || []).length,
-						})
+						t(
+							'filinq',
+							'Issued {date} by {actor}. {erased} documents erased, {refused} refused, {republish} to republish.',
+							{
+								date: formatTime(certificate.issuedAt),
+								actor: certificate.actor,
+								erased: (certificate.erased || []).length,
+								refused: (certificate.refused || []).length,
+								republish: (certificate.needsRepublishing || [])
+									.length,
+							},
+						)
 					}}
 				</p>
 				<ul>
-					<li v-for="row in certificate.refused || []" :key="`c-${row.document}-${row.obligation}`">
+					<li
+						v-for="row in certificate.refused || []"
+						:key="`c-${row.document}-${row.obligation}`">
 						{{ row.document }}: {{ row.reason }}
-						{{ t('filinq', 'Decided by: {who}', { who: row.decidedBy }) }}
+						{{
+							t('filinq', 'Decided by: {who}', { who: row.decidedBy })
+						}}
 					</li>
 				</ul>
 			</template>
@@ -334,7 +371,9 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		canPreview() {
-			return ['received', 'previewed', 'partially_completed'].includes(this.selected?.status)
+			return ['received', 'previewed', 'partially_completed'].includes(
+				this.selected?.status,
+			)
 		},
 
 		/**
@@ -344,7 +383,9 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		canRun() {
-			return ['previewed', 'partially_completed'].includes(this.selected?.status)
+			return ['previewed', 'partially_completed'].includes(
+				this.selected?.status,
+			)
 		},
 
 		/**
@@ -354,7 +395,11 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		exclusions() {
-			return buildExclusions(this.preview?.documents || [], this.kept, this.reasons)
+			return buildExclusions(
+				this.preview?.documents || [],
+				this.kept,
+				this.reasons,
+			)
 		},
 
 		/**
@@ -400,7 +445,8 @@ export default {
 			this.error = ''
 			this.requests = answer.data.results || []
 			if (this.selected) {
-				this.selected = this.requests.find((r) => r.uuid === this.selected.uuid) || null
+				this.selected =
+					this.requests.find((r) => r.uuid === this.selected.uuid) || null
 			}
 		},
 
@@ -514,7 +560,10 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		setErased(documentId, value, erased) {
-			this.kept = { ...this.kept, [documentId]: { ...(this.kept[documentId] || {}), [value]: erased } }
+			this.kept = {
+				...this.kept,
+				[documentId]: { ...(this.kept[documentId] || {}), [value]: erased },
+			}
 		},
 
 		/**
@@ -525,7 +574,9 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		leavesSomething(row) {
-			return (row.values || []).some((value) => !this.isErased(row.document, value))
+			return (row.values || []).some(
+				(value) => !this.isErased(row.document, value),
+			)
 		},
 
 		/**

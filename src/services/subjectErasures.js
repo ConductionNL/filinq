@@ -104,7 +104,9 @@ export function runRequest(uuid) {
  * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function fetchCertificate(uuid) {
-	return outcome(() => axios.get(`${base()}/${encodeURIComponent(uuid)}/certificate`))
+	return outcome(() =>
+		axios.get(`${base()}/${encodeURIComponent(uuid)}/certificate`),
+	)
 }
 
 /**
@@ -136,7 +138,9 @@ export function buildExclusions(documents, kept, reasons) {
 	const exclusions = []
 	for (const row of documents) {
 		const values = row.values || []
-		const left = values.filter((value) => kept?.[row.document]?.[value] === false)
+		const left = values.filter(
+			(value) => kept?.[row.document]?.[value] === false,
+		)
 		if (left.length === 0) {
 			continue
 		}
