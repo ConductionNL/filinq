@@ -28,8 +28,8 @@ owns redaction output only.
 
 Filinq MUST request tag-structure preservation from OpenRegister's
 document-processing engine on every PDF anonymisation/redaction run, including
-folder and batch runs, by passing a `preserveTags` option that defaults to ON
-for PDF inputs. The request MUST be additive to the existing anonymise call and
+folder and batch runs, by passing `preserveStructure` (the fifth argument of
+OpenRegister's `FileService::anonymizeDocument()`), which defaults to ON. The request MUST be additive to the existing anonymise call and
 MUST NOT introduce a Filinq-local PDF tag-rewriting engine — tag preservation
 is owned by OpenRegister's `tag-preserving-redaction` change. Formats that
 cannot carry PDF tags MUST pass the option through and rely on the engine's
@@ -39,15 +39,15 @@ reported loss reason rather than failing.
 
 - GIVEN a tagged source PDF submitted for anonymisation
 - WHEN Filinq invokes OpenRegister's redaction engine
-- THEN the call carries `preserveTags: true` by default
-- @e2e tests/e2e/spec-coverage/accessible-redaction-output.spec.ts
+- THEN the call carries `preserveStructure: true` by default
+- @e2e exclude the argument of a server-side call is not visible in a browser — covered by PHPUnit (tests/unit/Service/Pseudonymisation/DocumentAnonymizeRunnerAccessibilityTest.php::testTheRedactionRunRecordsItsAccessibilityOutcome)
 
 #### Scenario: The default can be disabled by an administrator
 
 - GIVEN `filinq.redaction.preserve_tags_default` is set to false
 - WHEN a PDF is redacted
-- THEN `preserveTags` is passed as false and the outcome is recorded accordingly
-- @e2e exclude admin-config default is backend logic — covered by PHPUnit (tests/unit/Service/AnonymizationServiceTest.php)
+- THEN `preserveStructure` is passed as false and the outcome is recorded accordingly
+- @e2e exclude admin-config default is backend logic — covered by PHPUnit (tests/unit/Service/Pseudonymisation/DocumentAnonymizeRunnerAccessibilityTest.php::testAnOpenRegisterThatReportsNothingIsUnknownAndTheSwitchIsHonoured)
 
 ### Requirement: Surface the structure-preservation outcome (REQ-DDARO-002)
 
@@ -66,14 +66,14 @@ and MUST NOT crash.
 - GIVEN a redaction whose processing result reports `preserved: true` with equal before/after tag counts
 - WHEN the operator opens the document report
 - THEN an "accessibility preserved" state is shown with the tag counts
-- @e2e tests/e2e/spec-coverage/accessible-redaction-output.spec.ts
+- @e2e exclude a real preserved redaction needs OpenRegister's tag-preserving engine on the instance; the note is a pure mapping of the run's structurePreservation — covered by vitest (tests/vitest/redactionAccessibility.spec.js)
 
 #### Scenario: Degraded redaction shows a prominent flag with loss reasons
 
 - GIVEN a redaction whose result reports `requested: true, preserved: false` with a `lossReasons` entry
 - WHEN the report renders
 - THEN a prominent "accessibility degraded" flag is shown with the loss reasons
-- @e2e tests/e2e/spec-coverage/accessible-redaction-output.spec.ts
+- @e2e exclude a degraded redaction needs a tagged fixture and OpenRegister's engine on the instance; the flag and the readable loss reasons are covered by vitest (tests/vitest/redactionAccessibility.spec.js)
 
 #### Scenario: Absent block is reported as unknown, never false-preserved
 
@@ -86,7 +86,7 @@ and MUST NOT crash.
 
 When a redacted document's structure was lost, Filinq MUST gate publication/
 clearance according to `filinq.redaction.accessibility_gate`: `warn` (default)
-proceeds but attaches a prominent, recorded flag to the clearance decision;
+proceeds but attaches a prominent, recorded flag to the publication record (the Woo hand-off decision);
 `block` prevents clearance until an operator overrides with a recorded reason;
 `off` records the outcome without gating. The gate MUST default to `warn` so it
 never hardens an existing publication flow by surprise, and MUST sit alongside
@@ -97,7 +97,7 @@ the existing prohibition/consent clearance checks, not replace them. An
 
 - GIVEN the gate is `warn` (default) and a degraded redaction is cleared for publication
 - WHEN clearance is evaluated
-- THEN clearance proceeds AND a prominent accessibility-degraded flag is attached to and recorded on the clearance decision
+- THEN clearance proceeds AND a prominent accessibility-degraded flag is attached to and recorded on the publication record (the Woo hand-off decision)
 - @e2e tests/e2e/spec-coverage/accessible-redaction-output.spec.ts
 
 #### Scenario: Block mode stops clearance until a reasoned override
@@ -105,7 +105,7 @@ the existing prohibition/consent clearance checks, not replace them. An
 - GIVEN the gate is `block` and a degraded redaction is submitted for clearance
 - WHEN clearance is evaluated
 - THEN clearance is blocked until an operator overrides with a recorded reason
-- @e2e exclude gate-mode branching is backend logic — covered by PHPUnit (tests/unit/Service/RedactionAccessibilityServiceTest.php)
+- @e2e exclude gate-mode branching is backend logic — covered by PHPUnit (tests/unit/Service/Publication/PublicationPipelineServiceTest.php::testBlockModeWaitsForAReasonedOverride)
 
 ### Requirement: Record the outcome on the anonymizationLink object (REQ-DDARO-004)
 
@@ -122,12 +122,12 @@ schema MUST gain this sub-object with a register version bump.
 - GIVEN a completed PDF redaction with a preserved outcome
 - WHEN the `anonymizationLink` object for that run is inspected
 - THEN it carries a `structurePreservation` sub-object with the tag counts and no entity values
-- @e2e exclude object-shape assertion is backend logic — covered by PHPUnit (tests/unit/Service/RedactionAccessibilityServiceTest.php)
+- @e2e exclude object-shape assertion is backend logic — covered by PHPUnit (tests/unit/Service/Pseudonymisation/DocumentAnonymizeRunnerAccessibilityTest.php::testTheRedactionRunRecordsItsAccessibilityOutcome, validated against the real anonymizationLink schema)
 
 ### Requirement: Optional veraPDF-backed verification when verapdf-validation is present (REQ-DDARO-005)
 
 When the `verapdf-validation` capability is present, Filinq MUST ask it to
-verify that the redacted output is genuinely tagged/valid and record the result
+verify a redacted PDF that claims PDF/UA against PDF/UA-1 and record the result
 as `veraPdfVerified`; a validator contradiction (output not actually valid
 despite a self-reported `preserved`) MUST downgrade the state to `degraded`.
 Filinq MUST NOT integrate veraPDF directly — the integration is owned by
@@ -140,7 +140,7 @@ validator-verified, without error.
 - GIVEN `verapdf-validation` is present and a redaction self-reports `preserved: true`
 - WHEN Filinq runs the verification hook
 - THEN veraPDF confirmation is recorded as `veraPdfVerified: true`
-- @e2e exclude requires the verapdf binary/capability — covered by PHPUnit with a fake verapdf-validation capability (tests/unit/Service/RedactionAccessibilityServiceTest.php)
+- @e2e exclude requires the verapdf binary/capability — covered by PHPUnit with a fake verapdf-validation capability (tests/unit/Service/RedactionAccessibilityServiceTest.php::testVeraPdfConfirmsAPreservedClaim)
 
 #### Scenario: veraPDF contradiction downgrades a self-reported outcome
 
@@ -154,4 +154,4 @@ validator-verified, without error.
 - GIVEN `verapdf-validation` is not present
 - WHEN Filinq maps a redaction outcome
 - THEN the engine's self-reported outcome stands, labelled engine-reported-only, with no error
-- @e2e exclude presence-gate fallback is backend logic — covered by PHPUnit (tests/unit/Service/RedactionAccessibilityServiceTest.php)
+- @e2e exclude presence-gate fallback is backend logic — covered by PHPUnit (tests/unit/Service/RedactionAccessibilityServiceTest.php::testWithoutVeraPdfOrAPdfUaClaimTheEngineOutcomeStands)

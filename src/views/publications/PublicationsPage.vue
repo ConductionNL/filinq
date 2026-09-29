@@ -113,6 +113,13 @@ SPDX-License-Identifier: EUPL-1.2
 						</router-link>
 					</li>
 				</ol>
+				<NcNoteCard
+					v-if="accessibilityWarning"
+					type="warning"
+					class="publications__accessibility">
+					<p>{{ accessibilityWarning.title }}</p>
+					<p>{{ accessibilityWarning.detail }}</p>
+				</NcNoteCard>
 				<ul v-if="record.readinessReasons && record.readinessReasons.length">
 					<li v-for="reason in record.readinessReasons" :key="reason">
 						{{ reason }}
@@ -170,6 +177,15 @@ SPDX-License-Identifier: EUPL-1.2
 						id="publication-date"
 						v-model="form.publicatiedatum"
 						type="date" />
+					<template v-if="accessibilityWarning">
+						<label for="publication-accessibility-override">{{
+							t('filinq', 'Why may it be published anyway?')
+						}}</label>
+						<textarea
+							id="publication-accessibility-override"
+							v-model="form.accessibilityOverrideReason"
+							rows="3" />
+					</template>
 					<NcButton type="submit" :disabled="busy">
 						{{ t('filinq', 'Save metadata') }}
 					</NcButton>
@@ -271,6 +287,10 @@ import {
 	listPublications,
 	publicationStep,
 } from '../../services/publications.js'
+import {
+	accessibilityLost,
+	accessibilityNote,
+} from '../../services/redactionAccessibility.js'
 
 const FIELDS = [
 	'officieleTitel',
@@ -279,6 +299,7 @@ const FIELDS = [
 	'publisher',
 	'creatiedatum',
 	'publicatiedatum',
+	'accessibilityOverrideReason',
 ]
 
 export default {
@@ -325,6 +346,19 @@ export default {
 		 *
 		 * @spec openspec/specs/woo-publicatie-pipeline/spec.md
 		 */
+		/**
+		 * The warning for a redacted copy that lost its accessibility.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-3.1
+		 */
+		accessibilityWarning() {
+			if (!accessibilityLost(this.record)) {
+				return null
+			}
+			return accessibilityNote({ state: this.record.accessibilityState })
+		},
+
 		missing() {
 			return missingMetadata({ ...this.record, ...this.form })
 		},

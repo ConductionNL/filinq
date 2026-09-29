@@ -29,6 +29,7 @@ use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
@@ -43,6 +44,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
@@ -103,6 +105,13 @@ class PublicationPipelineServiceTest extends TestCase {
 	 * @var bool
 	 */
 	private bool $platform = true;
+
+	/**
+	 * The accessibility gate mode (filinq.redaction.accessibility_gate).
+	 *
+	 * @var string
+	 */
+	private string $accessibilityGate = 'warn';
 
 	/**
 	 * The pipeline over the in-memory world.
@@ -201,12 +210,17 @@ class PublicationPipelineServiceTest extends TestCase {
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getUserFolder')->willReturn($folder);
 
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			fn (string $app, string $key, string $default = ''): string => $key === RedactionAccessibilityService::CFG_GATE ? $this->accessibilityGate : $default
+		);
+
 		$clock = $this->createMock(ITimeFactory::class);
 		$clock->method('getTime')->willReturn((new DateTimeImmutable('2026-09-29T12:00:00+00:00'))->getTimestamp());
 
 		return new PublicationPipelineService(
 			store: $store,
-			readiness: new PublicationReadiness(consents: $consentService, consentConfig: $consentConfig, policies: $policies, marks: $marks, store: $store),
+			readiness: new PublicationReadiness(consents: $consentService, consentConfig: $consentConfig, policies: $policies, marks: $marks, store: $store, accessibility: new RedactionAccessibilityService($appConfig)),
 			map: new OpenCatalogiPublicationMap(),
 			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
 			clock: $clock
@@ -322,6 +336,62 @@ class PublicationPipelineServiceTest extends TestCase {
 		$this->assertSame([], $this->attached);
 
 	}//end testAHandoffChecksAgainAndDemotes()
+
+	/**
+	 * A copy that lost its accessibility is flagged on the record and, by
+	 * default, still handed off.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-4.1
+	 */
+	public function testADegradedCopyWarnsAndIsStillHandedOff(): void {
+		$pipeline = $this->pipeline();
+		$this->rows['anonymizationLink']['link-1']['structurePreservation'] = ['state' => 'degraded', 'requested' => true, 'preserved' => false, 'tagCountBefore' => 12, 'tagCountAfter' => 0, 'lossReasons' => ['structtreeroot-dropped-on-rebuild']];
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$this->assertSame('published', $record['status']);
+		$this->assertSame('degraded', $record['accessibilityState'], 'The flag is recorded on the decision.');
+
+	}//end testADegradedCopyWarnsAndIsStillHandedOff()
+
+	/**
+	 * In block mode a copy that lost its accessibility waits for a reason,
+	 * and the reason is recorded on the record and in the log.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-4.1
+	 */
+	public function testBlockModeWaitsForAReasonedOverride(): void {
+		$this->accessibilityGate = 'block';
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+
+		$this->assertSame('draft', $record['status'], 'Unknown counts as degraded: the old link recorded nothing.');
+		$this->assertSame('unknown', $record['accessibilityState']);
+		$this->assertStringContainsString('lost its accessibility', implode(' ', $record['readinessReasons']));
+		try {
+			$pipeline->handoff(record: $record, actor: 'anna');
+			$this->fail('A blocked copy must not be handed off without a reason');
+		} catch (PublicationNotReadyException $e) {
+			$this->assertSame(409, $e->getCode());
+		}
+
+		$record = $pipeline->updateMetadata(record: end($this->rows['publicationRecord']), metadata: ['accessibilityOverrideReason' => 'Origineel was al ontoegankelijk; toegankelijke versie volgt binnen 2 weken.'], actor: 'anna');
+		$record = $pipeline->handoff(record: $record, actor: 'anna');
+
+		$this->assertSame('published', $record['status']);
+		$this->assertStringContainsString('accessibility override: Origineel', implode(' ', array_column($this->rows['publicationLogEntry'], 'details')));
+		$register = json_decode((string) file_get_contents(__DIR__ . '/../../../../lib/Settings/filinq_register.json'), true);
+		foreach ($this->saves as [$schema, $object]) {
+			if ($schema === 'publicationRecord') {
+				$this->assertValid(schema: $register['components']['schemas']['publicationRecord'], payload: $object, label: $schema);
+			}
+		}
+
+	}//end testBlockModeWaitsForAReasonedOverride()
 
 	/**
 	 * Missing Woo metadata blocks the hand-off, and so does a missing platform.

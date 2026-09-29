@@ -219,12 +219,17 @@ class DocumentAnonymizeRunner {
 		$fileId = $context['fileId'];
 		$originalText = $this->replacementVerifier->readNodeText(node: $node);
 
+		// The fifth argument asks OpenRegister to keep the tag structure; an
+		// OpenRegister without it ignores the extra argument and reports nothing,
+		// which reads as unknown.
 		$result = $fileService->anonymizeDocument(
 			$node,
 			$mappedEntities,
 			$options['scope'],
-			$options['dossierKey']
+			$options['dossierKey'],
+			$this->runRecords->preserveStructure()
 		);
+		$context['structureReport'] = $this->locator->lastStructurePreservation(fileService: $fileService);
 
 		$residualEntities = $this->locator->lastResidualEntities(fileService: $fileService);
 		$context['placeholderMap'] = $this->locator->lastPlaceholderMap(fileService: $fileService);

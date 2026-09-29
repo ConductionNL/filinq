@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use JsonSerializable;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -122,4 +123,35 @@ class OpenRegisterServiceLocator {
 
 		return [];
 	}//end lastPlaceholderMap()
+
+	/**
+	 * Read what OpenRegister's last redaction did to the tag structure.
+	 *
+	 * `StructurePreservation::jsonSerialize()`: requested, preserved,
+	 * tagCountBefore, tagCountAfter, lossReasons. Null when OpenRegister is
+	 * too old to report it, or reported nothing: the caller treats that as
+	 * unknown, never as preserved.
+	 *
+	 * @param mixed $fileService OpenRegister FileService (resolved reflectively).
+	 *
+	 * @return array<string, mixed>|null The report, or null.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
+	 */
+	public function lastStructurePreservation(mixed $fileService): ?array {
+		if (method_exists($fileService, 'getLastStructurePreservation') === false) {
+			return null;
+		}
+
+		$report = $fileService->getLastStructurePreservation();
+		if ($report instanceof JsonSerializable) {
+			$report = $report->jsonSerialize();
+		}
+
+		if (is_array($report) === false) {
+			return null;
+		}
+
+		return $report;
+	}//end lastStructurePreservation()
 }//end class

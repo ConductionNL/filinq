@@ -165,6 +165,27 @@ class PublicationStore {
 	}//end findRedactedCopy()
 
 	/**
+	 * The anonymisation link of a document's redacted copy, with what the
+	 * redaction recorded about it.
+	 *
+	 * @param string $fileId The source document
+	 *
+	 * @return array<string, mixed>|null The link, or null when there is no redacted copy.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
+	 */
+	public function findRedactionLink(string $fileId): ?array {
+		foreach ($this->search(schema: 'anonymizationLink', filters: ['sourceFileId' => $fileId]) as $link) {
+			if ((string) ($link['anonymizedFileId'] ?? '') !== '') {
+				return $link;
+			}
+		}
+
+		return null;
+
+	}//end findRedactionLink()
+
+	/**
 	 * Create or update the platform's publication object.
 	 *
 	 * @param array<string, mixed> $publication The fields to write

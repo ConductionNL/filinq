@@ -229,3 +229,40 @@ outcomes remain readable.
 - Whether the veraPDF check should run inline or as a background job for large
   batches — provisional: background for folder/batch runs, inline for single
   documents.
+
+## Resolved at apply (2026-09-29)
+
+- **OpenRegister's argument is `preserveStructure`, not `preserveTags`.** It is
+  the fifth positional argument of `FileService::anonymizeDocument()` (tri-state,
+  null = auto). `DocumentAnonymizeRunner` passes what
+  `AnonymisationRunRecords::preserveStructure()` answers (`true`, or `false`
+  when `filinq.redaction.preserve_tags_default` is `false`); an older
+  OpenRegister ignores the extra argument. The assessment runs in
+  `AnonymisationRunRecords::record()`, on the bytes actually written (after
+  the grondslagen summary page), because the runner sits at phpmd's coupling
+  and parameter limits. The report is read with
+  `FileService::getLastStructurePreservation()` through
+  `OpenRegisterServiceLocator::lastStructurePreservation()` (method_exists
+  guard; nothing reported is `unknown`). Batch and folder runs go through the
+  same runner, so they are covered without their own change.
+- **The recorded state is part of the block.** `structurePreservation.state`
+  (preserved, degraded, not-applicable, unknown) is stored with the engine's
+  fields, so the publication gate reads one value. `not-applicable` is an
+  `input-not-tagged` reason or no tags before; `requested` is what was asked.
+- **The clearance decision is the Woo publication record.** No other clearance
+  object exists. `PublicationReadiness` reads the redacted copy's link
+  (`PublicationStore::findRedactionLink()`), records `accessibilityState` on
+  the `publicationRecord` (1.1.0) and, in `block` mode without
+  `accessibilityOverrideReason`, adds a readiness reason and keeps the record
+  from `ready`. The override is set through the existing metadata step and is
+  written to the publication log. `warn` records the state and the page shows
+  the flag.
+- **veraPDF checks only a PDF/UA claim.** A redacted PDF is validated against
+  `ua1` (added to `VeraPdfService`'s flavours) only when it declares
+  `pdfuaid:part`; a tagged source that never claimed PDF/UA would otherwise be
+  downgraded for something the redaction did not cause. A veraPDF that is off,
+  times out or fails leaves the engine's claim without `veraPdfVerified`.
+- **Surfaces.** The anonymisation result in the file viewer sidebar shows the
+  note (tag counts, readable loss reasons); the publication page shows the
+  flag and the override field. Register 8.33.0: `anonymizationLink` 1.3.0,
+  `publicationRecord` 1.1.0; one demo link carries a preserved outcome.

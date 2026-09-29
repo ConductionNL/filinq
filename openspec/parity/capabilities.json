@@ -3586,14 +3586,15 @@
 			"area": "redact",
 			"name": "Keep an anonymised PDF readable by a screen reader.",
 			"source": "own-code",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
-				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/accessible-redaction-output/tasks.md: 0 of 10 tasks checked. No PDF/UA tagging or screen-reader-accessibility code found in the anonymised-PDF output path (AnonymisedPdfOutputService.php, PdfConversionService).",
-				"change": "openspec/changes/accessible-redaction-output"
+			    "state": "built",
+			    "owner": "ConductionNL/filinq",
+			    "evidence": "DocumentAnonymizeRunner passes preserveStructure (OR FileService::anonymizeDocument 5th arg, default on via filinq.redaction.preserve_tags_default) and reads getLastStructurePreservation(); RedactionAccessibilityService maps it to preserved/degraded/not-applicable/unknown (nothing reported = unknown), checks a PDF/UA claim with VeraPdfService (ua1) and downgrades on contradiction; anonymizationLink 1.3.0 structurePreservation; PublicationReadiness records accessibilityState on publicationRecord 1.1.0 and, with filinq.redaction.accessibility_gate=block, holds the Woo hand-off until accessibilityOverrideReason (logged). File viewer sidebar and Publications page show it. Partial: whether tags survive depends on OpenRegister's engine.",
+			    "change": "openspec/changes/archive/2026-09-29-accessible-redaction-output",
+			    "readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Anonymise a PDF (file viewer sidebar result); Publications page for a redacted document",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",
