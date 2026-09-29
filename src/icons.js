@@ -56,12 +56,14 @@ import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import Scanner from 'vue-material-design-icons/Scanner.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
+import ShieldKeyOutline from 'vue-material-design-icons/ShieldKeyOutline.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import Stamper from 'vue-material-design-icons/Stamper.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
+import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
 export default {
@@ -122,6 +124,9 @@ export default {
 	ScaleBalance,
 	PublishOff,
 	ShieldCheck,
+	// The register's pseudonymMap and ocrResult schemas name these two.
+	ShieldKeyOutline,
+	TextRecognition,
 	ShieldLockOutline,
 	SignatureFreehand,
 	Sitemap,
