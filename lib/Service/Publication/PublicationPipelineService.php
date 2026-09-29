@@ -45,7 +45,15 @@ class PublicationPipelineService {
 	/**
 	 * The Woo metadata an operator may set.
 	 */
-	public const METADATA = ['wooCategory', 'documentsoort', 'publisher', 'officieleTitel', 'creatiedatum', 'publicatiedatum', 'accessibilityOverrideReason'];
+	public const METADATA = [
+		'wooCategory',
+		'documentsoort',
+		'publisher',
+		'officieleTitel',
+		'creatiedatum',
+		'publicatiedatum',
+		'accessibilityOverrideReason',
+	];
 
 	/**
 	 * Constructor
