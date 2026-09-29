@@ -145,7 +145,7 @@ class TemplateAccessibilityLint {
 			}
 
 			$first = $xpath->query('.//td', $table)->item(0);
-			$findings[] = ['rule' => 'table-without-headers', 'position' => $position, 'text' => $this->quote(text: ($first?->textContent ?? ''))];
+			$findings[] = ['rule' => 'table-without-headers', 'position' => $position, 'text' => $this->quote(text: ($first->textContent ?? ''))];
 		}
 
 		return $findings;
