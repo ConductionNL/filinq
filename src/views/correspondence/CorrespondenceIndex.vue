@@ -47,14 +47,21 @@ SPDX-License-Identifier: EUPL-1.2
 						v-for="fmt in formats"
 						:key="fmt.value"
 						class="correspondence-index__radio-label"
-						:class="{ 'correspondence-index__radio-label--disabled': fmt.disabled }"
+						:class="{
+							'correspondence-index__radio-label--disabled':
+								fmt.disabled,
+						}"
 						:title="fmt.reason">
 						<input
 							v-model="store.format"
 							type="radio"
 							:value="fmt.value"
 							:disabled="fmt.disabled"
-							:aria-describedby="fmt.disabled ? 'corr-format-reason-' + fmt.value : undefined" />
+							:aria-describedby="
+								fmt.disabled
+									? 'corr-format-reason-' + fmt.value
+									: undefined
+							" />
 						{{ fmt.label }}
 						<span
 							v-if="fmt.disabled"
@@ -277,7 +284,11 @@ import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
-import { fetchFormatMatrix, formatOptions, usableFormat } from '../../services/formatMatrix.js'
+import {
+	fetchFormatMatrix,
+	formatOptions,
+	usableFormat,
+} from '../../services/formatMatrix.js'
 import { buildPrintRequest } from '../../services/printJobs.js'
 import { useCorrespondenceStore } from '../../store/modules/correspondence.js'
 
@@ -301,10 +312,6 @@ export default {
 			formats: [],
 			formatsError: '',
 		}
-	},
-
-	async mounted() {
-		await this.loadFormats()
 	},
 
 	computed: {
@@ -345,22 +352,31 @@ export default {
 		},
 	},
 
+	async mounted() {
+		await this.loadFormats()
+	},
+
 	methods: {
 		/**
 		 * Offer the formats the server can make now.
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/multi-format-output/tasks.md#task-4.1
+		 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
 		 */
 		async loadFormats() {
 			try {
-				this.formats = formatOptions(await fetchFormatMatrix('correspondence'))
+				this.formats = formatOptions(
+					await fetchFormatMatrix('correspondence'),
+				)
 				this.store.format = usableFormat(this.store.format, this.formats)
 				this.formatsError = ''
-			} catch (e) {
+			} catch {
 				this.formats = []
-				this.formatsError = t('filinq', 'Could not load the output formats this server can make.')
+				this.formatsError = t(
+					'filinq',
+					'Could not load the output formats this server can make.',
+				)
 			}
 		},
 

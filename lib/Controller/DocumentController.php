@@ -28,13 +28,13 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Service\MultiFormatOutputProducer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IL10N;
-use OCP\IURLGenerator;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -60,7 +60,7 @@ class DocumentController extends Controller {
 	 * @param IUserSession $userSession User session for authentication
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
-	 * @param IURLGenerator|null $urlGenerator Makes the absolute download URL of a multi-format output
+	 * @param MultiFormatOutputProducer|null $multiFormat Answers a request with options.formats
 	 *
 	 * @return void
 	 */
@@ -71,7 +71,7 @@ class DocumentController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
-		private readonly ?IURLGenerator $urlGenerator = null,
+		private readonly ?MultiFormatOutputProducer $multiFormat = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -107,6 +107,7 @@ class DocumentController extends Controller {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
 	 */
 	public function generate(): DataDownloadResponse|JSONResponse {
 		try {
@@ -125,6 +126,15 @@ class DocumentController extends Controller {
 
 			$params['options']['userId'] = $user->getUID();
 			$params['options']['filename'] = $params['filename'];
+
+			if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
+				$result = $this->multiFormat->generate(
+					templateId: $params['templateId'],
+					dataRefs: $params['dataRefs'],
+					options: $params['options']
+				);
+				return $this->buildDocumentResponse(result: $result, filename: $params['filename']);
+			}
 
 			$result = $this->documentSvc->generateDocument(
 				templateId: $params['templateId'],
@@ -399,20 +409,20 @@ class DocumentController extends Controller {
 		array $result,
 		string $filename,
 	): DataDownloadResponse|JSONResponse {
-		$format = $result['format'];
-		$output = $result['output'] ?? ['mode' => 'return'];
-		$mode = $output['mode'] ?? 'return';
-
 		if (isset($result['outputs']) === true) {
 			return new JSONResponse(
 				data: [
-					'outputs' => array_map(fn (array $entry): array => $this->manifestEntry(entry: $entry), $result['outputs']),
+					'outputs' => $result['outputs'],
 					'metadata' => $result['metadata'],
 					'warnings' => $result['warnings'],
 				],
 				statusCode: Http::STATUS_OK
 			);
 		}
+
+		$format = $result['format'];
+		$output = $result['output'] ?? ['mode' => 'return'];
+		$mode = $output['mode'] ?? 'return';
 
 		if ($mode === 'files') {
 			return new JSONResponse(
@@ -465,47 +475,6 @@ class DocumentController extends Controller {
 
 		return $response;
 	}//end buildDocumentResponse()
-
-	/**
-	 * One manifest entry of a multi-format answer.
-	 *
-	 * The download URL is the file's WebDAV address, so the same access
-	 * control as opening it in Files applies.
-	 *
-	 * @param array $entry The output as MultiFormatOutputProducer made it.
-	 *
-	 * @return array{format: string, status: string, fileId: int|null, fileName: string|null,
-	 *               downloadUrl: string|null, size: int|null, error?: string}
-	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-3.1
-	 */
-	private function manifestEntry(array $entry): array {
-		$downloadUrl = null;
-		$path = (string)($entry['path'] ?? '');
-		if (preg_match('#^/([^/]+)/files/(.+)$#', $path, $match) === 1) {
-			$segments = array_map('rawurlencode', explode('/', $match[2]));
-			$davPath = '/remote.php/dav/files/' . rawurlencode($match[1]) . '/' . implode('/', $segments);
-			$downloadUrl = $davPath;
-			if ($this->urlGenerator !== null) {
-				$downloadUrl = $this->urlGenerator->getAbsoluteURL($davPath);
-			}
-		}
-
-		$manifest = [
-			'format' => $entry['format'],
-			'status' => $entry['status'],
-			'fileId' => $entry['fileId'],
-			'fileName' => $entry['fileName'],
-			'downloadUrl' => $downloadUrl,
-			'size' => $entry['size'],
-		];
-		if (isset($entry['error']) === true) {
-			$manifest['error'] = $entry['error'];
-		}
-
-		return $manifest;
-
-	}//end manifestEntry()
 
 	/**
 	 * Attach X-Docudesk-File-Id/X-Docudesk-File-Path headers when the

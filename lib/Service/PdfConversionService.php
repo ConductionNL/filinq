@@ -221,7 +221,7 @@ class PdfConversionService {
 	 *
 	 * @return array<int, array{name: string, available: bool, supports: bool, inputs: string[], reason: string|null}>
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.2
 	 */
 	public function getCapabilities(): array {
 		$report = [];

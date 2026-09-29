@@ -365,52 +365,41 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	}//end convertTagged()
 
 	/**
-	 * Convert a document's bytes to an editable office format: HTML to DOCX
-	 * or ODT, the one soffice path every non-PDF output goes through.
+	 * Convert rendered HTML to an editable office format (DOCX or ODT), the
+	 * one soffice path every non-PDF generated output goes through.
 	 *
-	 * Same lock, temp-dir hygiene and timeout as the PDF conversion. Without
-	 * a usable soffice this throws with {@see self::UNAVAILABLE_REASON}, the
-	 * reason the format matrix reports, so the two never disagree.
+	 * Same lock, temp-dir hygiene and timeout as the PDF conversion; the HTML
+	 * is opened in Writer. The caller checks {@see isAvailable()} first
+	 * ({@see HtmlToOfficeConverter} does, and fails with
+	 * {@see self::UNAVAILABLE_REASON}).
 	 *
-	 * @param string $bytes         The source document.
-	 * @param string $fromExtension Its extension (html, docx ...).
-	 * @param string $toExtension   The output: docx or odt.
+	 * @param string $html        The rendered HTML.
+	 * @param string $toExtension The output: docx or odt.
 	 *
 	 * @return string The output bytes.
 	 *
-	 * @throws ConversionFailedException When soffice is unavailable (code 503) or fails.
+	 * @throws ConversionFailedException When soffice fails.
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
 	 */
-	public function convertBytes(string $bytes, string $fromExtension, string $toExtension): string {
-		if ($this->isAvailable() === false) {
-			throw new ConversionFailedException(
-				message: self::UNAVAILABLE_REASON,
-				attempts: [
-					['name' => $this->name(), 'available' => false, 'supports' => true, 'reason' => self::UNAVAILABLE_REASON],
-				],
-				code: 503
-			);
-		}
-
-		$from = strtolower($fromExtension);
-		$exportFilter = (self::EXPORT_FILTERS[$toExtension] ?? $toExtension);
+	public function convertHtml(string $html, string $toExtension): string {
+		$exportFilter = self::EXPORT_FILTERS[$toExtension];
 		$binary = $this->resolveBinaryPath();
 		$timeout = $this->resolveTimeout();
 
 		return $this->underLock(
 			work: fn (): string => $this->exportPdfBytes(
-				bytes: $bytes,
-				extension: $from,
+				bytes: $html,
+				extension: 'html',
 				convertTo: $exportFilter,
 				binary: $binary,
 				timeout: $timeout,
-				inputFilter: (self::INPUT_FILTERS[$from] ?? []),
+				inputFilter: self::INPUT_FILTERS['html'],
 				outputExtension: $toExtension
 			)
 		);
 
-	}//end convertBytes()
+	}//end convertHtml()
 
 	/**
 	 * Run work while holding the soffice lock, which serialises soffice
@@ -492,8 +481,11 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		try {
 			file_put_contents($srcPath, $bytes);
 
-			$argv = $this->buildArgv(binary: $binary, tmpDir: $tmpDir, srcPath: $srcPath, convertTo: $convertTo);
-			array_splice($argv, 4, 0, $inputFilter);
+			// The array form of proc_open avoids the `/bin/sh -c` layer entirely.
+			// `--norestore` and `--nofirststartwizard` keep soffice from bringing
+			// up its on-disk profile UI under headless; the input filter, when
+			// there is one, chooses how soffice opens the source.
+			$argv = [$binary, '--headless', '--norestore', '--nofirststartwizard', ...$inputFilter, '--convert-to', $convertTo, '--outdir', $tmpDir, $srcPath];
 
 			$exitCode = $this->processRunner->run(argv: $argv, timeout: $timeout, tmpDir: $tmpDir, backendName: $this->name());
 			if ($exitCode !== 0) {
@@ -546,36 +538,6 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		return $bytes;
 
 	}//end sourceBytes()
-
-	/**
-	 * Build the soffice argv for a PDF/A-3b conversion.
-	 *
-	 * The array form of proc_open avoids the `/bin/sh -c` layer entirely —
-	 * strictly safer than the string form even with escapeshellarg().
-	 * `--norestore` and `--nofirststartwizard` keep soffice from trying to
-	 * bring up its on-disk profile UI under headless.
-	 *
-	 * @param string $binary Path to the soffice binary.
-	 * @param string $tmpDir Temp directory soffice writes its output into.
-	 * @param string $srcPath Path of the materialised source document.
-	 * @param string $convertTo The --convert-to argument (format and filter options).
-	 *
-	 * @return array<int, string> Process argv (argv[0] = binary).
-	 */
-	private function buildArgv(string $binary, string $tmpDir, string $srcPath, string $convertTo): array {
-		return [
-			$binary,
-			'--headless',
-			'--norestore',
-			'--nofirststartwizard',
-			'--convert-to',
-			$convertTo,
-			'--outdir',
-			$tmpDir,
-			$srcPath,
-		];
-
-	}//end buildArgv()
 
 	/**
 	 * Locate, containment-check, and read the PDF soffice emitted.

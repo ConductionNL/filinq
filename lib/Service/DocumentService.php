@@ -113,7 +113,6 @@ class DocumentService {
 	 * @param IJobList $jobList Nextcloud job list for async processing
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
-	 * @param MultiFormatOutputProducer|null $multiFormat Makes and files every format of an options.formats request
 	 *
 	 * @return void
 	 */
@@ -127,7 +126,6 @@ class DocumentService {
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
-		private readonly ?MultiFormatOutputProducer $multiFormat = null,
 	) {
 
 	}//end __construct()
@@ -142,7 +140,7 @@ class DocumentService {
 	 *
 	 * @param string $templateId The UUID of the template to use
 	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
-	 * @param array $options Options: format (pdf|odf|html), huisstijlId,
+	 * @param array $options Options: format (pdf|odf|html|docx), huisstijlId,
 	 *                       zaakId, adHocData, listRefs, pdfOptions, userId,
 	 *                       filename, output.
 	 *                       listRefs: [{register, schema, filter?, limit?,
@@ -173,7 +171,12 @@ class DocumentService {
 		array $options = [],
 		array $recordFields = [],
 	): array {
-		$this->resolveFormats(options: $options);
+		if (isset($options['formats']) === true) {
+			throw new Exception(message: 'options.formats is answered by MultiFormatOutputProducer::generate()', code: 400);
+		}
+
+		$format = $options['format'] ?? self::DEFAULT_FORMAT;
+		$this->validateFormat(format: $format);
 		$this->resolveOutputMode(options: $options);
 
 		$template = $this->templateService->getTemplate(id: $templateId);
@@ -224,13 +227,9 @@ class DocumentService {
 		array $options = [],
 		array $recordFields = [],
 	): array {
-		$formats = $this->resolveFormats(options: $options);
-		$format = ($formats[0] ?? ($options['format'] ?? self::DEFAULT_FORMAT));
+		$format = $options['format'] ?? self::DEFAULT_FORMAT;
+		$this->validateFormat(format: $format);
 		$outputMode = $this->resolveOutputMode(options: $options);
-		if ($formats !== null) {
-			// Several formats are files by nature: a manifest points at them.
-			$outputMode = 'files';
-		}
 
 		$resolution = $this->dataResolver->resolve(
 			dataRefs: $dataRefs,
@@ -271,38 +270,23 @@ class DocumentService {
 		$htmlContent = $renderResult['html'];
 		$warnings = array_merge($warnings, $renderResult['warnings']);
 
-		$multi = null;
-		if ($formats !== null) {
-			$multi = $this->produceEveryFormat(
-				html: $htmlContent,
-				formats: $formats,
-				pdfOptions: $pdfOptions,
-				templateId: $templateId,
-				template: $template,
-				options: $options
-			);
-			$content = '';
-			$stored = $multi['primary'];
-			$warnings = array_merge($warnings, $multi['warnings']);
-		} else {
-			$content = $this->renderPipeline->produceOutput(
-				htmlContent: $htmlContent,
-				format: $format,
-				pdfOptions: $pdfOptions
-			);
-			$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
+		$content = $this->renderPipeline->produceOutput(
+			htmlContent: $htmlContent,
+			format: $format,
+			pdfOptions: $pdfOptions
+		);
+		$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
 
-			$stored = $this->storeOutputIfRequested(
-				mode: $outputMode,
-				templateId: $templateId,
-				template: $template,
-				format: $format,
-				content: $content,
-				options: $options,
-				warnings: $warnings
-			);
-			$warnings = $stored['warnings'];
-		}//end if
+		$stored = $this->storeOutputIfRequested(
+			mode: $outputMode,
+			templateId: $templateId,
+			template: $template,
+			format: $format,
+			content: $content,
+			options: $options,
+			warnings: $warnings
+		);
+		$warnings = $stored['warnings'];
 
 		$plain = $this->producePlainRendition(
 			plan: $plainPlan,
@@ -333,10 +317,10 @@ class DocumentService {
 				'filePath' => $stored['path'],
 			],
 			userId: (string)($options['userId'] ?? ''),
-			extra: array_merge($recordFields, $plain['record'], ($multi['record'] ?? []))
+			extra: array_merge($recordFields, $plain['record'])
 		);
 
-		$result = [
+		return [
 			'content' => $content,
 			'html' => $htmlContent,
 			'format' => $format,
@@ -351,108 +335,8 @@ class DocumentService {
 				'size' => $stored['size'],
 			],
 		];
-		if ($multi !== null) {
-			$result['outputs'] = $multi['outputs'];
-		}
-
-		return $result;
 
 	}//end generateFromTemplate()
-
-	/**
-	 * Which format or formats a request asks for, validated.
-	 *
-	 * @param array $options The generation options.
-	 *
-	 * @return string[]|null The formats of an options.formats request; null for a single-format one.
-	 *
-	 * @throws Exception 400 on an unknown format or on format and formats together.
-	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.4
-	 */
-	private function resolveFormats(array $options): ?array {
-		$formats = MultiFormatOutputProducer::requestedFormats(options: $options, valid: self::VALID_FORMATS);
-		if ($formats === null) {
-			$this->validateFormat(format: ($options['format'] ?? self::DEFAULT_FORMAT));
-		}
-
-		return $formats;
-
-	}//end resolveFormats()
-
-	/**
-	 * Make and file every requested format from the one rendered HTML.
-	 *
-	 * The first format that was filed stands for the document in the fields
-	 * a single-format entry has (fileId, filePath); `outputs` on the
-	 * generatedDocument entry carries every format, failed ones included.
-	 *
-	 * @param string   $html       The rendered HTML.
-	 * @param string[] $formats    The requested formats.
-	 * @param array    $pdfOptions The PDF options.
-	 * @param string   $templateId The template's identifier (default folder).
-	 * @param array    $template   The template.
-	 * @param array    $options    The generation options.
-	 *
-	 * @return array{outputs: array, warnings: string[], primary: array, record: array}
-	 *
-	 * @throws Exception 400 when no user is known to file the outputs for.
-	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.6
-	 */
-	private function produceEveryFormat(
-		string $html,
-		array $formats,
-		array $pdfOptions,
-		string $templateId,
-		array $template,
-		array $options,
-	): array {
-		$userId = (string)($options['userId'] ?? '');
-		if ($userId === '') {
-			throw new Exception(message: 'options.userId is required to store generated documents in Files', code: 400);
-		}
-
-		$basename = pathinfo((string)($options['filename'] ?? 'document'), PATHINFO_FILENAME);
-		if ($basename === '') {
-			$basename = 'document';
-		}
-
-		$producer = ($this->multiFormat ?? new MultiFormatOutputProducer($this->renderPipeline, $this->storageService));
-		$produced = $producer->produce(
-			html: $html,
-			formats: $formats,
-			pdfOptions: $pdfOptions,
-			userId: $userId,
-			targetPath: $this->buildOutputTargetPath(
-				templateId: $templateId,
-				explicitTargetPath: ($options['output']['targetPath'] ?? null),
-				template: $template
-			),
-			basename: $basename
-		);
-
-		$primary = ['fileId' => null, 'path' => null, 'name' => null, 'size' => null];
-		$record = [];
-		foreach ($produced['outputs'] as $output) {
-			if ($primary['fileId'] === null && $output['status'] === 'generated') {
-				$primary = ['fileId' => $output['fileId'], 'path' => $output['path'], 'name' => $output['fileName'], 'size' => $output['size']];
-			}
-
-			$record[] = array_filter(
-				['format' => $output['format'], 'fileId' => $output['fileId'], 'status' => $output['status'], 'error' => ($output['error'] ?? null)],
-				static fn ($value): bool => $value !== null
-			);
-		}
-
-		return [
-			'outputs' => $produced['outputs'],
-			'warnings' => $produced['warnings'],
-			'primary' => $primary,
-			'record' => ['outputs' => $record],
-		];
-
-	}//end produceEveryFormat()
 
 	/**
 	 * Generate an HTML preview of a template without producing final output.
@@ -760,7 +644,16 @@ class DocumentService {
 			$basename = 'document';
 		}
 
-		return $basename . (MultiFormatOutputProducer::EXTENSIONS[$format] ?? '.pdf');
+		$extension = '.pdf';
+		if ($format === 'odf') {
+			$extension = '.odt';
+		} elseif ($format === 'html') {
+			$extension = '.html';
+		} elseif ($format === 'docx') {
+			$extension = '.docx';
+		}
+
+		return $basename . $extension;
 	}//end buildOutputFilename()
 
 	/**

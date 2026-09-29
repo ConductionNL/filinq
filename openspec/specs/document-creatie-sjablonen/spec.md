@@ -631,7 +631,7 @@ change.
 - GIVEN a multi-format request `["pdf", "odf"]` on an instance where the ODF conversion fails
 - WHEN the job runs
 - THEN the manifest reports the `pdf` entry `generated` and the `odf` entry `failed` with an error message
-- @e2e exclude backend fault-injection (disabling soffice mid-job) is not browser-drivable — covered by PHPUnit (tests/unit/Service/DocumentServiceMultiFormatTest.php::testPartialFormatFailure)
+- @e2e exclude backend fault-injection (disabling soffice mid-job) is not browser-drivable — covered by PHPUnit (tests/unit/Service/MultiFormatOutputProducerTest.php::testPartialFormatFailure)
 
 ### Requirement: Editable DOCX is a first-class document-generation format (REQ-DDMFO-003)
 
@@ -670,4 +670,4 @@ Single-format generations MUST keep their existing audit shape with no
 - WHEN the logged `generatedDocument` object is fetched
 - THEN `outputs` contains both entries with their statuses and the `odf` error
 - AND `format` equals the first requested format
-- @e2e exclude audit-shape assertion; covered by PHPUnit (tests/unit/Service/DocumentServiceMultiFormatTest.php::testMultiFormatAuditOutputs)
+- @e2e exclude audit-shape assertion; covered by PHPUnit (tests/unit/Service/MultiFormatOutputProducerTest.php::testMultiFormatAuditOutputs)

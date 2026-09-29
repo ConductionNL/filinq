@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-5.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-5.1
  */
 
 declare(strict_types=1);
@@ -26,6 +26,7 @@ use OCA\Filinq\Service\DocumentRenderPipeline;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
+use OCA\Filinq\Service\MultiFormatOutputProducer;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
@@ -40,9 +41,9 @@ use Psr\Log\NullLogger;
 use RuntimeException;
 
 /**
- * DocumentService with the real pipeline, producer and audit logger.
+ * The producer over the real DocumentService render, pipeline and audit logger.
  */
-class DocumentServiceMultiFormatTest extends TestCase {
+class MultiFormatOutputProducerTest extends TestCase {
 
 	/** @var array<int, array<string, mixed>> The generatedDocument entries written. */
 	private array $logged = [];
@@ -58,9 +59,9 @@ class DocumentServiceMultiFormatTest extends TestCase {
 	 *
 	 * @param bool $odtFails Whether the ODT conversion throws.
 	 *
-	 * @return DocumentService
+	 * @return MultiFormatOutputProducer
 	 */
-	private function service(bool $odtFails = false): DocumentService {
+	private function service(bool $odtFails = false): MultiFormatOutputProducer {
 		$templates = $this->createMock(TemplateService::class);
 		$templates->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => 'Besluit {{ naam }}', 'namespace' => 'besluiten', 'version' => 2]);
 
@@ -108,16 +109,11 @@ class DocumentServiceMultiFormatTest extends TestCase {
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 		$objectResolver = new DocumentObjectServiceResolver($container, $appManager);
 
-		return new DocumentService(
-			$templates,
-			$resolver,
-			new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer, null, $office),
-			$storage,
-			new GeneratedDocumentLogger($objectResolver, new NullLogger()),
-			$container,
-			$this->createMock(IJobList::class),
-			new NullLogger()
-		);
+		$pipeline = new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer, null, $office);
+		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
+		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $container, $this->createMock(IJobList::class), new NullLogger());
+
+		return new MultiFormatOutputProducer($documents, $templates, $pipeline, $storage, $logger);
 	}
 
 	/**
@@ -151,7 +147,7 @@ class DocumentServiceMultiFormatTest extends TestCase {
 	}
 
 	public function testPdfAndDocxFromOneRender(): void {
-		$result = $this->service()->generateDocument('tmpl-1', [], ['formats' => ['pdf', 'docx', 'pdf'], 'userId' => 'clerk', 'filename' => 'besluit']);
+		$result = $this->service()->generate('tmpl-1', [], ['formats' => ['pdf', 'docx', 'pdf'], 'userId' => 'clerk', 'filename' => 'besluit']);
 
 		$this->assertSame(1, $this->renders, 'The template is rendered once.');
 		$this->assertSame(['pdf', 'docx'], array_column($result['outputs'], 'format'));
@@ -159,11 +155,12 @@ class DocumentServiceMultiFormatTest extends TestCase {
 		$this->assertSame(['besluit.pdf', 'besluit.docx'], array_keys($this->filed));
 		$this->assertSame('%PDF of <p>Besluit Jansen</p>', $this->filed['besluit.pdf']);
 		$this->assertSame('PK docx of <p>Besluit Jansen</p>', $this->filed['besluit.docx'], 'Both files come from the same HTML.');
-		$this->assertSame('/clerk/files/DocuDesk/besluiten/besluit.docx', $result['outputs'][1]['path']);
+		$this->assertSame('/remote.php/dav/files/clerk/DocuDesk/besluiten/besluit.docx', $result['outputs'][1]['downloadUrl']);
+		$this->assertSame(['format', 'status', 'fileId', 'fileName', 'downloadUrl', 'size'], array_keys($result['outputs'][0]));
 	}
 
 	public function testPartialFormatFailure(): void {
-		$result = $this->service(odtFails: true)->generateDocument('tmpl-1', [], ['formats' => ['pdf', 'odf'], 'userId' => 'clerk']);
+		$result = $this->service(odtFails: true)->generate('tmpl-1', [], ['formats' => ['pdf', 'odf'], 'userId' => 'clerk']);
 
 		$this->assertSame('generated', $result['outputs'][0]['status']);
 		$this->assertSame('failed', $result['outputs'][1]['status']);
@@ -173,7 +170,7 @@ class DocumentServiceMultiFormatTest extends TestCase {
 	}
 
 	public function testMultiFormatAuditOutputs(): void {
-		$this->service(odtFails: true)->generateDocument('tmpl-1', [], ['formats' => ['odf', 'pdf'], 'userId' => 'clerk']);
+		$this->service(odtFails: true)->generate('tmpl-1', [], ['formats' => ['odf', 'pdf'], 'userId' => 'clerk']);
 
 		$this->assertCount(1, $this->logged, 'One entry per render, not per format.');
 		$entry = $this->logged[0];
@@ -190,7 +187,8 @@ class DocumentServiceMultiFormatTest extends TestCase {
 	}
 
 	public function testASingleFormatRequestKeepsItsShape(): void {
-		$result = $this->service()->generateDocument('tmpl-1', [], ['format' => 'docx']);
+		$documents = (new \ReflectionProperty(MultiFormatOutputProducer::class, 'documents'))->getValue($this->service());
+		$result = $documents->generateDocument('tmpl-1', [], ['format' => 'docx']);
 
 		$this->assertSame('PK docx of <p>Besluit Jansen</p>', $result['content']);
 		$this->assertArrayNotHasKey('outputs', $result);
@@ -208,6 +206,7 @@ class DocumentServiceMultiFormatTest extends TestCase {
 			'empty list' => [['formats' => []]],
 			'not a list' => [['formats' => 'pdf']],
 			'unknown format' => [['formats' => ['pdf', 'xlsx']]],
+			'no user' => [['formats' => ['pdf'], 'userId' => '']],
 		];
 	}
 
@@ -220,13 +219,39 @@ class DocumentServiceMultiFormatTest extends TestCase {
 	 */
 	public function testAMalformedFormatsRequestIsA400AndNothingIsMade(array $options): void {
 		try {
-			$this->service()->generateDocument('tmpl-1', [], $options + ['userId' => 'clerk']);
+			$this->service()->generate('tmpl-1', [], $options + ['userId' => 'clerk']);
 			$this->fail('Refused request went through.');
 		} catch (Exception $e) {
 			$this->assertSame(400, $e->getCode());
 		}
 
 		$this->assertSame(0, $this->renders);
+		$this->assertSame([], $this->filed);
+	}
+
+	public function testTheSingleFormatPathRefusesFormatsInsteadOfIgnoringThem(): void {
+		$documents = (new \ReflectionProperty(MultiFormatOutputProducer::class, 'documents'))->getValue($this->service());
+
+		$this->expectExceptionCode(400);
+		$documents->generateDocument('tmpl-1', [], ['formats' => ['pdf', 'docx']]);
+	}
+
+	public function testATemplateWithAPlainCounterpartIsRefused(): void {
+		$producer = $this->service();
+		$plain = $this->createMock(\OCA\Filinq\Service\PlainLanguageRenditionService::class);
+		$plain->method('counterpartOf')->willReturn(['templateId' => 'plain-1']);
+		$args = [];
+		foreach (['documents', 'templates', 'renderPipeline', 'storage', 'auditLog'] as $name) {
+			$args[] = (new \ReflectionProperty(MultiFormatOutputProducer::class, $name))->getValue($producer);
+		}
+
+		try {
+			(new MultiFormatOutputProducer(...[...$args, $plain]))->generate('tmpl-1', [], ['formats' => ['pdf'], 'userId' => 'clerk']);
+			$this->fail('A formal letter must not be filed without its plain counterpart.');
+		} catch (Exception $e) {
+			$this->assertSame(400, $e->getCode());
+		}
+
 		$this->assertSame([], $this->filed);
 	}
 }//end class

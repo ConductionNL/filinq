@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/multi-format-output/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,6 +37,8 @@ use OCP\IUserSession;
 
 /**
  * Serves the format matrix per instance and per template.
+ *
+ * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
  *
  * @category Controller
  * @package  OCA\Filinq\Controller
@@ -72,7 +74,7 @@ class FormatController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
 	 *
 	 * @no-admin-idor-exempt reads no object: it reports which converters this server has.
 	 */
@@ -100,7 +102,7 @@ class FormatController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/multi-format-output/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
 	 *
 	 * @no-admin-idor-exempt the template is read through OpenRegister with RBAC on
 	 * (no `_rbac: false` on this path), so a template the caller may not read is a 404.
