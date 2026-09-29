@@ -117,6 +117,21 @@ const documentRecordId = computed(() =>
 					</a>
 				</NcNoteCard>
 
+				<NcNoteCard
+					v-if="accessibility"
+					:type="accessibility.type"
+					class="accessibility-note">
+					<div>{{ accessibility.title }}</div>
+					<div class="muted">
+						{{ accessibility.detail }}
+					</div>
+					<ul v-if="accessibility.reasons.length">
+						<li v-for="reason in accessibility.reasons" :key="reason">
+							{{ reason }}
+						</li>
+					</ul>
+				</NcNoteCard>
+
 				<!-- Best-effort warning: the file was produced, but some entities
 				     could not be fully removed (e.g. text recognised across table
 				     cells that is not contiguous in the document). Refining
@@ -536,6 +551,7 @@ import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
+import { accessibilityNote } from '../services/redactionAccessibility.js'
 
 export default {
 	name: 'FileViewerSidebar',
@@ -614,6 +630,16 @@ export default {
 		 *
 		 * @return {object|undefined} Queue entry or undefined when not yet loaded.
 		 */
+		/**
+		 * What the redaction did to the copy's accessibility.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-3.1
+		 */
+		accessibility() {
+			return accessibilityNote(this.entry?.structurePreservation)
+		},
+
 		entry() {
 			const file = fileViewerStore.currentFile
 			if (!file) {

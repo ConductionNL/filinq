@@ -343,7 +343,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-4.1
 	 */
 	public function testADegradedCopyWarnsAndIsStillHandedOff(): void {
 		$pipeline = $this->pipeline();
@@ -362,7 +362,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-4.1
 	 */
 	public function testBlockModeWaitsForAReasonedOverride(): void {
 		$this->accessibilityGate = 'block';

@@ -85,7 +85,7 @@ class PublicationReadiness {
 	 *                              and, when found, redactedFileRef.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function evaluate(array $record, DateTimeImmutable $now): array {
 		$fileId = (string) ($record['documentFileRef'] ?? '');
@@ -138,7 +138,7 @@ class PublicationReadiness {
 	 * @return bool True when the document may be handed off.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function isReady(array $record): bool {
 		$accessible = true;

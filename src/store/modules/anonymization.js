@@ -755,6 +755,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				// sidebar can warn instead of implying the names can come back.
 				entry.pseudonymisation =
 					anonymizeResponse.data.pseudonymisation || null
+				// Whether the redaction kept the tag structure a screen reader reads.
+				entry.structurePreservation =
+					anonymizeResponse.data.structurePreservation || null
 				// The re-anonymise sub-flow (if any) is done — clear the marker
 				// so the dossier footer returns to its batch state.
 				entry.reanonymize = false

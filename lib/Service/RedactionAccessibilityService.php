@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -81,7 +81,7 @@ class RedactionAccessibilityService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.1
 	 */
 	public function preserveRequested(): bool {
 		return $this->appConfig->getValueString('filinq', self::CFG_PRESERVE_DEFAULT, 'true') !== 'false';
@@ -102,8 +102,8 @@ class RedactionAccessibilityService {
 	 * @return array{state: string, requested?: bool, preserved?: bool, tagCountBefore?: int,
 	 *               tagCountAfter?: int, lossReasons?: string[], veraPdfVerified?: bool}
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.2
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.4
 	 */
 	public function assess(?array $report, ?string $pdfBytes = null): array {
 		if ($report === null || is_bool($report['preserved'] ?? null) === false) {
@@ -140,7 +140,7 @@ class RedactionAccessibilityService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.4
 	 */
 	public function assessOutput(?array $report, mixed $output): array {
 		$bytes = null;
@@ -172,7 +172,7 @@ class RedactionAccessibilityService {
 	 *
 	 * @return array{clear: bool, warning: string|null}
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function gate(?string $state, string $overrideReason = ''): array {
 		$mode = $this->appConfig->getValueString('filinq', self::CFG_GATE, 'warn');

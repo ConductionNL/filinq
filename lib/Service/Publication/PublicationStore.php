@@ -172,7 +172,7 @@ class PublicationStore {
 	 *
 	 * @return array<string, mixed>|null The link, or null when there is no redacted copy.
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function findRedactionLink(string $fileId): ?array {
 		foreach ($this->search(schema: 'anonymizationLink', filters: ['sourceFileId' => $fileId]) as $link) {

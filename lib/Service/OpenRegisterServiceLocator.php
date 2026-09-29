@@ -136,7 +136,7 @@ class OpenRegisterServiceLocator {
 	 *
 	 * @return array<string, mixed>|null The report, or null.
 	 *
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
 	 */
 	public function lastStructurePreservation(mixed $fileService): ?array {
 		if (method_exists($fileService, 'getLastStructurePreservation') === false) {

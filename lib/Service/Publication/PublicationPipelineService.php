@@ -145,7 +145,7 @@ class PublicationPipelineService {
 	 * @throws InvalidArgumentException When the category is not one of OpenCatalogi's TOOI categories.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
-	 * @spec openspec/changes/accessible-redaction-output/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
 	 */
 	public function updateMetadata(array $record, array $metadata, string $actor): array {
 		$category = (string) ($metadata['wooCategory'] ?? '');
