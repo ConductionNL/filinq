@@ -34,6 +34,8 @@ use Throwable;
 /**
  * Maps OpenRegister's structure report to a state and gates publication on it.
  *
+ * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
+ *
  * @category Service
  * @package  OCA\Filinq\Service
  * @author   Conduction B.V. <info@conduction.nl>

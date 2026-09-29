@@ -59,7 +59,8 @@ class PublicationReadiness {
 	 * @param PolicyMatchService             $policies      The publication prohibitions
 	 * @param RedactionReviewMarkRepository  $marks         Who checked the detected entities
 	 * @param PublicationStore               $store         The redacted copy
-	 * @param RedactionAccessibilityService|null $accessibility Whether the redacted copy kept its accessibility, and what that means for the hand-off
+	 * @param RedactionAccessibilityService|null $accessibility Whether the redacted copy kept its accessibility,
+	 *                                                          and what that means for the hand-off
 	 *
 	 * @return void
 	 */

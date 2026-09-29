@@ -39,6 +39,8 @@ class AnonymisationRunRecords {
 	 * @param PseudonymMapRecorder            $keys        Keeps the key of a reversible run, and removes
 	 *                                                     the key of an earlier run when this one is
 	 *                                                     irreversible.
+	 * @param RedactionAccessibilityService|null $accessibility What the run asks OpenRegister to keep of
+	 *                                                     the tag structure, and what it kept.
 	 *
 	 * @return void
 	 */
@@ -46,6 +48,7 @@ class AnonymisationRunRecords {
 		private readonly RedactionVerdictRecorder $verdicts,
 		private readonly AnonymizationPersistenceService $persistence,
 		private readonly PseudonymMapRecorder $keys,
+		private readonly ?RedactionAccessibilityService $accessibility = null,
 	) {
 
 	}//end __construct()
@@ -60,8 +63,17 @@ class AnonymisationRunRecords {
 	 * @return array<string, mixed> The result, with the verdict, the link id and the key outcome.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
 	 */
 	public function record(array $resultInfo, array $context): array {
+		// On the bytes actually written, like the verdict: the summary page is already on.
+		if ($this->accessibility !== null && array_key_exists('structureReport', $context) === true) {
+			$resultInfo['structurePreservation'] = $this->accessibility->assessOutput(
+				report: $context['structureReport'],
+				output: $context['anonymisedNode']
+			);
+		}
+
 		// 🔴 ON THE BYTES THAT WERE ACTUALLY WRITTEN. The grondslagen summary
 		// appends a page after the redaction, so the caller runs this after it:
 		// verifying any earlier would record a verdict about a file that no
@@ -98,4 +110,18 @@ class AnonymisationRunRecords {
 		);
 
 	}//end record()
+
+	/**
+	 * Whether the run asks OpenRegister to keep the tag structure.
+	 *
+	 * Null (OpenRegister decides) when no accessibility service is wired.
+	 *
+	 * @return bool|null
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.1
+	 */
+	public function preserveStructure(): ?bool {
+		return $this->accessibility?->preserveRequested();
+
+	}//end preserveStructure()
 }//end class

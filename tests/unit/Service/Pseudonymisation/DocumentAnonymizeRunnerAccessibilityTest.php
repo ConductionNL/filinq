@@ -179,9 +179,9 @@ class DocumentAnonymizeRunnerAccessibilityTest extends TestCase {
 			runRecords: new AnonymisationRunRecords(
 				verdicts: $verdicts,
 				persistence: $persistence,
-				keys: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger)
-			),
-			accessibility: new RedactionAccessibilityService($appConfig)
+				keys: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger),
+				accessibility: new RedactionAccessibilityService($appConfig)
+			)
 		);
 
 	}//end runner()
