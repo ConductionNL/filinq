@@ -50,6 +50,7 @@ import InboxArrowDown from 'vue-material-design-icons/InboxArrowDown.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Printer from 'vue-material-design-icons/Printer.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import Scanner from 'vue-material-design-icons/Scanner.vue'
@@ -110,6 +111,7 @@ export default {
 	MapMarkerPath,
 	Palette,
 	Plus,
+	Printer,
 	// The two publication-policy menu entries. Both pages existed and were
 	// routable for months with no way in: an unregistered icon renders NOTHING
 	// in the navigation (rule 3 above), so adding the menu entry without these

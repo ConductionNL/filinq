@@ -126,6 +126,13 @@
 			"order": 55
 		},
 		{
+			"id": "PrintJobs",
+			"label": "Print jobs",
+			"icon": "Printer",
+			"route": "PrintJobs",
+			"order": 56
+		},
+		{
 			"id": "SigningRequests",
 			"label": "Signing Requests",
 			"icon": "SignatureFreehand",
@@ -402,6 +409,14 @@
 			"title": "My Documents",
 			"component": "MyDocumentsIndex",
 			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
+		},
+		{
+			"id": "PrintJobs",
+			"route": "/print-jobs",
+			"type": "custom",
+			"title": "Print jobs",
+			"component": "PrintJobs",
+			"_note": "The caller's own print jobs with status and download (print-jobs-in-the-app). type:custom because it reads GET api/print/jobs, which lists only the caller's jobs; the PDFs are in app data, not in the object."
 		},
 		{
 			"id": "PrintPreview",
