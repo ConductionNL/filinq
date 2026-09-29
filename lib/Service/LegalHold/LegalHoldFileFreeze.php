@@ -180,7 +180,7 @@ class LegalHoldFileFreeze {
 	 *
 	 * @return array<int, int> The file ids.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
 	 */
 	public function fileIdsOf(object $entity): array {
 		return array_map(static fn (File $file): int => (int) $file->getId(), $this->files(entity: $entity));

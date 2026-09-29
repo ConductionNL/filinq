@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -70,7 +70,7 @@ class SubjectErasureLocator {
 	 * @throws SubjectErasureRefusedException When the catalogue cannot be read: an erasure
 	 *                                        that cannot see where the person is must not run.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 	 */
 	public function locate(array $identifiers): array {
 		try {
@@ -113,7 +113,7 @@ class SubjectErasureLocator {
 	 *
 	 * @return array<int, string> The identifiers.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 	 */
 	public function clean(array $identifiers): array {
 		$clean = [];

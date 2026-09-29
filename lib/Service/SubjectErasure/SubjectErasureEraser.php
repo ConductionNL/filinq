@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.1
  */
 
 declare(strict_types=1);
@@ -88,7 +88,7 @@ class SubjectErasureEraser {
 	 * @throws RuntimeException When the file was not erased, or was erased but an
 	 *                          earlier version with the person in it survives.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.1
 	 */
 	public function erase(File $file, array $values): array {
 		$copy = $this->erasedCopy(file: $file, values: $values);
@@ -116,7 +116,7 @@ class SubjectErasureEraser {
 	 *
 	 * @throws RuntimeException When any step fails; a new version already written stays, draft.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.2
 	 */
 	public function eraseFinal(File $file, array $values, array $record, string $requestUuid): array {
 		$copy = $this->erasedCopy(file: $file, values: $values);

@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+@spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 -->
 
 <template>
@@ -58,7 +58,7 @@ import { runRequest } from '../services/subjectErasures.js'
  * The last check before an erasure runs: how many documents change and how
  * many are refused.
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export default {
 	name: 'RunSubjectErasureDialog',
@@ -81,7 +81,7 @@ export default {
 		 * Run the erasure and hand the outcome back.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		async onRun() {
 			this.busy = true

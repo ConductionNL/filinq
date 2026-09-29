@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -74,7 +74,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When the caller may not act.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
 	 */
 	public function assertMayErase(string $userId, string $requestUuid = ''): void {
 		try {
@@ -100,7 +100,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When the caller may not act.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
 	 */
 	public function list(string $userId): array {
 		$this->assertMayErase(userId: $userId);
@@ -121,7 +121,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When the caller may not act, or there is no such request.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
 	 */
 	public function get(string $uuid, string $userId): array {
 		$this->assertMayErase(userId: $userId, requestUuid: $uuid);
@@ -141,7 +141,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When the caller may not act, or the input is incomplete.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-1.1
 	 */
 	public function create(array $input, string $userId): array {
 		$this->assertMayErase(userId: $userId);
@@ -195,7 +195,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When refused, or the catalogue cannot be read.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
 	 */
 	public function preview(string $uuid, string $userId): array {
 		$this->assertMayErase(userId: $userId, requestUuid: $uuid);
@@ -240,7 +240,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When refused, not previewed, or an exclusion is incomplete.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 	 */
 	public function exclude(string $uuid, array $exclusions, string $userId): array {
 		$this->assertMayErase(userId: $userId, requestUuid: $uuid);
@@ -281,7 +281,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When there is none.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
 	 */
 	public function load(string $uuid): array {
 		$request = $this->store->find(schema: SubjectErasureStore::REQUEST, uuid: $uuid);
@@ -303,7 +303,7 @@ class SubjectErasureService {
 	 *
 	 * @throws SubjectErasureRefusedException When the state does not fit.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.1
 	 */
 	public function assertState(array $request, array $allowed): void {
 		if (in_array((string) ($request['status'] ?? ''), $allowed, true) === false) {

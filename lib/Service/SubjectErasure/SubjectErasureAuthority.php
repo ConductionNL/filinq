@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
@@ -75,7 +75,7 @@ class SubjectErasureAuthority {
 	 *
 	 * @throws SubjectErasureRefusedException When the user may not.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
 	 */
 	public function assertMayErase(string $userId): void {
 		$groups = $this->groups();

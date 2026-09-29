@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 
 import axios from '@nextcloud/axios'
@@ -41,7 +41,7 @@ async function outcome(call) {
  * Every request.
  *
  * @return {Promise<object>} The outcome, data.results the requests.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function listRequests() {
 	return outcome(() => axios.get(base()))
@@ -52,7 +52,7 @@ export function listRequests() {
  *
  * @param {object} input subject, identifiers, ground, dueAt.
  * @return {Promise<object>} The outcome, data the request.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function createRequest(input) {
 	return outcome(() => axios.post(base(), input))
@@ -63,7 +63,7 @@ export function createRequest(input) {
  *
  * @param {string} uuid The request.
  * @return {Promise<object>} The outcome, data the preview.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function previewRequest(uuid) {
 	return outcome(() => axios.post(`${base()}/${encodeURIComponent(uuid)}/preview`))
@@ -75,7 +75,7 @@ export function previewRequest(uuid) {
  * @param {string} uuid The request.
  * @param {Array<{occurrence: string, reason: string}>} exclusions The exclusions.
  * @return {Promise<object>} The outcome, data the request.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function saveExclusions(uuid, exclusions) {
 	return outcome(() =>
@@ -90,7 +90,7 @@ export function saveExclusions(uuid, exclusions) {
  *
  * @param {string} uuid The request.
  * @return {Promise<object>} The outcome, data {request, certificate}.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function runRequest(uuid) {
 	return outcome(() => axios.post(`${base()}/${encodeURIComponent(uuid)}/run`))
@@ -101,7 +101,7 @@ export function runRequest(uuid) {
  *
  * @param {string} uuid The request.
  * @return {Promise<object>} The outcome, data the certificate.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function fetchCertificate(uuid) {
 	return outcome(() => axios.get(`${base()}/${encodeURIComponent(uuid)}/certificate`))
@@ -112,7 +112,7 @@ export function fetchCertificate(uuid) {
  *
  * @param {string} text The text.
  * @return {string[]} The lines.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function parseLines(text) {
 	return (text || '')
@@ -130,7 +130,7 @@ export function parseLines(text) {
  * @param {Object<string, Object<string, boolean>>} kept document => value => false when left in place.
  * @param {Object<string, string>} reasons document => reason.
  * @return {Array<{occurrence: string, reason: string}>} The exclusions.
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
  */
 export function buildExclusions(documents, kept, reasons) {
 	const exclusions = []
@@ -157,7 +157,7 @@ export function buildExclusions(documents, kept, reasons) {
  *
  * @param {Array<{reason: string}>} exclusions The exclusions.
  * @return {boolean}
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
  */
 export function exclusionsComplete(exclusions) {
 	return exclusions.every((exclusion) => exclusion.reason.trim() !== '')
@@ -168,7 +168,7 @@ export function exclusionsComplete(exclusions) {
  *
  * @param {string} status The status.
  * @return {string}
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function statusLabel(status) {
 	const labels = {
@@ -187,7 +187,7 @@ export function statusLabel(status) {
  *
  * @param {string} outcomeName erased, refused, excluded or failed.
  * @return {string}
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export function outcomeLabel(outcomeName) {
 	const labels = {

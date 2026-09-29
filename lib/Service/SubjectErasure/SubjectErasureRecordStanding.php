@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
@@ -73,7 +73,7 @@ class SubjectErasureRecordStanding {
 	 *
 	 * @return array{legal_hold: string|false, retention: string|false}
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
 	 */
 	public function forFile(?File $node): array {
 		$clear = ['legal_hold' => false, 'retention' => false];

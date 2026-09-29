@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
@@ -79,7 +79,7 @@ class SubjectErasureObligations {
 	 * @return array<int, array<string, mixed>> Per file: id, name, occurrences, values,
 	 *                                          finalVersion, unreadable, legal_hold.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.1
 	 */
 	public function assess(array $located): array {
 		$held = $this->heldFiles();
@@ -150,7 +150,7 @@ class SubjectErasureObligations {
 	 *
 	 * @return File|null The file.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.1
 	 */
 	public function file(int $fileId): ?File {
 		try {

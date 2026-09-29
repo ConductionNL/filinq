@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.2
  */
 
 declare(strict_types=1);
@@ -81,7 +81,7 @@ class SubjectErasureAudit {
 	 *
 	 * @throws SubjectErasureRefusedException When the audit trail did not take the entry.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.2
 	 */
 	public function record(string $requestUuid, string $action, string $userId, array $details = []): void {
 		$subject = $this->store->storedRequest(uuid: $requestUuid);

@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -70,7 +70,7 @@ class SubjectErasureStore {
 	 *
 	 * @throws RuntimeException When the register cannot be read.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-1.1
 	 */
 	public function search(string $schema, array $filters = []): array {
 		try {
@@ -112,7 +112,7 @@ class SubjectErasureStore {
 	 *
 	 * @throws RuntimeException When the register cannot be read.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-1.1
 	 */
 	public function find(string $schema, string $uuid): ?array {
 		if ($uuid === '') {
@@ -139,7 +139,7 @@ class SubjectErasureStore {
 	 *
 	 * @throws RuntimeException When OpenRegister refuses it.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-1.1
 	 */
 	public function save(string $schema, array $row): array {
 		$uuid = (string) ($row['uuid'] ?? '');
@@ -177,7 +177,7 @@ class SubjectErasureStore {
 	 *
 	 * @return ObjectEntity|null The object, or null when it cannot be read.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.2
 	 */
 	public function storedRequest(string $uuid): ?ObjectEntity {
 		if ($uuid === '') {

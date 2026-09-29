@@ -177,7 +177,7 @@ class PseudonymMapService {
 	 * @throws RuntimeException When a map cannot be read, decrypted or rewritten: the
 	 *                          way back is then still open, and the caller must say so.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.3
 	 */
 	public function forgetValues(int $sourceFileId, array $values): array {
 		$needles = array_map(static fn (string $value): string => mb_strtolower(trim($value)), $values);

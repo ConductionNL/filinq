@@ -109,7 +109,7 @@ class PseudonymMapRepository {
 	 *
 	 * @throws RuntimeException When OpenRegister cannot be read.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.3
 	 */
 	public function findForSource(int $sourceFileId): array {
 		try {

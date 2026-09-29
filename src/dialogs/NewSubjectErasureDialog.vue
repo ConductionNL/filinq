@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+@spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 -->
 
 <template>
@@ -62,7 +62,7 @@ import { createRequest, parseLines } from '../services/subjectErasures.js'
  * Record an erasure request: the person, how the documents name them, and the
  * legal ground. Nothing is looked up or changed until the preview.
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export default {
 	name: 'NewSubjectErasureDialog',
@@ -85,7 +85,7 @@ export default {
 		 * Whether the person and the ground are filled in.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		complete() {
 			return this.subject.trim() !== '' && this.ground.trim() !== ''
@@ -98,7 +98,7 @@ export default {
 		 * Record the request and hand it back.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		async onCreate() {
 			this.busy = true

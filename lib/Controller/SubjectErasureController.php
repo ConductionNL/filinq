@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -86,7 +86,7 @@ class SubjectErasureController extends Controller {
 	 *
 	 * @return JSONResponse The requests, or a refusal.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -101,7 +101,7 @@ class SubjectErasureController extends Controller {
 	 *
 	 * @return JSONResponse The request, or a refusal.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -114,7 +114,7 @@ class SubjectErasureController extends Controller {
 	 *
 	 * @return JSONResponse The request, or a refusal.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-1.1
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -132,7 +132,7 @@ class SubjectErasureController extends Controller {
 	 *
 	 * @return JSONResponse The preview, or a refusal.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function preview(string $id): JSONResponse {
@@ -147,7 +147,7 @@ class SubjectErasureController extends Controller {
 	 *
 	 * @return JSONResponse The request, or a refusal.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 	 */
 	#[NoAdminRequired]
 	public function exclude(string $id): JSONResponse {
@@ -168,7 +168,7 @@ class SubjectErasureController extends Controller {
 	 *
 	 * @return JSONResponse The request and the certificate, or a refusal.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-3.1
 	 */
 	#[NoAdminRequired]
 	public function run(string $id): JSONResponse {
@@ -183,7 +183,7 @@ class SubjectErasureController extends Controller {
 	 *
 	 * @return JSONResponse The certificate, or a refusal.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-4.2
 	 */
 	#[NoAdminRequired]
 	public function certificate(string $id): JSONResponse {

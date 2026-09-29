@@ -49,7 +49,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
  */
 
 declare(strict_types=1);
@@ -112,7 +112,7 @@ class SubjectErasureRules {
 	 *
 	 * @return array<int, array<string, mixed>> The refusals, empty when it may be erased.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function refusals(array $document): array {
 		$refusals = [];
@@ -146,7 +146,7 @@ class SubjectErasureRules {
 	 *
 	 * @return array{erase: array<int, string>, refused: array<int, array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function screen(array $documents): array {
 		$erase = [];
@@ -179,7 +179,7 @@ class SubjectErasureRules {
 	 *
 	 * @return bool True when it genuinely removes the person.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function treatmentErases(string $treatment): bool {
 		return in_array($treatment, ['remove', 'fixed'], true);
@@ -200,7 +200,7 @@ class SubjectErasureRules {
 	 *
 	 * @return array<string, mixed> The certificate.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function certificate(array $request, array $erased, array $refused, array $republish = []): array {
 		return [

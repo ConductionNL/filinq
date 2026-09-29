@@ -45,7 +45,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
  */
 
 declare(strict_types=1);
@@ -91,7 +91,7 @@ class SubjectErasureJob {
 	 *
 	 * @return array<int, string> The documents still to do.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function resumeFrom(array $documents, array $progress): array {
 		$last = trim((string)($progress['lastDocument'] ?? ''));
@@ -118,7 +118,7 @@ class SubjectErasureJob {
 	 *
 	 * @return string The status.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function statusFor(int $total, int $done): string {
 		if ($total <= 0 || $done >= $total) {
@@ -140,7 +140,7 @@ class SubjectErasureJob {
 	 *
 	 * @return array<string, mixed> The account of the stopped run.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
 	 */
 	public function accountOf(array $progress, string $dueAt = ''): array {
 		$total = (int)($progress['documentsTotal'] ?? 0);

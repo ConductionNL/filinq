@@ -1,7 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
-@spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+@spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 @visual exclude No pixel baseline yet: the page is driven through its /subject-erasures route by
 	tests/e2e/workflows/subject-erasure.spec.ts, which reaches it by URL. A baseline needs a seeded
 	instance whose entity catalogue names a person.
@@ -296,7 +296,7 @@ import {
  * Erasure requests: record one, read the preview, leave occurrences in place
  * with a reason, run, and read the certificate.
  *
- * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+ * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
  */
 export default {
 	name: 'SubjectErasures',
@@ -331,7 +331,7 @@ export default {
 		 * Whether a preview may be built now.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		canPreview() {
 			return ['received', 'previewed', 'partially_completed'].includes(this.selected?.status)
@@ -341,7 +341,7 @@ export default {
 		 * Whether the run may start or resume now.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		canRun() {
 			return ['previewed', 'partially_completed'].includes(this.selected?.status)
@@ -351,7 +351,7 @@ export default {
 		 * The exclusions the choices make.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		exclusions() {
 			return buildExclusions(this.preview?.documents || [], this.kept, this.reasons)
@@ -361,7 +361,7 @@ export default {
 		 * Whether every exclusion has a reason.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		exclusionsReady() {
 			return exclusionsComplete(this.exclusions)
@@ -371,7 +371,7 @@ export default {
 	/**
 	 * Load the requests.
 	 *
-	 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+	 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 	 */
 	mounted() {
 		this.load()
@@ -386,7 +386,7 @@ export default {
 		 * Read the requests.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		async load() {
 			this.loading = true
@@ -408,7 +408,7 @@ export default {
 		 * Show one request.
 		 *
 		 * @param {object} request The request.
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		select(request) {
 			this.selected = request
@@ -423,7 +423,7 @@ export default {
 		 *
 		 * @param {object} request The request.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		async onCreated(request) {
 			this.creating = false
@@ -435,7 +435,7 @@ export default {
 		 * Build the preview.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		async onPreview() {
 			const answer = await previewRequest(this.selected.uuid)
@@ -452,7 +452,7 @@ export default {
 		 * Store the exclusions.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		async onSaveExclusions() {
 			const answer = await saveExclusions(this.selected.uuid, this.exclusions)
@@ -469,7 +469,7 @@ export default {
 		 *
 		 * @param {object} outcome {request, certificate}.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		async onRan(outcome) {
 			this.running = false
@@ -482,7 +482,7 @@ export default {
 		 * Read the certificate.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		async onCertificate() {
 			const answer = await fetchCertificate(this.selected.uuid)
@@ -499,7 +499,7 @@ export default {
 		 * @param {string} documentId The document.
 		 * @param {string} value The identifier.
 		 * @return {boolean}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		isErased(documentId, value) {
 			return this.kept[documentId]?.[value] !== false
@@ -511,7 +511,7 @@ export default {
 		 * @param {string} documentId The document.
 		 * @param {string} value The identifier.
 		 * @param {boolean} erased Whether it is erased.
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		setErased(documentId, value, erased) {
 			this.kept = { ...this.kept, [documentId]: { ...(this.kept[documentId] || {}), [value]: erased } }
@@ -522,7 +522,7 @@ export default {
 		 *
 		 * @param {object} row The preview row.
 		 * @return {boolean}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		leavesSomething(row) {
 			return (row.values || []).some((value) => !this.isErased(row.document, value))
@@ -533,7 +533,7 @@ export default {
 		 *
 		 * @param {string} documentId The document.
 		 * @param {string} reason The reason.
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-2.2
 		 */
 		setReason(documentId, reason) {
 			this.reasons = { ...this.reasons, [documentId]: reason }
@@ -544,7 +544,7 @@ export default {
 		 *
 		 * @param {string} value An ISO 8601 date-time.
 		 * @return {string}
-		 * @spec openspec/changes/erase-a-person-while-the-records-stay/tasks.md#task-5.2
+		 * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/tasks.md#task-5.2
 		 */
 		formatTime(value) {
 			return value ? new Date(value).toLocaleString() : ''
