@@ -231,6 +231,12 @@ class SettingsService {
 			'pseudonymisation_restore_allowed_groups' => $this->decodeList(
 				raw: $this->config->getValueString($this->appName, 'pseudonymisation_restore_allowed_groups', '[]')
 			),
+			// Legal holds: the groups that may place and release them, besides
+			// admins. LegalHoldAuthority reads the raw value and refuses everyone
+			// when it does not decode.
+			'legal_hold_authority_groups' => $this->decodeList(
+				raw: $this->config->getValueString($this->appName, 'legal_hold_authority_groups', '[]')
+			),
 			// Propose-grondslag-per-entity-type — instance-global map of
 			// entity type → base slug(s), used to pre-fill a proposed
 			// grondslag onto freshly-detected entities. Decoded to an
@@ -422,6 +428,7 @@ class SettingsService {
 		'ocr_dpi',
 		'ocr_on_arrival',
 		'pseudonymisation_restore_allowed_groups',
+		'legal_hold_authority_groups',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 	];

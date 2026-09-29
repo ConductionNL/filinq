@@ -212,6 +212,14 @@ $extra = [
         // Reversible pseudonymisation: does a redacted copy keep a key, and restore it (gated, audited).
         ['name' => 'pseudonymisation#status', 'url' => 'api/pseudonymisation/status/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'pseudonymisation#restore', 'url' => 'api/pseudonymisation/{linkId}/restore', 'verb' => 'POST'],
+        // Legal hold cases (e-discovery-legal-hold): the hold register, gated on hold authority in the service.
+        ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#show', 'url' => 'api/legal-holds/{id}', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#addScope', 'url' => 'api/legal-holds/{id}/scope', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#retry', 'url' => 'api/legal-holds/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#release', 'url' => 'api/legal-holds/{id}/release', 'verb' => 'POST'],
         ['name' => 'printJob#index', 'url' => 'api/print/jobs', 'verb' => 'GET'],
         ['name' => 'printJob#create', 'url' => 'api/print/jobs', 'verb' => 'POST'],
         ['name' => 'printJob#batch', 'url' => 'api/print/batch', 'verb' => 'POST'],

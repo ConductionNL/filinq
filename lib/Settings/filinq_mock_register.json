@@ -5795,6 +5795,110 @@
         "scope": "document",
         "storedAt": "2026-09-23T09:00:00+00:00",
         "storedBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "legalHoldCase",
+          "slug": "demostad-woo-bezwaar-2026-004"
+        },
+        "name": "Woo-bezwaar 2026-004 (demo)",
+        "holdType": "woo-appeal",
+        "reason": "Bezwaarprocedure tegen Woo-besluit 2026-004; betrokken stukken bevriezen tot afronding.",
+        "caseReference": "BZW-2026-004",
+        "custodian": "seed-user-juridisch",
+        "scopeDocuments": [
+          "00000000-0000-0000-0000-000000000001"
+        ],
+        "scopeDossiers": [],
+        "status": "active",
+        "protection": "complete",
+        "fileLockBackstop": "unavailable",
+        "fanOut": [
+          {
+            "ref": "00000000-0000-0000-0000-000000000001",
+            "kind": "document",
+            "record": "held",
+            "file": "unavailable",
+            "at": "2026-07-01T09:00:00+00:00"
+          }
+        ],
+        "placedBy": "seed-user-juridisch",
+        "placedAt": "2026-07-01T09:00:00+00:00",
+        "notifiedOwners": [
+          "seed-user-juridisch"
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "legalHoldCase",
+          "slug": "demostad-audit-2026-q2"
+        },
+        "name": "Accountantscontrole 2026 Q2 (demo)",
+        "holdType": "audit",
+        "reason": "De accountant controleert de subsidiedossiers van het tweede kwartaal.",
+        "caseReference": "AUD-2026-Q2",
+        "custodian": "seed-user-control",
+        "scopeDocuments": [],
+        "scopeDossiers": [
+          "00000000-0000-0000-0000-000000000002"
+        ],
+        "status": "active",
+        "protection": "partial",
+        "fileLockBackstop": "available",
+        "fanOut": [
+          {
+            "ref": "00000000-0000-0000-0000-000000000002",
+            "kind": "dossier",
+            "record": "failed",
+            "recordError": "The record could not be found.",
+            "file": "no_files",
+            "at": "2026-08-03T10:00:00+00:00"
+          }
+        ],
+        "placedBy": "seed-user-control",
+        "placedAt": "2026-08-03T10:00:00+00:00",
+        "notifiedOwners": [
+          "seed-user-control"
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "legalHoldCase",
+          "slug": "demostad-procedure-2025-117"
+        },
+        "name": "Rechtszaak 2025-117 (demo)",
+        "holdType": "litigation",
+        "reason": "Aansprakelijkheidsprocedure over de aanbesteding van 2024.",
+        "caseReference": "ROT-25-117",
+        "custodian": "seed-user-juridisch",
+        "scopeDocuments": [
+          "00000000-0000-0000-0000-000000000003"
+        ],
+        "scopeDossiers": [],
+        "status": "released",
+        "protection": "complete",
+        "fileLockBackstop": "available",
+        "fanOut": [
+          {
+            "ref": "00000000-0000-0000-0000-000000000003",
+            "kind": "document",
+            "record": "released",
+            "file": "unlocked",
+            "fileIds": [],
+            "at": "2026-06-15T14:00:00+00:00"
+          }
+        ],
+        "placedBy": "seed-user-juridisch",
+        "placedAt": "2025-11-04T08:30:00+00:00",
+        "releasedBy": "seed-user-juridisch",
+        "releasedAt": "2026-06-15T14:00:00+00:00",
+        "releaseReason": "De zaak is geschikt; de stukken hoeven niet langer bevroren te blijven.",
+        "notifiedOwners": [
+          "seed-user-juridisch"
+        ]
       }
     ]
   }

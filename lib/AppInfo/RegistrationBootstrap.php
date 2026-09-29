@@ -124,6 +124,10 @@ class RegistrationBootstrap {
 		// objects to the right variant.
 		$context->registerMiddleware(LanguageNegotiationMiddleware::class);
 
+		// e-discovery-legal-hold: renders the place and release notifications.
+		// Named by string to keep this class's coupling where it is.
+		$context->registerNotifierService('OCA\\Filinq\\Notification\\LegalHoldNotifier');
+
 		// AppHost observability adoption (ADR-006 / ADR-040). Registers only the
 		// MetricsEngine; the Health/Metrics controllers auto-wire from OCP and
 		// resolve the engine by FQCN string at dispatch time.
