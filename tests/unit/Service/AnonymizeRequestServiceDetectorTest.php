@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\AnonymizeRequestService;
+use OCA\Filinq\Service\AnonymizeRequestValidator;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\OpenRegister\Service\Anonymisation\BackendState;
 use OCP\Files\IRootFolder;
@@ -91,6 +92,60 @@ class AnonymizeRequestServiceDetectorTest extends TestCase {
 		$this->assertSame('regex', $response['body']['detection']['backend']);
 
 	}//end testACleanRunAnswersWithTheBackend()
+
+	/**
+	 * The reversible flag travels from the request to the runner, with the acting user;
+	 * leaving it out keeps the run irreversible.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 */
+	public function testTheReversibleFlagReachesTheRunner(): void {
+		$seen = [];
+		$runner = $this->getMockBuilder(DocumentAnonymizeRunner::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['run'])
+			->getMock();
+		$runner->method('run')->willReturnCallback(
+			static function (int $fileId, array $entities, array $options) use (&$seen): array {
+				$seen[] = $options;
+				return ['anonymizedFileId' => 99];
+			}
+		);
+		$service = $this->requestServiceOver(state: DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex'), runner: $runner);
+
+		$service->executeAnonymize(fileId: 42, userId: 'noor', params: [], request: array_merge(self::REQUEST, ['reversible' => true]), outputFormat: 'preserve');
+		$service->executeAnonymize(fileId: 42, userId: 'noor', params: [], request: self::REQUEST, outputFormat: 'preserve');
+
+		$this->assertTrue($seen[0]['reversible']);
+		$this->assertSame('noor', $seen[0]['userId']);
+		$this->assertFalse($seen[1]['reversible']);
+
+	}//end testTheReversibleFlagReachesTheRunner()
+
+	/**
+	 * A reversible flag that is not a boolean is refused, never read as truthy.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 */
+	public function testAReversibleFlagThatIsNotABooleanIsRefused(): void {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$validator = new AnonymizeRequestValidator($l10n);
+		$entities = [['type' => 'PERSON', 'value' => 'Jan Jansen']];
+
+		$refused = $validator->validateBody(params: ['entities' => $entities, 'reversible' => 'false']);
+		$accepted = $validator->validateBody(params: ['entities' => $entities, 'reversible' => true]);
+		$omitted = $validator->validateBody(params: ['entities' => $entities]);
+
+		$this->assertSame(400, $refused['error']['status']);
+		$this->assertTrue($accepted['request']['reversible']);
+		$this->assertFalse($omitted['request']['reversible']);
+
+	}//end testAReversibleFlagThatIsNotABooleanIsRefused()
 
 	/**
 	 * Build the request service over a real AnonymizationService.

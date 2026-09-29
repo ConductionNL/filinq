@@ -1065,6 +1065,13 @@ class AnonymizationServiceTest extends TestCase {
 			verdictRecorder: new RedactionVerdictRecorder(
 				verifier: new RedactionIrreversibilityVerifier(),
 				logger: $logger
+			),
+			pseudonymMaps: new \OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder(
+				pairs: new \OCA\Filinq\Service\Pseudonymisation\PseudonymPairs(),
+				maps: $this->createMock(\OCA\Filinq\Service\Pseudonymisation\PseudonymMapService::class),
+				persistence: $this->createMock(AnonymizationPersistenceService::class),
+				locator: $locator,
+				logger: $logger
 			)
 		);
 

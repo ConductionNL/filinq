@@ -95,6 +95,14 @@ if (is_dir($ocpMigrationDir) === true) {
 	}
 }
 
+// The real ICrypto contract (reversible-pseudonymization): the key store
+// encrypts with it, and a double of the real interface cannot grow a method
+// Nextcloud does not have.
+$ocpCryptoPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Security/ICrypto.php';
+if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto') === false) {
+	require_once $ocpCryptoPath;
+}
+
 $ocpDbExceptionDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/AppFramework/Db';
 if (is_dir($ocpDbExceptionDir) === true) {
 	foreach (['IMapperException.php', 'DoesNotExistException.php'] as $ocpDbFile) {
@@ -244,6 +252,7 @@ if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false)
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
 require_once __DIR__ . '/unit/Service/DetectionStates.php';
 require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
+require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';
 
 // Batch-state fakes (NullCache / in-memory OpenRegister ObjectService) shared
 // by BatchStateServicePersistenceTest and BatchStateRepositoryTest. Same
