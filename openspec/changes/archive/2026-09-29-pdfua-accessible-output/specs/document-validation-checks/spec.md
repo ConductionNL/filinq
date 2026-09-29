@@ -53,14 +53,14 @@ heuristics, not certified PDF/UA (Matterhorn/veraPDF-grade) validation.
 - WHEN validation runs
 - THEN the findings contain `pdf-language-missing`
 - AND contain neither `pdf-not-tagged` nor a false `pdf-title-missing` when a title is present
-- @e2e exclude fixture-permutation matrix; covered by PHPUnit (tests/unit/Service/DocumentValidationServiceTest.php)
+- @e2e exclude fixture-permutation matrix; covered by PHPUnit (tests/unit/Service/Validation/AccessibilityChecksTest.php)
 
 #### Scenario: Accessible fixture passes the accessibility category
 
 - GIVEN the tagged PDF/UA fixture with `/StructTreeRoot`, `/Lang`, a title, and `pdfuaid:part`
 - WHEN validation runs
 - THEN no accessibility-category finding is produced
-- @e2e exclude pure service computation; covered by PHPUnit (tests/unit/Service/DocumentValidationServiceTest.php)
+- @e2e exclude pure service computation; covered by PHPUnit (tests/unit/Service/Validation/AccessibilityChecksTest.php)
 
 #### Scenario: Admin escalates an accessibility check to blocking
 
@@ -68,4 +68,4 @@ heuristics, not certified PDF/UA (Matterhorn/veraPDF-grade) validation.
 - WHEN an untagged PDF is validated
 - THEN `validationStatus` is `failed` via the existing aggregation
 - AND the existing intake 422 gate applies without any new gating mechanism
-- @e2e exclude severity-escalation config permutation; covered by PHPUnit (tests/unit/Service/DocumentValidationServiceTest.php)
+- @e2e exclude severity-escalation config permutation; covered by PHPUnit (tests/unit/Service/Validation/AccessibilityChecksTest.php)

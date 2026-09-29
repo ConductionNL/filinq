@@ -253,3 +253,14 @@ No new schemas → no new seed objects. Test fixtures (committed under
   accessibility findings by default (provisional: yes — they run through
   validation like any document; scan-sourced files will warn, which is the
   truthful state).
+
+## Resolved at apply (2026-09-29)
+
+- `PdfConversionService::convertToPdf()` had no `$opts` parameter at HEAD (the Context above was stale). It now takes `array $opts = []`; `accessible: true` asks only LibreOffice (`LibreOfficeHeadlessBackend::convertTagged()`, JSON filter options `UseTaggedPDF`, `PDFUACompliance`, `SelectPdfVersion` 3 with PDF/A, else 0) and records every other backend as "cannot write tagged PDF".
+- Twig/HTML output goes through `Conversion\AccessiblePdfRenderer`: it sets `<html lang>` and `<title>`, opens the HTML in Writer (`--infilter=HTML (StarWriter)`), and checks the returned bytes with the same heuristics as the validation checks; a PDF without tags, language or title is refused (502), never returned as accessible.
+- LibreOffice's output was read back under the original file name, while soffice names it after the temp input (`input.pdf`), so every LibreOffice conversion failed and fell through. Fixed in the same backend (`exportPdfBytes`), with a test whose runner writes what soffice writes.
+- The template schema has no language field. `DocumentRenderPipeline::buildPdfOptions()` passes `template.language` when a template carries one (register-i18n), and the template name as `templateName`.
+- No schema stores validation findings, so "stored findings" (D4) do not exist. The publication-readiness signal is a fresh validation at hand-off (`POST api/validation/validate`), filtered to the accessibility category, shown before **Publish** on the file viewer (the Woo hand-off from woo-publicatie-pipeline). The pipeline's server-side `PublicationReadiness` does not consult it yet; a blocking severity still stops the hand-off in the UI.
+- Office templates: the conversion option is in place; calling it from filled DOCX templates belongs to office-template-authoring (not built). The DOCX projection of the template lint waits for the same change.
+- Open question 2: anonymisation outputs are validated like any document, so they report accessibility findings by default.
+- Fixtures (tests/sample-documents/pdfua): hand-built minimal PDFs for the tagged variants and one real mPDF output (untagged-mpdf.pdf); LibreOffice could not run in the build sandbox to produce them.

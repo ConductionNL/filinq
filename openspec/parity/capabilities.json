@@ -1561,14 +1561,15 @@
 			"name": "Generate PDFs that a screen reader can read (PDF/UA).",
 			"source": "competitor-derived",
 			"sourceRef": "Xential WCAG-compliant templates",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "No PDF/UA, veraPDF or Matterhorn code anywhere in lib/ (grep for 'PDF/UA'/'pdfua'/'verapdf'/'Matterhorn' returns nothing). openspec/changes/pdfua-accessible-output (0/14), pdfua-verapdf-matterhorn (0/15) and verapdf-validation (0/15) are all unbuilt proposals.",
-				"change": "openspec/changes/pdfua-accessible-output"
+				"evidence": "pdfOptions.accessible on generation: PdfService routes it to Conversion\\AccessiblePdfRenderer (never mPDF), which sets <html lang> (option, template language, default_language; none -> 422) and <title> (option, template name), runs LibreOfficeHeadlessBackend::convertTagged (UseTaggedPDF + PDFUACompliance, PDF/A-3 kept with pdfa) and refuses output without tags, /Lang or title (502); no soffice -> 503 with attempts (DocumentController returns them). PdfConversionService::convertToPdf($file, ['accessible' => true]) for files. Validation: Validation\\AccessibilityChecks adds pdf-not-tagged, pdf-language-missing, pdf-title-missing, pdfua-identifier-missing (category accessibility, warning by default, presence heuristics, not certification). Publish on the file viewer warns on open accessibility findings (AccessibilityPublishWarningModal; blocking severity stops it). Template preview returns a lint (TemplateAccessibilityLint: alt text, heading jumps, table headers, language) shown as a checklist. Tests: AccessibilityChecksTest (fixture PDFs), AccessiblePdfRendererTest, LibreOfficeTaggedExportTest, PdfConversionServiceTaggedTest, TemplateAccessibilityLintTest, vitest accessibility.spec.js. Partial: office templates do not call the accessible path yet (office-template-authoring), no full PDF/UA validator.",
+				"change": "openspec/changes/archive/2026-09-29-pdfua-accessible-output",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it; not built",
+			"reachedOn": "POST api/documents/generate with pdfOptions.accessible; validation result (Validate in My documents); Publish on the file viewer; template editor Preview tab",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "pdfua-accessible-output",

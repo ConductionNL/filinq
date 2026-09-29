@@ -33,6 +33,8 @@ namespace OCA\Filinq\Service;
 use Exception;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Conversion\AccessiblePdfRenderer;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -56,12 +58,14 @@ class PdfService {
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param TemplateRenderer $templateRenderer Template renderer for Twig
+	 * @param AccessiblePdfRenderer|null $accessibleRenderer Tagged (PDF/UA) output; without it an accessible request fails
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly TemplateRenderer $templateRenderer,
+		private readonly ?AccessiblePdfRenderer $accessibleRenderer = null,
 	) {
 
 	}//end __construct()
@@ -80,6 +84,8 @@ class PdfService {
 	 *                       - cropMarks: Add 3mm bleed and crop marks. Default: false
 	 *                       - author: Author name for XMP metadata. Default: Filinq
 	 *                       - caseReference: Case reference for XMP keywords. Default: empty
+	 *                       - accessible: Tagged PDF/UA output through LibreOffice, never mPDF. Default: false
+	 *                       - lang: Document language for accessible output (else the template's, else the instance's)
 	 *
 	 * @return string PDF binary content
 	 *
@@ -481,6 +487,33 @@ class PdfService {
 	}//end applyPrintCss()
 
 	/**
+	 * Accessible output: tagged, with language and title, through LibreOffice.
+	 * mPDF cannot tag, so it is never used for this; without LibreOffice the
+	 * request fails.
+	 *
+	 * @param string $html The rendered HTML.
+	 * @param array<string, mixed> $options The PDF options.
+	 *
+	 * @return string The PDF bytes.
+	 *
+	 * @throws ConversionFailedException When no tagged output can be made.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.2
+	 */
+	private function accessiblePdf(string $html, array $options): string {
+		if ($this->accessibleRenderer === null) {
+			throw new ConversionFailedException(
+				message: 'Accessible PDF output is not available here; no untagged PDF is made instead.',
+				attempts: [['name' => 'mpdf', 'available' => true, 'supports' => false, 'reason' => 'mPDF cannot write tagged PDF']],
+				code: 503
+			);
+		}
+
+		return $this->accessibleRenderer->render(html: $html, options: $options);
+
+	}//end accessiblePdf()
+
+	/**
 	 * Generate a PDF from rendered HTML content
 	 *
 	 * Creates the mPDF temp directory if it does not exist,
@@ -497,6 +530,10 @@ class PdfService {
 	 * @spec openspec/specs/pdf-generation/spec.md
 	 */
 	private function generatePdf(string $html, array $options): string {
+		if (($options['accessible'] ?? false) === true) {
+			return $this->accessiblePdf(html: $html, options: $options);
+		}
+
 		$tempDir = '/tmp/mpdf';
 		$this->ensureTempDirectory(tempDir: $tempDir);
 

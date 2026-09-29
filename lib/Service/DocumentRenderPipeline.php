@@ -122,6 +122,8 @@ class DocumentRenderPipeline {
 	 * @param array $options The request options
 	 *
 	 * @return array The merged PDF options
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
 	 */
 	public function buildPdfOptions(array $template, ?array $huisstijl, array $options): array {
 		$pdfOptions = [
@@ -131,6 +133,17 @@ class DocumentRenderPipeline {
 
 		if ($huisstijl !== null && isset($huisstijl['defaultMargins']) === true) {
 			$pdfOptions['margin'] = $huisstijl['defaultMargins'];
+		}
+
+		// What accessible output needs from the template: its name as the
+		// fallback title, its language when it has one. The caller's own
+		// title and lang (below) win.
+		if (is_string($template['name'] ?? null) === true && $template['name'] !== '') {
+			$pdfOptions['templateName'] = $template['name'];
+		}
+
+		if (is_string($template['language'] ?? null) === true && $template['language'] !== '') {
+			$pdfOptions['templateLanguage'] = $template['language'];
 		}
 
 		if (isset($options['pdfOptions']) === true) {

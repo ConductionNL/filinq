@@ -204,6 +204,9 @@
 					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
 			</div>
+			<TemplateLintChecklist
+				v-if="!previewLoading && previewHtml"
+				:lint="previewLint" />
 			<NcLoadingIcon v-if="previewLoading" />
 			<div v-else-if="previewError" class="template-detail__error">
 				{{ previewError }}
@@ -286,6 +289,7 @@ import {
 	NcTextField,
 } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
@@ -301,6 +305,7 @@ export default {
 		ConditionalSectionDialog,
 		MergeFieldDialog,
 		ConfirmRestoreVersionDialog,
+		TemplateLintChecklist,
 	},
 
 	data() {
@@ -324,6 +329,7 @@ export default {
 			// Preview
 			previewLoading: false,
 			previewHtml: '',
+			previewLint: [],
 			previewError: '',
 			sampleDataJson: '{}',
 			// Versions
@@ -483,10 +489,12 @@ export default {
 				// Ignore JSON parse error; use empty data.
 			}
 			try {
-				this.previewHtml = await this.templateStore.previewTemplate(
+				const preview = await this.templateStore.previewTemplate(
 					this.form.content,
 					sampleData,
 				)
+				this.previewHtml = preview?.html || ''
+				this.previewLint = preview?.lint || []
 			} catch (err) {
 				this.previewError = err.message || t('filinq', 'Preview failed')
 			} finally {

@@ -64,6 +64,10 @@ class ValidationProfileResolver {
 		DocumentValidationService::CHECK_METADATA_INCOMPLETE,
 		DocumentValidationService::CHECK_PDFA_CONFORMANCE,
 		DocumentValidationService::CHECK_PDFA_FONTS,
+		DocumentValidationService::CHECK_PDF_NOT_TAGGED,
+		DocumentValidationService::CHECK_PDF_LANGUAGE_MISSING,
+		DocumentValidationService::CHECK_PDF_TITLE_MISSING,
+		DocumentValidationService::CHECK_PDFUA_IDENTIFIER_MISSING,
 	];
 
 	/**

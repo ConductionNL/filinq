@@ -20,6 +20,7 @@
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\DocumentController;
+use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -296,6 +297,34 @@ class DocumentControllerTest extends TestCase {
 		$this->assertInstanceOf(DataDownloadResponse::class, $result);
 
 	}//end testGenerateReturnsPdfDownload()
+
+	/**
+	 * An accessible request that cannot be met answers with the status and
+	 * every backend's attempt, not a bare 500.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
+	 */
+	public function testAnAccessibleRequestThatCannotBeMetNamesTheAttempts(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['pdfOptions' => ['accessible' => true]]],
+				['filename', 'document', 'besluit'],
+			]);
+		$attempts = [['name' => 'libreoffice_headless', 'available' => false, 'supports' => true, 'reason' => 'backend disabled or soffice binary not found']];
+		$this->documentSvc->method('generateDocument')
+			->willThrowException(new ConversionFailedException(message: 'Accessible PDF output needs LibreOffice.', attempts: $attempts, code: 503));
+
+		$result = $this->controller->generate();
+
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertSame(503, $result->getStatus());
+		$this->assertSame($attempts, $result->getData()['attempts']);
+
+	}//end testAnAccessibleRequestThatCannotBeMetNamesTheAttempts()
 
 	/**
 	 * Test generate returns ODF download for odf format.
