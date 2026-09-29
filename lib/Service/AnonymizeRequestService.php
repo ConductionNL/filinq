@@ -296,6 +296,7 @@ class AnonymizeRequestService {
 	 *
 	 * @throws \OCA\Filinq\Exception\ProhibitionGateException When the prohibition gate fires.
 	 * @throws \OCA\Filinq\Exception\ConversionFailedException When the PDF cascade is exhausted.
+	 * @throws DetectionUnavailableException When no live entity detector is behind the run.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
@@ -407,10 +408,10 @@ class AnonymizeRequestService {
 		);
 
 		$messages = [
-			AnonymiserBackendStateClient::REFUSE_DISABLED => $this->l10n->t(
+			DetectionUnavailableException::REASON_DISABLED => $this->l10n->t(
 				'Anonymisation refused: entity detection is disabled on this instance, so nothing would be found. No file was written.'
 			),
-			AnonymiserBackendStateClient::REFUSE_UNAVAILABLE => $this->l10n->t(
+			DetectionUnavailableException::REASON_UNAVAILABLE => $this->l10n->t(
 				'Anonymisation refused: the entity detector %s is unavailable. No file was written.',
 				[$refusal->getBackend()]
 			),

@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use JsonSerializable;
+use OCA\Filinq\Exception\DetectionUnavailableException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -57,21 +58,21 @@ class AnonymiserBackendStateClient {
 	 *
 	 * @var string
 	 */
-	public const REFUSE_UNKNOWN = 'detection_state_unknown';
+	public const REFUSE_UNKNOWN = DetectionUnavailableException::REASON_UNKNOWN;
 
 	/**
 	 * Refusal: entity recognition is switched off on this instance.
 	 *
 	 * @var string
 	 */
-	public const REFUSE_DISABLED = 'detection_disabled';
+	public const REFUSE_DISABLED = DetectionUnavailableException::REASON_DISABLED;
 
 	/**
 	 * Refusal: the backend OpenRegister would use says it is unavailable.
 	 *
 	 * @var string
 	 */
-	public const REFUSE_UNAVAILABLE = 'detection_backend_unavailable';
+	public const REFUSE_UNAVAILABLE = DetectionUnavailableException::REASON_UNAVAILABLE;
 
 	/**
 	 * Constructor.

@@ -29,9 +29,30 @@ use RuntimeException;
 class DetectionUnavailableException extends RuntimeException {
 
 	/**
+	 * Filinq could not read which detector is live.
+	 *
+	 * @var string
+	 */
+	public const REASON_UNKNOWN = 'detection_state_unknown';
+
+	/**
+	 * Entity recognition is switched off on this instance.
+	 *
+	 * @var string
+	 */
+	public const REASON_DISABLED = 'detection_disabled';
+
+	/**
+	 * The backend OpenRegister would use says it is unavailable.
+	 *
+	 * @var string
+	 */
+	public const REASON_UNAVAILABLE = 'detection_backend_unavailable';
+
+	/**
 	 * Constructor.
 	 *
-	 * @param string $reason  One of AnonymiserBackendStateClient::REFUSE_*.
+	 * @param string $reason  One of the REASON_* constants.
 	 * @param string $message What went wrong, in English, for the log.
 	 * @param string $backend The effective backend OpenRegister named, '' when unknown.
 	 *
