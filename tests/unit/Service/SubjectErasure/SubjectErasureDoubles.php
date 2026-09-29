@@ -35,6 +35,7 @@ use OCA\Filinq\Service\SubjectErasure\SubjectErasureJob;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureLocator;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureObligations;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasurePreview;
+use OCA\Filinq\Service\SubjectErasure\SubjectErasureRecordStanding;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureRules;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
@@ -89,6 +90,20 @@ trait SubjectErasureDoubles {
 	 * @var bool
 	 */
 	protected bool $catalogueDown = false;
+
+	/**
+	 * OpenRegister records by uuid: their `retention` block.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	protected array $records = [];
+
+	/**
+	 * Whether loading an OpenRegister record fails.
+	 *
+	 * @var bool
+	 */
+	protected bool $recordsDown = false;
 
 	/**
 	 * When true the rewrite leaves the content as it was (a detector that missed).
@@ -211,19 +226,22 @@ trait SubjectErasureDoubles {
 		$owner = $this->createMock(IUser::class);
 		$owner->method('getUID')->willReturn('alice');
 		$file->method('getOwner')->willReturn($owner);
-		$file->method('getParent')->willReturnCallback(fn (): Folder => $this->folder());
+		$file->method('getParent')->willReturnCallback(fn (): Folder => $this->folder(name: (string) ($this->files[$fileId]['parent'] ?? 'Documents')));
 
 		return $file;
 
 	}//end fileNode()
 
 	/**
-	 * The one folder every file sits in.
+	 * The folder a file sits in; an object folder is named after the record's uuid.
+	 *
+	 * @param string $name The folder name.
 	 *
 	 * @return Folder The double.
 	 */
-	protected function folder(): Folder {
+	protected function folder(string $name = 'Documents'): Folder {
 		$folder = $this->createMock(Folder::class);
+		$folder->method('getName')->willReturn($name);
 		$folder->method('getNonExistingName')->willReturnCallback(
 			function (string $name): string {
 				$taken = array_column(array_filter($this->files, static fn (array $f): bool => $f['deleted'] === false), 'name');
@@ -557,6 +575,34 @@ trait SubjectErasureDoubles {
 	}//end auditMapper()
 
 	/**
+	 * The record loader over $this->records: throws when $recordsDown, as OpenRegister does when its tables are gone.
+	 *
+	 * @return LegalHoldRecordFreeze The double.
+	 */
+	protected function recordLoader(): LegalHoldRecordFreeze {
+		$loader = $this->createMock(LegalHoldRecordFreeze::class);
+		$loader->method('load')->willReturnCallback(
+			function (string $ref): ?ObjectEntity {
+				if ($this->recordsDown === true) {
+					throw new RuntimeException('object table unavailable');
+				}
+
+				if (isset($this->records[$ref]) === false) {
+					return null;
+				}
+
+				$entity = $this->entity(uuid: $ref, row: []);
+				$entity->setRetention($this->records[$ref]);
+
+				return $entity;
+			}
+		);
+
+		return $loader;
+
+	}//end recordLoader()
+
+	/**
 	 * The real services, wired.
 	 *
 	 * @return array{service: SubjectErasureService, run: SubjectErasureRun} The services.
@@ -579,7 +625,8 @@ trait SubjectErasureDoubles {
 			new LegalHoldCaseRepository($resolver),
 			$finals,
 			$this->createMock(LegalHoldRecordFreeze::class),
-			$this->createMock(LegalHoldFileFreeze::class)
+			$this->createMock(LegalHoldFileFreeze::class),
+			new SubjectErasureRecordStanding($this->recordLoader())
 		);
 		$rules = new SubjectErasureRules();
 		$service = new SubjectErasureService(

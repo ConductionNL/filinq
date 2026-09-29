@@ -30,8 +30,10 @@ use Throwable;
 
 /**
  * Builds, per file, the document shape SubjectErasureRules and
- * SubjectErasurePreview read: `legal_hold` (the covering matters), whether the
- * current version is final, and why a file cannot be processed.
+ * SubjectErasurePreview read: `legal_hold` (the covering matters, or a hold
+ * on the record whose folder holds the file), `retention` (that record is
+ * appraised to be kept permanently), whether the current version is final,
+ * and why a file cannot be processed.
  *
  * Every read that fails refuses rather than clears: a hold register that cannot
  * be read marks every document held, and a finalisation record that cannot be
@@ -56,6 +58,7 @@ class SubjectErasureObligations {
 	 * @param FinalDocumentRepository $finalDocuments The finalisation records.
 	 * @param LegalHoldRecordFreeze   $holdRecords    Loads a held record.
 	 * @param LegalHoldFileFreeze     $holdFiles      The files behind a held record.
+	 * @param SubjectErasureRecordStanding $records   The record behind each file.
 	 */
 	public function __construct(
 		private readonly IRootFolder $rootFolder,
@@ -63,6 +66,7 @@ class SubjectErasureObligations {
 		private readonly FinalDocumentRepository $finalDocuments,
 		private readonly LegalHoldRecordFreeze $holdRecords,
 		private readonly LegalHoldFileFreeze $holdFiles,
+		private readonly SubjectErasureRecordStanding $records,
 	) {
 
 	}//end __construct()
@@ -93,6 +97,9 @@ class SubjectErasureObligations {
 			];
 
 			$document['legal_hold'] = $this->holdOn(held: $held, fileId: $fileId);
+			$record = $this->records->forFile(node: $node);
+			$document['legal_hold'] = $this->joined(first: $document['legal_hold'], second: $record['legal_hold']);
+			$document['retention'] = $record['retention'];
 
 			if ($node === null) {
 				$document['unreadable'] = 'The file no longer exists.';
@@ -117,6 +124,24 @@ class SubjectErasureObligations {
 		return $documents;
 
 	}//end assess()
+
+	/**
+	 * Two standings as one, false when neither stands.
+	 *
+	 * @param string|false $first  One standing.
+	 * @param string|false $second The other.
+	 *
+	 * @return string|false Both, joined.
+	 */
+	private function joined(string|false $first, string|false $second): string|false {
+		$standing = array_filter([$first, $second], static fn (string|false $one): bool => $one !== false);
+		if ($standing === []) {
+			return false;
+		}
+
+		return implode('; ', $standing);
+
+	}//end joined()
 
 	/**
 	 * The file behind an id, across every user, or null.

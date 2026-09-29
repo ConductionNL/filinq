@@ -88,3 +88,9 @@ first.
   preview and the certificate are declared as their own
   `x-openregister-processing` activity, with purpose, ground and
   retention.
+
+## Resolved at apply
+
+- **Where the obligations come from.** Legal hold: an active Filinq `legalHoldCase` whose fan-out covers the file, or an active OpenRegister `retention.legalHold` (placed by anybody) on the record whose folder holds the file. OpenRegister names an object folder after the object's uuid, so the file's parent folder name is the record. Retention: that same record appraised to be kept permanently (`retention.archiefnominatie` or `waardering` `blijvend_bewaren`, `bewaren` or `B`). A record due for destruction carries no duty to keep the name, so it does not refuse. A record that cannot be read refuses on both counts (`SubjectErasureRecordStanding`).
+- **Publication prohibition has no source yet.** Filinq's Woo prohibitions (`PolicyMatchService`, `publicationRecord.prohibitionsClear`) forbid publishing a named person; erasing that person fulfils them rather than breaks them, so they are not a refusal. A record-level restriction on changing a document (MDTO `beperkingGebruik`) is not carried by OpenRegister records today. `SubjectErasureRules` refuses on `publication_prohibition` as soon as a source fills it; until then the row is rated partial.
+- **Republication.** The certificate lists erased documents whose Woo publication is handed off, published or awaiting depublication (`SubjectErasureCertifier::PUBLISHED`). There is no leaf: the page is Filinq's own **Erasure requests** page, so dossiq has nothing to mount.
