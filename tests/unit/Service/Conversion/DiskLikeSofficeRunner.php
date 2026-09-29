@@ -36,6 +36,13 @@ class DiskLikeSofficeRunner extends SofficeProcessRunner {
 	public array $runs = [];
 
 	/**
+	 * The source bytes soffice was given, per run.
+	 *
+	 * @var array<int, string>
+	 */
+	public array $inputs = [];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $pdf The bytes to emit.
@@ -56,6 +63,7 @@ class DiskLikeSofficeRunner extends SofficeProcessRunner {
 	public function run(array $argv, int $timeout, string $tmpDir, string $backendName): int {
 		$this->runs[] = $argv;
 		$input = (string) end($argv);
+		$this->inputs[] = (string) file_get_contents($input);
 		$outdir = $argv[(int) array_search('--outdir', $argv, true) + 1];
 		file_put_contents($outdir . '/' . pathinfo($input, PATHINFO_FILENAME) . '.pdf', $this->pdf);
 		return 0;

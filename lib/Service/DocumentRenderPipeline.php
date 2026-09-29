@@ -133,6 +133,17 @@ class DocumentRenderPipeline {
 			$pdfOptions['margin'] = $huisstijl['defaultMargins'];
 		}
 
+		// What accessible output needs from the template: its name as the
+		// fallback title, its language when it has one. The caller's own
+		// title and lang (below) win.
+		if (is_string($template['name'] ?? null) === true && $template['name'] !== '') {
+			$pdfOptions['templateName'] = $template['name'];
+		}
+
+		if (is_string($template['language'] ?? null) === true && $template['language'] !== '') {
+			$pdfOptions['templateLanguage'] = $template['language'];
+		}
+
 		if (isset($options['pdfOptions']) === true) {
 			$pdfOptions = array_merge($pdfOptions, $options['pdfOptions']);
 		}

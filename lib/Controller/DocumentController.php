@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -496,8 +497,15 @@ class DocumentController extends Controller {
 			context: ['exception' => $exception]
 		);
 
+		$data = ['error' => $exception->getMessage()];
+		if ($exception instanceof ConversionFailedException) {
+			// Which backend was tried and why it could not, e.g. an
+			// accessible request without LibreOffice.
+			$data['attempts'] = $exception->getAttempts();
+		}
+
 		return new JSONResponse(
-			data: ['error' => $exception->getMessage()],
+			data: $data,
 			statusCode: $statusCode
 		);
 
