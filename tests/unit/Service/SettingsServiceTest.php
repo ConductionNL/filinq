@@ -283,7 +283,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.4
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
 	 */
 	public function testReadingOnArrivalDefaultsOnAndIsWritable(): void {
 		$this->mockConfig->method('getValueString')->willReturnCallback(

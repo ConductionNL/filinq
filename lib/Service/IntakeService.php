@@ -94,7 +94,7 @@ class IntakeService {
 	 * @throws IntakeRefusedException When the channel is not one this app accepts.
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
 	 */
 	public function receive(IntakeDocumentReceivedEvent $event): array {
 		$channel = $event->getChannel();

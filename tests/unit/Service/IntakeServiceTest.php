@@ -240,7 +240,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
 	 */
 	public function testAnArrivingScanIsQueuedForReading(): void {
 		$stored = $this->service(rows: [])->receive(event: $this->scanArrives());
@@ -256,7 +256,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
 	 */
 	public function testNothingIsQueuedWhenThereIsNothingToRead(): void {
 		$this->service(rows: [$this->waitingRow()])->receive(event: $this->scanArrives());

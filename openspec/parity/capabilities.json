@@ -918,14 +918,15 @@
 			"name": "Run OCR automatically when a file lands in a folder, without anyone starting it.",
 			"source": "competitor-derived",
 			"sourceRef": "Workflow OCR (Nextcloud app) flow-triggered OCR; Paperless-ngx consumer",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-ocr-on-arrival on 2026-09-28 in the build-all pass. Before: No watched-folder job triggers OCR (lib/BackgroundJob/ has no such job; scan-intake-with-separator-sheets task 3.2 confirms none exists). openspec/changes/ocr-trigger-surface (which would add automatic OCR fallback inside AnonymizationService::extractAndDetectEntities()) is entirely unchecked - task 2.3 unimplemented.",
-				"change": "openspec/changes/intake-ocr-on-arrival"
+				"evidence": "IntakeService::receive() (the one door every intake channel uses) asks IntakeOcrQueue to mark a new document with an image or PDF file `queued` and queues IntakeOcrJob after the save; the job runs Tesseract through OcrService::processNode() with the admin's languages/DPI, stores contentText on intakeDocument (1.2.0) and moves readingState to read, or failed with the reason, via IntakeReadingProgress. Admin setting ocr_on_arrival (default on). IntakeIndex.vue shows the reading state per row. Tests: IntakeServiceTest::testAnArrivingScanIsQueuedForReading / testNothingIsQueuedWhenThereIsNothingToRead, IntakeOcrJobTest (every payload validated against the real intakeDocument fragment), OcrServiceProcessFileTest, vitest intakeReading.spec.js.",
+				"change": "openspec/changes/archive/2026-09-29-intake-ocr-on-arrival",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches it (unbuilt)",
+			"reachedOn": "any document arriving in the intake inbox (scanner folder, mail, digital post); the Text column on the inbox",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "ocr-trigger-surface",

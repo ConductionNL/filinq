@@ -8,7 +8,7 @@
  * A document with no reading state was never queued for reading (not a scan,
  * or reading on arrival is off) and shows nothing.
  *
- * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-2.2
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -18,7 +18,7 @@ import { translate as t } from '@nextcloud/l10n'
  *
  * @param {string|undefined} state queued, reading, read, failed, or nothing.
  * @return {string} The label, or '' when the document is not being read.
- * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-2.2
  */
 export function readingLabel(state) {
 	const labels = {
@@ -37,7 +37,7 @@ export function readingLabel(state) {
  * The badge colour per label.
  *
  * @return {object} Label to CnStatusBadge variant.
- * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-2.2
  */
 export function readingColorMap() {
 	return {

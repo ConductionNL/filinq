@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.3
+ * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Throwable;
 /**
  * Reading on arrival: the mark before the save, the job after it.
  *
- * @spec openspec/changes/intake-ocr-on-arrival/specs/intake-ocr-on-arrival/spec.md
+ * @spec openspec/specs/intake-ocr-on-arrival/spec.md
  */
 class IntakeOcrQueue {
 
@@ -76,7 +76,7 @@ class IntakeOcrQueue {
 	 *
 	 * @return array<string, mixed> The document, with readingState when it will be read.
 	 *
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
 	 */
 	public function mark(array $document): array {
 		if ($this->config->getValueString('filinq', self::SETTING, '1') !== '1') {
@@ -115,7 +115,7 @@ class IntakeOcrQueue {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
 	 */
 	public function queue(array $document): void {
 		if (($document['readingState'] ?? null) !== IntakeReadingProgress::QUEUED || ($document['uuid'] ?? '') === '') {

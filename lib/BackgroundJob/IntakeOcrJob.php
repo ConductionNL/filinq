@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * One reading of one intake document.
  *
- * @spec openspec/changes/intake-ocr-on-arrival/specs/intake-ocr-on-arrival/spec.md
+ * @spec openspec/specs/intake-ocr-on-arrival/spec.md
  */
 class IntakeOcrJob extends QueuedJob {
 
@@ -84,7 +84,7 @@ class IntakeOcrJob extends QueuedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.2
 	 */
 	protected function run(mixed $argument): void {
 		$uuid = (string) ($argument['uuid'] ?? '');

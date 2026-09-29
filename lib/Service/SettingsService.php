@@ -150,7 +150,7 @@ class SettingsService {
 	 * @return array<string, mixed> Feature toggle settings
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.4
+	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
 	 */
 	private function loadFeatureToggles(): array {
 		return [

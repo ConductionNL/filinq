@@ -105,3 +105,28 @@ and the search show something on a clean install.
   stored the document.
 - A failed read leaves the document in the inbox, assignable by hand
   (`IntakeReadingProgress::showsInInbox()`).
+
+## Resolved at apply (2026-09-29)
+
+- **The job does not call `processFile()`.** `processFile(int)` resolves the
+  file through the session user's folder, and a background job has no
+  session, so every read would have failed as "not installed". The job
+  checks `isOcrEnabled()` and `isTesseractAvailable()` itself, resolves the
+  node with `IRootFolder::getFirstNodeById()` and calls
+  `OcrService::processNode()`, which `ocr-trigger-surface` (#1264) added.
+  D5 (images to the image path) landed there; this change adds the
+  `processFile()` test for it.
+- **The trigger lives in `IntakeOcrQueue`.** `receive()` asks it to `mark()`
+  the document (`queued`, through `IntakeReadingProgress`) before the save,
+  and to `queue()` the job after it, so the job gets the stored uuid.
+- **`readingError` is `''`, not `null`.** `IntakeReadingProgress` returned
+  null for "no error", but the register types `readingError` as a string and
+  `intakeDocument` has hardValidation on, so the first `queued` write would
+  have refused the whole arriving document. `IntakeOcrJobTest` validates every
+  payload the job writes against the real fragment; it failed on null first.
+- **Failure reasons are stored in English**, as IntakeReadingProgress already
+  does; the inbox shows the translated state and the reason on hover.
+- **`contentText` is capped** at 500,000 characters.
+- **Seed:** three `intakeDocument` demo objects in the mock register (read,
+  failed, queued), which also clears that schema's gate-101 finding.
+- **Strings:** all six shipped locales.
