@@ -281,3 +281,4 @@ require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
 
 // The veraPDF service over the recorded veraPDF (tests/fixtures/verapdf).
 require_once __DIR__ . '/unit/Service/VeraPdf/VeraPdfDoubles.php';
+require_once __DIR__ . '/unit/Service/Conversion/DiskLikeSofficeRunner.php';
