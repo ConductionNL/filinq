@@ -34,8 +34,6 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
-use OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder;
-use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -65,13 +63,8 @@ class DocumentAnonymizeRunner {
 	 *                                                     publication consents.
 	 * @param GrondslagenSummaryAttacher $summaryAttacher Renders and attaches the per-document
 	 *                                                    grondslagen summary.
-	 * @param RedactionVerdictRecorder $verdictRecorder Verifies the bytes that were actually
-	 *                                                  written and records the verdict on the
-	 *                                                  link, so a published copy can be shown
-	 *                                                  to have been checked.
-	 * @param PseudonymMapRecorder $pseudonymMaps Keeps the key of a reversible run, and removes
-	 *                                            the key of an earlier run when this one is
-	 *                                            irreversible.
+	 * @param AnonymisationRunRecords $runRecords The verdict, the anonymisation link and the
+	 *                                            reversible-pseudonymisation key of a finished run.
 	 *
 	 * @return void
 	 *
@@ -86,8 +79,7 @@ class DocumentAnonymizeRunner {
 		private readonly ReplacementVerificationService $replacementVerifier,
 		private readonly AnonymizationPersistenceService $persistence,
 		private readonly GrondslagenSummaryAttacher $summaryAttacher,
-		private readonly RedactionVerdictRecorder $verdictRecorder,
-		private readonly PseudonymMapRecorder $pseudonymMaps,
+		private readonly AnonymisationRunRecords $runRecords,
 	) {
 
 	}//end __construct()
@@ -337,38 +329,8 @@ class DocumentAnonymizeRunner {
 			);
 		}
 
-		// 🔴 LAST, AND ON THE BYTES THAT WERE ACTUALLY WRITTEN. The grondslagen
-		// summary above appends a page after the redaction, so verifying any
-		// earlier would record a verdict about a file that no longer exists.
-		$resultInfo = $this->verdictRecorder->record(
-			resultInfo: $resultInfo,
-			anonymisedNode: $context['anonymisedNode'],
-			redactedValues: ($context['redactedValues'] ?? []),
-			outputMode: (string)($context['outputMode'] ?? '')
-		);
-
-		if (empty($resultInfo['anonymizedFileId']) === false) {
-			$resultInfo = $this->persistence->recordAnonymizationLink(
-				fileId: $context['fileId'],
-				sourceNode: $context['sourceNode'],
-				resultInfo: $resultInfo
-			);
-
-			// After the link, because the key names it. A reversible run keeps
-			// the key; an irreversible one removes the key an earlier run left.
-			$resultInfo = $this->pseudonymMaps->record(
-				resultInfo: $resultInfo,
-				run: [
-					'fileId' => $context['fileId'],
-					'entities' => ($context['redactedValues'] ?? []),
-					'placeholderMap' => ($context['placeholderMap'] ?? []),
-					'reversible' => ($context['reversible'] ?? false),
-					'scope' => ($context['scope'] ?? 'document'),
-					'userId' => ($context['userId'] ?? ''),
-				]
-			);
-		}
-
-		return $resultInfo;
+		// LAST, after the summary: the verdict is about the bytes actually
+		// written, and the link and the key follow it (AnonymisationRunRecords).
+		return $this->runRecords->record(resultInfo: $resultInfo, context: $context);
 	}//end finaliseResult()
 }//end class

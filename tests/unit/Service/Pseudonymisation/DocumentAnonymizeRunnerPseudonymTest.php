@@ -23,6 +23,7 @@
 declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Pseudonymisation;
+use OCA\Filinq\Service\AnonymisationRunRecords;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\AnonymizationResultParser;
@@ -140,8 +141,11 @@ class DocumentAnonymizeRunnerPseudonymTest extends TestCase {
 			replacementVerifier: new ReplacementVerificationService(logger: $logger),
 			persistence: $persistence,
 			summaryAttacher: $this->createMock(GrondslagenSummaryAttacher::class),
-			verdictRecorder: $verdicts,
-			pseudonymMaps: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger)
+			runRecords: new AnonymisationRunRecords(
+				verdicts: $verdicts,
+				persistence: $persistence,
+				keys: new PseudonymMapRecorder(new PseudonymPairs(), $this->mapService(container: $container), $persistence, $locator, $logger)
+			)
 		);
 
 	}//end runner()

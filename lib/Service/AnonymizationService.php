@@ -506,6 +506,9 @@ class AnonymizationService {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
+	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
 	public function anonymizeDocument(
 		int $fileId,
@@ -573,6 +576,9 @@ class AnonymizationService {
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$reversible` is a request field the
+	 *     caller passes through; it selects no branch here, the runner records it.
 	 */
 	public function anonymizeDocumentWithBasisSummary(
 		int $fileId,

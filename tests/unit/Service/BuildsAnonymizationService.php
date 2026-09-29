@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\AnonymisationRunRecords;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\AnonymizationResultParser;
@@ -113,6 +114,12 @@ trait BuildsAnonymizationService {
 
 		$anonymizeRunner = ($deps['anonymizeRunner'] ?? null);
 		if ($anonymizeRunner === null) {
+			$persistence = new AnonymizationPersistenceService(
+				logger: $logger,
+				locator: $locator,
+				consentCrud: ($deps['consentCrud'] ?? $this->createMock(ConsentCrudService::class)),
+				consentService: ($deps['consentService'] ?? $this->createMock(ConsentService::class))
+			);
 			$anonymizeRunner = new DocumentAnonymizeRunner(
 				logger: $logger,
 				locator: $locator,
@@ -127,26 +134,24 @@ trait BuildsAnonymizationService {
 					pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
 				),
 				replacementVerifier: new ReplacementVerificationService(logger: $logger),
-				persistence: new AnonymizationPersistenceService(
-					logger: $logger,
-					locator: $locator,
-					consentCrud: ($deps['consentCrud'] ?? $this->createMock(ConsentCrudService::class)),
-					consentService: ($deps['consentService'] ?? $this->createMock(ConsentService::class))
-				),
+				persistence: $persistence,
 				summaryAttacher: new GrondslagenSummaryAttacher(
 					logger: $logger,
 					grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
 				),
-				verdictRecorder: new RedactionVerdictRecorder(
-					verifier: new RedactionIrreversibilityVerifier(),
-					logger: $logger
-				),
-				pseudonymMaps: new \OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder(
-					pairs: new \OCA\Filinq\Service\Pseudonymisation\PseudonymPairs(),
-					maps: $this->createMock(\OCA\Filinq\Service\Pseudonymisation\PseudonymMapService::class),
-					persistence: $this->createMock(AnonymizationPersistenceService::class),
-					locator: $locator,
-					logger: $logger
+				runRecords: new AnonymisationRunRecords(
+					verdicts: new RedactionVerdictRecorder(
+						verifier: new RedactionIrreversibilityVerifier(),
+						logger: $logger
+					),
+					persistence: $persistence,
+					keys: new \OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder(
+						pairs: new \OCA\Filinq\Service\Pseudonymisation\PseudonymPairs(),
+						maps: $this->createMock(\OCA\Filinq\Service\Pseudonymisation\PseudonymMapService::class),
+						persistence: $this->createMock(AnonymizationPersistenceService::class),
+						locator: $locator,
+						logger: $logger
+					)
 				)
 			);
 		}
