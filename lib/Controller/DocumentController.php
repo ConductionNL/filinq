@@ -34,6 +34,7 @@ use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\IL10N;
+use OCP\IURLGenerator;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -59,6 +60,7 @@ class DocumentController extends Controller {
 	 * @param IUserSession $userSession User session for authentication
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
+	 * @param IURLGenerator|null $urlGenerator Makes the absolute download URL of a multi-format output
 	 *
 	 * @return void
 	 */
@@ -69,6 +71,7 @@ class DocumentController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
+		private readonly ?IURLGenerator $urlGenerator = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -400,6 +403,17 @@ class DocumentController extends Controller {
 		$output = $result['output'] ?? ['mode' => 'return'];
 		$mode = $output['mode'] ?? 'return';
 
+		if (isset($result['outputs']) === true) {
+			return new JSONResponse(
+				data: [
+					'outputs' => array_map(fn (array $entry): array => $this->manifestEntry(entry: $entry), $result['outputs']),
+					'metadata' => $result['metadata'],
+					'warnings' => $result['warnings'],
+				],
+				statusCode: Http::STATUS_OK
+			);
+		}
+
 		if ($mode === 'files') {
 			return new JSONResponse(
 				data: [
@@ -432,6 +446,9 @@ class DocumentController extends Controller {
 		if ($format === 'odf') {
 			$extension = '.odt';
 			$contentType = 'application/vnd.oasis.opendocument.text';
+		} elseif ($format === 'docx') {
+			$extension = '.docx';
+			$contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 		}
 
 		$basename = pathinfo($filename, PATHINFO_FILENAME);
@@ -448,6 +465,47 @@ class DocumentController extends Controller {
 
 		return $response;
 	}//end buildDocumentResponse()
+
+	/**
+	 * One manifest entry of a multi-format answer.
+	 *
+	 * The download URL is the file's WebDAV address, so the same access
+	 * control as opening it in Files applies.
+	 *
+	 * @param array $entry The output as MultiFormatOutputProducer made it.
+	 *
+	 * @return array{format: string, status: string, fileId: int|null, fileName: string|null,
+	 *               downloadUrl: string|null, size: int|null, error?: string}
+	 *
+	 * @spec openspec/changes/multi-format-output/tasks.md#task-3.1
+	 */
+	private function manifestEntry(array $entry): array {
+		$downloadUrl = null;
+		$path = (string)($entry['path'] ?? '');
+		if (preg_match('#^/([^/]+)/files/(.+)$#', $path, $match) === 1) {
+			$segments = array_map('rawurlencode', explode('/', $match[2]));
+			$davPath = '/remote.php/dav/files/' . rawurlencode($match[1]) . '/' . implode('/', $segments);
+			$downloadUrl = $davPath;
+			if ($this->urlGenerator !== null) {
+				$downloadUrl = $this->urlGenerator->getAbsoluteURL($davPath);
+			}
+		}
+
+		$manifest = [
+			'format' => $entry['format'],
+			'status' => $entry['status'],
+			'fileId' => $entry['fileId'],
+			'fileName' => $entry['fileName'],
+			'downloadUrl' => $downloadUrl,
+			'size' => $entry['size'],
+		];
+		if (isset($entry['error']) === true) {
+			$manifest['error'] = $entry['error'];
+		}
+
+		return $manifest;
+
+	}//end manifestEntry()
 
 	/**
 	 * Attach X-Docudesk-File-Id/X-Docudesk-File-Path headers when the

@@ -257,6 +257,8 @@ $extra = [
 
         // Document generation routes (document-creatie-sjablonen).
         ['name' => 'document#generate', 'url' => 'api/documents/generate', 'verb' => 'POST'],
+        ['name' => 'format#instance', 'url' => 'api/documents/formats', 'verb' => 'GET'],
+        ['name' => 'format#template', 'url' => 'api/templates/{id}/formats', 'verb' => 'GET'],
         ['name' => 'document#preview', 'url' => 'api/documents/generate/preview', 'verb' => 'POST'],
         ['name' => 'document#generateBulk', 'url' => 'api/documents/generate/bulk', 'verb' => 'POST'],
         ['name' => 'document#jobStatus', 'url' => 'api/documents/jobs/{jobId}', 'verb' => 'GET'],

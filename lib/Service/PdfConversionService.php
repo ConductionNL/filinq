@@ -59,6 +59,15 @@ use Throwable;
  */
 class PdfConversionService {
 	/**
+	 * The source types {@see getCapabilities()} asks every backend about.
+	 */
+	private const PROBED_INPUTS = [
+		'html' => 'text/html',
+		'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		'odt' => 'application/vnd.oasis.opendocument.text',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array<int, ConversionBackendInterface> $backends Ordered list of backends; first success wins.
@@ -198,6 +207,53 @@ class PdfConversionService {
 		);
 
 	}//end convertToPdfReporting()
+
+	/**
+	 * What each backend could do right now, without converting anything.
+	 *
+	 * One entry per backend in cascade order, in the shape a
+	 * {@see ConversionFailedException} reports its attempts in (`name`,
+	 * `available`, `supports`, `reason`), where `supports` answers for HTML,
+	 * the intermediate every generated document starts as. `inputs` lists
+	 * which of the probed source types the backend takes. A probe that throws
+	 * reports the backend unavailable with the exception's message; this
+	 * method never throws.
+	 *
+	 * @return array<int, array{name: string, available: bool, supports: bool, inputs: string[], reason: string|null}>
+	 *
+	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.2
+	 */
+	public function getCapabilities(): array {
+		$report = [];
+		foreach ($this->backends as $backend) {
+			if ($backend instanceof ConversionBackendInterface === false) {
+				continue;
+			}
+
+			$entry = ['name' => $backend->name(), 'available' => false, 'supports' => false, 'inputs' => [], 'reason' => null];
+			try {
+				$entry['available'] = $backend->isAvailable();
+				foreach (self::PROBED_INPUTS as $ext => $mime) {
+					if ($backend->canHandle($mime, $ext) === true) {
+						$entry['inputs'][] = $ext;
+					}
+				}
+
+				$entry['supports'] = in_array('html', $entry['inputs'], true);
+				if ($entry['available'] === false) {
+					$entry['reason'] = 'backend disabled or prerequisites not present';
+				}
+			} catch (Throwable $e) {
+				$entry['available'] = false;
+				$entry['reason'] = 'availability probe failed: ' . $e->getMessage();
+			}
+
+			$report[] = $entry;
+		}//end foreach
+
+		return $report;
+
+	}//end getCapabilities()
 
 	/**
 	 * Tagged (PDF/UA) conversion: only LibreOffice can tag, so every other

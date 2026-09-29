@@ -243,6 +243,65 @@ class CorrespondenceServiceTest extends TestCase {
 	}//end testGenerateHtml()
 
 	/**
+	 * A DOCX letter goes through the shared converter; without LibreOffice it
+	 * is a 503 with the matrix's reason, as before the extraction.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.1
+	 */
+	public function testDocxGoesThroughTheSharedConverter(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Test', 'content' => '<p>Hello</p>']);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>Hello</p>');
+		$this->rasterizer->method('rasterizeInlineSvg')->willReturn(['html' => '<p>Hello</p>', 'warnings' => []]);
+		$logEntity = $this->createMock(ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+		$this->objectSvc->method('saveObject')->willReturn($logEntity);
+
+		$office = $this->createMock(\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter::class);
+		$office->method('isAvailable')->willReturn(true);
+		$office->expects($this->once())->method('toDocx')->with('<p>Hello</p>')->willReturn('PK letter');
+		$service = $this->serviceWith(office: $office);
+
+		$result = $service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+		$this->assertSame('PK letter', $result['content']);
+
+		try {
+			$this->serviceWith(office: null)->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+			$this->fail('A DOCX letter was made without LibreOffice.');
+		} catch (\Exception $e) {
+			$this->assertSame(503, $e->getCode());
+			$this->assertSame(\OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, $e->getMessage());
+		}
+
+	}//end testDocxGoesThroughTheSharedConverter()
+
+	/**
+	 * The service as setUp() builds it, with the given office converter.
+	 *
+	 * @param \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter|null $office The converter.
+	 *
+	 * @return CorrespondenceService
+	 */
+	private function serviceWith(?\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter $office): CorrespondenceService {
+		$reflection = new \ReflectionClass($this->service);
+		$args = [];
+		foreach ($reflection->getConstructor()->getParameters() as $parameter) {
+			if ($parameter->getName() === 'officeConverter') {
+				$args[] = $office;
+				continue;
+			}
+
+			$property = $reflection->getProperty($parameter->getName());
+			$args[] = $property->getValue($this->service);
+		}
+
+		return new CorrespondenceService(...$args);
+
+	}//end serviceWith()
+
+	/**
 	 * Test invalid format throws exception
 	 *
 	 * @return void

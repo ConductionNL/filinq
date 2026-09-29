@@ -28,6 +28,8 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
+use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
+use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -57,6 +59,7 @@ class DocumentRenderPipeline {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
 	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
+	 * @param HtmlToOfficeConverter|null $officeConverter Makes DOCX and ODT; without it both answer 503
 	 *
 	 * @return void
 	 */
@@ -67,6 +70,7 @@ class DocumentRenderPipeline {
 		private readonly LoggerInterface $logger,
 		private readonly SvgRasterizer $svgRasterizer,
 		private readonly ?ObjectionTermCalculator $objectionTerm = null,
+		private readonly ?HtmlToOfficeConverter $officeConverter = null,
 	) {
 
 	}//end __construct()
@@ -220,14 +224,15 @@ class DocumentRenderPipeline {
 	 * Produce output in the requested format.
 	 *
 	 * @param string $htmlContent The rendered HTML content
-	 * @param string $format The output format (pdf, odf, html)
+	 * @param string $format The output format (pdf, odf, docx, html)
 	 * @param array $pdfOptions The PDF generation options
 	 *
-	 * @return string The generated content (binary for pdf/odf, string for html)
+	 * @return string The generated content (binary for pdf/odf/docx, string for html)
 	 *
 	 * @throws Exception If output generation fails
 	 *
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-007
+	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.5
 	 */
 	public function produceOutput(string $htmlContent, string $format, array $pdfOptions): string {
 		$this->lastOutputWarnings = [];
@@ -236,9 +241,8 @@ class DocumentRenderPipeline {
 			case 'html':
 				return $htmlContent;
 			case 'odf':
-				$rasterized = $this->svgRasterizer->rasterizeInlineSvg(html: $htmlContent, format: 'odf');
-				$this->lastOutputWarnings = $rasterized['warnings'];
-				return $this->convertToOdf(htmlContent: $rasterized['html']);
+			case 'docx':
+				return $this->convertToOffice(htmlContent: $htmlContent, format: $format);
 			case 'pdf':
 			default:
 				return $this->pdfService->renderPdf(
@@ -263,66 +267,33 @@ class DocumentRenderPipeline {
 	}//end getLastOutputWarnings()
 
 	/**
-	 * Convert HTML to ODF (.odt) using LibreOffice headless.
+	 * Convert HTML to DOCX or ODT through the shared LibreOffice converter.
 	 *
-	 * @param string $htmlContent The HTML content to convert
+	 * Charts arrive as inline SVG, which an office file cannot carry, so they
+	 * are rasterised first; the warnings name what could not be.
 	 *
-	 * @return string The ODT binary content
+	 * @param string $htmlContent The rendered HTML.
+	 * @param string $format      odf or docx.
 	 *
-	 * @throws Exception If LibreOffice is not available or conversion fails
+	 * @return string The file's bytes.
 	 *
-	 * @psalm-suppress ForbiddenCode shell_exec is required to locate the LibreOffice binary
+	 * @throws Exception 503 with the matrix's reason when LibreOffice is unavailable.
+	 *
+	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.5
 	 */
-	private function convertToOdf(string $htmlContent): string {
-		$soffice = trim((string)shell_exec('which soffice 2>/dev/null'));
-		if (empty($soffice) === true) {
-			throw new Exception(
-				message: 'ODF conversion service unavailable: LibreOffice is not installed',
-				code: 503
-			);
+	private function convertToOffice(string $htmlContent, string $format): string {
+		if ($this->officeConverter === null || $this->officeConverter->isAvailable() === false) {
+			throw new Exception(message: LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, code: 503);
 		}
 
-		$tempDir = '/tmp/filinq_odf_convert';
-		if (file_exists($tempDir) === false) {
-			mkdir($tempDir, 0700, true);
+		$rasterized = $this->svgRasterizer->rasterizeInlineSvg(html: $htmlContent, format: $format);
+		$this->lastOutputWarnings = $rasterized['warnings'];
+
+		if ($format === 'docx') {
+			return $this->officeConverter->toDocx(html: $rasterized['html']);
 		}
 
-		$tempFile = $tempDir . '/' . uniqid('odf_') . '.html';
-		file_put_contents($tempFile, $htmlContent);
+		return $this->officeConverter->toOdt(html: $rasterized['html']);
 
-		try {
-			$outDir = escapeshellarg($tempDir);
-			$inFile = escapeshellarg($tempFile);
-			$command = escapeshellcmd($soffice) . " --headless --convert-to odt --outdir {$outDir} {$inFile} 2>&1";
-
-			$output = [];
-			$returnCode = 0;
-			exec($command, $output, $returnCode);
-
-			if ($returnCode !== 0) {
-				throw new Exception(
-					message: 'ODF conversion failed: ' . implode("\n", $output),
-					code: 500
-				);
-			}
-
-			$odtFile = preg_replace('/\.html$/', '.odt', $tempFile);
-			if (file_exists($odtFile) === false) {
-				throw new Exception(
-					message: 'ODF output file not found after conversion',
-					code: 500
-				);
-			}
-
-			$content = file_get_contents($odtFile);
-			unlink($odtFile);
-
-			return $content;
-		} finally {
-			if (file_exists($tempFile) === true) {
-				unlink($tempFile);
-			}
-		}//end try
-
-	}//end convertToOdf()
+	}//end convertToOffice()
 }//end class

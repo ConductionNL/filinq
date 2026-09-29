@@ -172,6 +172,77 @@ class DocumentControllerTest extends TestCase {
 	}//end testGenerateReturnsFileRefsForFilesMode()
 
 	/**
+	 * A multi-format request answers with a manifest: one entry per format,
+	 * the WebDAV address to download it, and a failed format's error.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/multi-format-output/tasks.md#task-3.1
+	 */
+	public function testGenerateAnswersAManifestForSeveralFormats(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['formats' => ['pdf', 'docx']]],
+				['filename', 'document', 'besluit'],
+			]);
+		$this->documentSvc->method('generateDocument')
+			->willReturn([
+				'content' => '',
+				'format' => 'pdf',
+				'metadata' => ['id' => 'doc-1'],
+				'warnings' => ['w'],
+				'output' => ['mode' => 'files', 'fileId' => 7, 'path' => '/clerk/files/DocuDesk/b/besluit.pdf', 'name' => 'besluit.pdf', 'size' => 9],
+				'outputs' => [
+					['format' => 'pdf', 'status' => 'generated', 'fileId' => 7, 'fileName' => 'besluit.pdf', 'path' => '/clerk/files/DocuDesk/b b/besluit.pdf', 'size' => 9],
+					['format' => 'docx', 'status' => 'failed', 'fileId' => null, 'fileName' => null, 'path' => null, 'size' => null, 'error' => 'LibreOffice is not available on this server'],
+				],
+			]);
+
+		$result = $this->controller->generate();
+
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertSame(200, $result->getStatus());
+		$data = $result->getData();
+		$this->assertSame(['w'], $data['warnings']);
+		$this->assertSame(
+			['format' => 'pdf', 'status' => 'generated', 'fileId' => 7, 'fileName' => 'besluit.pdf', 'downloadUrl' => '/remote.php/dav/files/clerk/DocuDesk/b%20b/besluit.pdf', 'size' => 9],
+			$data['outputs'][0]
+		);
+		$this->assertSame('failed', $data['outputs'][1]['status']);
+		$this->assertNull($data['outputs'][1]['downloadUrl']);
+		$this->assertSame('LibreOffice is not available on this server', $data['outputs'][1]['error']);
+
+	}//end testGenerateAnswersAManifestForSeveralFormats()
+
+	/**
+	 * A single DOCX is a Word download.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/multi-format-output/tasks.md#task-2.5
+	 */
+	public function testGenerateDownloadsADocx(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['format' => 'docx']],
+				['filename', 'document', 'besluit'],
+			]);
+		$this->documentSvc->method('generateDocument')
+			->willReturn(['content' => 'PK', 'format' => 'docx', 'metadata' => [], 'warnings' => [], 'output' => ['mode' => 'return']]);
+
+		$result = $this->controller->generate();
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $result);
+		$this->assertSame('application/vnd.openxmlformats-officedocument.wordprocessingml.document', $result->getHeaders()['Content-Type']);
+		$this->assertStringContainsString('besluit.docx', $result->getHeaders()['Content-Disposition']);
+
+	}//end testGenerateDownloadsADocx()
+
+	/**
 	 * Test generate returns the binary download PLUS storage headers for
 	 * output.mode "both" (REQ-DDOB-001).
 	 *
