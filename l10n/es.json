@@ -1,5 +1,11 @@
 {
     "translations": {
+        "LibreSign (certificate)": "LibreSign (certificado)",
+        "LibreSign is chosen but the LibreSign app is not enabled. Signing requests fail until you enable it or choose another provider.": "LibreSign está elegido, pero la app LibreSign no está activada. Las solicitudes de firma fallan hasta que la active o elija otro proveedor.",
+        "LibreSign certificate is qualified": "El certificado de LibreSign es cualificado",
+        "Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).": "Actívelo solo cuando LibreSign firme con un certificado cualificado de un prestador de servicios de confianza. Solo entonces una solicitud puede pedir una firma cualificada (QES).",
+        "Provider request": "Solicitud en el proveedor",
+        "The request at the signing provider that runs the signer flow, for LibreSign its file uuid. Empty for the native provider.": "La solicitud en el proveedor de firma que guía a los firmantes, para LibreSign el uuid del archivo. Vacío con el proveedor integrado.",
         "Duplex, colour, paper tray and stapling for the printer.": "Doble cara, color, bandeja de papel y grapado para la impresora.",
         "Errors": "Errores",
         "How many letters could not be made.": "Cuántas cartas no se pudieron crear.",

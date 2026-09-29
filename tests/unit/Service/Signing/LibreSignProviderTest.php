@@ -65,8 +65,8 @@ class LibreSignProviderTest extends TestCase {
 	 */
 	private function provider(bool $qualified = false): LibreSignProvider {
 		$config = $this->createMock(IAppConfig::class);
-		$config->method('getValueBool')->willReturnCallback(
-			static fn (string $app, string $key, bool $default = false): bool => ($key === 'libresign_qualified') ? $qualified : $default
+		$config->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => ($key === 'libresign_qualified') ? ($qualified ? '1' : '0') : $default
 		);
 
 		return new LibreSignProvider(config: $config, client: $this->client);

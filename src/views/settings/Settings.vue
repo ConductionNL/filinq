@@ -576,13 +576,50 @@
 						<option value="validsign">
 							{{ t('filinq', 'ValidSign') }}
 						</option>
+						<option v-if="libresignAvailable" value="libresign">
+							{{ t('filinq', 'LibreSign (certificate)') }}
+						</option>
 					</select>
 				</div>
+				<NcNoteCard
+					v-if="
+						settings.signing_provider === 'libresign'
+						&& !libresignAvailable
+					"
+					type="error">
+					{{
+						t(
+							'filinq',
+							'LibreSign is chosen but the LibreSign app is not enabled. Signing requests fail until you enable it or choose another provider.',
+						)
+					}}
+				</NcNoteCard>
 				<div class="setting-description">
 					{{
 						t(
 							'filinq',
 							'The signing provider to use for new signing requests',
+						)
+					}}
+				</div>
+			</div>
+
+			<div
+				v-if="settings.signing_provider === 'libresign'"
+				class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'LibreSign certificate is qualified') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:aria-label="t('filinq', 'LibreSign certificate is qualified')"
+					:modelValue="settings.libresign_qualified"
+					type="switch"
+					@update:modelValue="settings.libresign_qualified = $event" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).',
 						)
 					}}
 				</div>
@@ -879,6 +916,7 @@ export default {
 			saving: false,
 			isAdmin: false,
 			openRegisterInstalled: false,
+			libresignAvailable: false,
 			anonymiserBackend: {
 				method: 'regex',
 				appApiInstalled: false,
@@ -910,6 +948,7 @@ export default {
 				ocr_dpi: 300,
 				signing_enabled: false,
 				signing_provider: 'native',
+				libresign_qualified: false,
 				signing_default_level: 'SES',
 				signing_request_expiry_days: 30,
 				signing_guardian_consent_age: 16,
@@ -1076,6 +1115,7 @@ export default {
 				.then((response) => response.json())
 				.then((data) => {
 					this.openRegisterInstalled = data.openRegisters
+					this.libresignAvailable = data.libresignAvailable === true
 					this.isAdmin = data.isAdmin ?? false
 					this.settingsData = data
 					this.availableRegisters = data.availableRegisters
@@ -1108,6 +1148,9 @@ export default {
 						data.signing_enabled === '1' || data.signing_enabled === true
 					this.settings.signing_provider =
 						data.signing_provider || 'native'
+					this.settings.libresign_qualified =
+						data.libresign_qualified === true
+						|| data.libresign_qualified === '1'
 					this.settings.signing_default_level =
 						data.signing_default_level || 'SES'
 					this.settings.signing_request_expiry_days =
@@ -1299,6 +1342,7 @@ export default {
 				ocr_dpi: String(this.settings.ocr_dpi),
 				signing_enabled: this.settings.signing_enabled ? '1' : '0',
 				signing_provider: this.settings.signing_provider || 'native',
+				libresign_qualified: this.settings.libresign_qualified ? '1' : '0',
 				signing_default_level: this.settings.signing_default_level || 'SES',
 				signing_request_expiry_days: String(
 					this.settings.signing_request_expiry_days || 30,

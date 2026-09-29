@@ -159,6 +159,30 @@ class SettingsControllerTest extends TestCase {
 	}//end testLoadIsRefusedWithoutASession()
 
 	/**
+	 * The provider picker learns whether LibreSign can sign.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-2.2
+	 */
+	public function testIndexSaysWhetherLibreSignIsAvailable(): void {
+		foreach ([true, false] as $enabled) {
+			$appManager = $this->createMock(IAppManager::class);
+			$appManager->method('getInstalledApps')->willReturn([]);
+			$appManager->method('isEnabledForAnyone')->willReturnCallback(
+				static fn (string $appId): bool => $appId === 'libresign' && $enabled
+			);
+			$settingsService = $this->createMock(SettingsService::class);
+			$settingsService->method('getAllSettings')->willReturn([]);
+
+			$data = $this->controller(settingsService: $settingsService, appManager: $appManager)->index()->getData();
+
+			$this->assertSame($enabled, $data['libresignAvailable']);
+		}
+
+	}//end testIndexSaysWhetherLibreSignIsAvailable()
+
+	/**
 	 * Build a SettingsController over doubles.
 	 *
 	 * @param SettingsService $settingsService The settings service double.
@@ -171,6 +195,7 @@ class SettingsControllerTest extends TestCase {
 		SettingsService $settingsService,
 		bool $isAdmin = true,
 		?string $user = 'alice',
+		?IAppManager $appManager = null,
 	): SettingsController {
 		$userSession = $this->createMock(IUserSession::class);
 		if ($user === null) {
@@ -190,7 +215,7 @@ class SettingsControllerTest extends TestCase {
 		return new SettingsController(
 			'filinq',
 			$request,
-			$this->createMock(IAppManager::class),
+			($appManager ?? $this->createMock(IAppManager::class)),
 			$groupManager,
 			$userSession,
 			new NullLogger(),

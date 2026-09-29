@@ -220,6 +220,25 @@ class SettingsServiceTest extends TestCase {
 	}//end testUpdateSettingsAcceptsOcrKeys()
 
 	/**
+	 * The admin may mark LibreSign's certificate qualified.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/libresign-signing-provider/tasks.md#task-2.2
+	 */
+	public function testUpdateSettingsAcceptsTheLibreSignQualifiedSwitch(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'libresign_qualified', '1');
+		$this->mockConfig->method('getValueString')->willReturn('1');
+
+		$result = $this->settingsService->updateSettings(['libresign_qualified' => true]);
+
+		$this->assertSame('1', $result['libresign_qualified']);
+
+	}//end testUpdateSettingsAcceptsTheLibreSignQualifiedSwitch()
+
+	/**
 	 * Test updateSettings persists values for allowlisted keys
 	 *
 	 * @return void

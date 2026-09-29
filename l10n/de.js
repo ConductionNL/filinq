@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "LibreSign (certificate)": "LibreSign (Zertifikat)",
+        "LibreSign is chosen but the LibreSign app is not enabled. Signing requests fail until you enable it or choose another provider.": "LibreSign ist ausgewählt, aber die LibreSign-App ist nicht aktiviert. Signaturanfragen schlagen fehl, bis Sie sie aktivieren oder einen anderen Anbieter wählen.",
+        "LibreSign certificate is qualified": "LibreSign-Zertifikat ist qualifiziert",
+        "Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).": "Schalten Sie dies nur ein, wenn LibreSign mit einem qualifizierten Zertifikat eines Vertrauensdiensteanbieters signiert. Nur dann kann eine Anfrage eine qualifizierte Signatur (QES) verlangen.",
+        "Provider request": "Anfrage beim Anbieter",
+        "The request at the signing provider that runs the signer flow, for LibreSign its file uuid. Empty for the native provider.": "Die Anfrage beim Signaturanbieter, der die Unterzeichnenden führt, bei LibreSign die UUID der Datei. Leer beim integrierten Anbieter.",
         "Duplex, colour, paper tray and stapling for the printer.": "Duplex, Farbe, Papierfach und Heften für den Drucker.",
         "Errors": "Fehler",
         "How many letters could not be made.": "Wie viele Briefe nicht erstellt werden konnten.",

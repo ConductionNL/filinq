@@ -1,5 +1,11 @@
 {
     "translations": {
+        "LibreSign (certificate)": "LibreSign (certificaat)",
+        "LibreSign is chosen but the LibreSign app is not enabled. Signing requests fail until you enable it or choose another provider.": "LibreSign is gekozen, maar de LibreSign-app is niet ingeschakeld. Ondertekeningsverzoeken mislukken totdat je hem inschakelt of een andere provider kiest.",
+        "LibreSign certificate is qualified": "LibreSign-certificaat is gekwalificeerd",
+        "Turn this on only when LibreSign signs with a qualified certificate from a trust service provider. Only then can a request ask for a qualified signature (QES).": "Zet dit alleen aan als LibreSign ondertekent met een gekwalificeerd certificaat van een vertrouwensdienstverlener. Alleen dan kan een verzoek om een gekwalificeerde handtekening (QES) vragen.",
+        "Provider request": "Verzoek bij de provider",
+        "The request at the signing provider that runs the signer flow, for LibreSign its file uuid. Empty for the native provider.": "Het verzoek bij de ondertekeningsprovider die de ondertekenaars begeleidt, voor LibreSign de uuid van het bestand. Leeg bij de ingebouwde provider.",
         "Duplex, colour, paper tray and stapling for the printer.": "Dubbelzijdig, kleur, papierlade en nieten voor de printer.",
         "Errors": "Fouten",
         "How many letters could not be made.": "Hoeveel brieven niet gemaakt konden worden.",
