@@ -6747,6 +6747,57 @@
         "maxSizeBytes": 0,
         "refuseUnknownType": false,
         "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "entitySearchLog",
+          "slug": "demostad-entiteitzoeken-001"
+        },
+        "action": "search",
+        "queryDigest": "b8004f1d6937db197b6600a8a90f12914a0c1632e39e18f504d1983639840eb4",
+        "typeFilter": "PERSON",
+        "categoryFilter": "",
+        "resultCount": 2,
+        "entityRef": "",
+        "occurrenceCount": 0,
+        "collectedInto": "",
+        "performedBy": "seed-user-privacy",
+        "performedAt": "2026-09-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "entitySearchLog",
+          "slug": "demostad-entiteitzoeken-002"
+        },
+        "action": "detail",
+        "queryDigest": "",
+        "typeFilter": "",
+        "categoryFilter": "",
+        "resultCount": 0,
+        "entityRef": "00000000-0000-0000-0000-000000000031",
+        "occurrenceCount": 3,
+        "collectedInto": "",
+        "performedBy": "seed-user-privacy",
+        "performedAt": "2026-09-01T09:02:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "entitySearchLog",
+          "slug": "demostad-entiteitzoeken-003"
+        },
+        "action": "search",
+        "queryDigest": "8bccb7e96009fdbd077471884d187bf5a63f0eb5249949505528a24c5c7c9381",
+        "typeFilter": "IBAN",
+        "categoryFilter": "",
+        "resultCount": 0,
+        "entityRef": "",
+        "occurrenceCount": 0,
+        "collectedInto": "",
+        "performedBy": "seed-user-woo",
+        "performedAt": "2026-09-02T14:30:00+00:00"
       }
     ]
   }

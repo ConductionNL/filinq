@@ -220,6 +220,10 @@ $extra = [
         ['name' => 'legalHoldCase#addScope', 'url' => 'api/legal-holds/{id}/scope', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#retry', 'url' => 'api/legal-holds/{id}/retry', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#release', 'url' => 'api/legal-holds/{id}/release', 'verb' => 'POST'],
+        // Entity search (entity-search): gate, log and enrichment in EntitySearchService; access before {entityUuid}.
+        ['name' => 'entitySearch#access', 'url' => 'api/entity-search/access', 'verb' => 'GET'],
+        ['name' => 'entitySearch#index', 'url' => 'api/entity-search', 'verb' => 'GET'],
+        ['name' => 'entitySearch#show', 'url' => 'api/entity-search/{entityUuid}', 'verb' => 'GET'],
         // Subject erasure (erase-a-person-while-the-records-stay): authority checked in the services.
         ['name' => 'subjectErasure#index', 'url' => 'api/subject-erasures', 'verb' => 'GET'],
         ['name' => 'subjectErasure#create', 'url' => 'api/subject-erasures', 'verb' => 'POST'],
