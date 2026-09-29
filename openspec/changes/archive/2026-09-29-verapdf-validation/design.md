@@ -262,3 +262,10 @@ but rule-failing file, and a non-embedded-font import wrapped by
   heuristics — follow-up decision with the pdfua capability owner; the
   category naming here (`archival` vs `accessibility`) deliberately leaves
   that door open.
+
+## Resolved at apply (2026-09-29)
+
+- The report is keyed by `fileId` plus `subject` (`file` or `conversionOutput`), not `fileId` alone: a PDF/A-3 conversion's report is stored on its source file, and keying by file id only would let it overwrite the file's own report. Re-running a check still updates the one report per file and subject.
+- The schema also carries `checksum` (SHA-256 of the bytes checked) and `durationMs`; both are references, not content.
+- The document detail surface is the file viewer (**PDF/A report** button, `ConformanceReportModal`), since My documents has no separate detail page.
+- Open question 1 (eml-pdf-assembly): its docs now point at the integrated check; no auto-validation hook added beyond the conversion path.
