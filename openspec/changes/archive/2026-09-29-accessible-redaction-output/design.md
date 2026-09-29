@@ -234,9 +234,13 @@ outcomes remain readable.
 
 - **OpenRegister's argument is `preserveStructure`, not `preserveTags`.** It is
   the fifth positional argument of `FileService::anonymizeDocument()` (tri-state,
-  null = auto). `DocumentAnonymizeRunner` passes `true` (or `false` when
-  `filinq.redaction.preserve_tags_default` is `false`); an older OpenRegister
-  ignores the extra argument. The report is read with
+  null = auto). `DocumentAnonymizeRunner` passes what
+  `AnonymisationRunRecords::preserveStructure()` answers (`true`, or `false`
+  when `filinq.redaction.preserve_tags_default` is `false`); an older
+  OpenRegister ignores the extra argument. The assessment runs in
+  `AnonymisationRunRecords::record()`, on the bytes actually written (after
+  the grondslagen summary page), because the runner sits at phpmd's coupling
+  and parameter limits. The report is read with
   `FileService::getLastStructurePreservation()` through
   `OpenRegisterServiceLocator::lastStructurePreservation()` (method_exists
   guard; nothing reported is `unknown`). Batch and folder runs go through the
