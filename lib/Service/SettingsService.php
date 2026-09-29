@@ -225,6 +225,12 @@ class SettingsService {
 			// OCR document scanning (ocr-document-scanning) and reading on
 			// arrival (intake-ocr-on-arrival).
 			...$this->loadOcrSettings(),
+			// Reversible pseudonymisation: the groups that may restore names,
+			// besides admins. A list that does not decode reads as [] here;
+			// PseudonymRestoreGate reads the raw value and refuses everyone.
+			'pseudonymisation_restore_allowed_groups' => $this->decodeList(
+				raw: $this->config->getValueString($this->appName, 'pseudonymisation_restore_allowed_groups', '[]')
+			),
 			// Propose-grondslag-per-entity-type — instance-global map of
 			// entity type → base slug(s), used to pre-fill a proposed
 			// grondslag onto freshly-detected entities. Decoded to an
@@ -304,6 +310,7 @@ class SettingsService {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.3
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
 	 */
 	public function getAllSettings(): array {
 		$data = [
@@ -348,6 +355,25 @@ class SettingsService {
 		}//end try
 
 	}//end getAllSettings()
+
+	/**
+	 * A stored JSON list of strings, or [] when it is not one.
+	 *
+	 * @param string $raw The stored value.
+	 *
+	 * @return array<int, string> The strings in it.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-3.2
+	 */
+	private function decodeList(string $raw): array {
+		$decoded = json_decode($raw, true);
+		if (is_array($decoded) === false) {
+			return [];
+		}
+
+		return array_values(array_filter($decoded, 'is_string'));
+
+	}//end decodeList()
 
 	/**
 	 * Convert a setting value to string for storage
@@ -395,6 +421,7 @@ class SettingsService {
 		'ocr_languages',
 		'ocr_dpi',
 		'ocr_on_arrival',
+		'pseudonymisation_restore_allowed_groups',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 	];

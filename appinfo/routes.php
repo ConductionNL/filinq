@@ -209,6 +209,9 @@ $extra = [
         ['name' => 'ocr#index', 'url' => 'api/ocr', 'verb' => 'GET'],
         ['name' => 'ocr#run', 'url' => 'api/ocr/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'ocr#show', 'url' => 'api/ocr/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // Reversible pseudonymisation: does a redacted copy keep a key, and restore it (gated, audited).
+        ['name' => 'pseudonymisation#status', 'url' => 'api/pseudonymisation/status/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'pseudonymisation#restore', 'url' => 'api/pseudonymisation/{linkId}/restore', 'verb' => 'POST'],
         ['name' => 'printJob#index', 'url' => 'api/print/jobs', 'verb' => 'GET'],
         ['name' => 'printJob#create', 'url' => 'api/print/jobs', 'verb' => 'POST'],
         ['name' => 'printJob#batch', 'url' => 'api/print/batch', 'verb' => 'POST'],

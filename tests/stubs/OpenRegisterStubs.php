@@ -38,6 +38,8 @@ class ObjectService {
 	 * @param string $schema Schema slug
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param bool $_render False returns the stored row: no writeOnly strip, no RBAC projection.
+	 * @param bool $_audit False skips the read audit entry.
 	 *
 	 * @return mixed
 	 */
@@ -47,6 +49,8 @@ class ObjectService {
 		string $schema = '',
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
 	) {
 		return null;
 	}//end find()
@@ -981,6 +985,9 @@ class AuditTrailMapper {
 	 * @param ObjectEntity $object The object the entry relates to.
 	 * @param string $action The action type.
 	 * @param array $context Additional context data.
+	 * @param string|null $actorId The acting user, null for the session user.
+	 * @param string|null $actorName The acting user's display name.
+	 * @param string|null $ipAddress The request's address.
 	 *
 	 * @return AuditTrail
 	 */
@@ -988,6 +995,9 @@ class AuditTrailMapper {
 		ObjectEntity $object,
 		string $action,
 		array $context = [],
+		?string $actorId = null,
+		?string $actorName = null,
+		?string $ipAddress = null,
 	): AuditTrail {
 		$trail = new AuditTrail();
 		$trail->setObjectUuid($object->getUuid());

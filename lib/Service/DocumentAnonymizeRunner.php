@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use Psr\Log\LoggerInterface;
 
@@ -68,8 +69,13 @@ class DocumentAnonymizeRunner {
 	 *                                                  written and records the verdict on the
 	 *                                                  link, so a published copy can be shown
 	 *                                                  to have been checked.
+	 * @param PseudonymMapRecorder $pseudonymMaps Keeps the key of a reversible run, and removes
+	 *                                            the key of an earlier run when this one is
+	 *                                            irreversible.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -81,6 +87,7 @@ class DocumentAnonymizeRunner {
 		private readonly AnonymizationPersistenceService $persistence,
 		private readonly GrondslagenSummaryAttacher $summaryAttacher,
 		private readonly RedactionVerdictRecorder $verdictRecorder,
+		private readonly PseudonymMapRecorder $pseudonymMaps,
 	) {
 
 	}//end __construct()
@@ -127,6 +134,7 @@ class DocumentAnonymizeRunner {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function run(int $fileId, array $entities, array $options): array {
 		try {
@@ -140,6 +148,9 @@ class DocumentAnonymizeRunner {
 				'fileId' => $fileId,
 				'redactedValues' => $mappedEntities,
 				'outputMode' => (string)($options['outputFormat'] ?? ''),
+				'reversible' => (($options['reversible'] ?? false) === true),
+				'scope' => (string)($options['scope'] ?? 'document'),
+				'userId' => (string)($options['userId'] ?? ''),
 			];
 
 			// EML branch (eml-pdf-assembly): OR's anonymizeDocument() THROWS on
@@ -314,6 +325,7 @@ class DocumentAnonymizeRunner {
 	 * @return array<string, mixed> The finalised result info.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	private function finaliseResult(array $resultInfo, array $context): array {
 		if ($context['appendBasisSummary'] === true) {
@@ -340,6 +352,20 @@ class DocumentAnonymizeRunner {
 				fileId: $context['fileId'],
 				sourceNode: $context['sourceNode'],
 				resultInfo: $resultInfo
+			);
+
+			// After the link, because the key names it. A reversible run keeps
+			// the key; an irreversible one removes the key an earlier run left.
+			$resultInfo = $this->pseudonymMaps->record(
+				resultInfo: $resultInfo,
+				run: [
+					'fileId' => $context['fileId'],
+					'entities' => ($context['redactedValues'] ?? []),
+					'placeholderMap' => ($context['placeholderMap'] ?? []),
+					'reversible' => ($context['reversible'] ?? false),
+					'scope' => ($context['scope'] ?? 'document'),
+					'userId' => ($context['userId'] ?? ''),
+				]
 			);
 		}
 

@@ -5750,6 +5750,51 @@
         "readingState": "queued",
         "readingError": "",
         "readingUpdatedAt": "2026-09-19T10:00:05+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "pseudonymMap",
+          "slug": "pseudonymmap-1"
+        },
+        "anonymizationLink": "demo-anonymizationlink-1",
+        "sourceFileId": 812101,
+        "mappings": "demo: no key was kept, this map cannot be decrypted",
+        "algorithm": "nextcloud-icrypto-v1",
+        "entryCount": 3,
+        "scope": "document",
+        "storedAt": "2026-09-21T09:00:00+00:00",
+        "storedBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "pseudonymMap",
+          "slug": "pseudonymmap-2"
+        },
+        "anonymizationLink": "demo-anonymizationlink-2",
+        "sourceFileId": 812102,
+        "mappings": "demo: no key was kept, this map cannot be decrypted",
+        "algorithm": "nextcloud-icrypto-v1",
+        "entryCount": 5,
+        "scope": "dossier",
+        "storedAt": "2026-09-22T09:00:00+00:00",
+        "storedBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "pseudonymMap",
+          "slug": "pseudonymmap-3"
+        },
+        "anonymizationLink": "demo-anonymizationlink-3",
+        "sourceFileId": 812103,
+        "mappings": "demo: no key was kept, this map cannot be decrypted",
+        "algorithm": "nextcloud-icrypto-v1",
+        "entryCount": 1,
+        "scope": "document",
+        "storedAt": "2026-09-23T09:00:00+00:00",
+        "storedBy": "admin"
       }
     ]
   }

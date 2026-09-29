@@ -486,6 +486,8 @@ class AnonymizationService {
 	 * @param string|null $dossierKey Stable folder id for the dossier when
 	 *                                $scope='dossier'; null lets OpenRegister
 	 *                                fall back to the file's parent folder.
+	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
+	 *                         back into names later. False, the default, keeps nothing.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional warning/createdConsents fields
 	 *
@@ -503,6 +505,7 @@ class AnonymizationService {
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function anonymizeDocument(
 		int $fileId,
@@ -513,6 +516,7 @@ class AnonymizationService {
 		string $userId = '',
 		string $scope = 'document',
 		?string $dossierKey = null,
+		bool $reversible = false,
 	): array {
 		return $this->runAnonymize(
 			fileId: $fileId,
@@ -525,6 +529,8 @@ class AnonymizationService {
 				'unredactedEntities' => $unredactedEntities,
 				'scope' => $scope,
 				'dossierKey' => $dossierKey,
+				'reversible' => $reversible,
+				'userId' => $userId,
 			]
 		);
 
@@ -552,6 +558,8 @@ class AnonymizationService {
 	 * @param string $scope Placeholder-numbering scope forwarded to
 	 *                      OpenRegister.
 	 * @param string|null $dossierKey Stable folder id for the dossier.
+	 * @param bool $reversible Keep an encrypted key so the placeholders can be turned
+	 *                         back into names later. False, the default, keeps nothing.
 	 *
 	 * @return array<string, mixed> Anonymization result with optional
 	 *                              warning/summaryFileId/createdConsents fields
@@ -564,6 +572,7 @@ class AnonymizationService {
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/specs/anonymization/spec.md
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function anonymizeDocumentWithBasisSummary(
 		int $fileId,
@@ -574,6 +583,7 @@ class AnonymizationService {
 		string $userId = '',
 		string $scope = 'document',
 		?string $dossierKey = null,
+		bool $reversible = false,
 	): array {
 		return $this->runAnonymize(
 			fileId: $fileId,
@@ -586,6 +596,8 @@ class AnonymizationService {
 				'unredactedEntities' => $unredactedEntities,
 				'scope' => $scope,
 				'dossierKey' => $dossierKey,
+				'reversible' => $reversible,
+				'userId' => $userId,
 			]
 		);
 

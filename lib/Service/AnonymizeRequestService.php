@@ -300,6 +300,7 @@ class AnonymizeRequestService {
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	private function callAnonymizeDocument(
 		int $fileId,
@@ -318,7 +319,8 @@ class AnonymizeRequestService {
 				overrides: $request['overrides'],
 				userId: $userId,
 				scope: $this->resolveScope(params: $params),
-				dossierKey: $this->resolveDossierKey(params: $params)
+				dossierKey: $this->resolveDossierKey(params: $params),
+				reversible: ($request['reversible'] ?? false) === true
 			);
 		}
 
@@ -330,7 +332,8 @@ class AnonymizeRequestService {
 			overrides: $request['overrides'],
 			userId: $userId,
 			scope: $this->resolveScope(params: $params),
-			dossierKey: $this->resolveDossierKey(params: $params)
+			dossierKey: $this->resolveDossierKey(params: $params),
+			reversible: ($request['reversible'] ?? false) === true
 		);
 
 	}//end callAnonymizeDocument()
