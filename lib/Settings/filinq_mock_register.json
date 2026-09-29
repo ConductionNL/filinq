@@ -5899,6 +5899,854 @@
         "notifiedOwners": [
           "seed-user-juridisch"
         ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "archiveJob",
+          "slug": "demostad-archief-zaak-2025-0412"
+        },
+        "subject": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "00000000-0000-0000-0000-000000000001"
+        },
+        "status": "completed",
+        "requestedBy": "seed-user-dia",
+        "requestedAt": "2026-02-03T10:15:00+00:00",
+        "ceilingBytes": 524288000,
+        "includedCount": 12,
+        "excludedCount": 1,
+        "totalBytes": 18350080,
+        "manifest": [
+          {
+            "file": "besluit-2025-0412.pdf",
+            "included": true
+          },
+          {
+            "file": "concept-notitie.docx",
+            "included": false,
+            "reason": "concept, niet archiefwaardig"
+          }
+        ],
+        "fileId": 48211
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "archiveJob",
+          "slug": "demostad-archief-zaak-2025-0587"
+        },
+        "subject": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "00000000-0000-0000-0000-000000000002"
+        },
+        "status": "running",
+        "requestedBy": "seed-user-dia",
+        "requestedAt": "2026-03-11T08:40:00+00:00",
+        "ceilingBytes": 524288000,
+        "includedCount": 0,
+        "excludedCount": 0,
+        "totalBytes": 0,
+        "manifest": []
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "archiveJob",
+          "slug": "demostad-archief-zaak-2025-0633"
+        },
+        "subject": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "00000000-0000-0000-0000-000000000003"
+        },
+        "status": "failed",
+        "requestedBy": "seed-user-juridisch",
+        "requestedAt": "2026-03-14T13:05:00+00:00",
+        "ceilingBytes": 104857600,
+        "includedCount": 0,
+        "excludedCount": 0,
+        "totalBytes": 0,
+        "manifest": [],
+        "errorMessage": "De bundel wordt groter dan het plafond van 100 MB."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentRegistration",
+          "slug": "demostad-registratie-in-2026-00118"
+        },
+        "direction": "inbound",
+        "registeredAt": "2026-03-02T09:12:00+00:00",
+        "unit": "Burgerzaken",
+        "document": "00000000-0000-0000-0000-000000000001",
+        "registrationNumber": "IN-2026-00118"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentRegistration",
+          "slug": "demostad-registratie-uit-2026-00042"
+        },
+        "direction": "outbound",
+        "registeredAt": "2026-03-05T15:30:00+00:00",
+        "unit": "Burgerzaken",
+        "document": "00000000-0000-0000-0000-000000000002",
+        "registrationNumber": "UIT-2026-00042",
+        "answers": "00000000-0000-0000-0000-000000000001"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentRegistration",
+          "slug": "demostad-registratie-in-2026-00131"
+        },
+        "direction": "inbound",
+        "registeredAt": "2026-03-06T11:00:00+00:00",
+        "unit": "Vergunningen",
+        "document": "00000000-0000-0000-0000-000000000003",
+        "registrationNumber": "IN-2026-00131",
+        "withdrawnReason": "Dubbel geregistreerd; zie IN-2026-00130.",
+        "withdrawnAt": "2026-03-06T11:20:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "downloadAgreement",
+          "slug": "demostad-downloadvoorwaarden-v1"
+        },
+        "version": "1",
+        "locale": "nl",
+        "text": "U downloadt dit stuk voor eigen gebruik. Verspreid het niet verder zonder toestemming van de gemeente."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "downloadAgreement",
+          "slug": "demostad-downloadvoorwaarden-v2-en"
+        },
+        "version": "2",
+        "locale": "en",
+        "text": "You download this document for your own use. Do not pass it on without the municipality's permission."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "downloadAgreement",
+          "slug": "demostad-downloadvoorwaarden-v2-akkoord"
+        },
+        "version": "2",
+        "locale": "nl",
+        "text": "U downloadt dit stuk voor eigen gebruik. Verspreid het niet verder zonder toestemming van de gemeente.",
+        "acceptedBy": "seed-user-burger",
+        "acceptedAt": "2026-03-09T14:22:00+00:00",
+        "acceptedVersion": "2",
+        "document": "00000000-0000-0000-0000-000000000001"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "erasureCertificate",
+          "slug": "demostad-wisbewijs-2026-001"
+        },
+        "request": "demostad-wisverzoek-2026-001",
+        "issuedAt": "2026-03-20T10:00:00+00:00",
+        "actor": "seed-user-privacy",
+        "erased": [
+          {
+            "document": "00000000-0000-0000-0000-000000000001",
+            "occurrences": 4
+          },
+          {
+            "document": "00000000-0000-0000-0000-000000000002",
+            "occurrences": 1
+          }
+        ],
+        "refused": [],
+        "needsRepublishing": [],
+        "complete": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "erasureCertificate",
+          "slug": "demostad-wisbewijs-2026-002"
+        },
+        "request": "demostad-wisverzoek-2026-002",
+        "issuedAt": "2026-03-22T16:45:00+00:00",
+        "actor": "seed-user-privacy",
+        "erased": [
+          {
+            "document": "00000000-0000-0000-0000-000000000002",
+            "occurrences": 2
+          }
+        ],
+        "refused": [
+          {
+            "document": "00000000-0000-0000-0000-000000000003",
+            "obligation": "legal_hold",
+            "reason": "Het stuk valt onder een juridische bewaarplicht (rechtszaak 2025-117).",
+            "decidedBy": "seed-user-juridisch"
+          }
+        ],
+        "needsRepublishing": [
+          "00000000-0000-0000-0000-000000000002"
+        ],
+        "complete": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "erasureCertificate",
+          "slug": "demostad-wisbewijs-2026-003"
+        },
+        "request": "demostad-wisverzoek-2026-003",
+        "issuedAt": "2026-03-25T09:30:00+00:00",
+        "actor": "seed-user-privacy",
+        "erased": [],
+        "refused": [
+          {
+            "document": "00000000-0000-0000-0000-000000000001",
+            "obligation": "archiefwet",
+            "reason": "Het dossier is als blijvend te bewaren gewaardeerd.",
+            "decidedBy": "seed-user-dia"
+          }
+        ],
+        "needsRepublishing": [],
+        "complete": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeDefaultRule",
+          "slug": "demostad-standaard-scan"
+        },
+        "name": "Scans krijgen documenttype inkomende post",
+        "channel": "scan",
+        "stamps": {
+          "documentType": "inkomende-post",
+          "confidentiality": "intern"
+        },
+        "order": 100,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeDefaultRule",
+          "slug": "demostad-standaard-belastingdienst"
+        },
+        "name": "Post van de Belastingdienst is vertrouwelijk",
+        "channel": "mail",
+        "senderPattern": "*@belastingdienst.nl",
+        "stamps": {
+          "confidentiality": "vertrouwelijk"
+        },
+        "order": 10,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeDefaultRule",
+          "slug": "demostad-standaard-berichtenbox-oud"
+        },
+        "name": "Oude regel voor de Berichtenbox",
+        "channel": "digitalPost",
+        "stamps": {
+          "documentType": "bericht"
+        },
+        "order": 200,
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakePartyCorrection",
+          "slug": "demostad-afzender-woningcorporatie"
+        },
+        "sender": "info@woonstad-demo.example",
+        "intakeDocument": "intakedocument-1",
+        "suggested": {
+          "name": "Woonstad Demo",
+          "kvk": "12345678"
+        },
+        "decision": "accepted",
+        "accepted": {
+          "name": "Woonstad Demo",
+          "kvk": "12345678"
+        },
+        "decidedBy": "seed-user-dia",
+        "decidedAt": "2026-03-03T09:45:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakePartyCorrection",
+          "slug": "demostad-afzender-bouwbedrijf"
+        },
+        "sender": "offerte@bouw-demo.example",
+        "intakeDocument": "intakedocument-2",
+        "suggested": {
+          "name": "Bouw Demo"
+        },
+        "decision": "edited",
+        "accepted": {
+          "name": "Bouwbedrijf Demo B.V.",
+          "kvk": "87654321"
+        },
+        "decidedBy": "seed-user-dia",
+        "decidedAt": "2026-03-04T10:10:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakePartyCorrection",
+          "slug": "demostad-afzender-nieuwsbrief"
+        },
+        "sender": "nieuws@leverancier-demo.example",
+        "intakeDocument": "intakedocument-3",
+        "suggested": {
+          "name": "Leverancier Demo"
+        },
+        "decision": "rejected",
+        "accepted": {},
+        "decidedBy": "seed-user-dia",
+        "decidedAt": "2026-03-04T10:12:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeRoutingRule",
+          "slug": "demostad-routering-bezwaar"
+        },
+        "declaringApp": "dossiq",
+        "typeReference": "bezwaarschrift",
+        "routeTo": "Juridische zaken",
+        "requiresAcceptance": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeRoutingRule",
+          "slug": "demostad-routering-factuur"
+        },
+        "declaringApp": "shillinq",
+        "typeReference": "inkoopfactuur",
+        "routeTo": "Crediteurenadministratie",
+        "requiresAcceptance": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeRoutingRule",
+          "slug": "demostad-routering-sollicitatie"
+        },
+        "declaringApp": "humaniq",
+        "typeReference": "sollicitatiebrief",
+        "routeTo": "HR",
+        "requiresAcceptance": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "mergeJob",
+          "slug": "demostad-samenvoegen-besluitdossier"
+        },
+        "inputs": [
+          {
+            "fileId": 48101,
+            "label": "Aanvraag.pdf"
+          },
+          {
+            "fileId": 48102,
+            "label": "Advies.pdf"
+          },
+          {
+            "fileId": 48103,
+            "label": "Besluit.pdf"
+          }
+        ],
+        "options": {
+          "bookmarks": true
+        },
+        "requestedBy": "seed-user-dia",
+        "hostObject": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "00000000-0000-0000-0000-000000000001"
+        },
+        "resultFileId": 48120,
+        "pageCount": 14,
+        "progress": 100,
+        "status": "done",
+        "conformance": "pdfa-3b"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "mergeJob",
+          "slug": "demostad-samenvoegen-vergunning"
+        },
+        "inputs": [
+          {
+            "fileId": 48201,
+            "label": "Tekening.pdf"
+          },
+          {
+            "fileId": 48202,
+            "label": "Situatieschets.pdf"
+          }
+        ],
+        "options": {},
+        "requestedBy": "seed-user-dia",
+        "hostObject": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "00000000-0000-0000-0000-000000000002"
+        },
+        "progress": 40,
+        "status": "running",
+        "conformance": "pdf"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "mergeJob",
+          "slug": "demostad-samenvoegen-mislukt"
+        },
+        "inputs": [
+          {
+            "fileId": 48301,
+            "label": "Beveiligd.pdf"
+          }
+        ],
+        "options": {},
+        "requestedBy": "seed-user-juridisch",
+        "hostObject": {
+          "register": "filinq",
+          "schema": "dossier",
+          "id": "00000000-0000-0000-0000-000000000003"
+        },
+        "progress": 0,
+        "lastError": "Beveiligd.pdf is met een wachtwoord beveiligd en kan niet worden gelezen.",
+        "status": "failed",
+        "conformance": "pdf"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "pageLayout",
+          "slug": "demostad-opmaak-brief"
+        },
+        "name": "Brief gemeente Demostad",
+        "layoutVersion": 2,
+        "supersedes": "demostad-opmaak-brief-v1",
+        "paperSize": "A4",
+        "orientation": "portrait",
+        "margins": {
+          "top": 25,
+          "right": 20,
+          "bottom": 25,
+          "left": 25
+        },
+        "header": "Gemeente Demostad",
+        "footer": "Postbus 1, 1234 AB Demostad",
+        "firstPageDiffers": true,
+        "firstPageHeader": "Gemeente Demostad, afdeling Burgerzaken",
+        "firstPageFooter": "www.demostad.example",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "pageLayout",
+          "slug": "demostad-opmaak-rapport"
+        },
+        "name": "Rapport liggend",
+        "layoutVersion": 1,
+        "paperSize": "A4",
+        "orientation": "landscape",
+        "margins": {
+          "top": 15,
+          "right": 15,
+          "bottom": 15,
+          "left": 15
+        },
+        "footer": "Pagina {page} van {pages}",
+        "firstPageDiffers": false,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "pageLayout",
+          "slug": "demostad-opmaak-brief-v1"
+        },
+        "name": "Brief gemeente Demostad (oud)",
+        "layoutVersion": 1,
+        "paperSize": "A4",
+        "orientation": "portrait",
+        "margins": {
+          "top": 30,
+          "right": 20,
+          "bottom": 30,
+          "left": 25
+        },
+        "header": "Gemeente Demostad",
+        "firstPageDiffers": false,
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "periodicDocument",
+          "slug": "demostad-weekoverzicht-post"
+        },
+        "name": "Weekoverzicht inkomende post",
+        "viewSlug": "inkomende-post-deze-week",
+        "templateId": "template-voorbeeld-name-3-3",
+        "layout": "demostad-opmaak-rapport",
+        "cadence": "weekly",
+        "lastRunAt": "2026-03-16T06:00:00+00:00",
+        "lastRunRecords": 37,
+        "lastRunDocument": "generateddocument-generateddocument-1-1",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "periodicDocument",
+          "slug": "demostad-maandrapport-woo"
+        },
+        "name": "Maandrapport Woo-verzoeken",
+        "viewSlug": "woo-verzoeken-open",
+        "templateId": "template-voorbeeld-name-3-3",
+        "cadence": "monthly",
+        "lastRunAt": "2026-03-01T06:00:00+00:00",
+        "lastRunError": "De weergave woo-verzoeken-open bestaat niet meer.",
+        "lastRunErrorAt": "2026-03-01T06:00:00+00:00",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "periodicDocument",
+          "slug": "demostad-kwartaal-archief"
+        },
+        "name": "Kwartaaloverzicht overgebrachte dossiers",
+        "viewSlug": "overgebracht-dit-kwartaal",
+        "templateId": "template-voorbeeld-name-3-3",
+        "cadence": "quarterly",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "printJob",
+          "slug": "demostad-printopdracht-aanslagen"
+        },
+        "status": "printed",
+        "requestedBy": "seed-user-dia",
+        "requestedAt": "2026-03-10T08:00:00+00:00",
+        "templateId": "template-voorbeeld-name-3-3",
+        "filename": "aanslagen-maart.pdf",
+        "total": 3,
+        "rendered": 3,
+        "errors": 0,
+        "files": [
+          "aanslagen-maart-1.pdf",
+          "aanslagen-maart-2.pdf",
+          "aanslagen-maart-3.pdf"
+        ],
+        "printConfig": {
+          "duplex": true,
+          "color": false,
+          "paperTray": "default",
+          "stapling": false
+        },
+        "manifest": [],
+        "statusChangedAt": "2026-03-10T11:30:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "printJob",
+          "slug": "demostad-printopdracht-herinneringen"
+        },
+        "status": "queued",
+        "requestedBy": "seed-user-dia",
+        "requestedAt": "2026-03-12T09:15:00+00:00",
+        "templateId": "template-voorbeeld-name-3-3",
+        "filename": "herinneringen.pdf",
+        "total": 2,
+        "rendered": 2,
+        "errors": 0,
+        "files": [
+          "herinneringen-1.pdf",
+          "herinneringen-2.pdf"
+        ],
+        "printConfig": {
+          "duplex": false,
+          "color": true,
+          "paperTray": "default",
+          "stapling": true
+        },
+        "manifest": [],
+        "statusChangedAt": "2026-03-12T09:16:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "printJob",
+          "slug": "demostad-printopdracht-mislukt"
+        },
+        "status": "failed",
+        "requestedBy": "seed-user-juridisch",
+        "requestedAt": "2026-03-13T14:00:00+00:00",
+        "templateId": "template-voorbeeld-name-3-3",
+        "filename": "uitnodigingen.pdf",
+        "total": 1,
+        "rendered": 0,
+        "errors": 1,
+        "files": [],
+        "printConfig": {
+          "duplex": false,
+          "color": true,
+          "paperTray": "default",
+          "stapling": false
+        },
+        "manifest": [],
+        "statusChangedAt": "2026-03-13T14:01:00+00:00",
+        "statusDetails": "Het sjabloon verwijst naar een veld dat de ontvanger niet heeft."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "redactionReviewMark",
+          "slug": "demostad-controle-besluit-woo"
+        },
+        "document": "00000000-0000-0000-0000-000000000001",
+        "detectionRun": "run-2026-03-18-001",
+        "checkedBy": "seed-user-privacy",
+        "checkedAt": "2026-03-18T10:05:00+00:00",
+        "detectorVersion": "presidio 2.2",
+        "entityCount": 12,
+        "note": "Twee telefoonnummers handmatig toegevoegd."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "redactionReviewMark",
+          "slug": "demostad-controle-advies-woo"
+        },
+        "document": "00000000-0000-0000-0000-000000000002",
+        "detectionRun": "run-2026-03-18-002",
+        "checkedBy": "seed-user-privacy",
+        "checkedAt": "2026-03-18T10:40:00+00:00",
+        "detectorVersion": "presidio 2.2",
+        "entityCount": 3
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "redactionReviewMark",
+          "slug": "demostad-controle-bijlage-woo"
+        },
+        "document": "00000000-0000-0000-0000-000000000003",
+        "detectionRun": "run-2026-03-19-001",
+        "checkedBy": "seed-user-juridisch",
+        "checkedAt": "2026-03-19T09:00:00+00:00",
+        "detectorVersion": "regex",
+        "entityCount": 0,
+        "note": "Geen persoonsgegevens gevonden; steekproef bevestigt dat."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "scanBatch",
+          "slug": "demostad-scanbatch-2026-03-02"
+        },
+        "file": 49001,
+        "scannerId": "scanner-balie-1",
+        "receivedAt": "2026-03-02T08:30:00+00:00",
+        "separatorMode": "qr",
+        "pageCount": 9,
+        "segments": [
+          {
+            "fileId": 49011,
+            "name": "scan-1.pdf",
+            "firstPage": 1,
+            "pages": 4
+          },
+          {
+            "fileId": 49012,
+            "name": "scan-2.pdf",
+            "firstPage": 6,
+            "pages": 4
+          }
+        ],
+        "status": "split"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "scanBatch",
+          "slug": "demostad-scanbatch-2026-03-03"
+        },
+        "file": 49002,
+        "scannerId": "scanner-postkamer",
+        "receivedAt": "2026-03-03T08:10:00+00:00",
+        "separatorMode": "blankPage",
+        "pageCount": 5,
+        "segments": [],
+        "status": "received"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "scanBatch",
+          "slug": "demostad-scanbatch-2026-03-04"
+        },
+        "file": 49003,
+        "scannerId": "scanner-postkamer",
+        "receivedAt": "2026-03-04T08:05:00+00:00",
+        "separatorMode": "qr",
+        "pageCount": 0,
+        "segments": [],
+        "lastError": "Het bestand is geen leesbare PDF.",
+        "status": "failed"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "subjectErasureRequest",
+          "slug": "demostad-wisverzoek-2026-001"
+        },
+        "subject": "J. de Vries",
+        "identifiers": [
+          "j.devries@voorbeeld.example"
+        ],
+        "ground": "AVG artikel 17 lid 1 onder a: niet langer nodig",
+        "requester": "seed-user-privacy",
+        "requestedAt": "2026-03-15T09:00:00+00:00",
+        "dueAt": "2026-04-15T09:00:00+00:00",
+        "status": "completed",
+        "progress": {
+          "documentsTotal": 2,
+          "documentsDone": 2,
+          "lastDocument": "00000000-0000-0000-0000-000000000002",
+          "occurrencesErased": 5
+        },
+        "excluded": []
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "subjectErasureRequest",
+          "slug": "demostad-wisverzoek-2026-002"
+        },
+        "subject": "A. Jansen",
+        "identifiers": [
+          "a.jansen@voorbeeld.example",
+          "0612345678"
+        ],
+        "ground": "AVG artikel 17 lid 1 onder b: toestemming ingetrokken",
+        "requester": "seed-user-privacy",
+        "requestedAt": "2026-03-16T11:30:00+00:00",
+        "dueAt": "2026-04-16T11:30:00+00:00",
+        "status": "partially_completed",
+        "progress": {
+          "documentsTotal": 2,
+          "documentsDone": 2,
+          "lastDocument": "00000000-0000-0000-0000-000000000003",
+          "occurrencesErased": 2
+        },
+        "excluded": [
+          {
+            "occurrence": "00000000-0000-0000-0000-000000000003",
+            "reason": "Juridische bewaarplicht (rechtszaak 2025-117)."
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "subjectErasureRequest",
+          "slug": "demostad-wisverzoek-2026-003"
+        },
+        "subject": "P. Bakker",
+        "identifiers": [
+          "p.bakker@voorbeeld.example"
+        ],
+        "ground": "AVG artikel 17 lid 1 onder d: onrechtmatig verwerkt",
+        "requester": "seed-user-privacy",
+        "requestedAt": "2026-03-24T14:00:00+00:00",
+        "dueAt": "2026-04-24T14:00:00+00:00",
+        "status": "received",
+        "progress": {
+          "documentsTotal": 0,
+          "documentsDone": 0,
+          "occurrencesErased": 0
+        },
+        "excluded": []
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "uploadPolicy",
+          "slug": "demostad-uploadbeleid-standaard"
+        },
+        "name": "Standaard: documenten en afbeeldingen",
+        "allowedExtensions": [
+          "pdf",
+          "docx",
+          "odt",
+          "jpg",
+          "png"
+        ],
+        "allowedMediaTypes": [
+          "application/pdf",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/vnd.oasis.opendocument.text",
+          "image/jpeg",
+          "image/png"
+        ],
+        "maxSizeBytes": 26214400,
+        "refuseUnknownType": true,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "uploadPolicy",
+          "slug": "demostad-uploadbeleid-alleen-pdf"
+        },
+        "name": "Alleen PDF voor archiefstukken",
+        "allowedExtensions": [
+          "pdf"
+        ],
+        "allowedMediaTypes": [
+          "application/pdf"
+        ],
+        "maxSizeBytes": 104857600,
+        "refuseUnknownType": true,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "uploadPolicy",
+          "slug": "demostad-uploadbeleid-oud"
+        },
+        "name": "Oud beleid zonder limiet",
+        "allowedExtensions": [],
+        "allowedMediaTypes": [],
+        "maxSizeBytes": 0,
+        "refuseUnknownType": false,
+        "active": false
       }
     ]
   }
