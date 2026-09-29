@@ -179,6 +179,12 @@ export default {
 			)
 		},
 
+		/**
+		 * The inbox columns, with the reading state of an arriving scan.
+		 *
+		 * @return {Array<object>} The columns.
+		 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-2.2
+		 */
 		tableColumns() {
 			const columns = [
 				{ key: 'channel', label: t('filinq', 'Channel'), sortable: true },
