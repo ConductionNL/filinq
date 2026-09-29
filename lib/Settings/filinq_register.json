@@ -8852,7 +8852,7 @@
                 "title": "Entity search log",
                 "version": "1.0.0",
                 "summary": "",
-                "description": "Eén regel per zoekopdracht of detailweergave in de entiteitenzoeker: wie, wanneer, welke filters en hoeveel resultaten. De zoekterm zelf wordt nooit bewaard, alleen de sha256-samenvatting, zodat dit logboek geen nieuwe verzameling persoonsgegevens wordt. Alleen toevoegen: de app wijzigt of verwijdert geen regels.",
+                "description": "One row per search or detail view in the entity search: who, when, which filters and how many results. The query itself is never kept, only its sha256, so this log does not become a new collection of personal data. Append only: the app changes or deletes no row.",
                 "icon": "TextBoxOutline",
                 "required": [
                     "action",
@@ -8863,7 +8863,7 @@
                     "action": {
                         "type": "string",
                         "title": "Action",
-                        "description": "search voor een zoekopdracht, detail voor het openen van één entiteit.",
+                        "description": "search for a search, detail for opening one entity.",
                         "enum": [
                             "search",
                             "detail"
@@ -8872,57 +8872,57 @@
                     "queryDigest": {
                         "type": "string",
                         "title": "Query digest",
-                        "description": "sha256 van de zoekterm in kleine letters zonder spaties aan de randen. Nooit de zoekterm zelf.",
+                        "description": "The sha256 of the query, lower-cased and trimmed. Never the query itself.",
                         "pattern": "^([0-9a-f]{64})?$",
                         "maxLength": 64
                     },
                     "typeFilter": {
                         "type": "string",
                         "title": "Type filter",
-                        "description": "Het entiteittype waarop gefilterd is, leeg als er niet gefilterd is.",
+                        "description": "The entity type filtered on, empty when none.",
                         "maxLength": 64
                     },
                     "categoryFilter": {
                         "type": "string",
                         "title": "Category filter",
-                        "description": "De categorie waarop gefilterd is, leeg als er niet gefilterd is.",
+                        "description": "The category filtered on, empty when none.",
                         "maxLength": 64
                     },
                     "resultCount": {
                         "type": "integer",
                         "title": "Result count",
-                        "description": "Het aantal gevonden entiteiten.",
+                        "description": "How many entities matched.",
                         "minimum": 0
                     },
                     "entityRef": {
                         "type": "string",
                         "title": "Entity",
-                        "description": "De uuid van de entiteit in de OpenRegister-catalogus. Een verwijzing, geen kopie van de waarde.",
+                        "description": "The uuid of the entity in the OpenRegister catalogue. A pointer, not a copy of the value.",
                         "maxLength": 64
                     },
                     "occurrenceCount": {
                         "type": "integer",
                         "title": "Occurrence count",
-                        "description": "Het aantal vindplaatsen dat de detailweergave toonde, inclusief die zonder toegang.",
+                        "description": "How many occurrences the detail view showed, including those without access.",
                         "minimum": 0
                     },
                     "collectedInto": {
                         "type": "string",
                         "title": "Collected into",
-                        "description": "Het Woo-verzoek waarin treffers zijn verzameld, leeg als dat niet gebeurde.",
+                        "description": "The Woo request the hits were collected into, empty when none.",
                         "maxLength": 64
                     },
                     "performedBy": {
                         "type": "string",
                         "title": "Performed by",
-                        "description": "De gebruiker die zocht.",
+                        "description": "The user who searched.",
                         "maxLength": 255
                     },
                     "performedAt": {
                         "type": "string",
                         "format": "date-time",
                         "title": "Performed at",
-                        "description": "Het moment van de zoekopdracht."
+                        "description": "When the search ran."
                     }
                 },
                 "archive": [],

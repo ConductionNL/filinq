@@ -10,7 +10,12 @@ SPDX-License-Identifier: EUPL-1.2
 		<div class="entity-search__header">
 			<h2>{{ t('filinq', 'Entity search') }}</h2>
 			<p class="entity-search__subtitle">
-				{{ t('filinq', 'Find the documents a person, email address, IBAN or other detected value appears in. Every search is recorded in the processing log.') }}
+				{{
+					t(
+						'filinq',
+						'Find the documents a person, email address, IBAN or other detected value appears in. Every search is recorded in the processing log.',
+					)
+				}}
 			</p>
 		</div>
 
@@ -37,7 +42,12 @@ SPDX-License-Identifier: EUPL-1.2
 		<NcEmptyContent
 			v-else-if="searched && results.length === 0 && !error"
 			:name="t('filinq', 'Nothing found')"
-			:description="t('filinq', 'Only documents that were extracted can be searched. A document nobody extracted has no detected values yet.')" />
+			:description="
+				t(
+					'filinq',
+					'Only documents that were extracted can be searched. A document nobody extracted has no detected values yet.',
+				)
+			" />
 		<template v-else-if="results.length > 0">
 			<p>{{ t('filinq', 'Values found: {total}', { total }) }}</p>
 			<CnDataTable
@@ -46,7 +56,7 @@ SPDX-License-Identifier: EUPL-1.2
 				rowKey="uuid"
 				:tableLabel="t('filinq', 'Detected values')"
 				data-testid="entity-search-results"
-				@row-click="open" />
+				@rowClick="open" />
 		</template>
 
 		<section
@@ -54,7 +64,14 @@ SPDX-License-Identifier: EUPL-1.2
 			class="entity-search__detail"
 			:aria-label="t('filinq', 'Where this value occurs')">
 			<h3>{{ detail.value }}</h3>
-			<p>{{ t('filinq', '{type}. Occurrences: {count}', { type: detail.type, count: detail.occurrenceCount }) }}</p>
+			<p>
+				{{
+					t('filinq', '{type}. Occurrences: {count}', {
+						type: detail.type,
+						count: detail.occurrenceCount,
+					})
+				}}
+			</p>
 			<CnDataTable
 				v-if="documentRows.length > 0"
 				:columns="documentColumns"
@@ -63,7 +80,11 @@ SPDX-License-Identifier: EUPL-1.2
 				:tableLabel="t('filinq', 'Documents')"
 				data-testid="entity-search-documents" />
 			<p v-if="detail.noAccess > 0" data-testid="entity-search-no-access">
-				{{ t('filinq', 'Documents you have no access to: {count}', { count: detail.noAccess }) }}
+				{{
+					t('filinq', 'Documents you have no access to: {count}', {
+						count: detail.noAccess,
+					})
+				}}
 			</p>
 			<ul v-if="detail.other.length > 0">
 				<li v-for="item in detail.other" :key="item.kind">
@@ -76,6 +97,7 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcEmptyContent,
@@ -84,10 +106,9 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
-import { translate as t } from '@nextcloud/l10n'
 import {
-	ENTITY_TYPES,
 	anonymisationLabel,
+	ENTITY_TYPES,
 	entityDetail,
 	otherLabel,
 	searchEntities,
@@ -151,7 +172,9 @@ export default {
 				...document,
 				dossierName: document.dossier ? document.dossier.name : '',
 				anonymisationLabel: anonymisationLabel(document.anonymisation.state),
-				confidence: Math.max(...document.occurrences.map((o) => o.confidence)).toFixed(2),
+				confidence: Math.max(
+					...document.occurrences.map((o) => o.confidence),
+				).toFixed(2),
 			}))
 		},
 	},
@@ -164,7 +187,10 @@ export default {
 			this.loading = true
 			this.error = ''
 			this.detail = null
-			const result = await searchEntities({ query: this.query.trim(), type: this.type || '' })
+			const result = await searchEntities({
+				query: this.query.trim(),
+				type: this.type || '',
+			})
 			this.loading = false
 			this.searched = true
 			if (!result.ok) {

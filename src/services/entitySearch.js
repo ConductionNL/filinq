@@ -18,7 +18,17 @@ const base = () => generateUrl('/apps/filinq/api/entity-search')
  *
  * @type {Array<string>}
  */
-export const ENTITY_TYPES = ['PERSON', 'EMAIL', 'PHONE', 'ADDRESS', 'IBAN', 'SSN', 'ORGANIZATION', 'LOCATION', 'CUSTOM_DICTIONARY']
+export const ENTITY_TYPES = [
+	'PERSON',
+	'EMAIL',
+	'PHONE',
+	'ADDRESS',
+	'IBAN',
+	'SSN',
+	'ORGANIZATION',
+	'LOCATION',
+	'CUSTOM_DICTIONARY',
+]
 
 /**
  * Run a call and answer { ok, data } or { ok: false, error, status }.
@@ -34,7 +44,9 @@ async function outcome(call) {
 		return {
 			ok: false,
 			status: error.response?.status || 0,
-			error: error.response?.data?.error || t('filinq', 'The entity search failed. Try again later.'),
+			error:
+				error.response?.data?.error
+				|| t('filinq', 'The entity search failed. Try again later.'),
 		}
 	}
 }
@@ -60,7 +72,11 @@ export async function mayUseEntitySearch() {
 export function searchEntities(filters) {
 	const params = {}
 	for (const key of ['query', 'type', 'category', 'limit', 'offset']) {
-		if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+		if (
+			filters[key] !== undefined
+			&& filters[key] !== null
+			&& filters[key] !== ''
+		) {
 			params[key] = filters[key]
 		}
 	}

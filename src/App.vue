@@ -116,10 +116,6 @@ export default {
 		}
 	},
 
-	async mounted() {
-		this.shellManifest.runtime.entitySearch.allowed = await mayUseEntitySearch()
-	},
-
 	computed: {
 		/**
 		 * Current user's Nextcloud permission set, passed to the app shell.
@@ -129,6 +125,10 @@ export default {
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
+	},
+
+	async mounted() {
+		this.shellManifest.runtime.entitySearch.allowed = await mayUseEntitySearch()
 	},
 
 	methods: {

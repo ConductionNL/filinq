@@ -31,7 +31,10 @@ vi.mock('@nextcloud/axios', () => ({
 }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => path }))
 vi.mock('@nextcloud/l10n', () => ({
-	translate: (app, text, vars) => text.replace(/\{(\w+)\}/g, (m, key) => (vars && key in vars ? vars[key] : m)),
+	translate: (app, text, vars) =>
+		text.replace(/\{(\w+)\}/g, (m, key) =>
+			vars && key in vars ? vars[key] : m,
+		),
 }))
 
 describe('entity search service', () => {
@@ -42,8 +45,17 @@ describe('entity search service', () => {
 
 	it('sends only the filters that are set', async () => {
 		answer = () => Promise.resolve({ data: { results: [], total: 0 } })
-		await searchEntities({ query: 'de vries', type: '', category: null, limit: 25 })
-		expect(calls[0]).toEqual(['get', '/apps/filinq/api/entity-search', { params: { query: 'de vries', limit: 25 } }])
+		await searchEntities({
+			query: 'de vries',
+			type: '',
+			category: null,
+			limit: 25,
+		})
+		expect(calls[0]).toEqual([
+			'get',
+			'/apps/filinq/api/entity-search',
+			{ params: { query: 'de vries', limit: 25 } },
+		])
 	})
 
 	it('reads the menu permission from the access route, and a refusal is no', async () => {
@@ -51,7 +63,13 @@ describe('entity search service', () => {
 		expect(await mayUseEntitySearch()).toBe(true)
 		expect(calls[0][1]).toBe('/apps/filinq/api/entity-search/access')
 
-		answer = () => Promise.reject({ response: { status: 403, data: { error: 'no', reason: 'not_allowed' } } })
+		answer = () =>
+			Promise.reject({
+				response: {
+					status: 403,
+					data: { error: 'no', reason: 'not_allowed' },
+				},
+			})
 		expect(await mayUseEntitySearch()).toBe(false)
 
 		answer = () => Promise.reject(new Error('network down'))
@@ -59,10 +77,22 @@ describe('entity search service', () => {
 	})
 
 	it('shows the server refusal and its status', async () => {
-		answer = () => Promise.reject({ response: { status: 503, data: { error: 'The search could not be recorded in the processing log, so it was not run.' } } })
+		answer = () =>
+			Promise.reject({
+				response: {
+					status: 503,
+					data: {
+						error: 'The search could not be recorded in the processing log, so it was not run.',
+					},
+				},
+			})
 		const result = await entityDetail('abc/def')
 		expect(calls[0][1]).toBe('/apps/filinq/api/entity-search/abc%2Fdef')
-		expect(result).toEqual({ ok: false, status: 503, error: 'The search could not be recorded in the processing log, so it was not run.' })
+		expect(result).toEqual({
+			ok: false,
+			status: 503,
+			error: 'The search could not be recorded in the processing log, so it was not run.',
+		})
 	})
 
 	it('labels the anonymisation state and other occurrences', () => {
@@ -74,16 +104,30 @@ describe('entity search service', () => {
 	})
 
 	it('the page shows unreadable documents as a count, never by name', () => {
-		const page = readFileSync(new URL('../../src/views/entitySearch/EntitySearch.vue', import.meta.url), 'utf8')
+		const page = readFileSync(
+			new URL(
+				'../../src/views/entitySearch/EntitySearch.vue',
+				import.meta.url,
+			),
+			'utf8',
+		)
 		expect(page).toContain('detail.noAccess')
 		expect(page).not.toMatch(/noAccess\s*\.\s*(name|path)/)
 	})
 
 	it('the menu entry is hidden unless the access route said yes', () => {
-		const manifest = JSON.parse(readFileSync(new URL('../../src/manifest.json', import.meta.url), 'utf8'))
+		const manifest = JSON.parse(
+			readFileSync(
+				new URL('../../src/manifest.json', import.meta.url),
+				'utf8',
+			),
+		)
 		const entry = manifest.menu.find((item) => item.id === 'EntitySearch')
 		expect(entry.visibleIf).toEqual({ 'entitySearch.allowed': true })
-		const app = readFileSync(new URL('../../src/App.vue', import.meta.url), 'utf8')
+		const app = readFileSync(
+			new URL('../../src/App.vue', import.meta.url),
+			'utf8',
+		)
 		expect(app).toContain('entitySearch: { allowed: false }')
 	})
 })
