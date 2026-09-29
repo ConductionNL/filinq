@@ -141,10 +141,22 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The entity types offered as a filter.
+		 *
+		 * @return {Array<string>} The types.
+		 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
+		 */
 		typeOptions() {
 			return ENTITY_TYPES
 		},
 
+		/**
+		 * The result table columns.
+		 *
+		 * @return {Array<object>} The columns.
+		 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
+		 */
 		columns() {
 			return [
 				{ key: 'value', label: t('filinq', 'Value') },
@@ -154,6 +166,12 @@ export default {
 			]
 		},
 
+		/**
+		 * The occurrence table columns.
+		 *
+		 * @return {Array<object>} The columns.
+		 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.2
+		 */
 		documentColumns() {
 			return [
 				{ key: 'name', label: t('filinq', 'Document') },
@@ -164,6 +182,12 @@ export default {
 			]
 		},
 
+		/**
+		 * The readable documents as table rows, with the highest confidence per document.
+		 *
+		 * @return {Array<object>} The rows.
+		 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.2
+		 */
 		documentRows() {
 			if (!this.detail) {
 				return []
@@ -183,6 +207,12 @@ export default {
 		t,
 		otherLabel,
 
+		/**
+		 * Run the search and show the page or the refusal.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.1
+		 */
 		async onSearch() {
 			this.loading = true
 			this.error = ''
@@ -203,6 +233,13 @@ export default {
 			this.total = result.data.total
 		},
 
+		/**
+		 * Open one value and show where it occurs, or the refusal.
+		 *
+		 * @param {object} row The clicked result row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-3.2
+		 */
 		async open(row) {
 			this.error = ''
 			const result = await entityDetail(row.uuid)
