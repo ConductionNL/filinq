@@ -3058,14 +3058,15 @@
 			"area": "detect",
 			"name": "Refuse to anonymise when no detector is set up, rather than pass a document through untouched.",
 			"source": "own-code",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md: 0 of 16 tasks checked. Its own proposal.md documents the CURRENT bug: AnonymiserBackendStateClient::OR_SERVICE (lib/Service/AnonymiserBackendStateClient.php:49) names 'OCA\\OpenRegister\\Service\\AnonymisationBackendService', but OR's real class (confirmed by git grep on openregister origin/development) is one segment deeper at 'OCA\\OpenRegister\\Service\\Anonymisation\\AnonymisationBackendService'; the container resolve throws, the catch silently falls back to method='regex', and runAnonymize() (AnonymizationService.php:594) never consults backend state at all before writing an output file. dq-flow (dossiq) independently documents the identical class-name bug in its own FilinqRedactionClient.php docblock ('filinq's own client omits it and has been silently falling back to a hardcoded answer ever since').",
-				"change": "openspec/changes/anonymisation-fails-closed-without-a-detector"
+				"evidence": "lib/Service/AnonymiserBackendStateClient.php reads OpenRegister's OCA\\OpenRegister\\Service\\Anonymisation\\AnonymisationBackendService::getState() (BackendState jsonSerialize shape) and reports unknown, never regex, when it cannot; AnonymizationService::runAnonymize() -> requireLiveDetector() throws DetectionUnavailableException before DocumentAnonymizeRunner writes anything when recognition is disabled, the effective backend is unavailable or the state is unknown; AnonymizeRequestService maps it to 503 detectionUnavailable; every result, batch entry and folder entry carries detection {backend, entitiesRedacted, outcome redacted|nothing_found}; SettingsController derives the banner warning from the same read. Tests: AnonymiserBackendStateClientTest, AnonymizationServiceDetectorTest, AnonymizeRequestServiceDetectorTest, SettingsControllerTest::testTheAdminWarningSaysWhatIsActuallyConfigured.",
+				"change": "openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "the refusal this row asks for does not exist in code",
+			"reachedOn": "every anonymise path: POST api/anonymization/{fileId}, batch anonymise, folder analysis job; banner on admin settings and dashboard",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",

@@ -13,7 +13,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
  */
 
 declare(strict_types=1);

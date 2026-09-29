@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
 @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-5
-@spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+@spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 -->
 
 <template>
@@ -185,7 +185,7 @@ export default {
 		 * Whether this warning means every anonymisation is refused.
 		 *
 		 * @return {boolean} True for unknown, disabled and unavailable.
-		 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 		 */
 		refusing() {
 			return isRefusing(this.warning)
@@ -195,7 +195,7 @@ export default {
 		 * Whether OpenRegister fell back from the detector it is set to.
 		 *
 		 * @return {boolean} True when active and effective differ.
-		 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 		 */
 		fellBack() {
 			return this.activeMethod !== '' && this.activeMethod !== this.effectiveMethod
@@ -205,7 +205,7 @@ export default {
 		 * Why anonymisation is refused, in one line.
 		 *
 		 * @return {string} The line.
-		 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 		 */
 		refusalLine() {
 			if (this.warning === 'disabled') {
@@ -221,7 +221,7 @@ export default {
 		 * The detector in use, named, for the settings page.
 		 *
 		 * @return {string} The line, or '' when not asked for or not known.
-		 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 		 */
 		activeLine() {
 			if (!this.showActiveBackend || this.effectiveMethod === '' || this.refusing) {

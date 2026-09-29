@@ -12,8 +12,8 @@
  * What this file proves is that the page names the backend it was given.
  */
 
-// @e2e openspec/changes/anonymisation-fails-closed-without-a-detector/specs/anonymisation-detector-honesty/spec.md#an-admin-sees-the-backend-that-will-run
-// @e2e openspec/changes/anonymisation-fails-closed-without-a-detector/specs/anonymisation-detector-honesty/spec.md#a-regex-only-instance-is-warned-by-name
+// @e2e openspec/specs/anonymisation-detector-honesty/spec.md#an-admin-sees-the-backend-that-will-run
+// @e2e openspec/specs/anonymisation-detector-honesty/spec.md#a-regex-only-instance-is-warned-by-name
 
 import type { Page } from '@playwright/test'
 
@@ -67,7 +67,7 @@ async function goSettings(page: Page): Promise<void> {
 
 test.describe('anonymisation detector honesty', () => {
 	test('an admin sees the backend that will run', async ({ page }) => {
-		// @e2e openspec/changes/anonymisation-fails-closed-without-a-detector/specs/anonymisation-detector-honesty/spec.md#an-admin-sees-the-backend-that-will-run
+		// @e2e openspec/specs/anonymisation-detector-honesty/spec.md#an-admin-sees-the-backend-that-will-run
 		await withBackend(page, 'openanonymiser', null)
 		await goSettings(page)
 
@@ -77,7 +77,7 @@ test.describe('anonymisation detector honesty', () => {
 	})
 
 	test('a regex-only instance is warned by name', async ({ page }) => {
-		// @e2e openspec/changes/anonymisation-fails-closed-without-a-detector/specs/anonymisation-detector-honesty/spec.md#a-regex-only-instance-is-warned-by-name
+		// @e2e openspec/specs/anonymisation-detector-honesty/spec.md#a-regex-only-instance-is-warned-by-name
 		await withBackend(page, 'regex', 'regex')
 		await goSettings(page)
 

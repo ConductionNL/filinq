@@ -143,7 +143,7 @@ class SettingsController extends Controller {
 	 * @return array<string, mixed> The state plus warning, showWarning,
 	 *                              warningDismissed and appApiInstalled.
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 	 */
 	private function anonymiserBackendPayload(bool $dismissed): array {
 		$state = $this->anonymiserClient->getState();

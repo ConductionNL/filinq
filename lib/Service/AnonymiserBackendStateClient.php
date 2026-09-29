@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-1
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://conduction.nl
  *
- * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-1
  */
 class AnonymiserBackendStateClient {
 
@@ -97,7 +97,7 @@ class AnonymiserBackendStateClient {
 	 * @return array{known: bool, entityRecognitionEnabled: bool|null, activeMethod: string|null,
 	 *               effectiveMethod: string|null, effectiveAvailable: bool, backends: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-1
 	 */
 	public function getState(): array {
 		try {
@@ -142,7 +142,7 @@ class AnonymiserBackendStateClient {
 	 *
 	 * @return string|null One of the REFUSE_* reasons, or null.
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	public function refusalReason(array $state): ?string {
 		if (($state['known'] ?? false) !== true) {
@@ -172,7 +172,7 @@ class AnonymiserBackendStateClient {
 	 *
 	 * @return string|null One of unknown, disabled, unavailable, regex, or null.
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 	 */
 	public function warningFor(array $state): ?string {
 		$kinds = [

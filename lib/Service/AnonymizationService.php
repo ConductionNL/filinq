@@ -105,7 +105,7 @@ class AnonymizationService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -599,7 +599,7 @@ class AnonymizationService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	private function runAnonymize(
 		int $fileId,
@@ -662,7 +662,7 @@ class AnonymizationService {
 	 * @throws DetectionUnavailableException When recognition is off, the effective
 	 *                                       backend is unavailable, or the state is unknown.
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	private function requireLiveDetector(): string {
 		$state = $this->backendState->getState();

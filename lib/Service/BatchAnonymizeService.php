@@ -373,7 +373,7 @@ class BatchAnonymizeService {
 	 * @return array<string, mixed> The entry with the anonymised status and result fields applied.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
 	 */
 	private function applyAnonymizedResult(array $entry, array $result): array {
 		$entry['status'] = 'anonymized';

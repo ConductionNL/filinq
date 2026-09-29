@@ -83,3 +83,29 @@ report nothing.
 **A batch run can now fail part way.** The state is read once per run, so a
 batch either starts or does not. A backend that fails mid-batch surfaces as
 the per-document failures it already does.
+
+## Resolved at apply
+
+- **Where the result fields are added.** Task 3.1 says "through
+  `DocumentAnonymizeRunner`". They are added in
+  `AnonymizationService::runAnonymize()` right after the runner returns,
+  because that is the one place every entry point (API, batch, folder job)
+  passes and the place the state was read. The runner is unchanged.
+- **The result shape.** `detection: {ran, backend, entitiesRedacted,
+  outcome}` with `outcome` `redacted` or `nothing_found`.
+  `entitiesRedacted` is the number of entities the run was asked to redact.
+- **The refusal status.** HTTP 503 with `detectionUnavailable` (the reason)
+  and `detectionBackend`, matching the prohibition gate's fail-closed 503.
+  Batch and folder runs record it as a per-file error.
+- **Unavailable.** OpenRegister already falls back to `regex` when the
+  configured detector is down, so `detection_backend_unavailable` fires only
+  when the effective backend's own probe says unavailable. A fallback to
+  regex runs, reports `regex`, and the admin banner says which detector
+  OpenRegister is set to and that it is unavailable.
+- **The banner.** The server derives `warning` (`unknown`, `disabled`,
+  `unavailable`, `regex`, or null). A dismissal hides only the regex warning;
+  the three refusals cannot be dismissed. `appApiInstalled` is read from
+  `IAppManager::isInstalled('app_api')`; it only decides whether to show the
+  install-AppAPI-first hint, not which detector runs. The retired `method` key
+  is gone from the payload.
+- **Strings.** All six shipped locales, not only Dutch and English.

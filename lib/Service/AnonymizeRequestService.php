@@ -228,7 +228,7 @@ class AnonymizeRequestService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	public function executeAnonymize(
 		int $fileId,
@@ -398,7 +398,7 @@ class AnonymizeRequestService {
 	 *
 	 * @return array{status: int, body: array<string, mixed>} The response payload.
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 */
 	private function detectionUnavailableResponse(DetectionUnavailableException $refusal, int $fileId): array {
 		$this->logger->warning(

@@ -9,7 +9,7 @@
  * derives one itself: a banner computed from a value filinq failed to read is
  * the defect anonymisation-fails-closed-without-a-detector removes.
  *
- * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
  */
 
 /**

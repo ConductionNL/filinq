@@ -157,7 +157,7 @@ class FolderExtractionJob extends QueuedJob {
 	 * @return array<string, mixed> The updated file entry.
 	 *
 	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
 	 */
 	private function processFileEntry(array $fileEntry, string $batchId, string $userId): array {
 		$fileName = ($fileEntry['fileName'] ?? '');

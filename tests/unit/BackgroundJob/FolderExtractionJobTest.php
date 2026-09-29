@@ -250,7 +250,7 @@ class FolderExtractionJobTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
 	 */
 	public function testEachFolderEntryCarriesTheDetectionOutcome(): void {
 		$detection = ['ran' => true, 'backend' => 'regex', 'entitiesRedacted' => 1, 'outcome' => 'redacted'];

@@ -155,7 +155,7 @@ class BatchAnonymizeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
 	 */
 	public function testEachEntryCarriesTheDetectionOutcome(): void {
 		$detection = ['ran' => true, 'backend' => 'presidio', 'entitiesRedacted' => 0, 'outcome' => 'nothing_found'];

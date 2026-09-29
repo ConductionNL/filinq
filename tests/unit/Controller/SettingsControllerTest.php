@@ -189,7 +189,7 @@ class SettingsControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-fails-closed-without-a-detector/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-4
 	 */
 	public function testTheAdminWarningSaysWhatIsActuallyConfigured(): void {
 		$cases = [
