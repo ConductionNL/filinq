@@ -150,6 +150,7 @@ class SettingsService {
 	 * @return array<string, mixed> Feature toggle settings
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.4
 	 */
 	private function loadFeatureToggles(): array {
 		return [
@@ -220,6 +221,12 @@ class SettingsService {
 				'ocr_dpi',
 				'300'
 			),
+			// Read an arriving intake scan in the background (intake-ocr-on-arrival).
+			'ocr_on_arrival' => $this->config->getValueString(
+				$this->appName,
+				'ocr_on_arrival',
+				'1'
+			) === '1',
 			// Propose-grondslag-per-entity-type — instance-global map of
 			// entity type → base slug(s), used to pre-fill a proposed
 			// grondslag onto freshly-detected entities. Decoded to an
@@ -389,6 +396,7 @@ class SettingsService {
 		'ocr_enabled',
 		'ocr_languages',
 		'ocr_dpi',
+		'ocr_on_arrival',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 	];

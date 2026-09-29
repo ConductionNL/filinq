@@ -5695,6 +5695,61 @@
         "ocrProcessedAt": "2026-07-17T08:30:00+00:00",
         "triggeredBy": "manual",
         "engineVersion": "tesseract 5.3.0"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeDocument",
+          "slug": "intakedocument-1"
+        },
+        "channel": "scan",
+        "subject": "Bezwaarschrift tegen besluit Z-2026-114",
+        "sender": "Balie postkamer",
+        "receivedAt": "2026-09-18T08:15:00+00:00",
+        "file": 9201,
+        "fileName": "scan-0001.pdf",
+        "sourceRef": "voorbeeld-scanbatch-0001",
+        "status": "received",
+        "readingState": "read",
+        "readingError": "",
+        "readingUpdatedAt": "2026-09-18T08:17:00+00:00",
+        "contentText": "Geachte heer, mevrouw, hierbij maak ik bezwaar tegen uw besluit van 1 september 2026 met kenmerk Z-2026-114."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeDocument",
+          "slug": "intakedocument-2"
+        },
+        "channel": "scan",
+        "subject": "Handgeschreven notitie",
+        "sender": "Balie postkamer",
+        "receivedAt": "2026-09-18T08:20:00+00:00",
+        "file": 9202,
+        "fileName": "scan-0002.jpg",
+        "sourceRef": "voorbeeld-scanbatch-0002",
+        "status": "received",
+        "readingState": "failed",
+        "readingError": "No text was found in this document",
+        "readingUpdatedAt": "2026-09-18T08:22:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "intakeDocument",
+          "slug": "intakedocument-3"
+        },
+        "channel": "mail",
+        "subject": "Aanvraag omgevingsvergunning",
+        "sender": "a.jansen@example.nl",
+        "receivedAt": "2026-09-19T10:00:00+00:00",
+        "file": 9203,
+        "fileName": "aanvraag.pdf",
+        "sourceRef": "voorbeeld-mail-0003",
+        "status": "received",
+        "readingState": "queued",
+        "readingError": "",
+        "readingUpdatedAt": "2026-09-19T10:00:05+00:00"
       }
     ]
   }

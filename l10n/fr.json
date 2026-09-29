@@ -1,5 +1,13 @@
 {
     "translations": {
+        "Read scans on arrival": "Lire les scans à l'arrivée",
+        "Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.": "Lire le texte d'un scan ou d'une photo de la boîte de réception dès son arrivée, pour pouvoir le rechercher. Nécessite l'OCR activé et Tesseract installé.",
+        "Reading": "Lecture en cours",
+        "Text could not be read": "Le texte n'a pas pu être lu",
+        "Text recognised": "Texte reconnu",
+        "Waiting to be read": "En attente de lecture",
+        "Content Text": "Texte du contenu",
+        "De tekst die OCR bij binnenkomst uit het bestand las. Dezelfde toegang als het document zelf; de zoekfunctie van de inbox en de classificatie lezen dit veld.": "Le texte que l'OCR a lu dans le fichier à son arrivée. Même accès que le document lui-même ; la recherche de la boîte de réception et la classification lisent ce champ.",
         "OCR {confidence}%": "OCR {confidence} %",
         "OCR failed on this file.": "L'OCR a échoué sur ce fichier.",
         "OCR read {length} characters.": "L'OCR a lu {length} caractères.",

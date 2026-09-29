@@ -308,6 +308,26 @@
 				</div>
 			</div>
 
+			<!-- Read arriving intake scans in the background (intake-ocr-on-arrival) -->
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'Read scans on arrival') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:aria-label="t('filinq', 'Read scans on arrival')"
+					:modelValue="settings.ocr_on_arrival"
+					type="switch"
+					@update:modelValue="settings.ocr_on_arrival = $event" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.',
+						)
+					}}
+				</div>
+			</div>
+
 			<!-- Language selection -->
 			<div class="setting-item">
 				<div class="setting-label">
@@ -948,6 +968,7 @@ export default {
 				enable_keyword_extraction: true,
 				enable_topic_classification: true,
 				ocr_enabled: true,
+				ocr_on_arrival: true,
 				ocr_dpi: 300,
 				signing_enabled: false,
 				signing_provider: 'native',
@@ -1140,6 +1161,7 @@ export default {
 					this.settings.enable_topic_classification =
 						data.enable_topic_classification ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
+					this.settings.ocr_on_arrival = data.ocr_on_arrival ?? true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
 					// Signing settings
 					this.settings.signing_enabled =
@@ -1336,6 +1358,7 @@ export default {
 					: '0',
 
 				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
+				ocr_on_arrival: this.settings.ocr_on_arrival ? '1' : '0',
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
 				signing_enabled: this.settings.signing_enabled ? '1' : '0',

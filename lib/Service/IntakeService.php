@@ -33,6 +33,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Service\Intake\IntakeOcrQueue;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -60,6 +61,7 @@ class IntakeService {
 	 * @param PartySuggestionService $parties Reads a party out of the document, and never files one.
 	 * @param IUserSession $userSession The current session.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param IntakeOcrQueue $ocrQueue Marks and queues the reading of an arriving scan.
 	 *
 	 * @return void
 	 */
@@ -72,6 +74,7 @@ class IntakeService {
 		private readonly PartySuggestionService $parties,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly IntakeOcrQueue $ocrQueue,
 	) {
 
 	}//end __construct()
@@ -91,6 +94,7 @@ class IntakeService {
 	 * @throws IntakeRefusedException When the channel is not one this app accepts.
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.3
 	 */
 	public function receive(IntakeDocumentReceivedEvent $event): array {
 		$channel = $event->getChannel();
@@ -148,7 +152,12 @@ class IntakeService {
 			$document['partySuggestion'] = $this->parties->suggestFor(fileId: $fileId);
 		}
 
-		return $this->repository->save(document: $document);
+		// Reading on arrival: a scan or photo is marked `queued` before it is
+		// stored and read by a background job after, so nobody has to start it.
+		$stored = $this->repository->save(document: $this->ocrQueue->mark(document: $document));
+		$this->ocrQueue->queue(document: $stored);
+
+		return $stored;
 
 	}//end receive()
 

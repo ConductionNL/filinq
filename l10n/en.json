@@ -1,5 +1,13 @@
 {
     "translations": {
+        "Read scans on arrival": "Read scans on arrival",
+        "Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.": "Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.",
+        "Reading": "Reading",
+        "Text could not be read": "Text could not be read",
+        "Text recognised": "Text recognised",
+        "Waiting to be read": "Waiting to be read",
+        "Content Text": "Content Text",
+        "De tekst die OCR bij binnenkomst uit het bestand las. Dezelfde toegang als het document zelf; de zoekfunctie van de inbox en de classificatie lezen dit veld.": "De tekst die OCR bij binnenkomst uit het bestand las. Dezelfde toegang als het document zelf; de zoekfunctie van de inbox en de classificatie lezen dit veld.",
         "OCR {confidence}%": "OCR {confidence}%",
         "OCR failed on this file.": "OCR failed on this file.",
         "OCR read {length} characters.": "OCR read {length} characters.",

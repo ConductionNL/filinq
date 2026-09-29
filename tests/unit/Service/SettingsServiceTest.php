@@ -279,6 +279,27 @@ class SettingsServiceTest extends TestCase {
 	}//end testTheGuardianConsentAgeIsAWritableSettingThatDefaultsToSixteen()
 
 	/**
+	 * Reading on arrival is on by default and an admin can switch it off.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/intake-ocr-on-arrival/tasks.md#task-1.4
+	 */
+	public function testReadingOnArrivalDefaultsOnAndIsWritable(): void {
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $default
+		);
+		$this->assertTrue($this->settingsService->getAllSettings()['ocr_on_arrival'] ?? null);
+
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'ocr_on_arrival', '0');
+
+		$this->settingsService->updateSettings(['ocr_on_arrival' => '0']);
+
+	}//end testReadingOnArrivalDefaultsOnAndIsWritable()
+
+	/**
 	 * Test updateSettings silently rejects unknown keys
 	 *
 	 * Keys not present in WRITABLE_KEYS must be dropped from the result and

@@ -1,6 +1,14 @@
 OC.L10N.register(
     "filinq",
     {
+        "Read scans on arrival": "Scans beim Eingang lesen",
+        "Read the text of a scan or photo in the inbox as soon as it arrives, so it can be searched. Needs OCR on and Tesseract installed.": "Den Text eines Scans oder Fotos im Posteingang lesen, sobald er ankommt, damit er durchsucht werden kann. Dafür muss OCR eingeschaltet und Tesseract installiert sein.",
+        "Reading": "Wird gelesen",
+        "Text could not be read": "Text konnte nicht gelesen werden",
+        "Text recognised": "Text erkannt",
+        "Waiting to be read": "Wartet auf das Lesen",
+        "Content Text": "Inhaltstext",
+        "De tekst die OCR bij binnenkomst uit het bestand las. Dezelfde toegang als het document zelf; de zoekfunctie van de inbox en de classificatie lezen dit veld.": "Der Text, den OCR beim Eingang aus der Datei gelesen hat. Gleicher Zugriff wie das Dokument selbst; die Suche im Posteingang und die Klassifizierung lesen dieses Feld.",
         "OCR {confidence}%": "OCR {confidence}%",
         "OCR failed on this file.": "OCR ist bei dieser Datei fehlgeschlagen.",
         "OCR read {length} characters.": "OCR hat {length} Zeichen gelesen.",

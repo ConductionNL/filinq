@@ -100,7 +100,7 @@ class IntakeReadingProgressTest extends TestCase {
 	public function testASuccessfulReadingClearsTheEarlierError(): void {
 		$recorded = $this->progress->progressFor(state: IntakeReadingProgress::READ);
 
-		$this->assertNull($recorded['readingError']);
+		$this->assertSame('', $recorded['readingError']);
 	}//end testASuccessfulReadingClearsTheEarlierError()
 
 	/**
