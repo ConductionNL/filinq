@@ -169,7 +169,7 @@ export default {
 		 * The server checks again when it is pressed.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		ocrOffered() {
 			const file = fileViewerStore.currentFile
@@ -184,7 +184,7 @@ export default {
 		 * The OCR badge, when the file was OCR'd.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		ocrBadge() {
 			return ocrBadgeLabel(this.ocrResult)
@@ -312,7 +312,7 @@ export default {
 		 * Read whether OCR can run and this file's last result.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		async loadOcrStatus() {
 			const file = fileViewerStore.currentFile
@@ -334,7 +334,7 @@ export default {
 		 * Run OCR on the open file and show the new badge without a reload.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		async runOcrNow() {
 			this.ocrRunning = true

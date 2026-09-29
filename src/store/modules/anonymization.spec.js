@@ -655,7 +655,7 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 })
 
 describe('reanalyseEntry — a scan detection could not read', () => {
-	// @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.2
+	// @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.2
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		jest.clearAllMocks()

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -56,7 +56,7 @@ class OcrResultRepository {
 	 *
 	 * @throws RuntimeException When OpenRegister cannot be read.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
 	 */
 	public function findForFile(int $fileId): ?array {
 		try {
@@ -98,7 +98,7 @@ class OcrResultRepository {
 	 *
 	 * @throws RuntimeException When OpenRegister refuses the write.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
 	 */
 	public function saveForFile(array $result): array {
 		unset($result['uuid']);

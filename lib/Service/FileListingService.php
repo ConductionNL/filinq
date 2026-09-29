@@ -75,7 +75,7 @@ class FileListingService {
 	 * @return array<string, mixed> File info
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
 	 */
 	private function buildFileInfo(
 		\OCP\Files\File $file,
@@ -118,7 +118,7 @@ class FileListingService {
 	 *
 	 * @return array{ocrProcessed: bool, ocrConfidence: float|int|null, ocrAvailable: bool} The status.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
 	 */
 	private function ocrStatus(int $fileId, string $mimeType): array {
 		$status = ['ocrProcessed' => false, 'ocrConfidence' => null, 'ocrAvailable' => false];

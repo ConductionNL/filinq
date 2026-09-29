@@ -203,7 +203,7 @@ class AnonymizationService {
 	 * @throws Exception If extraction or detection fails
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.3
 	 */
 	private function runExtraction(int $fileId, array $options): array {
 		$force = $options['force'];

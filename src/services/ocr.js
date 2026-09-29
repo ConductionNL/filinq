@@ -7,7 +7,7 @@
  * The server decides whether OCR can run and answers with a reason when it
  * cannot. These helpers only carry that answer to the screen.
  *
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
  */
 
 import axios from '@nextcloud/axios'
@@ -35,7 +35,7 @@ const base = () => generateUrl('/apps/filinq/api/ocr')
  *
  * @param {string} mimeType The MIME type.
  * @return {boolean} True for an image or a PDF.
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
  */
 export function isOcrCandidate(mimeType) {
 	return OCR_MIME_TYPES.includes((mimeType || '').toLowerCase())
@@ -46,7 +46,7 @@ export function isOcrCandidate(mimeType) {
  *
  * @param {Array<number|string>} fileIds The files.
  * @return {Promise<{capability: object, results: object}>} The answer.
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
  */
 export async function fetchOcrStatus(fileIds = []) {
 	const response = await axios.get(base(), {
@@ -60,7 +60,7 @@ export async function fetchOcrStatus(fileIds = []) {
  *
  * @param {number|string} fileId The file.
  * @return {Promise<object>} The result: ocrProcessed, confidence, textLength.
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
  */
 export async function runOcr(fileId) {
 	const response = await axios.post(base() + '/' + encodeURIComponent(fileId))
@@ -72,7 +72,7 @@ export async function runOcr(fileId) {
  *
  * @param {object} error The axios error, or a 200 answer with ocrProcessed false.
  * @return {string} The message.
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
  */
 export function ocrErrorMessage(error) {
 	const data = error?.response?.data ?? error
@@ -84,7 +84,7 @@ export function ocrErrorMessage(error) {
  *
  * @param {object|null} result The result, or null when OCR never ran.
  * @return {string} E.g. "OCR 91%", or '' when there is no result.
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
  */
 export function ocrBadgeLabel(result) {
 	if (!result || typeof result.confidence !== 'number') {
@@ -100,7 +100,7 @@ export function ocrBadgeLabel(result) {
  *
  * @param {object} data The extract endpoint's answer.
  * @return {string|null} The warning, or null when detection saw the whole document.
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.2
  */
 export function ocrExtractionWarning(data) {
 	if (!data) {
@@ -143,7 +143,7 @@ export function ocrExtractionWarning(data) {
  * @param {object} data The extract endpoint's answer.
  * @return {boolean} True when detection did not see the document, so an empty
  *                   entity list must not mark it done.
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.2
  */
 export function applyOcrFlags(entry, data) {
 	entry.ocrWarning = ocrExtractionWarning(data)

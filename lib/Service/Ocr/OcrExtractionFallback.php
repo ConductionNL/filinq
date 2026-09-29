@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -78,7 +78,7 @@ class OcrExtractionFallback {
 	 *                              `ocrSkipped` or `ocrDetectionPending`. Empty
 	 *                              when the file did not need OCR.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.3
 	 */
 	public function afterExtraction(int $fileId, object $textExtractor, bool $force): array {
 		$file = $this->resolve(fileId: $fileId);

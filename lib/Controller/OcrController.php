@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -88,7 +88,7 @@ class OcrController extends Controller {
 	 *
 	 * @return JSONResponse The result, never the text.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function run(int $fileId): JSONResponse {
@@ -122,7 +122,7 @@ class OcrController extends Controller {
 	 *
 	 * @return JSONResponse {fileId, ocrProcessed, ocrConfidence, result}.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
 	 */
 	#[NoAdminRequired]
 	public function show(int $fileId): JSONResponse {
@@ -154,7 +154,7 @@ class OcrController extends Controller {
 	 *
 	 * @return JSONResponse {capability: {enabled, tesseractAvailable, available}, results: {fileId: result}}.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {

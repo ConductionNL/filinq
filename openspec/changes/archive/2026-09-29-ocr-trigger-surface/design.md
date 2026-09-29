@@ -217,3 +217,35 @@ clean install.
 - Long-term: migrate `OcrService` into OpenRegister as a text-extraction
   handler so ALL OR consumers get OCR? Logged as the architectural
   follow-up in the OR issue of D2 — explicitly out of scope here.
+
+## Resolved at apply (2026-09-29)
+
+- **OcrService gained `processNode(File)`.** The design said OcrService stays
+  unchanged, but `processFile(int)` resolves the file through the session
+  user's folder, so the folder-analysis job (no session) could never run it.
+  `processNode()` takes the node the caller already resolved and access-checked;
+  `processFile()` now delegates to it. It also sends an image straight to
+  Tesseract; `processFile()` used to run the PDF rasteriser on images first.
+- **The OR seam is not there.** ConductionNL/openregister#2033 is open and
+  OpenRegister development has no `extractFromProvidedText`. The fallback calls
+  it when it exists (`method_exists`), and otherwise answers
+  `ocrDetectionPending: true`. Task 2.2 is the issue; the OpenRegister PR is not
+  this repo's to write. Reopening a pending scan does not run Tesseract again
+  unless the caller forces a re-analysis.
+- **`ocrResult` is written only when OCR recovered text.** A run that finds no
+  text answers `ocrSkipped: no_text_recovered` (pipeline) or 200 with
+  `ocrProcessed: false` (route), and stores nothing, so `ocrProcessed: true`
+  always means there is text somewhere.
+- **One status call per page.** My documents lists files over WebDAV, so the
+  badge needs a batch read: `GET api/ocr?fileIds=` answers the capability and
+  the results for files the caller can open (at most 200 ids).
+- **The review warning closes a silent hole in the store.** The anonymisation
+  store marked any document with zero entities `completed`. A scan with
+  `ocrSkipped` or `ocrDetectionPending` now stays `extracted`, with the warning
+  on the sidebar.
+- **Not done:** the one-concurrent-OCR-per-user lock from the risks section,
+  the seeded sample scan file (task 1.2 ships three demo `ocrResult` objects in
+  the mock register instead), and screenshots for the docs (the dev instance
+  serves another checkout). The docs extend `docs/features/ocr-document-scanning.md`
+  rather than a new `ocr.md`.
+- **Strings.** All six shipped locales.

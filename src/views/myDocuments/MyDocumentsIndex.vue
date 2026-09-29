@@ -481,7 +481,7 @@ export default {
 		 *
 		 * @param {Array<object>} rows The rows on the page.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		async loadOcrStatus(rows) {
 			const ids = (rows || [])
@@ -507,7 +507,7 @@ export default {
 		 *
 		 * @param {object} row The row.
 		 * @return {boolean}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		ocrOfferedFor(row) {
 			return this.ocrAvailable && !row.isFolder && isOcrCandidate(row.mimeType)
@@ -518,7 +518,7 @@ export default {
 		 *
 		 * @param {object} row The row.
 		 * @return {string}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		ocrBadgeFor(row) {
 			return ocrBadgeLabel(this.ocrResults[String(row.fileId)] ?? null)
@@ -529,7 +529,7 @@ export default {
 		 *
 		 * @param {object} row The row.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 		 */
 		async runOcrOn(row) {
 			this.ocrRunning = { ...this.ocrRunning, [row.fileId]: true }

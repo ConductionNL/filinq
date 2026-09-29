@@ -152,7 +152,7 @@ class FileListingServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
 	 */
 	public function testTheListingReflectsRealOcrRunsOnly(): void {
 		$this->ocrRunService($this->ocrService())->run(file: $this->ocrFile(id: 812004), trigger: 'manual');

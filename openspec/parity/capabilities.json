@@ -890,9 +890,11 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/OcrService.php (Tesseract wrapper: extractTextFromPdf/Image, needsOcr, isTesseractAvailable) has an admin toggle in src/views/settings/Settings.vue:257-303 ('OCR Document Scanning', ocr_enabled, languages) reached via settings#index/create (FE). But OcrService is only invoked internally by lib/Service/FinancialExtractionService.php (invoice text acquisition) and lib/Service/ScanPageReader.php (separator-sheet page reading) - never to add a text layer back to a document or make it generally searchable. openspec/changes/ocr-trigger-surface/tasks.md (the change that would add a user-facing 'Run OCR' action and OCR fallback inside anonymisation/entity-detection) is entirely unchecked; grep of src/ for 'ocr' outside settings/status display finds only a validation-finding cross-link (MyDocumentsIndex.vue onOcrRequested()) that navigates to Anonymization, it does not call OCR."
+				"evidence": "Run OCR on My documents (MyDocumentsIndex.vue row action) and in the file viewer (FileViewerPage.vue), POST/GET api/ocr/{fileId} and GET api/ocr?fileIds= (OcrController, caller's own files only), OcrRunService + ocrResult schema (confidence, languages, dpi, textLength, never the text); the file listing reads ocrProcessed/ocrConfidence from ocrResult. Still partial: the recognised text is not written back as a text layer, so the file itself does not become searchable.",
+				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "settings toggle only (Settings.vue); actual OCR execution is internal to FinancialExtractionService and ScanPageReader, not directly user-triggered",
+			"reachedOn": "Run OCR on My documents and in the file viewer; OCR badge with confidence",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "ocr-trigger-surface",
@@ -2948,13 +2950,15 @@
 			"name": "Detect personal data in scanned PDFs and photographed pages.",
 			"source": "competitor-derived",
 			"sourceRef": "Presidio image redaction; CaseGuard handwriting OCR",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/ocr-trigger-surface (an open change found in the openspec pass on 2026-09-27). Before: OpenRegister's TextExtractionService (the class filinq calls for detection, AnonymizationService.php:202) has no OCR code path (git grep on origin/development openregister for ocr/tesseract in that file returned nothing). Filinq's own OcrService/Tesseract integration exists only inside FinancialExtractionService.php (a different feature, 'scan-en-herken'), not called from the anonymisation pipeline (AnonymizationService.php / DocumentAnonymizeRunner.php have no OcrService references)."
+				"evidence": "lib/Service/Ocr/OcrExtractionFallback.php runs in AnonymizationService::runExtraction() after OpenRegister's extractFile(): when OcrService::needsOcr(mime, getExtractedText()) says a scan has no text, OcrRunService runs Tesseract (admin languages/DPI) and stores an ocrResult row; the text goes to OpenRegister's extractFromProvidedText when it exists. OpenRegister development has no such seam yet (ConductionNL/openregister#2033), so on today's OpenRegister every scan answers ocrDetectionPending: true and the review (FileViewerSidebar, anonymization store) keeps it open with a warning instead of marking it clean. Partial: entities in scans are not detected until OpenRegister takes the text. Tests: AnonymizationServiceOcrFallbackTest, jest anonymization.spec.js reanalyseEntry.",
+				"change": "openspec/changes/archive/2026-09-29-ocr-trigger-surface",
+				"readOn": "2026-09-29"
 			},
-			"reachedOn": "nothing reaches OCR-then-detect for the anonymisation pipeline",
+			"reachedOn": "anonymisation upload and review (POST api/anonymization/extract/{fileId}); the warning shows in the file viewer sidebar",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",

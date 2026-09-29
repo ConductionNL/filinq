@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -69,7 +69,7 @@ class OcrRunService {
 	 *
 	 * @return array{enabled: bool, tesseractAvailable: bool, available: bool} The capability.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
 	 */
 	public function capability(): array {
 		$enabled = $this->ocr->isOcrEnabled();
@@ -90,7 +90,7 @@ class OcrRunService {
 	 *
 	 * @return bool True for an OCR candidate.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
 	 */
 	public function isCandidate(string $mimeType): bool {
 		// A PDF with no text is a candidate; needsOcr() without text answers that.
@@ -107,7 +107,7 @@ class OcrRunService {
 	 * @return array{processed: bool, reason: string|null, text: string, result: array<string, mixed>|null}
 	 *         `text` is for the pipeline only; no caller may return it.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
 	 */
 	public function run(File $file, string $trigger): array {
 		$reason = $this->refusal(mimeType: $file->getMimeType());

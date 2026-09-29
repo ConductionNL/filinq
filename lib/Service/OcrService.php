@@ -510,7 +510,7 @@ class OcrService {
 	 *
 	 * @throws Exception When the file cannot be copied to a temporary location or recognition fails.
 	 *
-	 * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
 	 */
 	public function processNode(File $file): array {
 		$languages = $this->getOcrLanguages();

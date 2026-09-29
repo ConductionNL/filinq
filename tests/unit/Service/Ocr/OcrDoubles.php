@@ -11,7 +11,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/ocr-trigger-surface/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
