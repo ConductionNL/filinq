@@ -72,6 +72,8 @@ import CorrespondenceIndex from './views/correspondence/CorrespondenceIndex.vue'
 import CustomDictionaryDetail from './views/customDictionary/CustomDictionaryDetail.vue'
 import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryIndex.vue'
 import DashboardIndex from './views/dashboard/DashboardIndex.vue'
+import ContractDetail from './views/contracts/ContractDetail.vue'
+import ContractPipeline from './views/contracts/ContractPipeline.vue'
 import DossierDetail from './views/dossier/DossierDetail.vue'
 import DossierIndex from './views/dossier/DossierIndex.vue'
 import EntitySearch from './views/entitySearch/EntitySearch.vue'
@@ -112,6 +114,8 @@ export default {
 	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
 	PrintJobs: { kind: 'page', component: PrintJobs },
 	LegalHolds: { kind: 'page', component: LegalHolds },
+	ContractDetail: { kind: 'page', component: ContractDetail },
+	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EntitySearch: { kind: 'page', component: EntitySearch },
 	PublicationsPage: { kind: 'page', component: PublicationsPage },

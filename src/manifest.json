@@ -112,6 +112,20 @@
 			"order": 45
 		},
 		{
+			"id": "Contracts",
+			"label": "Contracts",
+			"icon": "FileSign",
+			"route": "Contracts",
+			"order": 46
+		},
+		{
+			"id": "ContractPipeline",
+			"label": "Renewal pipeline",
+			"icon": "CalendarSync",
+			"route": "ContractPipeline",
+			"order": 47
+		},
+		{
 			"id": "Templates",
 			"label": "Templates",
 			"icon": "FileReplaceOutline",
@@ -269,6 +283,12 @@
 			"schemaSlug": "customDictionary",
 			"urlTemplate": "/apps/filinq/custom-dictionaries/{uuid}",
 			"displayName": "Custom dictionary"
+		},
+		{
+			"registerSlug": "filinq",
+			"schemaSlug": "documentContract",
+			"urlTemplate": "/apps/filinq/contracts/{uuid}",
+			"displayName": "Contract"
 		}
 	],
 	"pages": [
@@ -358,6 +378,50 @@
 			"title": "Dossier",
 			"component": "DossierDetail",
 			"_note": "Aggregates documents, legal bases, anonymisation runs and publication state. Selecting a document swaps the inline viewer through store state, never a route push, so switching causes no reload. Every dossier-level action calls the endpoint that already owns it \u2014 nothing here reimplements batch, report or publication logic."
+		},
+		{
+			"id": "Contracts",
+			"route": "/contracts",
+			"type": "index",
+			"title": "Contracts",
+			"config": {
+				"register": "filinq",
+				"schema": "documentContract",
+				"columns": [
+					"title",
+					"contractType",
+					"status",
+					"endDate",
+					"noticeDeadline",
+					"value"
+				],
+				"rowRoute": "ContractDetail",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New contract",
+				"emptyText": "No contracts yet"
+			},
+			"_note": "contract-lifecycle-management REQ-DDCLM-006: OpenRegister lists the documentContract objects directly (its RBAC decides who sees them: filinq-contract-managers and admins); a row opens ContractDetail through rowRoute, because the detail is a custom page, not type:detail. Create and edit are the object API's own dialog; status starts at draft and only the declared lifecycle moves it."
+		},
+		{
+			"id": "ContractPipeline",
+			"route": "/contracts/pipeline",
+			"type": "custom",
+			"title": "Renewal pipeline",
+			"component": "ContractPipeline",
+			"_note": "The renewal pipeline (REQ-DDCLM-006): active contracts bucketed in the browser (src/services/contractPipeline.js) into expired, notice due within 30 days, ending within 90 days and later, from the objects the caller can read; renew and end on every row. MUST stay declared BEFORE /contracts/:id: vue-router matches in declaration order, so the :id route would swallow /contracts/pipeline."
+		},
+		{
+			"id": "ContractDetail",
+			"route": "/contracts/:id",
+			"type": "custom",
+			"title": "Contract",
+			"component": "ContractDetail",
+			"_note": "One contract (REQ-DDCLM-001/002/004/005): terms, parties named from their contacts (GET api/contracts/{id}/parties), documents (attach from Files, generate from a template through api/documents/generate), send for signature (an ordinary signing request, recorded through POST api/contracts/{id}/signing, which also links the signed document back once the request completed), suggested terms with accept and reject, and put in force, renew and end."
 		},
 		{
 			"id": "Templates",
