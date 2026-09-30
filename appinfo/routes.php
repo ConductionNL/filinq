@@ -217,6 +217,11 @@ $extra = [
         ['name' => 'pseudonymisation#status', 'url' => 'api/pseudonymisation/status/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'pseudonymisation#restore', 'url' => 'api/pseudonymisation/{linkId}/restore', 'verb' => 'POST'],
         // Legal hold cases (e-discovery-legal-hold): the hold register, gated on hold authority in the service.
+        // Contracts (contract-lifecycle-management): only the actions; CRUD is OpenRegister's object API.
+        ['name' => 'contract#renew', 'url' => 'api/contracts/{id}/renew', 'verb' => 'POST'],
+        ['name' => 'contract#terminate', 'url' => 'api/contracts/{id}/terminate', 'verb' => 'POST'],
+        ['name' => 'contract#suggest', 'url' => 'api/contracts/{id}/suggestions', 'verb' => 'POST'],
+        ['name' => 'contract#decideSuggestion', 'url' => 'api/contracts/{id}/suggestions/{index}', 'verb' => 'PUT', 'requirements' => ['index' => '\\d+']],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],

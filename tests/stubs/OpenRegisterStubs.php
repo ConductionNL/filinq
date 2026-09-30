@@ -2462,6 +2462,44 @@ class ObjectUpdatingEvent extends Event {
 	public function isPropagationStopped(): bool {
 		return $this->stopped;
 	}//end isPropagationStopped()
+
+	/** Mirrors OR: MagicMapper merges this over the object before the update. */
+	public function setModifiedData(array $data): void {
+		$this->modifiedData = $data;
+	}//end setModifiedData()
+
+	public function getModifiedData(): array {
+		return $this->modifiedData;
+	}//end getModifiedData()
+
+	private array $modifiedData = [];
+}//end class
+
+/**
+ * Mirrors openregister/lib/Event/ObjectCreatingEvent.php (development,
+ * 2026-09-30): `getObject()`, `setModifiedData()` / `getModifiedData()`,
+ * which MagicMapper merges over the object before the insert.
+ */
+class ObjectCreatingEvent extends Event {
+	private array $modifiedData = [];
+
+	public function __construct(
+		private readonly ObjectEntity $object,
+	) {
+		parent::__construct();
+	}//end __construct()
+
+	public function getObject(): ObjectEntity {
+		return $this->object;
+	}//end getObject()
+
+	public function setModifiedData(array $data): void {
+		$this->modifiedData = $data;
+	}//end setModifiedData()
+
+	public function getModifiedData(): array {
+		return $this->modifiedData;
+	}//end getModifiedData()
 }//end class
 
 class ObjectUpdatedEvent extends Event {

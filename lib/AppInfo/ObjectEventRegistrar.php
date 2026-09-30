@@ -96,6 +96,15 @@ class ObjectEventRegistrar {
 			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
 			DocumentRegistrationWriteGuard::class
 		);
+		// A contract saved without a notice deadline gets end date minus
+		// notice period, however it is saved (contract-lifecycle-management).
+		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $preWrite) {
+			$context->registerEventListener(
+				'OCA\\OpenRegister\\Event\\' . $preWrite,
+				'OCA\\Filinq\\EventListener\\ContractNoticeDeadlineListener'
+			);
+		}
+
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);
 
 		// A deleted anonymisation link takes its reversible-pseudonymisation
