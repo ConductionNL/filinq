@@ -165,10 +165,9 @@ class SigningRequestValidator {
 	/**
 	 * Check a new request's field placements and put them on the request.
 	 *
-	 * @param array<string, mixed>   $request     The request about to be stored.
-	 * @param mixed                  $placements  The `fieldPlacements` the caller sent.
-	 * @param int                    $signerCount How many signers the request names.
-	 * @param SignedArtifactProducer $producer    Reads the document's bytes, only when there are placements.
+	 * @param array<string, mixed>   $request  The request about to be stored.
+	 * @param array<string, mixed>   $data     What the caller sent: `fieldPlacements` and `signers`.
+	 * @param SignedArtifactProducer $producer Reads the document's bytes, only when there are placements.
 	 *
 	 * @return array<string, mixed> The request, with `fieldPlacements` when there are any.
 	 *
@@ -176,8 +175,13 @@ class SigningRequestValidator {
 	 *
 	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
-	public function withPlacements(array $request, mixed $placements, int $signerCount, SignedArtifactProducer $producer): array {
-		return $this->placementCheck->apply(request: $request, placements: $placements, signerCount: $signerCount, producer: $producer);
+	public function withPlacements(array $request, array $data, SignedArtifactProducer $producer): array {
+		return $this->placementCheck->apply(
+			request: $request,
+			placements: ($data['fieldPlacements'] ?? null),
+			signerCount: count((array) ($data['signers'] ?? [])),
+			producer: $producer
+		);
 
 	}//end withPlacements()
 }//end class
