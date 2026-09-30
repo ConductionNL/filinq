@@ -202,3 +202,13 @@ initials p2 @ 0.1/0.9). CSV fixture committed under `tests/fixtures/`
 - **XLSX.** No spreadsheet library is vendored, so XLSX is read directly (first sheet, shared and inline strings, a formula's cached value). No dependency was added.
 - **No new custom page.** The wizard is a dialog on the signing request form, which already holds the document and level every row uses; the batch list is a typed index page.
 - **Template batches** (D4, one generated document per row) are not built in this pass; the row stays partial for them.
+
+## Resolved at apply (field placement, 2026-09-30)
+
+- **Rendering library.** "The existing PDF composition service" is FPDI (setasign/fpdi, already used by the merge through PdfDocumentFactory). `FieldPlacementRenderer` imports every page at its own size and draws each field as a bordered box. The free FPDI parser cannot read every PDF (compressed cross-reference streams); such a document is refused at request creation with a 400, not at signing.
+- **When the document is checked.** `SignedArtifactProducer::withPlacements()` reads the document at creation and refuses a field on a page it lacks, so a request can never reach completion with a field it cannot draw.
+- **What a field shows.** Signature and text: the signer record's display name (else e-mail, else user id). Initials: the first letter of each word. Date: the signing date. Checkbox: a cross. The placements also join the MAC-covered assertion, so a rewritten placement list fails verification like a moved block.
+- **External providers.** LibreSign's `request-signature` call has no field input: its visible elements need the sign-request ids it creates, a second call per signer. A LibreSign request with placements is refused (400) rather than signed without them. ValidSign is not wired (it throws on produce), so it receives nothing.
+- **Preview source.** The editor reads the document through the existing `api/documents/{fileId}/versions/0/download`, which checks access the same way.
+- **Rounding.** The editor rounds to four decimals; the server allows a box to end at the page edge within 1e-9.
+

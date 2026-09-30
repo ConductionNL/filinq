@@ -6,11 +6,11 @@
 ## 1. Register & data model
 
 - [ ] 1.1 Additive register edit in `lib/Settings/filinq_register.json`: schemas `bulkSigningBatch` + `signingEnvelope`, properties `signingRequest.fieldPlacements[]` + `signingRequest.envelopeRef` per REQ-DDBSF-001; register version bump for boot import
-  - Bulk send half done: `bulkSigningBatch` 1.0.0, register 8.35.0. `fieldPlacements` and `envelopeRef` land with tasks 3 and 4.
+  - Bulk send half done: `bulkSigningBatch` 1.0.0, register 8.35.0. Placement half done: `signingRequest` 1.8.0 `fieldPlacements`, register 8.36.0. `signingEnvelope` and `envelopeRef` land with task 4.
   - Union-additive diff against merge base; `tests/validate-manifest.js` passes; property titles present (hydra schema-property-titles gate)
 
 - [ ] 1.2 Seed data per design.md (nil-UUID batch `…f001` with rejected-row fixture, envelope `…f002`, placement demo request); CSV fixture with `@example.invalid` emails under `tests/fixtures/`
-  - Bulk send half done: three demo batches in lib/Settings/filinq_mock_register.json (DemoDataCoverageTest wants three per schema); CSV fixture tests/fixtures/bulk-signing/recipients-50.csv. Envelope and placement seeds with tasks 3 and 4.
+  - Bulk send half done: three demo batches in lib/Settings/filinq_mock_register.json (DemoDataCoverageTest wants three per schema); CSV fixture tests/fixtures/bulk-signing/recipients-50.csv. Placement seed: the first signingRequest demo object carries a signature and a date field. Envelope seed with task 4.
 
 ## 2. Bulk send backend
 
@@ -26,11 +26,14 @@
 
 ## 3. Field placement
 
-- [ ] 3.1 Placement persistence + provider payload: `fieldPlacements` accepted/validated on create (coordinates 0–1, five types, signerIndex bounds), passed to external providers' payloads (REQ-DDBSF-003)
+- [x] 3.1 Placement persistence + provider payload: `fieldPlacements` accepted/validated on create (coordinates 0–1, five types, signerIndex bounds), passed to external providers' payloads (REQ-DDBSF-003)
+  - Built: lib/Service/Signing/FieldPlacements.php (rules), SignedArtifactProducer::withPlacements (called from SigningService::createRequest; 400 for a broken rule, a page the PDF lacks, or LibreSign), placements and signer names in the provider context at completion. LibreSign's request-signature call has no field input, so placements are refused for it rather than dropped; ValidSign is not wired (it throws on produce). Tests: SigningServiceTest placement cases, FieldPlacementRenderingTest::testPlacementRules.
 
-- [ ] 3.2 Native rendering: draw placed blocks via the existing PDF composition service BEFORE v2 canonicalisation/MAC in `produceSignedArtifact()`; mutation test proves a moved block → `tampered`; placement-free byte-compatibility regression test (REQ-DDBSF-003)
+- [x] 3.2 Native rendering: draw placed blocks via the existing PDF composition service BEFORE v2 canonicalisation/MAC in `produceSignedArtifact()`; mutation test proves a moved block → `tampered`; placement-free byte-compatibility regression test (REQ-DDBSF-003)
+  - Built: lib/Service/Signing/FieldPlacementRenderer.php (FPDI, the library the merge already uses), drawn in NativeSigningProvider::produceSignedArtifact() before the canonical hash; placements also join the assertion. Tests: tests/unit/Service/Signing/FieldPlacementRenderingTest.php (real renderer, provider and verifier: drawn and verified, moved block invalid, no placements byte-identical, page past the end refused).
 
-- [ ] 3.3 Placement editor UI on `SigningRequestForm.vue`: page-preview overlay, drag/resize per signer, five static types; component under `src/views/signing/`, dialogs in `src/modals/` (REQ-DDBSF-005)
+- [x] 3.3 Placement editor UI on `SigningRequestForm.vue`: page-preview overlay, drag/resize per signer, five static types; component under `src/views/signing/`, dialogs in `src/modals/` (REQ-DDBSF-005)
+  - Built: src/views/signing/FieldPlacementEditor.vue (pdfjs page preview through api/documents/{fileId}/versions/0/download; click to place, drag or arrow keys to move, Shift and an arrow key to resize, Delete to remove; every box is a labelled button), pure rules in src/views/signing/fieldPlacement.js (vitest tests/vitest/fieldPlacement.spec.js). No dialog was needed. Resize is keyboard and bottom-right only.
 
 ## 4. Envelopes
 
@@ -44,16 +47,16 @@
 ## 5. Quality, i18n, docs
 
 - [ ] 5.1 Unit tests ≥75% on new code (validation matrix, row isolation, cap enforcement, roll-up semantics, placement MAC coverage); run in container `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
-  - Bulk send half done (BulkSigning*Test, BulkSigningControllerTest).
+  - Bulk send half done (BulkSigning*Test, BulkSigningControllerTest). Placement half done (FieldPlacementRenderingTest, SigningServiceTest placement cases).
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/bulk-signing-field-builder.spec.ts`: 50-row CSV (3 bad) → report → 47-request batch; placement rendered in completed artifact + verify `verified`; 3-doc envelope single ceremony → 3 artifacts/trails, decline → `partially_declined`; verify on Postgres (8080), nldesign theme enabled
-  - Bulk send half written, not run (the dev instance serves another checkout): tests/e2e/spec-coverage/bulk-signing-field-builder.spec.ts.
+  - Bulk send and placement halves written, not run (the dev instance serves another checkout): tests/e2e/spec-coverage/bulk-signing-field-builder.spec.ts.
 
 - [ ] 5.3 i18n EN source + NL translations (wizard, report reasons, envelope statuses, placement editor)
-  - Bulk send strings in all six locales.
+  - Bulk send and placement strings in all six locales.
 
 - [ ] 5.4 Docs in `docs/features/` (bulk send, placement, envelopes — explicit "conditional fields: future" note) with Playwright screenshots (ADR-010); `openspec validate bulk-signing-field-builder --strict` passes
-  - Bulk send half: docs/features/bulk-send.md.
+  - Bulk send half: docs/features/bulk-send.md. Placement half: docs/features/signing-field-placement.md.
 
 ## Quality checklist
 

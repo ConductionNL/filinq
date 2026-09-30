@@ -235,7 +235,11 @@ class SignedArtifactProducer {
 		}
 
 		$file = $this->resolveDocumentFile(fileId: (int) ($request['documentFileId'] ?? 0), request: $request);
-		$pages = $this->placementRenderer->pageCount(pdf: $file->getContent());
+		try {
+			$pages = $this->placementRenderer->pageCount(pdf: $file->getContent());
+		} catch (RuntimeException $e) {
+			throw new RuntimeException(message: $e->getMessage(), code: 400, previous: $e);
+		}
 		foreach ($normalised as $placement) {
 			if ($placement['page'] > $pages) {
 				throw new RuntimeException(message: 'A field is placed on page '.$placement['page'].' of a document with '.$pages.' pages', code: 400);

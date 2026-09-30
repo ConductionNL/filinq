@@ -1775,14 +1775,15 @@ class SigningServiceTest extends TestCase {
 	 * @param array<int, array<string, mixed>> $placements The placements.
 	 * @param string                           $provider   The provider.
 	 * @param array<int, array<string, mixed>> $saved      Collects what was saved.
+	 * @param string|null                      $content    The document bytes (a three-page PDF when null).
 	 *
 	 * @return array<string, mixed> The created request.
 	 */
-	private function createWithPlacements(array $placements, string $provider, array &$saved): array {
+	private function createWithPlacements(array $placements, string $provider, array &$saved, ?string $content = null): array {
 		$supporting = $this->makeSupportingProvider();
 		$this->providerFactory->method('getProvider')->willReturn($supporting);
 		$document = $this->createMock(\OCP\Files\File::class);
-		$document->method('getContent')->willReturn($this->threePagePdf());
+		$document->method('getContent')->willReturn($content ?? $this->threePagePdf());
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$document]);
 		$this->rootFolder->method('getUserFolder')->willReturn($folder);
@@ -1917,6 +1918,26 @@ class SigningServiceTest extends TestCase {
 		);
 
 	}//end testCreateRequestRefusesPlacementsLibreSignCannotCarry()
+
+	/**
+	 * A document the renderer cannot read gets no placements: 400 at creation, not a failure at signing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesPlacementsOnADocumentThatIsNotAPdf(): void {
+		$saved = [];
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(400);
+		$this->createWithPlacements(
+			placements: [['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature']],
+			provider: 'native',
+			saved: $saved,
+			content: 'plain text, not a PDF'
+		);
+
+	}//end testCreateRequestRefusesPlacementsOnADocumentThatIsNotAPdf()
 
 	/**
 	 * At completion the provider gets the placements and each signer's name,

@@ -112,14 +112,14 @@ this change (the schema carries no condition key; future scope).
 - GIVEN a completed artifact containing rendered placement blocks
 - WHEN the block's bytes are relocated/altered and the document is verified
 - THEN verification reports status `invalid` / verdict `tampered`
-- @e2e exclude artifact byte-surgery mutation — covered by PHPUnit (tests/unit/Service/Signing/NativeSigningProviderTest.php)
+- @e2e exclude artifact byte-surgery mutation — covered by PHPUnit (tests/unit/Service/Signing/FieldPlacementRenderingTest.php::testAMovedBlockFailsVerification)
 
 #### Scenario: Placement-free requests are byte-compatible
 
 - GIVEN a request without `fieldPlacements`
 - WHEN its artifact is produced
 - THEN the artifact contains no rendered blocks and verifies exactly as under `signing-trust-rebuild`
-- @e2e exclude regression parity — covered by PHPUnit round-trip tests
+- @e2e exclude regression parity — covered by PHPUnit (tests/unit/Service/Signing/FieldPlacementRenderingTest.php::testWithoutPlacementsTheArtifactIsUnchanged)
 
 ### Requirement: Envelopes group documents into one ceremony with per-document records (REQ-DDBSF-004)
 
