@@ -3,6 +3,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
 @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-and-envelope-surfaces-are-first-class-ui-req-ddbsf-005
+@visual exclude Not a page: a panel inside the signing request detail page, shown only for a request that belongs to an envelope.
+	Its behaviour is covered by the envelope e2e in tests/e2e/spec-coverage/bulk-signing-field-builder.spec.ts.
 -->
 
 <template>
