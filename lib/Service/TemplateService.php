@@ -213,7 +213,7 @@ class TemplateService {
 		unset($template['version']);
 		try {
 			$number = $this->versionService->getNextVersionNumber(templateId: $id);
-		} catch (\Throwable $e) {
+		} catch (Exception $e) {
 			return $template;
 		}
 
