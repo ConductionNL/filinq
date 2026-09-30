@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 class BulkSigningService {
 
@@ -67,7 +67,7 @@ class BulkSigningService {
 	 * @param IJobList                   $jobList          Queues phase 2
 	 * @param SigningService             $signing          Cancels member requests
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public function __construct(
 		private readonly BulkSigningRecipientParser $parser,
@@ -94,7 +94,7 @@ class BulkSigningService {
 	 * @throws RuntimeException 400 when the request a row would become is invalid for everybody
 	 * @throws \InvalidArgumentException 400 when the list cannot be read
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public function createBatch(array $settings, string $content, string $filename, string $userId): array {
 		$toggles = $this->settings->getFeatureToggles();
@@ -147,7 +147,7 @@ class BulkSigningService {
 	 *
 	 * @throws RuntimeException 409 when the batch is not ready or names nobody to send to
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public function confirm(string $id, string $userId, bool $isAdmin): ?array {
 		$batch = $this->get(id: $id, userId: $userId, isAdmin: $isAdmin);
@@ -183,7 +183,7 @@ class BulkSigningService {
 	 *
 	 * @return array|null The batch with `cancelledRequests`, or null when the caller may not reach it
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public function cancel(string $id, string $userId, bool $isAdmin): ?array {
 		$batch = $this->get(id: $id, userId: $userId, isAdmin: $isAdmin);
@@ -222,7 +222,7 @@ class BulkSigningService {
 	 *
 	 * @return array|null The batch, or null when absent or not the caller's
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public function get(string $id, string $userId, bool $isAdmin): ?array {
 		$batch = $this->repository->find(uuid: $id);
@@ -247,7 +247,7 @@ class BulkSigningService {
 	 *
 	 * @return list<array>
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public function listFor(string $userId, bool $isAdmin): array {
 		$createdBy = $userId;
@@ -266,7 +266,7 @@ class BulkSigningService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
 	public static function isFinished(array $batch): bool {
 		return in_array(($batch['status'] ?? ''), self::FINISHED, true);

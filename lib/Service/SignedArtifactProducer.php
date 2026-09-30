@@ -204,7 +204,7 @@ class SignedArtifactProducer {
 	 *
 	 * @throws RuntimeException When the document cannot be resolved for the initiator or the session user.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function documentContent(array $request): string {
 		return $this->resolveDocumentFile(fileId: (int) ($request['documentFileId'] ?? 0), request: $request)->getContent();

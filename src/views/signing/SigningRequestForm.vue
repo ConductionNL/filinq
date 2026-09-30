@@ -143,12 +143,23 @@
 				@click="bulkOpen = true">
 				{{ t('filinq', 'Send to many from a list') }}
 			</NcButton>
+			<NcButton
+				variant="secondary"
+				:disabled="!signersAreComplete(signerRows)"
+				@click="envelopeOpen = true">
+				{{ t('filinq', 'Send several documents together') }}
+			</NcButton>
 		</div>
 		<BulkSendModal
 			v-if="bulkOpen"
 			:show="bulkOpen"
 			:settings="bulkSettings"
 			@close="bulkOpen = false" />
+		<SigningEnvelopeModal
+			v-if="envelopeOpen"
+			:show="envelopeOpen"
+			:settings="envelopeSettings"
+			@close="envelopeOpen = false" />
 	</div>
 </template>
 
@@ -162,6 +173,7 @@ import {
 	NcSelect,
 } from '@nextcloud/vue'
 import BulkSendModal from '../../modals/BulkSendModal.vue'
+import SigningEnvelopeModal from '../../modals/SigningEnvelopeModal.vue'
 import FieldPlacementEditor from './FieldPlacementEditor.vue'
 import { assuranceFloor, assuranceLevelsFrom } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
@@ -177,6 +189,7 @@ export default {
 		NcCheckboxRadioSwitch,
 		NcNoteCard,
 		NcSelect,
+		SigningEnvelopeModal,
 	},
 
 	data() {
@@ -191,6 +204,7 @@ export default {
 
 			signerRows: [emptySignerRow()],
 			bulkOpen: false,
+			envelopeOpen: false,
 			placingFields: false,
 			fieldPlacements: [],
 		}
@@ -202,7 +216,7 @@ export default {
 		 *
 		 * @return {Array<string>}
 		 *
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		signerLabels() {
 			return this.signerRows.map(
@@ -215,7 +229,7 @@ export default {
 		 *
 		 * @return {object}
 		 *
-		 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 		 */
 		bulkSettings() {
 			return {
@@ -223,6 +237,24 @@ export default {
 				documentName: this.form.documentName,
 				signatureLevel: this.form.signatureLevel,
 				signingMode: this.form.signingMode,
+			}
+		},
+
+		/**
+		 * What every document of an envelope shares, and the form's document as its first.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+		 */
+		envelopeSettings() {
+			return {
+				documentFileId: this.form.documentFileId,
+				documentName: this.form.documentName,
+				signatureLevel: this.form.signatureLevel,
+				signingMode: this.form.signingMode,
+				requiredAssurance: this.form.requiredAssurance,
+				signers: toSigners(this.signerRows),
 			}
 		},
 
@@ -300,6 +332,7 @@ export default {
 
 	methods: {
 		t,
+		signersAreComplete,
 		/**
 		 * Add an empty signer row at the end.
 		 *

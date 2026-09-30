@@ -4779,11 +4779,11 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Built (PR feat/signing-field-placement): signingRequest 1.8.0 fieldPlacements (signerIndex, page, a 0-1 box, one of signature/initials/date/text/checkbox; no condition key). SigningService::createRequest -> SignedArtifactProducer::withPlacements validates with FieldPlacements and refuses (400) an absent signer, a page the PDF lacks, or LibreSign (its request-signature call has no field input). At completion the producer hands placements and signer names to the provider; NativeSigningProvider draws them with FieldPlacementRenderer (FPDI) BEFORE the v2 canonical hash, and binds them in the assertion, so a moved block verifies as invalid. Without placements the artifact is byte-identical. Editor: SigningRequestForm 'Place fields on the document' -> FieldPlacementEditor (pdfjs page preview, click to place, drag or arrow keys to move, Shift+arrow to resize, Delete to remove). Tests: FieldPlacementRenderingTest (real renderer, provider and verifier), SigningServiceTest placement cases (payload against the real fragment), vitest fieldPlacement.spec.js. Partial: external providers do not map placements (LibreSign refused, ValidSign not wired).",
-				"change": "openspec/changes/bulk-signing-field-builder",
+				"evidence": "Built (PR #1318 feat/signing-field-placement): signingRequest 1.8.0 fieldPlacements (signerIndex, page, a 0-1 box, one of signature/initials/date/text/checkbox; no condition key). SigningService::createRequest -> SigningRequestValidator::withPlacements -> FieldPlacementCheck validates with FieldPlacements and refuses (400) an absent signer, a page the PDF lacks, or LibreSign (its request-signature call has no field input). At completion the producer hands placements and signer names to the provider; NativeSigningProvider draws them with FieldPlacementRenderer (FPDI) BEFORE the v2 canonical hash, and binds them in the assertion, so a moved block verifies as invalid. Without placements the artifact is byte-identical. Editor: SigningRequestForm 'Place fields on the document' -> FieldPlacementEditor (pdfjs page preview, click to place, drag or arrow keys to move, Shift+arrow to resize, Delete to remove). Tests: FieldPlacementRenderingTest (real renderer, provider and verifier), SigningServiceTest placement cases (payload against the real fragment), vitest fieldPlacement.spec.js. Partial: external providers do not map placements (LibreSign refused, ValidSign not wired).",
+				"change": "openspec/changes/archive/2026-09-30-bulk-signing-field-builder",
 				"readOn": "2026-09-30"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Signing requests > New signing request > Place fields on the document; POST api/signing/requests with fieldPlacements",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-signing",
@@ -4807,13 +4807,13 @@
 			"sourceRef": "DocuSeal bulk send; DocuSign envelope-based bulk",
 			"filinq": "partial",
 			"built": {
-				"state": "building",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Bulk send built (PR feat/bulk-signing-send): SigningRequestForm Send to many from a list -> BulkSendModal -> POST api/signing/batches (BulkSigningController) -> BulkSigningService: the document and level/provider pass SigningRequestValidator first (QES + native refused before anything is stored), BulkSigningRecipientParser reads CSV (comma or semicolon) or XLSX (ZipArchive, formula cells as cached text, never evaluated; 1,000 rows, 2 MB), BulkSigningRowValidator rejects no-recipient, invalid-email, unknown-user and duplicate rows into a report on a bulkSigningBatch (register 8.35.0, read by owner and admins only), confirm queues BulkSigningJob, BulkSigningRunner creates one ordinary request per row through SigningService::createRequest() as the initiator with per-row isolation, cancel cancels the still-cancellable members. Bulk sends index page. Tests: BulkSigningServiceTest (50-row fixture, gate parity, isolation, cancel, payloads against the real fragment), BulkSigningRecipientParserTest, BulkSigningControllerTest, vitest bulkSend.spec.js. Open: a send from a template (one generated document per row); field placement and envelopes are the rest of the change.",
-				"change": "openspec/changes/bulk-signing-field-builder",
+				"evidence": "Bulk send built (PR feat/bulk-signing-send): SigningRequestForm Send to many from a list -> BulkSendModal -> POST api/signing/batches (BulkSigningController) -> BulkSigningService: the document and level/provider pass SigningRequestValidator first (QES + native refused before anything is stored), BulkSigningRecipientParser reads CSV (comma or semicolon) or XLSX (ZipArchive, formula cells as cached text, never evaluated; 1,000 rows, 2 MB), BulkSigningRowValidator rejects no-recipient, invalid-email, unknown-user and duplicate rows into a report on a bulkSigningBatch (register 8.35.0, read by owner and admins only), confirm queues BulkSigningJob, BulkSigningRunner creates one ordinary request per row through SigningService::createRequest() as the initiator with per-row isolation, cancel cancels the still-cancellable members. Bulk sends index page. Tests: BulkSigningServiceTest (50-row fixture, gate parity, isolation, cancel, payloads against the real fragment), BulkSigningRecipientParserTest, BulkSigningControllerTest, vitest bulkSend.spec.js. Envelopes built (PR feat/signing-envelopes, DocuSign envelope parity): several documents, one signer roster, one notification per signer (signerRecord signingRequested skips a record with envelopeRef; signingEnvelope envelopeRequested names signerUserIds), Sign all through SigningService::bulkSign, status rolled up from the members, cancel; SigningEnvelopeServiceTest over the real SigningService. Partial: a send from a template (one generated document per row, design D4) is not built.",
+				"change": "openspec/changes/archive/2026-09-30-bulk-signing-field-builder",
 				"readOn": "2026-09-30"
 			},
-			"reachedOn": "Signing requests > New signing request > Send to many from a list; the Bulk sends page; POST api/signing/batches",
+			"reachedOn": "Signing requests > New signing request > Send to many from a list; the Bulk sends page; POST api/signing/batches; Send several documents together; the Envelopes page; POST api/signing/envelopes",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-signing",

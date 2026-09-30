@@ -12,7 +12,7 @@
  * rejected rows before anything is sent, and Send posts the confirm.
  */
 
-// @e2e openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#scenario-mixed-csv-yields-a-report-then-a-partial-batch
+// @e2e openspec/specs/bulk-signing-field-builder/spec.md#scenario-mixed-csv-yields-a-report-then-a-partial-batch
 
 import { expect, test } from '@playwright/test'
 import { readFileSync } from 'node:fs'
@@ -46,7 +46,7 @@ function batch(status: string, processedRows = 0) {
 
 test.describe('bulk send', () => {
 	test('a mixed list yields a report, then a partial batch', async ({ page }) => {
-		// @e2e openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#scenario-mixed-csv-yields-a-report-then-a-partial-batch
+		// @e2e openspec/specs/bulk-signing-field-builder/spec.md#scenario-mixed-csv-yields-a-report-then-a-partial-batch
 		let uploaded = ''
 		let confirmed = false
 		await page.route('**/apps/filinq/api/signing/batches', async (route) => {
@@ -96,7 +96,7 @@ test.describe('bulk send', () => {
 
 test.describe('field placement', () => {
 	test('a field placed on page 3 is sent with the request', async ({ page }) => {
-		// @e2e openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#scenario-a-placed-field-appears-in-the-artifact-at-its-position
+		// @e2e openspec/specs/bulk-signing-field-builder/spec.md#scenario-a-placed-field-appears-in-the-artifact-at-its-position
 		// The browser half: the page preview, the click that places the box,
 		// and the placement the request carries. That the native artifact draws
 		// it inside the MAC is proven by
@@ -144,5 +144,135 @@ test.describe('field placement', () => {
 			page: 3,
 			type: 'signature',
 		})
+	})
+})
+
+/**
+ * An envelope as the endpoints answer it.
+ *
+ * @param status The envelope status
+ * @param statuses The member statuses
+ * @return The envelope
+ */
+function envelope(status: string, statuses: string[]) {
+	return {
+		uuid: 'env-1',
+		title: 'Arbeidsovereenkomst',
+		status,
+		documentCount: 3,
+		initiatorUserId: 'someone-else',
+		signerUserIds: ['admin'],
+		requestRefs: ['req-1', 'req-2', 'req-3'],
+		members: ['contract.pdf', 'geheimhouding.pdf', 'reglement.pdf'].map(
+			(documentName, index) => ({
+				id: `req-${index + 1}`,
+				documentName,
+				documentFileId: String(11 + index),
+				status: statuses[index],
+			}),
+		),
+	}
+}
+
+test.describe('envelopes', () => {
+	test('three documents go out as one envelope', async ({ page }) => {
+		// @e2e openspec/specs/bulk-signing-field-builder/spec.md#scenario-three-documents-one-ceremony-three-artifacts
+		// The browser half: the dialog sends the three documents with the
+		// form's signers in one call. One notification per signer, the three
+		// member requests and the roll-up are proven by
+		// tests/unit/Service/SigningEnvelope/SigningEnvelopeServiceTest.php.
+		let sent: Record<string, unknown> = {}
+		await page.route('**/apps/filinq/api/signing/envelopes', async (route) => {
+			sent = route.request().postDataJSON()
+			await route.fulfill({
+				status: 201,
+				json: envelope('pending', ['PENDING', 'PENDING', 'PENDING']),
+			})
+		})
+
+		await go(page, 'signing/new')
+		await page.getByLabel('Document File ID').fill('11')
+		await page.getByLabel('Document Name').fill('contract.pdf')
+		await page.getByLabel('Name').first().fill('Bob')
+		await page.getByLabel('Nextcloud user').first().fill('bob')
+		await page
+			.getByRole('button', { name: 'Send several documents together' })
+			.click()
+		const dialog = page.getByRole('dialog')
+		await dialog.getByLabel('Name of this envelope').fill('Arbeidsovereenkomst')
+		await dialog.getByLabel('Document File ID').nth(1).fill('12')
+		await dialog.getByLabel('Document Name').nth(1).fill('geheimhouding.pdf')
+		await dialog.getByRole('button', { name: 'Add document' }).click()
+		await dialog.getByLabel('Document File ID').nth(2).fill('13')
+		await dialog.getByRole('button', { name: 'Send 3 documents' }).click()
+
+		await expect(
+			dialog.getByText(
+				'Envelope sent: 3 documents are waiting for signatures.',
+			),
+		).toBeVisible()
+		expect((sent.documents as unknown[]).length).toBe(3)
+		expect(sent.signers).toEqual([
+			expect.objectContaining({ userId: 'bob', displayName: 'Bob' }),
+		])
+	})
+
+	test('sign all, one document declined: the envelope is partly declined', async ({
+		page,
+	}) => {
+		// @e2e openspec/specs/bulk-signing-field-builder/spec.md#scenario-one-decline-yields-a-partial-envelope-signed-documents-stand
+		// @e2e openspec/specs/bulk-signing-field-builder/spec.md#scenario-envelope-detail-rolls-member-statuses-up
+		let signed = false
+		await page.route('**/apps/filinq/api/signing/requests/req-1', (route) =>
+			route.fulfill({
+				json: {
+					id: 'req-1',
+					documentName: 'contract.pdf',
+					status: 'PENDING',
+					envelopeRef: 'env-1',
+				},
+			}),
+		)
+		await page.route(
+			'**/apps/filinq/api/signing/requests/req-1/audit',
+			(route) => route.fulfill({ json: [] }),
+		)
+		await page.route('**/apps/filinq/api/signing/envelopes/env-1', (route) =>
+			route.fulfill({
+				json: envelope('in_progress', ['PENDING', 'IN_PROGRESS', 'PENDING']),
+			}),
+		)
+		await page.route(
+			'**/apps/filinq/api/signing/envelopes/env-1/sign',
+			async (route) => {
+				signed = true
+				await route.fulfill({
+					json: {
+						envelope: envelope('partially_declined', [
+							'COMPLETED',
+							'DECLINED',
+							'COMPLETED',
+						]),
+						results: {
+							'req-1': { success: true },
+							'req-3': { success: true },
+						},
+					},
+				})
+			},
+		)
+
+		await go(page, 'signing/req-1')
+		const panel = page.getByRole('region', {
+			name: 'Envelope: Arbeidsovereenkomst',
+		})
+		await expect(panel.getByText('Being signed')).toBeVisible()
+		await expect(panel.getByRole('row')).toHaveCount(4)
+		await panel.getByRole('button', { name: 'Sign all documents' }).click()
+
+		expect(signed).toBe(true)
+		await expect(panel.getByText('You signed 2 documents.')).toBeVisible()
+		await expect(panel.getByText('Partly declined')).toBeVisible()
+		await expect(panel.getByRole('row').nth(2)).toContainText('DECLINED')
 	})
 })

@@ -1814,7 +1814,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function testCreateRequestStoresItsFieldPlacements(): void {
 		$saved = [];
@@ -1856,7 +1856,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function testCreateRequestRefusesAPlacementPastTheLastPage(): void {
 		$saved = [];
@@ -1881,7 +1881,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function testCreateRequestRefusesAPlacementForAnAbsentSigner(): void {
 		$saved = [];
@@ -1905,7 +1905,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function testCreateRequestRefusesPlacementsLibreSignCannotCarry(): void {
 		$saved = [];
@@ -1924,7 +1924,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function testCreateRequestRefusesPlacementsOnADocumentThatIsNotAPdf(): void {
 		$saved = [];
@@ -1945,7 +1945,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
 	 */
 	public function testCompletionHandsThePlacementsAndSignerNamesToTheProvider(): void {
 		$placements = [['signerIndex' => 1, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature']];

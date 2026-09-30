@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Bulk Signing Batch Repository
+ * Signing Envelope Repository
  *
- * Reads and writes `bulkSigningBatch` rows in the `filinq` register.
+ * Reads and writes `signingEnvelope` rows in the `filinq` register.
  *
  * @category  Service
- * @package   OCA\Filinq\Service\BulkSigning
+ * @package   OCA\Filinq\Service\SigningEnvelope
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service\BulkSigning;
+namespace OCA\Filinq\Service\SigningEnvelope;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
@@ -29,25 +29,28 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Stores and finds bulk-send batches.
+ * Stores and finds signing envelopes.
  *
- * Reads go through OpenRegister's RBAC: the schema grants read to nobody, so
- * only the batch's owner (the initiator who created it) and admins see one.
+ * The schema grants read and update to nobody, so through OpenRegister only
+ * the initiator (the owner) and admins reach an envelope. A member signer
+ * reads it, and the roll-up is written back, through SigningEnvelopeService,
+ * which decides who may: that is why the reads and the roll-up write here
+ * pass `_rbac: false`. Nothing else calls this class.
  *
  * @category Service
- * @package  OCA\Filinq\Service\BulkSigning
+ * @package  OCA\Filinq\Service\SigningEnvelope
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
  */
-class BulkSigningBatchRepository {
+class SigningEnvelopeRepository {
 
 	/**
 	 * Schema slug.
 	 */
-	public const SCHEMA = 'bulkSigningBatch';
+	public const SCHEMA = 'signingEnvelope';
 
 	/**
 	 * Constructor.
@@ -63,32 +66,37 @@ class BulkSigningBatchRepository {
 	}//end __construct()
 
 	/**
-	 * Save a batch.
+	 * Save an envelope under a given uuid.
 	 *
-	 * @param array       $batch The batch fields
-	 * @param string|null $uuid  The batch to overwrite, or null for a new one
+	 * The uuid is chosen before the member requests are created, so they can
+	 * carry it from their first save.
 	 *
-	 * @return array The stored batch, with `uuid`
+	 * @param array  $envelope The envelope fields
+	 * @param string $uuid     The envelope's uuid
+	 *
+	 * @return array The stored envelope, with `uuid`
 	 *
 	 * @throws RuntimeException When OpenRegister refuses the write
 	 *
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
 	 */
-	public function save(array $batch, ?string $uuid = null): array {
-		unset($batch['uuid']);
-		$arguments = ['object' => $batch, 'register' => IntakeRepository::REGISTER, 'schema' => self::SCHEMA];
-		if ($uuid !== null && $uuid !== '') {
-			$arguments['uuid'] = $uuid;
-		}
+	public function save(array $envelope, string $uuid): array {
+		unset($envelope['uuid'], $envelope['members']);
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $envelope,
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
+				uuid: $uuid,
+				_rbac: false
+			);
 		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'Could not store the bulk send: ' . $e->getMessage(), code: 0, previous: $e);
+			throw new RuntimeException(message: 'Could not store the envelope: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
 		$normalised = $this->normalise(row: $stored);
-		if (($normalised['uuid'] ?? '') === '' && $uuid !== null) {
+		if (($normalised['uuid'] ?? '') === '') {
 			$normalised['uuid'] = $uuid;
 		}
 
@@ -97,11 +105,11 @@ class BulkSigningBatchRepository {
 	}//end save()
 
 	/**
-	 * Find one batch.
+	 * Find one envelope, whoever asks: the caller decides who may see it.
 	 *
-	 * @param string $uuid The batch uuid
+	 * @param string $uuid The envelope uuid
 	 *
-	 * @return array|null The batch, or null when absent
+	 * @return array|null The envelope, or null when absent
 	 *
 	 * @throws RuntimeException When the read fails
 	 *
@@ -113,9 +121,14 @@ class BulkSigningBatchRepository {
 		}
 
 		try {
-			$object = $this->objectResolver->resolve()->find(id: $uuid, register: IntakeRepository::REGISTER, schema: self::SCHEMA);
+			$object = $this->objectResolver->resolve()->find(
+				id: $uuid,
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
+				_rbac: false
+			);
 		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'The bulk send could not be read: ' . $e->getMessage(), code: 0, previous: $e);
+			throw new RuntimeException(message: 'The envelope could not be read: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
 		if ($object === null) {
@@ -127,9 +140,9 @@ class BulkSigningBatchRepository {
 	}//end find()
 
 	/**
-	 * List batches, newest first.
+	 * List envelopes, newest first.
 	 *
-	 * @param string|null $createdBy Only this initiator's batches, or null for all
+	 * @param string|null $initiator Only this initiator's envelopes, or null for all
 	 *
 	 * @return list<array>
 	 *
@@ -137,10 +150,10 @@ class BulkSigningBatchRepository {
 	 *
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
 	 */
-	public function list(?string $createdBy): array {
+	public function list(?string $initiator): array {
 		$filters = [];
-		if ($createdBy !== null) {
-			$filters['createdBy'] = $createdBy;
+		if ($initiator !== null) {
+			$filters['initiatorUserId'] = $initiator;
 		}
 
 		try {
@@ -148,27 +161,28 @@ class BulkSigningBatchRepository {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: IntakeRepository::REGISTER,
 				schemaSlug: self::SCHEMA,
-				filters: $filters
+				filters: $filters,
+				_rbac: false
 			);
 		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'The bulk sends could not be read: ' . $e->getMessage(), code: 0, previous: $e);
+			throw new RuntimeException(message: 'The envelopes could not be read: ' . $e->getMessage(), code: 0, previous: $e);
 		}
 
-		$batches = [];
+		$envelopes = [];
 		foreach ((array) $results as $result) {
-			$batch = $this->normalise(row: $result);
+			$envelope = $this->normalise(row: $result);
 			// The filter is the search's; the owner check is ours.
-			if ($createdBy === null || ($batch['createdBy'] ?? '') === $createdBy) {
-				$batches[] = $batch;
+			if ($initiator === null || ($envelope['initiatorUserId'] ?? '') === $initiator) {
+				$envelopes[] = $envelope;
 			}
 		}
 
 		usort(
-			$batches,
+			$envelopes,
 			static fn (array $a, array $b): int => strcmp((string) ($b['createdAt'] ?? ''), (string) ($a['createdAt'] ?? ''))
 		);
 
-		return $batches;
+		return $envelopes;
 
 	}//end list()
 

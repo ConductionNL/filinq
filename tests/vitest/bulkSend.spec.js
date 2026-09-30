@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

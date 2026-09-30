@@ -213,12 +213,12 @@ class SigningService {
 		// signing-request object (additive/optional) so the terminal
 		// SigningConcludedEvent can correlate back to the originating consumer.
 		// Internal requests omit these and are unaffected.
-		foreach (self::PROVENANCE_FIELDS as $field) {
+		foreach ([...self::PROVENANCE_FIELDS, 'envelopeRef'] as $field) {
 			if (empty($data[$field]) === false) {
 				$request[$field] = $data[$field];
 			}
 		}
-		$request = $this->validator->withPlacements(request: $request, placements: ($data['fieldPlacements'] ?? null), signerCount: count($signers), producer: $this->artifactProducer);
+		$request = $this->validator->withPlacements(request: $request, data: $data, producer: $this->artifactProducer);
 		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
@@ -282,7 +282,9 @@ class SigningService {
 					'order' => $signerData['order'] ?? $index,
 					'status' => 'PENDING',
 				],
-				($prepared['fields'][$index] ?? [])
+				($prepared['fields'][$index] ?? []),
+				// An envelope's signer records carry it, so the per-document notification skips them.
+				array_filter(['envelopeRef' => (string) ($signerData['envelopeRef'] ?? '')])
 			);
 
 			if (isset($links[$index]) === true) {

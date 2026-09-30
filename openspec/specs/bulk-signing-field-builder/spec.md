@@ -1,11 +1,6 @@
-# bulk-signing-field-builder Specification (delta)
-
----
-status: proposed
----
+# bulk-signing-field-builder Specification
 
 ## Purpose
-
 Competitive-parity signing workflow features on top of the rebuilt honest
 pipeline (`depends_on: signing-trust-rebuild`): bulk send (CSV/XLSX recipient
 lists creating a tracked batch of ordinary signing requests from one document
@@ -17,7 +12,7 @@ per-document artifacts/audit (LibreSign parity). Distinct from the existing
 `document-signing` "Bulk signing" requirement, which covers bulk *signing* by
 one signer and is unchanged.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Batch, envelope and placement data live in the signing register (REQ-DDBSF-001)
 
@@ -160,7 +155,7 @@ posture as single requests.
 - WHEN the signer uses "sign all" in the ceremony
 - THEN that member document is rejected with the same error as a direct call
 - AND the remaining member documents are still processed individually
-- @e2e exclude gate-parity fault injection — covered by PHPUnit (tests/unit/Service/SigningEnvelopeServiceTest.php)
+- @e2e exclude gate-parity fault injection — covered by PHPUnit (tests/unit/Service/SigningEnvelope/SigningEnvelopeServiceTest.php::testSignAllRefusesAMemberWithTheDirectErrorAndGoesOn)
 
 ### Requirement: Batch and envelope surfaces are first-class UI (REQ-DDBSF-005)
 

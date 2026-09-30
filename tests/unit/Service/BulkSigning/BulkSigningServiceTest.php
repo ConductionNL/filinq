@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
