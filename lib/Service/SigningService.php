@@ -66,7 +66,7 @@ class SigningService {
 	 */
 	private const STATUS_TRANSITIONS = [
 		'DRAFT' => ['PENDING', 'CANCELLED'],
-		'PENDING' => ['IN_PROGRESS', 'CANCELLED', 'EXPIRED'],
+		'PENDING' => ['IN_PROGRESS', 'DECLINED', 'CANCELLED', 'EXPIRED'],
 		'IN_PROGRESS' => ['COMPLETED', 'DECLINED', 'CANCELLED', 'EXPIRED'],
 		'COMPLETED' => [],
 		'DECLINED' => [],

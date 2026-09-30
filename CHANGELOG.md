@@ -78,6 +78,8 @@
 
 ### Fixed
 
+- **The first signer can decline a request (`signingRequest` 1.10.0, register 8.38.0).** Declining was only allowed once somebody had signed, so the first signer of a new request got "Cannot decline request in status: PENDING" and had to sign or wait. A request that nobody has signed yet now moves to declined like any other, and the register's lifecycle declares that step.
+
 - **The `template` schema imports again, with `slug` and `tenantId` as real properties (register 8.17.1, `template` 1.4.1).** The report-templates change put both field definitions beside the schema's own keys instead of inside `properties`. The `slug` definition was a duplicate JSON key, so the schema's own slug `template` was replaced by a property definition, and OpenRegister refuses a schema fragment without a string slug: the whole `template` schema was skipped on import while the import reported success, and the slug resolver queried fields no schema declared. `SchemaSlugIntegrityTest` now pins that every schema carries its own key as a string slug.
 
 - **ODF headings were invisible to `readDocument`, and could not be edited.** ODF writes a heading as `text:h`, its own element, and the block scanner spanned `text:p` only — so on a four-block `.odt` the tool reported three blocks and an agent asked to edit the heading was told its anchor did not exist for text plainly on the page.

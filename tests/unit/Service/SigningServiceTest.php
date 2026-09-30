@@ -1298,6 +1298,45 @@ class SigningServiceTest extends TestCase {
 	}//end testDeclineHappyPathFromInProgress()
 
 	/**
+	 * The first signer of a request nobody has signed yet (PENDING) can
+	 * decline it: the signer record and the request both become DECLINED.
+	 * Before this fix the status machine only allowed IN_PROGRESS -> DECLINED,
+	 * so the first signer got "Cannot decline request in status: PENDING".
+	 *
+	 * @return void
+	 */
+	public function testFirstSignerCanDeclineAFreshPendingRequest(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+
+		$result = $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'wrong document');
+
+		$this->assertSame('DECLINED', $result['status']);
+		$this->assertSame(['DECLINED', 'DECLINED'], array_column($saved, 'status'));
+		$this->assertTrue($this->service->isValidTransition(currentStatus: 'PENDING', newStatus: 'DECLINED'));
+
+	}//end testFirstSignerCanDeclineAFreshPendingRequest()
+
+	/**
 	 * decline() throws when signer record belongs to a different request
 	 * (C4 check preserved by the rewritten decline()).
 	 *
