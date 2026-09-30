@@ -23,6 +23,10 @@
 					>: {{ signingStore.signingRequest.provider }}
 				</div>
 			</div>
+			<SigningEnvelopePanel
+				v-if="signingStore.signingRequest.envelopeRef"
+				:envelopeId="signingStore.signingRequest.envelopeRef"
+				@changed="reload" />
 			<NcNoteCard v-if="stepUpDone && !signed" type="success">
 				{{
 					t(
@@ -90,12 +94,20 @@
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
+import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
 import { stepUpReturn } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
 	name: 'SigningRequestDetail',
-	components: { NcButton, NcLoadingIcon, NcNoteCard, SignerStepUpModal },
+	components: {
+		NcButton,
+		NcLoadingIcon,
+		NcNoteCard,
+		SignerStepUpModal,
+		SigningEnvelopePanel,
+	},
+
 	props: {
 		/**
 		 * The signing request to show.
@@ -175,6 +187,18 @@ export default {
 				await this.signingStore.fetchSigningRequest(this.id)
 				await this.signingStore.fetchAuditTrail(this.id)
 			}
+		},
+
+		/**
+		 * Read the request and its audit trail again after the envelope changed them.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-batch-and-envelope-surfaces-are-first-class-ui-req-ddbsf-005
+		 */
+		async reload() {
+			await this.signingStore.fetchSigningRequest(this.id)
+			await this.signingStore.fetchAuditTrail(this.id)
 		},
 
 		/**

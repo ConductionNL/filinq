@@ -185,6 +185,13 @@
 			"order": 66
 		},
 		{
+			"id": "SigningEnvelopes",
+			"label": "Envelopes",
+			"icon": "FileDocumentMultipleOutline",
+			"route": "SigningEnvelopes",
+			"order": 67
+		},
+		{
 			"id": "CustomDictionary",
 			"label": "Custom dictionaries",
 			"icon": "Domain",
@@ -430,6 +437,29 @@
 				"route": "SigningRequestForm"
 			},
 			"_note": "Bulk sends (bulk-signing-field-builder REQ-DDBSF-002). OpenRegister lists the batches directly; the schema grants read to nobody, so each user sees their own batches and an admin sees all. A batch is started from the signing request form (Send to many from a list), which holds the document and level every row uses, so the index adds no create dialog of its own."
+		},
+		{
+			"id": "SigningEnvelopes",
+			"route": "/signing-envelopes",
+			"type": "index",
+			"title": "Envelopes",
+			"config": {
+				"register": "filinq",
+				"schema": "signingEnvelope",
+				"columns": ["title", "status", "documentCount", "createdAt"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No envelopes yet",
+				"actionToggles": { "showAdd": false }
+			},
+			"primaryAction": {
+				"id": "NewEnvelope",
+				"label": "New envelope",
+				"icon": "Plus",
+				"route": "SigningRequestForm"
+			},
+			"_note": "Envelopes (bulk-signing-field-builder REQ-DDBSF-004/005). OpenRegister lists the envelopes directly; the schema grants read to nobody, so each user sees the envelopes they sent and an admin sees all. An envelope is started from the signing request form (Send several documents together), which holds the signers and level every document uses; a signer reaches it through the request page of any of its documents."
 		},
 		{
 			"id": "SigningFolder",
