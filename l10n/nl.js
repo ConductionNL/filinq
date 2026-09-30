@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Hidden content removed from the copy": "Verborgen inhoud verwijderd uit de kopie",
         "This document is encrypted. Remove the password and try again.": "Dit document is versleuteld. Haal het wachtwoord eraf en probeer het opnieuw.",
         "This file is not there, or you cannot open it.": "Dit bestand bestaat niet, of je mag het niet openen.",
         "Only Word and OpenDocument text files can be sanitized.": "Alleen Word- en OpenDocument-tekstbestanden kunnen worden opgeschoond.",

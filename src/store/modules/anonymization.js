@@ -758,6 +758,9 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				// Whether the redaction kept the tag structure a screen reader reads.
 				entry.structurePreservation =
 					anonymizeResponse.data.structurePreservation || null
+				// What OpenRegister's office sanitiser removed during the run.
+				entry.sanitizationReport =
+					anonymizeResponse.data.sanitizationReport || null
 				// The re-anonymise sub-flow (if any) is done — clear the marker
 				// so the dossier footer returns to its batch state.
 				entry.reanonymize = false

@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 
 /**
  * The office run's report is kept; a text run fabricates none; a PDF output
- * is never called sanitized; an unmet sanitize request is a warning.
+ * is never called sanitized.
  */
 class AnonymisationSanitizationRecorderTest extends TestCase {
 
@@ -97,7 +97,7 @@ class AnonymisationSanitizationRecorderTest extends TestCase {
 	}//end testATextRunFabricatesNothing()
 
 	/**
-	 * A DOCX delivered as PDF shows the report but no record calls the PDF sanitized; asked to sanitize, it warns.
+	 * A DOCX delivered as PDF shows the report but no record calls the PDF sanitized.
 	 *
 	 * @return void
 	 */
@@ -106,12 +106,11 @@ class AnonymisationSanitizationRecorderTest extends TestCase {
 
 		$result = $this->recorder()->record(
 			resultInfo: ['anonymizedFileId' => 79, 'anonymizedFileName' => 'besluit_anonymized.pdf'],
-			context: ['fileId' => 72, 'userId' => 'alice', 'sanitizationReport' => $report, 'sanitize' => true]
+			context: ['fileId' => 72, 'userId' => 'alice', 'sanitizationReport' => $report]
 		);
 
 		$this->assertSame([], $this->saved);
 		$this->assertSame(2, $result['sanitizationReport']['commentsRemoved']);
-		$this->assertSame(['reason' => 'pdf_sanitizer_unavailable'], $result['sanitizationWarning']);
 		$this->assertSame(79, $result['anonymizedFileId'], 'the anonymised file is kept');
 
 	}//end testAPdfOutputIsNeverCalledSanitized()

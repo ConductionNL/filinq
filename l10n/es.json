@@ -1,5 +1,6 @@
 {
     "translations": {
+        "Hidden content removed from the copy": "Contenido oculto eliminado de la copia",
         "This document is encrypted. Remove the password and try again.": "Este documento está cifrado. Quite la contraseña e inténtelo de nuevo.",
         "This file is not there, or you cannot open it.": "Este archivo no existe o no puede abrirlo.",
         "Only Word and OpenDocument text files can be sanitized.": "Solo se pueden limpiar archivos de texto Word y OpenDocument.",

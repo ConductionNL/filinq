@@ -93,7 +93,9 @@ class DocumentSanitizationService {
 		try {
 			$derivative = $this->writeDerivative(source: $file, tempPath: $result->path);
 		} finally {
-			@unlink($result->path);
+			if (is_file($result->path) === true) {
+				unlink($result->path);
+			}
 		}
 
 		$report = $result->report->jsonSerialize();

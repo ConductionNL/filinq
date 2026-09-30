@@ -6,9 +6,8 @@
  * OpenRegister sanitises every office document it anonymises and keeps a
  * report of what it removed. This keeps that report as a sanitizationRecord
  * (trigger anonymisation) and puts it on the run result. A run that produced
- * no report (plain text, PDF) records nothing. With `sanitize` asked for, a
- * PDF result is flagged: OpenRegister cannot clean PDFs yet, so the file is
- * kept and the response says it was not sanitized.
+ * no report (plain text, PDF) records nothing, and a PDF made from a cleaned
+ * document is never recorded as sanitized.
  *
  * @category  Service
  * @package   OCA\Filinq\Service\Sanitization
@@ -52,15 +51,14 @@ class AnonymisationSanitizationRecorder {
 	}//end __construct()
 
 	/**
-	 * Keep the run's report and flag a sanitize request that could not be met.
+	 * Keep the run's report.
 	 *
 	 * @param array<string, mixed> $resultInfo The run result, with anonymizedFileId and anonymizedFileName.
-	 * @param array<string, mixed> $context    fileId, userId, sanitizationReport (OpenRegister's, or null), sanitize.
+	 * @param array<string, mixed> $context    fileId, userId, sanitizationReport (OpenRegister's, or null).
 	 *
-	 * @return array<string, mixed> The result, with sanitizationReport and, when needed, sanitizationWarning.
+	 * @return array<string, mixed> The result, with sanitizationReport and, when the record failed, sanitizationWarning.
 	 *
 	 * @spec openspec/changes/document-sanitization/tasks.md#3-3
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
 	 */
 	public function record(array $resultInfo, array $context): array {
 		$report = $context['sanitizationReport'] ?? null;
@@ -72,29 +70,8 @@ class AnonymisationSanitizationRecorder {
 
 		// A PDF made from the cleaned document carries metadata the conversion
 		// wrote, so no record may call that PDF sanitized.
-		if (is_array($report) === true && $report !== [] && $outputId > 0 && $pdfOutput === false) {
-			try {
-				$this->records->save(
-					record: [
-						'fileId'          => (int) ($context['fileId'] ?? 0),
-						'sanitizedFileId' => $outputId,
-						'trigger'         => 'anonymisation',
-						'engine'          => 'OfficeDocumentSanitizer',
-						'report'          => $report,
-						'sanitizedAt'     => gmdate(format: 'Y-m-d\TH:i:s\Z'),
-						'sanitizedBy'     => (string) ($context['userId'] ?? ''),
-					]
-				);
-			} catch (Throwable $e) {
-				// The anonymised file stands; only the evidence row is missing.
-				$this->logger->warning('Sanitization record not written', ['fileId' => $context['fileId'] ?? null, 'exception' => $e->getMessage()]);
-				$resultInfo['sanitizationWarning'] = ['reason' => 'record_not_written'];
-			}
-		}
-
-		if (($context['sanitize'] ?? false) === true && ($pdfOutput === true || isset($resultInfo['sanitizationReport']) === false)) {
-			// The final artifact was asked to be clean and is not: keep it, say so.
-			$resultInfo['sanitizationWarning'] = ['reason' => $this->unmetReason(pdfOutput: $pdfOutput)];
+		if (isset($resultInfo['sanitizationReport']) === true && $outputId > 0 && $pdfOutput === false) {
+			$resultInfo = $this->keep(resultInfo: $resultInfo, context: $context, outputId: $outputId);
 		}
 
 		return $resultInfo;
@@ -102,18 +79,35 @@ class AnonymisationSanitizationRecorder {
 	}//end record()
 
 	/**
-	 * Why a requested sanitization did not happen.
+	 * Write the record of an office run against its anonymised file.
 	 *
-	 * @param bool $pdfOutput Whether the delivered file is a PDF.
+	 * @param array<string, mixed> $resultInfo The run result, carrying sanitizationReport.
+	 * @param array<string, mixed> $context    fileId and userId.
+	 * @param int                  $outputId   The anonymised file.
 	 *
-	 * @return string The reason.
+	 * @return array<string, mixed> The result, with a warning when the record could not be written.
 	 */
-	private function unmetReason(bool $pdfOutput): string {
-		if ($pdfOutput === true) {
-			return 'pdf_sanitizer_unavailable';
+	private function keep(array $resultInfo, array $context, int $outputId): array {
+		$report = $resultInfo['sanitizationReport'];
+		try {
+			$this->records->save(
+				record: [
+					'fileId'          => (int) ($context['fileId'] ?? 0),
+					'sanitizedFileId' => $outputId,
+					'trigger'         => 'anonymisation',
+					'engine'          => 'OfficeDocumentSanitizer',
+					'report'          => $report,
+					'sanitizedAt'     => gmdate(format: 'Y-m-d\TH:i:s\Z'),
+					'sanitizedBy'     => (string) ($context['userId'] ?? ''),
+				]
+			);
+		} catch (Throwable $e) {
+			// The anonymised file stands; only the evidence row is missing.
+			$this->logger->warning('Sanitization record not written', ['fileId' => $context['fileId'] ?? null, 'exception' => $e->getMessage()]);
+			$resultInfo['sanitizationWarning'] = ['reason' => 'record_not_written'];
 		}
 
-		return 'nothing_to_sanitize';
+		return $resultInfo;
 
-	}//end unmetReason()
+	}//end keep()
 }//end class

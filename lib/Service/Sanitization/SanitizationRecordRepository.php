@@ -101,7 +101,11 @@ class SanitizationRecordRepository {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
 		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(registerSlug: 'filinq', schemaSlug: self::SCHEMA, filters: $filters);
 
-		return array_values(array_map(fn (mixed $row): array => $this->normalise(row: $row), is_array($rows) === true ? $rows : []));
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		return array_values(array_map(fn (mixed $row): array => $this->normalise(row: $row), $rows));
 
 	}//end search()
 
