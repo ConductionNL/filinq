@@ -358,7 +358,7 @@ class BulkSigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnknownUsersEmptyRowsAndDuplicatesAreRejected(): void {
-		$csv = "email;userId\n;ghost\nan@example.invalid;\nAN@example.invalid;\n;an\n;an\n;;\n";
+		$csv = "email;userId;name\n;ghost;\nan@example.invalid;;\nAN@example.invalid;;\n;an;\n;an;\n;;Iemand\n";
 
 		$batch = $this->service()->createBatch(settings: self::SETTINGS, content: $csv, filename: 'x.csv', userId: 'alice');
 
