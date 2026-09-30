@@ -500,11 +500,9 @@ class SigningEnvelopeServiceTest extends TestCase {
 	public function testCancelCancelsOpenMembersOnly(): void {
 		$envelope = $this->threeDocuments();
 		$second = $envelope['requestRefs'][1];
-		// A request is declined once it is under way (PENDING cannot move to DECLINED).
+		// The first signer declines before anybody signed (PENDING -> DECLINED).
 		$this->uid = 'bob';
-		$this->signing->sign(requestId: $second, signerId: $this->store->rows[$second][1]['signerIds'][0]);
-		$this->uid = 'carol';
-		$this->signing->decline(requestId: $second, signerId: $this->store->rows[$second][1]['signerIds'][1], reason: 'No');
+		$this->signing->decline(requestId: $second, signerId: $this->store->rows[$second][1]['signerIds'][0], reason: 'No');
 
 		$this->uid = 'alice';
 		$cancelled = $this->envelopes->cancel(id: $envelope['uuid'], userId: 'alice', isAdmin: false);

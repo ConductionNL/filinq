@@ -30,7 +30,7 @@ The system SHALL allow authenticated users to create a signing request for a doc
 - **AND** each signer can sign independently of the others
 
 ### Requirement: Signing request lifecycle management
-The system SHALL enforce a strict status machine for signing requests: DRAFT -> PENDING -> IN_PROGRESS -> COMPLETED | DECLINED | EXPIRED | CANCELLED. Invalid transitions SHALL be rejected with an error response.
+The system SHALL enforce a strict status machine for signing requests: DRAFT -> PENDING -> IN_PROGRESS -> COMPLETED | DECLINED | EXPIRED | CANCELLED, where a PENDING request can also move straight to DECLINED. Invalid transitions SHALL be rejected with an error response.
 
 #### Scenario: Sequential signing progresses through signers
 - **WHEN** signer A signs in a sequential request with signers [A, B, C]
@@ -44,6 +44,12 @@ The system SHALL enforce a strict status machine for signing requests: DRAFT -> 
 - **THEN** the SigningRequest status changes to "COMPLETED"
 - **AND** the document file lock is released
 - **AND** the signed PDF is stored as a new file version in Nextcloud
+
+#### Scenario: First signer declines before anybody signed
+- **WHEN** the first signer declines a PENDING signing request that nobody has signed yet
+- **THEN** the SignerRecord status changes to "DECLINED" with the reason
+- **AND** the SigningRequest status changes to "DECLINED"
+- @e2e exclude a server-side status check: the decline button is the same in both states, only the server answer changed; covered by PHPUnit (tests/unit/Service/SigningServiceTest.php::testFirstSignerCanDeclineAFreshPendingRequest, tests/unit/Service/SigningEnvelope/SigningEnvelopeServiceTest.php::testCancelCancelsOpenMembersOnly)
 
 #### Scenario: Signer declines
 - **WHEN** a signer declines a signing request with a reason

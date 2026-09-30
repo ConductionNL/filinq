@@ -7086,6 +7086,97 @@
         ],
         "initiatorUserId": "admin",
         "createdAt": "2026-09-28T11:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentContract",
+          "slug": "demostad-groenonderhoud-2026"
+        },
+        "title": "Raamovereenkomst groenonderhoud 2026-2028",
+        "contractType": "inkoop",
+        "parties": [
+          {
+            "contactRef": "urn:nc:contact:00000000-0000-0000-0000-000000000010",
+            "role": "opdrachtnemer",
+            "displayName": "Groenbedrijf Demostad B.V."
+          },
+          {
+            "role": "opdrachtgever",
+            "displayName": "Gemeente Demostad"
+          }
+        ],
+        "internalOwner": "seed-user-inkoop",
+        "startDate": "2026-01-01",
+        "endDate": "2028-12-31",
+        "noticePeriodDays": 90,
+        "noticeDeadline": "2028-10-02",
+        "renewalType": "manual",
+        "value": 240000,
+        "currency": "EUR",
+        "status": "active",
+        "documents": [],
+        "keyTermSuggestions": [
+          {
+            "field": "endDate",
+            "value": "2028-12-31",
+            "confidence": 0.91,
+            "source": "seed",
+            "status": "accepted"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentContract",
+          "slug": "demostad-schoonmaak-2024"
+        },
+        "title": "Schoonmaakdienstverlening stadskantoor",
+        "contractType": "dienstverlening",
+        "parties": [
+          {
+            "role": "opdrachtnemer",
+            "displayName": "Schoon Demostad B.V."
+          },
+          {
+            "role": "opdrachtgever",
+            "displayName": "Gemeente Demostad"
+          }
+        ],
+        "internalOwner": "seed-user-facilitair",
+        "startDate": "2024-01-01",
+        "endDate": "2026-12-31",
+        "noticePeriodDays": 72,
+        "noticeDeadline": "2026-10-20",
+        "renewalType": "manual",
+        "value": 86000,
+        "currency": "EUR",
+        "status": "active",
+        "documents": [],
+        "keyTermSuggestions": []
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentContract",
+          "slug": "demostad-subsidie-cultuur-concept"
+        },
+        "title": "Subsidieovereenkomst cultuurfonds (concept)",
+        "contractType": "subsidie",
+        "parties": [
+          {
+            "role": "ontvanger",
+            "displayName": "Stichting Cultuur Demostad"
+          }
+        ],
+        "internalOwner": "seed-user-subsidies",
+        "renewalType": "none",
+        "currency": "EUR",
+        "status": "draft",
+        "documents": [],
+        "keyTermSuggestions": [],
+        "notes": "Nog geen datums: wacht op het besluit van het college."
       }
     ]
   }

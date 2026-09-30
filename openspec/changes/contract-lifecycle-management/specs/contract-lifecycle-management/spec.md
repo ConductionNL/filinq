@@ -18,8 +18,8 @@ competition (8 CLM competitors in the intelligence DB); tracked by GH #232.
 
 ### Requirement: Contract is a first-class OpenRegister object (REQ-DDCLM-001)
 
-Filinq MUST store contracts as objects of a new `contract` schema in the
-existing `dossier` register of `lib/Settings/filinq_register.json`
+Filinq MUST store contracts as objects of a new `documentContract` schema (slug qualified because other apps own `contract`) in the
+app's one register, `filinq`, in `lib/Settings/filinq_register.json`
 (additive register version bump). The schema MUST carry: `title` (string,
 required), `contractType` (string), `parties` (array of objects, each with
 `contactRef` — a string `format: uri` linkage pointer to a canonical NC
@@ -30,7 +30,7 @@ plus `role` and a `displayName` fallback), `internalOwner` (NC user id),
 `renews`/`renewedBy` (uuid references, nullable), `value` (number, nullable),
 `currency` (string, default `EUR`), `status` (lifecycle field), `documents`
 (array of artifact references), `signingRequestRef` and `signedDocumentRef`
-(nullable references), `keyTermSuggestions` (array, see REQ-DDCLM-005) and
+(nullable references), `keyTermSuggestions` (array, see REQ-DDCLM-005), `terminationReason` and
 `notes`. When a linked contact exists, the contact record MUST be the source
 of truth for party identity; the schema MUST NOT carry an organisation/tenant
 property (tenancy comes from OR's envelope). When `endDate` and
@@ -51,7 +51,7 @@ MUST never be overwritten.
 - WHEN it is saved
 - THEN `noticeDeadline` is stored as `2028-10-02`
 - AND saving again with a manually set `noticeDeadline` keeps the manual value
-- @e2e exclude pure date-arithmetic defaulting — covered by PHPUnit (tests/unit/Service/ContractServiceTest.php); the stored result is asserted in the contracts e2e spec
+- @e2e exclude pure date-arithmetic defaulting — covered by PHPUnit (tests/unit/Service/Contract/ContractServiceTest.php); the stored result is asserted in the contracts e2e spec
 
 ### Requirement: Contract status lifecycle is declaratively guarded (REQ-DDCLM-002)
 
@@ -138,7 +138,7 @@ external schema property (`signingRequest.status`, `deadline`,
 - GIVEN a contract whose signing request completes
 - WHEN the contract detail is reopened
 - THEN `signedDocumentRef` references the signed artifact and the detail presents the contract document as signed
-- @e2e exclude driving a full external signing completion is owned by the signing capability's own e2e suite — the linkage read is covered by PHPUnit (tests/unit/Service/ContractServiceTest.php) with a completed signingRequest fixture
+- @e2e exclude driving a full external signing completion is owned by the signing capability's own e2e suite — the linkage read is covered by PHPUnit (tests/unit/Service/Contract/ContractServiceTest.php) with a completed signingRequest fixture
 
 ### Requirement: Key-term extraction is suggestion-only (REQ-DDCLM-005)
 
@@ -171,7 +171,7 @@ sibling `inbound-auto-classification` change.
 - GIVEN `enable_contract_term_extraction` is set to `"0"`
 - WHEN a document is attached to a contract
 - THEN no extraction runs, `keyTermSuggestions` is unchanged, and the detail shows no suggestions panel
-- @e2e exclude IAppConfig toggle side-effect on a background pass — covered by PHPUnit (tests/unit/Service/ContractTermSuggestionServiceTest.php); the suggestions-panel visibility is asserted in the contracts e2e spec
+- @e2e exclude IAppConfig toggle side-effect on a background pass — covered by PHPUnit (tests/unit/Service/Contract/ContractTermSuggestionServiceTest.php); the suggestions-panel visibility is asserted in the contracts e2e spec
 
 ### Requirement: Renewal pipeline view (REQ-DDCLM-006)
 

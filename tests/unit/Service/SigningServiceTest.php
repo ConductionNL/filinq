@@ -415,6 +415,60 @@ class SigningServiceTest extends TestCase {
 	}//end testCreateRequestStoresTheSignersItIsGiven()
 
 	/**
+	 * A signer named only by user id is stored without an e-mail key, and
+	 * every field of every stored signer record validates against the real
+	 * signerRecord fragment. Before this fix the record carried `email: ''`,
+	 * which `format: email` refuses (it saved only because the register
+	 * validates softly).
+	 *
+	 * @return void
+	 */
+	public function testAUserOnlySignerRecordValidatesAgainstTheRegister(): void {
+		$saved = [];
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-1' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => 'file-001',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [
+					['displayName' => 'Carl', 'userId' => 'carl'],
+					['displayName' => 'Bea', 'email' => 'bea@example.org'],
+				],
+			]
+		);
+
+		$signerRecords = array_values(array_filter($saved, static fn (array $o) => isset($o['signingRequestId']) === true));
+		$this->assertCount(2, $signerRecords);
+		$this->assertArrayNotHasKey('email', $signerRecords[0]);
+		$this->assertSame('bea@example.org', $signerRecords[1]['email']);
+
+		$descriptor = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'));
+		$properties = $descriptor->components->schemas->signerRecord->properties;
+		$validator = new \Opis\JsonSchema\Validator();
+		foreach ($signerRecords as $record) {
+			foreach ($record as $field => $value) {
+				$this->assertObjectHasProperty($field, $properties, 'signerRecord declares ' . $field);
+				$property = clone $properties->{$field};
+				// A boolean `required` on a property is OpenRegister's, not JSON Schema's.
+				unset($property->required);
+				$result = $validator->validate(json_decode(json_encode($value)), json_encode($property));
+				$this->assertTrue($result->isValid(), $field . ' = ' . json_encode($value) . ' must validate');
+			}
+		}
+
+	}//end testAUserOnlySignerRecordValidatesAgainstTheRegister()
+
+	/**
 	 * createRequest() rejects missing documentFileId.
 	 *
 	 * @return void
@@ -1296,6 +1350,45 @@ class SigningServiceTest extends TestCase {
 		$this->assertSame('changed my mind', $result['declineReason']);
 
 	}//end testDeclineHappyPathFromInProgress()
+
+	/**
+	 * The first signer of a request nobody has signed yet (PENDING) can
+	 * decline it: the signer record and the request both become DECLINED.
+	 * Before this fix the status machine only allowed IN_PROGRESS -> DECLINED,
+	 * so the first signer got "Cannot decline request in status: PENDING".
+	 *
+	 * @return void
+	 */
+	public function testFirstSignerCanDeclineAFreshPendingRequest(): void {
+		$requestData = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+		];
+		$signerData = [
+			'id' => 'signer-001',
+			'signingRequestId' => 'req-001',
+			'userId' => 'alice',
+			'status' => 'PENDING',
+		];
+
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+
+		$result = $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'wrong document');
+
+		$this->assertSame('DECLINED', $result['status']);
+		$this->assertSame(['DECLINED', 'DECLINED'], array_column($saved, 'status'));
+		$this->assertTrue($this->service->isValidTransition(currentStatus: 'PENDING', newStatus: 'DECLINED'));
+
+	}//end testFirstSignerCanDeclineAFreshPendingRequest()
 
 	/**
 	 * decline() throws when signer record belongs to a different request

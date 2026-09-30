@@ -5,24 +5,24 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `contract` schema to the `dossier` register in `lib/Settings/filinq_register.json` (REQ-DDCLM-001, REQ-DDCLM-002, REQ-DDCLM-003)
+- [x] 1.1 Add the `contract` schema to the `filinq` register (the app's one register) in `lib/Settings/filinq_register.json` (REQ-DDCLM-001, REQ-DDCLM-002, REQ-DDCLM-003)
   - Properties per design.md D1; `x-openregister-lifecycle` in OR's CANONICAL dialect (canonical `initial: draft` — verify against OR HEAD, do NOT copy the drifted `initialState` blocks); two `x-openregister-notifications` entries (`noticeDeadline`, `endDate`) mirroring the shipped `objectionDeadline` dialect; additive register version bump with changelog entry.
 
-- [ ] 1.2 Add seed data: one notice-due `active` contract, one long-running `active` contract, one `draft` (design.md Seed Data)
+- [x] 1.2 Add seed data: one notice-due `active` contract, one long-running `active` contract, one `draft` (design.md Seed Data)
   - Placeholder identifiers only (nil-UUID URNs, `seed-*`/`demostad-*`); validates on boot import.
 
-- [ ] 1.3 Add register-declaration drift-pin unit tests (REQ-DDCLM-003, REQ-DDCLM-004)
+- [x] 1.3 Add register-declaration drift-pin unit tests (REQ-DDCLM-003, REQ-DDCLM-004)
   - Pins the canonical lifecycle dialect key OR honours, the notification entries, and the referenced external properties (`signingRequest.status`/`deadline`/`signatureLevel`) against the shipped register.
 
 ## 2. Backend
 
-- [ ] 2.1 Implement `lib/Service/ContractService.php`: notice-deadline defaulting, renew, terminate, suggestion acceptance (REQ-DDCLM-001, REQ-DDCLM-002, REQ-DDCLM-005)
+- [x] 2.1 Implement `lib/Service/ContractService.php`: notice-deadline defaulting, renew, terminate, suggestion acceptance (REQ-DDCLM-001, REQ-DDCLM-002, REQ-DDCLM-005)
   - Defaulting never overwrites a user value; renew creates + links the successor (`renews`/`renewedBy`) and carries fields forward; terminate requires a reason; all saves PUT-semantic (carry ALL fields forward; test a non-changed field survives); no `_rbac`/`_multitenancy` overrides.
 
-- [ ] 2.2 Implement `lib/Service/ContractTermSuggestionService.php` (REQ-DDCLM-005)
+- [x] 2.2 Implement `lib/Service/ContractTermSuggestionService.php` (REQ-DDCLM-005)
   - Local text extraction only; writes `keyTermSuggestions` records, never contract fields; honours `enable_contract_term_extraction` (default enabled); runs on document attach + on demand.
 
-- [ ] 2.3 Add the three action routes (renew, terminate, accept-suggestion) via a thin `lib/Controller/ContractController.php` (REQ-DDCLM-002, REQ-DDCLM-005, REQ-DDCLM-006)
+- [x] 2.3 Add the three action routes (renew, terminate, accept-suggestion) via a thin `lib/Controller/ContractController.php` (REQ-DDCLM-002, REQ-DDCLM-005, REQ-DDCLM-006)
   - Explicit auth attributes + per-object guards on every method (hydra gates route-auth / no-admin-idor / semantic-auth); NO CRUD pass-through methods (redundant-controller gate) — frontend CRUD stays on OR's object API.
 
 ## 3. Frontend

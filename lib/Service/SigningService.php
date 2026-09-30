@@ -66,7 +66,7 @@ class SigningService {
 	 */
 	private const STATUS_TRANSITIONS = [
 		'DRAFT' => ['PENDING', 'CANCELLED'],
-		'PENDING' => ['IN_PROGRESS', 'CANCELLED', 'EXPIRED'],
+		'PENDING' => ['IN_PROGRESS', 'DECLINED', 'CANCELLED', 'EXPIRED'],
 		'IN_PROGRESS' => ['COMPLETED', 'DECLINED', 'CANCELLED', 'EXPIRED'],
 		'COMPLETED' => [],
 		'DECLINED' => [],
@@ -278,13 +278,18 @@ class SigningService {
 					'signingRequestId' => $requestId,
 					'userId' => $signerData['userId'] ?? '',
 					'displayName' => $signerData['displayName'] ?? '',
-					'email' => $signerData['email'] ?? '',
 					'order' => $signerData['order'] ?? $index,
 					'status' => 'PENDING',
 				],
 				($prepared['fields'][$index] ?? []),
-				// An envelope's signer records carry it, so the per-document notification skips them.
-				array_filter(['envelopeRef' => (string) ($signerData['envelopeRef'] ?? '')])
+				// A signer named by user id alone has no address: `format: email` refuses ''.
+				// An envelope's signer records carry envelopeRef, so the per-document notification skips them.
+				array_filter(
+					[
+						'email' => trim((string) ($signerData['email'] ?? '')),
+						'envelopeRef' => (string) ($signerData['envelopeRef'] ?? ''),
+					]
+				)
 			);
 
 			if (isset($links[$index]) === true) {
