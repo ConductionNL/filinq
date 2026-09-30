@@ -216,7 +216,7 @@ export default {
 		 *
 		 * @return {Array<string>}
 		 *
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		signerLabels() {
 			return this.signerRows.map(
@@ -229,7 +229,7 @@ export default {
 		 *
 		 * @return {object}
 		 *
-		 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 		 */
 		bulkSettings() {
 			return {
@@ -245,7 +245,7 @@ export default {
 		 *
 		 * @return {object}
 		 *
-		 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 		 */
 		envelopeSettings() {
 			return {

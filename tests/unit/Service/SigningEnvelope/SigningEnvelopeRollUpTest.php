@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The envelope status for a set of member statuses.
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
  */
 class SigningEnvelopeRollUpTest extends TestCase {
 

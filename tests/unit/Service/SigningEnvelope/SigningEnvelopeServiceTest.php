@@ -184,7 +184,7 @@ class EnvelopeObjectStore extends ObjectService {
 /**
  * Envelope behaviour over the real signing path.
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
  */
 class SigningEnvelopeServiceTest extends TestCase {
 	use \OCA\Filinq\Tests\Unit\Service\SignerAuth\AssuranceGateHarness;

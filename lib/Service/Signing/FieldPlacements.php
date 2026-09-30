@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use InvalidArgumentException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
  */
 class FieldPlacements {
 
@@ -77,7 +77,7 @@ class FieldPlacements {
 	 *
 	 * @throws InvalidArgumentException When a placement breaks a rule; the message names which.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function normalise(mixed $placements, int $signerCount): array {
 		if ($placements === null || $placements === []) {

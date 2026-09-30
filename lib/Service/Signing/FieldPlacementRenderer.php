@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
  */
 class FieldPlacementRenderer {
 
@@ -52,7 +52,7 @@ class FieldPlacementRenderer {
 	 *
 	 * @throws RuntimeException When the bytes are not a PDF this renderer can read.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function pageCount(string $pdf): int {
 		try {
@@ -81,7 +81,7 @@ class FieldPlacementRenderer {
 	 *
 	 * @throws RuntimeException When the PDF cannot be read or a placement names a page it does not have.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
 	 */
 	public function render(string $pdf, array $placements, array $signers, string $timestamp): string {
 		if ($placements === []) {

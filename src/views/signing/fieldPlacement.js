@@ -41,7 +41,7 @@ function clamp(value, low, high) {
  * @param {Array<object>} list The placements.
  * @param {{signerIndex: number, page: number, type: string, x: number, y: number}} at Where and what.
  * @return {Array<object>} The new list.
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
  */
 export function addPlacement(list, at) {
 	const [width, height] = SIZES[at.type] ?? SIZES.text
@@ -67,7 +67,7 @@ export function addPlacement(list, at) {
  * @param {number} dx Distance to the right, as a share of the page width.
  * @param {number} dy Distance down, as a share of the page height.
  * @return {Array<object>} The new list.
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
  */
 export function movePlacement(list, index, dx, dy) {
 	return list.map((box, i) =>
@@ -89,7 +89,7 @@ export function movePlacement(list, index, dx, dy) {
  * @param {number} dw Change in width.
  * @param {number} dh Change in height.
  * @return {Array<object>} The new list.
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
  */
 export function resizePlacement(list, index, dw, dh) {
 	return list.map((box, i) =>
@@ -110,7 +110,7 @@ export function resizePlacement(list, index, dw, dh) {
  * @param {Array<object>} list The placements.
  * @param {number} signerIndex The removed signer.
  * @return {Array<object>} The new list.
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
  */
 export function dropSignerPlacements(list, signerIndex) {
 	return list
@@ -127,7 +127,7 @@ export function dropSignerPlacements(list, signerIndex) {
  *
  * @param {Array<object>} list The placements.
  * @return {Array<object>}
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
  */
 export function toRequestPlacements(list) {
 	const round = (n) => Math.round(n * 10000) / 10000

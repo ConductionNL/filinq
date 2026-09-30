@@ -9,7 +9,7 @@
  * confirm the server creates the requests in the background; the dialog reads
  * the batch again until it is finished.
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 
 import axios from '@nextcloud/axios'
@@ -25,7 +25,7 @@ const BASE = '/apps/filinq/api/signing/batches'
  * @param {object} settings documentFileId, documentName, signatureLevel, signingMode, title
  * @return {Promise<object>} The batch with its report.
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export async function uploadList(file, settings) {
 	const body = new FormData()
@@ -45,7 +45,7 @@ export async function uploadList(file, settings) {
  * @param {string} id The batch uuid
  * @return {Promise<object>} The batch.
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export async function fetchBatch(id) {
 	const response = await axios.get(generateUrl(`${BASE}/${id}`))
@@ -58,7 +58,7 @@ export async function fetchBatch(id) {
  * @param {string} id The batch uuid
  * @return {Promise<object>} The batch, now sending.
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export async function confirmBatch(id) {
 	const response = await axios.post(generateUrl(`${BASE}/${id}/confirm`))
@@ -71,7 +71,7 @@ export async function confirmBatch(id) {
  * @param {string} id The batch uuid
  * @return {Promise<object>} The cancelled batch.
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export async function cancelBatch(id) {
 	const response = await axios.post(generateUrl(`${BASE}/${id}/cancel`))
@@ -84,7 +84,7 @@ export async function cancelBatch(id) {
  * @param {object} batch The batch
  * @return {boolean}
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export function isFinished(batch) {
 	return ['completed', 'completed_with_errors', 'cancelled'].includes(
@@ -98,7 +98,7 @@ export function isFinished(batch) {
  * @param {{row: number, reason: string, detail?: string}} rejected The rejected row
  * @return {string}
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export function reasonLabel(rejected) {
 	const detail = rejected.detail || ''
@@ -126,7 +126,7 @@ export function reasonLabel(rejected) {
  * @param {string} status The stored status
  * @return {string}
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export function statusLabel(status) {
 	const labels = {
@@ -146,7 +146,7 @@ export function statusLabel(status) {
  * @param {Error} error The axios error
  * @return {string}
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
  */
 export function errorMessage(error) {
 	return (

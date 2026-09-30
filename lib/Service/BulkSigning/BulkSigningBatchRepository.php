@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
  */
 class BulkSigningBatchRepository {
 
@@ -54,7 +54,7 @@ class BulkSigningBatchRepository {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolves OpenRegister's ObjectService
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
@@ -72,7 +72,7 @@ class BulkSigningBatchRepository {
 	 *
 	 * @throws RuntimeException When OpenRegister refuses the write
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
 	 */
 	public function save(array $batch, ?string $uuid = null): array {
 		unset($batch['uuid']);
@@ -105,7 +105,7 @@ class BulkSigningBatchRepository {
 	 *
 	 * @throws RuntimeException When the read fails
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
 	 */
 	public function find(string $uuid): ?array {
 		if ($uuid === '') {
@@ -135,7 +135,7 @@ class BulkSigningBatchRepository {
 	 *
 	 * @throws RuntimeException When the read fails
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-envelope-and-placement-data-live-in-the-signing-register-req-ddbsf-001
 	 */
 	public function list(?string $createdBy): array {
 		$filters = [];

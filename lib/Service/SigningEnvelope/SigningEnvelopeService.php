@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+ * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
  */
 class SigningEnvelopeService {
 
@@ -61,7 +61,7 @@ class SigningEnvelopeService {
 	 * @param SigningEnvelopeRepository $repository Envelope storage
 	 * @param SigningEnvelopeRollUp     $rollUp     The status rules
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function __construct(
 		private readonly SigningService $signing,
@@ -87,7 +87,7 @@ class SigningEnvelopeService {
 	 *
 	 * @throws RuntimeException 400 when the input or a member request is invalid
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function create(array $input, string $userId): array {
 		$documents = $this->documents(value: ($input['documents'] ?? null));
@@ -141,7 +141,7 @@ class SigningEnvelopeService {
 	 *
 	 * @return array|null The envelope with `members`, or null
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function get(string $id, string $userId, bool $isAdmin): ?array {
 		$envelope = $this->reachable(id: $id, userId: $userId, isAdmin: $isAdmin, manage: false);
@@ -164,7 +164,7 @@ class SigningEnvelopeService {
 	 *
 	 * @return list<array>
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function listFor(string $userId, bool $isAdmin): array {
 		$initiator = $userId;
@@ -188,7 +188,7 @@ class SigningEnvelopeService {
 	 *
 	 * @return array|null `{envelope, results}` with a result per member signed or refused, or null
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function signAll(string $id, string $userId): ?array {
 		$envelope = $this->reachable(id: $id, userId: $userId, isAdmin: false, manage: false);
@@ -221,7 +221,7 @@ class SigningEnvelopeService {
 	 *
 	 * @return array|null The envelope with `cancelledRequests`, or null
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function cancel(string $id, string $userId, bool $isAdmin): ?array {
 		$envelope = $this->reachable(id: $id, userId: $userId, isAdmin: $isAdmin, manage: true);

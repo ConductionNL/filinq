@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
  */
 class FieldPlacementCheck {
 
@@ -48,7 +48,7 @@ class FieldPlacementCheck {
 	 * @param FieldPlacements        $rules    The placement rules.
 	 * @param FieldPlacementRenderer $renderer Reads the page count a placement must stay within.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function __construct(
 		private readonly FieldPlacements $rules = new FieldPlacements(),
@@ -73,7 +73,7 @@ class FieldPlacementCheck {
 	 *
 	 * @throws RuntimeException 400 when a placement breaks a rule or the provider cannot carry placements.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function accept(mixed $placements, int $signerCount, string $provider): array {
 		try {
@@ -100,7 +100,7 @@ class FieldPlacementCheck {
 	 *
 	 * @throws RuntimeException 400 when the document is not a PDF the renderer can read, or a page is missing.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function assertPagesExist(array $placements, string $pdf): void {
 		try {
@@ -132,7 +132,7 @@ class FieldPlacementCheck {
 	 *
 	 * @throws RuntimeException 400 when a placement breaks a rule, names a page the document lacks, or the provider cannot carry placements.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function apply(array $request, mixed $placements, int $signerCount, SignedArtifactProducer $producer): array {
 		$accepted = $this->accept(placements: $placements, signerCount: $signerCount, provider: (string) ($request['provider'] ?? ''));

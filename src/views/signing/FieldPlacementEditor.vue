@@ -145,7 +145,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<object>} One option per signer row.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		signerOptions() {
 			return this.signers.map((name, id) => ({
@@ -156,7 +156,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The five field types.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		typeOptions() {
 			return FIELD_TYPES.map((id) => ({ id, label: this.typeLabel(id) }))
@@ -164,7 +164,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The boxes on the page shown, with their list index.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		pageBoxes() {
 			return this.modelValue
@@ -179,7 +179,7 @@ export default {
 			/**
 			 * Read the new document.
 			 *
-			 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+			 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 			 */
 			handler() {
 				this.load()
@@ -190,7 +190,7 @@ export default {
 	/**
 	 * Stop listening for drags and free the document.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 	 */
 	beforeUnmount() {
 		window.removeEventListener('pointermove', this.onDrag)
@@ -207,7 +207,7 @@ export default {
 		 *
 		 * @param {string} type The type.
 		 * @return {string}
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		typeLabel(type) {
 			return {
@@ -224,7 +224,7 @@ export default {
 		 *
 		 * @param {object} box The box.
 		 * @return {string}
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		boxLabel(box) {
 			return t('filinq', '{field} for {signer} on page {page}', {
@@ -239,7 +239,7 @@ export default {
 		 *
 		 * @param {object} box The box.
 		 * @return {object}
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		boxStyle(box) {
 			return {
@@ -254,7 +254,7 @@ export default {
 		 * Read the document and show its first page.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		async load() {
 			this.error = ''
@@ -284,7 +284,7 @@ export default {
 		 *
 		 * @param {number} number The page.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		async showPage(number) {
 			this.page = number
@@ -311,7 +311,7 @@ export default {
 		 * Put a field where the page was clicked.
 		 *
 		 * @param {MouseEvent} event The click.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		place(event) {
 			const rect = this.$refs.sheet.getBoundingClientRect()
@@ -325,7 +325,7 @@ export default {
 		 * Put a field in the middle of the page, for the keyboard; the arrow
 		 * keys then move it.
 		 *
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		placeInMiddle() {
 			this.placeAt(0.5, 0.5)
@@ -336,7 +336,7 @@ export default {
 		 *
 		 * @param {number} x Share of the page width.
 		 * @param {number} y Share of the page height.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		placeAt(x, y) {
 			const next = addPlacement(this.modelValue, {
@@ -355,7 +355,7 @@ export default {
 		 *
 		 * @param {KeyboardEvent} event The key.
 		 * @param {number} index The box.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		nudge(event, index) {
 			const step = 0.01
@@ -386,7 +386,7 @@ export default {
 		 *
 		 * @param {PointerEvent} event The pointer.
 		 * @param {number} index The box.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		startDrag(event, index) {
 			this.selected = index
@@ -399,7 +399,7 @@ export default {
 		 * Follow the pointer.
 		 *
 		 * @param {PointerEvent} event The pointer.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		onDrag(event) {
 			if (!this.drag) {
@@ -419,7 +419,7 @@ export default {
 		/**
 		 * Stop dragging.
 		 *
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		endDrag() {
 			this.drag = null
@@ -431,7 +431,7 @@ export default {
 		 * Remove one field.
 		 *
 		 * @param {number} index The box.
-		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		remove(index) {
 			this.selected = -1

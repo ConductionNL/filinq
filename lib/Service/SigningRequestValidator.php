@@ -174,7 +174,7 @@ class SigningRequestValidator {
 	 *
 	 * @throws RuntimeException 400 when a placement breaks a rule, names a page the document lacks, or the provider cannot carry placements.
 	 *
-	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function withPlacements(array $request, mixed $placements, int $signerCount, SignedArtifactProducer $producer): array {
 		return $this->placementCheck->apply(request: $request, placements: $placements, signerCount: $signerCount, producer: $producer);
