@@ -74,7 +74,8 @@
                     "conformanceReport",
                     "bulkSigningBatch",
                     "signingEnvelope",
-                    "documentContract"
+                    "documentContract",
+                    "sanitizationRecord"
                 ]
             }
         },
@@ -10561,62 +10562,74 @@
                             "commentsRemoved": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Comments removed"
+                                "title": "Comments removed",
+                                "description": "How many comments were removed."
                             },
                             "trackedChangesAccepted": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Tracked changes accepted"
+                                "title": "Tracked changes accepted",
+                                "description": "How many tracked insertions were kept as plain text."
                             },
                             "trackedChangesDropped": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Tracked changes dropped"
+                                "title": "Tracked changes dropped",
+                                "description": "How many tracked deletions were removed for good."
                             },
                             "revisionAttributesStripped": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Revision marks removed"
+                                "title": "Revision marks removed",
+                                "description": "How many revision marks naming an author or date were removed."
                             },
                             "hyperlinksFlattened": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Links turned into text"
+                                "title": "Links turned into text",
+                                "description": "How many links were turned into plain text."
                             },
                             "metadataFieldsScrubbed": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Metadata fields cleared"
+                                "title": "Metadata fields cleared",
+                                "description": "How many document properties, such as author or company, were cleared."
                             },
                             "customXmlPartsDropped": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Hidden data parts removed"
+                                "title": "Hidden data parts removed",
+                                "description": "How many hidden data parts were removed."
                             },
                             "fieldCodesStripped": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Field codes removed"
+                                "title": "Field codes removed",
+                                "description": "How many field codes were replaced by their shown text."
                             },
                             "xmpNamespacesStripped": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "XMP metadata blocks removed"
+                                "title": "XMP metadata blocks removed",
+                                "description": "How many XMP metadata blocks were removed from a PDF."
                             },
                             "annotationsRemoved": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Annotations removed"
+                                "title": "Annotations removed",
+                                "description": "How many annotations were removed from a PDF."
                             },
                             "embeddedFilesRemoved": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Embedded files removed"
+                                "title": "Embedded files removed",
+                                "description": "How many embedded files were removed from a PDF."
                             },
                             "scriptsRemoved": {
                                 "type": "integer",
                                 "minimum": 0,
-                                "title": "Scripts removed"
+                                "title": "Scripts removed",
+                                "description": "How many scripts were removed from a PDF."
                             },
                             "sentinelApplied": {
                                 "type": "string",
@@ -10635,7 +10648,8 @@
                     "sanitizedAt": {
                         "type": "string",
                         "format": "date-time",
-                        "title": "Sanitized at"
+                        "title": "Sanitized at",
+                        "description": "When the run finished."
                     },
                     "sanitizedBy": {
                         "type": "string",

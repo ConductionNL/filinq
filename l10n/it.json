@@ -1,5 +1,17 @@
 {
     "translations": {
+        "How many comments were removed.": "Quanti commenti sono stati rimossi.",
+        "How many tracked insertions were kept as plain text.": "Quante inserzioni tracciate sono state mantenute come testo normale.",
+        "How many tracked deletions were removed for good.": "Quante eliminazioni tracciate sono state rimosse definitivamente.",
+        "How many revision marks naming an author or date were removed.": "Quanti segni di revisione con autore o data sono stati rimossi.",
+        "How many links were turned into plain text.": "Quanti collegamenti sono stati trasformati in testo normale.",
+        "How many document properties, such as author or company, were cleared.": "Quante proprietà del documento, come autore o azienda, sono state svuotate.",
+        "How many hidden data parts were removed.": "Quante parti di dati nascoste sono state rimosse.",
+        "How many field codes were replaced by their shown text.": "Quanti codici di campo sono stati sostituiti dal testo mostrato.",
+        "How many XMP metadata blocks were removed from a PDF.": "Quanti blocchi di metadati XMP sono stati rimossi da un PDF.",
+        "How many annotations were removed from a PDF.": "Quante annotazioni sono state rimosse da un PDF.",
+        "How many embedded files were removed from a PDF.": "Quanti file incorporati sono stati rimossi da un PDF.",
+        "How many scripts were removed from a PDF.": "Quanti script sono stati rimossi da un PDF.",
         "Hidden content removed from the copy": "Contenuto nascosto rimosso dalla copia",
         "This document is encrypted. Remove the password and try again.": "Questo documento è cifrato. Rimuovi la password e riprova.",
         "This file is not there, or you cannot open it.": "Questo file non esiste oppure non puoi aprirlo.",

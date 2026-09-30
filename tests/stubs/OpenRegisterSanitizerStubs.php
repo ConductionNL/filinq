@@ -41,7 +41,6 @@ use Throwable;
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/specs/office-document-sanitization/spec.md
  */
 class SanitizationException extends \Exception {
 
@@ -89,7 +88,6 @@ class SanitizationException extends \Exception {
 	 * @param string $message PII-free human-readable detail.
 	 * @param Throwable|null $previous Previous exception.
 	 *
-	 * @spec openspec/specs/office-document-sanitization/spec.md
 	 */
 	public function __construct(
 		string $reason,
@@ -111,7 +109,6 @@ class SanitizationException extends \Exception {
 	 *
 	 * @return string One of the REASON_* constants.
 	 *
-	 * @spec openspec/specs/office-document-sanitization/spec.md
 	 */
 	public function getReason(): string {
 		return $this->reason;
@@ -136,7 +133,6 @@ use JsonSerializable;
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/specs/office-document-sanitization/spec.md
  */
 final class SanitizationReport implements JsonSerializable {
 	/**
@@ -154,7 +150,6 @@ final class SanitizationReport implements JsonSerializable {
 	 *
 	 * @SuppressWarnings(PHPMD.LongVariable) Property names are the stable audit-report JSON keys (design D9).
 	 *
-	 * @spec openspec/specs/office-document-sanitization/spec.md
 	 */
 	public function __construct(
 		public readonly int $commentsRemoved = 0,
@@ -174,7 +169,6 @@ final class SanitizationReport implements JsonSerializable {
 	 *
 	 * @return array<string, int|string>
 	 *
-	 * @spec openspec/specs/office-document-sanitization/spec.md
 	 */
 	public function jsonSerialize(): array {
 		return [
@@ -205,7 +199,6 @@ final class SanitizationReport implements JsonSerializable {
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/specs/office-document-sanitization/spec.md
  */
 final class SanitizationResult {
 	/**
@@ -214,7 +207,6 @@ final class SanitizationResult {
 	 * @param string $path Absolute path to the sanitised temp file.
 	 * @param SanitizationReport $report Per-category sanitisation counts.
 	 *
-	 * @spec openspec/specs/office-document-sanitization/spec.md
 	 */
 	public function __construct(
 		public readonly string $path,

@@ -1,6 +1,18 @@
 OC.L10N.register(
     "filinq",
     {
+        "How many comments were removed.": "Wie viele Kommentare entfernt wurden.",
+        "How many tracked insertions were kept as plain text.": "Wie viele nachverfolgte Einfügungen als normaler Text behalten wurden.",
+        "How many tracked deletions were removed for good.": "Wie viele nachverfolgte Löschungen endgültig entfernt wurden.",
+        "How many revision marks naming an author or date were removed.": "Wie viele Überarbeitungsmarkierungen mit Autor oder Datum entfernt wurden.",
+        "How many links were turned into plain text.": "Wie viele Links in normalen Text umgewandelt wurden.",
+        "How many document properties, such as author or company, were cleared.": "Wie viele Dokumenteigenschaften, etwa Autor oder Firma, geleert wurden.",
+        "How many hidden data parts were removed.": "Wie viele versteckte Datenteile entfernt wurden.",
+        "How many field codes were replaced by their shown text.": "Wie viele Feldfunktionen durch ihren angezeigten Text ersetzt wurden.",
+        "How many XMP metadata blocks were removed from a PDF.": "Wie viele XMP-Metadatenblöcke aus einer PDF entfernt wurden.",
+        "How many annotations were removed from a PDF.": "Wie viele Anmerkungen aus einer PDF entfernt wurden.",
+        "How many embedded files were removed from a PDF.": "Wie viele eingebettete Dateien aus einer PDF entfernt wurden.",
+        "How many scripts were removed from a PDF.": "Wie viele Skripte aus einer PDF entfernt wurden.",
         "Hidden content removed from the copy": "Versteckter Inhalt aus der Kopie entfernt",
         "This document is encrypted. Remove the password and try again.": "Dieses Dokument ist verschlüsselt. Entfernen Sie das Passwort und versuchen Sie es erneut.",
         "This file is not there, or you cannot open it.": "Diese Datei gibt es nicht, oder Sie dürfen sie nicht öffnen.",
