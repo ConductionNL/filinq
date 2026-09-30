@@ -307,6 +307,12 @@ $extra = [
         ['name' => 'bulkSigning#show', 'url' => 'api/signing/batches/{id}', 'verb' => 'GET'],
         ['name' => 'bulkSigning#confirm', 'url' => 'api/signing/batches/{id}/confirm', 'verb' => 'POST'],
         ['name' => 'bulkSigning#cancel', 'url' => 'api/signing/batches/{id}/cancel', 'verb' => 'POST'],
+        // Envelopes (bulk-signing-field-builder REQ-DDBSF-004): several documents, one ceremony.
+        ['name' => 'signingEnvelope#index', 'url' => 'api/signing/envelopes', 'verb' => 'GET'],
+        ['name' => 'signingEnvelope#create', 'url' => 'api/signing/envelopes', 'verb' => 'POST'],
+        ['name' => 'signingEnvelope#show', 'url' => 'api/signing/envelopes/{id}', 'verb' => 'GET'],
+        ['name' => 'signingEnvelope#signAll', 'url' => 'api/signing/envelopes/{id}/sign', 'verb' => 'POST'],
+        ['name' => 'signingEnvelope#cancel', 'url' => 'api/signing/envelopes/{id}/cancel', 'verb' => 'POST'],
 
         // Signer identity rails (signer-identity-rails): the step-up start
         // (signing ownership check in the service) and the broker callback
