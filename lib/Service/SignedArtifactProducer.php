@@ -92,6 +92,8 @@ class SignedArtifactProducer {
 	 *                                                 folded into the produced artifact's
 	 *                                                 evidence binding (portal-signing-surface
 	 *                                                 REQ-DDPSS-004).
+	 * @param array<string, array<string, mixed>> $signers The request's signer records, keyed by id
+	 *                                                     (names for placed fields).
 	 *
 	 * @return string The stored signed-artifact reference (file id + version).
 	 *
@@ -103,7 +105,7 @@ class SignedArtifactProducer {
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
-	public function produce(array $request, ?array $verifiedActor = null): string {
+	public function produce(array $request, ?array $verifiedActor = null, array $signers = []): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
 		if ($fileId <= 0) {
 			throw new RuntimeException('Cannot produce a signed artifact: the request has no document file id');
@@ -136,6 +138,7 @@ class SignedArtifactProducer {
 		$provider = $this->providerFactory->getProvider(identifier: $providerName);
 
 		$context = $this->buildContext(request: $request, verifiedActor: $verifiedActor);
+		$context += $this->placementContext(request: $request, signers: $signers);
 
 		$signedBytes = $provider->produceSignedArtifact(documentContent: $originalContent, context: $context);
 
@@ -189,6 +192,52 @@ class SignedArtifactProducer {
 		return $request;
 
 	}//end delegate()
+
+	/**
+	 * The bytes of the document a request is for, read with the access check signing uses.
+	 *
+	 * Field placement reads the page count from them before the request is stored.
+	 *
+	 * @param array<string, mixed> $request The request (documentFileId, initiatorUserId).
+	 *
+	 * @return string The document's bytes.
+	 *
+	 * @throws RuntimeException When the document cannot be resolved for the initiator or the session user.
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function documentContent(array $request): string {
+		return $this->resolveDocumentFile(fileId: (int) ($request['documentFileId'] ?? 0), request: $request)->getContent();
+
+	}//end documentContent()
+
+	/**
+	 * The placements and signer names a provider draws, when the request has placements.
+	 *
+	 * A placement names its signer by position in `signerIds`; the name is the
+	 * signer record's display name, else its e-mail address, else its user id.
+	 *
+	 * @param array<string, mixed>                $request The completing request.
+	 * @param array<string, array<string, mixed>> $signers The signer records, keyed by id.
+	 *
+	 * @return array<string, mixed> `fieldPlacements` and `signerLabels`, or nothing.
+	 */
+	private function placementContext(array $request, array $signers): array {
+		$placements = ($request['fieldPlacements'] ?? []);
+		if (is_array($placements) === false || $placements === []) {
+			return [];
+		}
+
+		$labels = [];
+		foreach ((array) ($request['signerIds'] ?? []) as $signerId) {
+			$record = ($signers[(string) $signerId] ?? []);
+			$names = array_filter([(string) ($record['displayName'] ?? ''), (string) ($record['email'] ?? ''), (string) ($record['userId'] ?? '')]);
+			$labels[] = (string) (reset($names) ?? '');
+		}
+
+		return ['fieldPlacements' => $placements, 'signerLabels' => $labels];
+
+	}//end placementContext()
 
 	/**
 	 * Build the provider's evidence context.

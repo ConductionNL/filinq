@@ -4775,12 +4775,13 @@
 			"name": "Place signature and form fields on a document visually.",
 			"source": "competitor-derived",
 			"sourceRef": "DocuSeal WYSIWYG field-placement builder",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/bulk-signing-field-builder/tasks.md: 0/16 done. proposal.md names this explicitly: 'Signature field placement — DocuSeal: WYSIWYG field-placement builder... Filinq's native artifact is an appended marker with no visible signature block'.",
-				"change": "openspec/changes/bulk-signing-field-builder"
+				"evidence": "Built (PR feat/signing-field-placement): signingRequest 1.8.0 fieldPlacements (signerIndex, page, a 0-1 box, one of signature/initials/date/text/checkbox; no condition key). SigningService::createRequest -> SignedArtifactProducer::withPlacements validates with FieldPlacements and refuses (400) an absent signer, a page the PDF lacks, or LibreSign (its request-signature call has no field input). At completion the producer hands placements and signer names to the provider; NativeSigningProvider draws them with FieldPlacementRenderer (FPDI) BEFORE the v2 canonical hash, and binds them in the assertion, so a moved block verifies as invalid. Without placements the artifact is byte-identical. Editor: SigningRequestForm 'Place fields on the document' -> FieldPlacementEditor (pdfjs page preview, click to place, drag or arrow keys to move, Shift+arrow to resize, Delete to remove). Tests: FieldPlacementRenderingTest (real renderer, provider and verifier), SigningServiceTest placement cases (payload against the real fragment), vitest fieldPlacement.spec.js. Partial: external providers do not map placements (LibreSign refused, ValidSign not wired).",
+				"change": "openspec/changes/bulk-signing-field-builder",
+				"readOn": "2026-09-30"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

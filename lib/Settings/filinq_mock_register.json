@@ -5207,6 +5207,26 @@
         "deadline": "2026-03-01T09:00:00+00:00",
         "signerIds": [
           "Voorbeeld Signerids 1"
+        ],
+        "fieldPlacements": [
+          {
+            "signerIndex": 0,
+            "page": 1,
+            "x": 0.6,
+            "y": 0.85,
+            "width": 0.3,
+            "height": 0.05,
+            "type": "signature"
+          },
+          {
+            "signerIndex": 0,
+            "page": 1,
+            "x": 0.6,
+            "y": 0.91,
+            "width": 0.15,
+            "height": 0.03,
+            "type": "date"
+          }
         ]
       },
       {

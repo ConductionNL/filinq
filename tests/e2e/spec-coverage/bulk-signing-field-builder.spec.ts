@@ -93,3 +93,56 @@ test.describe('bulk send', () => {
 		})
 	})
 })
+
+test.describe('field placement', () => {
+	test('a field placed on page 3 is sent with the request', async ({ page }) => {
+		// @e2e openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#scenario-a-placed-field-appears-in-the-artifact-at-its-position
+		// The browser half: the page preview, the click that places the box,
+		// and the placement the request carries. That the native artifact draws
+		// it inside the MAC is proven by
+		// tests/unit/Service/Signing/FieldPlacementRenderingTest.php.
+		let created: Record<string, unknown> = {}
+		await page.route(
+			'**/apps/filinq/api/documents/4711/versions/0/download',
+			(route) =>
+				route.fulfill({
+					contentType: 'application/pdf',
+					body: readFileSync('tests/fixtures/signing/three-pages.pdf'),
+				}),
+		)
+		await page.route('**/apps/filinq/api/signing/requests', async (route) => {
+			created = route.request().postDataJSON()
+			await route.fulfill({
+				status: 201,
+				json: { id: 'req-1', status: 'PENDING' },
+			})
+		})
+
+		await go(page, 'signing/new')
+		await page.getByLabel('Document File ID').fill('4711')
+		await page.getByLabel('Document Name').fill('verklaring.pdf')
+		await page.getByLabel('Name').first().fill('Anna de Vries')
+		await page.getByLabel('E-mail').first().fill('anna@example.invalid')
+		await page.getByText('Place fields on the document').click()
+		await expect(page.getByText('Page 1 of 3')).toBeVisible()
+		await page.getByRole('button', { name: 'Next page' }).click()
+		await page.getByRole('button', { name: 'Next page' }).click()
+		await page
+			.getByTestId('field-placement-sheet')
+			.click({ position: { x: 300, y: 400 } })
+		await expect(
+			page.getByRole('button', {
+				name: 'Signature for Anna de Vries on page 3',
+			}),
+		).toBeVisible()
+
+		await page.getByRole('button', { name: 'Create Signing Request' }).click()
+		const placements = created.fieldPlacements as Array<Record<string, unknown>>
+		expect(placements).toHaveLength(1)
+		expect(placements[0]).toMatchObject({
+			signerIndex: 0,
+			page: 3,
+			type: 'signature',
+		})
+	})
+})
