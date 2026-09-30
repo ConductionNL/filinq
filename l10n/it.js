@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Page {page}: press Enter to place a field in the middle": "Pagina {page}: premi Invio per posizionare un campo al centro",
         "Fields on the document": "Campi sul documento",
         "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.": "Scegli un firmatario e un campo, poi fai clic sul punto della pagina in cui va. Trascina un campo per spostarlo, oppure selezionalo e usa i tasti freccia. Maiusc con un tasto freccia ne cambia la dimensione. I campi vengono disegnati nel documento al momento della firma.",
         "Previous page": "Pagina precedente",

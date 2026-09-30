@@ -25,9 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Signing;
 
+use OCA\Filinq\Service\PdfStreamReaderFactory;
 use RuntimeException;
 use setasign\Fpdi\Fpdi;
-use setasign\Fpdi\PdfParser\StreamReader;
 use Throwable;
 
 /**
@@ -56,7 +56,7 @@ class FieldPlacementRenderer {
 	 */
 	public function pageCount(string $pdf): int {
 		try {
-			return (new Fpdi())->setSourceFile(StreamReader::createByString($pdf));
+			return (new Fpdi())->setSourceFile((new PdfStreamReaderFactory())->fromString(content: $pdf));
 		} catch (Throwable $e) {
 			throw new RuntimeException('Fields cannot be placed on this document: ' . $e->getMessage(), 0, $e);
 		}
@@ -91,7 +91,7 @@ class FieldPlacementRenderer {
 		$document = new Fpdi('P', 'pt');
 		$document->SetAutoPageBreak(false);
 		$pages = $this->pageCount(pdf: $pdf);
-		$document->setSourceFile(StreamReader::createByString($pdf));
+		$document->setSourceFile((new PdfStreamReaderFactory())->fromString(content: $pdf));
 
 		foreach ($placements as $placement) {
 			if ((int) $placement['page'] > $pages) {

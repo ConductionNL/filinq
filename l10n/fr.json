@@ -1,5 +1,6 @@
 {
     "translations": {
+        "Page {page}: press Enter to place a field in the middle": "Page {page} : appuyez sur Entrée pour placer un champ au milieu",
         "Fields on the document": "Champs sur le document",
         "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.": "Choisissez un signataire et un champ, puis cliquez sur la page à l'endroit voulu. Faites glisser un champ pour le déplacer, ou sélectionnez-le et utilisez les flèches. Maj avec une flèche change sa taille. Les champs sont dessinés dans le document lors de la signature.",
         "Previous page": "Page précédente",

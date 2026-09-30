@@ -2790,8 +2790,7 @@
                                 "width",
                                 "height",
                                 "type"
-                            ],
-                            "additionalProperties": false
+                            ]
                         },
                         "visible": false,
                         "order": 23,

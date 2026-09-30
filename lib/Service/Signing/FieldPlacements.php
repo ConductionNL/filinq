@@ -129,19 +129,7 @@ class FieldPlacements {
 			throw new InvalidArgumentException($where . '.signerIndex names signer ' . $signerIndex . ' of ' . $signerCount);
 		}
 
-		$box = [];
-		foreach (['x', 'y', 'width', 'height'] as $key) {
-			$value = ($placement[$key] ?? null);
-			if ((is_int($value) === false && is_float($value) === false) || $value < 0 || $value > 1) {
-				throw new InvalidArgumentException($where . '.' . $key . ' must be a number from 0 to 1');
-			}
-
-			$box[$key] = (float) $value;
-		}
-
-		if ($box['width'] <= 0 || $box['height'] <= 0 || $box['x'] + $box['width'] > 1 + self::EPSILON || $box['y'] + $box['height'] > 1 + self::EPSILON) {
-			throw new InvalidArgumentException($where . ' must be a box of some size that stays on the page');
-		}
+		$box = $this->box(placement: $placement, where: $where);
 
 		return [
 			'signerIndex' => $signerIndex,
@@ -154,6 +142,37 @@ class FieldPlacements {
 		];
 
 	}//end normaliseOne()
+
+	/**
+	 * Read a placement's box: four shares of the page that keep it on the page.
+	 *
+	 * @param array  $placement The entry.
+	 * @param string $where     The entry's name, for the message.
+	 *
+	 * @return array{x: float, y: float, width: float, height: float} The box.
+	 *
+	 * @throws InvalidArgumentException When a coordinate is not a number from 0 to 1, or the box leaves the page.
+	 */
+	private function box(array $placement, string $where): array {
+		$box = [];
+		foreach (['x', 'y', 'width', 'height'] as $key) {
+			$value = ($placement[$key] ?? null);
+			if ((is_int($value) === false && is_float($value) === false) || $value < 0 || $value > 1) {
+				throw new InvalidArgumentException($where . '.' . $key . ' must be a number from 0 to 1');
+			}
+
+			$box[$key] = (float) $value;
+		}
+
+		$sized  = $box['width'] > 0 && $box['height'] > 0;
+		$onPage = max($box['x'] + $box['width'], $box['y'] + $box['height']) <= 1 + self::EPSILON;
+		if ($sized === false || $onPage === false) {
+			throw new InvalidArgumentException($where . ' must be a box of some size that stays on the page');
+		}
+
+		return $box;
+
+	}//end box()
 
 	/**
 	 * Read a whole number no lower than a minimum.

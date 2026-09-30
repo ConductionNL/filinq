@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Page {page}: press Enter to place a field in the middle": "Seite {page}: Drücken Sie die Eingabetaste, um ein Feld in der Mitte zu platzieren",
         "Fields on the document": "Felder im Dokument",
         "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.": "Wählen Sie eine unterzeichnende Person und ein Feld und klicken Sie dann auf die Stelle der Seite, an die es gehört. Ziehen Sie ein Feld, um es zu verschieben, oder wählen Sie es aus und verwenden Sie die Pfeiltasten. Umschalt mit einer Pfeiltaste ändert die Größe. Die Felder werden beim Unterschreiben in das Dokument gezeichnet.",
         "Previous page": "Vorherige Seite",

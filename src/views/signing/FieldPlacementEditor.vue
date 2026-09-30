@@ -52,7 +52,18 @@
 			ref="sheet"
 			class="field-placement__sheet"
 			data-testid="field-placement-sheet"
-			@click="place">
+			role="application"
+			tabindex="0"
+			:aria-label="
+				t(
+					'filinq',
+					'Page {page}: press Enter to place a field in the middle',
+					{ page },
+				)
+			"
+			@click="place"
+			@keydown.enter.self.prevent="placeInMiddle"
+			@keydown.space.self.prevent="placeInMiddle">
 			<canvas ref="canvas" class="field-placement__canvas" />
 			<button
 				v-for="box in pageBoxes"
@@ -165,12 +176,22 @@ export default {
 	watch: {
 		fileId: {
 			immediate: true,
+			/**
+			 * Read the new document.
+			 *
+			 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+			 */
 			handler() {
 				this.load()
 			},
 		},
 	},
 
+	/**
+	 * Stop listening for drags and free the document.
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+	 */
 	beforeUnmount() {
 		window.removeEventListener('pointermove', this.onDrag)
 		window.removeEventListener('pointerup', this.endDrag)
@@ -218,6 +239,7 @@ export default {
 		 *
 		 * @param {object} box The box.
 		 * @return {object}
+		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		boxStyle(box) {
 			return {
@@ -293,12 +315,36 @@ export default {
 		 */
 		place(event) {
 			const rect = this.$refs.sheet.getBoundingClientRect()
+			this.placeAt(
+				(event.clientX - rect.left) / rect.width,
+				(event.clientY - rect.top) / rect.height,
+			)
+		},
+
+		/**
+		 * Put a field in the middle of the page, for the keyboard; the arrow
+		 * keys then move it.
+		 *
+		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 */
+		placeInMiddle() {
+			this.placeAt(0.5, 0.5)
+		},
+
+		/**
+		 * Put a field at a point of the page.
+		 *
+		 * @param {number} x Share of the page width.
+		 * @param {number} y Share of the page height.
+		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 */
+		placeAt(x, y) {
 			const next = addPlacement(this.modelValue, {
 				signerIndex: this.signerIndex,
 				page: this.page,
 				type: this.fieldType,
-				x: (event.clientX - rect.left) / rect.width,
-				y: (event.clientY - rect.top) / rect.height,
+				x,
+				y,
 			})
 			this.selected = next.length - 1
 			this.$emit('update:modelValue', next)
@@ -340,6 +386,7 @@ export default {
 		 *
 		 * @param {PointerEvent} event The pointer.
 		 * @param {number} index The box.
+		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		startDrag(event, index) {
 			this.selected = index
@@ -352,6 +399,7 @@ export default {
 		 * Follow the pointer.
 		 *
 		 * @param {PointerEvent} event The pointer.
+		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		onDrag(event) {
 			if (!this.drag) {
@@ -370,6 +418,8 @@ export default {
 
 		/**
 		 * Stop dragging.
+		 *
+		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
 		 */
 		endDrag() {
 			this.drag = null

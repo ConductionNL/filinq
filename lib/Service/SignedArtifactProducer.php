@@ -42,9 +42,6 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
-use InvalidArgumentException;
-use OCA\Filinq\Service\Signing\FieldPlacementRenderer;
-use OCA\Filinq\Service\Signing\FieldPlacements;
 use OCA\Filinq\Service\Signing\LibreSignProvider;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
@@ -73,8 +70,6 @@ class SignedArtifactProducer {
 	 * @param IRequest $request HTTP request (client IP for the evidence context).
 	 * @param IRootFolder $rootFolder Root folder (reads the document, stores the signed version).
 	 * @param FinalDocumentService $finalDocuments The final-document guard.
-	 * @param FieldPlacements $placementRules The field placement rules.
-	 * @param FieldPlacementRenderer $placementRenderer Reads the page count a placement must stay within.
 	 *
 	 * @return void
 	 */
@@ -84,8 +79,6 @@ class SignedArtifactProducer {
 		private readonly IRequest $request,
 		private readonly IRootFolder $rootFolder,
 		private readonly FinalDocumentService $finalDocuments,
-		private readonly FieldPlacements $placementRules = new FieldPlacements(),
-		private readonly FieldPlacementRenderer $placementRenderer = new FieldPlacementRenderer(),
 	) {
 
 	}//end __construct()
@@ -201,56 +194,22 @@ class SignedArtifactProducer {
 	}//end delegate()
 
 	/**
-	 * Check a new request's field placements and put them on the request.
+	 * The bytes of the document a request is for, read with the access check signing uses.
 	 *
-	 * The rules come from FieldPlacements; on top of them every placement must
-	 * name a page the document has. LibreSign's request-signature call has no
-	 * field input (its visible elements need the sign-request ids it creates),
-	 * so a LibreSign request with placements is refused instead of being
-	 * signed without them. Runs before the request is stored.
+	 * Field placement reads the page count from them before the request is stored.
 	 *
-	 * @param array<string, mixed> $request     The request about to be stored.
-	 * @param mixed                $placements  The `fieldPlacements` the caller sent.
-	 * @param int                  $signerCount How many signers the request names.
+	 * @param array<string, mixed> $request The request (documentFileId, initiatorUserId).
 	 *
-	 * @return array<string, mixed> The request, with `fieldPlacements` when there are any.
+	 * @return string The document's bytes.
 	 *
-	 * @throws RuntimeException 400 when a placement breaks a rule, names a page the document lacks, or the provider cannot carry placements.
+	 * @throws RuntimeException When the document cannot be resolved for the initiator or the session user.
 	 *
 	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
 	 */
-	public function withPlacements(array $request, mixed $placements, int $signerCount): array {
-		try {
-			$normalised = $this->placementRules->normalise(placements: $placements, signerCount: $signerCount);
-		} catch (InvalidArgumentException $e) {
-			throw new RuntimeException(message: $e->getMessage(), code: 400, previous: $e);
-		}
+	public function documentContent(array $request): string {
+		return $this->resolveDocumentFile(fileId: (int) ($request['documentFileId'] ?? 0), request: $request)->getContent();
 
-		if ($normalised === []) {
-			return $request;
-		}
-
-		if (($request['provider'] ?? '') === LibreSignProvider::IDENTIFIER) {
-			throw new RuntimeException(message: 'LibreSign places its own fields: send this request without field placements', code: 400);
-		}
-
-		$file = $this->resolveDocumentFile(fileId: (int) ($request['documentFileId'] ?? 0), request: $request);
-		try {
-			$pages = $this->placementRenderer->pageCount(pdf: $file->getContent());
-		} catch (RuntimeException $e) {
-			throw new RuntimeException(message: $e->getMessage(), code: 400, previous: $e);
-		}
-		foreach ($normalised as $placement) {
-			if ($placement['page'] > $pages) {
-				throw new RuntimeException(message: 'A field is placed on page '.$placement['page'].' of a document with '.$pages.' pages', code: 400);
-			}
-		}
-
-		$request['fieldPlacements'] = $normalised;
-
-		return $request;
-
-	}//end withPlacements()
+	}//end documentContent()
 
 	/**
 	 * The placements and signer names a provider draws, when the request has placements.
@@ -272,7 +231,8 @@ class SignedArtifactProducer {
 		$labels = [];
 		foreach ((array) ($request['signerIds'] ?? []) as $signerId) {
 			$record = ($signers[(string) $signerId] ?? []);
-			$labels[] = (string) (($record['displayName'] ?? '') ?: (($record['email'] ?? '') ?: ($record['userId'] ?? '')));
+			$names = array_filter([(string) ($record['displayName'] ?? ''), (string) ($record['email'] ?? ''), (string) ($record['userId'] ?? '')]);
+			$labels[] = (string) (reset($names) ?? '');
 		}
 
 		return ['fieldPlacements' => $placements, 'signerLabels' => $labels];

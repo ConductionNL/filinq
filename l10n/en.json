@@ -1,5 +1,6 @@
 {
     "translations": {
+        "Page {page}: press Enter to place a field in the middle": "Page {page}: press Enter to place a field in the middle",
         "Fields on the document": "Fields on the document",
         "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.": "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.",
         "Previous page": "Previous page",

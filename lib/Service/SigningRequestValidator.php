@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Signing\FieldPlacementCheck;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use RuntimeException;
 
@@ -51,11 +52,13 @@ class SigningRequestValidator {
 	 * Constructor.
 	 *
 	 * @param SigningProviderFactory $providerFactory Provider factory (strict resolution).
+	 * @param FieldPlacementCheck    $placementCheck  The field placement rules and page check.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly SigningProviderFactory $providerFactory,
+		private readonly FieldPlacementCheck $placementCheck = new FieldPlacementCheck(),
 	) {
 
 	}//end __construct()
@@ -158,4 +161,23 @@ class SigningRequestValidator {
 		}
 
 	}//end validateProviderLevelPair()
+
+	/**
+	 * Check a new request's field placements and put them on the request.
+	 *
+	 * @param array<string, mixed>   $request     The request about to be stored.
+	 * @param mixed                  $placements  The `fieldPlacements` the caller sent.
+	 * @param int                    $signerCount How many signers the request names.
+	 * @param SignedArtifactProducer $producer    Reads the document's bytes, only when there are placements.
+	 *
+	 * @return array<string, mixed> The request, with `fieldPlacements` when there are any.
+	 *
+	 * @throws RuntimeException 400 when a placement breaks a rule, names a page the document lacks, or the provider cannot carry placements.
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function withPlacements(array $request, mixed $placements, int $signerCount, SignedArtifactProducer $producer): array {
+		return $this->placementCheck->apply(request: $request, placements: $placements, signerCount: $signerCount, producer: $producer);
+
+	}//end withPlacements()
 }//end class
