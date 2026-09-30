@@ -22,11 +22,15 @@
 
 namespace OCA\Filinq\Tests\Unit\Settings;
 
+use OCA\Filinq\Service\SigningService;
 use PHPUnit\Framework\TestCase;
+use ReflectionClassConstant;
 
 /**
  * The register's declared signingRequest lifecycle allows what the signing
- * service does: a signer may decline a request before anyone has signed.
+ * service does. OpenRegister refuses an update that moves `status` along a
+ * transition the schema does not declare, so a step the service allows and
+ * the register lacks fails live while every unit test passes.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Settings
@@ -47,7 +51,9 @@ class SigningRequestLifecycleTest extends TestCase {
 		$transitions = $parsed['components']['schemas']['signingRequest']['x-openregister-lifecycle']['transitions'];
 		$pairs = [];
 		foreach ($transitions as $transition) {
-			$pairs[] = $transition['from'] . '->' . $transition['to'];
+			foreach ((array) $transition['from'] as $from) {
+				$pairs[] = $from . '->' . $transition['to'];
+			}
 		}
 
 		return $pairs;
@@ -66,4 +72,25 @@ class SigningRequestLifecycleTest extends TestCase {
 		$this->assertContains('IN_PROGRESS->DECLINED', $pairs);
 
 	}//end testADeclineIsDeclaredFromPendingAndFromInProgress()
+
+	/**
+	 * Every status move SigningService allows is a declared transition.
+	 *
+	 * @return void
+	 */
+	public function testEveryServiceTransitionIsDeclared(): void {
+		$machine = (new ReflectionClassConstant(SigningService::class, 'STATUS_TRANSITIONS'))->getValue();
+		$declared = $this->declaredPairs();
+		$missing = [];
+		foreach ($machine as $from => $targets) {
+			foreach ($targets as $to) {
+				if (in_array($from . '->' . $to, $declared, true) === false) {
+					$missing[] = $from . '->' . $to;
+				}
+			}
+		}
+
+		$this->assertSame([], $missing, 'transitions the service makes but the register does not declare');
+
+	}//end testEveryServiceTransitionIsDeclared()
 }//end class

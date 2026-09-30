@@ -78,7 +78,7 @@
 
 ### Fixed
 
-- **The first signer can decline a request (`signingRequest` 1.10.0, register 8.38.0).** Declining was only allowed once somebody had signed, so the first signer of a new request got "Cannot decline request in status: PENDING" and had to sign or wait. A request that nobody has signed yet now moves to declined like any other, and the register's lifecycle declares that step.
+- **The first signer can decline a request (`signingRequest` 1.10.0, register 8.38.0).** Declining was only allowed once somebody had signed, so the first signer of a new request got "Cannot decline request in status: PENDING" and had to sign or wait. A request that nobody has signed yet now moves to declined like any other. The register's lifecycle now also declares cancelling a draft and cancelling or expiring a request that is under way: OpenRegister refuses a status change the schema does not declare, so those steps failed on a live instance.
 
 - **A signer named only by user id no longer gets an empty e-mail address.** The signer record stored `email: ""`, which the register's `format: email` refuses, and saved only because the register checks softly. The record now leaves `email` out when the request gives none.
 

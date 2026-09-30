@@ -2920,25 +2920,19 @@
                             "description": "All signers have signed; finalise the request. Terminal."
                         },
                         "decline": {
-                            "from": "IN_PROGRESS",
-                            "to": "DECLINED",
-                            "label": "Decline",
-                            "description": "A signer declined; terminate the request. Terminal."
-                        },
-                        "declineBeforeStart": {
-                            "from": "PENDING",
+                            "from": ["PENDING", "IN_PROGRESS"],
                             "to": "DECLINED",
                             "label": "Decline",
                             "description": "A signer declined; terminate the request. Terminal."
                         },
                         "expire": {
-                            "from": "PENDING",
+                            "from": ["PENDING", "IN_PROGRESS"],
                             "to": "EXPIRED",
                             "label": "Expire",
                             "description": "Deadline passed before completion. Terminal."
                         },
                         "cancel": {
-                            "from": "PENDING",
+                            "from": ["DRAFT", "PENDING", "IN_PROGRESS"],
                             "to": "CANCELLED",
                             "label": "Cancel",
                             "description": "Initiator cancels the request before completion. Terminal."
