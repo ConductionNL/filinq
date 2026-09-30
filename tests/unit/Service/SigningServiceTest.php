@@ -415,6 +415,60 @@ class SigningServiceTest extends TestCase {
 	}//end testCreateRequestStoresTheSignersItIsGiven()
 
 	/**
+	 * A signer named only by user id is stored without an e-mail key, and
+	 * every field of every stored signer record validates against the real
+	 * signerRecord fragment. Before this fix the record carried `email: ''`,
+	 * which `format: email` refuses (it saved only because the register
+	 * validates softly).
+	 *
+	 * @return void
+	 */
+	public function testAUserOnlySignerRecordValidatesAgainstTheRegister(): void {
+		$saved = [];
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-1' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => 'file-001',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [
+					['displayName' => 'Carl', 'userId' => 'carl'],
+					['displayName' => 'Bea', 'email' => 'bea@example.org'],
+				],
+			]
+		);
+
+		$signerRecords = array_values(array_filter($saved, static fn (array $o) => isset($o['signingRequestId']) === true));
+		$this->assertCount(2, $signerRecords);
+		$this->assertArrayNotHasKey('email', $signerRecords[0]);
+		$this->assertSame('bea@example.org', $signerRecords[1]['email']);
+
+		$descriptor = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'));
+		$properties = $descriptor->components->schemas->signerRecord->properties;
+		$validator = new \Opis\JsonSchema\Validator();
+		foreach ($signerRecords as $record) {
+			foreach ($record as $field => $value) {
+				$this->assertObjectHasProperty($field, $properties, 'signerRecord declares ' . $field);
+				$property = clone $properties->{$field};
+				// A boolean `required` on a property is OpenRegister's, not JSON Schema's.
+				unset($property->required);
+				$result = $validator->validate(json_decode(json_encode($value)), json_encode($property));
+				$this->assertTrue($result->isValid(), $field . ' = ' . json_encode($value) . ' must validate');
+			}
+		}
+
+	}//end testAUserOnlySignerRecordValidatesAgainstTheRegister()
+
+	/**
 	 * createRequest() rejects missing documentFileId.
 	 *
 	 * @return void
