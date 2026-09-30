@@ -56,13 +56,17 @@ SPDX-License-Identifier: EUPL-1.2
 						variant="tertiary"
 						:disabled="signerRows.length === 1"
 						:aria-label="
-							t('filinq', 'Remove signer {number}', { number: index + 1 })
+							t('filinq', 'Remove signer {number}', {
+								number: index + 1,
+							})
 						"
 						@click="signerRows.splice(index, 1)">
 						{{ t('filinq', 'Remove') }}
 					</NcButton>
 				</div>
-				<NcButton variant="secondary" @click="signerRows.push(emptySignerRow())">
+				<NcButton
+					variant="secondary"
+					@click="signerRows.push(emptySignerRow())">
 					{{ t('filinq', 'Add signer') }}
 				</NcButton>
 			</fieldset>

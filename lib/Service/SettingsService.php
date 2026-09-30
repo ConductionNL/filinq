@@ -192,12 +192,7 @@ class SettingsService {
 				'enable_topic_classification',
 				'1'
 			) === '1',
-			// Contract key terms (contract-lifecycle-management REQ-DDCLM-005); the key is ContractTermSuggestionService::TOGGLE.
-			'enable_contract_term_extraction' => $this->config->getValueString(
-				$this->appName,
-				'enable_contract_term_extraction',
-				'1'
-			) === '1',
+			'enable_contract_term_extraction' => $this->config->getValueString($this->appName, 'enable_contract_term_extraction', '1') === '1',
 			'signing_enabled' => $this->config->getValueString(
 				$this->appName,
 				'signing_enabled',

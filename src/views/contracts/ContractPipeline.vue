@@ -20,7 +20,9 @@ SPDX-License-Identifier: EUPL-1.2
 					}}
 				</p>
 			</div>
-			<NcButton variant="secondary" @click="$router.push({ name: 'Contracts' })">
+			<NcButton
+				variant="secondary"
+				@click="$router.push({ name: 'Contracts' })">
 				{{ t('filinq', 'All contracts') }}
 			</NcButton>
 		</div>
@@ -35,7 +37,9 @@ SPDX-License-Identifier: EUPL-1.2
 		<NcEmptyContent
 			v-else-if="!loading && activeCount === 0 && !error"
 			:name="t('filinq', 'No active contracts')"
-			:description="t('filinq', 'A contract shows here once it is put in force.')" />
+			:description="
+				t('filinq', 'A contract shows here once it is put in force.')
+			" />
 		<template v-else>
 			<section
 				v-for="bucket in BUCKETS"
@@ -44,9 +48,13 @@ SPDX-License-Identifier: EUPL-1.2
 				:data-testid="`contract-bucket-${bucket}`">
 				<h3>
 					{{ bucketLabel(bucket) }}
-					<span class="contract-pipeline__count">{{ buckets[bucket].length }}</span>
+					<span class="contract-pipeline__count">{{
+						buckets[bucket].length
+					}}</span>
 				</h3>
-				<p v-if="buckets[bucket].length === 0" class="contract-pipeline__none">
+				<p
+					v-if="buckets[bucket].length === 0"
+					class="contract-pipeline__none">
 					{{ t('filinq', 'None') }}
 				</p>
 				<table v-else class="contract-pipeline__table">
@@ -59,10 +67,15 @@ SPDX-License-Identifier: EUPL-1.2
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="contract in buckets[bucket]" :key="contractId(contract)">
+						<tr
+							v-for="contract in buckets[bucket]"
+							:key="contractId(contract)">
 							<td>
 								<router-link
-									:to="{ name: 'ContractDetail', params: { id: contractId(contract) } }">
+									:to="{
+										name: 'ContractDetail',
+										params: { id: contractId(contract) },
+									}">
 									{{ contract.title }}
 								</router-link>
 							</td>
@@ -72,14 +85,22 @@ SPDX-License-Identifier: EUPL-1.2
 								<NcButton
 									variant="secondary"
 									:disabled="busy"
-									:aria-label="t('filinq', 'Renew {title}', { title: contract.title })"
+									:aria-label="
+										t('filinq', 'Renew {title}', {
+											title: contract.title,
+										})
+									"
 									@click="renew(contract)">
 									{{ t('filinq', 'Renew') }}
 								</NcButton>
 								<NcButton
 									variant="tertiary"
 									:disabled="busy"
-									:aria-label="t('filinq', 'End {title}', { title: contract.title })"
+									:aria-label="
+										t('filinq', 'End {title}', {
+											title: contract.title,
+										})
+									"
 									@click="ending = contract">
 									{{ t('filinq', 'End contract') }}
 								</NcButton>
@@ -101,15 +122,10 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import {
-	NcButton,
-	NcEmptyContent,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import TerminateContractDialog from '../../dialogs/TerminateContractDialog.vue'
 import { bucketLabel } from '../../services/contractLabels.js'
-import { BUCKETS, bucketContracts } from '../../services/contractPipeline.js'
+import { bucketContracts, BUCKETS } from '../../services/contractPipeline.js'
 import {
 	contractId,
 	listContracts,
@@ -162,7 +178,10 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 		 */
 		activeCount() {
-			return BUCKETS.reduce((sum, bucket) => sum + this.buckets[bucket].length, 0)
+			return BUCKETS.reduce(
+				(sum, bucket) => sum + this.buckets[bucket].length,
+				0,
+			)
 		},
 	},
 
@@ -214,7 +233,11 @@ export default {
 				this.error = answer.error
 				return
 			}
-			this.notice = t('filinq', '"{title}" is renewed. Its successor is a draft.', { title: contract.title })
+			this.notice = t(
+				'filinq',
+				'"{title}" is renewed. Its successor is a draft.',
+				{ title: contract.title },
+			)
 			await this.load()
 		},
 
@@ -225,7 +248,9 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 		 */
 		async onTerminated() {
-			this.notice = t('filinq', '"{title}" has ended.', { title: this.ending.title })
+			this.notice = t('filinq', '"{title}" has ended.', {
+				title: this.ending.title,
+			})
 			this.ending = null
 			await this.load()
 		},

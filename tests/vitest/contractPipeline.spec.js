@@ -9,9 +9,9 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-	BUCKETS,
 	bucketContracts,
 	bucketOf,
+	BUCKETS,
 	displayStatus,
 } from '../../src/services/contractPipeline.js'
 
@@ -30,9 +30,9 @@ describe('contract pipeline', () => {
 		expect(displayStatus(active({ endDate: '2026-09-30' }), today)).toBe(
 			'active',
 		)
-		expect(displayStatus({ status: 'draft', endDate: '2020-01-01' }, today)).toBe(
-			'draft',
-		)
+		expect(
+			displayStatus({ status: 'draft', endDate: '2020-01-01' }, today),
+		).toBe('draft')
 		expect(displayStatus({}, today)).toBe('draft')
 	})
 
@@ -81,7 +81,10 @@ describe('contract pipeline', () => {
 					endDate: '2026-12-31',
 					noticeDeadline: '2026-10-20',
 				}),
-				{ title: 'Subsidieovereenkomst cultuurfonds (concept)', status: 'draft' },
+				{
+					title: 'Subsidieovereenkomst cultuurfonds (concept)',
+					status: 'draft',
+				},
 			],
 			today,
 		)

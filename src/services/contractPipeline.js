@@ -10,12 +10,7 @@
  */
 
 /** The buckets, most urgent first. */
-export const BUCKETS = Object.freeze([
-	'expired',
-	'noticeDue',
-	'expiring',
-	'later',
-])
+export const BUCKETS = Object.freeze(['expired', 'noticeDue', 'expiring', 'later'])
 
 const NOTICE_WINDOW_DAYS = 30
 const EXPIRY_WINDOW_DAYS = 90

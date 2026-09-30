@@ -23,9 +23,17 @@ import {
 
 const calls = []
 let answer = () => Promise.resolve({ data: {} })
-const record = (verb) => (url, body) => {
-	calls.push([verb, url, body])
-	return answer(verb, url, body)
+/**
+ * A recording axios verb.
+ *
+ * @param {string} verb The verb.
+ * @return {Function} The call.
+ */
+function record(verb) {
+	return (url, body) => {
+		calls.push([verb, url, body])
+		return answer(verb, url, body)
+	}
 }
 vi.mock('@nextcloud/axios', () => ({
 	default: {

@@ -16,13 +16,37 @@ import { generateUrl } from '@nextcloud/router'
 const REGISTER = 'filinq'
 const SCHEMA = 'documentContract'
 
-const objects = () =>
-	generateUrl(`/apps/openregister/api/objects/${REGISTER}/${SCHEMA}`)
-const object = (id) => `${objects()}/${encodeURIComponent(id)}`
-const action = (id, path) =>
-	generateUrl(
+/**
+ * The object API URL of the contracts.
+ *
+ * @return {string} The URL.
+ */
+function objects() {
+	return generateUrl(`/apps/openregister/api/objects/${REGISTER}/${SCHEMA}`)
+}
+
+/**
+ * The object API URL of one contract.
+ *
+ * @param {string} id The contract.
+ * @return {string} The URL.
+ */
+function object(id) {
+	return `${objects()}/${encodeURIComponent(id)}`
+}
+
+/**
+ * The URL of a contract action route.
+ *
+ * @param {string} id The contract.
+ * @param {string} path The action.
+ * @return {string} The URL.
+ */
+function action(id, path) {
+	return generateUrl(
 		`/apps/filinq/api/contracts/${encodeURIComponent(id)}/${path}`,
 	)
+}
 
 /**
  * The server's refusals, as a person reads them.
@@ -67,7 +91,10 @@ async function outcome(call) {
 			status: error.response?.status || 0,
 			error:
 				refusals()[message]
-				|| t('filinq', 'The contract could not be changed. Try again later.'),
+				|| t(
+					'filinq',
+					'The contract could not be changed. Try again later.',
+				),
 		}
 	}
 }
@@ -214,9 +241,7 @@ export function suggestTerms(id) {
  * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function decideSuggestion(id, index, decision) {
-	return outcome(() =>
-		axios.put(action(id, `suggestions/${index}`), { decision }),
-	)
+	return outcome(() => axios.put(action(id, `suggestions/${index}`), { decision }))
 }
 
 /**
@@ -251,7 +276,9 @@ export function linkSigningRequest(id, signingRequestId) {
  */
 export async function listTemplates() {
 	const result = await outcome(() =>
-		axios.get(generateUrl(`/apps/openregister/api/objects/${REGISTER}/template`)),
+		axios.get(
+			generateUrl(`/apps/openregister/api/objects/${REGISTER}/template`),
+		),
 	)
 	if (result.ok) {
 		result.data = Array.isArray(result.data)

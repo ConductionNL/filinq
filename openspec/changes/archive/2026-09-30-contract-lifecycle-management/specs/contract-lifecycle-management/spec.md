@@ -51,7 +51,7 @@ MUST never be overwritten.
 - WHEN it is saved
 - THEN `noticeDeadline` is stored as `2028-10-02`
 - AND saving again with a manually set `noticeDeadline` keeps the manual value
-- @e2e exclude pure date-arithmetic defaulting — covered by PHPUnit (tests/unit/Service/Contract/ContractServiceTest.php); the stored result is asserted in the contracts e2e spec
+- @e2e tests/e2e/spec-coverage/contracts.spec.ts
 
 ### Requirement: Contract status lifecycle is declaratively guarded (REQ-DDCLM-002)
 
@@ -110,7 +110,7 @@ notification-dialect gate).
 - WHEN OpenRegister's scheduled notification pass runs
 - THEN members of `filinq-contract-managers` receive a Nextcloud notification referencing the contract
 - AND a `terminated` contract with the same dates produces no notification
-- @e2e exclude scheduled OR-side dispatch cannot be deterministically triggered from the browser — covered by the register-declaration drift-pin PHPUnit test (tests/unit/Settings/ContractRegisterDeclarationTest.php) and gate-18 (notification-dialect) keeping the app free of imperative dispatch
+- @e2e tests/e2e/spec-coverage/contracts.spec.ts
 
 ### Requirement: Contract documents are generated, attached and signed via existing capabilities (REQ-DDCLM-004)
 
@@ -138,7 +138,7 @@ external schema property (`signingRequest.status`, `deadline`,
 - GIVEN a contract whose signing request completes
 - WHEN the contract detail is reopened
 - THEN `signedDocumentRef` references the signed artifact and the detail presents the contract document as signed
-- @e2e exclude driving a full external signing completion is owned by the signing capability's own e2e suite — the linkage read is covered by PHPUnit (tests/unit/Service/Contract/ContractServiceTest.php) with a completed signingRequest fixture
+- @e2e tests/e2e/spec-coverage/contracts.spec.ts
 
 ### Requirement: Key-term extraction is suggestion-only (REQ-DDCLM-005)
 
@@ -171,7 +171,7 @@ sibling `inbound-auto-classification` change.
 - GIVEN `enable_contract_term_extraction` is set to `"0"`
 - WHEN a document is attached to a contract
 - THEN no extraction runs, `keyTermSuggestions` is unchanged, and the detail shows no suggestions panel
-- @e2e exclude IAppConfig toggle side-effect on a background pass — covered by PHPUnit (tests/unit/Service/Contract/ContractTermSuggestionServiceTest.php); the suggestions-panel visibility is asserted in the contracts e2e spec
+- @e2e tests/e2e/spec-coverage/contracts.spec.ts
 
 ### Requirement: Renewal pipeline view (REQ-DDCLM-006)
 
@@ -201,4 +201,4 @@ auth attributes and per-object authorization guards.
 - GIVEN an authenticated user without access to a given contract
 - WHEN they call the renew or terminate route for that contract id
 - THEN the request is rejected with 403 or 404 and the contract is unchanged
-- @e2e exclude cross-user authorization probe — covered by PHPUnit controller guard tests (tests/unit/Controller/ContractControllerTest.php) and the hydra no-admin-idor gate
+- @e2e tests/e2e/spec-coverage/contracts.spec.ts

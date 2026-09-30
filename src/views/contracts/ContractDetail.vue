@@ -12,7 +12,7 @@ SPDX-License-Identifier: EUPL-1.2
 		<NcNoteCard v-else-if="!contract" type="error">
 			{{
 				error
-					|| t('filinq', 'This contract is not there, or you cannot see it.')
+				|| t('filinq', 'This contract is not there, or you cannot see it.')
 			}}
 		</NcNoteCard>
 		<template v-else>
@@ -51,7 +51,9 @@ SPDX-License-Identifier: EUPL-1.2
 						@click="terminating = true">
 						{{ t('filinq', 'End contract') }}
 					</NcButton>
-					<NcButton variant="tertiary" @click="$router.push({ name: 'ContractPipeline' })">
+					<NcButton
+						variant="tertiary"
+						@click="$router.push({ name: 'ContractPipeline' })">
 						{{ t('filinq', 'Renewal pipeline') }}
 					</NcButton>
 				</div>
@@ -76,14 +78,21 @@ SPDX-License-Identifier: EUPL-1.2
 				</dl>
 				<p v-if="contract.renews" class="contract-detail__link">
 					{{ t('filinq', 'This contract renews an earlier one.') }}
-					<router-link :to="{ name: 'ContractDetail', params: { id: contract.renews } }">
+					<router-link
+						:to="{
+							name: 'ContractDetail',
+							params: { id: contract.renews },
+						}">
 						{{ t('filinq', 'Open the earlier contract') }}
 					</router-link>
 				</p>
 				<p v-if="contract.renewedBy" class="contract-detail__link">
 					{{ t('filinq', 'A later contract replaces this one.') }}
 					<router-link
-						:to="{ name: 'ContractDetail', params: { id: contract.renewedBy } }"
+						:to="{
+							name: 'ContractDetail',
+							params: { id: contract.renewedBy },
+						}"
 						data-testid="contract-successor-link">
 						{{ t('filinq', 'Open the later contract') }}
 					</router-link>
@@ -95,13 +104,20 @@ SPDX-License-Identifier: EUPL-1.2
 				<p v-if="parties.length === 0">
 					{{ t('filinq', 'No parties yet.') }}
 				</p>
-				<ul v-else class="contract-detail__list" data-testid="contract-parties">
+				<ul
+					v-else
+					class="contract-detail__list"
+					data-testid="contract-parties">
 					<li v-for="(party, index) in parties" :key="index">
-						<strong>{{ party.displayName || t('filinq', 'Unnamed party') }}</strong>
+						<strong>{{
+							party.displayName || t('filinq', 'Unnamed party')
+						}}</strong>
 						<span v-if="party.role"> ({{ party.role }})</span>
 						<span v-if="party.linked" class="contract-detail__hint">
 							{{ t('filinq', 'from contacts') }}
-							<template v-if="party.email">, {{ party.email }}</template>
+							<template v-if="party.email"
+								>, {{ party.email }}</template
+							>
 						</span>
 					</li>
 				</ul>
@@ -112,20 +128,28 @@ SPDX-License-Identifier: EUPL-1.2
 				<p v-if="documents.length === 0">
 					{{ t('filinq', 'No documents yet.') }}
 				</p>
-				<ul v-else class="contract-detail__list" data-testid="contract-documents">
+				<ul
+					v-else
+					class="contract-detail__list"
+					data-testid="contract-documents">
 					<li v-for="fileId in documents" :key="fileId">
 						<a :href="fileUrl(fileId)" target="_blank" rel="noopener">
 							{{ t('filinq', 'File {id}', { id: fileId }) }}
 						</a>
 						<span
-							v-if="String(contract.signedDocumentRef || '') === fileId"
+							v-if="
+								String(contract.signedDocumentRef || '') === fileId
+							"
 							class="contract-detail__hint">
 							{{ t('filinq', 'signed') }}
 						</span>
 					</li>
 				</ul>
 				<div v-if="editable" class="contract-detail__actions">
-					<NcButton :disabled="busy" data-testid="contract-attach" @click="attach">
+					<NcButton
+						:disabled="busy"
+						data-testid="contract-attach"
+						@click="attach">
 						{{ t('filinq', 'Attach files') }}
 					</NcButton>
 					<NcButton
@@ -150,16 +174,28 @@ SPDX-License-Identifier: EUPL-1.2
 				</p>
 				<p v-else data-testid="contract-signing-status">
 					<template v-if="signing && signing.signed">
-						{{ t('filinq', 'Signed. The signed document is linked to the contract.') }}
+						{{
+							t(
+								'filinq',
+								'Signed. The signed document is linked to the contract.',
+							)
+						}}
 					</template>
 					<template v-else-if="signing">
-						{{ t('filinq', 'Signing request status: {status}', { status: signing.status }) }}
+						{{
+							t('filinq', 'Signing request status: {status}', {
+								status: signing.status,
+							})
+						}}
 					</template>
 					<template v-else>
 						{{ t('filinq', 'The signing request could not be read.') }}
 					</template>
 					<router-link
-						:to="{ name: 'SigningRequestDetail', params: { id: contract.signingRequestRef } }">
+						:to="{
+							name: 'SigningRequestDetail',
+							params: { id: contract.signingRequestRef },
+						}">
 						{{ t('filinq', 'Open the signing request') }}
 					</router-link>
 				</p>
@@ -199,18 +235,31 @@ SPDX-License-Identifier: EUPL-1.2
 							<td>{{ row.value }}</td>
 							<td>{{ confidence(row.confidence) }}</td>
 							<td>
-								<template v-if="row.status === 'proposed' && editable">
+								<template
+									v-if="row.status === 'proposed' && editable">
 									<NcButton
 										variant="primary"
 										:disabled="busy"
-										:aria-label="t('filinq', 'Accept {field}', { field: suggestionFieldLabel(row.field) })"
+										:aria-label="
+											t('filinq', 'Accept {field}', {
+												field: suggestionFieldLabel(
+													row.field,
+												),
+											})
+										"
 										@click="decide(row.index, 'accepted')">
 										{{ t('filinq', 'Accept') }}
 									</NcButton>
 									<NcButton
 										variant="tertiary"
 										:disabled="busy"
-										:aria-label="t('filinq', 'Reject {field}', { field: suggestionFieldLabel(row.field) })"
+										:aria-label="
+											t('filinq', 'Reject {field}', {
+												field: suggestionFieldLabel(
+													row.field,
+												),
+											})
+										"
 										@click="decide(row.index, 'rejected')">
 										{{ t('filinq', 'Reject') }}
 									</NcButton>
@@ -381,21 +430,48 @@ export default {
 		terms() {
 			const c = this.contract || {}
 			const rows = [
-				{ key: 'contractType', label: t('filinq', 'Type'), value: c.contractType },
-				{ key: 'internalOwner', label: t('filinq', 'Owner'), value: c.internalOwner },
-				{ key: 'startDate', label: t('filinq', 'Start date'), value: c.startDate },
+				{
+					key: 'contractType',
+					label: t('filinq', 'Type'),
+					value: c.contractType,
+				},
+				{
+					key: 'internalOwner',
+					label: t('filinq', 'Owner'),
+					value: c.internalOwner,
+				},
+				{
+					key: 'startDate',
+					label: t('filinq', 'Start date'),
+					value: c.startDate,
+				},
 				{ key: 'endDate', label: t('filinq', 'End date'), value: c.endDate },
 				{
 					key: 'noticePeriodDays',
 					label: t('filinq', 'Notice period in days'),
-					value: c.noticePeriodDays === null || c.noticePeriodDays === undefined ? '' : String(c.noticePeriodDays),
+					value:
+						c.noticePeriodDays === null
+						|| c.noticePeriodDays === undefined
+							? ''
+							: String(c.noticePeriodDays),
 				},
-				{ key: 'noticeDeadline', label: t('filinq', 'Notice deadline'), value: c.noticeDeadline },
-				{ key: 'value', label: t('filinq', 'Value'), value: money(c.value, c.currency) },
+				{
+					key: 'noticeDeadline',
+					label: t('filinq', 'Notice deadline'),
+					value: c.noticeDeadline,
+				},
+				{
+					key: 'value',
+					label: t('filinq', 'Value'),
+					value: money(c.value, c.currency),
+				},
 				{
 					key: 'renewalType',
 					label: t('filinq', 'Renewal'),
-					value: c.renewalType === 'manual' ? t('filinq', 'Renewed by hand') : t('filinq', 'Not renewed'),
+					value:
+						c.renewalType === 'manual'
+							? t('filinq', 'Renewed by hand')
+							: t('filinq', 'Not renewed'),
 				},
 			]
 			if (c.terminationReason) {
@@ -447,9 +523,13 @@ export default {
 			if (!answer.ok) {
 				this.loading = false
 				this.contract = null
-				this.error = answer.status === 404
-					? t('filinq', 'This contract is not there, or you cannot see it.')
-					: answer.error
+				this.error =
+					answer.status === 404
+						? t(
+								'filinq',
+								'This contract is not there, or you cannot see it.',
+							)
+						: answer.error
 				return
 			}
 			this.contract = answer.data
@@ -470,7 +550,10 @@ export default {
 			if (!this.contract?.signingRequestRef) {
 				return
 			}
-			const answer = await linkSigningRequest(this.id, this.contract.signingRequestRef)
+			const answer = await linkSigningRequest(
+				this.id,
+				this.contract.signingRequestRef,
+			)
 			if (answer.ok) {
 				this.signing = answer.data.signingRequest
 				this.contract = { ...this.contract, ...answer.data.contract }
@@ -483,6 +566,7 @@ export default {
 		 * @param {() => Promise<object>} call The action.
 		 * @param {string} done The sentence shown after it.
 		 * @return {Promise<object|null>} The data, or null.
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async act(call, done) {
 			this.busy = true
@@ -505,7 +589,12 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async activate() {
-			if (await this.act(() => activateContract(this.contract), t('filinq', 'The contract is in force.'))) {
+			if (
+				await this.act(
+					() => activateContract(this.contract),
+					t('filinq', 'The contract is in force.'),
+				)
+			) {
 				await this.load()
 			}
 		},
@@ -523,7 +612,10 @@ export default {
 			)
 			const successor = data?.successor?.uuid || data?.successor?.id
 			if (successor) {
-				this.$router.push({ name: 'ContractDetail', params: { id: String(successor) } })
+				this.$router.push({
+					name: 'ContractDetail',
+					params: { id: String(successor) },
+				})
 			} else if (data) {
 				await this.load()
 			}
@@ -548,17 +640,21 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async attach() {
-			let nodes = []
+			let nodes
 			try {
-				nodes = await getFilePickerBuilder(t('filinq', 'Attach files to the contract'))
+				nodes = await getFilePickerBuilder(
+					t('filinq', 'Attach files to the contract'),
+				)
 					.setMultiSelect(true)
 					.allowDirectories(false)
 					.build()
 					.pickNodes()
-			} catch (error) {
+			} catch {
 				return
 			}
-			const fileIds = nodes.map((node) => node.fileid).filter((id) => id !== undefined && id !== null)
+			const fileIds = nodes
+				.map((node) => node.fileid)
+				.filter((id) => id !== undefined && id !== null)
 			await this.addDocuments(fileIds, t('filinq', 'The files are attached.'))
 		},
 
@@ -571,7 +667,10 @@ export default {
 		 */
 		async onGenerated(fileId) {
 			this.generating = false
-			await this.addDocuments([fileId], t('filinq', 'The document is generated and attached.'))
+			await this.addDocuments(
+				[fileId],
+				t('filinq', 'The document is generated and attached.'),
+			)
 		},
 
 		/**
@@ -580,12 +679,15 @@ export default {
 		 * @param {Array<string|number>} fileIds The files.
 		 * @param {string} done The sentence shown after it.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async addDocuments(fileIds, done) {
 			if (fileIds.length === 0) {
 				return
 			}
-			if (await this.act(() => attachDocuments(this.contract, fileIds), done)) {
+			if (
+				await this.act(() => attachDocuments(this.contract, fileIds), done)
+			) {
 				if (this.extractionEnabled) {
 					await suggestTerms(this.id)
 				}
@@ -602,7 +704,10 @@ export default {
 		 */
 		async onSent(data) {
 			this.sending = false
-			this.notice = t('filinq', 'The signing request is created and linked to the contract.')
+			this.notice = t(
+				'filinq',
+				'The signing request is created and linked to the contract.',
+			)
 			this.contract = { ...this.contract, ...data.contract }
 			this.signing = data.signingRequest
 		},
@@ -616,9 +721,12 @@ export default {
 		async readTerms() {
 			const data = await this.act(() => suggestTerms(this.id), '')
 			if (data) {
-				this.notice = data.added > 0
-					? t('filinq', 'New suggestions: {count}', { count: data.added })
-					: t('filinq', 'No new suggestions in the documents.')
+				this.notice =
+					data.added > 0
+						? t('filinq', 'New suggestions: {count}', {
+								count: data.added,
+							})
+						: t('filinq', 'No new suggestions in the documents.')
 				await this.load()
 			}
 		},
@@ -632,10 +740,16 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async decide(index, decision) {
-			const done = decision === 'accepted'
-				? t('filinq', 'Accepted. The value is written on the contract.')
-				: t('filinq', 'Rejected. The contract is unchanged.')
-			if (await this.act(() => decideSuggestion(this.id, index, decision), done)) {
+			const done =
+				decision === 'accepted'
+					? t('filinq', 'Accepted. The value is written on the contract.')
+					: t('filinq', 'Rejected. The contract is unchanged.')
+			if (
+				await this.act(
+					() => decideSuggestion(this.id, index, decision),
+					done,
+				)
+			) {
 				await this.load()
 			}
 		},
@@ -645,6 +759,7 @@ export default {
 		 *
 		 * @param {string} fileId The file.
 		 * @return {string} The URL.
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		fileUrl(fileId) {
 			return generateUrl('/f/{fileId}', { fileId })
@@ -655,6 +770,7 @@ export default {
 		 *
 		 * @param {number} value 0 to 1.
 		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		confidence(value) {
 			return typeof value === 'number' ? `${Math.round(value * 100)}%` : '-'
@@ -665,13 +781,16 @@ export default {
 		 *
 		 * @param {string} status accepted, rejected or proposed.
 		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		decisionLabel(status) {
-			return {
-				accepted: t('filinq', 'Accepted'),
-				rejected: t('filinq', 'Rejected'),
-				proposed: t('filinq', 'Proposed'),
-			}[status] || status
+			return (
+				{
+					accepted: t('filinq', 'Accepted'),
+					rejected: t('filinq', 'Rejected'),
+					proposed: t('filinq', 'Proposed'),
+				}[status] || status
+			)
 		},
 	},
 }
@@ -723,7 +842,8 @@ export default {
 .contract-detail__terms {
 	display: grid;
 	grid-template-columns: max-content 1fr;
-	gap: calc(var(--default-grid-baseline) * 2) calc(var(--default-grid-baseline) * 6);
+	gap: calc(var(--default-grid-baseline) * 2)
+		calc(var(--default-grid-baseline) * 6);
 }
 
 .contract-detail__terms dt {

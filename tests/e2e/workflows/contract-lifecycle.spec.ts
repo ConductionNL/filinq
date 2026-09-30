@@ -49,12 +49,19 @@ const ACTIVE = {
  * @param contracts The contracts, by id
  * @param refuse Answer PUTs with OpenRegister's lifecycle refusal
  */
-async function serve(page: Page, contracts: Record<string, any>, refuse = false): Promise<void> {
+async function serve(
+	page: Page,
+	contracts: Record<string, any>,
+	refuse = false,
+): Promise<void> {
 	await page.route(`${OBJECTS}/*`, (route) => {
 		const id = new URL(route.request().url()).pathname.split('/').pop() as string
 		if (route.request().method() === 'PUT') {
 			if (refuse) {
-				return route.fulfill({ status: 400, json: { error: 'Transition not allowed' } })
+				return route.fulfill({
+					status: 400,
+					json: { error: 'Transition not allowed' },
+				})
 			}
 			contracts[id] = { ...route.request().postDataJSON(), id }
 		}
@@ -72,7 +79,9 @@ async function serve(page: Page, contracts: Record<string, any>, refuse = false)
  * @param id The contract
  */
 async function open(page: Page, id: string): Promise<void> {
-	await page.goto(await appUrl(page, `contracts/${id}`), { waitUntil: 'domcontentloaded' })
+	await page.goto(await appUrl(page, `contracts/${id}`), {
+		waitUntil: 'domcontentloaded',
+	})
 	await waitForAppReady(page)
 	await dismissOverlays(page)
 }
@@ -83,28 +92,48 @@ test.describe('contract lifecycle', () => {
 		const contracts: Record<string, any> = { 'c-1': { ...ACTIVE } }
 		await serve(page, contracts)
 		await page.route('**/apps/filinq/api/contracts/c-1/renew', (route) => {
-			contracts['c-1'] = { ...contracts['c-1'], status: 'renewed', renewedBy: 'c-2' }
-			contracts['c-2'] = { ...ACTIVE, id: 'c-2', status: 'draft', renews: 'c-1', uuid: 'c-2' }
-			return route.fulfill({ json: { contract: contracts['c-1'], successor: contracts['c-2'] } })
+			contracts['c-1'] = {
+				...contracts['c-1'],
+				status: 'renewed',
+				renewedBy: 'c-2',
+			}
+			contracts['c-2'] = {
+				...ACTIVE,
+				id: 'c-2',
+				status: 'draft',
+				renews: 'c-1',
+				uuid: 'c-2',
+			}
+			return route.fulfill({
+				json: { contract: contracts['c-1'], successor: contracts['c-2'] },
+			})
 		})
 		await open(page, 'c-1')
 
 		await page.getByTestId('contract-renew').click()
 		await expect(page).toHaveURL(/contracts\/c-2/)
 		await expect(page.getByTestId('contract-status')).toHaveText('Draft')
-		await expect(page.getByText('This contract renews an earlier one.')).toBeVisible()
+		await expect(
+			page.getByText('This contract renews an earlier one.'),
+		).toBeVisible()
 		await expect(page.getByTestId('contract-term-value')).toContainText('240')
 	})
 
-	test('a move the lifecycle does not declare is refused and nothing changes', async ({ page }) => {
+	test('a move the lifecycle does not declare is refused and nothing changes', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/contract-lifecycle-management/spec.md#invalid-transition-is-rejected-declaratively
-		const contracts: Record<string, any> = { 'c-3': { ...ACTIVE, id: 'c-3', status: 'draft' } }
+		const contracts: Record<string, any> = {
+			'c-3': { ...ACTIVE, id: 'c-3', status: 'draft' },
+		}
 		await serve(page, contracts, true)
 		await open(page, 'c-3')
 
 		await expect(page.getByTestId('contract-terminate')).toHaveCount(0)
 		await page.getByTestId('contract-activate').click()
-		await expect(page.getByText('The contract could not be changed. Try again later.')).toBeVisible()
+		await expect(
+			page.getByText('The contract could not be changed. Try again later.'),
+		).toBeVisible()
 		await expect(page.getByTestId('contract-status')).toHaveText('Draft')
 	})
 
@@ -114,7 +143,11 @@ test.describe('contract lifecycle', () => {
 		await serve(page, contracts)
 		await page.route('**/apps/filinq/api/contracts/c-1/terminate', (route) => {
 			const reason = route.request().postDataJSON().reason
-			contracts['c-1'] = { ...contracts['c-1'], status: 'terminated', terminationReason: reason }
+			contracts['c-1'] = {
+				...contracts['c-1'],
+				status: 'terminated',
+				terminationReason: reason,
+			}
 			return route.fulfill({ json: contracts['c-1'] })
 		})
 		await open(page, 'c-1')
@@ -122,24 +155,39 @@ test.describe('contract lifecycle', () => {
 		await page.getByTestId('contract-terminate').click()
 		const confirm = page.getByTestId('contract-terminate-confirm')
 		await expect(confirm).toBeDisabled()
-		await page.getByTestId('contract-terminate-reason').locator('textarea').fill('Opgezegd per brief')
+		await page
+			.getByTestId('contract-terminate-reason')
+			.locator('textarea')
+			.fill('Opgezegd per brief')
 		await confirm.click()
 		await expect(page.getByTestId('contract-status')).toHaveText('Terminated')
-		await expect(page.getByTestId('contract-term-terminationReason')).toHaveText('Opgezegd per brief')
+		await expect(page.getByTestId('contract-term-terminationReason')).toHaveText(
+			'Opgezegd per brief',
+		)
 	})
 
-	test('generate, attach and send for signature keep references on the contract', async ({ page }) => {
+	test('generate, attach and send for signature keep references on the contract', async ({
+		page,
+	}) => {
 		// @e2e openspec/specs/contract-lifecycle-management/spec.md#generate-attach-and-send-for-signature-from-the-contract
 		const contracts: Record<string, any> = { 'c-1': { ...ACTIVE } }
 		await serve(page, contracts)
-		await page.route('**/apps/openregister/api/objects/filinq/template**', (route) =>
-			route.fulfill({ json: { results: [{ id: 'tpl-1', name: 'Raamovereenkomst' }] } }),
+		await page.route(
+			'**/apps/openregister/api/objects/filinq/template**',
+			(route) =>
+				route.fulfill({
+					json: { results: [{ id: 'tpl-1', name: 'Raamovereenkomst' }] },
+				}),
 		)
 		await page.route('**/apps/filinq/api/documents/generate', (route) =>
-			route.fulfill({ json: { fileId: 88, name: 'Raamovereenkomst.pdf', format: 'pdf' } }),
+			route.fulfill({
+				json: { fileId: 88, name: 'Raamovereenkomst.pdf', format: 'pdf' },
+			}),
 		)
 		await page.route('**/apps/filinq/api/contracts/c-1/suggestions', (route) =>
-			route.fulfill({ json: { contract: contracts['c-1'], added: 0, enabled: true } }),
+			route.fulfill({
+				json: { contract: contracts['c-1'], added: 0, enabled: true },
+			}),
 		)
 		await page.route('**/apps/filinq/api/signing/requests', (route) =>
 			route.fulfill({ json: { id: 'req-1', status: 'DRAFT' } }),
@@ -147,7 +195,10 @@ test.describe('contract lifecycle', () => {
 		await page.route('**/apps/filinq/api/contracts/c-1/signing', (route) => {
 			contracts['c-1'] = { ...contracts['c-1'], signingRequestRef: 'req-1' }
 			return route.fulfill({
-				json: { contract: contracts['c-1'], signingRequest: { id: 'req-1', status: 'DRAFT', signed: false } },
+				json: {
+					contract: contracts['c-1'],
+					signingRequest: { id: 'req-1', status: 'DRAFT', signed: false },
+				},
 			})
 		})
 		await open(page, 'c-1')
@@ -162,7 +213,9 @@ test.describe('contract lifecycle', () => {
 		await page.getByTestId('contract-send-for-signature').click()
 		await page.getByTestId('contract-sign-user').locator('input').fill('admin')
 		await page.getByTestId('contract-sign-confirm').click()
-		await expect(page.getByTestId('contract-signing-status')).toContainText('DRAFT')
+		await expect(page.getByTestId('contract-signing-status')).toContainText(
+			'DRAFT',
+		)
 		expect(contracts['c-1'].signingRequestRef).toBe('req-1')
 	})
 })

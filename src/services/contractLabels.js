@@ -83,7 +83,7 @@ export function money(value, currency = 'EUR') {
 			style: 'currency',
 			currency: currency || 'EUR',
 		}).format(Number(value))
-	} catch (error) {
+	} catch {
 		return `${value} ${currency || ''}`.trim()
 	}
 }
