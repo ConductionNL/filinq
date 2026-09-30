@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service\Contract;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-key-term-extraction-is-suggestion-only-req-ddclm-005
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-key-term-extraction-is-suggestion-only-req-ddclm-005
  */
 class ContractTermExtractor {
 
@@ -77,7 +77,7 @@ class ContractTermExtractor {
 	 *
 	 * @return list<array{field: string, value: string, confidence: float}> The proposals, best first per field.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-2
 	 */
 	public function extract(string $text): array {
 		$text = (string) preg_replace('/\s+/u', ' ', $text);

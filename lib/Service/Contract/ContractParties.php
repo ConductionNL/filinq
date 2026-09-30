@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -57,7 +57,7 @@ class ContractParties {
 	 *
 	 * @return list<array{role: string, displayName: string, contactRef: string, linked: bool, email: string}> The parties.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 	 */
 	public function resolve(array $contract): array {
 		$resolved = [];

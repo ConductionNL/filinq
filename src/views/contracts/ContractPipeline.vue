@@ -1,7 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
-@spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+@spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 @visual exclude No pixel baseline yet: the page is driven through its /contracts/pipeline route by
 	tests/e2e/spec-coverage/contracts.spec.ts, which reaches it by URL. Its buckets move with the
 	date, so a baseline needs a fixed clock.
@@ -120,7 +120,7 @@ import {
  * The renewal pipeline: the active contracts the caller can read, bucketed
  * by urgency in the browser, with renew and end on every row.
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 export default {
 	name: 'ContractPipeline',
@@ -149,7 +149,7 @@ export default {
 		 * The contracts per bucket.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 		 */
 		buckets() {
 			return bucketContracts(this.contracts)
@@ -159,7 +159,7 @@ export default {
 		 * How many contracts are in any bucket.
 		 *
 		 * @return {number}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 		 */
 		activeCount() {
 			return BUCKETS.reduce((sum, bucket) => sum + this.buckets[bucket].length, 0)
@@ -170,7 +170,7 @@ export default {
 	 * Load on mount.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 	 */
 	mounted() {
 		return this.load()
@@ -184,7 +184,7 @@ export default {
 		 * Read the contracts.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 		 */
 		async load() {
 			this.loading = true
@@ -202,7 +202,7 @@ export default {
 		 *
 		 * @param {object} contract The contract.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 		 */
 		async renew(contract) {
 			this.busy = true
@@ -222,7 +222,7 @@ export default {
 		 * After the end dialog.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
 		 */
 		async onTerminated() {
 			this.notice = t('filinq', '"{title}" has ended.', { title: this.ending.title })

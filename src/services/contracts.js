@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 
 import axios from '@nextcloud/axios'
@@ -77,7 +77,7 @@ async function outcome(call) {
  *
  * @param {object} contract The contract.
  * @return {string} Its id.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function contractId(contract) {
 	return String(contract?.id ?? contract?.['@self']?.id ?? contract?.uuid ?? '')
@@ -102,7 +102,7 @@ function fields(contract) {
  * Every contract the caller can read.
  *
  * @return {Promise<object>} The outcome, data the contracts.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 export async function listContracts() {
 	const result = await outcome(() =>
@@ -121,7 +121,7 @@ export async function listContracts() {
  *
  * @param {string} id The contract.
  * @return {Promise<object>} The outcome.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function getContract(id) {
 	return outcome(() => axios.get(object(id)))
@@ -149,7 +149,7 @@ function saveContract(contract, changes) {
  *
  * @param {object} contract The contract.
  * @return {Promise<object>} The outcome.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function activateContract(contract) {
 	return saveContract(contract, { status: 'active' })
@@ -161,7 +161,7 @@ export function activateContract(contract) {
  * @param {object} contract The contract.
  * @param {Array<string|number>} fileIds The files.
  * @return {Promise<object>} The outcome.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function attachDocuments(contract, fileIds) {
 	const documents = [
@@ -175,7 +175,7 @@ export function attachDocuments(contract, fileIds) {
  *
  * @param {string} id The contract.
  * @return {Promise<object>} The outcome, data { contract, successor }.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function renewContract(id) {
 	return outcome(() => axios.post(action(id, 'renew')))
@@ -187,7 +187,7 @@ export function renewContract(id) {
  * @param {string} id The contract.
  * @param {string} reason Why.
  * @return {Promise<object>} The outcome.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function terminateContract(id, reason) {
 	return outcome(() => axios.post(action(id, 'terminate'), { reason }))
@@ -198,7 +198,7 @@ export function terminateContract(id, reason) {
  *
  * @param {string} id The contract.
  * @return {Promise<object>} The outcome, data { contract, added, enabled }.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function suggestTerms(id) {
 	return outcome(() => axios.post(action(id, 'suggestions')))
@@ -211,7 +211,7 @@ export function suggestTerms(id) {
  * @param {number} index The suggestion.
  * @param {string} decision accepted or rejected.
  * @return {Promise<object>} The outcome, data the contract.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function decideSuggestion(id, index, decision) {
 	return outcome(() =>
@@ -224,7 +224,7 @@ export function decideSuggestion(id, index, decision) {
  *
  * @param {string} id The contract.
  * @return {Promise<object>} The outcome, data the parties.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function contractParties(id) {
 	return outcome(() => axios.get(action(id, 'parties')))
@@ -237,7 +237,7 @@ export function contractParties(id) {
  * @param {string} id The contract.
  * @param {string} signingRequestId The request.
  * @return {Promise<object>} The outcome, data { contract, signingRequest }.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function linkSigningRequest(id, signingRequestId) {
 	return outcome(() => axios.post(action(id, 'signing'), { signingRequestId }))
@@ -247,7 +247,7 @@ export function linkSigningRequest(id, signingRequestId) {
  * The templates a document can be generated from.
  *
  * @return {Promise<object>} The outcome, data the templates.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export async function listTemplates() {
 	const result = await outcome(() =>
@@ -269,7 +269,7 @@ export async function listTemplates() {
  * @param {string} id The contract.
  * @param {string} filename The file name, without extension.
  * @return {Promise<object>} The outcome, data { fileId, name }.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export async function generateDocument(templateId, id, filename) {
 	const result = await outcome(() =>

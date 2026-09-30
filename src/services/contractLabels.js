@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -14,7 +14,7 @@ import { translate as t } from '@nextcloud/l10n'
  *
  * @param {string} status The status.
  * @return {string} The label.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function statusLabel(status) {
 	return (
@@ -33,7 +33,7 @@ export function statusLabel(status) {
  *
  * @param {string} bucket The bucket.
  * @return {string} The heading.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 export function bucketLabel(bucket) {
 	return (
@@ -51,7 +51,7 @@ export function bucketLabel(bucket) {
  *
  * @param {string} field The field.
  * @return {string} The label.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function suggestionFieldLabel(field) {
 	return (
@@ -72,7 +72,7 @@ export function suggestionFieldLabel(field) {
  * @param {number|null} value The amount.
  * @param {string} currency ISO 4217.
  * @return {string} The amount, or ''.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export function money(value, currency = 'EUR') {
 	if (value === null || value === undefined || value === '') {

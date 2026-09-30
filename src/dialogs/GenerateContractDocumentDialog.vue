@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+@spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 -->
 
 <template>
@@ -54,7 +54,7 @@ import { generateDocument, listTemplates } from '../services/contracts.js'
  * Generate a contract document from a template, through the app's normal
  * generation path, and hand back the new file id.
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export default {
 	name: 'GenerateContractDocumentDialog',
@@ -81,7 +81,7 @@ export default {
 	 * Load the templates to choose from.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 	 */
 	async mounted() {
 		const answer = await listTemplates()
@@ -105,7 +105,7 @@ export default {
 		 * Generate, and hand the file id back.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async onConfirm() {
 			this.busy = true

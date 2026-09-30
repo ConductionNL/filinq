@@ -305,7 +305,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 	 */
 	public function testContractTermsDefaultOnAndAreWritable(): void {
 		$this->mockConfig->method('getValueString')->willReturnCallback(

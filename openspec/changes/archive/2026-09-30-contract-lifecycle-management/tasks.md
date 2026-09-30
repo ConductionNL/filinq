@@ -27,22 +27,22 @@
 
 ## 3. Frontend
 
-- [ ] 3.1 Contracts index + detail manifest pages (REQ-DDCLM-001, REQ-DDCLM-004, REQ-DDCLM-006)
+- [x] 3.1 Contracts index + detail manifest pages (REQ-DDCLM-001, REQ-DDCLM-004, REQ-DDCLM-006)
   - `CnIndexPage`/`CnDataTable` with status chips + facets; detail with parties (contact linkage), dates/value, documents (generate-from-template, attach, send-for-signature deep links storing references only), signing status, suggestions panel with per-field accept/reject, lifecycle actions; manifest schema refs use slugs; NL Design tokens via NC CSS variables.
 
-- [ ] 3.2 Renewal pipeline view with the four urgency buckets (REQ-DDCLM-006)
+- [x] 3.2 Renewal pipeline view with the four urgency buckets (REQ-DDCLM-006)
   - Client-side date bucketing over authorised rows (expired / notice due ≤30d / expiring ≤90d / later); renew + terminate actionable from the pipeline; menu entry added.
 
 ## 4. Quality
 
-- [ ] 4.1 PHPUnit unit tests for services, controller guards, defaulting, suggestion flow, drift pins — minimum 75% coverage on new code
+- [x] 4.1 PHPUnit unit tests for services, controller guards, defaulting, suggestion flow, drift pins — minimum 75% coverage on new code
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
 
-- [ ] 4.2 Playwright e2e `tests/e2e/workflows/contract-lifecycle.spec.ts` + `tests/e2e/spec-coverage/contracts.spec.ts` covering the `@e2e`-referenced scenarios on the Postgres dev instance
+- [x] 4.2 Playwright e2e `tests/e2e/workflows/contract-lifecycle.spec.ts` + `tests/e2e/spec-coverage/contracts.spec.ts` covering the `@e2e`-referenced scenarios on the Postgres dev instance
   - Includes the nldesign-theme accessibility pass on the new views.
 
-- [ ] 4.3 i18n: EN + NL for all new UI strings (lifecycle actions, bucket labels, suggestion panel, notification subjects in the register)
+- [x] 4.3 i18n: EN + NL for all new UI strings (lifecycle actions, bucket labels, suggestion panel, notification subjects in the register)
   - Keys in English.
 
-- [ ] 4.4 Documentation `docs/features/contract-lifecycle.md` with Playwright MCP screenshots (ADR-010); run `openspec validate contract-lifecycle-management --strict`
+- [x] 4.4 Documentation `docs/features/contract-lifecycle.md` with Playwright MCP screenshots (ADR-010); run `openspec validate contract-lifecycle-management --strict`
   - Documents the lean-CLM positioning, the suggestion-only rule, and the reference-only signing/template boundaries.

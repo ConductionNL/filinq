@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+@spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 -->
 
 <template>
@@ -53,7 +53,7 @@ import { terminateContract } from '../services/contracts.js'
  * End one active contract early. The reason is mandatory: the button stays
  * off until there is one, and the server refuses an end without one too.
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export default {
 	name: 'TerminateContractDialog',
@@ -76,7 +76,7 @@ export default {
 		 * End the contract and hand the stored contract back.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async onConfirm() {
 			this.busy = true

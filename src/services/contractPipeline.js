@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 
 /** The buckets, most urgent first. */
@@ -24,7 +24,7 @@ const EXPIRY_WINDOW_DAYS = 90
  * Today as YYYY-MM-DD in the viewer's time zone.
  *
  * @return {string} The date.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 export function todayIso() {
 	const now = new Date()
@@ -59,7 +59,7 @@ function daysBetween(from, to) {
  * @param {object} contract The contract.
  * @param {string} today YYYY-MM-DD.
  * @return {string} The status.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 export function displayStatus(contract, today = todayIso()) {
 	const status = contract?.status || 'draft'
@@ -78,7 +78,7 @@ export function displayStatus(contract, today = todayIso()) {
  * @param {object} contract The contract.
  * @param {string} today YYYY-MM-DD.
  * @return {string|null} One of BUCKETS, or null.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 export function bucketOf(contract, today = todayIso()) {
 	if (contract?.status !== 'active') {
@@ -116,7 +116,7 @@ function sortDate(bucket, contract) {
  * @param {Array<object>} contracts The contracts.
  * @param {string} today YYYY-MM-DD.
  * @return {object} { expired, noticeDue, expiring, later }.
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-2
  */
 export function bucketContracts(contracts, today = todayIso()) {
 	const buckets = Object.fromEntries(BUCKETS.map((bucket) => [bucket, []]))

@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-is-a-first-class-openregister-object-req-ddclm-001
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-is-a-first-class-openregister-object-req-ddclm-001
  */
 class ContractRepository {
 
@@ -65,7 +65,7 @@ class ContractRepository {
 	 *
 	 * @return array<string, mixed>|null The contract fields with `uuid`.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	public function find(string $uuid): ?array {
 		if (trim($uuid) === '') {
@@ -101,7 +101,7 @@ class ContractRepository {
 	 *
 	 * @throws RuntimeException When OpenRegister refuses the write.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
 	 */
 	public function save(array $contract, ?string $uuid=null): array {
 		unset($contract['uuid'], $contract['@self'], $contract['id']);

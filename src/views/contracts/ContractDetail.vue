@@ -1,7 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
-@spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+@spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 @visual exclude No pixel baseline yet: the page is driven through its /contracts/:id route by
 	tests/e2e/workflows/contract-lifecycle.spec.ts and tests/e2e/spec-coverage/contracts.spec.ts, which
 	reach it by URL. A baseline needs the seeded contracts on a running instance.
@@ -283,7 +283,7 @@ import { useSettingsStore } from '../../store/modules/settings.js'
  * terms, with the lifecycle actions. The contract is read from OpenRegister's
  * object API as the caller; the actions go through the app's routes.
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export default {
 	name: 'ContractDetail',
@@ -321,7 +321,7 @@ export default {
 		 * The status shown: an active contract past its end date shows expired.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		shownStatus() {
 			return displayStatus(this.contract)
@@ -331,7 +331,7 @@ export default {
 		 * Whether documents and suggestions can still change.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		editable() {
 			return ['draft', 'active'].includes(this.contract?.status)
@@ -341,7 +341,7 @@ export default {
 		 * The contract's document file ids.
 		 *
 		 * @return {Array<string>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		documents() {
 			return (this.contract?.documents || []).map(String)
@@ -351,7 +351,7 @@ export default {
 		 * Whether suggested terms are read at all (the admin setting).
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		extractionEnabled() {
 			return (
@@ -363,7 +363,7 @@ export default {
 		 * The suggestions with their position, which the decision route takes.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		suggestions() {
 			return (this.contract?.keyTermSuggestions || []).map((row, index) => ({
@@ -376,7 +376,7 @@ export default {
 		 * The terms as label and shown value.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		terms() {
 			const c = this.contract || {}
@@ -413,7 +413,7 @@ export default {
 		/**
 		 * Load the next contract when the route moves to it (after a renewal).
 		 *
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		id() {
 			this.load()
@@ -424,7 +424,7 @@ export default {
 	 * Load the contract on mount.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 	 */
 	mounted() {
 		return this.load()
@@ -438,7 +438,7 @@ export default {
 		 * Read the contract, its parties and its signing status.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async load() {
 			this.loading = true
@@ -463,7 +463,7 @@ export default {
 		 * The signing request's status; a completed request links the signed document back.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async readSigning() {
 			this.signing = null
@@ -502,7 +502,7 @@ export default {
 		 * Put the draft in force.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async activate() {
 			if (await this.act(() => activateContract(this.contract), t('filinq', 'The contract is in force.'))) {
@@ -514,7 +514,7 @@ export default {
 		 * Renew and open the successor draft.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async renew() {
 			const data = await this.act(
@@ -533,7 +533,7 @@ export default {
 		 * After the end dialog.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async onTerminated() {
 			this.terminating = false
@@ -545,7 +545,7 @@ export default {
 		 * Pick files and add them to the contract; then read them for terms.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async attach() {
 			let nodes = []
@@ -567,7 +567,7 @@ export default {
 		 *
 		 * @param {string} fileId The generated file.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async onGenerated(fileId) {
 			this.generating = false
@@ -598,7 +598,7 @@ export default {
 		 *
 		 * @param {object} data { contract, signingRequest }.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async onSent(data) {
 			this.sending = false
@@ -611,7 +611,7 @@ export default {
 		 * Read the documents for suggested terms now.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async readTerms() {
 			const data = await this.act(() => suggestTerms(this.id), '')
@@ -629,7 +629,7 @@ export default {
 		 * @param {number} index The suggestion.
 		 * @param {string} decision accepted or rejected.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async decide(index, decision) {
 			const done = decision === 'accepted'

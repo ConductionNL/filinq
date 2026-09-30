@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -64,7 +64,7 @@ class ContractSigningLink {
 	 * @throws ContractNotFoundException When the contract is not there or not readable.
 	 * @throws InvalidArgumentException  400 without a request id, 404 when the caller cannot read the request.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 	 */
 	public function link(string $uuid, string $signingRequestId): array {
 		$signingRequestId = trim($signingRequestId);

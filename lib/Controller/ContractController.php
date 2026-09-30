@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -51,7 +51,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-renewal-pipeline-view-req-ddclm-006
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-renewal-pipeline-view-req-ddclm-006
  */
 class ContractController extends Controller {
 
@@ -90,7 +90,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse {contract, successor}, or 404/409.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function renew(string $id): JSONResponse {
@@ -109,7 +109,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse The contract, or 400/404/409.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function terminate(string $id, string $reason=''): JSONResponse {
@@ -127,7 +127,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse {contract, added, enabled}, or 404.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function suggest(string $id): JSONResponse {
@@ -149,7 +149,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse The contract, or 400/404/409/422.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function decideSuggestion(string $id, int $index, string $decision=''): JSONResponse {
@@ -169,7 +169,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse The contract and the request's status, or 400/404.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 	 */
 	#[NoAdminRequired]
 	public function linkSigning(string $id, string $signingRequestId=''): JSONResponse {
@@ -187,7 +187,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse The parties, or 404.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 	 */
 	#[NoAdminRequired]
 	public function parties(string $id): JSONResponse {

@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use InvalidArgumentException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-status-lifecycle-is-declaratively-guarded-req-ddclm-002
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-status-lifecycle-is-declaratively-guarded-req-ddclm-002
  */
 class ContractService {
 
@@ -73,7 +73,7 @@ class ContractService {
 	 * @throws ContractNotFoundException When the caller cannot read the contract.
 	 * @throws InvalidArgumentException  When the contract is not active (409).
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
 	 */
 	public function renew(string $uuid): array {
 		$contract = $this->activeContract(uuid: $uuid);
@@ -108,7 +108,7 @@ class ContractService {
 	 * @throws ContractNotFoundException When the caller cannot read the contract.
 	 * @throws InvalidArgumentException  When the reason is empty (400) or the contract is not active (409).
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
 	 */
 	public function terminate(string $uuid, string $reason): array {
 		$reason = trim($reason);
@@ -138,7 +138,7 @@ class ContractService {
 	 * @throws ContractNotFoundException When the caller cannot read the contract.
 	 * @throws InvalidArgumentException  When there is no such proposed suggestion (404/409) or its value does not fit (422).
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
 	 */
 	public function decideSuggestion(string $uuid, int $index, string $decision): array {
 		if (in_array($decision, ['accepted', 'rejected'], true) === false) {
@@ -178,7 +178,7 @@ class ContractService {
 	 *
 	 * @throws ContractNotFoundException When it is not found or not readable.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	public function requireReadable(string $uuid): array {
 		$contract = $this->repository->find(uuid: $uuid);

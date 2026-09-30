@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
  */
 class ContractNotFoundException extends RuntimeException {
 }//end class

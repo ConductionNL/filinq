@@ -5434,14 +5434,15 @@
 			"name": "Manage contracts with an alert before one renews, changes or lapses.",
 			"source": "competitor-derived",
 			"sourceRef": "procest round 4 C-deadlines-10; BCT Corsa contract management",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/contract-lifecycle-management/tasks.md: 0 of 13 tasks checked. Every 'contract' hit in lib/ (SetupController's ADR-042 setup contract, SigningFolderController's API contract, PortalSigningReceiverController's portaliq contract) is an unrelated use of the word, not a business/vendor contract-management feature.",
-				"change": "openspec/changes/contract-lifecycle-management"
+				"evidence": "Contracts page (manifest index on documentContract) and Renewal pipeline (src/views/contracts/ContractPipeline.vue; buckets expired / notice due within 30 days / ending within 90 days / later from src/services/contractPipeline.js) -> ContractDetail (/contracts/:id): terms, parties named from NC contacts (GET api/contracts/{id}/parties, ContractParties via OCP Contacts IManager), documents (Files picker, generate from a template via api/documents/generate), send for signature (ordinary signing request, recorded by POST api/contracts/{id}/signing = ContractSigningLink, which links the signed document back once the request completed), suggested terms accept/reject, put in force / renew / end with a reason. documentContract 1.1.0 (register 8.40.0) with an OpenRegister-enforced lifecycle and scheduled notice-deadline and end-date notifications (x-openregister-notifications, recipients filinq-contract-managers + object ACL). Tests: ContractServiceTest, ContractSigningLinkTest, ContractPartiesTest, ContractControllerTest, ContractRegisterDeclarationTest, ContractNoticeDeadlineListenerTest, ContractTermSuggestionServiceTest (payloads validated with Opis against the real documentContract fragment), vitest contractPipeline.spec.js and contracts.spec.js.",
+				"change": "openspec/changes/archive/2026-09-30-contract-lifecycle-management",
+				"readOn": "2026-09-30"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "the Contracts and Renewal pipeline menu entries; the contract page; api/contracts/{id}/renew|terminate|suggestions|signing|parties",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "contract-lifecycle-management",

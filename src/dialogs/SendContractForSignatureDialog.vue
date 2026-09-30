@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+@spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 -->
 
 <template>
@@ -107,7 +107,7 @@ import {
  * request, then record the request on the contract. Signing itself is not
  * changed: the contract only keeps the reference.
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
  */
 export default {
 	name: 'SendContractForSignatureDialog',
@@ -144,7 +144,7 @@ export default {
 		 * Whether the request can be sent: a document, a name and reachable signers.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		ready() {
 			return (
@@ -163,7 +163,7 @@ export default {
 		 * Create the signing request, record it on the contract, hand the link back.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
 		 */
 		async onConfirm() {
 			this.busy = true
