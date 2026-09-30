@@ -7177,6 +7177,30 @@
         "documents": [],
         "keyTermSuggestions": [],
         "notes": "Nog geen datums: wacht op het besluit van het college."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "sanitizationRecord",
+          "slug": "demostad-concept-besluit-sanitized"
+        },
+        "fileId": 813001,
+        "sanitizedFileId": 813442,
+        "trigger": "manual",
+        "engine": "OfficeDocumentSanitizer",
+        "report": {
+          "commentsRemoved": 4,
+          "trackedChangesAccepted": 11,
+          "trackedChangesDropped": 2,
+          "revisionAttributesStripped": 57,
+          "hyperlinksFlattened": 3,
+          "metadataFieldsScrubbed": 6,
+          "customXmlPartsDropped": 1,
+          "fieldCodesStripped": 2,
+          "sentinelApplied": ""
+        },
+        "sanitizedAt": "2026-09-30T09:30:00Z",
+        "sanitizedBy": "seed-user-woo"
       }
     ]
   }

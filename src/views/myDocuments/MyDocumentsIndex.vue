@@ -172,6 +172,16 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							{{ t('filinq', 'Validate') }}
 						</NcActionButton>
 						<NcActionButton
+							v-if="!row.isFolder"
+							closeAfterClick
+							data-testid="document-sanitize"
+							@click="sanitizeDocument(row)">
+							<template #icon>
+								<BroomIcon :size="20" />
+							</template>
+							{{ t('filinq', 'Sanitize') }}
+						</NcActionButton>
+						<NcActionButton
 							v-if="ocrOfferedFor(row)"
 							:disabled="Boolean(ocrRunning[row.fileId])"
 							closeAfterClick
@@ -214,6 +224,12 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			</DdIndexPage>
 		</template>
 
+		<SanitizationReportModal
+			:show="sanitization.show"
+			:loading="sanitization.loading"
+			:error="sanitization.error"
+			:result="sanitization.result"
+			@close="sanitization.show = false" />
 		<ValidationResultModal
 			:show="validation.show"
 			:loading="validation.loading"
@@ -252,6 +268,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
+import BroomIcon from 'vue-material-design-icons/Broom.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
@@ -271,6 +288,7 @@ import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import {
@@ -280,6 +298,7 @@ import {
 	ocrErrorMessage,
 	runOcr,
 } from '../../services/ocr.js'
+import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
 
 const VIEW_MODE_STORAGE_KEY = 'filinq:myDocuments:viewMode'
@@ -316,6 +335,8 @@ export default {
 		DdIcon,
 		FileViewerPage,
 		ValidationResultModal,
+		SanitizationReportModal,
+		BroomIcon,
 		ConfirmActionDialog,
 		DotsHorizontal,
 		Eye,
@@ -340,6 +361,13 @@ export default {
 			viewMode: loadPersistedViewMode(),
 			bulkSelect: false,
 			selectedIds: [],
+			sanitization: {
+				show: false,
+				loading: false,
+				error: '',
+				result: null,
+			},
+
 			validation: {
 				show: false,
 				loading: false,
@@ -866,6 +894,25 @@ export default {
 				),
 				'_blank',
 			)
+		},
+
+		/**
+		 * Sanitize a document into a clean copy beside it and show what was removed.
+		 *
+		 * @param {object} row Document row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/document-sanitization/tasks.md#4-1
+		 */
+		async sanitizeDocument(row) {
+			if (!row || !row.fileId) return
+			this.sanitization = { show: true, loading: true, error: '', result: null }
+			const answer = await sanitizeFile(row.fileId)
+			this.sanitization.loading = false
+			if (!answer.ok) {
+				this.sanitization.error = answer.error
+				return
+			}
+			this.sanitization.result = answer.data
 		},
 
 		/**

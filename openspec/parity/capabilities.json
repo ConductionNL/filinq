@@ -3447,14 +3447,14 @@
 			"name": "Strip hidden metadata, tracked changes, comments and embedded objects before a document leaves.",
 			"source": "competitor-derived",
 			"sourceRef": "Redactable document sanitization; Adobe sanitization pass",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/document-sanitization/tasks.md: 0 of 16 tasks checked. openspec/specs/anonymization/spec.md:11 lists it as '(active)': 'anonymisation runs persist/surface OpenRegister's sanitization report and the anonymise endpoint gains the additive opt-in sanitize flag'. No 'sanitize'/'sanitizationReport' parameter exists anywhere in AnonymizationController.php or AnonymizationService.php/DocumentAnonymizeRunner.php today.",
+				"evidence": "Sanitize action on My documents (src/views/myDocuments/MyDocumentsIndex.vue -> POST api/sanitization/{fileId}, SanitizationController -> DocumentSanitizationService): a DOCX/ODT gets a clean derivative beside it through OpenRegister's OfficeDocumentSanitizer, and a content-free sanitizationRecord (counts per category, schema 1.0.0, register 8.41.0) shown in SanitizationReportModal. Office anonymisation runs keep OpenRegister's report (AnonymisationSanitizationRecorder). The Woo hand-off warns on an unsanitized file (GET api/sanitization/{fileId}). Missing: PDF sanitization (OpenRegister has no PDF sanitizer; PDFs answer sanitizationSkipped pdf_sanitizer_unavailable), the sanitize flag on anonymisation, the seal-order warning (waits for document-waarmerk-certification). Tests: DocumentSanitizationServiceTest (derivative, OR report shape pinned, PDF skip, encrypted 422, 404/415; record validated with Opis against the real fragment), SanitizationStatusTest, SanitizationControllerTest, AnonymisationSanitizationRecorderTest, DocumentAnonymizeRunnerSanitizationTest, vitest sanitization.spec.js.",
 				"change": "openspec/changes/document-sanitization"
 			},
-			"reachedOn": "nothing reaches it yet",
+			"reachedOn": "the Sanitize action on My documents; the hand-off warning on a publication; POST/GET api/sanitization/{fileId}",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization",

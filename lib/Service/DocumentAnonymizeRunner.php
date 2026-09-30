@@ -230,6 +230,7 @@ class DocumentAnonymizeRunner {
 			$this->runRecords->preserveStructure()
 		);
 		$context['structureReport'] = $this->locator->lastStructurePreservation(fileService: $fileService);
+		$context['sanitizationReport'] = $this->locator->lastSanitizationReport(fileService: $fileService);
 
 		$residualEntities = $this->locator->lastResidualEntities(fileService: $fileService);
 		$context['placeholderMap'] = $this->locator->lastPlaceholderMap(fileService: $fileService);

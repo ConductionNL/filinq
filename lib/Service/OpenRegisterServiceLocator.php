@@ -154,4 +154,44 @@ class OpenRegisterServiceLocator {
 
 		return $report;
 	}//end lastStructurePreservation()
+
+	/**
+	 * Read what OpenRegister's office sanitiser removed in the last anonymise run.
+	 *
+	 * FileService delegates it when it has `getLastSanitizationReport()`; an
+	 * OpenRegister without that delegation still keeps the report on the
+	 * shared DocumentProcessingHandler, so that is asked instead. Null when
+	 * neither answers, or when the run sanitised nothing (text, PDF).
+	 *
+	 * @param mixed $fileService OpenRegister FileService (resolved reflectively).
+	 *
+	 * @return array<string, mixed>|null The report's counts, or null.
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+	 */
+	public function lastSanitizationReport(mixed $fileService): ?array {
+		$source = $fileService;
+		if (method_exists($fileService, 'getLastSanitizationReport') === false) {
+			try {
+				$source = $this->get(className: 'OCA\OpenRegister\Service\File\DocumentProcessingHandler');
+			} catch (\Throwable) {
+				return null;
+			}
+		}
+
+		if (is_object($source) === false || method_exists($source, 'getLastSanitizationReport') === false) {
+			return null;
+		}
+
+		$report = $source->getLastSanitizationReport();
+		if ($report instanceof JsonSerializable) {
+			$report = $report->jsonSerialize();
+		}
+
+		if (is_array($report) === false || $report === []) {
+			return null;
+		}
+
+		return $report;
+	}//end lastSanitizationReport()
 }//end class
