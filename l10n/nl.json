@@ -1,5 +1,18 @@
 {
     "translations": {
+        "Fields on the document": "Velden op het document",
+        "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.": "Kies een ondertekenaar en een veld en klik dan op de plek op de pagina waar het moet komen. Sleep een veld om het te verplaatsen, of selecteer het en gebruik de pijltjestoetsen. Shift met een pijltjestoets verandert de grootte. De velden worden in het document getekend als het wordt ondertekend.",
+        "Previous page": "Vorige pagina",
+        "Page {page} of {pages}": "Pagina {page} van {pages}",
+        "Next page": "Volgende pagina",
+        "Remove field {number}": "Veld {number} verwijderen",
+        "Signer {number}": "Ondertekenaar {number}",
+        "Signature": "Handtekening",
+        "Initials": "Initialen",
+        "Checkbox": "Vinkje",
+        "{field} for {signer} on page {page}": "{field} voor {signer} op pagina {page}",
+        "This document cannot be shown as a PDF, so no fields can be placed on it.": "Dit document kan niet als pdf worden getoond, dus er kunnen geen velden op worden geplaatst.",
+        "Place fields on the document": "Velden op het document plaatsen",
         "Field placements": "Veldposities",
         "Where each signer's fields are drawn on the document. Drawn once, when the signed document is made.": "Waar de velden van elke ondertekenaar op het document komen. Ze worden één keer getekend, als het ondertekende document wordt gemaakt.",
         "Signer": "Ondertekenaar",

@@ -1,5 +1,18 @@
 {
     "translations": {
+        "Fields on the document": "Campi sul documento",
+        "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.": "Scegli un firmatario e un campo, poi fai clic sul punto della pagina in cui va. Trascina un campo per spostarlo, oppure selezionalo e usa i tasti freccia. Maiusc con un tasto freccia ne cambia la dimensione. I campi vengono disegnati nel documento al momento della firma.",
+        "Previous page": "Pagina precedente",
+        "Page {page} of {pages}": "Pagina {page} di {pages}",
+        "Next page": "Pagina successiva",
+        "Remove field {number}": "Rimuovi il campo {number}",
+        "Signer {number}": "Firmatario {number}",
+        "Signature": "Firma",
+        "Initials": "Iniziali",
+        "Checkbox": "Casella di controllo",
+        "{field} for {signer} on page {page}": "{field} per {signer} a pagina {page}",
+        "This document cannot be shown as a PDF, so no fields can be placed on it.": "Questo documento non può essere mostrato come PDF, quindi non è possibile posizionarvi campi.",
+        "Place fields on the document": "Posiziona i campi sul documento",
         "Field placements": "Posizioni dei campi",
         "Where each signer's fields are drawn on the document. Drawn once, when the signed document is made.": "Dove vengono disegnati sul documento i campi di ciascun firmatario. Vengono disegnati una volta, quando viene creato il documento firmato.",
         "Signer": "Firmatario",

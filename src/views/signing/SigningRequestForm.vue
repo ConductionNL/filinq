@@ -120,6 +120,19 @@
 				{{ t('filinq', 'Add signer') }}
 			</NcButton>
 		</fieldset>
+		<div class="form-group">
+			<NcCheckboxRadioSwitch
+				v-model="placingFields"
+				type="switch"
+				:disabled="!form.documentFileId">
+				{{ t('filinq', 'Place fields on the document') }}
+			</NcCheckboxRadioSwitch>
+		</div>
+		<FieldPlacementEditor
+			v-if="placingFields && form.documentFileId"
+			v-model="fieldPlacements"
+			:fileId="form.documentFileId"
+			:signers="signerLabels" />
 		<div class="signing-request-form__actions">
 			<NcButton variant="primary" :disabled="!canSubmit" @click="submit">
 				{{ t('filinq', 'Create Signing Request') }}
@@ -142,15 +155,30 @@
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcNoteCard,
+	NcSelect,
+} from '@nextcloud/vue'
 import BulkSendModal from '../../modals/BulkSendModal.vue'
+import FieldPlacementEditor from './FieldPlacementEditor.vue'
 import { assuranceFloor, assuranceLevelsFrom } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
+import { dropSignerPlacements, toRequestPlacements } from './fieldPlacement.js'
 import { emptySignerRow, signersAreComplete, toSigners } from './signerRows.js'
 
 export default {
 	name: 'SigningRequestForm',
-	components: { BulkSendModal, NcButton, NcNoteCard, NcSelect },
+	components: {
+		BulkSendModal,
+		FieldPlacementEditor,
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcNoteCard,
+		NcSelect,
+	},
+
 	data() {
 		return {
 			form: {
@@ -163,10 +191,25 @@ export default {
 
 			signerRows: [emptySignerRow()],
 			bulkOpen: false,
+			placingFields: false,
+			fieldPlacements: [],
 		}
 	},
 
 	computed: {
+		/**
+		 * The name each signer row goes by, for the placement editor.
+		 *
+		 * @return {Array<string>}
+		 *
+		 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.3
+		 */
+		signerLabels() {
+			return this.signerRows.map(
+				(row) => row.displayName || row.email || row.userId,
+			)
+		},
+
 		/**
 		 * The document settings a bulk send applies to every row.
 		 *
@@ -275,6 +318,10 @@ export default {
 		removeSigner(index) {
 			if (this.signerRows.length > 1) {
 				this.signerRows.splice(index, 1)
+				this.fieldPlacements = dropSignerPlacements(
+					this.fieldPlacements,
+					index,
+				)
 			}
 		},
 
@@ -292,6 +339,9 @@ export default {
 			const result = await signingStore.createSigningRequest({
 				...this.form,
 				signers: toSigners(this.signerRows),
+				...(this.placingFields && this.fieldPlacements.length
+					? { fieldPlacements: toRequestPlacements(this.fieldPlacements) }
+					: {}),
 			})
 			if (result) {
 				showSuccess(t('filinq', 'Signing request created'))

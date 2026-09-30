@@ -48,6 +48,13 @@ class FieldPlacements {
 	public const TYPES = ['signature', 'initials', 'date', 'text', 'checkbox'];
 
 	/**
+	 * Rounding slack for a box that ends exactly at the page edge (0.7 + 0.3 is not 1.0 in floating point).
+	 *
+	 * @var float
+	 */
+	private const EPSILON = 1e-9;
+
+	/**
 	 * Most placements one request may carry.
 	 *
 	 * @var int
@@ -132,7 +139,7 @@ class FieldPlacements {
 			$box[$key] = (float) $value;
 		}
 
-		if ($box['width'] <= 0 || $box['height'] <= 0 || $box['x'] + $box['width'] > 1 || $box['y'] + $box['height'] > 1) {
+		if ($box['width'] <= 0 || $box['height'] <= 0 || $box['x'] + $box['width'] > 1 + self::EPSILON || $box['y'] + $box['height'] > 1 + self::EPSILON) {
 			throw new InvalidArgumentException($where . ' must be a box of some size that stays on the page');
 		}
 

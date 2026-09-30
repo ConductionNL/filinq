@@ -1,5 +1,18 @@
 {
     "translations": {
+        "Fields on the document": "Fields on the document",
+        "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.": "Choose a signer and a field, then click the page where it goes. Drag a field to move it, or select it and use the arrow keys. Shift and an arrow key changes its size. The fields are drawn into the document when it is signed.",
+        "Previous page": "Previous page",
+        "Page {page} of {pages}": "Page {page} of {pages}",
+        "Next page": "Next page",
+        "Remove field {number}": "Remove field {number}",
+        "Signer {number}": "Signer {number}",
+        "Signature": "Signature",
+        "Initials": "Initials",
+        "Checkbox": "Checkbox",
+        "{field} for {signer} on page {page}": "{field} for {signer} on page {page}",
+        "This document cannot be shown as a PDF, so no fields can be placed on it.": "This document cannot be shown as a PDF, so no fields can be placed on it.",
+        "Place fields on the document": "Place fields on the document",
         "Field placements": "Field placements",
         "Where each signer's fields are drawn on the document. Drawn once, when the signed document is made.": "Where each signer's fields are drawn on the document. Drawn once, when the signed document is made.",
         "Signer": "Signer",
