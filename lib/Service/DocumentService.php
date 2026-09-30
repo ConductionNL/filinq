@@ -142,7 +142,7 @@ class DocumentService {
 	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
 	 * @param array $options Options: format (pdf|odf|html|docx), huisstijlId,
 	 *                       zaakId, adHocData, listRefs, pdfOptions, userId,
-	 *                       filename, output.
+	 *                       filename, output, templateVersion (render that stored version, not the head).
 	 *                       listRefs: [{register, schema, filter?, limit?,
 	 *                       order?, as?}, ...] — each resolves to an array
 	 *                       of objects under the Twig context key 'as'
@@ -156,7 +156,8 @@ class DocumentService {
 	 *                            no HTTP route passes it, so a request cannot write into
 	 *                            its own audit entry. Canonical fields always win.
 	 *
-	 * @return array{content: string, format: string, metadata: array, warnings: string[], output: array}
+	 * @return array{content: string, format: string, metadata: array, warnings: string[], output: array,
+	 *     templateVersion: int|null, sha256: string, pageCount?: int}
 	 *
 	 * @throws Exception If generation fails
 	 *
@@ -179,7 +180,12 @@ class DocumentService {
 		$this->validateFormat(format: $format);
 		$this->resolveOutputMode(options: $options);
 
-		$template = $this->templateService->getTemplate(id: $templateId);
+		$template = null;
+		if (isset($options['templateVersion']) === true) {
+			$template = $this->templateService->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+		}
+
+		$template ??= $this->templateService->getTemplate(id: $templateId);
 
 		return $this->generateFromTemplate(
 			templateId: $templateId,
@@ -208,7 +214,8 @@ class DocumentService {
 	 * @param array $options The same options {@see generateDocument()} takes.
 	 * @param array $recordFields The same extra entry fields {@see generateDocument()} takes.
 	 *
-	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[], output: array}
+	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[],
+	 *     output: array, templateVersion: int|null, sha256: string, pageCount?: int}
 	 *               `html` is the rendered template before format conversion.
 	 *
 	 * @throws Exception If generation fails
@@ -303,7 +310,7 @@ class DocumentService {
 		$metadata = $this->documentLogger->log(
 			template: [
 				'id' => $templateId,
-				'version' => (int)($template['version'] ?? 1),
+				'version' => ($template['version'] ?? null),
 				'name' => ($template['name'] ?? ''),
 			],
 			dataRefs: $dataRefs,
@@ -326,6 +333,7 @@ class DocumentService {
 			'format' => $format,
 			'metadata' => $metadata,
 			'plainRendition' => $plain['rendition'],
+			'templateVersion' => ($template['version'] ?? null),
 			'warnings' => $warnings,
 			'output' => [
 				'mode' => $outputMode,
@@ -334,7 +342,7 @@ class DocumentService {
 				'name' => $stored['name'],
 				'size' => $stored['size'],
 			],
-		];
+		] + $this->renderPipeline->describeOutput(content: $content, format: $format);
 
 	}//end generateFromTemplate()
 
@@ -923,7 +931,7 @@ class DocumentService {
 				$this->documentLogger->log(
 					template: [
 						'id' => $templateId,
-						'version' => 0,
+						'version' => null,
 						'name' => '',
 					],
 					dataRefs: $dataRefs,

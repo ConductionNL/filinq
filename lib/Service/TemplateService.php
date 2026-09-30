@@ -185,11 +185,80 @@ class TemplateService {
 		if (is_object($result) === true
 			&& method_exists(object_or_class: $result, method: 'jsonSerialize') === true
 		) {
-			return $result->jsonSerialize();
+			$result = $result->jsonSerialize();
 		}
 
-		return $result;
+		return $this->withVersion(id: $id, template: $result);
 	}//end getTemplate()
+
+	/**
+	 * Put the version the template is on at the top level of the template.
+	 *
+	 * 🔑 THE NUMBER IS FILINQ'S OWN VERSION CHAIN, NOT `@self.version`.
+	 * OpenRegister's object version is a semver string that also moves on saves
+	 * that make no template version (a restore's head write, a lock release),
+	 * while a caller pins, and the audit record stores, the chain's integer:
+	 * snapshots 1..N-1 plus the head as N. A chain that cannot be read leaves
+	 * the key out, so "unversioned" never reads as version 1. `@self` is left
+	 * as OpenRegister returned it.
+	 *
+	 * @param string $id       The template id the chain is keyed on
+	 * @param array  $template The serialised template
+	 *
+	 * @return array The template with `version`, or without it when unknown
+	 *
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-template-carries-the-version-it-is-on-req-ddtvp-001
+	 */
+	private function withVersion(string $id, array $template): array {
+		unset($template['version']);
+		try {
+			$number = $this->versionService->getNextVersionNumber(templateId: $id);
+		} catch (Exception $e) {
+			return $template;
+		}
+
+		if ($number >= 1) {
+			$template['version'] = $number;
+		}
+
+		return $template;
+	}//end withVersion()
+
+	/**
+	 * Get a template as it was at one version, or the head when none is named.
+	 *
+	 * A pinned version renders the content stored in its snapshot. Nothing is
+	 * restored: the head stays where it is. A version the chain does not hold
+	 * is refused rather than answered with the head, because a document
+	 * claiming a version it was not rendered from is worse than no document.
+	 *
+	 * @param string   $id      The template id
+	 * @param int|null $version The version to read, or null for the head
+	 *
+	 * @return array The template, with `version` set to the version returned
+	 *
+	 * @throws Exception 404 naming the template and the version when it does not exist
+	 *
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
+	 */
+	public function getTemplateAtVersion(string $id, ?int $version): array {
+		$template = $this->getTemplate(id: $id);
+		if ($version === null || $version === ($template['version'] ?? null)) {
+			return $template;
+		}
+
+		$snapshot = null;
+		if ($version >= 1) {
+			$snapshot = $this->versionService->findVersionByNumber(templateId: $id, number: $version);
+		}
+
+		if ($snapshot === null) {
+			throw new Exception(message: "Template {$id} has no version {$version}", code: 404);
+		}
+
+		$stored = array_intersect_key($snapshot, array_flip(['content', 'name', 'format', 'orientation']));
+		return array_merge($template, $stored, ['version' => $version]);
+	}//end getTemplateAtVersion()
 
 	/**
 	 * Create a new template
@@ -281,6 +350,8 @@ class TemplateService {
 
 		$data['id'] = $id;
 		$merged = array_merge($existing, $data);
+		// The version is read from the chain, never stored on the template.
+		unset($merged['version']);
 
 		// Release lock after successful save.
 		$merged['lockedBy'] = null;
@@ -324,6 +395,8 @@ class TemplateService {
 
 		$data['id'] = $id;
 		$merged = array_merge($existing, $data);
+		// The version is read from the chain, never stored on the template.
+		unset($merged['version']);
 
 		$result = $objectService->saveObject(
 			object: $merged,
