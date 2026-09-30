@@ -6883,6 +6883,141 @@
         "collectedInto": "",
         "performedBy": "seed-user-woo",
         "performedAt": "2026-09-02T14:30:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bulkSigningBatch",
+          "slug": "demostad-bulk-send-verklaring-2026"
+        },
+        "title": "Demostad verklaring 2026",
+        "status": "completed_with_errors",
+        "documentFileId": "0",
+        "documentName": "verklaring-2026.pdf",
+        "signatureLevel": "SES",
+        "signingMode": "parallel",
+        "provider": "native",
+        "recipientSource": "csv",
+        "totalRows": 5,
+        "acceptedRows": 4,
+        "processedRows": 4,
+        "rejectedRows": [
+          {
+            "row": 3,
+            "reason": "invalid-email",
+            "detail": ""
+          }
+        ],
+        "recipients": [
+          {
+            "row": 2,
+            "userId": "",
+            "email": "inwoner2@example.invalid",
+            "displayName": "Inwoner 2"
+          },
+          {
+            "row": 4,
+            "userId": "",
+            "email": "inwoner4@example.invalid",
+            "displayName": "Inwoner 4"
+          },
+          {
+            "row": 5,
+            "userId": "",
+            "email": "inwoner5@example.invalid",
+            "displayName": "Inwoner 5"
+          },
+          {
+            "row": 6,
+            "userId": "",
+            "email": "inwoner6@example.invalid",
+            "displayName": "Inwoner 6"
+          }
+        ],
+        "requestRefs": [],
+        "createdBy": "admin",
+        "createdAt": "2026-09-30T09:00:00+00:00",
+        "completedAt": "2026-09-30T09:01:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bulkSigningBatch",
+          "slug": "demostad-bulk-send-toestemming-ready"
+        },
+        "title": "Demostad toestemming foto 2026",
+        "status": "ready",
+        "documentFileId": "0",
+        "documentName": "verklaring-2026.pdf",
+        "signatureLevel": "SES",
+        "signingMode": "parallel",
+        "provider": "native",
+        "recipientSource": "csv",
+        "totalRows": 3,
+        "acceptedRows": 2,
+        "processedRows": 0,
+        "rejectedRows": [
+          {
+            "row": 4,
+            "reason": "duplicate",
+            "detail": "row 2"
+          }
+        ],
+        "recipients": [
+          {
+            "row": 2,
+            "userId": "",
+            "email": "ouder2@example.invalid",
+            "displayName": "Ouder 2"
+          },
+          {
+            "row": 3,
+            "userId": "",
+            "email": "ouder3@example.invalid",
+            "displayName": "Ouder 3"
+          }
+        ],
+        "requestRefs": [],
+        "createdBy": "admin",
+        "createdAt": "2026-09-30T10:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bulkSigningBatch",
+          "slug": "demostad-bulk-send-cancelled"
+        },
+        "title": "Demostad verklaring vervallen",
+        "status": "cancelled",
+        "documentFileId": "0",
+        "documentName": "verklaring-2026.pdf",
+        "signatureLevel": "SES",
+        "signingMode": "parallel",
+        "provider": "native",
+        "recipientSource": "csv",
+        "totalRows": 2,
+        "acceptedRows": 2,
+        "processedRows": 1,
+        "rejectedRows": [],
+        "recipients": [
+          {
+            "row": 2,
+            "userId": "",
+            "email": "lid2@example.invalid",
+            "displayName": "Lid 2"
+          },
+          {
+            "row": 3,
+            "userId": "",
+            "email": "lid3@example.invalid",
+            "displayName": "Lid 3"
+          }
+        ],
+        "requestRefs": [],
+        "createdBy": "admin",
+        "createdAt": "2026-09-29T08:00:00+00:00",
+        "completedAt": "2026-09-29T08:05:00+00:00",
+        "cancelledRequests": 0
       }
     ]
   }

@@ -178,6 +178,13 @@
 			"order": 65
 		},
 		{
+			"id": "BulkSigningBatches",
+			"label": "Bulk sends",
+			"icon": "EmailMultipleOutline",
+			"route": "BulkSigningBatches",
+			"order": 66
+		},
+		{
 			"id": "CustomDictionary",
 			"label": "Custom dictionaries",
 			"icon": "Domain",
@@ -400,6 +407,29 @@
 				"route": "SigningRequestForm"
 			},
 			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered in the `signing` register, so CnIndexPage lists the requests directly. (`register` was `filinq` from Phase 8 until 2026-08-03 — a register Filinq has never shipped; see the Templates note.) Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
+		},
+		{
+			"id": "BulkSigningBatches",
+			"route": "/signing-batches",
+			"type": "index",
+			"title": "Bulk sends",
+			"config": {
+				"register": "filinq",
+				"schema": "bulkSigningBatch",
+				"columns": ["title", "status", "totalRows", "acceptedRows", "processedRows", "createdAt"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No bulk sends yet",
+				"actionToggles": { "showAdd": false }
+			},
+			"primaryAction": {
+				"id": "NewBulkSend",
+				"label": "New bulk send",
+				"icon": "Plus",
+				"route": "SigningRequestForm"
+			},
+			"_note": "Bulk sends (bulk-signing-field-builder REQ-DDBSF-002). OpenRegister lists the batches directly; the schema grants read to nobody, so each user sees their own batches and an admin sees all. A batch is started from the signing request form (Send to many from a list), which holds the document and level every row uses, so the index adds no create dialog of its own."
 		},
 		{
 			"id": "SigningFolder",

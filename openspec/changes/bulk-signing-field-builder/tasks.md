@@ -6,18 +6,23 @@
 ## 1. Register & data model
 
 - [ ] 1.1 Additive register edit in `lib/Settings/filinq_register.json`: schemas `bulkSigningBatch` + `signingEnvelope`, properties `signingRequest.fieldPlacements[]` + `signingRequest.envelopeRef` per REQ-DDBSF-001; register version bump for boot import
+  - Bulk send half done: `bulkSigningBatch` 1.0.0, register 8.35.0. `fieldPlacements` and `envelopeRef` land with tasks 3 and 4.
   - Union-additive diff against merge base; `tests/validate-manifest.js` passes; property titles present (hydra schema-property-titles gate)
 
 - [ ] 1.2 Seed data per design.md (nil-UUID batch `…f001` with rejected-row fixture, envelope `…f002`, placement demo request); CSV fixture with `@example.invalid` emails under `tests/fixtures/`
+  - Bulk send half done: three demo batches in lib/Settings/filinq_mock_register.json (DemoDataCoverageTest wants three per schema); CSV fixture tests/fixtures/bulk-signing/recipients-50.csv. Envelope and placement seeds with tasks 3 and 4.
 
 ## 2. Bulk send backend
 
-- [ ] 2.1 `BulkSigningService`: CSV parse (native) + validation (emails, resolvable recipients, duplicates, row/size caps default 1000, formula-inert cells) persisting the report on the batch, status `ready` (REQ-DDBSF-002 phase 1); XLSX via existing vendored parser if present, else CSV-first with the seam documented (ADR-011 check)
+- [x] 2.1 `BulkSigningService`: CSV parse (native) + validation (emails, resolvable recipients, duplicates, row/size caps default 1000, formula-inert cells) persisting the report on the batch, status `ready` (REQ-DDBSF-002 phase 1); XLSX via existing vendored parser if present, else CSV-first with the seam documented (ADR-011 check)
+  - Built: `lib/Service/BulkSigning/` BulkSigningRecipientParser (CSV comma/semicolon, XLSX through ZipArchive + SimpleXML: no spreadsheet library is vendored and none was added), BulkSigningRowValidator, BulkSigningService::createBatch(); tests/unit/Service/BulkSigning/BulkSigningRecipientParserTest.php, BulkSigningServiceTest.php
 
-- [ ] 2.2 `BulkSigningJob` (NC background job): per-row creation through `SigningService::createRequest()` with try/catch isolation into `rejectedRows`, progress + terminal status, batch cancel of still-cancellable members (REQ-DDBSF-002 phase 2)
+- [x] 2.2 `BulkSigningJob` (NC background job): per-row creation through `SigningService::createRequest()` with try/catch isolation into `rejectedRows`, progress + terminal status, batch cancel of still-cancellable members (REQ-DDBSF-002 phase 2)
+  - Built: lib/BackgroundJob/BulkSigningJob.php -> BulkSigningRunner (initiator set with IUserSession::setVolatileActiveUser, cleared in finally; status read before every row; progress saved per row)
   - Level/provider/assurance gate parity proven (QES+native batch rejected pre-send)
 
-- [ ] 2.3 `BulkSigningController` + routes (create/validate/confirm/list/show/cancel): explicit auth attributes, initiator-or-admin guards on read/cancel, report visible to initiator/admin only (hydra route-auth/no-admin-idor/semantic-auth gates)
+- [x] 2.3 `BulkSigningController` + routes (create/validate/confirm/list/show/cancel): explicit auth attributes, initiator-or-admin guards on read/cancel, report visible to initiator/admin only (hydra route-auth/no-admin-idor/semantic-auth gates)
+  - Built: lib/Controller/BulkSigningController.php, routes api/signing/batches (index, create, show, confirm, cancel); tests/unit/Controller/BulkSigningControllerTest.php
 
 ## 3. Field placement
 
@@ -34,16 +39,21 @@
 - [ ] 4.2 Ceremony: envelope-grouped notifications (one per signer per envelope, existing notification path — ADR-031 untouched); signing view lists all pending member records; "sign all" iterates ordinary `sign()` per document with per-document gate errors surfaced (REQ-DDBSF-004)
 
 - [ ] 4.3 Envelope + batch UI: bulk-send wizard (upload → report → confirm), batch list/detail with progress, envelope create/detail with member roll-up (CnDataTable/CnDetailPage, NL Design System tokens) (REQ-DDBSF-005)
+  - Bulk send half done: src/modals/BulkSendModal.vue (upload, report, confirm, progress, cancel) opened from SigningRequestForm, Bulk sends index page (typed, no new custom page). Envelope UI with task 4.
 
 ## 5. Quality, i18n, docs
 
 - [ ] 5.1 Unit tests ≥75% on new code (validation matrix, row isolation, cap enforcement, roll-up semantics, placement MAC coverage); run in container `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+  - Bulk send half done (BulkSigning*Test, BulkSigningControllerTest).
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/bulk-signing-field-builder.spec.ts`: 50-row CSV (3 bad) → report → 47-request batch; placement rendered in completed artifact + verify `verified`; 3-doc envelope single ceremony → 3 artifacts/trails, decline → `partially_declined`; verify on Postgres (8080), nldesign theme enabled
+  - Bulk send half written, not run (the dev instance serves another checkout): tests/e2e/spec-coverage/bulk-signing-field-builder.spec.ts.
 
 - [ ] 5.3 i18n EN source + NL translations (wizard, report reasons, envelope statuses, placement editor)
+  - Bulk send strings in all six locales.
 
 - [ ] 5.4 Docs in `docs/features/` (bulk send, placement, envelopes — explicit "conditional fields: future" note) with Playwright screenshots (ADR-010); `openspec validate bulk-signing-field-builder --strict` passes
+  - Bulk send half: docs/features/bulk-send.md.
 
 ## Quality checklist
 

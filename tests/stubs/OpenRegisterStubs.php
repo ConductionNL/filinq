@@ -1718,6 +1718,15 @@ interface IUserSession {
 	 * @return \OCP\IUser|null
 	 */
 	public function getUser(): ?\OCP\IUser;
+
+	/**
+	 * Set the active user for this process only (real OCP signature, NC 29+)
+	 *
+	 * @param \OCP\IUser|null $user The user, or null to clear
+	 *
+	 * @return void
+	 */
+	public function setVolatileActiveUser(?\OCP\IUser $user): void;
 }//end interface
 
 // OCP\AppFramework\Http\JSONResponse, DataDownloadResponse, and OCP\AppFramework\Controller

@@ -191,3 +191,14 @@ initials p2 @ 0.1/0.9). CSV fixture committed under `tests/fixtures/`
 - Envelope-level deadline overriding member deadlines: PO call at apply time
   (LibreSign has a single flow deadline; current design keeps per-request
   deadlines authoritative).
+
+## Resolved at apply (bulk send, 2026-09-30)
+
+- **Register.** Filinq ships one register, `filinq`; there is no `signing` register. `bulkSigningBatch` lives in `filinq` (register 8.35.0), like every signing schema.
+- **Who creates the rows.** `SigningService::createRequest()` takes the initiator from the session and a background job has none. `BulkSigningRunner` sets the initiator as the volatile active user for the rows and clears it afterwards; the job carries `userId` next to `batchId`. An admin who confirms somebody else's batch still sends as the initiator.
+- **Access.** The schema's `read`, `update` and `delete` are empty lists (owner and admins only), so the report is not readable through OpenRegister by anybody else either, and the Bulk sends index page lists each user's own batches with no endpoint of its own.
+- **Stored recipients.** The accepted rows are kept on the batch as `recipients`, so phase 2 needs no second upload. `processedRows` is the resume point.
+- **Rejected rows** carry a `reason` code (`no-recipient`, `invalid-email`, `unknown-user`, `duplicate`, `creation-failed`) and a `detail`; the dialog translates the code.
+- **XLSX.** No spreadsheet library is vendored, so XLSX is read directly (first sheet, shared and inline strings, a formula's cached value). No dependency was added.
+- **No new custom page.** The wizard is a dialog on the signing request form, which already holds the document and level every row uses; the batch list is a typed index page.
+- **Template batches** (D4, one generated document per row) are not built in this pass; the row stays partial for them.

@@ -120,9 +120,22 @@
 				{{ t('filinq', 'Add signer') }}
 			</NcButton>
 		</fieldset>
-		<NcButton variant="primary" :disabled="!canSubmit" @click="submit">
-			{{ t('filinq', 'Create Signing Request') }}
-		</NcButton>
+		<div class="signing-request-form__actions">
+			<NcButton variant="primary" :disabled="!canSubmit" @click="submit">
+				{{ t('filinq', 'Create Signing Request') }}
+			</NcButton>
+			<NcButton
+				variant="secondary"
+				:disabled="!form.documentFileId || !form.documentName"
+				@click="bulkOpen = true">
+				{{ t('filinq', 'Send to many from a list') }}
+			</NcButton>
+		</div>
+		<BulkSendModal
+			v-if="bulkOpen"
+			:show="bulkOpen"
+			:settings="bulkSettings"
+			@close="bulkOpen = false" />
 	</div>
 </template>
 
@@ -130,13 +143,14 @@
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import BulkSendModal from '../../modals/BulkSendModal.vue'
 import { assuranceFloor, assuranceLevelsFrom } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 import { emptySignerRow, signersAreComplete, toSigners } from './signerRows.js'
 
 export default {
 	name: 'SigningRequestForm',
-	components: { NcButton, NcNoteCard, NcSelect },
+	components: { BulkSendModal, NcButton, NcNoteCard, NcSelect },
 	data() {
 		return {
 			form: {
@@ -148,10 +162,27 @@ export default {
 			},
 
 			signerRows: [emptySignerRow()],
+			bulkOpen: false,
 		}
 	},
 
 	computed: {
+		/**
+		 * The document settings a bulk send applies to every row.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+		 */
+		bulkSettings() {
+			return {
+				documentFileId: this.form.documentFileId,
+				documentName: this.form.documentName,
+				signatureLevel: this.form.signatureLevel,
+				signingMode: this.form.signingMode,
+			}
+		},
+
 		/**
 		 * The identity levels this signature level allows: its floor and up.
 		 *
@@ -274,6 +305,12 @@ export default {
 </script>
 
 <style scoped>
+.signing-request-form__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--default-grid-baseline) * 2);
+}
+
 .signing-request-form {
 	padding: 20px;
 	max-width: 600px;

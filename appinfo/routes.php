@@ -301,6 +301,12 @@ $extra = [
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
+        // Bulk send (bulk-signing-field-builder REQ-DDBSF-002): upload + report, confirm, progress, cancel.
+        ['name' => 'bulkSigning#index', 'url' => 'api/signing/batches', 'verb' => 'GET'],
+        ['name' => 'bulkSigning#create', 'url' => 'api/signing/batches', 'verb' => 'POST'],
+        ['name' => 'bulkSigning#show', 'url' => 'api/signing/batches/{id}', 'verb' => 'GET'],
+        ['name' => 'bulkSigning#confirm', 'url' => 'api/signing/batches/{id}/confirm', 'verb' => 'POST'],
+        ['name' => 'bulkSigning#cancel', 'url' => 'api/signing/batches/{id}/cancel', 'verb' => 'POST'],
 
         // Signer identity rails (signer-identity-rails): the step-up start
         // (signing ownership check in the service) and the broker callback
