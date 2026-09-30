@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/specs/template-version-provenance/spec.md
+ * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md
  */
 
 declare(strict_types=1);

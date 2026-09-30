@@ -229,7 +229,7 @@ class TemplateVersionService {
 	 *
 	 * @throws Exception If the chain cannot be read
 	 *
-	 * @spec openspec/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
 	 */
 	public function findVersionByNumber(string $templateId, int $number): ?array {
 		// The chain is read whole and matched here: a `version` search parameter
@@ -262,7 +262,7 @@ class TemplateVersionService {
 	 *
 	 * @throws Exception If the chain cannot be read
 	 *
-	 * @spec openspec/specs/template-version-provenance/spec.md#requirement-filinq-answers-which-version-was-in-force-on-a-date-req-ddtvp-004
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-filinq-answers-which-version-was-in-force-on-a-date-req-ddtvp-004
 	 */
 	public function versionInForceAt(string $templateId, DateTimeInterface $moment): ?int {
 		$began = $this->templateCreatedAt(templateId: $templateId);

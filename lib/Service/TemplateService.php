@@ -207,7 +207,7 @@ class TemplateService {
 	 *
 	 * @return array The template with `version`, or without it when unknown
 	 *
-	 * @spec openspec/specs/template-version-provenance/spec.md#requirement-a-template-carries-the-version-it-is-on-req-ddtvp-001
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-template-carries-the-version-it-is-on-req-ddtvp-001
 	 */
 	private function withVersion(string $id, array $template): array {
 		unset($template['version']);
@@ -239,7 +239,7 @@ class TemplateService {
 	 *
 	 * @throws Exception 404 naming the template and the version when it does not exist
 	 *
-	 * @spec openspec/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
 	 */
 	public function getTemplateAtVersion(string $id, ?int $version): array {
 		$template = $this->getTemplate(id: $id);
