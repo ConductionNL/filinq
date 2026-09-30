@@ -466,4 +466,49 @@ class BulkSigningServiceTest extends TestCase {
 		$this->assertSame('cancelled', $done['status']);
 
 	}//end testACancelledBatchCreatesNothing()
+	/**
+	 * Every payload the service and the runner write, and the demo row, validate against the real schema fragment.
+	 *
+	 * @return void
+	 */
+	public function testEveryPayloadWrittenValidatesAgainstTheRegisterSchema(): void {
+		$service = $this->service();
+		$csv = "email;userId;name\nan@example.invalid;;An\nkapot;;\n;ghost;\ngone@example.invalid;;\n";
+		$batch = $service->createBatch(settings: self::SETTINGS, content: $csv, filename: 'x.csv', userId: 'alice');
+		$service->confirm(id: $batch['uuid'], userId: 'alice', isAdmin: false);
+		$this->signing->method('createRequest')->willReturnCallback(
+			static fn (array $data): array => $data['signers'][0]['email'] === 'gone@example.invalid' ? throw new RuntimeException(str_repeat('x', 900)) : ['id' => 'r1']
+		);
+		$this->runner()->run(batchId: $batch['uuid'], userId: 'alice');
+		$service->cancel(id: $batch['uuid'], userId: 'alice', isAdmin: false);
+
+		$descriptor = json_decode((string) file_get_contents(__DIR__ . '/../../../../lib/Settings/filinq_register.json'), true);
+		$mock = json_decode((string) file_get_contents(__DIR__ . '/../../../../lib/Settings/filinq_mock_register.json'), true);
+		$schema = $descriptor['components']['schemas']['bulkSigningBatch'];
+		$properties = [];
+		foreach ($schema['properties'] as $name => $property) {
+			unset($property['required'], $property['visible'], $property['order'], $property['facetable'], $property['x-enum-labels']);
+			$properties[$name] = $property;
+		}
+
+		$json = (string) json_encode(['type' => 'object', 'required' => $schema['required'], 'properties' => $properties, 'additionalProperties' => false]);
+		$demo = array_values(array_filter($mock['components']['objects'], static fn (array $o): bool => ($o['@self']['schema'] ?? '') === 'bulkSigningBatch'));
+		$this->assertCount(3, $demo);
+		$demo = array_map(static fn (array $o): array => array_diff_key($o, ['@self' => true]), $demo);
+
+		$this->assertGreaterThanOrEqual(6, count($this->batchWrites));
+		foreach (array_merge($this->batchWrites, $demo) as $payload) {
+			$result = (new \Opis\JsonSchema\Validator())->validate(json_decode((string) json_encode($payload)), $json);
+			$message = '';
+			if ($result->isValid() === false) {
+				$message = (string) json_encode((new \Opis\JsonSchema\Errors\ErrorFormatter())->format($result->error()));
+			}
+
+			$this->assertTrue($result->isValid(), $message);
+		}
+
+		$this->assertContains('bulkSigningBatch', $descriptor['components']['registers']['filinq']['schemas']);
+		$this->assertSame(['read' => [], 'create' => ['authenticated'], 'update' => [], 'delete' => []], $schema['authorization']);
+
+	}//end testEveryPayloadWrittenValidatesAgainstTheRegisterSchema()
 }//end class
