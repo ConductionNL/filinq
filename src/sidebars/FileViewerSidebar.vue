@@ -136,7 +136,9 @@ const documentRecordId = computed(() =>
 					v-if="sanitizationRows.length"
 					type="info"
 					data-testid="anonymisation-sanitization-report">
-					<div>{{ t('filinq', 'Hidden content removed from the copy') }}</div>
+					<div>
+						{{ t('filinq', 'Hidden content removed from the copy') }}
+					</div>
 					<ul>
 						<li v-for="row in sanitizationRows" :key="row.key">
 							{{ row.label }}: {{ row.count }}

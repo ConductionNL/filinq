@@ -48,12 +48,16 @@ describe('sanitization service', () => {
 
 	it('names an encrypted document and a file nobody can open', async () => {
 		answer = () =>
-			Promise.reject({ response: { status: 422, data: { error: 'encrypted' } } })
+			Promise.reject({
+				response: { status: 422, data: { error: 'encrypted' } },
+			})
 		expect((await sanitizeFile(1)).error).toBe(
 			'This document is encrypted. Remove the password and try again.',
 		)
 		answer = () =>
-			Promise.reject({ response: { status: 404, data: { error: 'not_found' } } })
+			Promise.reject({
+				response: { status: 404, data: { error: 'not_found' } },
+			})
 		expect((await sanitizeFile(1)).error).toBe(
 			'This file is not there, or you cannot open it.',
 		)
@@ -69,7 +73,11 @@ describe('sanitization service', () => {
 			}),
 		).toEqual([
 			{ key: 'commentsRemoved', label: 'Comments removed', count: 4 },
-			{ key: 'metadataFieldsScrubbed', label: 'Metadata fields cleared', count: 6 },
+			{
+				key: 'metadataFieldsScrubbed',
+				label: 'Metadata fields cleared',
+				count: 6,
+			},
 		])
 		expect(reportRows(null)).toEqual([])
 	})

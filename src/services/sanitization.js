@@ -32,7 +32,10 @@ function url(fileId) {
  */
 export function refusalMessage(status, reason) {
 	if (reason === 'encrypted') {
-		return t('filinq', 'This document is encrypted. Remove the password and try again.')
+		return t(
+			'filinq',
+			'This document is encrypted. Remove the password and try again.',
+		)
 	}
 	if (status === 404) {
 		return t('filinq', 'This file is not there, or you cannot open it.')

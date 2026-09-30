@@ -6,7 +6,10 @@ SPDX-License-Identifier: EUPL-1.2
 -->
 
 <template>
-	<NcModal :show="show" :name="t('filinq', 'Sanitize document')" @close="$emit('close')">
+	<NcModal
+		:show="show"
+		:name="t('filinq', 'Sanitize document')"
+		@close="$emit('close')">
 		<div class="sanitization-report" data-testid="sanitization-report">
 			<h2>{{ t('filinq', 'Sanitize document') }}</h2>
 			<NcLoadingIcon v-if="loading" :size="32" />
@@ -26,9 +29,13 @@ SPDX-License-Identifier: EUPL-1.2
 			<template v-else-if="result">
 				<NcNoteCard type="success">
 					{{
-						t('filinq', 'Saved as {name} next to the original. The original is unchanged.', {
-							name: result.sanitizedFileName,
-						})
+						t(
+							'filinq',
+							'Saved as {name} next to the original. The original is unchanged.',
+							{
+								name: result.sanitizedFileName,
+							},
+						)
 					}}
 				</NcNoteCard>
 				<p v-if="rows.length === 0">
@@ -37,19 +44,29 @@ SPDX-License-Identifier: EUPL-1.2
 				<table v-else class="sanitization-report__table">
 					<thead>
 						<tr>
-							<th scope="col">{{ t('filinq', 'What was removed') }}</th>
+							<th scope="col">
+								{{ t('filinq', 'What was removed') }}
+							</th>
 							<th scope="col">{{ t('filinq', 'Count') }}</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="row in rows" :key="row.key" :data-testid="`sanitization-${row.key}`">
+						<tr
+							v-for="row in rows"
+							:key="row.key"
+							:data-testid="`sanitization-${row.key}`">
 							<td>{{ row.label }}</td>
 							<td>{{ row.count }}</td>
 						</tr>
 					</tbody>
 				</table>
 				<p class="sanitization-report__hint">
-					{{ t('filinq', 'Only the counts are kept. The removed content is not stored anywhere.') }}
+					{{
+						t(
+							'filinq',
+							'Only the counts are kept. The removed content is not stored anywhere.',
+						)
+					}}
 				</p>
 			</template>
 		</div>

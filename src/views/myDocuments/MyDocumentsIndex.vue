@@ -267,8 +267,8 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
-import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import BroomIcon from 'vue-material-design-icons/Broom.vue'
+import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
@@ -905,7 +905,12 @@ export default {
 		 */
 		async sanitizeDocument(row) {
 			if (!row || !row.fileId) return
-			this.sanitization = { show: true, loading: true, error: '', result: null }
+			this.sanitization = {
+				show: true,
+				loading: true,
+				error: '',
+				result: null,
+			}
 			const answer = await sanitizeFile(row.fileId)
 			this.sanitization.loading = false
 			if (!answer.ok) {

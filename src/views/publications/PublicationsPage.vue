@@ -281,7 +281,6 @@ SPDX-License-Identifier: EUPL-1.2
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { sanitizationStatus } from '../../services/sanitization.js'
 import {
 	NcButton,
 	NcEmptyContent,
@@ -306,6 +305,7 @@ import {
 	accessibilityLost,
 	accessibilityNote,
 } from '../../services/redactionAccessibility.js'
+import { sanitizationStatus } from '../../services/sanitization.js'
 
 const FIELDS = [
 	'officieleTitel',

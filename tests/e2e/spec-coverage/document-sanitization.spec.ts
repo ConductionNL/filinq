@@ -48,7 +48,11 @@ test.describe('document sanitization', () => {
 		const token = await harvestToken(page)
 		const put = await context.request.fetch(
 			`/remote.php/dav/files/admin/DocuDesk/${FILE_NAME}`,
-			{ method: 'PUT', headers: { requesttoken: token }, data: Buffer.from('PK placeholder docx') },
+			{
+				method: 'PUT',
+				headers: { requesttoken: token },
+				data: Buffer.from('PK placeholder docx'),
+			},
 		)
 		expect(put.status(), 'seed the document').toBeLessThan(300)
 		const propfind = await context.request.fetch(
@@ -66,7 +70,9 @@ test.describe('document sanitization', () => {
 		await context.close()
 	})
 
-	test('sanitize writes a copy and shows counts, never content', async ({ page }) => {
+	test('sanitize writes a copy and shows counts, never content', async ({
+		page,
+	}) => {
 		// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#office-document-is-sanitized-into-a-derivative
 		// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#report-shows-category-counts-not-content
 		const posted: string[] = []
@@ -79,7 +85,12 @@ test.describe('document sanitization', () => {
 					fileId,
 					sanitizedFileId: fileId + 1,
 					sanitizedFileName: `${FILE_BASE}_sanitized.docx`,
-					report: { commentsRemoved: 4, metadataFieldsScrubbed: 6, trackedChangesDropped: 0, sentinelApplied: '' },
+					report: {
+						commentsRemoved: 4,
+						metadataFieldsScrubbed: 6,
+						trackedChangesDropped: 0,
+						sentinelApplied: '',
+					},
 				},
 			})
 		})
@@ -89,9 +100,15 @@ test.describe('document sanitization', () => {
 
 		const report = page.getByTestId('sanitization-report')
 		await expect(report).toContainText(`${FILE_BASE}_sanitized.docx`)
-		await expect(page.getByTestId('sanitization-commentsRemoved')).toContainText('4')
-		await expect(page.getByTestId('sanitization-metadataFieldsScrubbed')).toContainText('6')
-		await expect(page.getByTestId('sanitization-trackedChangesDropped')).toHaveCount(0)
+		await expect(page.getByTestId('sanitization-commentsRemoved')).toContainText(
+			'4',
+		)
+		await expect(
+			page.getByTestId('sanitization-metadataFieldsScrubbed'),
+		).toContainText('6')
+		await expect(
+			page.getByTestId('sanitization-trackedChangesDropped'),
+		).toHaveCount(0)
 		await expect(report).not.toContainText('wethouder')
 		expect(posted).toEqual(['POST'])
 	})
@@ -106,15 +123,21 @@ test.describe('document sanitization', () => {
 			officieleTitel: 'Besluit subsidie buurthuis',
 			platformAvailable: true,
 		}
-		await page.route('**/apps/filinq/api/publications/pub-1', (route) => route.fulfill({ json: record }))
+		await page.route('**/apps/filinq/api/publications/pub-1', (route) =>
+			route.fulfill({ json: record }),
+		)
 		await page.route(`**/apps/filinq/api/sanitization/${fileId}`, (route) =>
 			route.fulfill({ json: { fileId, sanitized: false, runs: [] } }),
 		)
-		await page.goto(await appUrl(page, 'publications/pub-1'), { waitUntil: 'domcontentloaded' })
+		await page.goto(await appUrl(page, 'publications/pub-1'), {
+			waitUntil: 'domcontentloaded',
+		})
 		await waitForAppReady(page)
 		await dismissOverlays(page)
 
 		await expect(page.getByTestId('publication-not-sanitized')).toBeVisible()
-		await expect(page.getByRole('button', { name: 'Hand off for publication' })).toBeVisible()
+		await expect(
+			page.getByRole('button', { name: 'Hand off for publication' }),
+		).toBeVisible()
 	})
 })
