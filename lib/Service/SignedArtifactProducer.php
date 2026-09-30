@@ -42,6 +42,9 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
+use InvalidArgumentException;
+use OCA\Filinq\Service\Signing\FieldPlacementRenderer;
+use OCA\Filinq\Service\Signing\FieldPlacements;
 use OCA\Filinq\Service\Signing\LibreSignProvider;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
@@ -70,6 +73,8 @@ class SignedArtifactProducer {
 	 * @param IRequest $request HTTP request (client IP for the evidence context).
 	 * @param IRootFolder $rootFolder Root folder (reads the document, stores the signed version).
 	 * @param FinalDocumentService $finalDocuments The final-document guard.
+	 * @param FieldPlacements $placementRules The field placement rules.
+	 * @param FieldPlacementRenderer $placementRenderer Reads the page count a placement must stay within.
 	 *
 	 * @return void
 	 */
@@ -79,6 +84,8 @@ class SignedArtifactProducer {
 		private readonly IRequest $request,
 		private readonly IRootFolder $rootFolder,
 		private readonly FinalDocumentService $finalDocuments,
+		private readonly FieldPlacements $placementRules = new FieldPlacements(),
+		private readonly FieldPlacementRenderer $placementRenderer = new FieldPlacementRenderer(),
 	) {
 
 	}//end __construct()
@@ -92,6 +99,8 @@ class SignedArtifactProducer {
 	 *                                                 folded into the produced artifact's
 	 *                                                 evidence binding (portal-signing-surface
 	 *                                                 REQ-DDPSS-004).
+	 * @param array<string, array<string, mixed>> $signers The request's signer records, keyed by id
+	 *                                                     (names for placed fields).
 	 *
 	 * @return string The stored signed-artifact reference (file id + version).
 	 *
@@ -103,7 +112,7 @@ class SignedArtifactProducer {
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
-	public function produce(array $request, ?array $verifiedActor = null): string {
+	public function produce(array $request, ?array $verifiedActor = null, array $signers = []): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
 		if ($fileId <= 0) {
 			throw new RuntimeException('Cannot produce a signed artifact: the request has no document file id');
@@ -136,6 +145,7 @@ class SignedArtifactProducer {
 		$provider = $this->providerFactory->getProvider(identifier: $providerName);
 
 		$context = $this->buildContext(request: $request, verifiedActor: $verifiedActor);
+		$context += $this->placementContext(request: $request, signers: $signers);
 
 		$signedBytes = $provider->produceSignedArtifact(documentContent: $originalContent, context: $context);
 
@@ -189,6 +199,81 @@ class SignedArtifactProducer {
 		return $request;
 
 	}//end delegate()
+
+	/**
+	 * Check a new request's field placements and put them on the request.
+	 *
+	 * The rules come from FieldPlacements; on top of them every placement must
+	 * name a page the document has. LibreSign's request-signature call has no
+	 * field input (its visible elements need the sign-request ids it creates),
+	 * so a LibreSign request with placements is refused instead of being
+	 * signed without them. Runs before the request is stored.
+	 *
+	 * @param array<string, mixed> $request     The request about to be stored.
+	 * @param mixed                $placements  The `fieldPlacements` the caller sent.
+	 * @param int                  $signerCount How many signers the request names.
+	 *
+	 * @return array<string, mixed> The request, with `fieldPlacements` when there are any.
+	 *
+	 * @throws RuntimeException 400 when a placement breaks a rule, names a page the document lacks, or the provider cannot carry placements.
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function withPlacements(array $request, mixed $placements, int $signerCount): array {
+		try {
+			$normalised = $this->placementRules->normalise(placements: $placements, signerCount: $signerCount);
+		} catch (InvalidArgumentException $e) {
+			throw new RuntimeException(message: $e->getMessage(), code: 400, previous: $e);
+		}
+
+		if ($normalised === []) {
+			return $request;
+		}
+
+		if (($request['provider'] ?? '') === LibreSignProvider::IDENTIFIER) {
+			throw new RuntimeException(message: 'LibreSign places its own fields: send this request without field placements', code: 400);
+		}
+
+		$file = $this->resolveDocumentFile(fileId: (int) ($request['documentFileId'] ?? 0), request: $request);
+		$pages = $this->placementRenderer->pageCount(pdf: $file->getContent());
+		foreach ($normalised as $placement) {
+			if ($placement['page'] > $pages) {
+				throw new RuntimeException(message: 'A field is placed on page '.$placement['page'].' of a document with '.$pages.' pages', code: 400);
+			}
+		}
+
+		$request['fieldPlacements'] = $normalised;
+
+		return $request;
+
+	}//end withPlacements()
+
+	/**
+	 * The placements and signer names a provider draws, when the request has placements.
+	 *
+	 * A placement names its signer by position in `signerIds`; the name is the
+	 * signer record's display name, else its e-mail address, else its user id.
+	 *
+	 * @param array<string, mixed>                $request The completing request.
+	 * @param array<string, array<string, mixed>> $signers The signer records, keyed by id.
+	 *
+	 * @return array<string, mixed> `fieldPlacements` and `signerLabels`, or nothing.
+	 */
+	private function placementContext(array $request, array $signers): array {
+		$placements = ($request['fieldPlacements'] ?? []);
+		if (is_array($placements) === false || $placements === []) {
+			return [];
+		}
+
+		$labels = [];
+		foreach ((array) ($request['signerIds'] ?? []) as $signerId) {
+			$record = ($signers[(string) $signerId] ?? []);
+			$labels[] = (string) (($record['displayName'] ?? '') ?: (($record['email'] ?? '') ?: ($record['userId'] ?? '')));
+		}
+
+		return ['fieldPlacements' => $placements, 'signerLabels' => $labels];
+
+	}//end placementContext()
 
 	/**
 	 * Build the provider's evidence context.

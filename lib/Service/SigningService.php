@@ -218,6 +218,7 @@ class SigningService {
 				$request[$field] = $data[$field];
 			}
 		}
+		$request = $this->artifactProducer->withPlacements(request: $request, placements: ($data['fieldPlacements'] ?? null), signerCount: count($signers));
 		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
@@ -871,7 +872,7 @@ class SigningService {
 		// MAC-covered assertion and into the completion payload.
 		$freshRequest = $this->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
 
-		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $verifiedActor);
+		$signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $verifiedActor, signers: $signers);
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;

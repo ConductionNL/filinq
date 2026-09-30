@@ -1753,4 +1753,231 @@ class SigningServiceTest extends TestCase {
 		$this->assertSame('AdES', $contexts[0]['level']);
 
 	}//end testCompletionHandsTheProviderItsExternalId()
+	/**
+	 * A three-page PDF made in the test.
+	 *
+	 * @return string The bytes.
+	 */
+	private function threePagePdf(): string {
+		$pdf = new \FPDF('P', 'pt', 'A4');
+		foreach ([1, 2, 3] as $page) {
+			$pdf->AddPage();
+			unset($page);
+		}
+
+		return $pdf->Output('S');
+
+	}//end threePagePdf()
+
+	/**
+	 * Create a request with placements over a three-page document.
+	 *
+	 * @param array<int, array<string, mixed>> $placements The placements.
+	 * @param string                           $provider   The provider.
+	 * @param array<int, array<string, mixed>> $saved      Collects what was saved.
+	 *
+	 * @return array<string, mixed> The created request.
+	 */
+	private function createWithPlacements(array $placements, string $provider, array &$saved): array {
+		$supporting = $this->makeSupportingProvider();
+		$this->providerFactory->method('getProvider')->willReturn($supporting);
+		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getContent')->willReturn($this->threePagePdf());
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$document]);
+		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-fp' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		return $this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'besluit.pdf',
+				'signatureLevel' => 'SES',
+				'provider' => $provider,
+				'signers' => [['displayName' => 'Anna', 'email' => 'anna@example.org'], ['displayName' => 'Bram', 'email' => 'bram@example.org']],
+				'fieldPlacements' => $placements,
+			]
+		);
+
+	}//end createWithPlacements()
+
+	/**
+	 * Placements are validated, normalised, stored, and the stored request
+	 * validates against the real signingRequest schema fragment.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestStoresItsFieldPlacements(): void {
+		$saved = [];
+		$this->createWithPlacements(
+			placements: [['signerIndex' => 1, 'page' => 3, 'x' => 0.6, 'y' => 0.8, 'width' => 0.3, 'height' => 0.05, 'type' => 'signature']],
+			provider: 'native',
+			saved: $saved
+		);
+
+		$this->assertSame(
+			[['signerIndex' => 1, 'page' => 3, 'x' => 0.6, 'y' => 0.8, 'width' => 0.3, 'height' => 0.05, 'type' => 'signature']],
+			$saved[0]['fieldPlacements'] ?? null
+		);
+
+		$descriptor = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'), true);
+		$schema = $descriptor['components']['schemas']['signingRequest'];
+		$properties = [];
+		foreach ($schema['properties'] as $name => $property) {
+			unset($property['required'], $property['visible'], $property['order'], $property['facetable'], $property['x-enum-labels']);
+			$properties[$name] = $property;
+		}
+
+		$json = (string) json_encode(['type' => 'object', 'properties' => $properties, 'additionalProperties' => false]);
+		foreach ([$saved[0], end($saved)] as $payload) {
+			$result = (new \Opis\JsonSchema\Validator())->validate(json_decode((string) json_encode(array_diff_key($payload, ['id' => true]))), $json);
+			$message = '';
+			if ($result->isValid() === false) {
+				$message = (string) json_encode((new \Opis\JsonSchema\Errors\ErrorFormatter())->format($result->error()));
+			}
+
+			$this->assertTrue($result->isValid(), $message);
+		}
+
+	}//end testCreateRequestStoresItsFieldPlacements()
+
+	/**
+	 * A placement the document cannot hold, or a signer that does not exist,
+	 * is a 400 and nothing is stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesAPlacementPastTheLastPage(): void {
+		$saved = [];
+		try {
+			$this->createWithPlacements(
+				placements: [['signerIndex' => 0, 'page' => 4, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'date']],
+				provider: 'native',
+				saved: $saved
+			);
+			$this->fail('A field on page 4 of 3 was accepted');
+		} catch (RuntimeException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertStringContainsString('page 4', $e->getMessage());
+		}
+
+		$this->assertSame([], $saved);
+
+	}//end testCreateRequestRefusesAPlacementPastTheLastPage()
+
+	/**
+	 * A placement naming signer 3 of 2 is a 400 and nothing is stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesAPlacementForAnAbsentSigner(): void {
+		$saved = [];
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(400);
+		try {
+			$this->createWithPlacements(
+				placements: [['signerIndex' => 2, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'initials']],
+				provider: 'native',
+				saved: $saved
+			);
+		} finally {
+			$this->assertSame([], $saved);
+		}
+
+	}//end testCreateRequestRefusesAPlacementForAnAbsentSigner()
+
+	/**
+	 * LibreSign's request-signature call has no field input, so a LibreSign
+	 * request with placements is refused rather than signed without them.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function testCreateRequestRefusesPlacementsLibreSignCannotCarry(): void {
+		$saved = [];
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionCode(400);
+		$this->createWithPlacements(
+			placements: [['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature']],
+			provider: 'libresign',
+			saved: $saved
+		);
+
+	}//end testCreateRequestRefusesPlacementsLibreSignCannotCarry()
+
+	/**
+	 * At completion the provider gets the placements and each signer's name,
+	 * in the order of the request's signers.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/bulk-signing-field-builder/tasks.md#task-3.2
+	 */
+	public function testCompletionHandsThePlacementsAndSignerNamesToTheProvider(): void {
+		$placements = [['signerIndex' => 1, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature']];
+		$request = ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'initiatorUserId' => 'alice', 'documentFileId' => '42', 'signerIds' => ['signer-001', 'signer-002'], 'signingMode' => 'parallel', 'fieldPlacements' => $placements];
+		$records = [
+			'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'displayName' => 'Bob Smit', 'status' => 'SIGNED'],
+			'signer-002' => ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'displayName' => 'Alice Jansen', 'status' => 'PENDING'],
+		];
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+		$this->objectService->method('find')->willReturnCallback(
+			function (string $id) use ($request, $records, &$saved): array {
+				if ($id === 'req-001') {
+					return $request;
+				}
+
+				foreach (array_reverse($saved) as $object) {
+					if (($object['id'] ?? '') === $id) {
+						return $object;
+					}
+				}
+
+				return $records[$id];
+			}
+		);
+		$this->objectService->method('findAll')->willReturn(array_values($records));
+
+		$context = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $bytes, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-002');
+
+		$this->assertNotNull($context, 'The artifact was produced');
+		$this->assertSame($placements, $context['fieldPlacements'] ?? null);
+		$this->assertSame(['Bob Smit', 'Alice Jansen'], $context['signerLabels'] ?? null);
+
+	}//end testCompletionHandsThePlacementsAndSignerNamesToTheProvider()
 }//end class
