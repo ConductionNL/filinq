@@ -4804,14 +4804,15 @@
 			"name": "Send the same document to many people for signature from a list.",
 			"source": "competitor-derived",
 			"sourceRef": "DocuSeal bulk send; DocuSign envelope-based bulk",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/bulk-signing-field-builder/tasks.md: 0/16 done. proposal.md names this explicitly as 'Bulk send — upload a CSV/XLSX recipient list against one document... today that is N manual SigningRequestForm submissions'. No CSV/XLSX bulk-send endpoint or UI exists today.",
-				"change": "openspec/changes/bulk-signing-field-builder"
+				"evidence": "Bulk send built (PR feat/bulk-signing-send): SigningRequestForm Send to many from a list -> BulkSendModal -> POST api/signing/batches (BulkSigningController) -> BulkSigningService: the document and level/provider pass SigningRequestValidator first (QES + native refused before anything is stored), BulkSigningRecipientParser reads CSV (comma or semicolon) or XLSX (ZipArchive, formula cells as cached text, never evaluated; 1,000 rows, 2 MB), BulkSigningRowValidator rejects no-recipient, invalid-email, unknown-user and duplicate rows into a report on a bulkSigningBatch (register 8.35.0, read by owner and admins only), confirm queues BulkSigningJob, BulkSigningRunner creates one ordinary request per row through SigningService::createRequest() as the initiator with per-row isolation, cancel cancels the still-cancellable members. Bulk sends index page. Tests: BulkSigningServiceTest (50-row fixture, gate parity, isolation, cancel, payloads against the real fragment), BulkSigningRecipientParserTest, BulkSigningControllerTest, vitest bulkSend.spec.js. Open: a send from a template (one generated document per row); field placement and envelopes are the rest of the change.",
+				"change": "openspec/changes/bulk-signing-field-builder",
+				"readOn": "2026-09-30"
 			},
-			"reachedOn": "nothing reaches it (today: N manual single-request submissions)",
+			"reachedOn": "Signing requests > New signing request > Send to many from a list; the Bulk sends page; POST api/signing/batches",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-signing",
