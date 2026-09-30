@@ -24,8 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\BulkSigning;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use OCA\Filinq\BackgroundJob\BulkSigningJob;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningRequestValidator;
@@ -123,7 +121,7 @@ class BulkSigningService {
 		return $this->repository->save(
 			batch: $request + [
 				'title' => mb_substr($title, 0, 255),
-				'recipientSource' => BulkSigningRecipientParser::sourceOf(filename: $filename),
+				'recipientSource' => $this->parser->sourceOf(filename: $filename),
 				'totalRows' => count($rows),
 				'acceptedRows' => count($sorted['accepted']),
 				'rejectedRows' => $sorted['rejected'],
@@ -132,7 +130,7 @@ class BulkSigningService {
 				'status' => 'ready',
 				'requestRefs' => [],
 				'createdBy' => $userId,
-				'createdAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+				'createdAt' => gmdate(DATE_ATOM),
 			]
 		);
 
@@ -209,7 +207,7 @@ class BulkSigningService {
 		}
 
 		$batch['cancelledRequests'] = $cancelled;
-		$batch['completedAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+		$batch['completedAt'] = gmdate(DATE_ATOM);
 
 		return $this->repository->save(batch: $batch, uuid: $id);
 

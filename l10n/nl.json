@@ -1,5 +1,8 @@
 {
     "translations": {
+        "Detail": "Toelichting",
+        "Email address": "E-mailadres",
+        "Display name": "Weergavenaam",
         "{accepted} of {total} rows can be sent. {rejected} rows are left out.": "{accepted} van {total} rijen kunnen worden verstuurd. {rejected} rijen vallen af.",
         "{done} of {accepted} rows processed": "{done} van {accepted} rijen verwerkt",
         "Cancel this send": "Deze verzending annuleren",

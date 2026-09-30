@@ -137,8 +137,8 @@ class BulkSigningRecipientParserTest extends TestCase {
 			],
 			$rows
 		);
-		$this->assertSame('xlsx', BulkSigningRecipientParser::sourceOf(filename: 'list.xlsx'));
-		$this->assertSame('csv', BulkSigningRecipientParser::sourceOf(filename: 'LIST.CSV'));
+		$this->assertSame('xlsx', (new BulkSigningRecipientParser())->sourceOf(filename: 'list.xlsx'));
+		$this->assertSame('csv', (new BulkSigningRecipientParser())->sourceOf(filename: 'LIST.CSV'));
 
 	}//end testAnXlsxSheetReads()
 

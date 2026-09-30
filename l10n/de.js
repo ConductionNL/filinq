@@ -1,6 +1,9 @@
 OC.L10N.register(
     "filinq",
     {
+        "Detail": "Detail",
+        "Email address": "E-Mail-Adresse",
+        "Display name": "Anzeigename",
         "{accepted} of {total} rows can be sent. {rejected} rows are left out.": "{accepted} von {total} Zeilen können gesendet werden. {rejected} Zeilen entfallen.",
         "{done} of {accepted} rows processed": "{done} von {accepted} Zeilen verarbeitet",
         "Cancel this send": "Diesen Versand abbrechen",

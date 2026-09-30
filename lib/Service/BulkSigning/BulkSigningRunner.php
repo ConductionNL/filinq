@@ -110,7 +110,8 @@ class BulkSigningRunner {
 		$recipients = (array) ($batch['recipients'] ?? []);
 		$next = (int) ($batch['processedRows'] ?? 0);
 
-		while (($batch['status'] ?? '') === 'creating' && $next < count($recipients)) {
+		$total = count($recipients);
+		while (($batch['status'] ?? '') === 'creating' && $next < $total) {
 			$batch = $this->createOne(batch: $batch, recipient: (array) $recipients[$next]);
 			$batch['processedRows'] = ++$next;
 			$fresh = ($this->repository->find(uuid: $batchId) ?? []);

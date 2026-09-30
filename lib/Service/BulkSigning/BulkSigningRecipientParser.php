@@ -88,7 +88,7 @@ class BulkSigningRecipientParser {
 	 *
 	 * @spec openspec/changes/bulk-signing-field-builder/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
 	 */
-	public static function sourceOf(string $filename): string {
+	public function sourceOf(string $filename): string {
 		$extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 		if (in_array($extension, ['csv', 'txt'], true) === true) {
 			return 'csv';
@@ -124,7 +124,7 @@ class BulkSigningRecipientParser {
 			throw new InvalidArgumentException(message: 'The recipient list is larger than 2 MB', code: 400);
 		}
 
-		$grid = match (self::sourceOf(filename: $filename)) {
+		$grid = match ($this->sourceOf(filename: $filename)) {
 			'csv' => $this->readCsv(content: $content),
 			'xlsx' => $this->readXlsx(content: $content),
 			default => throw new InvalidArgumentException(message: 'A recipient list is a .csv or .xlsx file', code: 400),
@@ -204,7 +204,11 @@ class BulkSigningRecipientParser {
 	 */
 	private function readCsv(string $content): array {
 		$content = preg_replace('/^\xEF\xBB\xBF/', '', $content) ?? $content;
-		$lines = preg_split('/\r\n|\n|\r/', $content) ?: [];
+		$lines = preg_split('/\r\n|\n|\r/', $content);
+		if ($lines === false) {
+			$lines = [];
+		}
+
 		$delimiter = ',';
 		if (substr_count($lines[0] ?? '', ';') > substr_count($lines[0] ?? '', ',')) {
 			$delimiter = ';';

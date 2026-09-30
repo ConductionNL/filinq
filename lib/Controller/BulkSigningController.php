@@ -100,7 +100,7 @@ class BulkSigningController extends Controller {
 		}
 
 		return $this->answer(
-			operation: fn (): ?array => $this->bulkSigning->createBatch(
+			operation: fn (): array => $this->bulkSigning->createBatch(
 				settings: $settings,
 				content: (string) file_get_contents((string) $upload['tmp_name']),
 				filename: (string) ($upload['name'] ?? ''),
@@ -123,7 +123,7 @@ class BulkSigningController extends Controller {
 		$uid = $this->callerId();
 		$isAdmin = $this->groupManager->isAdmin($uid);
 
-		return $this->answer(operation: fn (): ?array => ['results' => $this->bulkSigning->listFor(userId: $uid, isAdmin: $isAdmin)]);
+		return $this->answer(operation: fn (): array => ['results' => $this->bulkSigning->listFor(userId: $uid, isAdmin: $isAdmin)]);
 
 	}//end index()
 

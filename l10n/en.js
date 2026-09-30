@@ -1,6 +1,9 @@
 OC.L10N.register(
     "filinq",
     {
+        "Detail": "Detail",
+        "Email address": "Email address",
+        "Display name": "Display name",
         "{accepted} of {total} rows can be sent. {rejected} rows are left out.": "{accepted} of {total} rows can be sent. {rejected} rows are left out.",
         "{done} of {accepted} rows processed": "{done} of {accepted} rows processed",
         "Cancel this send": "Cancel this send",

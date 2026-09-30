@@ -9609,10 +9609,12 @@
                             "type": "object",
                             "properties": {
                                 "row": {
+                                    "title": "Row",
                                     "type": "integer",
                                     "minimum": 1
                                 },
                                 "reason": {
+                                    "title": "Reason",
                                     "type": "string",
                                     "enum": [
                                         "no-recipient",
@@ -9623,6 +9625,7 @@
                                     ]
                                 },
                                 "detail": {
+                                    "title": "Detail",
                                     "type": "string",
                                     "maxLength": 500
                                 }
@@ -9645,18 +9648,22 @@
                             "type": "object",
                             "properties": {
                                 "row": {
+                                    "title": "Row",
                                     "type": "integer",
                                     "minimum": 1
                                 },
                                 "userId": {
+                                    "title": "User",
                                     "type": "string",
                                     "maxLength": 64
                                 },
                                 "email": {
+                                    "title": "Email address",
                                     "type": "string",
                                     "maxLength": 320
                                 },
                                 "displayName": {
+                                    "title": "Display name",
                                     "type": "string",
                                     "maxLength": 255
                                 }
