@@ -156,7 +156,8 @@ class DocumentService {
 	 *                            no HTTP route passes it, so a request cannot write into
 	 *                            its own audit entry. Canonical fields always win.
 	 *
-	 * @return array{content: string, format: string, metadata: array, warnings: string[], output: array, templateVersion: int|null, sha256: string, pageCount?: int}
+	 * @return array{content: string, format: string, metadata: array, warnings: string[], output: array,
+	 *     templateVersion: int|null, sha256: string, pageCount?: int}
 	 *
 	 * @throws Exception If generation fails
 	 *
@@ -179,9 +180,12 @@ class DocumentService {
 		$this->validateFormat(format: $format);
 		$this->resolveOutputMode(options: $options);
 
-		$pinned = isset($options['templateVersion']) === true ? (int) $options['templateVersion'] : null;
-		$template = $pinned === null ? $this->templateService->getTemplate(id: $templateId)
-			: $this->templateService->getTemplateAtVersion(id: $templateId, version: $pinned);
+		$template = null;
+		if (isset($options['templateVersion']) === true) {
+			$template = $this->templateService->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+		}
+
+		$template ??= $this->templateService->getTemplate(id: $templateId);
 
 		return $this->generateFromTemplate(
 			templateId: $templateId,
@@ -210,7 +214,8 @@ class DocumentService {
 	 * @param array $options The same options {@see generateDocument()} takes.
 	 * @param array $recordFields The same extra entry fields {@see generateDocument()} takes.
 	 *
-	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[], output: array, templateVersion: int|null, sha256: string, pageCount?: int}
+	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[],
+	 *     output: array, templateVersion: int|null, sha256: string, pageCount?: int}
 	 *               `html` is the rendered template before format conversion.
 	 *
 	 * @throws Exception If generation fails
