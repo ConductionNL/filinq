@@ -388,6 +388,19 @@ class TextExtractionService {
 	public function getExtractedText(int $fileId): ?string {
 		return null;
 	}//end getExtractedText()
+
+	/**
+	 * Mirrors OpenRegister's parseEmlStructured(File $file): EmlStructure at development 8e001f4e.
+	 *
+	 * @param \OCP\Files\File $file The EML file.
+	 *
+	 * @return \OCA\OpenRegister\Service\TextExtraction\EmlStructure
+	 *
+	 * @throws \OCA\OpenRegister\Exception\EmlParseException On malformed input.
+	 */
+	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Service\TextExtraction\EmlStructure {
+		throw new \OCA\OpenRegister\Exception\EmlParseException('stub');
+	}//end parseEmlStructured()
 }//end class
 
 /**

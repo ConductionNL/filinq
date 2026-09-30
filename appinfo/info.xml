@@ -107,6 +107,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <job>OCA\Filinq\BackgroundJob\UploadFragmentReaperJob</job>
         <job>OCA\Filinq\BackgroundJob\PeriodicDocumentJob</job>
         <job>OCA\Filinq\BackgroundJob\LibreSignCompletionJob</job>
+        <job>OCA\Filinq\BackgroundJob\EmailIngestionJob</job>
     </background-jobs>
     <!--
         info.xsd fixes the order of these elements: background-jobs, repair-steps,
