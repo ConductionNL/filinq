@@ -203,8 +203,8 @@ class ContractServiceTest extends TestCase {
 			]
 		);
 
-		$this->service->decideSuggestion(uuid: $uuid, index: 0, accept: true);
-		$stored = $this->service->decideSuggestion(uuid: $uuid, index: 1, accept: false);
+		$this->service->decideSuggestion(uuid: $uuid, index: 0, decision: 'accepted');
+		$stored = $this->service->decideSuggestion(uuid: $uuid, index: 1, decision: 'rejected');
 
 		$this->assertSame('2028-12-31', $stored['endDate']);
 		$this->assertSame('2028-10-02', $stored['noticeDeadline']);
@@ -215,7 +215,7 @@ class ContractServiceTest extends TestCase {
 		}
 
 		$this->expectExceptionCode(409);
-		$this->service->decideSuggestion(uuid: $uuid, index: 1, accept: true);
+		$this->service->decideSuggestion(uuid: $uuid, index: 1, decision: 'accepted');
 
 	}//end testSuggestionsProposeAndThePersonDisposes()
 
@@ -240,7 +240,7 @@ class ContractServiceTest extends TestCase {
 		);
 
 		foreach ([0, 1, 2, 3] as $index) {
-			$stored = $this->service->decideSuggestion(uuid: $uuid, index: $index, accept: true);
+			$stored = $this->service->decideSuggestion(uuid: $uuid, index: $index, decision: 'accepted');
 		}
 
 		$this->assertSame(60, $stored['noticePeriodDays']);
@@ -250,7 +250,7 @@ class ContractServiceTest extends TestCase {
 		$this->assertValidContract(end($this->store->writes));
 
 		$this->expectExceptionCode(422);
-		$this->service->decideSuggestion(uuid: $uuid, index: 4, accept: true);
+		$this->service->decideSuggestion(uuid: $uuid, index: 4, decision: 'accepted');
 
 	}//end testAcceptedValuesTakeTheirFieldsType()
 }//end class

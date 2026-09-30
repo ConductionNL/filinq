@@ -40,7 +40,7 @@ trait ContractSchemaValidation {
 	 */
 	private function assertValidContract(array $payload): void {
 		$register = json_decode((string) file_get_contents(__DIR__ . '/../../../../lib/Settings/filinq_register.json'));
-		$schema = $register->components->schemas->contract;
+		$schema = $register->components->schemas->documentContract;
 		$properties = new \stdClass();
 		foreach ($schema->properties as $name => $property) {
 			$copy = clone $property;

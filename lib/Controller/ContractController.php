@@ -139,17 +139,17 @@ class ContractController extends Controller {
 	 *
 	 * @param string $id     The contract uuid.
 	 * @param int    $index  The suggestion's position.
-	 * @param bool   $accept True to accept, false to reject.
+	 * @param string $decision `accepted` or `rejected`.
 	 *
-	 * @return JSONResponse The contract, or 404/409/422.
+	 * @return JSONResponse The contract, or 400/404/409/422.
 	 *
 	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
-	public function decideSuggestion(string $id, int $index, bool $accept=false): JSONResponse {
+	public function decideSuggestion(string $id, int $index, string $decision=''): JSONResponse {
 		return $this->run(
 			id: $id,
-			action: fn (): array => $this->contracts->decideSuggestion(uuid: $id, index: $index, accept: $accept)
+			action: fn (): array => $this->contracts->decideSuggestion(uuid: $id, index: $index, decision: $decision)
 		);
 
 	}//end decideSuggestion()

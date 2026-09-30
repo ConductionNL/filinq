@@ -1,6 +1,11 @@
 OC.L10N.register(
     "filinq",
     {
+        "The contract field the term would fill.": "Het contractveld dat de afspraak zou invullen.",
+        "The value read from the document.": "De waarde gelezen uit het document.",
+        "How sure the reading is, from 0 to 1.": "Hoe zeker de lezing is, van 0 tot 1.",
+        "The document the term was read from.": "Het document waaruit de afspraak is gelezen.",
+        "Whether somebody accepted or rejected the suggestion.": "Of iemand het voorstel heeft geaccepteerd of afgewezen.",
         "Contract": "Contract",
         "The name of the contract as people refer to it.": "De naam van het contract zoals mensen het noemen.",
         "Contract type": "Soort contract",

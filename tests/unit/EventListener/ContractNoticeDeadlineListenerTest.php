@@ -66,7 +66,7 @@ class ContractNoticeDeadlineListenerTest extends TestCase {
 			 * @return string The slug.
 			 */
 			public function getSlug(): string {
-				return 'contract';
+				return 'documentContract';
 			}
 		};
 		$mapper = new class ($schema) {
@@ -112,7 +112,7 @@ class ContractNoticeDeadlineListenerTest extends TestCase {
 		$this->listener()->handle($creating);
 		$this->assertSame(['noticeDeadline' => '2026-10-20'], $creating->getModifiedData());
 
-		$updating = new ObjectUpdatingEvent($this->entity(data: $data, schema: 'contract'), $this->entity(data: [], schema: 'contract'));
+		$updating = new ObjectUpdatingEvent($this->entity(data: $data, schema: 'documentContract'), $this->entity(data: [], schema: 'documentContract'));
 		$this->listener()->handle($updating);
 		$this->assertSame(['noticeDeadline' => '2026-10-20'], $updating->getModifiedData());
 

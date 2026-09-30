@@ -108,17 +108,12 @@ class ContractTermExtractor {
 	 * @return string|null The date, or null when it is not a real date.
 	 */
 	private function normaliseDate(string $raw): ?string {
-		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $m) === 1) {
-			[$year, $month, $day] = [(int) $m[1], (int) $m[2], (int) $m[3]];
-		} else if (preg_match('/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/', $raw, $m) === 1) {
-			[$day, $month, $year] = [(int) $m[1], (int) $m[2], (int) $m[3]];
-		} else if (preg_match('/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/', $raw, $m) === 1) {
-			$month = (self::MONTHS[strtolower($m[2])] ?? 0);
-			[$day, $year] = [(int) $m[1], (int) $m[3]];
-		} else {
+		$parts = $this->dateParts(raw: $raw);
+		if ($parts === null) {
 			return null;
 		}
 
+		[$year, $month, $day] = $parts;
 		if (checkdate($month, $day, $year) === false) {
 			return null;
 		}
@@ -126,6 +121,30 @@ class ContractTermExtractor {
 		return sprintf('%04d-%02d-%02d', $year, $month, $day);
 
 	}//end normaliseDate()
+
+	/**
+	 * Year, month and day of a date as written, or null when it has none of the three shapes.
+	 *
+	 * @param string $raw The date as written.
+	 *
+	 * @return array{0: int, 1: int, 2: int}|null Year, month, day.
+	 */
+	private function dateParts(string $raw): ?array {
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $m) === 1) {
+			return [(int) $m[1], (int) $m[2], (int) $m[3]];
+		}
+
+		if (preg_match('/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/', $raw, $m) === 1) {
+			return [(int) $m[3], (int) $m[2], (int) $m[1]];
+		}
+
+		if (preg_match('/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/', $raw, $m) === 1) {
+			return [(int) $m[3], (self::MONTHS[strtolower($m[2])] ?? 0), (int) $m[1]];
+		}
+
+		return null;
+
+	}//end dateParts()
 
 	/**
 	 * The notice period, in days.
@@ -154,7 +173,8 @@ class ContractTermExtractor {
 	 * @return list<array{field: string, value: string, confidence: float}> The proposals.
 	 */
 	private function value(string $text): array {
-		$pattern = '/(contractwaarde|waarde|bedrag|totaal|value|amount)?[^€\d]{0,30}(?:€|EUR)\s?(\d{1,3}(?:[.,\s]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)/iu';
+		$pattern = '/(contractwaarde|waarde|bedrag|totaal|value|amount)?[^€\d]{0,30}(?:€|EUR)\s?'
+			. '(\d{1,3}(?:[.,\s]\d{3})*(?:[.,]\d{2})?|\d+(?:[.,]\d{2})?)/iu';
 		if (preg_match($pattern, $text, $match) !== 1) {
 			return [];
 		}
@@ -186,11 +206,9 @@ class ContractTermExtractor {
 	private function normaliseAmount(string $raw): ?string {
 		$raw = str_replace(' ', '', $raw);
 		// The last separator followed by exactly two digits is the decimal one.
+		$number = (string) preg_replace('/[.,]/', '', $raw);
 		if (preg_match('/^(.*)[.,](\d{2})$/', $raw, $m) === 1) {
-			$whole = (string) preg_replace('/[.,]/', '', $m[1]);
-			$number = $whole . '.' . $m[2];
-		} else {
-			$number = (string) preg_replace('/[.,]/', '', $raw);
+			$number = (string) preg_replace('/[.,]/', '', $m[1]) . '.' . $m[2];
 		}
 
 		if (is_numeric($number) === false) {
@@ -213,7 +231,8 @@ class ContractTermExtractor {
 	 * @return list<array{field: string, value: string, confidence: float}> The proposals.
 	 */
 	private function party(string $text): array {
-		$pattern = '/(?:opdrachtnemer|leverancier|supplier|contractor)\s*:\s*([^,;:()]{2,80}?)(?:,|;|\(|\s+(?:gevestigd|located|hierna|hereinafter)\b|$)/iu';
+		$pattern = '/(?:opdrachtnemer|leverancier|supplier|contractor)\s*:\s*([^,;:()]{2,80}?)'
+			. '(?:,|;|\(|\s+(?:gevestigd|located|hierna|hereinafter)\b|$)/iu';
 		if (preg_match($pattern, $text, $match) !== 1) {
 			return [];
 		}

@@ -7090,7 +7090,7 @@
       {
         "@self": {
           "register": "filinq",
-          "schema": "contract",
+          "schema": "documentContract",
           "slug": "demostad-groenonderhoud-2026"
         },
         "title": "Raamovereenkomst groenonderhoud 2026-2028",
@@ -7129,7 +7129,7 @@
       {
         "@self": {
           "register": "filinq",
-          "schema": "contract",
+          "schema": "documentContract",
           "slug": "demostad-schoonmaak-2024"
         },
         "title": "Schoonmaakdienstverlening stadskantoor",
@@ -7159,7 +7159,7 @@
       {
         "@self": {
           "register": "filinq",
-          "schema": "contract",
+          "schema": "documentContract",
           "slug": "demostad-subsidie-cultuur-concept"
         },
         "title": "Subsidieovereenkomst cultuurfonds (concept)",

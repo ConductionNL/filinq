@@ -95,7 +95,7 @@ class ContractControllerTest extends TestCase {
 		$this->assertSame(404, $this->controller->renew(id: 'not-mine')->getStatus());
 		$this->assertSame(404, $this->controller->terminate(id: 'not-mine', reason: 'x')->getStatus());
 		$this->assertSame(404, $this->controller->suggest(id: 'not-mine')->getStatus());
-		$this->assertSame(404, $this->controller->decideSuggestion(id: 'not-mine', index: 0, accept: true)->getStatus());
+		$this->assertSame(404, $this->controller->decideSuggestion(id: 'not-mine', index: 0, decision: 'accepted')->getStatus());
 		$this->assertSame([], $this->store->writes);
 
 	}//end testAContractTheCallerCannotReadIsNotFound()

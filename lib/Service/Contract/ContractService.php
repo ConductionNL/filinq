@@ -131,7 +131,7 @@ class ContractService {
 	 *
 	 * @param string $uuid   The contract.
 	 * @param int    $index  The suggestion's position in `keyTermSuggestions`.
-	 * @param bool   $accept True to accept, false to reject.
+	 * @param string $decision `accepted` or `rejected`.
 	 *
 	 * @return array<string, mixed> The stored contract.
 	 *
@@ -140,7 +140,11 @@ class ContractService {
 	 *
 	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
 	 */
-	public function decideSuggestion(string $uuid, int $index, bool $accept): array {
+	public function decideSuggestion(string $uuid, int $index, string $decision): array {
+		if (in_array($decision, ['accepted', 'rejected'], true) === false) {
+			throw new InvalidArgumentException('A decision is accepted or rejected.', 400);
+		}
+
 		$contract = $this->requireReadable(uuid: $uuid);
 		$suggestions = (array) ($contract['keyTermSuggestions'] ?? []);
 		if (isset($suggestions[$index]) === false || is_array($suggestions[$index]) === false) {
@@ -152,11 +156,11 @@ class ContractService {
 			throw new InvalidArgumentException('This suggestion was already decided.', 409);
 		}
 
-		$suggestion['status'] = 'rejected';
-		if ($accept === true) {
+		if ($decision === 'accepted') {
 			$contract = $this->applySuggestion(contract: $contract, suggestion: $suggestion);
-			$suggestion['status'] = 'accepted';
 		}
+
+		$suggestion['status'] = $decision;
 
 		$suggestions[$index] = $suggestion;
 		$contract['keyTermSuggestions'] = array_values($suggestions);
@@ -209,8 +213,8 @@ class ContractService {
 	/**
 	 * Write an accepted suggestion's value into the contract.
 	 *
-	 * @param array<string, mixed>  $contract   The contract.
-	 * @param array<string, mixed>  $suggestion The suggestion.
+	 * @param array<string, mixed> $contract   The contract.
+	 * @param array<string, mixed> $suggestion The suggestion.
 	 *
 	 * @return array<string, mixed> The contract with the value written.
 	 *
@@ -220,40 +224,45 @@ class ContractService {
 		$field = (string) ($suggestion['field'] ?? '');
 		$value = trim((string) ($suggestion['value'] ?? ''));
 
-		switch ($field) {
-			case 'startDate':
-			case 'endDate':
-				if ($this->dates->noticeDeadlineFor(endDate: $value, noticePeriodDays: 0) === null) {
-					throw new InvalidArgumentException('The suggested date is not a date.', 422);
-				}
+		if ($field === 'party') {
+			$contract['parties'] = array_merge((array) ($contract['parties'] ?? []), [['displayName' => $value]]);
+			return $contract;
+		}
 
-				$contract[$field] = $value;
-				break;
-			case 'noticePeriodDays':
-				if (ctype_digit($value) === false) {
-					throw new InvalidArgumentException('The suggested notice period is not a number of days.', 422);
-				}
-
-				$contract[$field] = (int) $value;
-				break;
-			case 'value':
-				if (is_numeric($value) === false) {
-					throw new InvalidArgumentException('The suggested value is not a number.', 422);
-				}
-
-				$contract[$field] = (float) $value;
-				break;
-			case 'currency':
-				$contract[$field] = strtoupper($value);
-				break;
-			case 'party':
-				$contract['parties'] = array_merge((array) ($contract['parties'] ?? []), [['displayName' => $value]]);
-				break;
-			default:
-				throw new InvalidArgumentException('Unknown suggestion field.', 422);
-		}//end switch
+		$contract[$field] = $this->typedValue(field: $field, value: $value);
 
 		return $contract;
 
 	}//end applySuggestion()
+
+	/**
+	 * A suggested value in the type its contract field declares.
+	 *
+	 * @param string $field The contract field.
+	 * @param string $value The value as read.
+	 *
+	 * @return string|int|float The typed value.
+	 *
+	 * @throws InvalidArgumentException When the value does not fit the field (422).
+	 */
+	private function typedValue(string $field, string $value): string|int|float {
+		$fits = match ($field) {
+			'startDate', 'endDate' => $this->dates->noticeDeadlineFor(endDate: $value, noticePeriodDays: 0) !== null,
+			'noticePeriodDays' => ctype_digit($value),
+			'value' => is_numeric($value),
+			'currency' => preg_match('/^[A-Za-z]{3}$/', $value) === 1,
+			default => false,
+		};
+		if ($fits === false) {
+			throw new InvalidArgumentException('The suggested value does not fit the field ' . $field . '.', 422);
+		}
+
+		return match ($field) {
+			'noticePeriodDays' => (int) $value,
+			'value' => (float) $value,
+			'currency' => strtoupper($value),
+			default => $value,
+		};
+
+	}//end typedValue()
 }//end class

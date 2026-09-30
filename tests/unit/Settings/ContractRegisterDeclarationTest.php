@@ -53,10 +53,10 @@ class ContractRegisterDeclarationTest extends TestCase {
 	 */
 	private function contract(): array {
 		$register = $this->register();
-		$this->assertContains('contract', $register['components']['registers']['filinq']['schemas']);
+		$this->assertContains('documentContract', $register['components']['registers']['filinq']['schemas']);
 		$this->assertTrue(version_compare($register['info']['version'], '8.39.0', '>='));
 
-		return $register['components']['schemas']['contract'];
+		return $register['components']['schemas']['documentContract'];
 
 	}//end contract()
 

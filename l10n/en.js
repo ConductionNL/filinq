@@ -1,6 +1,11 @@
 OC.L10N.register(
     "filinq",
     {
+        "The contract field the term would fill.": "The contract field the term would fill.",
+        "The value read from the document.": "The value read from the document.",
+        "How sure the reading is, from 0 to 1.": "How sure the reading is, from 0 to 1.",
+        "The document the term was read from.": "The document the term was read from.",
+        "Whether somebody accepted or rejected the suggestion.": "Whether somebody accepted or rejected the suggestion.",
         "Contract": "Contract",
         "The name of the contract as people refer to it.": "The name of the contract as people refer to it.",
         "Contract type": "Contract type",

@@ -84,12 +84,13 @@ class ContractDates {
 			return null;
 		}
 
-		$end = DateTimeImmutable::createFromFormat('!Y-m-d', $endDate);
-		if ($end === false || $end->format('Y-m-d') !== $endDate) {
+		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $endDate, $parts) !== 1
+			|| checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1]) === false
+		) {
 			return null;
 		}
 
-		return $end->modify('-' . (int) $noticePeriodDays . ' days')->format('Y-m-d');
+		return (new DateTimeImmutable($endDate))->modify('-' . (int) $noticePeriodDays . ' days')->format('Y-m-d');
 
 	}//end noticeDeadlineFor()
 }//end class

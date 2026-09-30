@@ -43,7 +43,7 @@ use Throwable;
  */
 class ContractRepository {
 
-	public const SCHEMA = 'contract';
+	public const SCHEMA = 'documentContract';
 
 	/**
 	 * Constructor.

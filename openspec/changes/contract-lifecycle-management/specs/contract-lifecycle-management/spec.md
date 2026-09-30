@@ -18,7 +18,7 @@ competition (8 CLM competitors in the intelligence DB); tracked by GH #232.
 
 ### Requirement: Contract is a first-class OpenRegister object (REQ-DDCLM-001)
 
-Filinq MUST store contracts as objects of a new `contract` schema in the
+Filinq MUST store contracts as objects of a new `documentContract` schema (slug qualified because other apps own `contract`) in the
 app's one register, `filinq`, in `lib/Settings/filinq_register.json`
 (additive register version bump). The schema MUST carry: `title` (string,
 required), `contractType` (string), `parties` (array of objects, each with

@@ -1,5 +1,10 @@
 {
     "translations": {
+        "The contract field the term would fill.": "Le champ du contrat que la condition remplirait.",
+        "The value read from the document.": "La valeur lue dans le document.",
+        "How sure the reading is, from 0 to 1.": "Le degré de certitude de la lecture, de 0 à 1.",
+        "The document the term was read from.": "Le document dont la condition a été lue.",
+        "Whether somebody accepted or rejected the suggestion.": "Si quelqu'un a accepté ou refusé la suggestion.",
         "Contract": "Contrat",
         "The name of the contract as people refer to it.": "Le nom du contrat tel qu'on l'appelle.",
         "Contract type": "Type de contrat",

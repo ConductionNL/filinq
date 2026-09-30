@@ -84,7 +84,7 @@ class ContractNoticeDeadlineListener implements IEventListener {
 			$object = $event->getObject();
 		}
 
-		if (is_object($object) === false || method_exists($event, 'setModifiedData') === false) {
+		if (is_object($object) === false || method_exists($event, 'setModifiedData') === false || method_exists($event, 'getModifiedData') === false) {
 			return;
 		}
 
