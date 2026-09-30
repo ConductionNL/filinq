@@ -103,6 +103,14 @@ if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto
 	require_once $ocpCryptoPath;
 }
 
+// The real contacts manager contract (contract-lifecycle-management): contract
+// parties take their names from contacts, and a double of the real interface
+// cannot answer a search Nextcloud would not.
+$ocpContactsPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Contacts/IManager.php';
+if (is_file($ocpContactsPath) === true && interface_exists('OCP\\Contacts\\IManager') === false) {
+	require_once $ocpContactsPath;
+}
+
 $ocpDbExceptionDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/AppFramework/Db';
 if (is_dir($ocpDbExceptionDir) === true) {
 	foreach (['IMapperException.php', 'DoesNotExistException.php'] as $ocpDbFile) {

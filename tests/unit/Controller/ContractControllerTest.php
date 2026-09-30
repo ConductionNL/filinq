@@ -28,9 +28,13 @@ require_once __DIR__ . '/../Service/Contract/InMemoryContracts.php';
 
 use OCA\Filinq\Controller\ContractController;
 use OCA\Filinq\Service\Contract\ContractDocumentText;
+use OCA\Filinq\Service\Contract\ContractParties;
 use OCA\Filinq\Service\Contract\ContractService;
+use OCA\Filinq\Service\Contract\ContractSigningLink;
 use OCA\Filinq\Service\Contract\ContractTermSuggestionService;
+use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Tests\Unit\Service\Contract\InMemoryContracts;
+use OCP\Contacts\IManager;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -81,7 +85,9 @@ class ContractControllerTest extends TestCase {
 			contracts: new ContractService(repository: $this->store),
 			suggestions: $suggestions,
 			userSession: $session,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			signingLink: new ContractSigningLink(contracts: $this->store, signing: $this->createMock(SigningService::class), userSession: $session),
+			parties: new ContractParties(contacts: $this->createMock(IManager::class))
 		);
 
 	}//end setUp()
@@ -96,6 +102,8 @@ class ContractControllerTest extends TestCase {
 		$this->assertSame(404, $this->controller->terminate(id: 'not-mine', reason: 'x')->getStatus());
 		$this->assertSame(404, $this->controller->suggest(id: 'not-mine')->getStatus());
 		$this->assertSame(404, $this->controller->decideSuggestion(id: 'not-mine', index: 0, decision: 'accepted')->getStatus());
+		$this->assertSame(404, $this->controller->linkSigning(id: 'not-mine', signingRequestId: 'req-1')->getStatus());
+		$this->assertSame(404, $this->controller->parties(id: 'not-mine')->getStatus());
 		$this->assertSame([], $this->store->writes);
 
 	}//end testAContractTheCallerCannotReadIsNotFound()
@@ -131,4 +139,33 @@ class ContractControllerTest extends TestCase {
 		$this->assertSame('draft', $data['successor']['status']);
 
 	}//end testRenewAnswersBothContracts()
+
+	/**
+	 * A signing request the caller cannot read is 404 on a contract they can; no id is 400.
+	 *
+	 * @return void
+	 */
+	public function testLinkSigningAnswers(): void {
+		$active = $this->store->seed(['title' => 'A', 'status' => 'active']);
+
+		$this->assertSame(400, $this->controller->linkSigning(id: $active)->getStatus());
+		$this->assertSame(404, $this->controller->linkSigning(id: $active, signingRequestId: 'someone-elses')->getStatus());
+		$this->assertSame([], $this->store->writes);
+
+	}//end testLinkSigningAnswers()
+
+	/**
+	 * The parties of a readable contract, with the stored name when no contact answers.
+	 *
+	 * @return void
+	 */
+	public function testPartiesAnswers(): void {
+		$uuid = $this->store->seed(['title' => 'A', 'status' => 'draft', 'parties' => [['role' => 'opdrachtgever', 'displayName' => 'Gemeente Demostad']]]);
+
+		$data = $this->controller->parties(id: $uuid)->getData();
+
+		$this->assertSame('Gemeente Demostad', $data[0]['displayName']);
+		$this->assertFalse($data[0]['linked']);
+
+	}//end testPartiesAnswers()
 }//end class

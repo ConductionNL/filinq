@@ -300,6 +300,28 @@ class SettingsServiceTest extends TestCase {
 	}//end testReadingOnArrivalDefaultsOnAndIsWritable()
 
 	/**
+	 * Contract term suggestions are on by default, and an admin can switch them
+	 * off under the key the suggestion pass reads.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#3-1
+	 */
+	public function testContractTermsDefaultOnAndAreWritable(): void {
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $default
+		);
+		$this->assertTrue($this->settingsService->getAllSettings()[\OCA\Filinq\Service\Contract\ContractTermSuggestionService::TOGGLE] ?? null);
+
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'enable_contract_term_extraction', '0');
+
+		$this->settingsService->updateSettings(['enable_contract_term_extraction' => '0']);
+
+	}//end testContractTermsDefaultOnAndAreWritable()
+
+	/**
 	 * Test updateSettings silently rejects unknown keys
 	 *
 	 * Keys not present in WRITABLE_KEYS must be dropped from the result and

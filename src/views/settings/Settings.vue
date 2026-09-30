@@ -257,6 +257,27 @@
 					{{ t('filinq', 'Automatically classify documents by topic') }}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'Contract terms') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:aria-label="t('filinq', 'Contract terms')"
+					:modelValue="settings.enable_contract_term_extraction"
+					type="switch"
+					@update:modelValue="
+						settings.enable_contract_term_extraction = $event
+					" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Suggest dates, notice periods and values from contract documents. A suggestion changes nothing until somebody accepts it.',
+						)
+					}}
+				</div>
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -1003,6 +1024,7 @@ export default {
 				enable_language_detection: true,
 				enable_keyword_extraction: true,
 				enable_topic_classification: true,
+				enable_contract_term_extraction: true,
 				ocr_enabled: true,
 				ocr_on_arrival: true,
 				ocr_dpi: 300,
@@ -1221,6 +1243,8 @@ export default {
 						data.enable_keyword_extraction ?? true
 					this.settings.enable_topic_classification =
 						data.enable_topic_classification ?? true
+					this.settings.enable_contract_term_extraction =
+						data.enable_contract_term_extraction ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
 					this.settings.ocr_on_arrival = data.ocr_on_arrival ?? true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
@@ -1415,6 +1439,11 @@ export default {
 
 				enable_topic_classification: this.settings
 					.enable_topic_classification
+					? '1'
+					: '0',
+
+				enable_contract_term_extraction: this.settings
+					.enable_contract_term_extraction
 					? '1'
 					: '0',
 

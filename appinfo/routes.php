@@ -222,6 +222,8 @@ $extra = [
         ['name' => 'contract#terminate', 'url' => 'api/contracts/{id}/terminate', 'verb' => 'POST'],
         ['name' => 'contract#suggest', 'url' => 'api/contracts/{id}/suggestions', 'verb' => 'POST'],
         ['name' => 'contract#decideSuggestion', 'url' => 'api/contracts/{id}/suggestions/{index}', 'verb' => 'PUT', 'requirements' => ['index' => '\\d+']],
+        ['name' => 'contract#linkSigning', 'url' => 'api/contracts/{id}/signing', 'verb' => 'POST'],
+        ['name' => 'contract#parties', 'url' => 'api/contracts/{id}/parties', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],
