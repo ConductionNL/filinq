@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
+use OCA\Filinq\Service\Sanitization\AnonymisationSanitizationRecorder;
 
 /**
  * Records the verdict, then the anonymisation link, then the key.
@@ -41,6 +42,8 @@ class AnonymisationRunRecords {
 	 *                                                     irreversible.
 	 * @param RedactionAccessibilityService|null $accessibility What the run asks OpenRegister to keep of
 	 *                                                     the tag structure, and what it kept.
+	 * @param AnonymisationSanitizationRecorder|null $sanitization Keeps what OpenRegister's office
+	 *                                                     sanitiser removed during the run.
 	 *
 	 * @return void
 	 */
@@ -49,6 +52,7 @@ class AnonymisationRunRecords {
 		private readonly AnonymizationPersistenceService $persistence,
 		private readonly PseudonymMapRecorder $keys,
 		private readonly ?RedactionAccessibilityService $accessibility = null,
+		private readonly ?AnonymisationSanitizationRecorder $sanitization = null,
 	) {
 
 	}//end __construct()
@@ -94,6 +98,11 @@ class AnonymisationRunRecords {
 			sourceNode: $context['sourceNode'],
 			resultInfo: $resultInfo
 		);
+
+		// What OpenRegister's sanitiser removed from an office document on the way.
+		if ($this->sanitization !== null) {
+			$resultInfo = $this->sanitization->record(resultInfo: $resultInfo, context: $context);
+		}
 
 		// After the link, because the key names it. A reversible run keeps
 		// the key; an irreversible one removes the key an earlier run left.

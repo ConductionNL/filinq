@@ -7177,6 +7177,78 @@
         "documents": [],
         "keyTermSuggestions": [],
         "notes": "Nog geen datums: wacht op het besluit van het college."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "sanitizationRecord",
+          "slug": "demostad-concept-besluit-sanitized"
+        },
+        "fileId": 813001,
+        "sanitizedFileId": 813442,
+        "trigger": "manual",
+        "engine": "OfficeDocumentSanitizer",
+        "report": {
+          "commentsRemoved": 4,
+          "trackedChangesAccepted": 11,
+          "trackedChangesDropped": 2,
+          "revisionAttributesStripped": 57,
+          "hyperlinksFlattened": 3,
+          "metadataFieldsScrubbed": 6,
+          "customXmlPartsDropped": 1,
+          "fieldCodesStripped": 2,
+          "sentinelApplied": ""
+        },
+        "sanitizedAt": "2026-09-30T09:30:00Z",
+        "sanitizedBy": "seed-user-woo"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "sanitizationRecord",
+          "slug": "demostad-bezwaar-advies-anonymised"
+        },
+        "fileId": 813101,
+        "sanitizedFileId": 813102,
+        "trigger": "anonymisation",
+        "engine": "OfficeDocumentSanitizer",
+        "report": {
+          "commentsRemoved": 1,
+          "trackedChangesAccepted": 0,
+          "trackedChangesDropped": 0,
+          "revisionAttributesStripped": 12,
+          "hyperlinksFlattened": 0,
+          "metadataFieldsScrubbed": 4,
+          "customXmlPartsDropped": 0,
+          "fieldCodesStripped": 0,
+          "sentinelApplied": ""
+        },
+        "sanitizedAt": "2026-09-30T10:15:00Z",
+        "sanitizedBy": "seed-user-juridisch"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "sanitizationRecord",
+          "slug": "demostad-woo-bijlage-publication"
+        },
+        "fileId": 813201,
+        "sanitizedFileId": 813202,
+        "trigger": "publication",
+        "engine": "OfficeDocumentSanitizer",
+        "report": {
+          "commentsRemoved": 0,
+          "trackedChangesAccepted": 3,
+          "trackedChangesDropped": 1,
+          "revisionAttributesStripped": 8,
+          "hyperlinksFlattened": 2,
+          "metadataFieldsScrubbed": 5,
+          "customXmlPartsDropped": 0,
+          "fieldCodesStripped": 1,
+          "sentinelApplied": ""
+        },
+        "sanitizedAt": "2026-09-30T11:00:00Z",
+        "sanitizedBy": "seed-user-woo"
       }
     ]
   }

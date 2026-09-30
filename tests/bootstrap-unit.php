@@ -55,6 +55,9 @@ require_once __DIR__ . '/stubs/GlobalStubs.php';
 // Load Nextcloud OCP stubs (no NC server required).
 require_once __DIR__ . '/stubs/NextcloudStubs.php';
 
+// OpenRegister's sanitizer value classes, verbatim, and the office sanitizer's public surface.
+require_once __DIR__ . '/stubs/OpenRegisterSanitizerStubs.php';
+
 // Load OCP event-dispatcher contracts before OR stubs that reference them
 // (Event / IEventDispatcher / IEventListener). The OCP package ships them
 // in vendor/nextcloud/ocp but does not classmap-autoload, so we require
@@ -101,6 +104,14 @@ if (is_dir($ocpMigrationDir) === true) {
 $ocpCryptoPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Security/ICrypto.php';
 if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto') === false) {
 	require_once $ocpCryptoPath;
+}
+
+// The real contacts manager contract (contract-lifecycle-management): contract
+// parties take their names from contacts, and a double of the real interface
+// cannot answer a search Nextcloud would not.
+$ocpContactsPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Contacts/IManager.php';
+if (is_file($ocpContactsPath) === true && interface_exists('OCP\\Contacts\\IManager') === false) {
+	require_once $ocpContactsPath;
 }
 
 $ocpDbExceptionDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/AppFramework/Db';

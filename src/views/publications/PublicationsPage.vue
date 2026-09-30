@@ -194,6 +194,20 @@ SPDX-License-Identifier: EUPL-1.2
 
 			<section>
 				<h3>{{ t('filinq', 'Hand off') }}</h3>
+				<NcNoteCard
+					v-if="sanitized === false"
+					type="warning"
+					data-testid="publication-not-sanitized">
+					{{
+						t(
+							'filinq',
+							'This file was not sanitized. Comments, tracked changes or author names may still be hidden in it. You can hand it off anyway.',
+						)
+					}}
+					<router-link :to="{ name: 'MyDocuments' }">
+						{{ t('filinq', 'Sanitize it in My documents') }}
+					</router-link>
+				</NcNoteCard>
 				<p v-if="missing.length" class="publications__muted">
 					{{
 						t('filinq', 'Still missing: {fields}', {
@@ -291,6 +305,7 @@ import {
 	accessibilityLost,
 	accessibilityNote,
 } from '../../services/redactionAccessibility.js'
+import { sanitizationStatus } from '../../services/sanitization.js'
 
 const FIELDS = [
 	'officieleTitel',
@@ -319,6 +334,7 @@ export default {
 			form: {},
 			withdrawReason: '',
 			destruction: { date: '', source: '' },
+			sanitized: null,
 		}
 	},
 
@@ -482,6 +498,27 @@ export default {
 				this.platformAvailable = record.platformAvailable
 			}
 			this.form = Object.fromEntries(FIELDS.map((f) => [f, record[f] || '']))
+			this.readSanitized(record)
+		},
+
+		/**
+		 * Whether the file that would be handed off is a sanitized file.
+		 * Null while unknown or unreadable: then no warning, the hand-off is not blocked either way.
+		 *
+		 * @param {object} record The record
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/document-sanitization/tasks.md#4-2
+		 */
+		async readSanitized(record) {
+			this.sanitized = null
+			const fileId = record.redactedFileRef || record.documentFileRef
+			if (!fileId) {
+				return
+			}
+			const answer = await sanitizationStatus(fileId)
+			if (answer.ok) {
+				this.sanitized = answer.data.sanitized === true
+			}
 		},
 
 		/**

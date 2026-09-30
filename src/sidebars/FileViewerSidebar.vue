@@ -132,6 +132,20 @@ const documentRecordId = computed(() =>
 					</ul>
 				</NcNoteCard>
 
+				<NcNoteCard
+					v-if="sanitizationRows.length"
+					type="info"
+					data-testid="anonymisation-sanitization-report">
+					<div>
+						{{ t('filinq', 'Hidden content removed from the copy') }}
+					</div>
+					<ul>
+						<li v-for="row in sanitizationRows" :key="row.key">
+							{{ row.label }}: {{ row.count }}
+						</li>
+					</ul>
+				</NcNoteCard>
+
 				<!-- Best-effort warning: the file was produced, but some entities
 				     could not be fully removed (e.g. text recognised across table
 				     cells that is not contiguous in the document). Refining
@@ -552,6 +566,7 @@ import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
+import { reportRows } from '../services/sanitization.js'
 
 export default {
 	name: 'FileViewerSidebar',
@@ -638,6 +653,16 @@ export default {
 		 */
 		accessibility() {
 			return accessibilityNote(this.entry?.structurePreservation)
+		},
+
+		/**
+		 * What OpenRegister's office sanitiser removed from the anonymised copy.
+		 *
+		 * @return {Array<object>} Label and count per category.
+		 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+		 */
+		sanitizationRows() {
+			return reportRows(this.entry?.sanitizationReport)
 		},
 
 		entry() {

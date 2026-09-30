@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,9 @@ namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Service\Contract\ContractNotFoundException;
+use OCA\Filinq\Service\Contract\ContractParties;
 use OCA\Filinq\Service\Contract\ContractService;
+use OCA\Filinq\Service\Contract\ContractSigningLink;
 use OCA\Filinq\Service\Contract\ContractTermSuggestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -49,7 +51,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-renewal-pipeline-view-req-ddclm-006
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-renewal-pipeline-view-req-ddclm-006
  */
 class ContractController extends Controller {
 
@@ -62,6 +64,8 @@ class ContractController extends Controller {
 	 * @param ContractTermSuggestionService $suggestions The key-term suggestions.
 	 * @param IUserSession                  $userSession The session.
 	 * @param LoggerInterface               $logger      The logger.
+	 * @param ContractSigningLink           $signingLink The signing request link.
+	 * @param ContractParties               $parties     The parties, from their contacts.
 	 *
 	 * @return void
 	 */
@@ -72,6 +76,8 @@ class ContractController extends Controller {
 		private readonly ContractTermSuggestionService $suggestions,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly ContractSigningLink $signingLink,
+		private readonly ContractParties $parties,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -84,7 +90,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse {contract, successor}, or 404/409.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function renew(string $id): JSONResponse {
@@ -103,7 +109,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse The contract, or 400/404/409.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function terminate(string $id, string $reason=''): JSONResponse {
@@ -121,7 +127,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse {contract, added, enabled}, or 404.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function suggest(string $id): JSONResponse {
@@ -143,7 +149,7 @@ class ContractController extends Controller {
 	 *
 	 * @return JSONResponse The contract, or 400/404/409/422.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-3
 	 */
 	#[NoAdminRequired]
 	public function decideSuggestion(string $id, int $index, string $decision=''): JSONResponse {
@@ -153,6 +159,44 @@ class ContractController extends Controller {
 		);
 
 	}//end decideSuggestion()
+
+	/**
+	 * Record the signing request sent for a contract document; answers its
+	 * status and, once it completed, links the signed document back.
+	 *
+	 * @param string $id               The contract uuid.
+	 * @param string $signingRequestId The signing request.
+	 *
+	 * @return JSONResponse The contract and the request's status, or 400/404.
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
+	 */
+	#[NoAdminRequired]
+	public function linkSigning(string $id, string $signingRequestId=''): JSONResponse {
+		return $this->run(
+			id: $id,
+			action: fn (): array => $this->signingLink->link(uuid: $id, signingRequestId: $signingRequestId)
+		);
+
+	}//end linkSigning()
+
+	/**
+	 * The contract's parties, named from their contacts where linked.
+	 *
+	 * @param string $id The contract uuid.
+	 *
+	 * @return JSONResponse The parties, or 404.
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#3-1
+	 */
+	#[NoAdminRequired]
+	public function parties(string $id): JSONResponse {
+		return $this->run(
+			id: $id,
+			action: fn (): array => $this->parties->resolve(contract: $this->contracts->requireReadable(uuid: $id))
+		);
+
+	}//end parties()
 
 	/**
 	 * Read the contract as the caller first, then run the action; map the outcome to a status.

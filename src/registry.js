@@ -68,6 +68,8 @@ import FolderAnonymizationView from './views/anonymization/FolderAnonymizationVi
 import ComparisonView from './views/comparison/ComparisonView.vue'
 import ConsentDetail from './views/consent/ConsentDetail.vue'
 import ConsentIndex from './views/consent/ConsentIndex.vue'
+import ContractDetail from './views/contracts/ContractDetail.vue'
+import ContractPipeline from './views/contracts/ContractPipeline.vue'
 import CorrespondenceIndex from './views/correspondence/CorrespondenceIndex.vue'
 import CustomDictionaryDetail from './views/customDictionary/CustomDictionaryDetail.vue'
 import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryIndex.vue'
@@ -112,6 +114,8 @@ export default {
 	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
 	PrintJobs: { kind: 'page', component: PrintJobs },
 	LegalHolds: { kind: 'page', component: LegalHolds },
+	ContractDetail: { kind: 'page', component: ContractDetail },
+	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EntitySearch: { kind: 'page', component: EntitySearch },
 	PublicationsPage: { kind: 'page', component: PublicationsPage },

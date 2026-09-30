@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use DateTimeImmutable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-is-a-first-class-openregister-object-req-ddclm-001
+ * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/specs/contract-lifecycle-management/spec.md#requirement-contract-is-a-first-class-openregister-object-req-ddclm-001
  */
 class ContractDates {
 
@@ -49,7 +49,7 @@ class ContractDates {
 	 *
 	 * @return array<string, mixed> The contract, possibly with `noticeDeadline` set.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
 	 */
 	public function withNoticeDeadline(array $contract): array {
 		if (trim((string) ($contract['noticeDeadline'] ?? '')) !== '') {
@@ -77,7 +77,7 @@ class ContractDates {
 	 *
 	 * @return string|null The notice deadline.
 	 *
-	 * @spec openspec/changes/contract-lifecycle-management/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-09-30-contract-lifecycle-management/tasks.md#2-1
 	 */
 	public function noticeDeadlineFor(string $endDate, mixed $noticePeriodDays): ?string {
 		if (is_int($noticePeriodDays) === false && (is_string($noticePeriodDays) === false || ctype_digit($noticePeriodDays) === false)) {
