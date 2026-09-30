@@ -218,7 +218,12 @@ class SigningService {
 				$request[$field] = $data[$field];
 			}
 		}
-		$request = $this->validator->withPlacements(request: $request, placements: ($data['fieldPlacements'] ?? null), signerCount: count($signers), producer: $this->artifactProducer);
+		$request = $this->validator->withPlacements(
+			request: $request,
+			placements: ($data['fieldPlacements'] ?? null),
+			signerCount: count($signers),
+			producer: $this->artifactProducer
+		);
 		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
