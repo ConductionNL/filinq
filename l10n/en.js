@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "The row number in the uploaded list, counting from 1.": "The row number in the uploaded list, counting from 1.",
+        "Why no request was made for this row.": "Why no request was made for this row.",
+        "What was wrong with the row, in words.": "What was wrong with the row, in words.",
+        "The Nextcloud user who signs, when the row names one.": "The Nextcloud user who signs, when the row names one.",
+        "The address the signing invitation goes to.": "The address the signing invitation goes to.",
+        "The name the request shows for this signer.": "The name the request shows for this signer.",
         "Detail": "Detail",
         "Email address": "Email address",
         "Display name": "Display name",

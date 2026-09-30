@@ -1,5 +1,11 @@
 {
     "translations": {
+        "The row number in the uploaded list, counting from 1.": "Le numéro de ligne dans la liste envoyée, à partir de 1.",
+        "Why no request was made for this row.": "Pourquoi aucune demande n'a été créée pour cette ligne.",
+        "What was wrong with the row, in words.": "Ce qui n'allait pas dans la ligne, en mots.",
+        "The Nextcloud user who signs, when the row names one.": "L'utilisateur Nextcloud qui signe, quand la ligne en nomme un.",
+        "The address the signing invitation goes to.": "L'adresse à laquelle part l'invitation à signer.",
+        "The name the request shows for this signer.": "Le nom que la demande affiche pour ce signataire.",
         "Detail": "Détail",
         "Email address": "Adresse e-mail",
         "Display name": "Nom d'affichage",

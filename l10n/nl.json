@@ -1,5 +1,11 @@
 {
     "translations": {
+        "The row number in the uploaded list, counting from 1.": "Het rijnummer in de geüploade lijst, vanaf 1 geteld.",
+        "Why no request was made for this row.": "Waarom voor deze rij geen verzoek is gemaakt.",
+        "What was wrong with the row, in words.": "Wat er mis was met de rij, in woorden.",
+        "The Nextcloud user who signs, when the row names one.": "De Nextcloud-gebruiker die ondertekent, als de rij er een noemt.",
+        "The address the signing invitation goes to.": "Het adres waar de uitnodiging tot ondertekenen naartoe gaat.",
+        "The name the request shows for this signer.": "De naam die het verzoek voor deze ondertekenaar toont.",
         "Detail": "Toelichting",
         "Email address": "E-mailadres",
         "Display name": "Weergavenaam",

@@ -9610,11 +9610,13 @@
                             "properties": {
                                 "row": {
                                     "title": "Row",
+                                    "description": "The row number in the uploaded list, counting from 1.",
                                     "type": "integer",
                                     "minimum": 1
                                 },
                                 "reason": {
                                     "title": "Reason",
+                                    "description": "Why no request was made for this row.",
                                     "type": "string",
                                     "enum": [
                                         "no-recipient",
@@ -9626,6 +9628,7 @@
                                 },
                                 "detail": {
                                     "title": "Detail",
+                                    "description": "What was wrong with the row, in words.",
                                     "type": "string",
                                     "maxLength": 500
                                 }
@@ -9649,21 +9652,25 @@
                             "properties": {
                                 "row": {
                                     "title": "Row",
+                                    "description": "The row number in the uploaded list, counting from 1.",
                                     "type": "integer",
                                     "minimum": 1
                                 },
                                 "userId": {
                                     "title": "User",
+                                    "description": "The Nextcloud user who signs, when the row names one.",
                                     "type": "string",
                                     "maxLength": 64
                                 },
                                 "email": {
                                     "title": "Email address",
+                                    "description": "The address the signing invitation goes to.",
                                     "type": "string",
                                     "maxLength": 320
                                 },
                                 "displayName": {
                                     "title": "Display name",
+                                    "description": "The name the request shows for this signer.",
                                     "type": "string",
                                     "maxLength": 255
                                 }

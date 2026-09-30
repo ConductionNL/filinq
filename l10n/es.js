@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "The row number in the uploaded list, counting from 1.": "El número de fila en la lista subida, contando desde 1.",
+        "Why no request was made for this row.": "Por qué no se creó ninguna solicitud para esta fila.",
+        "What was wrong with the row, in words.": "Qué estaba mal en la fila, en palabras.",
+        "The Nextcloud user who signs, when the row names one.": "El usuario de Nextcloud que firma, cuando la fila nombra uno.",
+        "The address the signing invitation goes to.": "La dirección a la que va la invitación a firmar.",
+        "The name the request shows for this signer.": "El nombre que muestra la solicitud para este firmante.",
         "Detail": "Detalle",
         "Email address": "Dirección de correo electrónico",
         "Display name": "Nombre visible",
