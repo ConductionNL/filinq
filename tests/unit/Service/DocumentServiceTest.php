@@ -574,6 +574,48 @@ class DocumentServiceTest extends TestCase {
 	}//end testDocumentMetadataIncludesTemplateVersion()
 
 	/**
+	 * A generation without options.wizardContext never reaches the wizard gate and logs no wizardContext.
+	 *
+	 * @return void
+	 */
+	public function testGenerationWithoutWizardContextUnchanged(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['name' => 'Brief', 'content' => '<p>x</p>', 'version' => 1]);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
+		$entries = [];
+		$this->objectSvc->method('saveObject')->willReturnCallback(
+			static function (array $entry) use (&$entries): array {
+				$entries[] = $entry;
+				return $entry;
+			}
+		);
+		$gate = $this->getMockBuilder(\OCA\Filinq\Service\Wizard\WizardGenerationGate::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['check'])
+			->getMock();
+		$gate->expects($this->never())->method('check');
+		$withGate = new \ReflectionClass(DocumentService::class);
+		$service = $withGate->newInstanceWithoutConstructor();
+		foreach ($withGate->getProperties() as $property) {
+			if ($property->getName() !== 'wizardGate' && $property->isStatic() === false && $property->isInitialized($this->service) === true) {
+				$property->setValue($service, $property->getValue($this->service));
+			}
+		}
+
+		$withGate->getProperty('wizardGate')->setValue($service, $gate);
+
+		$result = $service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: ['userId' => 'u1']);
+
+		$this->assertArrayNotHasKey('wizardContext', $entries[0]);
+		$this->assertSame(
+			['content', 'html', 'format', 'metadata', 'plainRendition', 'templateVersion', 'warnings', 'output', 'sha256', 'size', 'mimeType'],
+			array_keys($result)
+		);
+
+	}//end testGenerationWithoutWizardContextUnchanged()
+
+	/**
 	 * Test partial failure does not abort bulk batch (DCS-043).
 	 *
 	 * @return void

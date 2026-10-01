@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\BackgroundJob\BatchDocumentJob;
+use OCA\Filinq\Service\Wizard\WizardGenerationGate;
 use OCP\BackgroundJob\IJobList;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -113,6 +114,7 @@ class DocumentService {
 	 * @param IJobList $jobList Nextcloud job list for async processing
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
+	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
 	 *
 	 * @return void
 	 */
@@ -126,6 +128,7 @@ class DocumentService {
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
+		private readonly ?WizardGenerationGate $wizardGate = null,
 	) {
 
 	}//end __construct()
@@ -186,6 +189,12 @@ class DocumentService {
 		}
 
 		$template ??= $this->templateService->getTemplate(id: $templateId);
+
+		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
+			// A wizard run: the answers are checked against the stored wizard before
+			// anything renders, and the entry records the interview (REQ-DDGDW-005/008).
+			$recordFields = array_merge($recordFields, $this->wizardGate->check(templateId: $templateId, dataRefs: $dataRefs, context: $options['wizardContext']));
+		}
 
 		return $this->generateFromTemplate(
 			templateId: $templateId,

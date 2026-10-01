@@ -29,6 +29,7 @@ use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\MultiFormatOutputProducer;
+use OCA\Filinq\Service\Wizard\WizardRefused;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -525,6 +526,11 @@ class DocumentController extends Controller {
 		);
 
 		$data = ['error' => $exception->getMessage()];
+		if ($exception instanceof WizardRefused && $exception->getErrors() !== []) {
+			// Which wizard questions were unanswered or answered wrongly.
+			$data['errors'] = $exception->getErrors();
+		}
+
 		if ($exception instanceof ConversionFailedException) {
 			// Which backend was tried and why it could not, e.g. an
 			// accessible request without LibreOffice.
