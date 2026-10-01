@@ -76,7 +76,11 @@ class WizardGenerationGate {
 		}
 
 		if ((string) ($wizard['templateId'] ?? '') !== $templateId || ($wizard['active'] ?? true) === false) {
-			throw new WizardRefused(message: 'The wizard is not the active wizard of this template', code: 422, errors: ['wizardId' => 'Not the active wizard of this template.']);
+			throw new WizardRefused(
+				message: 'The wizard is not the active wizard of this template',
+				code: 422,
+				errors: ['wizardId' => 'Not the active wizard of this template.']
+			);
 		}
 
 		$given = ($context['answers'] ?? []);

@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\DataResolverService;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\PdfService;
@@ -163,8 +164,7 @@ class DocumentServiceTest extends TestCase {
 				$objectResolver,
 				$logger
 			),
-			$container,
-			$this->jobList,
+			new DocumentJobStore($appConfig, $this->jobList, $logger),
 			$logger
 		);
 

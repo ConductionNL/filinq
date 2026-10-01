@@ -31,10 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\Filinq\BackgroundJob\BatchDocumentJob;
 use OCA\Filinq\Service\Wizard\WizardGenerationGate;
-use OCP\BackgroundJob\IJobList;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -110,8 +107,7 @@ class DocumentService {
 	 * @param DocumentRenderPipeline $renderPipeline Huisstijl + Twig rendering and output production
 	 * @param DocumentStorageService $storageService Service for storing output in Files
 	 * @param GeneratedDocumentLogger $documentLogger Audit-trail writer for generated documents
-	 * @param ContainerInterface $container Container for dependency injection
-	 * @param IJobList $jobList Nextcloud job list for async processing
+	 * @param DocumentJobStore $jobs Status records and queueing of async bulk jobs
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
@@ -124,8 +120,7 @@ class DocumentService {
 		private readonly DocumentRenderPipeline $renderPipeline,
 		private readonly DocumentStorageService $storageService,
 		private readonly GeneratedDocumentLogger $documentLogger,
-		private readonly ContainerInterface $container,
-		private readonly IJobList $jobList,
+		private readonly DocumentJobStore $jobs,
 		private readonly LoggerInterface $logger,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
@@ -193,7 +188,8 @@ class DocumentService {
 		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
 			// A wizard run: the answers are checked against the stored wizard before
 			// anything renders, and the entry records the interview (REQ-DDGDW-005/008).
-			$recordFields = array_merge($recordFields, $this->wizardGate->check(templateId: $templateId, dataRefs: $dataRefs, context: $options['wizardContext']));
+			$wizardFields = $this->wizardGate->check(templateId: $templateId, dataRefs: $dataRefs, context: $options['wizardContext']);
+			$recordFields = array_merge($recordFields, $wizardFields);
 		}
 
 		return $this->generateFromTemplate(
@@ -511,26 +507,7 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function getJobStatus(string $jobId): ?array {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$value = $config->getValueString(
-				'filinq',
-				'document_job_' . $jobId,
-				''
-			);
-
-			if (empty($value) === true) {
-				return null;
-			}
-
-			return json_decode($value, true);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to load document job status: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
-			return null;
-		}//end try
+		return $this->jobs->get(jobId: $jobId);
 
 	}//end getJobStatus()
 
@@ -545,19 +522,7 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function updateJobStatus(string $jobId, array $status): void {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$config->setValueString(
-				'filinq',
-				'document_job_' . $jobId,
-				json_encode($status)
-			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to store document job status: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
-		}//end try
+		$this->jobs->put(jobId: $jobId, status: $status);
 
 	}//end updateJobStatus()
 
@@ -1001,7 +966,7 @@ class DocumentService {
 		array $objectIds,
 		array $options,
 	): array {
-		$jobId = $this->generateJobId();
+		$jobId = $this->jobs->newId();
 
 		$baseTargetPath = $this->buildOutputTargetPath(
 			templateId: $templateId,
@@ -1018,10 +983,9 @@ class DocumentService {
 			'results' => [],
 			'options' => $options,
 		];
-		$this->updateJobStatus(jobId: $jobId, status: $initialStatus);
-
-		$this->jobList->add(
-			job: BatchDocumentJob::class,
+		$this->jobs->enqueue(
+			jobId: $jobId,
+			status: $initialStatus,
 			argument: [
 				'jobId' => $jobId,
 				'templateId' => $templateId,
@@ -1037,16 +1001,4 @@ class DocumentService {
 		];
 
 	}//end dispatchBulkJob()
-
-	/**
-	 * Generate a cryptographically secure job UUID.
-	 *
-	 * @return string A RFC-4122 v4 UUID job identifier
-	 */
-	private function generateJobId(): string {
-		$data = random_bytes(16);
-		$data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-		$data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end generateJobId()
 }//end class

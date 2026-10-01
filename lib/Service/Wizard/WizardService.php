@@ -53,6 +53,7 @@ class WizardService {
 	 * @param TemplateService           $templates  The templates the wizards front.
 	 * @param DataResolverService       $resolver   Resolves the entry object of a prefill.
 	 * @param SchemaMapper              $schemas    Reads the property names of a template's bound schema.
+	 * @param WizardAnswers             $answers    Suggests a prefill answer per question.
 	 *
 	 * @return void
 	 */
@@ -62,6 +63,7 @@ class WizardService {
 		private readonly TemplateService $templates,
 		private readonly DataResolverService $resolver,
 		private readonly SchemaMapper $schemas,
+		private readonly WizardAnswers $answers,
 	) {
 
 	}//end __construct()
@@ -234,7 +236,7 @@ class WizardService {
 			$key = (string) ($question['key'] ?? '');
 			$value = null;
 			if ($found === true) {
-				$value = $this->suggestion(question: (array) $question, ref: $ref, data: $data);
+				$value = $this->answers->suggestion(question: (array) $question, ref: $ref, data: $data);
 			}
 
 			if ($value === null) {
@@ -248,44 +250,6 @@ class WizardService {
 		return ['answers' => $answers, 'unresolved' => $unresolved];
 
 	}//end prefill()
-
-	/**
-	 * The suggested answer of one question, or null.
-	 *
-	 * @param array<string, mixed> $question The question.
-	 * @param array<string, string> $ref     The entry object.
-	 * @param array<string, mixed> $data     The resolved data, keyed by schema.
-	 *
-	 * @return mixed The suggestion.
-	 */
-	private function suggestion(array $question, array $ref, array $data): mixed {
-		if (($question['type'] ?? '') === 'registerObject') {
-			$fits = (string) ($question['register'] ?? '') === $ref['register'] && (string) ($question['schema'] ?? '') === $ref['schema'];
-			if ($fits === false) {
-				return null;
-			}
-
-			return $ref['id'];
-		}
-
-		$path = trim((string) ($question['mapsTo'] ?? ''));
-		if ($path === '') {
-			return null;
-		}
-
-		$value = WizardAnswers::readPath(data: $data, path: $path);
-		if ($value === null) {
-			// A path may also be written relative to the entry object.
-			$value = WizardAnswers::readPath(data: (array) ($data[$ref['schema']] ?? []), path: $path);
-		}
-
-		if (is_scalar($value) === false) {
-			return null;
-		}
-
-		return $value;
-
-	}//end suggestion()
 
 	/**
 	 * The fields of a wizard as stored.

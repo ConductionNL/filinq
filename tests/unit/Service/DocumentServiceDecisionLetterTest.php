@@ -28,6 +28,7 @@ use OCA\Filinq\Service\Charts\TableHtmlRenderer;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -36,7 +37,6 @@ use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCP\App\IAppManager;
-use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -86,8 +86,7 @@ class DocumentServiceDecisionLetterTest extends TestCase {
 			new DocumentRenderPipeline($renderer, new PdfService($logger, $renderer), $objectResolver, $logger, $rasterizer, new ObjectionTermCalculator($appConfig)),
 			$this->createMock(DocumentStorageService::class),
 			new GeneratedDocumentLogger($objectResolver, $logger),
-			$container,
-			$this->createMock(IJobList::class),
+			$this->createMock(DocumentJobStore::class),
 			$logger
 		);
 

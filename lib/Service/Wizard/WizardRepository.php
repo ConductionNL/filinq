@@ -132,7 +132,9 @@ class WizardRepository {
 			return [];
 		}
 
-		return array_values(array_filter(array_map(fn (mixed $row): array => $this->normalise(row: $row), $rows), static fn (array $row): bool => $row !== []));
+		$normalised = array_map(fn (mixed $row): array => $this->normalise(row: $row), $rows);
+
+		return array_values(array_filter($normalised, static fn (array $row): bool => $row !== []));
 
 	}//end search()
 

@@ -28,6 +28,7 @@ use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -38,7 +39,6 @@ use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
-use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -187,7 +187,7 @@ class TemplateVersionProvenanceTest extends TestCase {
 		$objectResolver = new DocumentObjectServiceResolver($container, $appManager);
 		$pipeline = new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer);
 		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
-		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $container, $this->createMock(IJobList::class), new NullLogger());
+		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $this->createMock(DocumentJobStore::class), new NullLogger());
 
 		return ['documents' => $documents, 'templates' => $templates, 'versions' => $versions];
 	}

@@ -31,6 +31,7 @@ use OCA\Filinq\Exception\PlainRenditionRefusedException;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -41,7 +42,6 @@ use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
-use OCP\BackgroundJob\IJobList;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -152,8 +152,7 @@ class DocumentServicePlainRenditionTest extends TestCase {
 			),
 			$this->storage,
 			new GeneratedDocumentLogger($objectResolver, new NullLogger()),
-			$container,
-			$this->createMock(IJobList::class),
+			$this->createMock(DocumentJobStore::class),
 			new NullLogger(),
 			new PlainLanguageRenditionService(
 				$this->templates,

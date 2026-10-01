@@ -30,6 +30,7 @@ use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -44,9 +45,7 @@ use OCA\Filinq\Service\Wizard\WizardRepository;
 use OCA\Filinq\Tests\Unit\Service\Wizard\WizardFixtures;
 use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
 use OCA\OpenRegister\Service\ObjectService;
-use OCP\BackgroundJob\IJobList;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -111,8 +110,7 @@ class DocumentServiceWizardTest extends TestCase {
 			renderPipeline: new DocumentRenderPipeline($renderer, $this->createMock(PdfService::class), $logResolver, $logger, $this->passThroughRasterizer()),
 			storageService: $this->createMock(DocumentStorageService::class),
 			documentLogger: new GeneratedDocumentLogger($logResolver, $logger),
-			container: $this->createMock(ContainerInterface::class),
-			jobList: $this->createMock(IJobList::class),
+			jobs: $this->createMock(DocumentJobStore::class),
 			logger: $logger,
 			wizardGate: new WizardGenerationGate(
 				repository: new WizardRepository(objectResolver: $wizardResolver),

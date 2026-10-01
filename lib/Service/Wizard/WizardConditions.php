@@ -79,7 +79,7 @@ class WizardConditions {
 	 *
 	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
 	 */
-	public static function isAnswered(mixed $answer): bool {
+	public function isAnswered(mixed $answer): bool {
 		if ($answer === null || $answer === [] || (is_string($answer) === true && trim($answer) === '')) {
 			return false;
 		}
@@ -108,23 +108,23 @@ class WizardConditions {
 			return true;
 		}
 
-		$on = (string) ($condition['questionKey'] ?? '');
+		$onKey = (string) ($condition['questionKey'] ?? '');
 		$operator = (string) ($condition['operator'] ?? '');
-		if ($on === '' || isset($earlier[$on]) === false || in_array($operator, self::OPERATORS, true) === false) {
+		if ($onKey === '' || isset($earlier[$onKey]) === false || in_array($operator, self::OPERATORS, true) === false) {
 			// Fail safe: a condition that cannot be evaluated never hides a question.
 			return true;
 		}
 
-		if (isset($visible[$on]) === false) {
+		if (isset($visible[$onKey]) === false) {
 			return false;
 		}
 
-		$answer = ($answers[$on] ?? null);
+		$answer = ($answers[$onKey] ?? null);
 		$value = ($condition['value'] ?? null);
 
 		return match ($operator) {
-			'answered' => self::isAnswered(answer: $answer),
-			'equals' => self::isAnswered(answer: $answer) === true && $this->same(answer: $answer, value: $value) === true,
+			'answered' => $this->isAnswered(answer: $answer),
+			'equals' => $this->isAnswered(answer: $answer) === true && $this->same(answer: $answer, value: $value) === true,
 			default => $this->same(answer: $answer, value: $value) === false,
 		};
 

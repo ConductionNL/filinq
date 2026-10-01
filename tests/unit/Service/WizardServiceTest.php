@@ -99,6 +99,7 @@ class WizardServiceTest extends TestCase {
 			templates: $templates,
 			resolver: $this->resolver,
 			schemas: $this->schemas,
+			answers: $this->answers(),
 		);
 
 	}//end service()

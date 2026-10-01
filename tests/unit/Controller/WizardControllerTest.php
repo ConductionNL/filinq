@@ -28,6 +28,8 @@ use OCA\Filinq\Controller\WizardController;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Service\Wizard\WizardAnswers;
+use OCA\Filinq\Service\Wizard\WizardConditions;
 use OCA\Filinq\Service\Wizard\WizardDefinitionValidator;
 use OCA\Filinq\Service\Wizard\WizardRepository;
 use OCA\Filinq\Service\Wizard\WizardService;
@@ -83,6 +85,7 @@ class WizardControllerTest extends TestCase {
 				templates: $templates,
 				resolver: $this->createMock(DataResolverService::class),
 				schemas: $this->createMock(SchemaMapper::class),
+				answers: new WizardAnswers(conditions: new WizardConditions()),
 			),
 			userSession: $session,
 			logger: $this->createMock(LoggerInterface::class),

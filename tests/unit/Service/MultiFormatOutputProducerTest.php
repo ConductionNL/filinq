@@ -23,6 +23,7 @@ use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentRenderPipeline;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
@@ -32,7 +33,6 @@ use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
-use OCP\BackgroundJob\IJobList;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
@@ -111,7 +111,7 @@ class MultiFormatOutputProducerTest extends TestCase {
 
 		$pipeline = new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer, null, $office);
 		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
-		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $container, $this->createMock(IJobList::class), new NullLogger());
+		$documents = new DocumentService($templates, $resolver, $pipeline, $storage, $logger, $this->createMock(DocumentJobStore::class), new NullLogger());
 
 		return new MultiFormatOutputProducer($documents, $templates, $pipeline, $storage, $logger);
 	}

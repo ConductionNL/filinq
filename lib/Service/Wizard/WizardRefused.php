@@ -24,12 +24,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Wizard;
 
+use OCA\Filinq\Exception\ErrorDetailsInterface;
 use RuntimeException;
 
 /**
  * Refusal with per-question errors.
  */
-class WizardRefused extends RuntimeException {
+class WizardRefused extends RuntimeException implements ErrorDetailsInterface {
 
 	/**
 	 * Constructor.
@@ -56,4 +57,20 @@ class WizardRefused extends RuntimeException {
 		return $this->errors;
 
 	}//end getErrors()
+
+	/**
+	 * The error body names which wizard questions were unanswered or answered wrongly.
+	 *
+	 * @return array<string, array<string, string>> `errors` by question key, or nothing.
+	 *
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-4
+	 */
+	public function getErrorDetails(): array {
+		if ($this->errors === []) {
+			return [];
+		}
+
+		return ['errors' => $this->errors];
+
+	}//end getErrorDetails()
 }//end class

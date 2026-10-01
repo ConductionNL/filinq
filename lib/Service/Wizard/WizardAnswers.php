@@ -28,8 +28,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Wizard;
 
-use DateTimeImmutable;
-
 /**
  * Answer validation and translation for wizard runs.
  */
@@ -70,7 +68,7 @@ class WizardAnswers {
 			}
 
 			$answer = ($answers[$key] ?? null);
-			if (WizardConditions::isAnswered(answer: $answer) === false) {
+			if ($this->conditions->isAnswered(answer: $answer) === false) {
 				if (($question['required'] ?? false) === true) {
 					$errors[$key] = 'This question needs an answer.';
 				}
@@ -108,7 +106,7 @@ class WizardAnswers {
 		foreach ($questions as $question) {
 			$key = (string) ($question['key'] ?? '');
 			$answer = ($answers[$key] ?? null);
-			if (isset($visible[$key]) === false || WizardConditions::isAnswered(answer: $answer) === false) {
+			if (isset($visible[$key]) === false || $this->conditions->isAnswered(answer: $answer) === false) {
 				continue;
 			}
 
@@ -124,7 +122,7 @@ class WizardAnswers {
 
 			$path = trim((string) ($question['mapsTo'] ?? ''));
 			if ($path !== '') {
-				self::setPath(data: $adHocData, path: $path, value: $answer);
+				$this->setPath(data: $adHocData, path: $path, value: $answer);
 			}
 		}//end foreach
 
@@ -141,6 +139,46 @@ class WizardAnswers {
 	}//end translate()
 
 	/**
+	 * The suggested answer of one question, or null.
+	 *
+	 * @param array<string, mixed> $question The question.
+	 * @param array<string, string> $ref     The entry object.
+	 * @param array<string, mixed> $data     The resolved data, keyed by schema.
+	 *
+	 * @return mixed The suggestion.
+	 *
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-5
+	 */
+	public function suggestion(array $question, array $ref, array $data): mixed {
+		if (($question['type'] ?? '') === 'registerObject') {
+			$fits = (string) ($question['register'] ?? '') === $ref['register'] && (string) ($question['schema'] ?? '') === $ref['schema'];
+			if ($fits === false) {
+				return null;
+			}
+
+			return $ref['id'];
+		}
+
+		$path = trim((string) ($question['mapsTo'] ?? ''));
+		if ($path === '') {
+			return null;
+		}
+
+		$value = $this->readPath(data: $data, path: $path);
+		if ($value === null) {
+			// A path may also be written relative to the entry object.
+			$value = $this->readPath(data: (array) ($data[$ref['schema']] ?? []), path: $path);
+		}
+
+		if (is_scalar($value) === false) {
+			return null;
+		}
+
+		return $value;
+
+	}//end suggestion()
+
+	/**
 	 * Read a dotted path from nested data.
 	 *
 	 * @param array<string, mixed> $data The data.
@@ -150,7 +188,7 @@ class WizardAnswers {
 	 *
 	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-5
 	 */
-	public static function readPath(array $data, string $path): mixed {
+	private function readPath(array $data, string $path): mixed {
 		$value = $data;
 		foreach (explode('.', $path) as $segment) {
 			if (is_array($value) === false || array_key_exists($segment, $value) === false) {
@@ -173,7 +211,7 @@ class WizardAnswers {
 	 *
 	 * @return void
 	 */
-	private static function setPath(array &$data, string $path, mixed $value): void {
+	private function setPath(array &$data, string $path, mixed $value): void {
 		$segments = explode('.', $path);
 		$leaf     = (string) array_pop($segments);
 		$node     = &$data;
@@ -259,9 +297,9 @@ class WizardAnswers {
 			return false;
 		}
 
-		$date = DateTimeImmutable::createFromFormat('!Y-m-d', substr($answer, 0, 10));
+		[$year, $month, $day] = explode('-', substr($answer, 0, 10));
 
-		return $date !== false && $date->format('Y-m-d') === substr($answer, 0, 10);
+		return checkdate((int) $month, (int) $day, (int) $year);
 
 	}//end isIsoDate()
 
