@@ -1305,14 +1305,15 @@
 			"name": "Build a document step by step by answering questions.",
 			"source": "competitor-derived",
 			"sourceRef": "SmartDocuments Q&A wizard; docassemble guided interview",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep for 'wizard'/'Wizard' across lib/ and src/ finds only DemoDataService, LibreOfficeHeadlessBackend and SetupController (unrelated setup-wizard). No guided Q&A document-creation flow exists. openspec/changes/guided-document-wizard/proposal.md proposes exactly this and cites DocumentController::parseGenerateParams()/DataResolverService::resolve() as the current developer-only contract.",
-				"change": "openspec/changes/guided-document-wizard"
+				"evidence": "wizardDefinition schema 1.0.0 in register filinq 8.43.0 (ordered questions: text, choice, date, registerObject; one-level conditions equals/notEquals/answered on earlier questions), WizardService/WizardDefinitionValidator (save-time checks, one active wizard per template 409, template lock 423, unknown mapsTo warns), WizardConditions (forward pass, malformed condition stays visible), WizardAnswers (registerObject -> dataRefs, scalars -> adHocData at mapsTo, ad-hoc wins), WizardGenerationGate called from DocumentService::generateDocument when options.wizardContext is present (422 per question before rendering; generatedDocument 1.6.0 records wizardContext {wizardId, wizardVersion, answers}), prefill via DataResolverService (POST api/wizards/{id}/prefill). WizardController api/wizards CRUD + GET api/templates/{id}/wizard. UI: Wizard tab on TemplateDetail (WizardAuthoringPanel + WizardQuestionDialog), WizardRunner page /templates/:id/wizard (steps, progress, back, live skip logic, object picker through the shared object store, review with override marks, generate through api/documents/generate), Generate with wizard on the template detail and per wizard on the dossier page with prefill. Tests: WizardServiceTest, WizardControllerTest, DocumentServiceWizardTest (generatedDocument payload validated with Opis against the real fragment), WizardDefinitionSchemaTest, DocumentServiceTest::testGenerationWithoutWizardContextUnchanged, vitest wizard.spec.js, e2e tests/e2e/spec-coverage/guided-document-wizard.spec.ts. No server-side draft runs (gen-draft).",
+				"change": "openspec/changes/archive/2026-10-01-guided-document-wizard",
+				"readOn": "2026-10-01"
 			},
-			"reachedOn": "nothing reaches it; not built",
+			"reachedOn": "the Wizard tab and the Generate with wizard button on a template; Generate with wizard on a dossier page; /templates/:id/wizard",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "guided-document-wizard",

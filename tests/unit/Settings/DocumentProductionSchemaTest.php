@@ -125,7 +125,8 @@ class DocumentProductionSchemaTest extends TestCase {
 		// never moves is how a property edit lands on one instance and not on
 		// the next. 1.4.0 since `multi-format-output` (`outputs`). 1.5.0 since
 		// `generated-document-names-its-template-version` (optional templateVersion).
-		$this->assertSame('1.5.0', $document['version']);
+		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
+		$this->assertSame('1.6.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],

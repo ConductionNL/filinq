@@ -7326,6 +7326,147 @@
         "ingestedAt": "2026-06-22T07:30:00+00:00",
         "dossierRef": "demostad-woo-2025-017",
         "ingestSource": "watched-folder"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "wizardDefinition",
+          "slug": "seed-wizard-parkeervergunning"
+        },
+        "name": "Beschikking parkeervergunning, begeleid",
+        "description": "Asks for the dossier and the decision; asks the reason only for a rejection and the effective date only for a grant.",
+        "namespace": "filinq",
+        "templateId": "template-voorbeeld-name-1-1",
+        "active": true,
+        "questions": [
+          {
+            "key": "dossier",
+            "label": "Which dossier is this decision for?",
+            "type": "registerObject",
+            "required": true,
+            "register": "filinq",
+            "schema": "dossier"
+          },
+          {
+            "key": "besluit",
+            "label": "What is the decision?",
+            "type": "choice",
+            "required": true,
+            "choices": [
+              {
+                "value": "toegewezen",
+                "label": "Granted"
+              },
+              {
+                "value": "afgewezen",
+                "label": "Rejected"
+              }
+            ],
+            "mapsTo": "besluit.uitkomst"
+          },
+          {
+            "key": "afwijzingsreden",
+            "label": "Reason for rejection",
+            "type": "text",
+            "required": true,
+            "mapsTo": "besluit.afwijzingsreden",
+            "condition": {
+              "questionKey": "besluit",
+              "operator": "equals",
+              "value": "afgewezen"
+            }
+          },
+          {
+            "key": "ingangsdatum",
+            "label": "Effective date",
+            "type": "date",
+            "required": true,
+            "mapsTo": "besluit.ingangsdatum",
+            "condition": {
+              "questionKey": "besluit",
+              "operator": "equals",
+              "value": "toegewezen"
+            }
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "wizardDefinition",
+          "slug": "seed-wizard-ontvangstbevestiging"
+        },
+        "name": "Ontvangstbevestiging",
+        "description": "A short acknowledgement of receipt: the dossier and the date the request came in.",
+        "namespace": "filinq",
+        "templateId": "template-voorbeeld-name-2-2",
+        "active": true,
+        "questions": [
+          {
+            "key": "dossier",
+            "label": "Which dossier is this decision for?",
+            "type": "registerObject",
+            "required": true,
+            "register": "filinq",
+            "schema": "dossier"
+          },
+          {
+            "key": "ontvangen",
+            "label": "When did the request come in?",
+            "type": "date",
+            "required": true,
+            "mapsTo": "verzoek.ontvangen"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "wizardDefinition",
+          "slug": "seed-wizard-informatieverzoek"
+        },
+        "name": "Informatieverzoek (concept)",
+        "description": "Not offered to clerks yet: asks what is missing and, when a deadline is given, by when.",
+        "namespace": "filinq",
+        "templateId": "template-voorbeeld-name-3-3",
+        "active": false,
+        "questions": [
+          {
+            "key": "ontbreekt",
+            "label": "What is missing?",
+            "type": "text",
+            "required": true,
+            "mapsTo": "verzoek.ontbreekt"
+          },
+          {
+            "key": "termijn",
+            "label": "Is there a deadline?",
+            "type": "choice",
+            "required": false,
+            "choices": [
+              {
+                "value": "ja",
+                "label": "Yes"
+              },
+              {
+                "value": "nee",
+                "label": "No"
+              }
+            ]
+          },
+          {
+            "key": "uiterlijk",
+            "label": "By when?",
+            "type": "date",
+            "required": true,
+            "mapsTo": "verzoek.uiterlijk",
+            "condition": {
+              "questionKey": "termijn",
+              "operator": "equals",
+              "value": "ja"
+            }
+          }
+        ]
       }
     ]
   }

@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\ErrorDetailsInterface;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\MultiFormatOutputProducer;
 use OCP\AppFramework\Controller;
@@ -525,10 +525,10 @@ class DocumentController extends Controller {
 		);
 
 		$data = ['error' => $exception->getMessage()];
-		if ($exception instanceof ConversionFailedException) {
-			// Which backend was tried and why it could not, e.g. an
-			// accessible request without LibreOffice.
-			$data['attempts'] = $exception->getAttempts();
+		if ($exception instanceof ErrorDetailsInterface) {
+			// The conversion attempts of a failed PDF conversion, or which wizard
+			// questions were unanswered or answered wrongly.
+			$data = array_merge($data, $exception->getErrorDetails());
 		}
 
 		return new JSONResponse(

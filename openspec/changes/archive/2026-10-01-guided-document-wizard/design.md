@@ -295,3 +295,15 @@ instance.
 - [Browser-local runs lose work on crash] → accepted for v1 (Non-Goal);
   answers are typically minutes of work, and server drafts would create a new
   PII store.
+
+## Resolved at apply (2026-10-01)
+
+- Filinq ships one register, `filinq`. The draft named `templates` and `document` registers that do not exist. Register 8.43.0 adds `wizardDefinition` 1.0.0 and gives `generatedDocument` 1.6.0 the optional `wizardContext`. The spec deltas now say `filinq`; the version numbers in D1 and the OpenRegister section above are the draft's and are superseded by these.
+- The register object picker in the seed asks for `filinq`/`dossier`, the slug the dossier schema really has, not a `dossier` register.
+- `wizardDefinition` is written by the group that edits templates (`docudesk-template-editors`, the same literal the `template` schema uses) and read by every signed-in user.
+- The Templates index is a generic `type:index` page (CnIndexPage) with no row actions, so "Generate with wizard" lives on the template detail page header, next to the new Wizard tab. TemplateDetail never loaded the template its route names (only the retired TemplateIndex set it, filinq#782), so neither the Versions tab nor a Wizard tab could render on a reachable navigation. It now loads the template by route id when the store holds another one.
+- The object entry point is `WizardEntryActions` on the dossier page, listing the active wizards whose register object question asks for `filinq`/`dossier` (`GET api/wizards?register=&schema=`).
+- `options.wizardContext` together with `options.formats` is refused with 400: the multi-format path renders once outside `generateDocument()` and would skip the answer check and the record.
+- Seed data: three demo `wizardDefinition` rows in `filinq_mock_register.json` (the demo descriptor every schema has; gate-101), pointing at the demo templates by slug.
+- Documentation screenshots (task 5.4, ADR-010) and the Postgres run of the Playwright spec (task 5.2) were not done here; the docs page describes the screens in words, and the e2e spec answers filinq's routes with handlers.
+

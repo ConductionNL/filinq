@@ -23,6 +23,7 @@ import CallSplit from 'vue-material-design-icons/CallSplit.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
 import CertificateOutline from 'vue-material-design-icons/CertificateOutline.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
+import ChatQuestionOutline from 'vue-material-design-icons/ChatQuestionOutline.vue'
 import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
@@ -82,6 +83,7 @@ export default {
 	BookOpenVariantOutline,
 	CertificateOutline,
 	ChartBoxOutline,
+	ChatQuestionOutline,
 	CheckDecagram,
 	ClipboardCheckOutline,
 	Domain,
