@@ -106,6 +106,30 @@ class InboundClassificationServiceTest extends TestCase {
 	}//end testOnlyInboundDocumentsAreClassified()
 
 	/**
+	 * An incoming email gets its case suggested from the reference in its
+	 * subject, also when the body never repeats it (in-email-suggest).
+	 *
+	 * @return void
+	 */
+	public function testAnEmailsSubjectReferenceSuggestsItsCase(): void {
+		$this->store->rows['dossier']['00000000-0000-0000-0000-00000000d077'] = ['name' => 'Z-2026-0412 Omgevingsvergunning Dorpsstraat 4'];
+		$this->store->rows['dossier']['00000000-0000-0000-0000-00000000d078'] = ['name' => 'Z-2026-0413 Kapvergunning'];
+		$email = [
+			'channel' => 'mail',
+			'status' => 'received',
+			'file' => 812030,
+			'subject' => 'Re: aanvullende stukken Z-2026-0412',
+			'contentText' => "Geachte heer, mevrouw,\nHierbij stuur ik de gevraagde tekeningen.\nMet vriendelijke groet",
+		];
+
+		$record = $this->service()->classify(objectData: $email, objectRef: $this->ref())['record'];
+
+		$this->assertSame('00000000-0000-0000-0000-00000000d077', $record['suggestedDossier']);
+		$this->assertSame('suggested', $record['status']);
+
+	}//end testAnEmailsSubjectReferenceSuggestsItsCase()
+
+	/**
 	 * A document without text is skipped with the reason, not silently.
 	 *
 	 * @return void

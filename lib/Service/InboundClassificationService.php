@@ -174,7 +174,7 @@ class InboundClassificationService {
 			'method' => $method,
 			'suggestedCorrespondent' => $correspondent,
 			'correspondentPending' => $entities === null,
-			'suggestedDossier' => $this->matcher->match(dossiers: $this->sources->dossiers(), correspondent: $correspondent['name'] ?? null, text: $text),
+			'suggestedDossier' => $this->matcher->match(dossiers: $this->sources->dossiers(), correspondent: $correspondent['name'] ?? null, text: $this->referenceText(objectData: $objectData, text: $text)),
 			'status' => 'suggested',
 		];
 
@@ -195,6 +195,26 @@ class InboundClassificationService {
 			&& $entities !== null;
 
 	}//end supersedes()
+
+	/**
+	 * The text a case reference is looked for in: the subject first, then the
+	 * document text. An email names its case in the subject far more often
+	 * than in the body, and the body is what the type is read from.
+	 *
+	 * @param array<string, mixed> $objectData The object's fields.
+	 * @param string               $text       The document text.
+	 *
+	 * @return string The subject and the text.
+	 */
+	private function referenceText(array $objectData, string $text): string {
+		$subject = ($objectData['subject'] ?? '');
+		if (is_string($subject) === false || trim($subject) === '' || str_contains($text, $subject) === true) {
+			return $text;
+		}
+
+		return trim($subject) . "\n" . $text;
+
+	}//end referenceText()
 
 	/**
 	 * Whether the object is an inbound document: an intakeDocument, which
