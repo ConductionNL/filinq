@@ -101,6 +101,22 @@ class ClassificationDecisionService {
 	}//end pending()
 
 	/**
+	 * Whether the reviewer can open the file in their own folder: the per-object
+	 * guard every classification endpoint asks first.
+	 *
+	 * @param int    $fileId The file.
+	 * @param string $userId The reviewer.
+	 *
+	 * @return bool True when the file resolves in the reviewer's folder.
+	 *
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-4
+	 */
+	public function canAccessFile(int $fileId, string $userId): bool {
+		return $this->nodeFor(userId: $userId, fileId: $fileId) !== null;
+
+	}//end canAccessFile()
+
+	/**
 	 * The active record of one file, decided or not, for the document card.
 	 *
 	 * @param int    $fileId The file.

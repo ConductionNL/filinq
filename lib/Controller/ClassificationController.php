@@ -94,7 +94,11 @@ class ClassificationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(int $fileId): JSONResponse {
-		// The per-object guard: the decision service resolves the file in the caller's own folder first.
+		// The per-object guard: the caller must be able to open the file in their own folder.
+		if ($this->decisions->canAccessFile(fileId: $fileId, userId: $this->userId()) === false) {
+			return $this->notFound();
+		}
+
 		return $this->answer(
 			action: function () use ($fileId): array {
 				$record = $this->decisions->forFile(fileId: $fileId, userId: $this->userId());
@@ -122,7 +126,11 @@ class ClassificationController extends Controller {
 		$body = $this->request->getParams();
 		$choices = array_intersect_key($body, array_flip(['documentType', 'correspondent', 'dossier']));
 
-		// The per-object guard: the decision service resolves the file in the caller's own folder first.
+		// The per-object guard: the caller must be able to open the file in their own folder.
+		if ($this->decisions->canAccessFile(fileId: $fileId, userId: $this->userId()) === false) {
+			return $this->notFound();
+		}
+
 		return $this->answer(action: fn (): array => $this->decisions->confirm(fileId: $fileId, userId: $this->userId(), choices: $choices));
 
 	}//end confirm()
@@ -138,7 +146,11 @@ class ClassificationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function reject(int $fileId): JSONResponse {
-		// The per-object guard: the decision service resolves the file in the caller's own folder first.
+		// The per-object guard: the caller must be able to open the file in their own folder.
+		if ($this->decisions->canAccessFile(fileId: $fileId, userId: $this->userId()) === false) {
+			return $this->notFound();
+		}
+
 		return $this->answer(action: fn (): array => $this->decisions->reject(fileId: $fileId, userId: $this->userId()));
 
 	}//end reject()
@@ -152,6 +164,17 @@ class ClassificationController extends Controller {
 		return (string) $this->userSession->getUser()?->getUID();
 
 	}//end userId()
+
+	/**
+	 * The answer for a file the caller cannot open: the same 404 as a file
+	 * without a suggestion, so no file id can be probed.
+	 *
+	 * @return JSONResponse The 404.
+	 */
+	private function notFound(): JSONResponse {
+		return new JSONResponse(data: ['error' => 'No suggestion for this file'], statusCode: Http::STATUS_NOT_FOUND);
+
+	}//end notFound()
 
 	/**
 	 * Run an action; a refusal keeps its status, anything else is a 500 with a generic body.

@@ -303,4 +303,19 @@ class ClassificationDecisionServiceTest extends TestCase {
 		$this->assertNull($this->decisions()->forFile(fileId: 3, userId: 'annemarie'));
 
 	}//end testTheCardReadsTheActiveRecordOfAReachableFile()
+
+	/**
+	 * The guard the controller asks first: only a file in the reviewer's own folder.
+	 *
+	 * @return void
+	 */
+	public function testCanAccessFileOnlyForTheReviewersOwnFiles(): void {
+		$this->reachable(userId: 'annemarie', fileId: 1);
+		$this->reachable(userId: 'bram', fileId: 2);
+
+		$this->assertTrue($this->decisions()->canAccessFile(fileId: 1, userId: 'annemarie'));
+		$this->assertFalse($this->decisions()->canAccessFile(fileId: 2, userId: 'annemarie'));
+		$this->assertFalse($this->decisions()->canAccessFile(fileId: 0, userId: 'annemarie'));
+
+	}//end testCanAccessFileOnlyForTheReviewersOwnFiles()
 }//end class

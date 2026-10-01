@@ -170,6 +170,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the suggestions and the dossiers a suggestion can be filed in.
+	 *
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
+	 */
 	mounted() {
 		this.load()
 		dossierOptions().then((options) => {

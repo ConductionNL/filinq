@@ -157,6 +157,11 @@ export default {
 	watch: {
 		fileId: {
 			immediate: true,
+			/**
+			 * Load the classification of the document that is open now.
+			 *
+			 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
+			 */
 			handler() {
 				this.load()
 			},

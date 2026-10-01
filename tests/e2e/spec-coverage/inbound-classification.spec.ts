@@ -66,13 +66,10 @@ async function stub(page: Page): Promise<Array<[string, unknown]>> {
 			json: { results: decisions.length === 0 ? [INVOICE] : [] },
 		}),
 	)
-	await page.route(
-		'**/apps/filinq/api/classification/812010/confirm',
-		(route) => {
-			decisions.push(['confirm', route.request().postDataJSON() ?? {}])
-			return route.fulfill({ json: { ...INVOICE, status: 'confirmed' } })
-		},
-	)
+	await page.route('**/apps/filinq/api/classification/812010/confirm', (route) => {
+		decisions.push(['confirm', route.request().postDataJSON() ?? {}])
+		return route.fulfill({ json: { ...INVOICE, status: 'confirmed' } })
+	})
 	return decisions
 }
 
