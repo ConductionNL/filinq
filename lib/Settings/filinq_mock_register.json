@@ -7512,6 +7512,22 @@
         "filing": "recorded",
         "confirmedBy": "w.devries",
         "confirmedAt": "2026-07-17T10:20:00Z"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "classificationResult",
+          "slug": "seed-classification-overig-pending"
+        },
+        "fileId": 812012,
+        "fileName": "scan-2026-07-18-0931.pdf",
+        "suggestedDocumentType": "overig",
+        "documentTypeConfidence": 0.2,
+        "method": "rules",
+        "suggestedCorrespondent": null,
+        "correspondentPending": true,
+        "suggestedDossier": null,
+        "status": "suggested"
       }
     ]
   }
