@@ -28,55 +28,19 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 require_once __DIR__ . '/Wizard/WizardDoubles.php';
 require_once __DIR__ . '/Classification/ClassificationDoubles.php';
+require_once __DIR__ . '/Classification/InboundClassificationFixture.php';
 
-use OCA\Filinq\Service\Classification\ClassificationResultRepository;
-use OCA\Filinq\Service\Classification\ClassificationSources;
-use OCA\Filinq\Service\Classification\CorrespondentRanker;
-use OCA\Filinq\Service\Classification\DossierMatcher;
-use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentTypeClassifier;
-use OCA\Filinq\Service\FileEntityStatsService;
-use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Tests\Unit\Service\Classification\ClassificationObjectStore;
-use OCA\OpenRegister\Db\EntityRelationMapper;
-use OCP\App\IAppManager;
-use OCP\IAppConfig;
+use OCA\Filinq\Tests\Unit\Service\Classification\InboundClassificationFixture;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Inbound classification over the real classes.
  */
 class InboundClassificationServiceTest extends TestCase {
 
-	/**
-	 * An invoice's OCR text.
-	 *
-	 * @var string
-	 */
-	private const INVOICE = "Heijmans B.V.\nFactuur\nFactuurnummer: 2026-0412\nTe betalen binnen 30 dagen op IBAN NL91ABNA0417164300.\nBedrag excl. btw: 1.250,00";
-
-	/**
-	 * The in-memory OpenRegister.
-	 *
-	 * @var ClassificationObjectStore
-	 */
-	private ClassificationObjectStore $store;
-
-	/**
-	 * Detected entity rows per file id; a missing file id has had no detection.
-	 *
-	 * @var array<int, array<int, array<string, mixed>>>
-	 */
-	private array $entities = [];
-
-	/**
-	 * The toggle value.
-	 *
-	 * @var string
-	 */
-	private string $toggle = '1';
+	use InboundClassificationFixture;
 
 	/**
 	 * Set up the store.
@@ -120,6 +84,26 @@ class InboundClassificationServiceTest extends TestCase {
 		$this->assertSame([], $this->store->saves);
 
 	}//end testTheToggleDisablesTheSurface()
+
+	/**
+	 * Only inbound documents are classified: the enrichment path sees every
+	 * object, and a conformance report or an archive job also carries a file
+	 * and a subject.
+	 *
+	 * @return void
+	 */
+	public function testOnlyInboundDocumentsAreClassified(): void {
+		$report = ['fileId' => 812010, 'subject' => self::INVOICE, 'flavour' => 'pdfa-2b', 'compliant' => true];
+		$archiveJob = ['file' => 812011, 'subject' => self::INVOICE, 'status' => 'queued'];
+
+		foreach ([$report, $archiveJob] as $objectData) {
+			$outcome = $this->service()->classify(objectData: $objectData, objectRef: ['id' => 'x', 'register' => 'filinq', 'schema' => 'conformanceReport']);
+			$this->assertSame(['outcome' => 'skipped', 'reason' => 'not_inbound'], $outcome);
+		}
+
+		$this->assertSame([], $this->store->saves);
+
+	}//end testOnlyInboundDocumentsAreClassified()
 
 	/**
 	 * A document without text is skipped with the reason, not silently.
@@ -241,55 +225,4 @@ class InboundClassificationServiceTest extends TestCase {
 		$this->assertSame('suggested', $record['status']);
 
 	}//end testAMatchingDossierIsSuggestedNotApplied()
-
-	/**
-	 * The service over the real classes.
-	 *
-	 * @return InboundClassificationService The service.
-	 */
-	private function service(): InboundClassificationService {
-		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
-		$resolver->method('resolve')->willReturn($this->store);
-
-		$mapper = $this->createMock(EntityRelationMapper::class);
-		$mapper->method('findEntitiesForFile')->willReturnCallback(fn (int $fileId): array => ($this->entities[$fileId] ?? []));
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($mapper);
-		$apps = $this->createMock(IAppManager::class);
-		$apps->method('getInstalledApps')->willReturn(['openregister']);
-
-		$config = $this->createMock(IAppConfig::class);
-		$config->method('getValueString')->willReturnCallback(fn (string $app, string $key, string $default): string => $key === InboundClassificationService::TOGGLE ? $this->toggle : $default);
-
-		return new InboundClassificationService(
-			classifier: new DocumentTypeClassifier(),
-			ranker: new CorrespondentRanker(),
-			matcher: new DossierMatcher(),
-			results: new ClassificationResultRepository(objectResolver: $resolver),
-			sources: new ClassificationSources(entityStats: new FileEntityStatsService(new NullLogger(), $container, $apps), objectResolver: $resolver, logger: new NullLogger()),
-			appConfig: $config,
-			logger: new NullLogger(),
-		);
-
-	}//end service()
-
-	/**
-	 * An intake document with OCR text.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function intake(): array {
-		return ['channel' => 'scan', 'status' => 'received', 'file' => 812010, 'fileName' => 'scan-factuur-heijmans.pdf', 'contentText' => self::INVOICE];
-
-	}//end intake()
-
-	/**
-	 * The intake document's reference.
-	 *
-	 * @return array<string, string> The id, register and schema.
-	 */
-	private function ref(): array {
-		return ['id' => 'intake-1', 'register' => 'filinq', 'schema' => 'intakeDocument'];
-
-	}//end ref()
 }//end class

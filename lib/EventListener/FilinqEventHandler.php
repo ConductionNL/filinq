@@ -160,6 +160,10 @@ class FilinqEventHandler {
 		);
 
 		if ($this->hasContentChanged(objectData: $objectData, oldObjectData: $oldObjectData) === false) {
+			// An intake document gets its OCR text (contentText) by an update,
+			// which is not an enrichment content field: offer it to
+			// classification anyway. A file with a suggestion is skipped there.
+			$this->enrichmentRunner->classify(object: $object, logger: $logger);
 			$logger->debug(
 				'Filinq: No content change detected, skipping re-enrichment',
 				['objectId' => $object->getUuid()]

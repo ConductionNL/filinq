@@ -26,9 +26,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
+use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\SettingsService;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Runs metadata enrichment for Filinq objects
@@ -42,6 +44,58 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/metadata-enrichment/spec.md
  */
 class EnrichmentRunner {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param InboundClassificationService|null $classification Suggests a type, correspondent and dossier for an
+	 *                                                          inbound document; null leaves classification out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 */
+	public function __construct(
+		private readonly ?InboundClassificationService $classification = null,
+	) {
+
+	}//end __construct()
+
+	/**
+	 * Offer an object to classification. Suggestions only: the service writes
+	 * a classificationResult record and never a field of the object. It has
+	 * its own toggle, so it runs whether or not enrichment is on, and a
+	 * failure here never costs the object its enrichment or its save.
+	 *
+	 * @param mixed           $object The OpenRegister object entity.
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 */
+	public function classify(mixed $object, LoggerInterface $logger): void {
+		if ($this->classification === null) {
+			return;
+		}
+
+		try {
+			$outcome = $this->classification->classify(
+				objectData: $object->getObject(),
+				objectRef: [
+					'id' => (string) $object->getUuid(),
+					'register' => (string) $object->getRegister(),
+					'schema' => (string) $object->getSchema(),
+				]
+			);
+			if ($outcome['outcome'] === 'suggested') {
+				$logger->info('Filinq: classification suggested', ['objectId' => $object->getUuid()]);
+			}
+		} catch (Throwable $e) {
+			$logger->warning('Filinq: classification failed', ['objectId' => $object->getUuid(), 'exception' => $e->getMessage()]);
+		}
+
+	}//end classify()
 	/**
 	 * Check if enrichment is enabled based on settings
 	 *
@@ -97,6 +151,8 @@ class EnrichmentRunner {
 				'registerId' => $object->getRegister(),
 			]
 		);
+
+		$this->classify(object: $object, logger: $logger);
 
 		try {
 			if ($this->isEnrichmentEnabled(settingsService: $settingsService) === false) {

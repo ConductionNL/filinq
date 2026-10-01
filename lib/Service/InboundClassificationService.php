@@ -108,6 +108,11 @@ class InboundClassificationService {
 			return ['outcome' => 'skipped', 'reason' => 'disabled'];
 		}
 
+		// The enrichment path sees every object; only an intake document is inbound.
+		if ($this->isInbound(objectData: $objectData) === false) {
+			return ['outcome' => 'skipped', 'reason' => 'not_inbound'];
+		}
+
 		$fileId = $this->fileIdOf(objectData: $objectData);
 		if ($fileId === 0) {
 			return ['outcome' => 'skipped', 'reason' => 'no_file'];
@@ -190,6 +195,22 @@ class InboundClassificationService {
 			&& $entities !== null;
 
 	}//end supersedes()
+
+	/**
+	 * Whether the object is an inbound document: an intakeDocument, which
+	 * alone carries the channel it arrived through. A conformance report or
+	 * an archive job also has a file and a subject, and is not classified.
+	 *
+	 * @param array<string, mixed> $objectData The object's fields.
+	 *
+	 * @return bool True for an intake document.
+	 */
+	private function isInbound(array $objectData): bool {
+		$channel = ($objectData['channel'] ?? null);
+
+		return is_string($channel) === true && $channel !== '';
+
+	}//end isInbound()
 
 	/**
 	 * The file id an object names: `file` on an intake document, `fileId` elsewhere.
