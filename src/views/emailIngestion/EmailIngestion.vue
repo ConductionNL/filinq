@@ -116,7 +116,7 @@ by hand. Admins only, like the api/email-ingestion routes behind it.
 <script>
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcSelect } from '@nextcloud/vue'
 import {
 	failureText,
@@ -224,7 +224,9 @@ export default {
 				return
 			}
 			showSuccess(
-				n('filinq', '%n email handled', '%n emails handled', result.data.processed),
+				t('filinq', 'Emails handled: {count}', {
+					count: result.data.processed,
+				}),
 			)
 			await this.load()
 		},
