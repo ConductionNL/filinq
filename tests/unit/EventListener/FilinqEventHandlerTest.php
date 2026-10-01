@@ -545,7 +545,7 @@ class FilinqEventHandlerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-3
 	 */
 	public function testAnUnchangedUpdateIsStillOfferedToClassification(): void {
 		$payload = ['channel' => 'scan', 'status' => 'received', 'file' => 812010, 'contentText' => 'Factuur'];

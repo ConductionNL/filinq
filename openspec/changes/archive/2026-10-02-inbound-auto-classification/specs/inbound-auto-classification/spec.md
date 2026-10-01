@@ -129,8 +129,8 @@ visible rows.
 ### Requirement: Dossier routing is a suggestion only (REQ-DDIAC-004)
 
 The system MUST set `suggestedDossier` only on a high-precision match
-(suggested correspondent name or an explicit case reference matching a
-dossier name); fuzzy matching MUST NOT be used in this wave. Filing MUST
+(suggested correspondent name or an explicit case reference, in the
+subject or the text, matching a dossier name); fuzzy matching MUST NOT be used in this wave. Filing MUST
 happen only on human confirmation: confirming a suggestion with a dossier
 MUST attach the document via the dossier's existing folder binding
 (moving the file into the dossier's bound folder when resolvable, and
@@ -143,6 +143,13 @@ The system MUST NOT move, tag, or re-file any document automatically.
 - WHEN classification runs
 - THEN the suggestion carries the dossier reference and the file has not moved
 - @e2e tests/e2e/spec-coverage/inbound-classification.spec.ts
+
+#### Scenario: An incoming email's subject reference suggests its case
+
+- GIVEN a dossier named "Z-2026-0412 Omgevingsvergunning Dorpsstraat 4" and an intake document from the mail channel whose subject is "Re: aanvullende stukken Z-2026-0412" while its body never repeats the reference
+- WHEN classification runs
+- THEN the suggestion carries that dossier, and nothing is filed until a person confirms it
+- @e2e exclude reference-matching contract with no screen of its own; covered by PHPUnit (tests/unit/Service/InboundClassificationServiceTest.php::testAnEmailsSubjectReferenceSuggestsItsCase)
 
 #### Scenario: Confirmation files the document
 

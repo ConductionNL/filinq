@@ -24,7 +24,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Orchestrates one classification suggestion per inbound file.
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
  */
 class InboundClassificationService {
 
@@ -85,7 +85,7 @@ class InboundClassificationService {
 	 *
 	 * @return bool True unless the setting is "0".
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-5
 	 */
 	public function isEnabled(): bool {
 		return $this->appConfig->getValueString('filinq', self::TOGGLE, '1') !== '0';
@@ -101,7 +101,7 @@ class InboundClassificationService {
 	 * @return array{outcome: string, reason?: string, record?: array<string, mixed>}
 	 *     `suggested` with the record, or `skipped` with the reason.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
 	 */
 	public function classify(array $objectData, array $objectRef): array {
 		if ($this->isEnabled() === false) {
@@ -174,7 +174,11 @@ class InboundClassificationService {
 			'method' => $method,
 			'suggestedCorrespondent' => $correspondent,
 			'correspondentPending' => $entities === null,
-			'suggestedDossier' => $this->matcher->match(dossiers: $this->sources->dossiers(), correspondent: $correspondent['name'] ?? null, text: $this->referenceText(objectData: $objectData, text: $text)),
+			'suggestedDossier' => $this->matcher->match(
+				dossiers: $this->sources->dossiers(),
+				correspondent: $correspondent['name'] ?? null,
+				text: $this->referenceText(objectData: $objectData, text: $text)
+			),
 			'status' => 'suggested',
 		];
 

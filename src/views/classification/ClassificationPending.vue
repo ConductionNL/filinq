@@ -7,7 +7,7 @@ a sender and a dossier for each document that came in. Nothing is applied
 until somebody confirms it; a correction is kept beside the suggestion, and
 a rejection changes nothing. Only files the reader can open are listed.
 
-@spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+@spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 -->
 
 <template>
@@ -158,7 +158,7 @@ export default {
 		/**
 		 * The columns of the suggestion table.
 		 *
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		tableColumns() {
 			return [
@@ -186,7 +186,7 @@ export default {
 		/**
 		 * Load the waiting suggestions.
 		 *
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		async load() {
 			const result = await listPending()
@@ -201,7 +201,7 @@ export default {
 		/**
 		 * Reload the list on the refresh action.
 		 *
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		async refresh() {
 			this.refreshing = true
@@ -214,7 +214,7 @@ export default {
 		 *
 		 * @param {string} id The dossier uuid.
 		 * @return {string} The label.
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		dossierLabel(id) {
 			return this.dossiers.find((option) => option.id === id)?.label || id
@@ -225,7 +225,7 @@ export default {
 		 *
 		 * @param {object} row The suggestion.
 		 * @param {string} action confirm or reject.
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		async decide(row, action) {
 			this.busy = true
@@ -246,7 +246,7 @@ export default {
 		 * Confirm the suggestion with the person's corrections.
 		 *
 		 * @param {object} choices From the correction pickers.
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		async confirmCorrected(choices) {
 			const row = this.correcting
@@ -260,7 +260,7 @@ export default {
 		/**
 		 * Confirm every suggestion on the page as suggested.
 		 *
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		async confirmShown() {
 			this.busy = true
@@ -290,7 +290,7 @@ export default {
 		 *
 		 * @param {object} result The call's answer.
 		 * @param {string} success The message on success.
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
 		 */
 		async report(result, success) {
 			if (!result.ok) {

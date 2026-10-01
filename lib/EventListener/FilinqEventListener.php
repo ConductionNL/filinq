@@ -121,7 +121,7 @@ class FilinqEventListener implements IEventListener {
 	 *
 	 * @return InboundClassificationService|null The service.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-3
 	 */
 	private function classificationService(): ?InboundClassificationService {
 		try {

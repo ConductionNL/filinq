@@ -6,7 +6,7 @@ The pickers a person uses to correct a suggestion before confirming it:
 document type, sender and dossier. Starts on the suggestion; emits the
 choices on every change, as { documentType, correspondentName, dossier }.
 
-@spec openspec/changes/inbound-auto-classification/tasks.md#3-2
+@spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
 -->
 
 <template>
@@ -79,7 +79,7 @@ export default {
 		/**
 		 * Tell the parent what is chosen now.
 		 *
-		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
+		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
 		 */
 		emitChoices() {
 			this.$emit('change', {

@@ -22,7 +22,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ namespace OCA\Filinq\Service;
 /**
  * Rule and keyword classification into Dutch intake types.
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-1
  */
 class DocumentTypeClassifier {
 
@@ -124,7 +124,7 @@ class DocumentTypeClassifier {
 	 * @return array{type: string, confidence: float, scores: array<string, float>}
 	 *     The suggested type, its confidence (0 to 1) and the raw score per type.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-1
 	 */
 	public function classify(string $text): array {
 		$scores = $this->scores(text: $text);
