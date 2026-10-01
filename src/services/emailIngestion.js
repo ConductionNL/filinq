@@ -59,25 +59,28 @@ export function stateLabel(state) {
  */
 export function failureText(reason) {
 	switch (reason) {
-	case 'unsupported-format':
-		return t(
-			'filinq',
-			'Outlook .msg files cannot be read. Save the email as .eml and put it in the inbox again.',
-		)
-	case 'unparseable':
-		return t(
-			'filinq',
-			'This file could not be read as an email. Export it again as .eml.',
-		)
-	case 'dossier-folder-unavailable':
-		return t(
-			'filinq',
-			'The dossier of this inbox has no folder that can be reached. Check the inbox mapping.',
-		)
-	case 'filing-failed':
-		return t('filinq', 'The email could not be moved into the dossier folder.')
-	default:
-		return reason || t('filinq', 'Unknown reason')
+		case 'unsupported-format':
+			return t(
+				'filinq',
+				'Outlook .msg files cannot be read. Save the email as .eml and put it in the inbox again.',
+			)
+		case 'unparseable':
+			return t(
+				'filinq',
+				'This file could not be read as an email. Export it again as .eml.',
+			)
+		case 'dossier-folder-unavailable':
+			return t(
+				'filinq',
+				'The dossier of this inbox has no folder that can be reached. Check the inbox mapping.',
+			)
+		case 'filing-failed':
+			return t(
+				'filinq',
+				'The email could not be moved into the dossier folder.',
+			)
+		default:
+			return reason || t('filinq', 'Unknown reason')
 	}
 }
 
@@ -93,9 +96,7 @@ export function inThread(row, rows) {
 	if (!row.threadKey) {
 		return false
 	}
-	return rows.some(
-		(other) => other !== row && other.threadKey === row.threadKey,
-	)
+	return rows.some((other) => other !== row && other.threadKey === row.threadKey)
 }
 
 /**
@@ -153,9 +154,7 @@ export function rescan() {
  */
 export function retryConversion(uuid) {
 	return answer(
-		axios.post(
-			generateUrl(`${BASE}/${encodeURIComponent(uuid)}/convert`),
-		),
+		axios.post(generateUrl(`${BASE}/${encodeURIComponent(uuid)}/convert`)),
 	)
 }
 

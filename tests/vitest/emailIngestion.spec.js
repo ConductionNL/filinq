@@ -21,9 +21,11 @@ import {
 
 const calls = []
 let answer = () => Promise.resolve({ data: {} })
-const record = (method) => (url, body) => {
-	calls.push([method, url, body])
-	return answer()
+function record(method) {
+	return (url, body) => {
+		calls.push([method, url, body])
+		return answer()
+	}
 }
 vi.mock('@nextcloud/axios', () => ({
 	default: {

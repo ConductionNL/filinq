@@ -183,7 +183,8 @@ export default {
 			return this.rows.filter(
 				(row) =>
 					(!this.stateFilter || rowState(row) === this.stateFilter)
-					&& (!this.dossierFilter || row.dossierRef === this.dossierFilter),
+					&& (!this.dossierFilter
+						|| row.dossierRef === this.dossierFilter),
 			)
 		},
 	},
@@ -237,7 +238,10 @@ export default {
 			this.retrying = ''
 			if (!result.ok || !result.data.pdfFileRef) {
 				showError(
-					t('filinq', 'The email is still not converted. Try again later.'),
+					t(
+						'filinq',
+						'The email is still not converted. Try again later.',
+					),
 				)
 				return
 			}

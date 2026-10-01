@@ -20,7 +20,9 @@ says who delivers the .eml files instead.
 		">
 		<NcLoadingIcon v-if="loading" :size="32" />
 		<template v-else>
-			<p class="email-settings__boundary" data-testid="email-settings-boundary">
+			<p
+				class="email-settings__boundary"
+				data-testid="email-settings-boundary">
 				{{
 					t(
 						'filinq',
@@ -118,7 +120,9 @@ export default {
 		const result = await loadSettings()
 		this.loading = false
 		if (!result.ok) {
-			showError(t('filinq', 'The email ingestion settings could not be loaded.'))
+			showError(
+				t('filinq', 'The email ingestion settings could not be loaded.'),
+			)
 			return
 		}
 		this.inboxes = result.data.inboxes.map((row) => ({

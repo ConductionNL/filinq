@@ -127,7 +127,7 @@
 					{{
 						t(
 							'filinq',
-							'Controls what the anonymise endpoints write back to Nextcloud Files by default. "PDF only" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. "PDF and native file" also keeps the native version (DOCX, ODT, …) alongside the PDF. "Native format only" skips conversion entirely. Callers can always override per-request by sending outputFormat: "pdf-only", "pdf", or "preserve".',
+							'Controls what the anonymise endpoints write back to Nextcloud Files by default. "PDF only" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. "PDF and native file" also keeps the native version (DOCX, ODT, …) alongside the PDF. "Native format only" skips conversion entirely. Callers can always override per-request by sending outputFormat: "pdf-only", "pdf", or "preserve".',
 						)
 					}}
 				</div>
@@ -963,8 +963,8 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
-import EntityTypeSelector from './EntityTypeSelector.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
+import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import {
