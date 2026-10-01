@@ -58,6 +58,9 @@ require_once __DIR__ . '/stubs/NextcloudStubs.php';
 // OpenRegister's sanitizer value classes, verbatim, and the office sanitizer's public surface.
 require_once __DIR__ . '/stubs/OpenRegisterSanitizerStubs.php';
 
+// OpenRegister's EML value classes (email-ingestion).
+require_once __DIR__ . '/stubs/OpenRegisterEmlStubs.php';
+
 // Load OCP event-dispatcher contracts before OR stubs that reference them
 // (Event / IEventDispatcher / IEventListener). The OCP package ships them
 // in vendor/nextcloud/ocp but does not classmap-autoload, so we require

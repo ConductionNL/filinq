@@ -26,6 +26,7 @@ import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
+import EmailArrowRightOutline from 'vue-material-design-icons/EmailArrowRightOutline.vue'
 import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
@@ -85,6 +86,7 @@ export default {
 	ClipboardCheckOutline,
 	Domain,
 	EmailMultipleOutline,
+	EmailArrowRightOutline,
 	EmailOutline,
 	EyeOffOutline,
 	// The `documentFinalityRule` and `documentVersion` schemas in

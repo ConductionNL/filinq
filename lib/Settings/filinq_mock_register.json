@@ -7249,6 +7249,83 @@
         },
         "sanitizedAt": "2026-09-30T11:00:00Z",
         "sanitizedBy": "seed-user-woo"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "emailDocument",
+          "slug": "seed-email-woo-verzoek-ontvangst"
+        },
+        "sourceFileRef": "814001",
+        "pdfFileRef": "814002",
+        "subject": "Woo-verzoek handhavingsbesluiten horeca",
+        "fromAddress": "verzoeker@example.org",
+        "toAddresses": [
+          "woo@demostad.example"
+        ],
+        "ccAddresses": [],
+        "sentAt": "2026-06-20T08:41:00+00:00",
+        "messageId": "seed-0001@example.org",
+        "references": [],
+        "threadKey": "seed-0001@example.org",
+        "attachmentCount": 1,
+        "attachmentNames": [
+          "machtiging.pdf"
+        ],
+        "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "status": "filed",
+        "ingestedAt": "2026-06-20T09:00:00+00:00",
+        "dossierRef": "demostad-woo-2025-017",
+        "ingestSource": "watched-folder"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "emailDocument",
+          "slug": "seed-email-woo-verzoek-ontvangstbevestiging"
+        },
+        "sourceFileRef": "814003",
+        "subject": "Re: Woo-verzoek handhavingsbesluiten horeca",
+        "fromAddress": "woo@demostad.example",
+        "toAddresses": [
+          "verzoeker@example.org"
+        ],
+        "ccAddresses": [
+          "juridisch@demostad.example"
+        ],
+        "sentAt": "2026-06-21T10:05:00+00:00",
+        "messageId": "seed-0002@demostad.example",
+        "inReplyTo": "seed-0001@example.org",
+        "references": [
+          "seed-0001@example.org"
+        ],
+        "threadKey": "seed-0001@example.org",
+        "attachmentCount": 0,
+        "attachmentNames": [],
+        "contentHash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "status": "filed",
+        "ingestedAt": "2026-06-21T10:10:00+00:00",
+        "dossierRef": "demostad-woo-2025-017",
+        "ingestSource": "watched-folder"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "emailDocument",
+          "slug": "seed-email-outlook-export-failed"
+        },
+        "sourceFileRef": "814004",
+        "subject": "",
+        "references": [],
+        "attachmentNames": [],
+        "toAddresses": [],
+        "ccAddresses": [],
+        "contentHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "status": "failed",
+        "failureReason": "unsupported-format",
+        "ingestedAt": "2026-06-22T07:30:00+00:00",
+        "dossierRef": "demostad-woo-2025-017",
+        "ingestSource": "watched-folder"
       }
     ]
   }

@@ -150,6 +150,7 @@ deliberately.
 | `pseudonymMap` | admins | admins | admins | The key that turns a reversibly anonymised copy back into names. Nobody but an admin reaches it through the OpenRegister API, and an admin gets the metadata only: `mappings` is `writeOnly` and encrypted with the server secret. Filinq reads and writes it itself, past the cascade, after its own checks (see the bypass table). |
 | `documentContract` | `filinq-contract-managers` | `filinq-contract-managers` | `filinq-contract-managers`, delete admins | A contract carries its value and the people and companies it binds, so the whole schema belongs to the contract managers group, not to every signed-in user. The contract routes (renew, terminate, suggestions) read the contract as the caller first and answer 404 for one they cannot read. Only an admin deletes one: a contract is a record, ended by terminating or renewing it. |
 | `sanitizationRecord` | authenticated | authenticated | nobody updates, delete admins | Written by the sanitize action and the anonymiser as the acting user. It holds counts per category and file ids, never removed content. Nobody may change a record: it is evidence that a file was cleaned, and the publication hand-off reads it. |
+| `emailDocument` | admins | nobody (the system writes) | nobody (the system writes), delete admins | One row per email filed from a watched inbox into a dossier. It names sender, recipients and subject, so the REST API offers it to admins only: every list is empty, which leaves OpenRegister's admin bypass and nothing else. The ingestion job runs as the system and writes past the cascade; the status page and its routes are served by `EmailIngestionController` to admins and delegated admins of the filinq settings only (see the bypass table). The email itself is a file in the dossier folder and follows that folder's permissions. |
 
 | `printJob` | authenticated | authenticated | admins | A handler sends their own letters to print, and a print service reports back with that handler's account, so `create` and `update` are theirs. The endpoints only show a job to the person in `requestedBy` or an admin, and the list is always the caller's own. Only an admin deletes one: the job is the trace of what went to the printer. |
 
@@ -158,7 +159,7 @@ deliberately.
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
-`findAll()` accept `_rbac: false`, and Filinq passes it at **32 call sites in 13
+`findAll()` accept `_rbac: false`, and Filinq passes it at **35 call sites in 14
 files**. Each is paired with a compensating control rather than being an oversight,
 and the coverage test pins the set: **a new bypass fails the test until it is added
 here with a reason.**
@@ -168,6 +169,7 @@ here with a reason.**
 | `Service/PolicyCrudService.php` | 5 | `requirePolicyPermission()` asserts membership in `docudesk-policy-admins` / `docudesk-standing-consent-admins` for **every** action including `read`, before the lookup runs. |
 | `Service/CustomDictionaryRepository.php` | 4 | Recogniser lists are read during anonymisation, which runs on behalf of a user who may not hold the maintainer group. Read-only; no caller-supplied id reaches it. |
 | `Service/DossierObjectRepository.php` | 3 | Dossier contents are governed by Nextcloud folder permissions, which are checked before the repository is reached. |
+| `Service/EmailIngestion/EmailDocumentRepository.php` | 3 | The email ingestion job files mail as the system from a cron tick, with no user to check, and the idempotency reads must see every record of a dossier. The only other callers are the `api/email-ingestion` routes, which `EmailIngestionController` guards with `#[AuthorizedAdminSetting]` before the repository is reached. No caller-supplied filter reaches OpenRegister beyond status and dossier. |
 | `Service/BatchStateRepository.php` | 3 | Batch state is Filinq's own working state, written and read only by `BatchStateService` — no OpenRegister API caller reaches this class. Ownership is enforced one layer up in `BatchStateService::getBatch()`, which returns `null` (not a distinct error) for a batch belonging to another non-admin user, so a guessed batch id is indistinguishable from an absent one. The bypass is required, not convenient: the cascade restricts `update`/`delete` to `docudesk-policy-admins`, which ships **empty**, so an ordinary user's own extraction run would fail closed at its first status write. |
 | `Service/PolicyMatchService.php` | 2 | Matching must see every prohibition regardless of the acting user, or an anonymisation silently under-redacts. Fail-closed by design. |
 | `Service/ConsentPolicyReferentValidator.php` | 2 | Validation-only; returns a boolean, never record content. |

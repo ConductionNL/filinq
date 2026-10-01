@@ -227,6 +227,12 @@ $extra = [
         // Document sanitization: a clean copy beside the file, and what earlier runs removed.
         ['name' => 'sanitization#sanitize', 'url' => 'api/sanitization/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'sanitization#status', 'url' => 'api/sanitization/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // Email ingestion (email-ingestion): the filed and failed emails, a re-scan, a conversion retry and the inbox mapping. Admins only.
+        ['name' => 'emailIngestion#index', 'url' => 'api/email-ingestion', 'verb' => 'GET'],
+        ['name' => 'emailIngestion#scan', 'url' => 'api/email-ingestion/scan', 'verb' => 'POST'],
+        ['name' => 'emailIngestion#settings', 'url' => 'api/email-ingestion/settings', 'verb' => 'GET'],
+        ['name' => 'emailIngestion#updateSettings', 'url' => 'api/email-ingestion/settings', 'verb' => 'PUT'],
+        ['name' => 'emailIngestion#retry', 'url' => 'api/email-ingestion/{uuid}/convert', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],

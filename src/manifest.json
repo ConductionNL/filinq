@@ -168,6 +168,14 @@
 			"order": 59
 		},
 		{
+			"id": "EmailIngestion",
+			"label": "Email ingestion",
+			"icon": "EmailArrowRightOutline",
+			"route": "EmailIngestion",
+			"section": "settings",
+			"order": 94
+		},
+		{
 			"id": "EntitySearch",
 			"label": "Entity search",
 			"icon": "Magnify",
@@ -596,6 +604,14 @@
 			"title": "Erasure requests",
 			"component": "SubjectErasures",
 			"_note": "Subject erasure (erase-a-person-while-the-records-stay): record a request, read the capped preview, leave occurrences in place with a reason, run, read the certificate. type:custom because the preview and the run are computed by api/subject-erasures, which checks the erasure authority (admins plus subject_erasure_groups) before anything is read."
+		},
+		{
+			"id": "EmailIngestion",
+			"route": "/email-ingestion",
+			"type": "custom",
+			"title": "Email ingestion",
+			"component": "EmailIngestion",
+			"_note": "The emails filed from watched inbox folders into their dossiers, and the files that could not be filed, with the reason (email-ingestion). type:custom because it reads GET api/email-ingestion, which serves admins only, and its re-scan and convert-again actions are filinq endpoints, not object operations."
 		},
 		{
 			"id": "EntitySearch",

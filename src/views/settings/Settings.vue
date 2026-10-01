@@ -796,6 +796,8 @@
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
 
+		<EmailIngestionSettings v-if="isAdmin" />
+
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
 		<PageLayoutSettings v-if="isAdmin" />
 
@@ -961,6 +963,7 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
@@ -991,6 +994,7 @@ export default {
 		FileExportOutline,
 		AccountSearchOutline,
 		EntityTypeSelector,
+		EmailIngestionSettings,
 		PageLayoutSettings,
 		SignerIdentitySettings,
 	},
