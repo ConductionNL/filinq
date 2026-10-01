@@ -92,6 +92,11 @@
 						</template>
 						{{ t('filinq', 'Anonymise this dossier') }}
 					</NcButton>
+
+					<WizardEntryActions
+						register="filinq"
+						schema="dossier"
+						:objectId="dossierId" />
 				</div>
 			</header>
 
@@ -280,6 +285,7 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
+import WizardEntryActions from '../../components/WizardEntryActions.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import { dossierStore } from '../../store/store.js'
 
@@ -309,6 +315,7 @@ export default {
 		NcEmptyContent,
 		NcNoteCard,
 		Plus,
+		WizardEntryActions,
 	},
 
 	data() {

@@ -606,12 +606,12 @@ class DocumentServiceTest extends TestCase {
 		$withGate->getProperty('wizardGate')->setValue($service, $gate);
 
 		$result = $service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: ['userId' => 'u1']);
+		$plain  = $this->service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: ['userId' => 'u1']);
 
 		$this->assertArrayNotHasKey('wizardContext', $entries[0]);
-		$this->assertSame(
-			['content', 'html', 'format', 'metadata', 'plainRendition', 'templateVersion', 'warnings', 'output', 'sha256', 'size', 'mimeType'],
-			array_keys($result)
-		);
+		$this->assertSame($entries[1], $entries[0], 'the logged entry is the same with and without a wizard gate');
+		$this->assertSame(array_keys($plain), array_keys($result));
+		$this->assertSame($plain['content'], $result['content']);
 
 	}//end testGenerationWithoutWizardContextUnchanged()
 

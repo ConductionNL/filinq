@@ -457,6 +457,14 @@
 			"_note": "Template detail view with lock/unlock, editor, and preview. Hybrid data path via templateStore."
 		},
 		{
+			"id": "WizardRunner",
+			"route": "/templates/:id/wizard",
+			"type": "custom",
+			"title": "Guided document wizard",
+			"component": "WizardRunner",
+			"_note": "The guided document wizard of a template (guided-document-wizard): one question per step with skip logic, a review step, then one call to api/documents/generate, which checks the answers again. type:custom because it reads the wizard through api/templates/{id}/wizard and prefills through api/wizards/{id}/prefill, filinq endpoints rather than object operations."
+		},
+		{
 			"id": "Correspondence",
 			"route": "/correspondence",
 			"type": "custom",
