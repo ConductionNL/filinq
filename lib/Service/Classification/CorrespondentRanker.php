@@ -48,7 +48,19 @@ class CorrespondentRanker {
 	 *
 	 * @var string[]
 	 */
-	private const ORGANISATION_MARKS = ['b.v.', 'bv', 'n.v.', 'nv', 'v.o.f.', 'gemeente', 'stichting', 'provincie', 'waterschap', 'vereniging', 'ministerie'];
+	private const ORGANISATION_MARKS = [
+		'b.v.',
+		'bv',
+		'n.v.',
+		'nv',
+		'v.o.f.',
+		'gemeente',
+		'stichting',
+		'provincie',
+		'waterschap',
+		'vereniging',
+		'ministerie',
+	];
 
 	/**
 	 * The entity types that can be a correspondent.

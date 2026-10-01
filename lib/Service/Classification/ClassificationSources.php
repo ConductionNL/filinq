@@ -115,6 +115,10 @@ class ClassificationSources {
 				$row = $row->jsonSerialize();
 			}
 
+			if (is_array($row) === false) {
+				continue;
+			}
+
 			$fields = (array) ($row['object'] ?? $row);
 			$uuid = (string) ($fields['uuid'] ?? ($row['uuid'] ?? ($row['@self']['id'] ?? ($row['id'] ?? ''))));
 			$dossiers[] = ['uuid' => $uuid, 'name' => (string) ($fields['name'] ?? '')];
