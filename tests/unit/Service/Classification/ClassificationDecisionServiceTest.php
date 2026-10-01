@@ -285,4 +285,22 @@ class ClassificationDecisionServiceTest extends TestCase {
 		$this->assertSame('classification-1', $pending[0]['uuid']);
 
 	}//end testPendingListsOnlyReachableOpenSuggestions()
+
+	/**
+	 * The document card reads the file's active record, decided or not, and only for a reachable file.
+	 *
+	 * @return void
+	 */
+	public function testTheCardReadsTheActiveRecordOfAReachableFile(): void {
+		$this->suggestion(fileId: 1, fields: ['status' => 'confirmed', 'confirmedDocumentType' => 'besluit']);
+		$this->suggestion(fileId: 2);
+		$this->reachable(userId: 'annemarie', fileId: 1);
+		$this->reachable(userId: 'bram', fileId: 2);
+		$this->reachable(userId: 'annemarie', fileId: 3);
+
+		$this->assertSame('besluit', $this->decisions()->forFile(fileId: 1, userId: 'annemarie')['confirmedDocumentType']);
+		$this->assertNull($this->decisions()->forFile(fileId: 2, userId: 'annemarie'));
+		$this->assertNull($this->decisions()->forFile(fileId: 3, userId: 'annemarie'));
+
+	}//end testTheCardReadsTheActiveRecordOfAReachableFile()
 }//end class

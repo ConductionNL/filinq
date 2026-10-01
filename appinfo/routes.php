@@ -245,6 +245,7 @@ $extra = [
         ['name' => 'classification#pending', 'url' => 'api/classification/pending', 'verb' => 'GET'],
         ['name' => 'classification#confirm', 'url' => 'api/classification/{fileId}/confirm', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'classification#reject', 'url' => 'api/classification/{fileId}/reject', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'classification#show', 'url' => 'api/classification/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],

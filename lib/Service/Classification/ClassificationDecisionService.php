@@ -101,6 +101,25 @@ class ClassificationDecisionService {
 	}//end pending()
 
 	/**
+	 * The active record of one file, decided or not, for the document card.
+	 *
+	 * @param int    $fileId The file.
+	 * @param string $userId The reviewer.
+	 *
+	 * @return array<string, mixed>|null The record, or null for a file the reviewer cannot reach or without one.
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
+	 */
+	public function forFile(int $fileId, string $userId): ?array {
+		if ($this->nodeFor(userId: $userId, fileId: $fileId) === null) {
+			return null;
+		}
+
+		return $this->results->activeFor(fileId: $fileId);
+
+	}//end forFile()
+
+	/**
 	 * Confirm a suggestion, with the reviewer's corrections if any.
 	 *
 	 * @param int                  $fileId  The file.

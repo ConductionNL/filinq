@@ -117,6 +117,27 @@ class ClassificationControllerTest extends TestCase {
 	}//end testRejectClosesTheSuggestion()
 
 	/**
+	 * One file's record for the document card; a file the caller cannot open, or without a record, is a 404.
+	 *
+	 * @return void
+	 */
+	public function testShowAnswersTheFilesRecord(): void {
+		$this->suggestion(fileId: 1);
+		$this->suggestion(fileId: 2);
+		$this->reachable(userId: 'annemarie', fileId: 1);
+		$this->reachable(userId: 'bram', fileId: 2);
+
+		$controller = $this->controller(userId: 'annemarie');
+		$response = $controller->show(fileId: 1);
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('suggested', $response->getData()['status']);
+		$this->assertSame(404, $controller->show(fileId: 2)->getStatus());
+		$this->assertSame(404, $controller->show(fileId: 9)->getStatus());
+
+	}//end testShowAnswersTheFilesRecord()
+
+	/**
 	 * Another user's file is a 404, a decided one a 409, an unknown type a 422.
 	 *
 	 * @return void

@@ -84,6 +84,31 @@ class ClassificationController extends Controller {
 	}//end pending()
 
 	/**
+	 * The classification of one file, for the document card.
+	 *
+	 * @param int $fileId The file.
+	 *
+	 * @return JSONResponse The record, or 404 for a file the caller cannot open or without a record.
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
+	 */
+	#[NoAdminRequired]
+	public function show(int $fileId): JSONResponse {
+		// The per-object guard: the decision service resolves the file in the caller's own folder first.
+		return $this->answer(
+			action: function () use ($fileId): array {
+				$record = $this->decisions->forFile(fileId: $fileId, userId: $this->userId());
+				if ($record === null) {
+					throw new ClassificationRefused(message: 'No suggestion for this file', code: Http::STATUS_NOT_FOUND);
+				}
+
+				return $record;
+			}
+		);
+
+	}//end show()
+
+	/**
 	 * Confirm a suggestion, with corrections if the body carries any.
 	 *
 	 * @param int $fileId The file.
