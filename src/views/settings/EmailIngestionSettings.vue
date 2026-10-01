@@ -116,6 +116,11 @@ export default {
 		}
 	},
 
+	/**
+	 * Load the inbox mapping.
+	 *
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
+	 */
 	async mounted() {
 		const result = await loadSettings()
 		this.loading = false
@@ -135,6 +140,11 @@ export default {
 	methods: {
 		t,
 
+		/**
+		 * Save the inbox mapping and the emails per run.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
+		 */
 		async save() {
 			this.saving = true
 			const result = await saveSettings(this.inboxes, this.filesPerTick)

@@ -76,7 +76,10 @@ class EmailFiling {
 		try {
 			$moved = $email->move(rtrim($folder->getPath(), '/') . '/' . $folder->getNonExistingName($email->getName()));
 		} catch (Throwable $e) {
-			$this->logger->warning('[EmailFiling] could not move an email into its dossier', ['fileId' => $email->getId(), 'dossier' => $dossierRef, 'exception' => $e->getMessage()]);
+			$this->logger->warning(
+				'[EmailFiling] could not move an email into its dossier',
+				['fileId' => $email->getId(), 'dossier' => $dossierRef, 'exception' => $e->getMessage()]
+			);
 			throw new EmailNotFiled(EmailIngestionService::REASON_FILING_FAILED);
 		}
 

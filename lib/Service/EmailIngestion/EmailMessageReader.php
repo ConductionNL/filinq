@@ -195,7 +195,7 @@ class EmailMessageReader {
 		$fields['attachmentCount'] = count($names);
 		$fields['attachmentNames'] = $names;
 
-		return array_filter($fields, static fn (mixed $value): bool => $value !== '' || is_array($value) === true);
+		return array_filter($fields, static fn (mixed $value): bool => $value !== '');
 
 	}//end envelope()
 

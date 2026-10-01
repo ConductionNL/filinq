@@ -2,7 +2,7 @@
 
 Save an email as an `.eml` file in a watched inbox folder and Filinq files it into the dossier that folder belongs to. It puts a PDF copy beside the email and keeps one record per email with the sender, recipients, subject and thread headers. This is how mail that has to be archived under the Woo and the Archiefwet ends up in the dossier, without anyone moving files by hand.
 
-Filinq does not connect to a mailbox. Fetching mail over IMAP or Microsoft 365 belongs to OpenConnector, which writes the `.eml` files into the inbox folder. Filinq has no setting for a mail server, account or password, on purpose.
+Filinq does not connect to a mailbox. Fetching mail over IMAP or Microsoft 365 belongs to Integriq, which writes the `.eml` files into the inbox folder. Filinq has no setting for a mail server, account or password, on purpose.
 
 ## Map an inbox to a dossier
 

@@ -65,6 +65,9 @@ class EmailIngestionJob extends TimedJob {
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's
+	 * TimedJob signature; this job takes its work from the inbox mapping.
+	 *
 	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-4
 	 */
 	protected function run(mixed $argument): void {

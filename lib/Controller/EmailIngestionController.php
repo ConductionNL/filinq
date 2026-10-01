@@ -102,7 +102,9 @@ class EmailIngestionController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function scan(): JSONResponse {
-		return $this->answer(action: fn (): array => $this->ingestion->scan(limit: $this->settings->filesPerTick(), source: EmailIngestionService::SOURCE_MANUAL));
+		return $this->answer(
+			action: fn (): array => $this->ingestion->scan(limit: $this->settings->filesPerTick(), source: EmailIngestionService::SOURCE_MANUAL)
+		);
 
 	}//end scan()
 

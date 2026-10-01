@@ -121,7 +121,7 @@ class EmailThreadHeaders {
 	 */
 	private function ids(string $value): array {
 		if (preg_match_all('/<([^<>\s]+)>/', $value, $matches) > 0) {
-			return array_values($matches[1]);
+			return $matches[1];
 		}
 
 		return array_values(array_filter(preg_split('/\s+/', trim($value)), static fn (string $id): bool => $id !== ''));

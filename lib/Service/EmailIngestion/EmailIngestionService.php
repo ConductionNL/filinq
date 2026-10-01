@@ -30,8 +30,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\EmailIngestion;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use InvalidArgumentException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
@@ -209,7 +207,12 @@ class EmailIngestionService {
 			}
 
 			$record += $this->reader->read(file: $email);
-			if ($this->repository->findFiledDuplicate(dossierRef: $dossierRef, contentHash: $record['contentHash'], messageId: (string) ($record['messageId'] ?? '')) !== null) {
+			$duplicate = $this->repository->findFiledDuplicate(
+				dossierRef: $dossierRef,
+				contentHash: $record['contentHash'],
+				messageId: (string) ($record['messageId'] ?? '')
+			);
+			if ($duplicate !== null) {
 				$email->delete();
 				return 'duplicates';
 			}
@@ -249,7 +252,10 @@ class EmailIngestionService {
 			$this->repository->save(record: $record);
 		} catch (Throwable $e) {
 			// Without a record the file stays in the inbox and is tried again next tick.
-			$this->logger->error('[EmailIngestionService] could not record a failed email', ['fileId' => $record['sourceFileRef'], 'reason' => $reason, 'exception' => $e->getMessage()]);
+			$this->logger->error(
+				'[EmailIngestionService] could not record a failed email',
+				['fileId' => $record['sourceFileRef'], 'reason' => $reason, 'exception' => $e->getMessage()]
+			);
 		}
 
 		return 'failed';
@@ -274,7 +280,7 @@ class EmailIngestionService {
 	 * @return string The time.
 	 */
 	private function now(): string {
-		return (new DateTimeImmutable('@' . $this->clock->getTime()))->format(DateTimeInterface::ATOM);
+		return gmdate(DATE_ATOM, $this->clock->getTime());
 
 	}//end now()
 }//end class

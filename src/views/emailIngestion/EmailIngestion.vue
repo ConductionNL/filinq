@@ -156,6 +156,11 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The columns of the status table.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		tableColumns() {
 			return [
 				{ key: 'subject', label: t('filinq', 'Subject') },
@@ -166,6 +171,11 @@ export default {
 			]
 		},
 
+		/**
+		 * The status filter options.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		stateOptions() {
 			return ['filed', 'not-converted', 'failed'].map((id) => ({
 				id,
@@ -173,12 +183,22 @@ export default {
 			}))
 		},
 
+		/**
+		 * The dossiers that occur in the list, for the dossier filter.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		dossierOptions() {
 			return [...new Set(this.rows.map((row) => row.dossierRef))]
 				.filter(Boolean)
 				.sort()
 		},
 
+		/**
+		 * The rows that pass the status and dossier filters.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		visibleRows() {
 			return this.rows.filter(
 				(row) =>
@@ -200,6 +220,11 @@ export default {
 		rowState,
 		stateLabel,
 
+		/**
+		 * Load the email records.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		async load() {
 			const result = await listEmails()
 			this.loading = false
@@ -210,12 +235,22 @@ export default {
 			this.rows = result.data.results || []
 		},
 
+		/**
+		 * Reload the list on the refresh action.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		async refresh() {
 			this.refreshing = true
 			await this.load()
 			this.refreshing = false
 		},
 
+		/**
+		 * Scan the inboxes now and reload.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		async scanNow() {
 			this.scanning = true
 			const result = await rescan()
@@ -232,6 +267,12 @@ export default {
 			await this.load()
 		},
 
+		/**
+		 * Make the PDF copy of a filed email again.
+		 *
+		 * @param {object} row The record.
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		async convertAgain(row) {
 			this.retrying = row.uuid
 			const result = await retryConversion(row.uuid)
@@ -249,6 +290,13 @@ export default {
 			await this.load()
 		},
 
+		/**
+		 * A date as the user reads it.
+		 *
+		 * @param {string} value An ISO 8601 date-time.
+		 * @return {string} The localised date.
+		 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
+		 */
 		formatDate(value) {
 			return new Date(value).toLocaleString()
 		},

@@ -114,7 +114,9 @@ class EmailDocumentRepository {
 	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function failedSourceRefs(): array {
-		return array_values(array_unique(array_map(static fn (array $row): string => (string) ($row['sourceFileRef'] ?? ''), $this->search(filters: ['status' => 'failed']))));
+		$refs = array_map(static fn (array $row): string => (string) ($row['sourceFileRef'] ?? ''), $this->search(filters: ['status' => 'failed']));
+
+		return array_values(array_unique($refs));
 
 	}//end failedSourceRefs()
 

@@ -141,8 +141,12 @@ class EmailIngestionSettings {
 	private function validInboxes(array $inboxes): array {
 		$valid = [];
 		foreach ($inboxes as $row) {
-			$folderId = (int) (is_array($row) === true ? ($row['folderId'] ?? 0) : 0);
-			$dossierRef = trim((string) (is_array($row) === true ? ($row['dossierRef'] ?? '') : ''));
+			if (is_array($row) === false) {
+				$row = [];
+			}
+
+			$folderId = (int) ($row['folderId'] ?? 0);
+			$dossierRef = trim((string) ($row['dossierRef'] ?? ''));
 			if ($folderId < 1 || preg_match('/^[A-Za-z0-9_-]{1,64}$/', $dossierRef) !== 1) {
 				throw new InvalidArgumentException('Every inbox needs a folder and a dossier.', 400);
 			}
