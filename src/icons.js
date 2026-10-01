@@ -65,6 +65,7 @@ import SignatureFreehand from 'vue-material-design-icons/SignatureFreehand.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import Stamper from 'vue-material-design-icons/Stamper.vue'
 import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
+import TagCheckOutline from 'vue-material-design-icons/TagCheckOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
@@ -117,6 +118,7 @@ export default {
 	Magnify,
 	Scanner,
 	InboxArrowDown,
+	TagCheckOutline,
 	Stamper,
 	MapMarkerPath,
 	Palette,
