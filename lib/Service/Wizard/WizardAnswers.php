@@ -174,8 +174,10 @@ class WizardAnswers {
 	 * @return void
 	 */
 	private static function setPath(array &$data, string $path, mixed $value): void {
-		$node = &$data;
-		foreach (explode('.', $path) as $segment) {
+		$segments = explode('.', $path);
+		$leaf     = (string) array_pop($segments);
+		$node     = &$data;
+		foreach ($segments as $segment) {
 			if (isset($node[$segment]) === false || is_array($node[$segment]) === false) {
 				$node[$segment] = [];
 			}
@@ -183,7 +185,7 @@ class WizardAnswers {
 			$node = &$node[$segment];
 		}
 
-		$node = $value;
+		$node[$leaf] = $value;
 
 	}//end setPath()
 

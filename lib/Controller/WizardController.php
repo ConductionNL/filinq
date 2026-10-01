@@ -3,7 +3,7 @@
 /**
  * Guided document wizards API
  *
- * api/wizards: author the wizard of a template, read it, remove it, and
+ * The api/wizards routes: author the wizard of a template, read it, remove it, and
  * prefill a run from a register object. Generation itself stays on
  * POST api/documents/generate with options.wizardContext.
  *
@@ -71,7 +71,8 @@ class WizardController extends Controller {
 	 *
 	 * @return JSONResponse {results}.
 	 *
-	 * @no-admin-idor-exempt lists wizards through OpenRegister as the caller, so only wizards the caller may read are answered; register and schema name no object.
+	 * @no-admin-idor-exempt lists wizards through OpenRegister as the caller, so only wizards the caller may read
+	 * are answered; register and schema name no object.
 	 *
 	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 	 */
@@ -86,7 +87,9 @@ class WizardController extends Controller {
 	 *
 	 * @return JSONResponse {wizard, warnings}, or 403/409/422/423.
 	 *
-	 * @no-admin-idor-exempt creates a new object and names no existing one; who may create a wizard is the wizardDefinition schema's authorization (template editors), which OpenRegister enforces on the save as the caller.
+	 * @no-admin-idor-exempt creates a new object and names no existing one; who may create a wizard is the
+	 * wizardDefinition schema's authorization (template editors), which OpenRegister enforces on the save as the
+	 * caller.
 	 *
 	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
 	 */
@@ -164,7 +167,8 @@ class WizardController extends Controller {
 	 *
 	 * @return JSONResponse {wizard: object|null}.
 	 *
-	 * @no-admin-idor-exempt reads wizards through OpenRegister as the caller, so only wizards the caller may read are answered; the template id is not an object the caller is acting on.
+	 * @no-admin-idor-exempt reads wizards through OpenRegister as the caller, so only wizards the caller may read
+	 * are answered; the template id is not an object the caller is acting on.
 	 *
 	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
 	 */

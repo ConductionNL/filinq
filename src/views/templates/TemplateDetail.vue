@@ -409,7 +409,11 @@ export default {
 	 */
 	async mounted() {
 		const routeId = this.$route?.params?.id
-		if (routeId && routeId !== 'new' && this.templateStore.templateItem?.id !== routeId) {
+		if (
+			routeId
+			&& routeId !== 'new'
+			&& this.templateStore.templateItem?.id !== routeId
+		) {
 			// Opened by URL (the Templates index links here): load the template
 			// the route names, so the Versions and Wizard tabs can render.
 			await this.templateStore.fetchTemplate(routeId)
