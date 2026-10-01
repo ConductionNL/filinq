@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/email-ingestion/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

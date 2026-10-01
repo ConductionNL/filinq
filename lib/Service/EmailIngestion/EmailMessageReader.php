@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -65,7 +65,7 @@ class EmailMessageReader {
 	 *
 	 * @return string The hex digest.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function contentHash(File $file): string {
 		$stream = $file->fopen('r');
@@ -90,7 +90,7 @@ class EmailMessageReader {
 	 *
 	 * @throws EmailNotFiled With reason unparseable when OpenRegister's parser refuses the file.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-2
 	 */
 	public function read(File $file): array {
 		$thread = $this->threadHeaders->read(raw: $this->head(file: $file));

@@ -581,14 +581,15 @@
 			"name": "Register an incoming email and its attachments as an official document.",
 			"source": "category-derived",
 			"sourceRef": "user story \"Import incoming email as official document\"; canonical email-integration",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/email-ingestion/tasks.md: every task unchecked ([ ] throughout, sections 1-4). openspec/changes/email-ingestion/design.md: 'No ingestion machinery exists: no watched folder, no mailbox client, no email record schema, no filing.' find lib -iname '*EmailIngestion*' returns nothing.",
-				"change": "openspec/changes/email-ingestion"
+				"evidence": "Watched-folder ingestion: EmailIngestionJob (TimedJob, 300 s, files_per_tick default 25) -> EmailIngestionService scans the inbox folders mapped in filinq.email_ingestion.inbox_folders, moves each .eml into the mapped dossier's folder (EmailFiling), writes an emailDocument record (register filinq 8.42.0, schema 1.0.0: sender, recipients, subject, sentAt, messageId, In-Reply-To/References + threadKey from EmailThreadHeaders, attachment names, sha256) and makes the PDF/A copy through the existing PdfConversionService; idempotent on sha256 and messageId per dossier; .msg, unreadable mail and an unreachable dossier folder leave the file in the inbox with a failed record and a reason. Status page EmailIngestion (/email-ingestion) and admin settings section; api/email-ingestion list/scan/convert/settings, #[AuthorizedAdminSetting]. No mailbox client or credential (OpenConnector boundary). Tests: EmailIngestionServiceTest, EmailIngestionJobTest, EmailIngestionControllerTest, EmailIngestionSettingsTest, EmailThreadHeadersTest, EmailDocumentSchemaTest; record payloads validated with Opis against the real emailDocument fragment in EmailIngestionDoubles, vitest emailIngestion.spec.js. Attachments are kept inside the filed .eml, not split into separate documents.",
+				"change": "openspec/changes/archive/2026-10-01-email-ingestion",
+				"readOn": "2026-10-01"
 			},
-			"reachedOn": "nothing reaches it (unbuilt)",
+			"reachedOn": "the Email ingestion menu entry (admins); the Email ingestion section of the admin settings; api/email-ingestion",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "email-ingestion",
@@ -1249,11 +1250,11 @@
 			"sourceRef": "Docmosis multi-format single render",
 			"filinq": "yes",
 			"built": {
-			    "state": "built",
-			    "owner": "ConductionNL/filinq",
-			    "evidence": "options.formats on POST api/documents/generate: DocumentService renders once, MultiFormatOutputProducer converts per format (pdf mPDF, docx/odf via Conversion\\HtmlToOfficeConverter -> LibreOfficeHeadlessBackend::convertBytes under the soffice lock, html passthrough), files each in Files and answers a manifest {format, status, fileId, fileName, downloadUrl, size, error?}; a failed format does not stop the others; generatedDocument 1.4.0 outputs[]. docx is a single-format generation format too. FormatMatrixService + GET api/documents/formats (?flow=correspondence) and GET api/templates/{id}/formats from PdfConversionService::getCapabilities(); CorrespondenceIndex.vue reads it. Office templates follow in office-template-authoring task 2.7.",
-			    "change": "openspec/changes/archive/2026-09-29-multi-format-output",
-			    "readOn": "2026-09-29"
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "options.formats on POST api/documents/generate: DocumentService renders once, MultiFormatOutputProducer converts per format (pdf mPDF, docx/odf via Conversion\\HtmlToOfficeConverter -> LibreOfficeHeadlessBackend::convertBytes under the soffice lock, html passthrough), files each in Files and answers a manifest {format, status, fileId, fileName, downloadUrl, size, error?}; a failed format does not stop the others; generatedDocument 1.4.0 outputs[]. docx is a single-format generation format too. FormatMatrixService + GET api/documents/formats (?flow=correspondence) and GET api/templates/{id}/formats from PdfConversionService::getCapabilities(); CorrespondenceIndex.vue reads it. Office templates follow in office-template-authoring task 2.7.",
+				"change": "openspec/changes/archive/2026-09-29-multi-format-output",
+				"readOn": "2026-09-29"
 			},
 			"reachedOn": "POST api/documents/generate with options.formats; GET api/documents/formats; Letters & correspondence output format choice",
 			"provider": "filinq",
@@ -3588,11 +3589,11 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-			    "state": "built",
-			    "owner": "ConductionNL/filinq",
-			    "evidence": "DocumentAnonymizeRunner passes preserveStructure (OR FileService::anonymizeDocument 5th arg, default on via filinq.redaction.preserve_tags_default) and reads getLastStructurePreservation(); RedactionAccessibilityService maps it to preserved/degraded/not-applicable/unknown (nothing reported = unknown), checks a PDF/UA claim with VeraPdfService (ua1) and downgrades on contradiction; anonymizationLink 1.3.0 structurePreservation; PublicationReadiness records accessibilityState on publicationRecord 1.1.0 and, with filinq.redaction.accessibility_gate=block, holds the Woo hand-off until accessibilityOverrideReason (logged). File viewer sidebar and Publications page show it. Partial: whether tags survive depends on OpenRegister's engine.",
-			    "change": "openspec/changes/archive/2026-09-29-accessible-redaction-output",
-			    "readOn": "2026-09-29"
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "DocumentAnonymizeRunner passes preserveStructure (OR FileService::anonymizeDocument 5th arg, default on via filinq.redaction.preserve_tags_default) and reads getLastStructurePreservation(); RedactionAccessibilityService maps it to preserved/degraded/not-applicable/unknown (nothing reported = unknown), checks a PDF/UA claim with VeraPdfService (ua1) and downgrades on contradiction; anonymizationLink 1.3.0 structurePreservation; PublicationReadiness records accessibilityState on publicationRecord 1.1.0 and, with filinq.redaction.accessibility_gate=block, holds the Woo hand-off until accessibilityOverrideReason (logged). File viewer sidebar and Publications page show it. Partial: whether tags survive depends on OpenRegister's engine.",
+				"change": "openspec/changes/archive/2026-09-29-accessible-redaction-output",
+				"readOn": "2026-09-29"
 			},
 			"reachedOn": "Anonymise a PDF (file viewer sidebar result); Publications page for a redacted document",
 			"provider": "filinq",

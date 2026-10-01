@@ -39,7 +39,7 @@ record, no dossier.
 
 ## What Changes
 
-- **`emailDocument` schema** (`document` register): one record per ingested
+- **`emailDocument` schema** (`filinq` register): one record per ingested
   email — source `.eml` file ref, PDF/A derivative ref, dossier ref,
   envelope metadata (subject, from, to/cc, sent date), threading metadata
   (`messageId`, `inReplyTo`, `references[]`, `threadKey`), attachment
@@ -88,7 +88,7 @@ record, no dossier.
 ## Impact
 
 - `lib/Settings/filinq_register.json`: `emailDocument` schema in the
-  `document` register, seed data, register version bump.
+  `filinq` register, seed data, register version bump.
 - New `lib/Service/EmailIngestionService.php` (scan, parse, thread-header
   extraction, filing, record writes) + `lib/BackgroundJob/EmailIngestionJob.php`
   (cron `TimedJob`, bounded per tick) + `lib/Controller/EmailIngestionController.php`

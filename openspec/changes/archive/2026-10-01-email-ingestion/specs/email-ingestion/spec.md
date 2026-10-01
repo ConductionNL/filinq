@@ -23,7 +23,7 @@ auto-registration.
 
 ### Requirement: Email-document schema and register import (REQ-DDEIN-001)
 
-The app MUST declare an `emailDocument` schema in the `document` register:
+The app MUST declare an `emailDocument` schema in the `filinq` register:
 `sourceFileRef` (required), `pdfFileRef`, `dossierRef`, `subject`,
 `fromAddress`, `toAddresses[]`, `ccAddresses[]`, `sentAt`, `messageId`,
 `inReplyTo`, `references[]`, `threadKey`, `attachmentCount`,
@@ -40,7 +40,7 @@ existing outbound `correspondence` schema MUST NOT be reused or modified.
 
 - GIVEN Filinq and OpenRegister installed
 - WHEN `ConfigurationService::importFromApp()` runs on boot
-- THEN the `emailDocument` schema exists in the `document` register, the seeded demo email record is queryable, and the processing annotation is declared
+- THEN the `emailDocument` schema exists in the `filinq` register, the seeded demo email record is queryable, and the processing annotation is declared
 - @e2e exclude boot-time register import with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
 
 ### Requirement: Bounded, idempotent watched-folder ingestion (REQ-DDEIN-002)

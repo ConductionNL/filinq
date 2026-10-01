@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-5
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -63,7 +63,7 @@ class EmailIngestionSettings {
 	 *
 	 * @return list<array{folderId: int, dossierRef: string}> The mappings; none when unset or unreadable.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function inboxes(): array {
 		$decoded = json_decode($this->appConfig->getValueString(self::APP_ID, self::KEY_INBOXES, '[]'), true);
@@ -84,7 +84,7 @@ class EmailIngestionSettings {
 	 *
 	 * @return int Between 1 and MAX_FILES_PER_TICK; 25 when unset or not a number.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-4
 	 */
 	public function filesPerTick(): int {
 		$raw = $this->appConfig->getValueString(self::APP_ID, self::KEY_FILES_PER_TICK, (string) self::DEFAULT_FILES_PER_TICK);
@@ -101,7 +101,7 @@ class EmailIngestionSettings {
 	 *
 	 * @return array{inboxes: list<array{folderId: int, dossierRef: string}>, filesPerTick: int} The settings.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 	 */
 	public function toArray(): array {
 		return ['inboxes' => $this->inboxes(), 'filesPerTick' => $this->filesPerTick()];
@@ -118,7 +118,7 @@ class EmailIngestionSettings {
 	 *
 	 * @throws InvalidArgumentException With code 400 for a row without folder or dossier, or a folder mapped twice.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 	 */
 	public function update(array $inboxes, int $filesPerTick): array {
 		$valid = $this->validInboxes(inboxes: $inboxes);

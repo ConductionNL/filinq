@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ class EmailThreadHeaders {
 	 *
 	 * @return array{messageId: string, inReplyTo: string, references: list<string>} Ids without angle brackets.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-2
 	 */
 	public function read(string $raw): array {
 		$headers = $this->headerLines(raw: $raw);
@@ -69,7 +69,7 @@ class EmailThreadHeaders {
 	 *
 	 * @return string The key, brackets stripped and lower case; '' when there is no id at all.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-2
 	 */
 	public function threadKey(string $messageId, string $inReplyTo, array $references): string {
 		foreach ([($references[0] ?? ''), $inReplyTo, $messageId] as $candidate) {

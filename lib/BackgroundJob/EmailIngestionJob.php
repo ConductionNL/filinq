@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-4
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -65,7 +65,7 @@ class EmailIngestionJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-4
 	 */
 	protected function run(mixed $argument): void {
 		$summary = $this->ingestion->scan(limit: $this->settings->filesPerTick());

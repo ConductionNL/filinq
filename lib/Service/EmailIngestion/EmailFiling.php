@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-3
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -68,7 +68,7 @@ class EmailFiling {
 	 *
 	 * @throws EmailNotFiled When the dossier has no reachable folder, or the move fails.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function file(File $email, string $dossierRef): File {
 		$folder = $this->dossierFolder(dossierRef: $dossierRef);
@@ -95,7 +95,7 @@ class EmailFiling {
 	 *
 	 * @return string The PDF's file id, or '' when the cascade could not convert it.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-3
 	 */
 	public function convert(File $email): string {
 		try {
@@ -115,7 +115,7 @@ class EmailFiling {
 	 *
 	 * @return File|null The file, or null when it is gone.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-3
 	 */
 	public function fileById(string $fileId): ?File {
 		if (ctype_digit($fileId) === false) {

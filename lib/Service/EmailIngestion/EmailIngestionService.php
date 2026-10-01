@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -92,7 +92,7 @@ class EmailIngestionService {
 	 *
 	 * @return array{processed: int, filed: int, failed: int, duplicates: int} What the tick did.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function scan(int $limit, string $source = self::SOURCE_WATCHED_FOLDER): array {
 		$summary = ['processed' => 0, 'filed' => 0, 'failed' => 0, 'duplicates' => 0];
@@ -122,7 +122,7 @@ class EmailIngestionService {
 	 *
 	 * @throws InvalidArgumentException 404 for an unknown record or a gone file, 409 for a failed one.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-3
 	 */
 	public function retryConversion(string $uuid): array {
 		$record = $this->repository->findByUuid(uuid: $uuid);

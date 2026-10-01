@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -59,7 +59,7 @@ class EmailDocumentRepository {
 	 *
 	 * @return array<string, mixed> The stored record with its uuid.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function save(array $record, ?string $uuid = null): array {
 		unset($record['uuid']);
@@ -90,7 +90,7 @@ class EmailDocumentRepository {
 	 *
 	 * @return array<string, mixed>|null The record, or null.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function findFiledDuplicate(string $dossierRef, string $contentHash, string $messageId): ?array {
 		$byHash = $this->search(filters: ['dossierRef' => $dossierRef, 'contentHash' => $contentHash, 'status' => 'filed']);
@@ -111,7 +111,7 @@ class EmailDocumentRepository {
 	 *
 	 * @return list<string> The ids.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-1
 	 */
 	public function failedSourceRefs(): array {
 		return array_values(array_unique(array_map(static fn (array $row): string => (string) ($row['sourceFileRef'] ?? ''), $this->search(filters: ['status' => 'failed']))));
@@ -125,7 +125,7 @@ class EmailDocumentRepository {
 	 *
 	 * @return array<string, mixed>|null The record, or null.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-3
 	 */
 	public function findByUuid(string $uuid): ?array {
 		$row = $this->objectResolver->resolve()->find(id: $uuid, register: self::REGISTER, schema: self::SCHEMA, _rbac: false, _multitenancy: false);
@@ -149,7 +149,7 @@ class EmailDocumentRepository {
 	 *
 	 * @return list<array<string, mixed>> The records.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
 	 */
 	public function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.

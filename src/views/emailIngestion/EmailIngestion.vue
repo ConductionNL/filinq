@@ -7,7 +7,7 @@ its dossier, and every file that could not be filed, with the reason. A filed
 email without its PDF copy can be converted again; the inboxes can be scanned
 by hand. Admins only, like the api/email-ingestion routes behind it.
 
-@spec openspec/changes/email-ingestion/tasks.md#3-1
+@spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
 -->
 
 <template>

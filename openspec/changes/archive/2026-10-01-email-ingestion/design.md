@@ -62,7 +62,7 @@ Verified at HEAD:
 
 ## Decisions
 
-### D1 — `emailDocument` schema in the `document` register
+### D1 — `emailDocument` schema in the `filinq` register
 
 One record per ingested email: `sourceFileRef` (the filed `.eml`, required),
 `pdfFileRef` (PDF/A-3b derivative, null until converted), `dossierRef`,
@@ -278,3 +278,10 @@ remain readable. No data migration.
 - Reference OpenConnector IMAP flow (D5 contract) — OpenConnector backlog.
 - `processing-activity-export` canonical activity enumeration ("four") —
   one-line follow-up amendment covering the wave-2 additions.
+
+## Resolved at apply (2026-10-01)
+
+- Filinq ships one register, `filinq` (8.42.0 adds `emailDocument` 1.0.0). The draft named a `document` register that does not exist; the text above now says `filinq`.
+- OpenRegister exposes `TextExtractionService::parseEmlStructured` only on newer versions, so `EmailMessageReader` resolves it by class name and files the email without parsed metadata when it is missing (`testMissingParserStillFilesTheMail`).
+- The admin route set is five routes under `api/email-ingestion` (list, scan, convert again, read and write the inbox mapping), each guarded by `#[AuthorizedAdminSetting]`.
+- Documentation screenshots (task 4.4, ADR-010) were not taken: the shared browser service was down when the change was finished. The docs page describes the screens in words.

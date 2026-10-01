@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/email-ingestion/tasks.md#2-5
+ * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -76,7 +76,7 @@ class EmailIngestionController extends Controller {
 	 *
 	 * @return JSONResponse {results}.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#3-1
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function index(string $status = '', string $dossier = ''): JSONResponse {
@@ -98,7 +98,7 @@ class EmailIngestionController extends Controller {
 	 *
 	 * @return JSONResponse {processed, filed, failed, duplicates}.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function scan(): JSONResponse {
@@ -113,7 +113,7 @@ class EmailIngestionController extends Controller {
 	 *
 	 * @return JSONResponse The record, 404 or 409.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function retry(string $uuid): JSONResponse {
@@ -126,7 +126,7 @@ class EmailIngestionController extends Controller {
 	 *
 	 * @return JSONResponse {inboxes, filesPerTick}.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function settings(): JSONResponse {
@@ -142,7 +142,7 @@ class EmailIngestionController extends Controller {
 	 *
 	 * @return JSONResponse The stored settings, or 400.
 	 *
-	 * @spec openspec/changes/email-ingestion/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function updateSettings(array $inboxes = [], int $filesPerTick = EmailIngestionSettings::DEFAULT_FILES_PER_TICK): JSONResponse {

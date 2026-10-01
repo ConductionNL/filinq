@@ -6,7 +6,7 @@ Email ingestion settings: which folders are watched inboxes and which dossier
 each one files into. Filinq never connects to a mailbox itself; the section
 says who delivers the .eml files instead.
 
-@spec openspec/changes/email-ingestion/tasks.md#2-5
+@spec openspec/changes/archive/2026-10-01-email-ingestion/tasks.md#2-5
 -->
 
 <template>
