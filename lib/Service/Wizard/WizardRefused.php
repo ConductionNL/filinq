@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -50,7 +50,7 @@ class WizardRefused extends RuntimeException {
 	 *
 	 * @return array<string, string> The errors.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function getErrors(): array {
 		return $this->errors;

@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ class WizardDefinitionValidator {
 	 *
 	 * @return array{errors: array<string, string>, warnings: string[]} Errors by question key (or field name) and warnings.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function check(array $wizard, ?array $template=null, ?array $boundProperties=null): array {
 		$errors = [];

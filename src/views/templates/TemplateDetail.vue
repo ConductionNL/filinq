@@ -448,7 +448,7 @@ export default {
 		/**
 		 * Open the wizard runner for this template.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 		 */
 		openWizard() {
 			this.$router.push({
@@ -461,7 +461,7 @@ export default {
 		 * Keep the Generate with wizard button in step with the Wizard tab.
 		 *
 		 * @param {object|null} wizard The saved wizard, or null after a delete.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 		 */
 		onWizardSaved(wizard) {
 			this.hasWizard = Boolean(wizard) && wizard.active !== false

@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-3
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -57,7 +57,7 @@ class WizardAnswers {
 	 *
 	 * @return array<string, string> Question key => what is wrong. Empty when the answers are good.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
 	 */
 	public function errors(array $wizard, array $answers, array $dataRefs): array {
 		$questions = $this->questions(wizard: $wizard);
@@ -97,7 +97,7 @@ class WizardAnswers {
 	 * @return array{dataRefs: array<int, array<string, string>>, adHocData: array<string, mixed>,
 	 *     wizardContext: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-3
 	 */
 	public function translate(array $wizard, array $answers): array {
 		$questions = $this->questions(wizard: $wizard);
@@ -148,7 +148,7 @@ class WizardAnswers {
 	 *
 	 * @return mixed The value, or null when the path does not resolve.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-5
 	 */
 	public static function readPath(array $data, string $path): mixed {
 		$value = $data;

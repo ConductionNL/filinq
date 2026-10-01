@@ -10,7 +10,7 @@ Generate document sends one request to api/documents/generate, which checks
 the answers again. Started from a register object (?register, ?schema,
 ?objectId) the wizard prefills what it can as suggestions to review.
 
-@spec openspec/changes/guided-document-wizard/tasks.md#4-2
+@spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 -->
 
 <template>
@@ -268,7 +268,7 @@ export default {
 		/**
 		 * Template id.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		templateId() {
 			return this.$route?.params?.id || ''
@@ -277,7 +277,7 @@ export default {
 		/**
 		 * Steps.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		steps() {
 			if (!this.wizard) {
@@ -290,7 +290,7 @@ export default {
 		/**
 		 * On review.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		onReview() {
 			return this.step >= this.steps.length
@@ -299,7 +299,7 @@ export default {
 		/**
 		 * Current.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		current() {
 			return this.steps[this.step] || null
@@ -308,7 +308,7 @@ export default {
 		/**
 		 * Progress.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		progress() {
 			if (!this.steps.length) {
@@ -322,7 +322,7 @@ export default {
 		/**
 		 * Can continue.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		canContinue() {
 			return (
@@ -333,7 +333,7 @@ export default {
 		/**
 		 * Missing.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		missing() {
 			return this.wizard ? missingKeys(this.wizard, this.answers) : []
@@ -342,7 +342,7 @@ export default {
 		/**
 		 * Overriding.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		overriding() {
 			return this.wizard ? overridingKeys(this.wizard, this.answers) : []
@@ -351,7 +351,7 @@ export default {
 		/**
 		 * Picked option.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		pickedOption() {
 			const id = this.answers[this.current?.key]
@@ -361,7 +361,7 @@ export default {
 		/**
 		 * Format options.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		formatOptions() {
 			return [
@@ -378,7 +378,7 @@ export default {
 		 * Current.
 		 *
 		 * @param {*} question The question.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		current(question) {
 			if (question?.type === 'registerObject') {
@@ -390,7 +390,7 @@ export default {
 	/**
 	 * Mounted.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 	 */
 	async mounted() {
 		await this.load()
@@ -402,7 +402,7 @@ export default {
 		/**
 		 * Load.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		async load() {
 			const result = await loadTemplateWizard(this.templateId)
@@ -420,7 +420,7 @@ export default {
 		/**
 		 * Apply prefill.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		async applyPrefill() {
 			const { register, schema, objectId } = this.$route?.query || {}
@@ -443,7 +443,7 @@ export default {
 		 * Answer.
 		 *
 		 * @param {*} value The value.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		answer(value) {
 			this.answers = { ...this.answers, [this.current.key]: value }
@@ -455,7 +455,7 @@ export default {
 		 * Pick object.
 		 *
 		 * @param {*} option The option.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		pickObject(option) {
 			if (option) {
@@ -468,7 +468,7 @@ export default {
 		 * Search objects.
 		 *
 		 * @param {*} search The search.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		async searchObjects(search) {
 			const question = this.current
@@ -500,7 +500,7 @@ export default {
 		/**
 		 * Next.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		next() {
 			if (this.canContinue) {
@@ -511,7 +511,7 @@ export default {
 		/**
 		 * Previous.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		previous() {
 			this.step = Math.max(0, Math.min(this.step, this.steps.length) - 1)
@@ -521,7 +521,7 @@ export default {
 		 * Display answer.
 		 *
 		 * @param {*} question The question.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		displayAnswer(question) {
 			const value = this.answers[question.key]
@@ -542,7 +542,7 @@ export default {
 		/**
 		 * Generate.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		async generate() {
 			this.generating = true
@@ -577,7 +577,7 @@ export default {
 		/**
 		 * Back.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
 		 */
 		back() {
 			this.$router.push({

@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -73,7 +73,7 @@ class WizardController extends Controller {
 	 *
 	 * @no-admin-idor-exempt lists wizards through OpenRegister as the caller, so only wizards the caller may read are answered; register and schema name no object.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 	 */
 	#[NoAdminRequired]
 	public function index(string $register='', string $schema=''): JSONResponse {
@@ -88,7 +88,7 @@ class WizardController extends Controller {
 	 *
 	 * @no-admin-idor-exempt creates a new object and names no existing one; who may create a wizard is the wizardDefinition schema's authorization (template editors), which OpenRegister enforces on the save as the caller.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -105,7 +105,7 @@ class WizardController extends Controller {
 	 *
 	 * @return JSONResponse The wizard, or 404.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
@@ -120,7 +120,7 @@ class WizardController extends Controller {
 	 *
 	 * @return JSONResponse {wizard, warnings}, or 403/404/409/422/423.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
@@ -143,7 +143,7 @@ class WizardController extends Controller {
 	 *
 	 * @return JSONResponse {deleted: true}, or 403/404/423.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
 	 */
 	#[NoAdminRequired]
 	public function destroy(string $id): JSONResponse {
@@ -166,7 +166,7 @@ class WizardController extends Controller {
 	 *
 	 * @no-admin-idor-exempt reads wizards through OpenRegister as the caller, so only wizards the caller may read are answered; the template id is not an object the caller is acting on.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
 	 */
 	#[NoAdminRequired]
 	public function forTemplate(string $id): JSONResponse {
@@ -184,7 +184,7 @@ class WizardController extends Controller {
 	 *
 	 * @return JSONResponse {answers, unresolved}, or 404/422.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-5
 	 */
 	#[NoAdminRequired]
 	public function prefill(string $id, string $register='', string $schema='', string $objectId=''): JSONResponse {

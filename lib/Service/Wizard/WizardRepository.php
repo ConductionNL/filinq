@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -63,7 +63,7 @@ class WizardRepository {
 	 *
 	 * @return array<string, mixed>|null The wizard, or null when absent or not readable.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function find(string $uuid): ?array {
 		if (trim($uuid) === '') {
@@ -91,7 +91,7 @@ class WizardRepository {
 	 *
 	 * @return array<int, array<string, mixed>> The wizards.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function forTemplate(string $templateId): array {
 		if (trim($templateId) === '') {
@@ -107,7 +107,7 @@ class WizardRepository {
 	 *
 	 * @return array<int, array<string, mixed>> The wizards.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 	 */
 	public function active(): array {
 		return $this->search(filters: ['active' => true]);
@@ -146,7 +146,7 @@ class WizardRepository {
 	 *
 	 * @throws RuntimeException 422 when OpenRegister refuses it, 403 when the caller may not.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function save(array $wizard, ?string $uuid=null): array {
 		unset($wizard['uuid'], $wizard['@self'], $wizard['id'], $wizard['version']);
@@ -188,7 +188,7 @@ class WizardRepository {
 	 *
 	 * @throws RuntimeException 403 when the caller may not.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function delete(string $uuid): void {
 		try {

@@ -7,7 +7,7 @@ an object of this register and schema. The wizard opens with what the object
 answers already filled in, as suggestions to review. Renders nothing when no
 wizard fits.
 
-@spec openspec/changes/guided-document-wizard/tasks.md#4-3
+@spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 -->
 
 <template>
@@ -56,7 +56,7 @@ export default {
 	/**
 	 * Load the wizards that fit this object.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 	 */
 	async mounted() {
 		const result = await listWizardsFor(this.register, this.schema)
@@ -70,7 +70,7 @@ export default {
 		 * Open the wizard with this object as its entry.
 		 *
 		 * @param {object} wizard The wizard.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 		 */
 		open(wizard) {
 			this.$router.push({

@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/guided-document-wizard/tasks.md#4-1
+@spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 -->
 
 <template>
@@ -132,7 +132,7 @@ import {
  * choices or the register to pick from, where the answer goes in the
  * template data, and the earlier answer it depends on.
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
  */
 export default {
 	name: 'WizardQuestionDialog',
@@ -176,7 +176,7 @@ export default {
 		 * The answer types.
 		 *
 		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		typeOptions() {
 			return [
@@ -191,7 +191,7 @@ export default {
 		 * The earlier questions a condition may name.
 		 *
 		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		earlierOptions() {
 			return this.earlier.map((question) => ({
@@ -204,7 +204,7 @@ export default {
 		 * The condition operators.
 		 *
 		 * @return {Array<object>} The options.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		operatorOptions() {
 			return [
@@ -218,7 +218,7 @@ export default {
 		 * What keeps the question from being kept, or ''.
 		 *
 		 * @return {string} The problem.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		problem() {
 			return questionProblem(this.form, this.usedKeys)
@@ -231,7 +231,7 @@ export default {
 		/**
 		 * Hand the question back.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		onSave() {
 			this.$emit('save', formToQuestion(this.form))

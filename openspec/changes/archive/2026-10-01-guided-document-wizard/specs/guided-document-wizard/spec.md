@@ -19,7 +19,7 @@ Works identically for `twig` and `office` templates. SmartDocuments Q&A wizard
 ### Requirement: Wizard definitions are register objects attached to a template (REQ-DDGDW-001)
 
 The app MUST store wizard definitions as objects of a new `wizardDefinition`
-schema in the `templates` register, each attached to exactly one template via
+schema in the `filinq` register, each attached to exactly one template via
 `templateId` and carrying an ordered `questions` array. Each question MUST
 declare a unique `key`, a `label`, a `type` from exactly `text`, `choice`,
 `date`, `registerObject`, and a `required` flag; `choice` questions MUST
@@ -35,7 +35,7 @@ be modified by this change.
 
 - GIVEN an existing template and no active wizard attached to it
 - WHEN a `wizardDefinition` with ordered questions of all four types is saved via the wizard API
-- THEN the object is persisted in the `templates` register via OpenRegister
+- THEN the object is persisted in the `filinq` register via OpenRegister
 - AND `GET /api/templates/{id}/wizard` returns it
 - @e2e tests/e2e/spec-coverage/guided-document-wizard.spec.ts
 
@@ -150,7 +150,7 @@ request with HTTP 422 and per-question errors. Requests without
 
 - GIVEN a wizard run where the dossier question was answered with dossier UUID "…017"
 - WHEN the generate request is processed
-- THEN `dataRefs` contains `{register: "dossier", schema: "dossier", id: "…017"}` and the template context carries the resolved dossier fields under the schema key
+- THEN `dataRefs` contains `{register: "filinq", schema: "dossier", id: "…017"}` and the template context carries the resolved dossier fields under the schema key
 - @e2e exclude payload-shape equivalence assertion; covered by PHPUnit (tests/unit/Service/WizardServiceTest.php::testTranslateAnswersProducesDataRefs)
 
 #### Scenario: Missing required visible answer fails with 422

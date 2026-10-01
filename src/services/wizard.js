@@ -8,7 +8,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
  */
 
 import axios from '@nextcloud/axios'
@@ -24,7 +24,7 @@ export const QUESTION_TYPES = ['text', 'choice', 'date', 'registerObject']
  *
  * @param {*} answer The answer.
  * @return {boolean} False for null, undefined, blank text and an empty list.
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
  */
 export function isAnswered(answer) {
 	if (answer === null || answer === undefined) {
@@ -45,7 +45,7 @@ export function isAnswered(answer) {
  * @param {Array<object>} questions The wizard's questions.
  * @param {object} answers The answers by key.
  * @return {Array<string>} The visible keys.
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
  */
 export function visibleKeys(questions, answers) {
 	const visible = new Set()
@@ -119,7 +119,7 @@ function setPath(data, path, value) {
  * @param {object} wizard The wizard, with uuid and version.
  * @param {object} answers The answers by key.
  * @return {{dataRefs: Array<object>, adHocData: object, wizardContext: object}} The payload parts.
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-3
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-3
  */
 export function translateAnswers(wizard, answers) {
 	const questions = wizard.questions || []
@@ -160,7 +160,7 @@ export function translateAnswers(wizard, answers) {
  * @param {object} wizard The wizard.
  * @param {object} answers The answers.
  * @return {Array<string>} The keys of the overriding answers.
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
  */
 export function overridingKeys(wizard, answers) {
 	const questions = wizard.questions || []
@@ -193,7 +193,7 @@ export function overridingKeys(wizard, answers) {
  * @param {object} wizard The wizard.
  * @param {object} answers The answers.
  * @return {Array<string>} The keys.
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
  */
 export function missingKeys(wizard, answers) {
 	const visible = new Set(visibleKeys(wizard.questions || [], answers))
@@ -209,7 +209,7 @@ export function missingKeys(wizard, answers) {
  *
  * @param {object|null} question The question, or null for a new one.
  * @return {object} The form.
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
  */
 export function questionToForm(question) {
 	const q = question || {}
@@ -236,7 +236,7 @@ export function questionToForm(question) {
  *
  * @param {object} form The form.
  * @return {object} The question.
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
  */
 export function formToQuestion(form) {
 	const question = {
@@ -287,7 +287,7 @@ export function formToQuestion(form) {
  * @param {object} form The form.
  * @param {Array<string>} usedKeys The keys of the other questions.
  * @return {string} The problem, or ''.
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
  */
 export function questionProblem(form, usedKeys) {
 	if (!form.label.trim()) {
@@ -351,7 +351,7 @@ async function answer(call) {
  *
  * @param {string} templateId The template.
  * @return {Promise<object>} { ok, data: { wizard } }.
- * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
  */
 export function loadTemplateWizard(templateId) {
 	return answer(
@@ -368,7 +368,7 @@ export function loadTemplateWizard(templateId) {
  *
  * @param {object} wizard The definition; with uuid to change it.
  * @return {Promise<object>} { ok, data: { wizard, warnings } } or the refusal.
- * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
  */
 export function saveWizard(wizard) {
 	const body = { ...wizard }
@@ -392,7 +392,7 @@ export function saveWizard(wizard) {
  *
  * @param {string} uuid The wizard.
  * @return {Promise<object>} { ok }.
- * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#3-1
  */
 export function deleteWizard(uuid) {
 	return answer(
@@ -408,7 +408,7 @@ export function deleteWizard(uuid) {
  * @param {string} register The register.
  * @param {string} schema The schema.
  * @return {Promise<object>} { ok, data: { results } }.
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
  */
 export function listWizardsFor(register, schema) {
 	return answer(
@@ -424,7 +424,7 @@ export function listWizardsFor(register, schema) {
  * @param {string} uuid The wizard.
  * @param {object} entry { register, schema, objectId }.
  * @return {Promise<object>} { ok, data: { answers, unresolved } }.
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-5
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-5
  */
 export function prefillWizard(uuid, entry) {
 	return answer(
@@ -445,7 +445,7 @@ export function prefillWizard(uuid, entry) {
  * @param {object} answers The answers.
  * @param {string} format pdf, odf, docx or html.
  * @return {Promise<object>} { ok, data } where data is the file as a Blob, or the refusal.
- * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
  */
 export async function generateWithWizard(
 	templateId,

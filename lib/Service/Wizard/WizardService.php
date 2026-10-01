@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -77,7 +77,7 @@ class WizardService {
 	 *
 	 * @throws WizardRefused 404, 409, 422 or 423.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function save(array $wizard, string $userId, ?string $uuid=null): array {
 		$fields = $this->fields(wizard: $wizard);
@@ -119,7 +119,7 @@ class WizardService {
 	 *
 	 * @throws WizardRefused 404.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function requireWizard(string $uuid): array {
 		$wizard = $this->repository->find(uuid: $uuid);
@@ -138,7 +138,7 @@ class WizardService {
 	 *
 	 * @return array<string, mixed>|null The wizard.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function activeFor(string $templateId): ?array {
 		return $this->otherActive(templateId: $templateId, uuid: null);
@@ -156,7 +156,7 @@ class WizardService {
 	 *
 	 * @return array<int, array<string, mixed>> The wizards.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
 	 */
 	public function forObject(string $register, string $schema): array {
 		$fits = [];
@@ -183,7 +183,7 @@ class WizardService {
 	 *
 	 * @throws WizardRefused 404 or 423.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-1
 	 */
 	public function delete(string $uuid, string $userId): void {
 		$wizard = $this->requireWizard(uuid: $uuid);
@@ -212,7 +212,7 @@ class WizardService {
 	 *
 	 * @throws WizardRefused 404 for an unknown wizard, 422 for an entry without register, schema and id.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-5
 	 */
 	public function prefill(string $uuid, array $entry): array {
 		$wizard = $this->requireWizard(uuid: $uuid);

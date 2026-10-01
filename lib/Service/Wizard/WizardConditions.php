@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -52,7 +52,7 @@ class WizardConditions {
 	 *
 	 * @return string[] The visible question keys.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
 	 */
 	public function visibleKeys(array $questions, array $answers): array {
 		$visible = [];
@@ -77,7 +77,7 @@ class WizardConditions {
 	 *
 	 * @return bool False for null, an empty string and an empty list.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-2
 	 */
 	public static function isAnswered(mixed $answer): bool {
 		if ($answer === null || $answer === [] || (is_string($answer) === true && trim($answer) === '')) {

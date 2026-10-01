@@ -21,7 +21,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/guided-document-wizard/tasks.md#2-4
+ * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -63,7 +63,7 @@ class WizardGenerationGate {
 	 * @throws WizardRefused 422 when the wizard is unknown, fronts another template, is inactive,
 	 *                       or the answers do not pass.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#2-4
 	 */
 	public function check(string $templateId, array $dataRefs, mixed $context): array {
 		if (is_array($context) === false) {

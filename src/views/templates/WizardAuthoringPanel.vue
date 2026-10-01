@@ -8,7 +8,7 @@ api/wizards. The server refuses a wizard that cannot run (per question) and
 warns when a question does not fit the template's bound schema. A question
 is edited in WizardQuestionDialog.
 
-@spec openspec/changes/guided-document-wizard/tasks.md#4-1
+@spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 -->
 
 <template>
@@ -215,7 +215,7 @@ export default {
 		/**
 		 * Used keys.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		usedKeys() {
 			return this.wizard.questions
@@ -227,7 +227,7 @@ export default {
 	/**
 	 * Mounted.
 	 *
-	 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+	 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 	 */
 	async mounted() {
 		const result = await loadTemplateWizard(this.templateId)
@@ -243,7 +243,7 @@ export default {
 		/**
 		 * Blank.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		blank() {
 			return {
@@ -261,7 +261,7 @@ export default {
 		 * Type label.
 		 *
 		 * @param {*} type The type.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		typeLabel(type) {
 			return (
@@ -278,7 +278,7 @@ export default {
 		 * Condition text.
 		 *
 		 * @param {*} condition The condition.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		conditionText(condition) {
 			if (condition.operator === 'answered') {
@@ -303,7 +303,7 @@ export default {
 		 *
 		 * @param {*} index The index.
 		 * @param {*} by The by.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		move(index, by) {
 			const questions = [...this.wizard.questions]
@@ -316,7 +316,7 @@ export default {
 		 * Edit.
 		 *
 		 * @param {*} index The index.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		edit(index) {
 			this.editing = index
@@ -326,7 +326,7 @@ export default {
 		 * Remove.
 		 *
 		 * @param {*} index The index.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		remove(index) {
 			const key = this.wizard.questions[index].key
@@ -346,7 +346,7 @@ export default {
 		 * Store question.
 		 *
 		 * @param {*} question The question.
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		storeQuestion(question) {
 			const questions = [...this.wizard.questions]
@@ -362,7 +362,7 @@ export default {
 		/**
 		 * Save.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		async save() {
 			this.saving = true
@@ -408,7 +408,7 @@ export default {
 		/**
 		 * Remove wizard.
 		 *
-		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-1
 		 */
 		async removeWizard() {
 			const result = await deleteWizard(this.wizard.uuid)
