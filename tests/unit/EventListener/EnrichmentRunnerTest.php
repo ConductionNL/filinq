@@ -34,6 +34,7 @@ use OCA\Filinq\Tests\Unit\Service\Classification\ClassificationObjectStore;
 use OCA\Filinq\Tests\Unit\Service\Classification\InboundClassificationFixture;
 use OCA\OpenRegister\Db\ObjectEntity;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
 
@@ -174,6 +175,28 @@ class EnrichmentRunnerTest extends TestCase {
 		$this->assertSame([], $this->store->saves);
 
 	}//end testTheRunnerWorksWithoutAClassificationService()
+
+	/**
+	 * The handler's default runner resolves the service from the container,
+	 * and an instance where it cannot be resolved still enriches.
+	 *
+	 * @return void
+	 */
+	public function testTheRunnerResolvesClassificationFromTheContainer(): void {
+		$service = $this->service();
+		$found = $this->createMock(ContainerInterface::class);
+		$found->method('get')->willReturn($service);
+		$missing = $this->createMock(ContainerInterface::class);
+		$missing->method('get')->willThrowException(new RuntimeException('not registered'));
+
+		(new EnrichmentRunner())->withClassificationFrom(container: $missing)->enrichObject($this->object(), $this->metadata(metadata: ['language' => 'nl']), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		$this->assertSame([], $this->store->saves);
+		$this->assertSame([['language' => 'nl']], $this->enriched);
+
+		(new EnrichmentRunner())->withClassificationFrom(container: $found)->enrichObject($this->object(), $this->metadata(metadata: []), $this->settings(enrichment: true), new NullLogger(), 'new object');
+		$this->assertCount(1, $this->store->saves);
+
+	}//end testTheRunnerResolvesClassificationFromTheContainer()
 
 	/**
 	 * The intake document as OpenRegister hands it to the listener.

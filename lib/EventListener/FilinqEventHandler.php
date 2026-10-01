@@ -46,19 +46,30 @@ use Psr\Log\LoggerInterface;
  */
 class FilinqEventHandler {
 	/**
+	 * The enrichment runner.
+	 *
+	 * @var EnrichmentRunner
+	 */
+	private readonly EnrichmentRunner $enrichmentRunner;
+
+	/**
 	 * Constructor for FilinqEventHandler
 	 *
 	 * @param ContainerInterface $container App container the legal-bases summary service is resolved from.
-	 * @param EnrichmentRunner $enrichmentRunner The enrichment runner. Defaults to a
-	 *                                           fresh stateless instance; injectable
-	 *                                           so tests can substitute a double.
+	 * @param EnrichmentRunner|null $enrichmentRunner The enrichment runner. Defaults to a
+	 *                                                fresh instance that also classifies
+	 *                                                inbound documents; injectable so
+	 *                                                tests can substitute a double.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-3
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly EnrichmentRunner $enrichmentRunner = new EnrichmentRunner(),
+		?EnrichmentRunner $enrichmentRunner = null,
 	) {
+		$this->enrichmentRunner = $enrichmentRunner ?? (new EnrichmentRunner())->withClassificationFrom(container: $container);
 
 	}//end __construct()
 

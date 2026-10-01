@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\PolicyRetroactiveService;
 use OCA\Filinq\Service\SettingsService;
@@ -68,10 +67,7 @@ class FilinqEventListener implements IEventListener {
 			$metadataService = $this->container->get(MetadataService::class);
 			$settingsService = $this->container->get(SettingsService::class);
 			$retroactive = $this->container->get(PolicyRetroactiveService::class);
-			$eventHandler = new FilinqEventHandler(
-				container: $this->container,
-				enrichmentRunner: new EnrichmentRunner(classification: $this->classificationService())
-			);
+			$eventHandler = new FilinqEventHandler(container: $this->container);
 
 			$logger->info(
 				'Filinq: Processing event',
@@ -114,29 +110,6 @@ class FilinqEventListener implements IEventListener {
 		}//end try
 
 	}//end handle()
-
-	/**
-	 * The classification service, or null when it cannot be built: an
-	 * instance where it fails to resolve still enriches as before.
-	 *
-	 * @return InboundClassificationService|null The service.
-	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-3
-	 */
-	private function classificationService(): ?InboundClassificationService {
-		try {
-			$service = $this->container->get(InboundClassificationService::class);
-		} catch (\Throwable) {
-			return null;
-		}
-
-		if (($service instanceof InboundClassificationService) === false) {
-			return null;
-		}
-
-		return $service;
-
-	}//end classificationService()
 
 	/**
 	 * Dispatch the event to the appropriate handler

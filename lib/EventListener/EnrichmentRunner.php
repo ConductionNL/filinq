@@ -29,6 +29,7 @@ namespace OCA\Filinq\EventListener;
 use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\SettingsService;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -60,6 +61,31 @@ class EnrichmentRunner {
 	) {
 
 	}//end __construct()
+
+	/**
+	 * A runner that also classifies, with the service resolved from the app
+	 * container; when it cannot be resolved the runner enriches as before.
+	 *
+	 * @param ContainerInterface $container The app container.
+	 *
+	 * @return self The runner.
+	 *
+	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-3
+	 */
+	public function withClassificationFrom(ContainerInterface $container): self {
+		try {
+			$service = $container->get(InboundClassificationService::class);
+		} catch (Throwable) {
+			return $this;
+		}
+
+		if (($service instanceof InboundClassificationService) === false) {
+			return $this;
+		}
+
+		return new self(classification: $service);
+
+	}//end withClassificationFrom()
 
 	/**
 	 * Offer an object to classification. Suggestions only: the service writes
