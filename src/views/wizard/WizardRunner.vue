@@ -36,14 +36,17 @@ the answers again. Started from a register object (?register, ?schema,
 			" />
 
 		<template v-else>
-			<p class="wizard-runner__progress" aria-live="polite" data-testid="wizard-progress">
+			<p
+				class="wizard-runner__progress"
+				aria-live="polite"
+				data-testid="wizard-progress">
 				{{
 					onReview
 						? t('filinq', 'Review your answers')
 						: t('filinq', 'Question {current} of {total}', {
-							current: step + 1,
-							total: steps.length,
-						})
+								current: step + 1,
+								total: steps.length,
+							})
 				}}
 			</p>
 			<NcProgressBar :value="progress" size="medium" />
@@ -57,7 +60,9 @@ the answers again. Started from a register object (?register, ?schema,
 				<fieldset>
 					<legend class="wizard-runner__question">
 						{{ current.label }}
-						<span v-if="current.required" class="wizard-runner__required">
+						<span
+							v-if="current.required"
+							class="wizard-runner__required">
 							{{ t('filinq', '(required)') }}
 						</span>
 					</legend>
@@ -67,39 +72,41 @@ the answers again. Started from a register object (?register, ?schema,
 
 					<NcTextField
 						v-if="current.type === 'text'"
-						ref="field"
-						:value="String(answers[current.key] ?? '')"
+						:modelValue="String(answers[current.key] ?? '')"
 						:label="current.label"
 						:labelOutside="true"
 						data-testid="wizard-answer-text"
-						@update:value="answer" />
+						@update:modelValue="answer" />
 
-					<div v-else-if="current.type === 'choice'" role="radiogroup" :aria-label="current.label">
+					<div
+						v-else-if="current.type === 'choice'"
+						role="radiogroup"
+						:aria-label="current.label">
 						<NcCheckboxRadioSwitch
 							v-for="choice in current.choices"
 							:key="choice.value"
-							:checked="answers[current.key] || ''"
+							:modelValue="answers[current.key] || ''"
 							:value="choice.value"
 							type="radio"
 							:name="'wizard-' + current.key"
 							:data-testid="'wizard-choice-' + choice.value"
-							@update:checked="answer">
+							@update:modelValue="answer">
 							{{ choice.label }}
 						</NcCheckboxRadioSwitch>
 					</div>
 
 					<NcTextField
 						v-else-if="current.type === 'date'"
-						:value="String(answers[current.key] ?? '')"
+						:modelValue="String(answers[current.key] ?? '')"
 						type="date"
 						:label="current.label"
 						:labelOutside="true"
 						data-testid="wizard-answer-date"
-						@update:value="answer" />
+						@update:modelValue="answer" />
 
 					<NcSelect
 						v-else-if="current.type === 'registerObject'"
-						:value="pickedOption"
+						:modelValue="pickedOption"
 						:inputLabel="current.label"
 						:options="pickerOptions"
 						:loading="pickerLoading"
@@ -107,10 +114,17 @@ the answers again. Started from a register object (?register, ?schema,
 						label="label"
 						data-testid="wizard-answer-object"
 						@search="searchObjects"
-						@input="pickObject" />
+						@update:modelValue="pickObject" />
 
-					<p v-if="suggested.includes(current.key)" class="wizard-runner__suggested">
-						{{ t('filinq', 'Suggested from the object you started from. Change it if it is wrong.') }}
+					<p
+						v-if="suggested.includes(current.key)"
+						class="wizard-runner__suggested">
+						{{
+							t(
+								'filinq',
+								'Suggested from the object you started from. Change it if it is wrong.',
+							)
+						}}
 					</p>
 					<NcNoteCard v-if="serverErrors[current.key]" type="error">
 						{{ serverErrors[current.key] }}
@@ -134,16 +148,25 @@ the answers again. Started from a register object (?register, ?schema,
 			<!-- REVIEW STEP -->
 			<div v-else class="wizard-runner__review" data-testid="wizard-review">
 				<dl class="wizard-runner__answers">
-					<template v-for="(question, index) in steps">
-						<dt :key="question.key + '-q'">
+					<template v-for="(question, index) in steps" :key="question.key">
+						<dt>
 							{{ question.label }}
 						</dt>
-						<dd :key="question.key + '-a'" :data-testid="'wizard-review-' + question.key">
+						<dd :data-testid="'wizard-review-' + question.key">
 							<span>{{ displayAnswer(question) }}</span>
-							<span v-if="overriding.includes(question.key)" class="wizard-runner__override">
-								{{ t('filinq', 'replaces the value from the picked object') }}
+							<span
+								v-if="overriding.includes(question.key)"
+								class="wizard-runner__override">
+								{{
+									t(
+										'filinq',
+										'replaces the value from the picked object',
+									)
+								}}
 							</span>
-							<span v-if="serverErrors[question.key]" class="wizard-runner__error">
+							<span
+								v-if="serverErrors[question.key]"
+								class="wizard-runner__error">
 								{{ serverErrors[question.key] }}
 							</span>
 							<NcButton variant="tertiary" @click="step = index">
@@ -175,7 +198,11 @@ the answers again. Started from a register object (?register, ?schema,
 						:disabled="generating || missing.length > 0"
 						data-testid="wizard-generate"
 						@click="generate">
-						{{ generating ? t('filinq', 'Generating…') : t('filinq', 'Generate document') }}
+						{{
+							generating
+								? t('filinq', 'Generating…')
+								: t('filinq', 'Generate document')
+						}}
 					</NcButton>
 				</div>
 			</div>
@@ -196,6 +223,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import pinia from '../../pinia.js'
 import {
 	generateWithWizard,
 	isAnswered,
@@ -205,7 +233,6 @@ import {
 	prefillWizard,
 	visibleKeys,
 } from '../../services/wizard.js'
-import pinia from '../../pinia.js'
 import { useObjectStore } from '../../store/store.js'
 
 export default {
@@ -287,7 +314,9 @@ export default {
 			if (!this.steps.length) {
 				return 0
 			}
-			return Math.round((Math.min(this.step, this.steps.length) / this.steps.length) * 100)
+			return Math.round(
+				(Math.min(this.step, this.steps.length) / this.steps.length) * 100,
+			)
 		},
 
 		/**
@@ -296,7 +325,9 @@ export default {
 		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
 		 */
 		canContinue() {
-			return !this.current?.required || isAnswered(this.answers[this.current.key])
+			return (
+				!this.current?.required || isAnswered(this.answers[this.current.key])
+			)
 		},
 
 		/**
@@ -396,7 +427,11 @@ export default {
 			if (!register || !schema || !objectId) {
 				return
 			}
-			const result = await prefillWizard(this.wizard.uuid, { register, schema, objectId })
+			const result = await prefillWizard(this.wizard.uuid, {
+				register,
+				schema,
+				objectId,
+			})
 			if (!result.ok) {
 				return
 			}
@@ -446,11 +481,19 @@ export default {
 				store.registerObjectType(type, question.schema, question.register)
 			}
 			this.pickerLoading = true
-			const rows = await store.fetchCollectionForOptions(type, { _search: search || undefined, _limit: 20 })
+			const rows = await store.fetchCollectionForOptions(type, {
+				_search: search || undefined,
+				_limit: 20,
+			})
 			this.pickerLoading = false
 			this.pickerOptions = rows.map((row) => ({
 				id: row.uuid || row.id || row['@self']?.id,
-				label: row['@self']?.name || row.title || row.name || row.uuid || row.id,
+				label:
+					row['@self']?.name
+					|| row.title
+					|| row.name
+					|| row.uuid
+					|| row.id,
 			}))
 		},
 
@@ -486,7 +529,9 @@ export default {
 				return t('filinq', 'No answer')
 			}
 			if (question.type === 'choice') {
-				return question.choices.find((c) => c.value === value)?.label || value
+				return (
+					question.choices.find((c) => c.value === value)?.label || value
+				)
 			}
 			if (question.type === 'registerObject') {
 				return this.labels[value] || value
@@ -501,13 +546,23 @@ export default {
 		 */
 		async generate() {
 			this.generating = true
-			const result = await generateWithWizard(this.templateId, this.wizard, this.answers, this.format)
+			const result = await generateWithWizard(
+				this.templateId,
+				this.wizard,
+				this.answers,
+				this.format,
+			)
 			this.generating = false
 			if (!result.ok) {
 				this.serverErrors = result.errors || {}
-				showError(result.status === 422
-					? t('filinq', 'Some answers were not accepted. Check the marked questions.')
-					: t('filinq', 'The document could not be generated.'))
+				showError(
+					result.status === 422
+						? t(
+								'filinq',
+								'Some answers were not accepted. Check the marked questions.',
+							)
+						: t('filinq', 'The document could not be generated.'),
+				)
 				return
 			}
 			const url = URL.createObjectURL(result.data)
@@ -525,7 +580,10 @@ export default {
 		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
 		 */
 		back() {
-			this.$router.push({ name: 'TemplateDetail', params: { id: this.templateId } })
+			this.$router.push({
+				name: 'TemplateDetail',
+				params: { id: this.templateId },
+			})
 		},
 	},
 }

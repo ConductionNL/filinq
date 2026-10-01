@@ -26,12 +26,12 @@ is edited in WizardQuestionDialog.
 
 			<div class="wizard-authoring__meta">
 				<NcTextField
-					:value.sync="wizard.name"
+					v-model="wizard.name"
 					:label="t('filinq', 'Wizard name')"
 					:disabled="readOnly"
 					data-testid="wizard-name" />
 				<NcCheckboxRadioSwitch
-					:checked.sync="wizard.active"
+					v-model="wizard.active"
 					:disabled="readOnly"
 					type="switch">
 					{{ t('filinq', 'Offer this wizard to clerks') }}
@@ -41,7 +41,9 @@ is edited in WizardQuestionDialog.
 			<NcEmptyContent
 				v-if="!wizard.questions.length"
 				:name="t('filinq', 'No questions yet')"
-				:description="t('filinq', 'Add the first question the clerk answers.')" />
+				:description="
+					t('filinq', 'Add the first question the clerk answers.')
+				" />
 
 			<ol v-else class="wizard-authoring__questions">
 				<li
@@ -52,12 +54,21 @@ is edited in WizardQuestionDialog.
 					<div class="wizard-authoring__question-text">
 						<strong>{{ question.label }}</strong>
 						<span class="wizard-authoring__muted">
-							{{ typeLabel(question.type) }}{{ question.required ? ', ' + t('filinq', 'required') : '' }}
+							{{ typeLabel(question.type)
+							}}{{
+								question.required
+									? ', ' + t('filinq', 'required')
+									: ''
+							}}
 						</span>
-						<span v-if="question.condition" class="wizard-authoring__muted">
+						<span
+							v-if="question.condition"
+							class="wizard-authoring__muted">
 							{{ conditionText(question.condition) }}
 						</span>
-						<span v-if="errors[question.key]" class="wizard-authoring__error">
+						<span
+							v-if="errors[question.key]"
+							class="wizard-authoring__error">
 							{{ errors[question.key] }}
 						</span>
 					</div>
@@ -71,15 +82,23 @@ is edited in WizardQuestionDialog.
 						</NcButton>
 						<NcButton
 							variant="tertiary"
-							:disabled="readOnly || index === wizard.questions.length - 1"
+							:disabled="
+								readOnly || index === wizard.questions.length - 1
+							"
 							:aria-label="t('filinq', 'Move down')"
 							@click="move(index, 1)">
 							{{ t('filinq', 'Down') }}
 						</NcButton>
-						<NcButton variant="tertiary" :disabled="readOnly" @click="edit(index)">
+						<NcButton
+							variant="tertiary"
+							:disabled="readOnly"
+							@click="edit(index)">
 							{{ t('filinq', 'Edit') }}
 						</NcButton>
-						<NcButton variant="tertiary" :disabled="readOnly" @click="remove(index)">
+						<NcButton
+							variant="tertiary"
+							:disabled="readOnly"
+							@click="remove(index)">
 							{{ t('filinq', 'Remove') }}
 						</NcButton>
 					</div>
@@ -94,7 +113,10 @@ is edited in WizardQuestionDialog.
 			</NcNoteCard>
 
 			<div class="wizard-authoring__actions">
-				<NcButton :disabled="readOnly" data-testid="wizard-add-question" @click="edit(-1)">
+				<NcButton
+					:disabled="readOnly"
+					data-testid="wizard-add-question"
+					@click="edit(-1)">
 					{{ t('filinq', 'Add a question') }}
 				</NcButton>
 				<NcButton
@@ -102,7 +124,9 @@ is edited in WizardQuestionDialog.
 					:disabled="readOnly || saving || !wizard.questions.length"
 					data-testid="wizard-save"
 					@click="save">
-					{{ saving ? t('filinq', 'Saving…') : t('filinq', 'Save wizard') }}
+					{{
+						saving ? t('filinq', 'Saving…') : t('filinq', 'Save wizard')
+					}}
 				</NcButton>
 				<NcButton
 					v-if="wizard.uuid"
@@ -117,7 +141,9 @@ is edited in WizardQuestionDialog.
 		<WizardQuestionDialog
 			v-if="editing !== null"
 			:question="editing >= 0 ? wizard.questions[editing] : null"
-			:earlier="editing >= 0 ? wizard.questions.slice(0, editing) : wizard.questions"
+			:earlier="
+				editing >= 0 ? wizard.questions.slice(0, editing) : wizard.questions
+			"
 			:usedKeys="usedKeys"
 			@close="editing = null"
 			@save="storeQuestion" />
@@ -136,7 +162,11 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import WizardQuestionDialog from '../../dialogs/WizardQuestionDialog.vue'
-import { deleteWizard, loadTemplateWizard, saveWizard } from '../../services/wizard.js'
+import {
+	deleteWizard,
+	loadTemplateWizard,
+	saveWizard,
+} from '../../services/wizard.js'
 
 export default {
 	name: 'WizardAuthoringPanel',
@@ -217,7 +247,10 @@ export default {
 		 */
 		blank() {
 			return {
-				name: this.templateName ? t('filinq', '{name} wizard', { name: this.templateName }) : '',
+				name: this.templateName
+					? t('filinq', '{name} wizard', { name: this.templateName })
+					: '',
+
 				templateId: this.templateId,
 				active: true,
 				questions: [],
@@ -231,12 +264,14 @@ export default {
 		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
 		 */
 		typeLabel(type) {
-			return {
-				text: t('filinq', 'Text'),
-				choice: t('filinq', 'Choice'),
-				date: t('filinq', 'Date'),
-				registerObject: t('filinq', 'Register object'),
-			}[type] || type
+			return (
+				{
+					text: t('filinq', 'Text'),
+					choice: t('filinq', 'Choice'),
+					date: t('filinq', 'Date'),
+					registerObject: t('filinq', 'Register object'),
+				}[type] || type
+			)
 		},
 
 		/**
@@ -247,12 +282,20 @@ export default {
 		 */
 		conditionText(condition) {
 			if (condition.operator === 'answered') {
-				return t('filinq', 'Asked when "{question}" is answered', { question: condition.questionKey })
+				return t('filinq', 'Asked when "{question}" is answered', {
+					question: condition.questionKey,
+				})
 			}
 			if (condition.operator === 'notEquals') {
-				return t('filinq', 'Asked when "{question}" is not {value}', { question: condition.questionKey, value: condition.value })
+				return t('filinq', 'Asked when "{question}" is not {value}', {
+					question: condition.questionKey,
+					value: condition.value,
+				})
 			}
-			return t('filinq', 'Asked when "{question}" is {value}', { question: condition.questionKey, value: condition.value })
+			return t('filinq', 'Asked when "{question}" is {value}', {
+				question: condition.questionKey,
+				value: condition.value,
+			})
 		},
 
 		/**
@@ -291,7 +334,11 @@ export default {
 				...this.wizard,
 				questions: this.wizard.questions
 					.filter((question, i) => i !== index)
-					.map((question) => (question.condition?.questionKey === key ? { ...question, condition: undefined } : question)),
+					.map((question) =>
+						question.condition?.questionKey === key
+							? { ...question, condition: undefined }
+							: question,
+					),
 			}
 		},
 
@@ -321,16 +368,35 @@ export default {
 			this.saving = true
 			this.errors = {}
 			this.formError = ''
-			const result = await saveWizard({ ...this.wizard, templateId: this.templateId })
+			const result = await saveWizard({
+				...this.wizard,
+				templateId: this.templateId,
+			})
 			this.saving = false
 			if (!result.ok) {
 				this.errors = result.errors || {}
-				this.formError = {
-					409: t('filinq', 'This template already has an active wizard. Switch the other one off first.'),
-					423: t('filinq', 'Someone else is editing this template. Try again when they are done.'),
-					403: t('filinq', 'Only template editors can change a wizard.'),
-					422: t('filinq', 'The wizard has errors. Check the marked questions.'),
-				}[result.status] || t('filinq', 'The wizard could not be saved.')
+				this.formError =
+					{
+						409: t(
+							'filinq',
+							'This template already has an active wizard. Switch the other one off first.',
+						),
+
+						423: t(
+							'filinq',
+							'Someone else is editing this template. Try again when they are done.',
+						),
+
+						403: t(
+							'filinq',
+							'Only template editors can change a wizard.',
+						),
+
+						422: t(
+							'filinq',
+							'The wizard has errors. Check the marked questions.',
+						),
+					}[result.status] || t('filinq', 'The wizard could not be saved.')
 				return
 			}
 			this.wizard = { ...this.blank(), ...result.data.wizard }

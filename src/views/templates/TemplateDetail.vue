@@ -408,6 +408,13 @@ export default {
 	 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 	 */
 	async mounted() {
+		const routeId = this.$route?.params?.id
+		if (routeId && routeId !== 'new' && this.templateStore.templateItem?.id !== routeId) {
+			// Opened by URL (the Templates index links here): load the template
+			// the route names, so the Versions and Wizard tabs can render.
+			await this.templateStore.fetchTemplate(routeId)
+		}
+
 		if (!this.isNew) {
 			const tmpl = this.templateStore.templateItem
 			this.form.name = tmpl.name || ''
@@ -444,7 +451,10 @@ export default {
 		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
 		 */
 		openWizard() {
-			this.$router.push({ name: 'WizardRunner', params: { id: this.templateStore.templateItem.id } })
+			this.$router.push({
+				name: 'WizardRunner',
+				params: { id: this.templateStore.templateItem.id },
+			})
 		},
 
 		/**

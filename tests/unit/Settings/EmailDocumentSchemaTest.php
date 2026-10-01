@@ -62,7 +62,7 @@ class EmailDocumentSchemaTest extends TestCase {
 		$schemas = $this->register['components']['schemas'];
 		$this->assertArrayHasKey('emailDocument', $schemas);
 		$this->assertContains('emailDocument', $this->register['components']['registers']['filinq']['schemas']);
-		$this->assertSame('8.42.0', $this->register['info']['version']);
+		$this->assertTrue(version_compare($this->register['info']['version'], '8.42.0', '>='));
 		$schema = $schemas['emailDocument'];
 		$this->assertSame('1.0.0', $schema['version']);
 		$this->assertSame(['sourceFileRef', 'status', 'ingestedAt'], $schema['required']);

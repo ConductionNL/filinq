@@ -84,8 +84,10 @@ function isAsked(question, answers, earlier, visible) {
 	if (condition.operator === 'answered') {
 		return isAnswered(answer)
 	}
-	const same = String(answer ?? '') === String(condition.value ?? '')
-		&& (answer !== undefined && answer !== null)
+	const same =
+		String(answer ?? '') === String(condition.value ?? '')
+		&& answer !== undefined
+		&& answer !== null
 	if (condition.operator === 'equals') {
 		return isAnswered(answer) && same
 	}
@@ -165,11 +167,22 @@ export function overridingKeys(wizard, answers) {
 	const visible = new Set(visibleKeys(questions, answers))
 	const picked = new Set(
 		questions
-			.filter((q) => q.type === 'registerObject' && visible.has(q.key) && isAnswered(answers[q.key]))
+			.filter(
+				(q) =>
+					q.type === 'registerObject'
+					&& visible.has(q.key)
+					&& isAnswered(answers[q.key]),
+			)
 			.map((q) => q.schema),
 	)
 	return questions
-		.filter((q) => q.type !== 'registerObject' && q.mapsTo && visible.has(q.key) && isAnswered(answers[q.key]))
+		.filter(
+			(q) =>
+				q.type !== 'registerObject'
+				&& q.mapsTo
+				&& visible.has(q.key)
+				&& isAnswered(answers[q.key]),
+		)
 		.filter((q) => picked.has(q.mapsTo.split('.')[0]))
 		.map((q) => q.key)
 }
@@ -185,7 +198,9 @@ export function overridingKeys(wizard, answers) {
 export function missingKeys(wizard, answers) {
 	const visible = new Set(visibleKeys(wizard.questions || [], answers))
 	return (wizard.questions || [])
-		.filter((q) => visible.has(q.key) && q.required && !isAnswered(answers[q.key]))
+		.filter(
+			(q) => visible.has(q.key) && q.required && !isAnswered(answers[q.key]),
+		)
 		.map((q) => q.key)
 }
 
@@ -204,7 +219,9 @@ export function questionToForm(question) {
 		helpText: q.helpText || '',
 		type: q.type || 'text',
 		required: q.required === true,
-		choicesText: (q.choices || []).map((c) => `${c.value}=${c.label}`).join('\n'),
+		choicesText: (q.choices || [])
+			.map((c) => `${c.value}=${c.label}`)
+			.join('\n'),
 		register: q.register || '',
 		schema: q.schema || '',
 		mapsTo: q.mapsTo || '',
@@ -232,13 +249,17 @@ export function formToQuestion(form) {
 		question.helpText = form.helpText.trim()
 	}
 	if (form.type === 'choice') {
-		question.choices = form.choicesText.split('\n')
+		question.choices = form.choicesText
+			.split('\n')
 			.map((line) => line.trim())
 			.filter(Boolean)
 			.map((line) => {
 				const at = line.indexOf('=')
 				return at > 0
-					? { value: line.slice(0, at).trim(), label: line.slice(at + 1).trim() }
+					? {
+							value: line.slice(0, at).trim(),
+							label: line.slice(at + 1).trim(),
+						}
 					: { value: line, label: line }
 			})
 	}
@@ -249,7 +270,10 @@ export function formToQuestion(form) {
 		question.mapsTo = form.mapsTo.trim()
 	}
 	if (form.conditionKey) {
-		question.condition = { questionKey: form.conditionKey, operator: form.conditionOperator }
+		question.condition = {
+			questionKey: form.conditionKey,
+			operator: form.conditionOperator,
+		}
 		if (form.conditionOperator !== 'answered') {
 			question.condition.value = form.conditionValue
 		}
@@ -270,7 +294,10 @@ export function questionProblem(form, usedKeys) {
 		return t('filinq', 'Write the question.')
 	}
 	if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(form.key.trim())) {
-		return t('filinq', 'The key needs letters, digits, - or _, starting with a letter.')
+		return t(
+			'filinq',
+			'The key needs letters, digits, - or _, starting with a letter.',
+		)
 	}
 	if (usedKeys.includes(form.key.trim())) {
 		return t('filinq', 'Another question already uses this key.')
@@ -278,12 +305,23 @@ export function questionProblem(form, usedKeys) {
 	if (form.type === 'choice' && !form.choicesText.trim()) {
 		return t('filinq', 'Add at least one choice.')
 	}
-	if (form.type === 'registerObject' && (!form.register.trim() || !form.schema.trim())) {
+	if (
+		form.type === 'registerObject'
+		&& (!form.register.trim() || !form.schema.trim())
+	) {
 		return t('filinq', 'Name the register and the schema to pick from.')
 	}
-	if (form.type !== 'registerObject' && form.mapsTo.trim()
-		&& !/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$/.test(form.mapsTo.trim())) {
-		return t('filinq', 'The data path needs names joined by dots, such as applicant.name.')
+	if (
+		form.type !== 'registerObject'
+		&& form.mapsTo.trim()
+		&& !/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*$/.test(
+			form.mapsTo.trim(),
+		)
+	) {
+		return t(
+			'filinq',
+			'The data path needs names joined by dots, such as applicant.name.',
+		)
 	}
 	return ''
 }
@@ -316,7 +354,13 @@ async function answer(call) {
  * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
  */
 export function loadTemplateWizard(templateId) {
-	return answer(axios.get(generateUrl(`/apps/filinq/api/templates/${encodeURIComponent(templateId)}/wizard`)))
+	return answer(
+		axios.get(
+			generateUrl(
+				`/apps/filinq/api/templates/${encodeURIComponent(templateId)}/wizard`,
+			),
+		),
+	)
 }
 
 /**
@@ -331,7 +375,14 @@ export function saveWizard(wizard) {
 	delete body.uuid
 	delete body.version
 	if (wizard.uuid) {
-		return answer(axios.put(generateUrl(`/apps/filinq/api/wizards/${encodeURIComponent(wizard.uuid)}`), body))
+		return answer(
+			axios.put(
+				generateUrl(
+					`/apps/filinq/api/wizards/${encodeURIComponent(wizard.uuid)}`,
+				),
+				body,
+			),
+		)
 	}
 	return answer(axios.post(generateUrl('/apps/filinq/api/wizards'), body))
 }
@@ -344,7 +395,11 @@ export function saveWizard(wizard) {
  * @spec openspec/changes/guided-document-wizard/tasks.md#3-1
  */
 export function deleteWizard(uuid) {
-	return answer(axios.delete(generateUrl(`/apps/filinq/api/wizards/${encodeURIComponent(uuid)}`)))
+	return answer(
+		axios.delete(
+			generateUrl(`/apps/filinq/api/wizards/${encodeURIComponent(uuid)}`),
+		),
+	)
 }
 
 /**
@@ -356,7 +411,11 @@ export function deleteWizard(uuid) {
  * @spec openspec/changes/guided-document-wizard/tasks.md#4-3
  */
 export function listWizardsFor(register, schema) {
-	return answer(axios.get(generateUrl('/apps/filinq/api/wizards'), { params: { register, schema } }))
+	return answer(
+		axios.get(generateUrl('/apps/filinq/api/wizards'), {
+			params: { register, schema },
+		}),
+	)
 }
 
 /**
@@ -368,7 +427,14 @@ export function listWizardsFor(register, schema) {
  * @spec openspec/changes/guided-document-wizard/tasks.md#2-5
  */
 export function prefillWizard(uuid, entry) {
-	return answer(axios.post(generateUrl(`/apps/filinq/api/wizards/${encodeURIComponent(uuid)}/prefill`), entry))
+	return answer(
+		axios.post(
+			generateUrl(
+				`/apps/filinq/api/wizards/${encodeURIComponent(uuid)}/prefill`,
+			),
+			entry,
+		),
+	)
 }
 
 /**
@@ -381,7 +447,12 @@ export function prefillWizard(uuid, entry) {
  * @return {Promise<object>} { ok, data } where data is the file as a Blob, or the refusal.
  * @spec openspec/changes/guided-document-wizard/tasks.md#4-2
  */
-export async function generateWithWizard(templateId, wizard, answers, format = 'pdf') {
+export async function generateWithWizard(
+	templateId,
+	wizard,
+	answers,
+	format = 'pdf',
+) {
 	const payload = translateAnswers(wizard, answers)
 	try {
 		const response = await axios.post(
@@ -397,7 +468,11 @@ export async function generateWithWizard(templateId, wizard, answers, format = '
 			},
 			{ responseType: 'blob' },
 		)
-		return { ok: true, data: response.data, filename: filenameOf(response.headers) }
+		return {
+			ok: true,
+			data: response.data,
+			filename: filenameOf(response.headers),
+		}
 	} catch (error) {
 		const body = await readErrorBody(error?.response?.data)
 		return {
@@ -429,7 +504,10 @@ function filenameOf(headers) {
  */
 async function readErrorBody(data) {
 	try {
-		const text = typeof data?.text === 'function' ? await data.text() : JSON.stringify(data ?? {})
+		const text =
+			typeof data?.text === 'function'
+				? await data.text()
+				: JSON.stringify(data ?? {})
 		return JSON.parse(text) || {}
 	} catch {
 		return {}

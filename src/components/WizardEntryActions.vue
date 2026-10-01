@@ -76,7 +76,11 @@ export default {
 			this.$router.push({
 				name: 'WizardRunner',
 				params: { id: wizard.templateId },
-				query: { register: this.register, schema: this.schema, objectId: this.objectId },
+				query: {
+					register: this.register,
+					schema: this.schema,
+					objectId: this.objectId,
+				},
 			})
 		},
 	},

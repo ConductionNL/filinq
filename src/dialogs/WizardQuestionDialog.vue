@@ -13,18 +13,23 @@ SPDX-License-Identifier: EUPL-1.2
 		<template #default>
 			<div class="wizard-question">
 				<NcTextField
-					:value.sync="form.label"
+					v-model="form.label"
 					:label="t('filinq', 'Question')"
 					:required="true"
 					data-testid="wizard-question-label" />
 				<NcTextField
-					:value.sync="form.key"
+					v-model="form.key"
 					:label="t('filinq', 'Key')"
-					:helperText="t('filinq', 'A short name for the question: letters, digits, - or _.')"
+					:helperText="
+						t(
+							'filinq',
+							'A short name for the question: letters, digits, - or _.',
+						)
+					"
 					:required="true"
 					data-testid="wizard-question-key" />
 				<NcTextArea
-					:value.sync="form.helpText"
+					v-model="form.helpText"
 					:label="t('filinq', 'Help text (optional)')" />
 				<NcSelect
 					v-model="form.type"
@@ -34,32 +39,34 @@ SPDX-License-Identifier: EUPL-1.2
 					label="label"
 					:reduce="(option) => option.id"
 					data-testid="wizard-question-type" />
-				<NcCheckboxRadioSwitch :checked.sync="form.required">
+				<NcCheckboxRadioSwitch v-model="form.required">
 					{{ t('filinq', 'An answer is required') }}
 				</NcCheckboxRadioSwitch>
 
 				<NcTextArea
 					v-if="form.type === 'choice'"
-					:value.sync="form.choicesText"
+					v-model="form.choicesText"
 					:label="t('filinq', 'Choices, one per line as value=label')"
 					:helperText="t('filinq', 'For example granted=Granted')"
 					data-testid="wizard-question-choices" />
 
 				<template v-if="form.type === 'registerObject'">
 					<NcTextField
-						:value.sync="form.register"
+						v-model="form.register"
 						:label="t('filinq', 'Register')"
 						:required="true" />
 					<NcTextField
-						:value.sync="form.schema"
+						v-model="form.schema"
 						:label="t('filinq', 'Schema')"
 						:required="true" />
 				</template>
 				<NcTextField
 					v-else
-					:value.sync="form.mapsTo"
+					v-model="form.mapsTo"
 					:label="t('filinq', 'Data path in the template (optional)')"
-					:helperText="t('filinq', 'Names joined by dots, such as applicant.name')"
+					:helperText="
+						t('filinq', 'Names joined by dots, such as applicant.name')
+					"
 					data-testid="wizard-question-maps-to" />
 
 				<NcSelect
@@ -79,7 +86,7 @@ SPDX-License-Identifier: EUPL-1.2
 						:reduce="(option) => option.id" />
 					<NcTextField
 						v-if="form.conditionOperator !== 'answered'"
-						:value.sync="form.conditionValue"
+						v-model="form.conditionValue"
 						:label="t('filinq', 'Answer to compare with')" />
 				</template>
 
@@ -114,7 +121,11 @@ import {
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
-import { formToQuestion, questionProblem, questionToForm } from '../services/wizard.js'
+import {
+	formToQuestion,
+	questionProblem,
+	questionToForm,
+} from '../services/wizard.js'
 
 /**
  * Add or change one wizard question: its text, key, answer type, the
@@ -183,7 +194,10 @@ export default {
 		 * @spec openspec/changes/guided-document-wizard/tasks.md#4-1
 		 */
 		earlierOptions() {
-			return this.earlier.map((question) => ({ id: question.key, label: question.label }))
+			return this.earlier.map((question) => ({
+				id: question.key,
+				label: question.label,
+			}))
 		},
 
 		/**
