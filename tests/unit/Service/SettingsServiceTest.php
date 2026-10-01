@@ -322,6 +322,29 @@ class SettingsServiceTest extends TestCase {
 	}//end testContractTermsDefaultOnAndAreWritable()
 
 	/**
+	 * Inbound classification is on by default, and an admin can switch it off
+	 * under the key InboundClassificationService reads.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-5
+	 */
+	public function testInboundClassificationDefaultsOnAndIsWritable(): void {
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $default
+		);
+		$this->assertTrue($this->settingsService->getFeatureToggles()[\OCA\Filinq\Service\InboundClassificationService::TOGGLE] ?? null);
+		$this->assertTrue($this->settingsService->getAllSettings()[\OCA\Filinq\Service\InboundClassificationService::TOGGLE] ?? null);
+
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'enable_inbound_classification', '0');
+
+		$this->settingsService->updateSettings(['enable_inbound_classification' => '0']);
+
+	}//end testInboundClassificationDefaultsOnAndIsWritable()
+
+	/**
 	 * Test updateSettings silently rejects unknown keys
 	 *
 	 * Keys not present in WRITABLE_KEYS must be dropped from the result and

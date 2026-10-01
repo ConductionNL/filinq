@@ -193,6 +193,7 @@ class SettingsService {
 				'1'
 			) === '1',
 			'enable_contract_term_extraction' => $this->config->getValueString($this->appName, 'enable_contract_term_extraction', '1') === '1',
+			'enable_inbound_classification' => $this->config->getValueString($this->appName, 'enable_inbound_classification', '1') !== '0',
 			'signing_enabled' => $this->config->getValueString(
 				$this->appName,
 				'signing_enabled',
@@ -419,6 +420,7 @@ class SettingsService {
 		'enable_keyword_extraction',
 		'enable_topic_classification',
 		'enable_contract_term_extraction',
+		'enable_inbound_classification',
 		'signing_enabled',
 		'signing_provider',
 		'signing_default_level',
