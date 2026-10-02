@@ -204,7 +204,11 @@ class WizardObjectStore extends ObjectService {
 			'properties' => $fragment->properties,
 			'additionalProperties' => false,
 		];
-		unset($payload['uuid'], $payload['version']);
+		unset($payload['uuid']);
+		if ($schema !== 'templateVersion') {
+			// version is OpenRegister's object version everywhere else; on templateVersion it is a real field.
+			unset($payload['version']);
+		}
 		$result = (new Validator())->validate(json_decode((string) json_encode($payload)), json_encode($jsonSchema));
 		if ($result->isValid() === false) {
 			throw new RuntimeException($schema . ' refused: ' . json_encode((new ErrorFormatter())->format($result->error())));

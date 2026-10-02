@@ -79,7 +79,7 @@ class OfficeTemplateRendererTest extends TestCase {
 		$resolver->method('resolve')->willReturn($this->objects);
 		$libreOffice = $this->createMock(LibreOfficeHeadlessBackend::class);
 		$libreOffice->method('isAvailable')->willReturnCallback(fn (): bool => $this->libreOffice);
-		$libreOffice->method('convertOffice')->willReturnCallback(function (string $bytes, string $fromExtension, string $toExtension): string {
+		$libreOffice->method('convertHtml')->willReturnCallback(function (string $bytes, string $toExtension, string $fromExtension = 'html'): string {
 			$this->calls[] = ['convertOffice', $fromExtension, $toExtension];
 			if ($this->libreOffice === false) {
 				throw new ConversionFailedException(message: LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, attempts: [], code: 503);

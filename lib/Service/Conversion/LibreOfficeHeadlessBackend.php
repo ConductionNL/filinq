@@ -375,15 +375,18 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 * {@see self::UNAVAILABLE_REASON}).
 	 *
 	 * @param string $html        The rendered HTML.
-	 * @param string $toExtension The output: docx or odt.
+	 * @param string $toExtension The output: docx, odt or html.
+	 * @param string $fromExtension The input: html (default), or docx/odt for an office
+	 *                              template's source or filled document.
 	 *
 	 * @return string The output bytes.
 	 *
 	 * @throws ConversionFailedException When soffice fails.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-7
 	 */
-	public function convertHtml(string $html, string $toExtension): string {
+	public function convertHtml(string $html, string $toExtension, string $fromExtension = 'html'): string {
 		$exportFilter = self::EXPORT_FILTERS[$toExtension];
 		$binary = $this->resolveBinaryPath();
 		$timeout = $this->resolveTimeout();
@@ -391,59 +394,16 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		return $this->underLock(
 			work: fn (): string => $this->exportPdfBytes(
 				bytes: $html,
-				extension: 'html',
+				extension: $fromExtension,
 				convertTo: $exportFilter,
 				binary: $binary,
 				timeout: $timeout,
-				inputFilter: self::INPUT_FILTERS['html'],
+				inputFilter: (self::INPUT_FILTERS[$fromExtension] ?? []),
 				outputExtension: $toExtension
 			)
 		);
 
 	}//end convertHtml()
-
-	/**
-	 * Convert an office document to another format: an uploaded ODT to the
-	 * DOCX an office template is filled from, or a filled DOCX to HTML or ODT.
-	 *
-	 * Same lock, temp-dir hygiene and timeout as every other soffice call.
-	 *
-	 * @param string $bytes         The source document.
-	 * @param string $fromExtension Its extension: docx or odt.
-	 * @param string $toExtension   The output: docx, odt or html.
-	 *
-	 * @return string The output bytes.
-	 *
-	 * @throws ConversionFailedException 503 when soffice is unavailable, or when it fails.
-	 *
-	 * @spec openspec/changes/office-template-authoring/tasks.md#2-7
-	 */
-	public function convertOffice(string $bytes, string $fromExtension, string $toExtension): string {
-		if ($this->isAvailable() === false) {
-			throw new ConversionFailedException(
-				message: self::UNAVAILABLE_REASON,
-				attempts: [
-					['name' => $this->name(), 'available' => false, 'supports' => true, 'reason' => 'backend disabled or soffice binary not found'],
-				],
-				code: 503
-			);
-		}
-
-		$binary = $this->resolveBinaryPath();
-		$timeout = $this->resolveTimeout();
-
-		return $this->underLock(
-			work: fn (): string => $this->exportPdfBytes(
-				bytes: $bytes,
-				extension: strtolower($fromExtension),
-				convertTo: self::EXPORT_FILTERS[$toExtension],
-				binary: $binary,
-				timeout: $timeout,
-				outputExtension: $toExtension
-			)
-		);
-
-	}//end convertOffice()
 
 	/**
 	 * Run work while holding the soffice lock, which serialises soffice

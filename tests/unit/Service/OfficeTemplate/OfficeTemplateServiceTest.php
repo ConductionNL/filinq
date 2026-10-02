@@ -99,7 +99,8 @@ class OfficeTemplateServiceTest extends TestCase {
 			};
 		});
 		$libreOffice = $this->createMock(LibreOfficeHeadlessBackend::class);
-		$libreOffice->method('convertOffice')->willReturnCallback(function (string $bytes, string $fromExtension, string $toExtension): string {
+		$libreOffice->method('isAvailable')->willReturn(true);
+		$libreOffice->method('convertHtml')->willReturnCallback(function (string $bytes, string $toExtension, string $fromExtension = 'html'): string {
 			$this->odtConversions++;
 
 			return OfficeFixtures::bytes('zaak-as-docx.docx');

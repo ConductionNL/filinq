@@ -81,7 +81,7 @@ class OfficeConverter {
 	 */
 	public function odtToDocx(string $odtBytes): string {
 		try {
-			return $this->libreOffice->convertOffice(bytes: $odtBytes, fromExtension: 'odt', toExtension: 'docx');
+			return $this->libreOffice->convertHtml(html: $this->requireLibreOffice(bytes: $odtBytes), toExtension: 'docx', fromExtension: 'odt');
 		} catch (ConversionFailedException $e) {
 			throw new OfficeTemplateRefused(
 				message: 'An ODT template is converted to DOCX by LibreOffice, which failed: ' . $e->getMessage(),
@@ -120,7 +120,7 @@ class OfficeConverter {
 		}
 
 		try {
-			return $this->libreOffice->convertOffice(bytes: $docxBytes, fromExtension: 'docx', toExtension: $target);
+			return $this->libreOffice->convertHtml(html: $this->requireLibreOffice(bytes: $docxBytes), toExtension: $target, fromExtension: 'docx');
 		} catch (ConversionFailedException $e) {
 			throw new Exception(message: $e->getMessage(), code: 503, previous: $e);
 		}
@@ -139,7 +139,7 @@ class OfficeConverter {
 	 */
 	public function previewHtml(string $docxBytes): string {
 		$html = $this->viaLibreOffice(
-			work: fn (): string => $this->libreOffice->convertOffice(bytes: $docxBytes, fromExtension: 'docx', toExtension: 'html')
+			work: fn (): string => $this->libreOffice->convertHtml(html: $docxBytes, toExtension: 'html', fromExtension: 'docx')
 		);
 
 		return $html ?? $this->phpWordHtml(docxBytes: $docxBytes);
@@ -160,6 +160,24 @@ class OfficeConverter {
 		return $pdf ?? $this->pdfService->generatePdfFromHtml(html: $this->phpWordHtml(docxBytes: $docxBytes));
 
 	}//end pdf()
+
+	/**
+	 * Pass the bytes on when LibreOffice is usable; refuse with the matrix's reason otherwise.
+	 *
+	 * @param string $bytes The document.
+	 *
+	 * @return string The same bytes.
+	 *
+	 * @throws ConversionFailedException 503 when LibreOffice is unavailable.
+	 */
+	private function requireLibreOffice(string $bytes): string {
+		if ($this->libreOffice->isAvailable() === false) {
+			throw new ConversionFailedException(message: LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, attempts: [], code: 503);
+		}
+
+		return $bytes;
+
+	}//end requireLibreOffice()
 
 	/**
 	 * The result of a LibreOffice call, or null when LibreOffice is missing
