@@ -98,15 +98,22 @@ class TemplateObjectRepository {
 	 */
 	public function save(array $record, ?string $uuid=null): array {
 		unset($record['uuid']);
-		$caller = $this->access === 'caller';
-		$stored = $this->objectResolver->resolve()->saveObject(
-			object: $record,
-			register: self::REGISTER,
-			schema: $this->schema,
-			uuid: $uuid,
-			_rbac: $caller,
-			_multitenancy: $caller
-		);
+		$service = $this->objectResolver->resolve();
+		$stored = null;
+		if ($this->access === 'system') {
+			$stored = $service->saveObject(
+				object: $record,
+				register: self::REGISTER,
+				schema: $this->schema,
+				uuid: $uuid,
+				_rbac: false,
+				_multitenancy: false
+			);
+		}
+
+		if ($this->access === 'caller') {
+			$stored = $service->saveObject(object: $record, register: self::REGISTER, schema: $this->schema, uuid: $uuid);
+		}
 
 		$normalised = $this->normalise(row: $stored);
 		if ($normalised['uuid'] === '' && $uuid !== null) {
@@ -127,14 +134,15 @@ class TemplateObjectRepository {
 	 * @spec openspec/changes/office-template-authoring/tasks.md#2-4
 	 */
 	public function find(string $uuid): ?array {
-		$caller = $this->access === 'caller';
-		$row = $this->objectResolver->resolve()->find(
-			id: $uuid,
-			register: self::REGISTER,
-			schema: $this->schema,
-			_rbac: $caller,
-			_multitenancy: $caller
-		);
+		$service = $this->objectResolver->resolve();
+		$row = null;
+		if ($this->access === 'system') {
+			$row = $service->find(id: $uuid, register: self::REGISTER, schema: $this->schema, _rbac: false, _multitenancy: false);
+		}
+
+		if ($this->access === 'caller') {
+			$row = $service->find(id: $uuid, register: self::REGISTER, schema: $this->schema);
+		}
 		if ($row === null) {
 			return null;
 		}
@@ -153,15 +161,22 @@ class TemplateObjectRepository {
 	 * @spec openspec/changes/office-template-authoring/tasks.md#2-4
 	 */
 	public function search(array $filters): array {
-		$caller = $this->access === 'caller';
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: $this->schema,
-			filters: $filters,
-			_rbac: $caller,
-			_multitenancy: $caller
-		);
+		$service = $this->objectResolver->resolve();
+		$rows = null;
+		if ($this->access === 'system') {
+			$rows = $service->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: $this->schema,
+				filters: $filters,
+				_rbac: false,
+				_multitenancy: false
+			);
+		}
+
+		if ($this->access === 'caller') {
+			$rows = $service->searchObjectsBySlug(registerSlug: self::REGISTER, schemaSlug: $this->schema, filters: $filters);
+		}
 
 		if (is_array($rows) === false) {
 			return [];
@@ -181,14 +196,13 @@ class TemplateObjectRepository {
 	 * @spec openspec/changes/office-template-authoring/tasks.md#2-4
 	 */
 	public function delete(string $uuid): void {
-		$caller = $this->access === 'caller';
-		$this->objectResolver->resolve()->deleteObject(
-			uuid: $uuid,
-			register: self::REGISTER,
-			schema: $this->schema,
-			_rbac: $caller,
-			_multitenancy: $caller
-		);
+		$service = $this->objectResolver->resolve();
+		if ($this->access === 'system') {
+			$service->deleteObject(uuid: $uuid, register: self::REGISTER, schema: $this->schema, _rbac: false, _multitenancy: false);
+			return;
+		}
+
+		$service->deleteObject(uuid: $uuid, register: self::REGISTER, schema: $this->schema);
 
 	}//end delete()
 
