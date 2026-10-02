@@ -136,20 +136,7 @@ class OfficeTemplateFiller {
 	 * @return string[] Warnings.
 	 */
 	private function fillRows(TemplateProcessor $processor, array $data, array $fieldMap): array {
-		$groups = [];
-		foreach ($processor->getVariables() as $variable) {
-			$path = $fieldMap[$variable] ?? $variable;
-			if (str_contains($path, '.') === false || $this->dataPath->scalar(data: $data, path: $path) !== null) {
-				continue;
-			}
-
-			$prefix = strstr($path, '.', true);
-			$rows = $this->dataPath->rows(data: $data, path: $prefix);
-			if ($rows !== null && $rows !== []) {
-				$groups[$prefix]['rows'] = $rows;
-				$groups[$prefix]['tags'][$variable] = substr($path, strlen($prefix) + 1);
-			}
-		}
+		$groups = $this->rowGroups(variables: $processor->getVariables(), data: $data, fieldMap: $fieldMap);
 
 		$warnings = [];
 		foreach ($groups as $prefix => $group) {
@@ -171,6 +158,35 @@ class OfficeTemplateFiller {
 		return $warnings;
 
 	}//end fillRows()
+
+	/**
+	 * The tags that point into a list, grouped by the list.
+	 *
+	 * @param string[]              $variables The tags.
+	 * @param array<string, mixed>  $data      The data.
+	 * @param array<string, string> $fieldMap  Aliases.
+	 *
+	 * @return array<string, array{rows: array, tags: array<string, string>}> By list path.
+	 */
+	private function rowGroups(array $variables, array $data, array $fieldMap): array {
+		$groups = [];
+		foreach ($variables as $variable) {
+			$path = $fieldMap[$variable] ?? $variable;
+			if (str_contains($path, '.') === false || $this->dataPath->scalar(data: $data, path: $path) !== null) {
+				continue;
+			}
+
+			$prefix = strstr($path, '.', true);
+			$rows = $this->dataPath->rows(data: $data, path: $prefix);
+			if ($rows !== null && $rows !== []) {
+				$groups[$prefix]['rows'] = $rows;
+				$groups[$prefix]['tags'][$variable] = substr($path, strlen($prefix) + 1);
+			}
+		}
+
+		return $groups;
+
+	}//end rowGroups()
 
 	/**
 	 * Fill every remaining tag from the data; a tag without a value is left

@@ -306,6 +306,19 @@ $extra = [
         ['name' => 'correspondence#jobStatus', 'url' => 'api/correspondence/jobs/{jobId}', 'verb' => 'GET'],
 
         // Template routes.
+        // Office templates (office-template-authoring): DOCX/ODT upload, new source revisions, field mapping,
+        // source download, bulk ZIP import (a templateImportJob) and text fragments. Before api/templates/{id}.
+        ['name' => 'officeTemplates#create', 'url' => 'api/templates/office', 'verb' => 'POST'],
+        ['name' => 'officeTemplates#import', 'url' => 'api/templates/import', 'verb' => 'POST'],
+        ['name' => 'officeTemplates#importStatus', 'url' => 'api/templates/import/{jobId}', 'verb' => 'GET'],
+        ['name' => 'officeTemplates#replaceSource', 'url' => 'api/templates/{id}/office', 'verb' => 'POST'],
+        ['name' => 'officeTemplates#source', 'url' => 'api/templates/{id}/office', 'verb' => 'GET'],
+        ['name' => 'officeTemplates#fieldMap', 'url' => 'api/templates/{id}/field-map', 'verb' => 'PUT'],
+        ['name' => 'textFragments#index', 'url' => 'api/fragments', 'verb' => 'GET'],
+        ['name' => 'textFragments#create', 'url' => 'api/fragments', 'verb' => 'POST'],
+        ['name' => 'textFragments#show', 'url' => 'api/fragments/{id}', 'verb' => 'GET'],
+        ['name' => 'textFragments#update', 'url' => 'api/fragments/{id}', 'verb' => 'PUT'],
+        ['name' => 'textFragments#destroy', 'url' => 'api/fragments/{id}', 'verb' => 'DELETE'],
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
         ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],

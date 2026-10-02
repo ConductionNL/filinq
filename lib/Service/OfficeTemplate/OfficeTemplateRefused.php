@@ -51,7 +51,7 @@ class OfficeTemplateRefused extends RuntimeException {
 		private readonly array $details = [],
 		int $code = 422,
 	) {
-		parent::__construct($message, $code);
+		parent::__construct(message: $message, code: $code);
 
 	}//end __construct()
 

@@ -104,8 +104,14 @@
 					class="template-detail__field" />
 			</div>
 
+			<!-- An office template is edited in Word or LibreOffice; this is its source, tags and mapping. -->
+			<OfficeTemplatePanel
+				v-if="isOffice"
+				:template="templateStore.templateItem"
+				@updated="officeUpdated" />
+
 			<!-- WYSIWYG toolbar -->
-			<div class="template-detail__toolbar">
+			<div v-if="!isOffice" class="template-detail__toolbar">
 				<button
 					type="button"
 					:title="t('filinq', 'Bold')"
@@ -176,6 +182,7 @@
 
 			<!-- Content-editable WYSIWYG area -->
 			<div
+				v-if="!isOffice"
 				ref="editor"
 				class="template-detail__content-editor"
 				contenteditable="true"
@@ -184,7 +191,7 @@
 				v-html="editorHtml" />
 
 			<!-- Raw HTML toggle -->
-			<div class="template-detail__raw-toggle">
+			<div v-if="!isOffice" class="template-detail__raw-toggle">
 				<button
 					type="button"
 					class="template-detail__raw-btn"
@@ -195,7 +202,7 @@
 				</button>
 			</div>
 			<textarea
-				v-if="showRaw"
+				v-if="showRaw && !isOffice"
 				:value="form.content"
 				class="template-detail__raw-area"
 				:aria-label="t('filinq', 'Raw HTML')"
@@ -312,6 +319,7 @@ import {
 	NcTextField,
 } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import OfficeTemplatePanel from '../../components/OfficeTemplatePanel.vue'
 import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
@@ -332,6 +340,7 @@ export default {
 		ConfirmRestoreVersionDialog,
 		TemplateLintChecklist,
 		WizardAuthoringPanel,
+		OfficeTemplatePanel,
 	},
 
 	data() {
@@ -375,6 +384,15 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Whether the open template is an office document (DOCX source).
+		 *
+		 * @spec openspec/changes/office-template-authoring/tasks.md#4-2
+		 */
+		isOffice() {
+			return this.templateStore.templateItem?.templateType === 'office'
+		},
+
 		/**
 		 * Pinia template store accessor for the detail editor.
 		 *
@@ -449,6 +467,19 @@ export default {
 
 	methods: {
 		t,
+		/**
+		 * Take the template as the server returned it after a new revision or mapping.
+		 *
+		 * @param {object} template The updated template.
+		 * @spec openspec/changes/office-template-authoring/tasks.md#4-2
+		 */
+		officeUpdated(template) {
+			this.templateStore.templateItem = {
+				...this.templateStore.templateItem,
+				...template,
+			}
+		},
+
 		/**
 		 * Open the wizard runner for this template.
 		 *

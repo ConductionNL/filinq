@@ -2,104 +2,157 @@
 	<div class="template-index">
 		<div class="template-index__header">
 			<h2>{{ t('filinq', 'Templates') }}</h2>
-			<NcButton variant="primary" @click="openNewTemplate">
-				{{ t('filinq', 'New template') }}
+			<div class="template-index__actions">
+				<NcButton
+					data-testid="template-import-open"
+					@click="importing = true">
+					{{ t('filinq', 'Import ZIP') }}
+				</NcButton>
+				<NcButton
+					data-testid="office-template-upload-open"
+					@click="uploading = true">
+					{{ t('filinq', 'Upload office template') }}
+				</NcButton>
+				<NcButton variant="primary" @click="openNewTemplate">
+					{{ t('filinq', 'New template') }}
+				</NcButton>
+			</div>
+		</div>
+
+		<div class="template-index__tabs" role="tablist">
+			<NcButton
+				role="tab"
+				:aria-selected="tab === 'templates' ? 'true' : 'false'"
+				:variant="tab === 'templates' ? 'secondary' : 'tertiary'"
+				@click="tab = 'templates'">
+				{{ t('filinq', 'Templates') }}
+			</NcButton>
+			<NcButton
+				role="tab"
+				data-testid="text-fragments-tab"
+				:aria-selected="tab === 'fragments' ? 'true' : 'false'"
+				:variant="tab === 'fragments' ? 'secondary' : 'tertiary'"
+				@click="tab = 'fragments'">
+				{{ t('filinq', 'Text fragments') }}
 			</NcButton>
 		</div>
 
-		<div class="template-index__filters">
-			<NcSelect
-				v-model="selectedCategory"
-				:options="categoryOptions"
-				:placeholder="t('filinq', 'Filter by category')"
-				:inputLabel="t('filinq', 'Category filter')"
-				class="template-index__filter-select"
-				@update:modelValue="applyFilters" />
-			<NcTextField
-				v-model="searchQuery"
-				:label="t('filinq', 'Search templates')"
-				:placeholder="t('filinq', 'Search by name...')"
-				class="template-index__search"
-				@update:modelValue="applyFilters" />
-		</div>
+		<TextFragmentList v-if="tab === 'fragments'" />
 
-		<NcLoadingIcon v-if="templateStore.loading" />
+		<template v-else>
+			<div class="template-index__filters">
+				<NcSelect
+					v-model="selectedCategory"
+					:options="categoryOptions"
+					:placeholder="t('filinq', 'Filter by category')"
+					:inputLabel="t('filinq', 'Category filter')"
+					class="template-index__filter-select"
+					@update:modelValue="applyFilters" />
+				<NcSelect
+					v-model="selectedType"
+					:options="typeOptions"
+					:placeholder="t('filinq', 'Filter by type')"
+					:inputLabel="t('filinq', 'Type filter')"
+					class="template-index__filter-select"
+					@update:modelValue="applyFilters" />
+				<NcTextField
+					v-model="searchQuery"
+					:label="t('filinq', 'Search templates')"
+					:placeholder="t('filinq', 'Search by name...')"
+					class="template-index__search"
+					@update:modelValue="applyFilters" />
+			</div>
 
-		<table
-			v-else-if="templateStore.templates.length > 0"
-			class="template-index__table">
-			<thead>
-				<tr>
-					<th scope="col">{{ t('filinq', 'Name') }}</th>
-					<th scope="col">{{ t('filinq', 'Category') }}</th>
-					<th scope="col">{{ t('filinq', 'Namespace') }}</th>
-					<th scope="col">{{ t('filinq', 'Tags') }}</th>
-					<th scope="col">{{ t('filinq', 'Status') }}</th>
-					<th scope="col">{{ t('filinq', 'Actions') }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="tmpl in templateStore.templates"
-					:key="tmpl.id"
-					class="template-index__row"
-					@click="openTemplate(tmpl)">
-					<td>{{ tmpl.name }}</td>
-					<td>{{ tmpl.category || '-' }}</td>
-					<td>{{ tmpl.namespace }}</td>
-					<td>
-						<span
-							v-for="tag in tmpl.tags || []"
-							:key="tag"
-							class="template-index__tag">
-							{{ tag }}
-						</span>
-					</td>
-					<td>
-						<span v-if="tmpl.lockedBy" class="template-index__locked">
-							{{
-								t('filinq', 'Locked by {user}', {
-									user: tmpl.lockedBy,
-								})
-							}}
-						</span>
-					</td>
-					<td @click.stop>
-						<NcButton
-							variant="tertiary"
-							:aria-label="t('filinq', 'Edit template')"
-							@click="openTemplate(tmpl)">
-							{{ t('filinq', 'Edit') }}
-						</NcButton>
-						<NcButton
-							variant="tertiary"
-							:aria-label="t('filinq', 'Duplicate template')"
-							@click="duplicateTemplate(tmpl)">
-							{{ t('filinq', 'Duplicate') }}
-						</NcButton>
-						<NcButton
-							variant="error"
-							:aria-label="t('filinq', 'Delete template')"
-							@click="confirmDelete(tmpl)">
-							{{ t('filinq', 'Delete') }}
-						</NcButton>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+			<NcLoadingIcon v-if="templateStore.loading" />
 
-		<NcEmptyContent
-			v-else
-			:name="t('filinq', 'No templates found')"
-			:description="
-				t('filinq', 'Create your first template to get started.')
-			" />
+			<table
+				v-else-if="templateStore.templates.length > 0"
+				class="template-index__table">
+				<thead>
+					<tr>
+						<th scope="col">{{ t('filinq', 'Name') }}</th>
+						<th scope="col">{{ t('filinq', 'Type') }}</th>
+						<th scope="col">{{ t('filinq', 'Category') }}</th>
+						<th scope="col">{{ t('filinq', 'Namespace') }}</th>
+						<th scope="col">{{ t('filinq', 'Tags') }}</th>
+						<th scope="col">{{ t('filinq', 'Status') }}</th>
+						<th scope="col">{{ t('filinq', 'Actions') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="tmpl in templateStore.templates"
+						:key="tmpl.id"
+						class="template-index__row"
+						@click="openTemplate(tmpl)">
+						<td>{{ tmpl.name }}</td>
+						<td>{{ typeLabel(tmpl) }}</td>
+						<td>{{ tmpl.category || '-' }}</td>
+						<td>{{ tmpl.namespace }}</td>
+						<td>
+							<span
+								v-for="tag in tmpl.tags || []"
+								:key="tag"
+								class="template-index__tag">
+								{{ tag }}
+							</span>
+						</td>
+						<td>
+							<span
+								v-if="tmpl.lockedBy"
+								class="template-index__locked">
+								{{
+									t('filinq', 'Locked by {user}', {
+										user: tmpl.lockedBy,
+									})
+								}}
+							</span>
+						</td>
+						<td @click.stop>
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('filinq', 'Edit template')"
+								@click="openTemplate(tmpl)">
+								{{ t('filinq', 'Edit') }}
+							</NcButton>
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('filinq', 'Duplicate template')"
+								@click="duplicateTemplate(tmpl)">
+								{{ t('filinq', 'Duplicate') }}
+							</NcButton>
+							<NcButton
+								variant="error"
+								:aria-label="t('filinq', 'Delete template')"
+								@click="confirmDelete(tmpl)">
+								{{ t('filinq', 'Delete') }}
+							</NcButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<NcEmptyContent
+				v-else
+				:name="t('filinq', 'No templates found')"
+				:description="
+					t('filinq', 'Create your first template to get started.')
+				" />
+		</template>
 
 		<ConfirmDeleteTemplateDialog
 			v-if="deleteTarget"
 			:templateName="deleteTarget.name"
 			@confirm="executeDelete"
 			@cancel="deleteTarget = null" />
+		<OfficeTemplateUploadModal
+			v-if="uploading"
+			@close="uploading = false"
+			@created="officeCreated" />
+		<TemplateImportModal
+			v-if="importing"
+			@close="importing = false"
+			@imported="templateStore.fetchTemplates()" />
 	</div>
 </template>
 
@@ -113,6 +166,9 @@ import {
 } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
+import OfficeTemplateUploadModal from '../../modals/OfficeTemplateUploadModal.vue'
+import TemplateImportModal from '../../modals/TemplateImportModal.vue'
+import TextFragmentList from './TextFragmentList.vue'
 import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
@@ -124,13 +180,20 @@ export default {
 		NcSelect,
 		NcTextField,
 		ConfirmDeleteTemplateDialog,
+		OfficeTemplateUploadModal,
+		TemplateImportModal,
+		TextFragmentList,
 	},
 
 	data() {
 		return {
 			selectedCategory: null,
+			selectedType: null,
 			searchQuery: '',
 			deleteTarget: null,
+			tab: 'templates',
+			uploading: false,
+			importing: false,
 		}
 	},
 
@@ -158,6 +221,19 @@ export default {
 				...[...cats].map((c) => ({ label: c, value: c })),
 			]
 		},
+
+		/**
+		 * The template type filter options.
+		 *
+		 * @spec openspec/changes/office-template-authoring/tasks.md#4-1
+		 */
+		typeOptions() {
+			return [
+				{ label: t('filinq', 'All types'), value: '' },
+				{ label: t('filinq', 'HTML'), value: 'twig' },
+				{ label: t('filinq', 'Office document'), value: 'office' },
+			]
+		},
 	},
 
 	mounted() {
@@ -176,6 +252,9 @@ export default {
 			if (this.selectedCategory?.value) {
 				filters.category = this.selectedCategory.value
 			}
+			if (this.selectedType?.value) {
+				filters.templateType = this.selectedType.value
+			}
 			if (this.searchQuery) {
 				filters._search = this.searchQuery
 			}
@@ -191,6 +270,30 @@ export default {
 		openTemplate(tmpl) {
 			this.templateStore.templateItem = tmpl
 			this.$router.push({ name: 'TemplateDetail', params: { id: tmpl.id } })
+		},
+
+		/**
+		 * The type of a template in words; no templateType reads as HTML.
+		 *
+		 * @param {object} tmpl The template.
+		 * @return {string} The label.
+		 * @spec openspec/changes/office-template-authoring/tasks.md#4-1
+		 */
+		typeLabel(tmpl) {
+			return tmpl.templateType === 'office'
+				? t('filinq', 'Office document')
+				: t('filinq', 'HTML')
+		},
+
+		/**
+		 * Open a freshly uploaded office template.
+		 *
+		 * @param {object} result The upload result.
+		 * @spec openspec/changes/office-template-authoring/tasks.md#4-1
+		 */
+		officeCreated(result) {
+			this.uploading = false
+			this.openTemplate(result.template)
 		},
 
 		/**
@@ -242,6 +345,13 @@ export default {
 </script>
 
 <style scoped>
+.template-index__actions,
+.template-index__tabs {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
 .template-index__header {
 	display: flex;
 	justify-content: space-between;

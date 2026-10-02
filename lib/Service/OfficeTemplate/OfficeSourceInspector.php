@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\OfficeTemplate;
 
+use DOMDocument;
 use OCP\IAppConfig;
 use PhpOffice\PhpWord\TemplateProcessor;
 use Throwable;
@@ -120,9 +121,16 @@ class OfficeSourceInspector {
 			throw new OfficeTemplateRefused(message: 'The file content is not a ' . strtoupper($extension) . ' document.', reason: 'mime');
 		}
 
+		if ($this->partParses(bytes: $bytes, part: self::MAIN_PARTS[$extension]) === false) {
+			throw new OfficeTemplateRefused(message: 'The document is damaged: its main part is not valid XML.', reason: 'corrupt');
+		}
+
 		foreach ($entries as $entry) {
 			if (strtolower(basename($entry)) === 'vbaproject.bin') {
-				throw new OfficeTemplateRefused(message: 'The document contains macros (vbaProject.bin); macro-enabled documents are not accepted as templates.', reason: 'macro');
+				throw new OfficeTemplateRefused(
+					message: 'The document contains macros (vbaProject.bin); macro-enabled documents are not accepted as templates.',
+					reason: 'macro'
+				);
 			}
 		}
 
@@ -220,6 +228,38 @@ class OfficeSourceInspector {
 		return $entries;
 
 	}//end packageEntries()
+
+	/**
+	 * Whether a part of a ZIP package is well-formed XML.
+	 *
+	 * @param string $bytes The package.
+	 * @param string $part  The part name.
+	 *
+	 * @return bool True when it parses.
+	 */
+	private function partParses(string $bytes, string $part): bool {
+		$path = $this->writeTemp(bytes: $bytes);
+		$zip = new ZipArchive();
+		$xml = false;
+		if ($zip->open($path) === true) {
+			$xml = $zip->getFromName($part);
+			$zip->close();
+		}
+
+		unlink($path);
+		if (is_string($xml) === false || $xml === '') {
+			return false;
+		}
+
+		$previous = libxml_use_internal_errors(true);
+		$document = new DOMDocument();
+		$parsed = $document->loadXML($xml, LIBXML_NONET);
+		libxml_clear_errors();
+		libxml_use_internal_errors($previous);
+
+		return $parsed;
+
+	}//end partParses()
 
 	/**
 	 * The configured upload cap in bytes.

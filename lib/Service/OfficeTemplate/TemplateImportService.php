@@ -101,7 +101,7 @@ class TemplateImportService {
 			throw new OfficeTemplateRefused(message: 'A namespace (lowercase letters and digits) is required.', reason: 'namespace', code: 400);
 		}
 
-		$entries = $this->importableEntries(bytes: $bytes);
+		$entries = $this->entriesOf(bytes: $bytes);
 		if ($entries === []) {
 			throw new OfficeTemplateRefused(message: 'The ZIP holds no DOCX or ODT templates and no fragments/ texts.', reason: 'empty');
 		}
@@ -199,7 +199,7 @@ class TemplateImportService {
 			return $this->finish(job: $job, status: 'failed', error: 'The ZIP could not be read: ' . $e->getMessage());
 		}
 
-		foreach ($this->importableEntries(bytes: null, zip: $zip['archive']) as $entry) {
+		foreach ($this->importableEntries(zip: $zip['archive']) as $entry) {
 			$row = $this->importEntry(entry: $entry, bytes: (string) $zip['archive']->getFromName($entry), job: $job);
 			$job['report'][] = $row;
 			// The row status (imported or failed) is also the job's counter.
@@ -234,7 +234,11 @@ class TemplateImportService {
 				return $row;
 			}
 
-			$created = $this->officeTemplates->createFromUpload(fileName: basename($entry), bytes: $bytes, meta: $this->templateMeta(entry: $entry, job: $job));
+			$created = $this->officeTemplates->createFromUpload(
+				fileName: basename($entry),
+				bytes: $bytes,
+				meta: $this->templateMeta(entry: $entry, job: $job)
+			);
 			$row['objectId'] = (string) ($created['template']['id'] ?? ($created['template']['uuid'] ?? ''));
 			$row['tags'] = count((array) ($created['template']['mergeFields'] ?? []));
 			$row['unknownTags'] = array_values((array) ($created['tagReport']['unknown'] ?? []));
@@ -271,7 +275,12 @@ class TemplateImportService {
 		$fragments = $this->objects->forSchema(schema: 'textFragment');
 		$existing = $fragments->search(filters: ['slug' => $slug, 'namespace' => $namespace]);
 		$saved = $fragments->save(
-			record: ['name' => ucfirst(str_replace('-', ' ', $slug)), 'slug' => $slug, 'namespace' => $namespace, 'content' => mb_substr(trim($content), 0, 20000)],
+			record: [
+				'name' => ucfirst(str_replace('-', ' ', $slug)),
+				'slug' => $slug,
+				'namespace' => $namespace,
+				'content' => mb_substr(trim($content), 0, 20000),
+			],
 			uuid: ($existing[0]['uuid'] ?? null)
 		);
 
@@ -328,20 +337,32 @@ class TemplateImportService {
 	}//end finish()
 
 	/**
+	 * The entries a ZIP holds that an import handles.
+	 *
+	 * @param string $bytes The ZIP.
+	 *
+	 * @return string[] The entry paths.
+	 *
+	 * @throws OfficeTemplateRefused 422 when it is not a ZIP.
+	 */
+	private function entriesOf(string $bytes): array {
+		$opened = $this->open(bytes: $bytes);
+		$entries = $this->importableEntries(zip: $opened['archive']);
+		$opened['archive']->close();
+		unlink($opened['path']);
+
+		return $entries;
+
+	}//end entriesOf()
+
+	/**
 	 * The entries an import handles, in archive order.
 	 *
-	 * @param string|null     $bytes The ZIP, or null with an open archive.
-	 * @param ZipArchive|null $zip   An open archive.
+	 * @param ZipArchive $zip An open archive.
 	 *
 	 * @return string[] The entry paths.
 	 */
-	private function importableEntries(?string $bytes, ?ZipArchive $zip=null): array {
-		$opened = null;
-		if ($zip === null) {
-			$opened = $this->open(bytes: (string) $bytes);
-			$zip = $opened['archive'];
-		}
-
+	private function importableEntries(ZipArchive $zip): array {
 		$entries = [];
 		for ($index = 0; $index < $zip->numFiles; $index++) {
 			$name = (string) $zip->getNameIndex($index);
@@ -350,14 +371,10 @@ class TemplateImportService {
 			}
 
 			$extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-			if (in_array($extension, self::TEMPLATE_EXTENSIONS, true) === true || ($this->isFragment(entry: $name) === true && in_array($extension, self::FRAGMENT_EXTENSIONS, true) === true)) {
+			$fragment = $this->isFragment(entry: $name) === true && in_array($extension, self::FRAGMENT_EXTENSIONS, true) === true;
+			if ($fragment === true || in_array($extension, self::TEMPLATE_EXTENSIONS, true) === true) {
 				$entries[] = $name;
 			}
-		}
-
-		if ($opened !== null) {
-			$zip->close();
-			unlink($opened['path']);
 		}
 
 		return $entries;

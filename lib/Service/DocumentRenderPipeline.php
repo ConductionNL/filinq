@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use Exception;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
@@ -61,6 +62,7 @@ class DocumentRenderPipeline {
 	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
 	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
 	 * @param HtmlToOfficeConverter|null $officeConverter Makes DOCX and ODT; without it both answer 503
+	 * @param OfficeTemplateRenderer|null $officeRenderer Renders office templates and resolves text fragments
 	 *
 	 * @return void
 	 */
@@ -72,6 +74,7 @@ class DocumentRenderPipeline {
 		private readonly SvgRasterizer $svgRasterizer,
 		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 		private readonly ?HtmlToOfficeConverter $officeConverter = null,
+		private readonly ?OfficeTemplateRenderer $officeRenderer = null,
 	) {
 
 	}//end __construct()
@@ -220,6 +223,95 @@ class DocumentRenderPipeline {
 		];
 
 	}//end renderWithHuisstijl()
+
+	/**
+	 * Render a template's body and produce the requested format: an office
+	 * template through its DOCX, a Twig template through the huisstijl and
+	 * the HTML conversions.
+	 *
+	 * @param array      $template  The template.
+	 * @param array      $data      The resolved data.
+	 * @param array|null $huisstijl The loaded huisstijl (Twig only).
+	 * @param array      $output    format, pdfOptions and the generation options.
+	 *
+	 * @return array{content: string, html: string, warnings: string[], templateType: string}
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-3
+	 */
+	public function renderBody(array $template, array $data, ?array $huisstijl, array $output): array {
+		if ($this->officeRenderer?->isOffice(template: $template) === true) {
+			$office = $this->officeRenderer->render(template: $template, data: $data, format: $output['format'], options: $output['options']);
+
+			return ['content' => $office['content'], 'html' => $office['html'], 'warnings' => $office['warnings'], 'templateType' => 'office'];
+		}
+
+		$rendered = $this->renderTwig(template: $template, data: $data, huisstijl: $huisstijl);
+		$content = $this->produceOutput(
+			htmlContent: $rendered['html'],
+			format: $output['format'],
+			pdfOptions: $output['pdfOptions']
+		);
+
+		return [
+			'content' => $content,
+			'html' => $rendered['html'],
+			'warnings' => array_merge($rendered['warnings'], $this->getLastOutputWarnings()),
+			'templateType' => 'twig',
+		];
+
+	}//end renderBody()
+
+	/**
+	 * Render a Twig template with its huisstijl, its `${fragment:slug}`
+	 * references resolved around the Twig run (the sandbox never sees them).
+	 *
+	 * @param array      $template  The Twig template.
+	 * @param array      $data      The resolved data.
+	 * @param array|null $huisstijl The loaded huisstijl.
+	 *
+	 * @return array{html: string, warnings: string[]}
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-4
+	 */
+	public function renderTwig(array $template, array $data, ?array $huisstijl): array {
+		$prepared = ['content' => (string) $template['content'], 'tokens' => [], 'warnings' => []];
+		if ($this->officeRenderer !== null) {
+			$prepared = $this->officeRenderer->prepareTwig(template: $template, data: $data);
+		}
+
+		$rendered = $this->renderWithHuisstijl(
+			templateContent: $prepared['content'],
+			data: $data,
+			huisstijl: $huisstijl
+		);
+		if ($prepared['tokens'] !== []) {
+			$rendered['html'] = $this->officeRenderer->finishTwig(html: $rendered['html'], tokens: $prepared['tokens']);
+		}
+
+		return ['html' => $rendered['html'], 'warnings' => array_merge($prepared['warnings'], $rendered['warnings'])];
+
+	}//end renderTwig()
+
+	/**
+	 * The HTML preview of a template: an office template's filled DOCX as
+	 * HTML, a Twig template rendered with its huisstijl.
+	 *
+	 * @param array      $template  The template.
+	 * @param array      $data      The resolved data.
+	 * @param array|null $huisstijl The loaded huisstijl (Twig only).
+	 *
+	 * @return array{html: string, warnings: string[]}
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
+	 */
+	public function renderPreview(array $template, array $data, ?array $huisstijl): array {
+		if ($this->officeRenderer?->isOffice(template: $template) === true) {
+			return $this->officeRenderer->preview(template: $template, data: $data);
+		}
+
+		return $this->renderTwig(template: $template, data: $data, huisstijl: $huisstijl);
+
+	}//end renderPreview()
 
 	/**
 	 * Produce output in the requested format.

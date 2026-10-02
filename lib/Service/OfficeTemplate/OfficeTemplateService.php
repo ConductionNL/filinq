@@ -91,6 +91,10 @@ class OfficeTemplateService {
 	 */
 	public function createFromUpload(string $fileName, string $bytes, array $meta): array {
 		$fields = array_intersect_key($meta, array_flip(self::META_FIELDS));
+		if (trim((string) ($fields['name'] ?? '')) === '' || preg_match('/^[a-z0-9]+$/', (string) ($fields['namespace'] ?? '')) !== 1) {
+			throw new OfficeTemplateRefused(message: 'name and namespace (lowercase letters and digits) are required.', reason: 'fields', code: 400);
+		}
+
 		$source = $this->accept(
 			fileName: $fileName,
 			bytes: $bytes,
@@ -137,6 +141,29 @@ class OfficeTemplateService {
 		return ['template' => $template, 'converted' => $source['converted'], 'tagReport' => $source['fields']['tagReport']];
 
 	}//end replaceSource()
+
+	/**
+	 * Duplicate any template; an office template's copy gets its own copy of
+	 * the source file (same hash, new file id), no history and no lock.
+	 *
+	 * @param string $templateId The template.
+	 *
+	 * @return array The duplicate.
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
+	 */
+	public function duplicate(string $templateId): array {
+		$original = $this->templates->getTemplate(id: $templateId);
+		$extra = [];
+		if (($original['templateType'] ?? 'twig') === 'office') {
+			$copied = ['templateType', 'contentHash', 'boundRegister', 'boundSchema', 'mergeFields', 'fieldMap', 'tagReport'];
+			$extra = array_intersect_key($original, array_flip($copied));
+			$extra['sourceFileId'] = $this->store->copy(fileId: (int) ($original['sourceFileId'] ?? 0));
+		}
+
+		return $this->templates->duplicateTemplate(id: $templateId, extra: $extra);
+
+	}//end duplicate()
 
 	/**
 	 * Store a field mapping (tag to schema property) and recheck the tags.

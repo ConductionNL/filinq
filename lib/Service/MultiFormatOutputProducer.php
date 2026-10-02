@@ -218,7 +218,12 @@ class MultiFormatOutputProducer {
 			$resolved = $this->documents->resolveTemplateData(dataRefs: $dataRefs, options: $options);
 
 			return [
-				'convert' => fn (string $format): array => $this->officeRenderer->render(template: $template, data: $resolved['data'], format: $format, options: $options),
+				'convert' => fn (string $format): array => $this->officeRenderer->render(
+					template: $template,
+					data: $resolved['data'],
+					format: $format,
+					options: $options
+				),
 				'warnings' => $resolved['warnings'],
 			];
 		}

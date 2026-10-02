@@ -28,6 +28,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateService;
 use OCA\Filinq\Service\TemplateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -55,6 +56,7 @@ class TemplatesController extends Controller {
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
 	 * @param IUserSession $userSession User session for current user
 	 * @param LoggerInterface $logger Logger for not-configured info messages
+	 * @param OfficeTemplateService|null $officeTemplates Duplicates an office template with its own copy of the source
 	 *
 	 * @return void
 	 */
@@ -65,6 +67,7 @@ class TemplatesController extends Controller {
 		private readonly TemplateRequestHandler $requestHandler,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly ?OfficeTemplateService $officeTemplates = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -259,6 +262,7 @@ class TemplatesController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
 	 */
 	public function duplicate(string $id): JSONResponse {
 		try {
@@ -270,7 +274,7 @@ class TemplatesController extends Controller {
 				);
 			}
 
-			$result = $this->templateService->duplicateTemplate(id: $id);
+			$result = $this->officeTemplates?->duplicate(templateId: $id) ?? $this->templateService->duplicateTemplate(id: $id);
 			return new JSONResponse(data: $result);
 		} catch (Exception $e) {
 			return $this->requestHandler->buildErrorResponse($e, 'Failed to duplicate template: ');

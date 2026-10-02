@@ -83,7 +83,11 @@ class OfficeConverter {
 		try {
 			return $this->libreOffice->convertOffice(bytes: $odtBytes, fromExtension: 'odt', toExtension: 'docx');
 		} catch (ConversionFailedException $e) {
-			throw new OfficeTemplateRefused(message: 'An ODT template is converted to DOCX by LibreOffice, which failed: ' . $e->getMessage(), reason: 'conversion', code: 503);
+			throw new OfficeTemplateRefused(
+				message: 'An ODT template is converted to DOCX by LibreOffice, which failed: ' . $e->getMessage(),
+				reason: 'conversion',
+				code: 503
+			);
 		}
 
 	}//end odtToDocx()
@@ -134,7 +138,9 @@ class OfficeConverter {
 	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
 	 */
 	public function previewHtml(string $docxBytes): string {
-		$html = $this->viaLibreOffice(work: fn (): string => $this->libreOffice->convertOffice(bytes: $docxBytes, fromExtension: 'docx', toExtension: 'html'));
+		$html = $this->viaLibreOffice(
+			work: fn (): string => $this->libreOffice->convertOffice(bytes: $docxBytes, fromExtension: 'docx', toExtension: 'html')
+		);
 
 		return $html ?? $this->phpWordHtml(docxBytes: $docxBytes);
 

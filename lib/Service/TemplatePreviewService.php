@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use Exception;
 use OCA\Filinq\Service\Validation\TemplateAccessibilityLint;
 use OCP\IConfig;
@@ -45,6 +46,7 @@ class TemplatePreviewService {
 	 * @param TemplateRenderer $templateRenderer Twig template renderer
 	 * @param TemplateService $templateService Template CRUD service
 	 * @param IConfig|null $config System config, for the instance language the lint falls back to
+	 * @param OfficeTemplateRenderer|null $officeRenderer Previews an office template through its filled DOCX
 	 *
 	 * @return void
 	 */
@@ -52,6 +54,7 @@ class TemplatePreviewService {
 		private readonly TemplateRenderer $templateRenderer,
 		private readonly TemplateService $templateService,
 		private readonly ?IConfig $config = null,
+		private readonly ?OfficeTemplateRenderer $officeRenderer = null,
 	) {
 
 	}//end __construct()
@@ -125,9 +128,14 @@ class TemplatePreviewService {
 	 * @throws Exception If the template is not found or rendering fails
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
 	 */
 	public function previewTemplate(string $templateId, array $data): string {
 		$template = $this->templateService->getTemplate(id: $templateId);
+		if ($this->officeRenderer?->isOffice(template: $template) === true) {
+			// An office template previews through its filled DOCX, the same cascade generation uses.
+			return $this->officeRenderer->preview(template: $template, data: $data)['html'];
+		}
 
 		return $this->preview(
 			content: $template['content'],
