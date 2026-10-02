@@ -1,6 +1,7 @@
 <script setup>
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { computed } from 'vue'
+import ClassificationCard from '../components/ClassificationCard.vue'
 import DocumentLeafTabs from '../components/DocumentLeafTabs.vue'
 import { documentRecordIdFor } from '../services/documentLeafTabs.js'
 import {
@@ -532,6 +533,9 @@ const documentRecordId = computed(() =>
 		     nothing to it: anonymisation, redaction and signing stay Filinq's
 		     own, because no leaf provides them and Filinq is the service that
 		     does (ADR-022 documented exception). -->
+		<!-- The document's classification suggestion, when it has one
+		     (inbound-auto-classification): confirm, correct or reject. -->
+		<ClassificationCard :fileId="currentFileId" />
 		<DocumentLeafTabs
 			register="filinq"
 			schema="anonymizationLink"

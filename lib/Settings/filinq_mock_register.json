@@ -7467,6 +7467,67 @@
             }
           }
         ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "classificationResult",
+          "slug": "seed-classification-factuur-heijmans"
+        },
+        "fileId": 812010,
+        "fileName": "scan-factuur-heijmans.pdf",
+        "suggestedDocumentType": "factuur",
+        "documentTypeConfidence": 0.86,
+        "method": "mixed",
+        "suggestedCorrespondent": {
+          "name": "Heijmans B.V.",
+          "entityType": "ORGANIZATION",
+          "source": "ner"
+        },
+        "correspondentPending": false,
+        "suggestedDossier": null,
+        "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "classificationResult",
+          "slug": "seed-classification-besluit-bezwaar"
+        },
+        "fileId": 812011,
+        "fileName": "brief-bezwaar-2026-114.pdf",
+        "suggestedDocumentType": "brief",
+        "documentTypeConfidence": 0.55,
+        "method": "rules",
+        "suggestedCorrespondent": {
+          "name": "J. de Vries",
+          "entityType": "PERSON",
+          "source": "ner"
+        },
+        "correspondentPending": false,
+        "suggestedDossier": "00000000-0000-0000-0000-00000000d055",
+        "status": "confirmed",
+        "confirmedDocumentType": "besluit",
+        "confirmedDossier": "00000000-0000-0000-0000-00000000d055",
+        "filing": "recorded",
+        "confirmedBy": "w.devries",
+        "confirmedAt": "2026-07-17T10:20:00Z"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "classificationResult",
+          "slug": "seed-classification-overig-pending"
+        },
+        "fileId": 812012,
+        "fileName": "scan-2026-07-18-0931.pdf",
+        "suggestedDocumentType": "overig",
+        "documentTypeConfidence": 0.2,
+        "method": "rules",
+        "suggestedCorrespondent": null,
+        "correspondentPending": true,
+        "suggestedDossier": null,
+        "status": "suggested"
       }
     ]
   }

@@ -278,6 +278,28 @@
 					}}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'Inbound classification') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:aria-label="t('filinq', 'Inbound classification')"
+					:modelValue="settings.enable_inbound_classification"
+					type="switch"
+					data-testid="settings-inbound-classification"
+					@update:modelValue="
+						settings.enable_inbound_classification = $event
+					" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.',
+						)
+					}}
+				</div>
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -1029,6 +1051,7 @@ export default {
 				enable_keyword_extraction: true,
 				enable_topic_classification: true,
 				enable_contract_term_extraction: true,
+				enable_inbound_classification: true,
 				ocr_enabled: true,
 				ocr_on_arrival: true,
 				ocr_dpi: 300,
@@ -1249,6 +1272,8 @@ export default {
 						data.enable_topic_classification ?? true
 					this.settings.enable_contract_term_extraction =
 						data.enable_contract_term_extraction ?? true
+					this.settings.enable_inbound_classification =
+						data.enable_inbound_classification ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
 					this.settings.ocr_on_arrival = data.ocr_on_arrival ?? true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
@@ -1448,6 +1473,11 @@ export default {
 
 				enable_contract_term_extraction: this.settings
 					.enable_contract_term_extraction
+					? '1'
+					: '0',
+
+				enable_inbound_classification: this.settings
+					.enable_inbound_classification
 					? '1'
 					: '0',
 

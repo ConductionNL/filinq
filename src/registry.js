@@ -65,6 +65,7 @@ import ProhibitionFormModal from './dialogs/ProhibitionFormModal.vue'
 import StandingConsentFormModal from './dialogs/StandingConsentFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
+import ClassificationPending from './views/classification/ClassificationPending.vue'
 import ComparisonView from './views/comparison/ComparisonView.vue'
 import ConsentDetail from './views/consent/ConsentDetail.vue'
 import ConsentIndex from './views/consent/ConsentIndex.vue'
@@ -121,6 +122,7 @@ export default {
 	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },
+	ClassificationPending: { kind: 'page', component: ClassificationPending },
 	EntitySearch: { kind: 'page', component: EntitySearch },
 	PublicationsPage: { kind: 'page', component: PublicationsPage },
 	PrintPreview: { kind: 'page', component: PrintPreview },

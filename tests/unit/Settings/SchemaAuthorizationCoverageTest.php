@@ -84,6 +84,8 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/BaseLabelResolver.php' => 1,
 		'lib/Service/BasesResolverService.php' => 1,
 		'lib/Service/BatchStateRepository.php' => 3,
+		'lib/Service/Classification/ClassificationResultRepository.php' => 2,
+		'lib/Service/Classification/ClassificationSources.php' => 1,
 		'lib/Service/ConsentPolicyReferentValidator.php' => 2,
 		'lib/Service/CustomDictionaryRepository.php' => 4,
 		'lib/Service/DossierObjectRepository.php' => 3,
