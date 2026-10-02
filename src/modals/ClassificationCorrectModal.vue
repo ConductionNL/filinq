@@ -5,7 +5,7 @@ SPDX-License-Identifier: EUPL-1.2
 Correct a suggestion and confirm it in one step. The record keeps what the
 classifier suggested beside what the person chose.
 
-@spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-1
+@spec openspec/changes/inbound-auto-classification/tasks.md#3-1
 -->
 
 <template>

@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,7 +31,7 @@ namespace OCA\Filinq\Service\Classification;
 /**
  * Exact and prefix matching of a document onto one dossier.
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  */
 class DossierMatcher {
 
@@ -51,7 +51,7 @@ class DossierMatcher {
 	 *
 	 * @return string|null The dossier uuid, or null when no single dossier matches.
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
 	 */
 	public function match(array $dossiers, ?string $correspondent, string $text): ?string {
 		$references = [];

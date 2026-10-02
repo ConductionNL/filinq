@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * Detected entities and dossiers, read for a classification.
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  */
 class ClassificationSources {
 
@@ -63,7 +63,7 @@ class ClassificationSources {
 	 *
 	 * @return array<int, array<string, mixed>>|null The rows (entity_type, entity_value, position_start).
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
 	 */
 	public function entitiesFor(int $fileId): ?array {
 		$mapper = $this->entityStats->tryGetEntityRelationMapper();
@@ -92,7 +92,7 @@ class ClassificationSources {
 	 *
 	 * @return array<int, array{uuid: string, name: string}> The dossiers.
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
 	 */
 	public function dossiers(): array {
 		try {

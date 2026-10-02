@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-4
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,7 +31,7 @@ use RuntimeException;
 /**
  * A refused confirm or reject, carrying its HTTP status as the code.
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-4
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
  */
 class ClassificationRefused extends RuntimeException {
 }//end class

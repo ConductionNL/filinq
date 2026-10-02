@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ namespace OCA\Filinq\Service\Classification;
 /**
  * Ranks detected PERSON and ORGANIZATION entities as the correspondent.
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  */
 class CorrespondentRanker {
 
@@ -77,7 +77,7 @@ class CorrespondentRanker {
 	 *
 	 * @return array{name: string, entityType: string, source: string}|null The candidate.
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
 	 */
 	public function rank(array $rows): ?array {
 		$candidates = [];

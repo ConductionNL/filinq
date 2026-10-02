@@ -165,7 +165,7 @@ class MetadataController extends Controller {
 	 *
 	 * @return string `suggested`, `skipped` or `failed`.
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-3
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
 	 */
 	private function classifyReachable(array $objectData, array $data): string {
 		$fileId = (int) ($objectData['file'] ?? ($objectData['fileId'] ?? 0));

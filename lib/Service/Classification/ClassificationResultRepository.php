@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 /**
  * Storage of classificationResult records.
  *
- * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  */
 class ClassificationResultRepository {
 
@@ -72,7 +72,7 @@ class ClassificationResultRepository {
 	 *
 	 * @return array<string, mixed> The stored record with its uuid.
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
 	 */
 	public function save(array $record, ?string $uuid=null): array {
 		unset($record['uuid']);
@@ -101,7 +101,7 @@ class ClassificationResultRepository {
 	 *
 	 * @return array<string, mixed>|null The record.
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
 	 */
 	public function activeFor(int $fileId): ?array {
 		foreach ($this->search(filters: ['fileId' => $fileId]) as $record) {
@@ -121,7 +121,7 @@ class ClassificationResultRepository {
 	 *
 	 * @return array<int, array<string, mixed>> The records.
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-4
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
 	 */
 	public function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.

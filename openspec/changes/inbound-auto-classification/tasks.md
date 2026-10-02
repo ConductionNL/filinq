@@ -27,8 +27,10 @@
 
 - [x] 4.1 PHPUnit for classifier scoring/threshold, correspondent ranking + pending flag, supersede idempotency, no-silent-write guards (enrichment path writes nothing canonical), confirm/correct/reject transitions, dossier match precision, data-minimisation shape — 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
-  - Live-verify on Postgres (8080) with OpenRegister: upload an invoice-like PDF → suggestion appears → confirm → documentType set + file in dossier folder.
-- [x] 4.2 Playwright spec `tests/e2e/spec-coverage/inbound-classification.spec.ts` for the `@e2e`-referenced scenarios
+  - Owed (needs the live instance): live-verify on Postgres (8080) with OpenRegister: upload an invoice-like PDF → suggestion appears → confirm → documentType set + file in dossier folder.
+- [ ] 4.2 Playwright spec `tests/e2e/spec-coverage/inbound-classification.spec.ts` for the `@e2e`-referenced scenarios
+  - Written, not yet run: it needs a built frontend on a live instance. Run it there, then tick and archive.
 - [x] 4.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
-- [x] 4.4 Docs: `docs/features/inbound-classification.md` with Playwright screenshots (pending list, confirm-with-correction, dossier filing) including the human-oversight posture and the deferred-learning note (ADR-010)
+- [ ] 4.4 Docs: `docs/features/inbound-classification.md` with Playwright screenshots (pending list, confirm-with-correction, dossier filing) including the human-oversight posture and the deferred-learning note (ADR-010)
+  - The page is written; the Playwright screenshots are owed with 4.2 on a live instance.
 - [x] 4.5 Validate: `openspec validate inbound-auto-classification --strict` passes; hydra gates green

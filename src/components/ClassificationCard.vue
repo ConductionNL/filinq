@@ -7,7 +7,7 @@ person decided, what they chose. While the suggestion waits, the reader can
 correct the type, sender and dossier and confirm, or reject it. Renders
 nothing for a document without a suggestion.
 
-@spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
+@spec openspec/changes/inbound-auto-classification/tasks.md#3-2
 -->
 
 <template>
@@ -121,7 +121,7 @@ export default {
 		/**
 		 * Badge colours per status label.
 		 *
-		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
+		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
 		 */
 		statusColors() {
 			return {
@@ -134,7 +134,7 @@ export default {
 		/**
 		 * Where the document was filed, as a person reads it.
 		 *
-		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
+		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
 		 */
 		filingText() {
 			if (!this.record?.confirmedDossier) {
@@ -160,7 +160,7 @@ export default {
 			/**
 			 * Load the classification of the document that is open now.
 			 *
-			 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
+			 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
 			 */
 			handler() {
 				this.load()
@@ -177,7 +177,7 @@ export default {
 		/**
 		 * Load the open document's classification.
 		 *
-		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
+		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
 		 */
 		async load() {
 			this.record = null
@@ -195,7 +195,7 @@ export default {
 		 * Confirm with the chosen values, or reject.
 		 *
 		 * @param {string} action confirm or reject.
-		 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#3-2
+		 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
 		 */
 		async decide(action) {
 			this.busy = true

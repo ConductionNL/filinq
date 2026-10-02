@@ -63,7 +63,7 @@ class FilinqEventHandler {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/archive/2026-10-02-inbound-auto-classification/tasks.md#2-3
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
