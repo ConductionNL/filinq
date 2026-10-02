@@ -104,20 +104,34 @@ class FormatMatrixService {
 	/**
 	 * The matrix for one template.
 	 *
-	 * Every template today is a Twig template, rendered to HTML, from which
-	 * all four formats are made, so its matrix is the instance's. Office
-	 * templates (office-template-authoring) will narrow it here.
+	 * A Twig template is rendered to HTML, from which all four formats are
+	 * made, so its matrix is the instance's. An office template is a filled
+	 * DOCX: its PDF always comes out (LibreOffice, else PhpWord and mPDF), while
+	 * its DOCX passthrough, HTML (DOCX to HTML) and ODT are offered only with
+	 * LibreOffice (REQ-DDMFO-007).
 	 *
 	 * @param array $template The template, as TemplateService returns it.
 	 *
 	 * @return array<string, array{available: bool, reason?: string}>
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The template decides nothing until office templates exist.
-	 *
 	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-7
 	 */
 	public function forTemplate(array $template): array {
-		return $this->forInstance(flow: 'documents');
+		if (($template['templateType'] ?? 'twig') !== 'office') {
+			return $this->forInstance(flow: 'documents');
+		}
+
+		$libreOffice = $this->libreOfficeAvailable();
+		$matrix = [];
+		foreach (self::DOCUMENT_FORMATS as $format) {
+			$matrix[$format] = ['available' => true];
+			if ($libreOffice === false && $format !== 'pdf') {
+				$matrix[$format] = ['available' => false, 'reason' => LibreOfficeHeadlessBackend::UNAVAILABLE_REASON];
+			}
+		}
+
+		return $matrix;
 
 	}//end forTemplate()
 

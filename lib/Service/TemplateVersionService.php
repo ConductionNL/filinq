@@ -90,6 +90,7 @@ class TemplateVersionService {
 	 * @throws Exception If version creation fails
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
 	 */
 	public function createVersion(
 		string $templateId,
@@ -112,6 +113,13 @@ class TemplateVersionService {
 			'editor' => $editor,
 			'changelog' => $changelog ?? '',
 		];
+
+		// An office template's version points at its immutable source file.
+		if (($templateState['templateType'] ?? 'twig') === 'office') {
+			$versionData['templateType'] = 'office';
+			$versionData['sourceFileId'] = $templateState['sourceFileId'] ?? null;
+			$versionData['contentHash'] = $templateState['contentHash'] ?? null;
+		}
 
 		$result = $objectService->saveObject(
 			object: $versionData,
@@ -363,6 +371,7 @@ class TemplateVersionService {
 	 * @throws Exception If restore fails
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
 	 */
 	public function restoreVersion(
 		string $templateId,
@@ -389,6 +398,11 @@ class TemplateVersionService {
 			'format' => $targetVersion['format'] ?? 'A4',
 			'orientation' => $targetVersion['orientation'] ?? 'P',
 		];
+		if (($targetVersion['templateType'] ?? 'twig') === 'office') {
+			// Re-point the template at the exact office revision of that version.
+			$restoreData['sourceFileId'] = $targetVersion['sourceFileId'] ?? null;
+			$restoreData['contentHash'] = $targetVersion['contentHash'] ?? null;
+		}
 
 		return $service->updateTemplateWithoutVersion(
 			id: $templateId,

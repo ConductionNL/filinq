@@ -108,6 +108,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	private const EXPORT_FILTERS = [
 		'docx' => 'docx:MS Word 2007 XML',
 		'odt' => 'odt:writer8',
+		'html' => 'html:XHTML Writer File:UTF8',
 	];
 
 	/**
@@ -400,6 +401,49 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 		);
 
 	}//end convertHtml()
+
+	/**
+	 * Convert an office document to another format: an uploaded ODT to the
+	 * DOCX an office template is filled from, or a filled DOCX to HTML or ODT.
+	 *
+	 * Same lock, temp-dir hygiene and timeout as every other soffice call.
+	 *
+	 * @param string $bytes         The source document.
+	 * @param string $fromExtension Its extension: docx or odt.
+	 * @param string $toExtension   The output: docx, odt or html.
+	 *
+	 * @return string The output bytes.
+	 *
+	 * @throws ConversionFailedException 503 when soffice is unavailable, or when it fails.
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-7
+	 */
+	public function convertOffice(string $bytes, string $fromExtension, string $toExtension): string {
+		if ($this->isAvailable() === false) {
+			throw new ConversionFailedException(
+				message: self::UNAVAILABLE_REASON,
+				attempts: [
+					['name' => $this->name(), 'available' => false, 'supports' => true, 'reason' => 'backend disabled or soffice binary not found'],
+				],
+				code: 503
+			);
+		}
+
+		$binary = $this->resolveBinaryPath();
+		$timeout = $this->resolveTimeout();
+
+		return $this->underLock(
+			work: fn (): string => $this->exportPdfBytes(
+				bytes: $bytes,
+				extension: strtolower($fromExtension),
+				convertTo: self::EXPORT_FILTERS[$toExtension],
+				binary: $binary,
+				timeout: $timeout,
+				outputExtension: $toExtension
+			)
+		);
+
+	}//end convertOffice()
 
 	/**
 	 * Run work while holding the soffice lock, which serialises soffice

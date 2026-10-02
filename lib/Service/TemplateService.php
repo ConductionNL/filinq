@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\OfficeTemplate\OfficeSourceStore;
 use DateTime;
 use Exception;
 use OCP\App\IAppManager;
@@ -70,6 +71,7 @@ class TemplateService {
 	 *                                                Nullable only so existing test doubles
 	 *                                                built before this field existed keep
 	 *                                                constructing without change.
+	 * @param OfficeSourceStore|null $officeSources Copies an office template's source on duplicate.
 	 *
 	 * @return void
 	 */
@@ -81,6 +83,7 @@ class TemplateService {
 		private readonly IUserSession $userSession,
 		private readonly IAppConfig $config,
 		private readonly ?TemplateSlugResolver $slugResolver = null,
+		private readonly ?OfficeSourceStore $officeSources = null,
 	) {
 
 	}//end __construct()
@@ -467,6 +470,7 @@ class TemplateService {
 	 * @throws Exception If the template is not found or duplication fails
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-6
 	 */
 	public function duplicateTemplate(string $id): array {
 		$original = $this->getTemplate(id: $id);
@@ -481,6 +485,11 @@ class TemplateService {
 			'category' => $original['category'] ?? '',
 			'tags' => $original['tags'] ?? [],
 		];
+		if (($original['templateType'] ?? 'twig') === 'office' && $this->officeSources !== null) {
+			// The duplicate gets its own copy of the source: same hash, new file, no history, no lock.
+			$duplicateData += array_intersect_key($original, array_flip(['templateType', 'contentHash', 'boundRegister', 'boundSchema', 'mergeFields', 'fieldMap', 'tagReport']));
+			$duplicateData['sourceFileId'] = $this->officeSources->copy(fileId: (int) ($original['sourceFileId'] ?? 0));
+		}
 
 		$objectService = $this->getObjectService();
 		$config = $this->registerResolver->getRegisterAndSchema();

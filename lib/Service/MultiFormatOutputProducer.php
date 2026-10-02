@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use Exception;
 use OCP\IURLGenerator;
 use Throwable;
@@ -72,6 +73,7 @@ class MultiFormatOutputProducer {
 	 * @param GeneratedDocumentLogger            $auditLog       Writes the one generatedDocument entry.
 	 * @param PlainLanguageRenditionService|null $plainRendition Tells whether the template has a plain-language counterpart.
 	 * @param IURLGenerator|null                 $urls           Makes the download URLs absolute.
+	 * @param OfficeTemplateRenderer|null        $officeRenderer Fills an office template once per format.
 	 */
 	public function __construct(
 		private readonly DocumentService $documents,
@@ -81,6 +83,7 @@ class MultiFormatOutputProducer {
 		private readonly GeneratedDocumentLogger $auditLog,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?IURLGenerator $urls = null,
+		private readonly ?OfficeTemplateRenderer $officeRenderer = null,
 	) {
 
 	}//end __construct()
@@ -127,21 +130,15 @@ class MultiFormatOutputProducer {
 			throw new Exception(message: 'options.formats cannot be used for a template with a plain-language counterpart yet; use options.format', code: 400);
 		}
 
-		$render = $this->documents->generatePreview(templateId: $templateId, dataRefs: $dataRefs, options: $options);
-		$pdfOptions = $this->renderPipeline->buildPdfOptions(
-			template: $template,
-			huisstijl: $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null)),
-			options: $options
-		);
+		$render = $this->converterFor(template: $template, templateId: $templateId, dataRefs: $dataRefs, options: $options);
 		$basename = pathinfo((string) ($options['filename'] ?? 'document'), PATHINFO_FILENAME);
 		if ($basename === '') {
 			$basename = 'document';
 		}
 
 		$produced = $this->produce(
-			html: $render['html'],
+			convert: $render['convert'],
 			formats: $formats,
-			pdfOptions: $pdfOptions,
 			userId: $userId,
 			targetPath: $this->documents->buildOutputTargetPath(
 				templateId: $templateId,
@@ -202,11 +199,52 @@ class MultiFormatOutputProducer {
 	}//end requestedFormats()
 
 	/**
-	 * Convert the rendered HTML to every format and file each result.
+	 * How the one render becomes each format: a Twig template is rendered
+	 * once to HTML and that HTML converted per format; an office template's
+	 * data is resolved once and its filled DOCX converted per format
+	 * (MultiFormatOutputProducer starts from the filled DOCX, REQ-DDMFO-007).
 	 *
-	 * @param string   $html       The rendered HTML (the one render).
+	 * @param array  $template   The template.
+	 * @param string $templateId Its id.
+	 * @param array  $dataRefs   The data references.
+	 * @param array  $options    The generation options.
+	 *
+	 * @return array{convert: callable, warnings: string[]} convert(format) returns {content, warnings}.
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-7
+	 */
+	private function converterFor(array $template, string $templateId, array $dataRefs, array $options): array {
+		if ($this->officeRenderer?->isOffice(template: $template) === true) {
+			$resolved = $this->documents->resolveTemplateData(dataRefs: $dataRefs, options: $options);
+
+			return [
+				'convert' => fn (string $format): array => $this->officeRenderer->render(template: $template, data: $resolved['data'], format: $format, options: $options),
+				'warnings' => $resolved['warnings'],
+			];
+		}
+
+		$render = $this->documents->generatePreview(templateId: $templateId, dataRefs: $dataRefs, options: $options);
+		$pdfOptions = $this->renderPipeline->buildPdfOptions(
+			template: $template,
+			huisstijl: $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null)),
+			options: $options
+		);
+
+		return [
+			'convert' => fn (string $format): array => [
+				'content' => $this->renderPipeline->produceOutput(htmlContent: $render['html'], format: $format, pdfOptions: $pdfOptions),
+				'warnings' => $this->renderPipeline->getLastOutputWarnings(),
+			],
+			'warnings' => $render['warnings'],
+		];
+
+	}//end converterFor()
+
+	/**
+	 * Produce every format from the one render and file each result.
+	 *
+	 * @param callable $convert    format => {content, warnings}.
 	 * @param string[] $formats    The formats.
-	 * @param array    $pdfOptions The PDF options for the pdf output.
 	 * @param string   $userId     Whose Files the outputs go in.
 	 * @param string   $targetPath The folder, relative to the user's Files.
 	 * @param string   $basename   The file name without extension.
@@ -214,9 +252,8 @@ class MultiFormatOutputProducer {
 	 * @return array{outputs: array<int, array<string, mixed>>, warnings: string[]}
 	 */
 	private function produce(
-		string $html,
+		callable $convert,
 		array $formats,
-		array $pdfOptions,
 		string $userId,
 		string $targetPath,
 		string $basename,
@@ -226,8 +263,9 @@ class MultiFormatOutputProducer {
 		foreach ($formats as $format) {
 			$output = ['format' => $format, 'status' => 'generated', 'fileId' => null, 'fileName' => null, 'path' => null, 'size' => null];
 			try {
-				$content = $this->renderPipeline->produceOutput(htmlContent: $html, format: $format, pdfOptions: $pdfOptions);
-				$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
+				$converted = $convert($format);
+				$content = $converted['content'];
+				$warnings = array_merge($warnings, $converted['warnings']);
 				$stored = $this->storage->store(
 					userId: $userId,
 					targetPath: $targetPath,

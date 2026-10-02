@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use Exception;
 use OCA\Filinq\Service\Wizard\WizardGenerationGate;
 use Psr\Log\LoggerInterface;
@@ -111,6 +112,7 @@ class DocumentService {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
+	 * @param OfficeTemplateRenderer|null $officeRenderer Renders office templates and resolves text fragments
 	 *
 	 * @return void
 	 */
@@ -124,6 +126,7 @@ class DocumentService {
 		private readonly LoggerInterface $logger,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
+		private readonly ?OfficeTemplateRenderer $officeRenderer = null,
 	) {
 
 	}//end __construct()
@@ -243,18 +246,9 @@ class DocumentService {
 		$this->validateFormat(format: $format);
 		$outputMode = $this->resolveOutputMode(options: $options);
 
-		$resolution = $this->dataResolver->resolve(
-			dataRefs: $dataRefs,
-			listRefs: ($options['listRefs'] ?? []),
-			adHocData: ($options['adHocData'] ?? [])
-		);
+		$resolution = $this->resolveTemplateData(dataRefs: $dataRefs, options: $options);
 		$data = $resolution['data'];
 		$warnings = $resolution['warnings'];
-
-		foreach ($resolution['errors'] as $error) {
-			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
-			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
-		}
 
 		// 🔴 THE PLAIN RENDITION IS PLANNED BEFORE ANYTHING IS FILED. REQ-DIO-04's
 		// fourth scenario asks a refused generation to leave NEITHER rendition
@@ -274,20 +268,15 @@ class DocumentService {
 			huisstijl: $huisstijl,
 			options: $options
 		);
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
-			templateContent: $template['content'],
+		$body = $this->renderBody(
+			template: $template,
 			data: $data,
-			huisstijl: $huisstijl
+			huisstijl: $huisstijl,
+			output: ['format' => $format, 'pdfOptions' => $pdfOptions, 'options' => $options]
 		);
-		$htmlContent = $renderResult['html'];
-		$warnings = array_merge($warnings, $renderResult['warnings']);
-
-		$content = $this->renderPipeline->produceOutput(
-			htmlContent: $htmlContent,
-			format: $format,
-			pdfOptions: $pdfOptions
-		);
-		$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
+		$htmlContent = $body['html'];
+		$content = $body['content'];
+		$warnings = array_merge($warnings, $body['warnings']);
 
 		$stored = $this->storeOutputIfRequested(
 			mode: $outputMode,
@@ -329,7 +318,7 @@ class DocumentService {
 				'filePath' => $stored['path'],
 			],
 			userId: (string)($options['userId'] ?? ''),
-			extra: array_merge($recordFields, $plain['record'])
+			extra: array_merge($recordFields, $plain['record'], ['templateType' => $body['templateType']])
 		);
 
 		return [
@@ -379,25 +368,18 @@ class DocumentService {
 	): array {
 		$template = $this->templateService->getTemplate(id: $templateId);
 
-		$resolution = $this->dataResolver->resolve(
-			dataRefs: $dataRefs,
-			listRefs: ($options['listRefs'] ?? []),
-			adHocData: ($options['adHocData'] ?? [])
-		);
+		$resolution = $this->resolveTemplateData(dataRefs: $dataRefs, options: $options);
 		$data = $resolution['data'];
 		$warnings = $resolution['warnings'];
 
-		foreach ($resolution['errors'] as $error) {
-			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
-			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
+		if ($this->officeRenderer?->isOffice(template: $template) === true) {
+			$preview = $this->officeRenderer->preview(template: $template, data: $data);
+
+			return ['html' => $preview['html'], 'warnings' => array_merge($warnings, $preview['warnings'])];
 		}
 
 		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
-			templateContent: $template['content'],
-			data: $data,
-			huisstijl: $huisstijl
-		);
+		$renderResult = $this->renderTwig(template: $template, data: $data, huisstijl: $huisstijl);
 		$warnings = array_merge($warnings, $renderResult['warnings']);
 
 		return [
@@ -406,6 +388,101 @@ class DocumentService {
 		];
 
 	}//end generatePreview()
+
+	/**
+	 * Resolve the data a template is filled with: the data references, the
+	 * list references and the ad-hoc data, with a warning per failed reference.
+	 *
+	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
+	 * @param array $options  listRefs and adHocData.
+	 *
+	 * @return array{data: array, warnings: string[]}
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-7
+	 */
+	public function resolveTemplateData(array $dataRefs, array $options): array {
+		$resolution = $this->dataResolver->resolve(
+			dataRefs: $dataRefs,
+			listRefs: ($options['listRefs'] ?? []),
+			adHocData: ($options['adHocData'] ?? [])
+		);
+		$warnings = $resolution['warnings'];
+		foreach ($resolution['errors'] as $error) {
+			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
+			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
+		}
+
+		return ['data' => $resolution['data'], 'warnings' => $warnings];
+
+	}//end resolveTemplateData()
+
+	/**
+	 * Render a template's body and produce the requested format: an office
+	 * template through its DOCX, a Twig template through the huisstijl and
+	 * the HTML conversions.
+	 *
+	 * @param array      $template  The template.
+	 * @param array      $data      The resolved data.
+	 * @param array|null $huisstijl The loaded huisstijl (Twig only).
+	 * @param array      $output    format, pdfOptions and the generation options.
+	 *
+	 * @return array{content: string, html: string, warnings: string[], templateType: string}
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-3
+	 */
+	private function renderBody(array $template, array $data, ?array $huisstijl, array $output): array {
+		if ($this->officeRenderer?->isOffice(template: $template) === true) {
+			$office = $this->officeRenderer->render(template: $template, data: $data, format: $output['format'], options: $output['options']);
+
+			return ['content' => $office['content'], 'html' => $office['html'], 'warnings' => $office['warnings'], 'templateType' => 'office'];
+		}
+
+		$rendered = $this->renderTwig(template: $template, data: $data, huisstijl: $huisstijl);
+		$content = $this->renderPipeline->produceOutput(
+			htmlContent: $rendered['html'],
+			format: $output['format'],
+			pdfOptions: $output['pdfOptions']
+		);
+
+		return [
+			'content' => $content,
+			'html' => $rendered['html'],
+			'warnings' => array_merge($rendered['warnings'], $this->renderPipeline->getLastOutputWarnings()),
+			'templateType' => 'twig',
+		];
+
+	}//end renderBody()
+
+	/**
+	 * Render a Twig template with its huisstijl, its `${fragment:slug}`
+	 * references resolved around the Twig run (the sandbox never sees them).
+	 *
+	 * @param array      $template  The Twig template.
+	 * @param array      $data      The resolved data.
+	 * @param array|null $huisstijl The loaded huisstijl.
+	 *
+	 * @return array{html: string, warnings: string[]}
+	 *
+	 * @spec openspec/changes/office-template-authoring/tasks.md#2-4
+	 */
+	private function renderTwig(array $template, array $data, ?array $huisstijl): array {
+		$prepared = ['content' => (string) $template['content'], 'tokens' => [], 'warnings' => []];
+		if ($this->officeRenderer !== null) {
+			$prepared = $this->officeRenderer->prepareTwig(template: $template, data: $data);
+		}
+
+		$rendered = $this->renderPipeline->renderWithHuisstijl(
+			templateContent: $prepared['content'],
+			data: $data,
+			huisstijl: $huisstijl
+		);
+		if ($prepared['tokens'] !== []) {
+			$rendered['html'] = $this->officeRenderer->finishTwig(html: $rendered['html'], tokens: $prepared['tokens']);
+		}
+
+		return ['html' => $rendered['html'], 'warnings' => array_merge($prepared['warnings'], $rendered['warnings'])];
+
+	}//end renderTwig()
 
 	/**
 	 * Generate documents for multiple objects in a single request.

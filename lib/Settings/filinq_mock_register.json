@@ -1481,7 +1481,7 @@
         "title": "Generated Document",
         "description": "Audit trail voor documenten gegenereerd via DocumentService. Bevat metadata inclusief template UUID, versie, databronnen en resultaat, plus (optioneel) het Nextcloud bestand-ID en -pad wanneer het document is opgeslagen in Files.",
         "x-schema-org": "schema:DigitalDocument",
-        "version": "1.1.0",
+        "version": "1.7.0",
         "summary": "",
         "icon": "FileDocument",
         "required": [
@@ -1621,6 +1621,19 @@
             "facetable": false,
             "title": "File path",
             "maxLength": 2048
+          },
+          "templateType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "title": "Template type",
+            "description": "twig or office: which render path made the document.",
+            "enum": [
+              "twig",
+              "office",
+              null
+            ]
           }
         },
         "archive": [],
@@ -3623,8 +3636,8 @@
         "uri": null,
         "slug": "template",
         "title": "Document Template",
-        "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-        "version": "1.1.0",
+        "description": "Reusable document templates: HTML with Twig tags written in the app, or an office document (DOCX, ODT) with ${field} tags made in Word or LibreOffice. Templates are scoped per app by the namespace field.",
+        "version": "1.5.0",
         "summary": "",
         "icon": "FileDocument",
         "required": [
@@ -3742,6 +3755,144 @@
             "order": 10,
             "facetable": false,
             "title": "Locked at"
+          },
+          "templateType": {
+            "type": "string",
+            "title": "Template type",
+            "description": "twig: HTML with Twig tags, written in the app. office: a DOCX made in Word or LibreOffice with ${field} tags. Absent reads as twig.",
+            "enum": [
+              "twig",
+              "office"
+            ],
+            "default": "twig",
+            "facetable": true,
+            "x-enum-labels": {
+              "twig": "HTML",
+              "office": "Office document"
+            }
+          },
+          "sourceFileId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "title": "Source file",
+            "description": "Nextcloud file id of the DOCX source of an office template.",
+            "facetable": false
+          },
+          "originalFileId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "title": "Original file",
+            "description": "Nextcloud file id of the uploaded ODT, kept when it was converted to DOCX.",
+            "facetable": false
+          },
+          "contentHash": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "title": "Content hash",
+            "description": "SHA-256 of the DOCX source, so a version restore can prove it points at the same revision.",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "boundRegister": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "title": "Bound register",
+            "description": "Slug of the register whose data fills this template.",
+            "maxLength": 64
+          },
+          "boundSchema": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "title": "Bound schema",
+            "description": "Slug of the schema the merge tags are checked against.",
+            "maxLength": 64
+          },
+          "mergeFields": {
+            "type": "array",
+            "title": "Merge fields",
+            "description": "Every ${...} tag found in the office source.",
+            "items": {
+              "type": "string",
+              "maxLength": 255
+            }
+          },
+          "fieldMap": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "title": "Field mapping",
+            "description": "Tag name to schema property path, for tags that use another name than the schema (for example naam_aanvrager to aanvrager.naam).",
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 255
+            }
+          },
+          "tagReport": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "title": "Tag report",
+            "description": "What the last upload found: each merge tag of the source as known (a property of the bound schema), fragment (a text fragment reference) or unknown.",
+            "properties": {
+              "validated": {
+                "type": "boolean",
+                "title": "Validated",
+                "description": "False when the template has no bound schema, so the tags were not checked."
+              },
+              "notice": {
+                "type": "string",
+                "title": "Notice",
+                "description": "Why the tags were not checked, when they were not.",
+                "maxLength": 255
+              },
+              "severity": {
+                "type": "string",
+                "title": "Severity",
+                "description": "How unknown tags were treated: warning or blocking.",
+                "enum": [
+                  "warning",
+                  "blocking"
+                ]
+              },
+              "known": {
+                "type": "array",
+                "title": "Known tags",
+                "description": "Tags that match a property of the bound schema.",
+                "items": {
+                  "type": "string",
+                  "maxLength": 255
+                }
+              },
+              "fragment": {
+                "type": "array",
+                "title": "Fragment tags",
+                "description": "Tags that reference a text fragment.",
+                "items": {
+                  "type": "string",
+                  "maxLength": 255
+                }
+              },
+              "unknown": {
+                "type": "array",
+                "title": "Unknown tags",
+                "description": "Tags that match nothing in the bound schema and have no field mapping.",
+                "items": {
+                  "type": "string",
+                  "maxLength": 255
+                }
+              }
+            }
           }
         },
         "archive": [],
@@ -3804,7 +3955,7 @@
         "slug": "templateVersion",
         "title": "Template Version",
         "description": "Historische versie van een template. Wordt aangemaakt bij elke bewerking als snapshot van de vorige staat.",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "summary": "",
         "icon": "History",
         "required": [
@@ -3899,6 +4050,32 @@
             "title": "Changelog note",
             "maxLength": 2000,
             "translatable": true
+          },
+          "templateType": {
+            "type": "string",
+            "title": "Template type",
+            "description": "The template type at the time of the snapshot.",
+            "enum": [
+              "twig",
+              "office"
+            ]
+          },
+          "sourceFileId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "title": "Source file",
+            "description": "File id of the immutable copy of the office source at this version."
+          },
+          "contentHash": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "title": "Content hash",
+            "description": "SHA-256 of the office source at this version.",
+            "pattern": "^[a-f0-9]{64}$"
           }
         },
         "archive": [],
@@ -7528,6 +7705,101 @@
         "correspondentPending": true,
         "suggestedDossier": null,
         "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "template",
+          "slug": "seed-office-beschikking-parkeervergunning"
+        },
+        "name": "Beschikking parkeervergunning",
+        "namespace": "filinq",
+        "templateType": "office",
+        "content": "Beschikking parkeervergunning ${aanvrager.naam} ${aanvrager.adres} ${besluit.datum} ${fragment:ondertekening-burgemeester}",
+        "description": "Office template (DOCX) for the parking permit decision, made in Word by the communications department.",
+        "sourceFileId": 0,
+        "contentHash": null,
+        "boundRegister": "filinq",
+        "boundSchema": "dossier",
+        "mergeFields": [
+          "aanvrager.naam",
+          "aanvrager.adres",
+          "besluit.datum",
+          "fragment:ondertekening-burgemeester"
+        ],
+        "fieldMap": {},
+        "category": "beschikkingen",
+        "tags": [
+          "parkeren",
+          "huisstijl-2026"
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "textFragment",
+          "slug": "seed-fragment-ondertekening-burgemeester"
+        },
+        "name": "Ondertekening burgemeester",
+        "slug": "ondertekening-burgemeester",
+        "namespace": "filinq",
+        "content": "Hoogachtend,\nde burgemeester van Demostad,\nnamens deze,",
+        "category": "ondertekening",
+        "tags": [
+          "ondertekening"
+        ],
+        "language": "nl"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "templateImportJob",
+          "slug": "seed-import-huisstijl-2026"
+        },
+        "status": "completed",
+        "namespace": "filinq",
+        "archiveName": "huisstijl-2026.zip",
+        "archiveFileId": null,
+        "boundRegister": "filinq",
+        "boundSchema": "dossier",
+        "totalFiles": 3,
+        "imported": 3,
+        "failed": 0,
+        "startedBy": "demo-communicatie",
+        "startedAt": "2026-09-30T09:00:00+00:00",
+        "finishedAt": "2026-09-30T09:00:12+00:00",
+        "error": null,
+        "report": [
+          {
+            "file": "beschikking-parkeervergunning.docx",
+            "kind": "template",
+            "status": "imported",
+            "objectId": null,
+            "tags": 4,
+            "unknownTags": [],
+            "reason": null
+          },
+          {
+            "file": "fragments/ondertekening-burgemeester.txt",
+            "kind": "fragment",
+            "status": "imported",
+            "objectId": null,
+            "tags": 0,
+            "unknownTags": [],
+            "reason": null
+          },
+          {
+            "file": "brief-ontvangstbevestiging.docx",
+            "kind": "template",
+            "status": "imported",
+            "objectId": null,
+            "tags": 3,
+            "unknownTags": [
+              "naam_aanvrager"
+            ],
+            "reason": null
+          }
+        ]
       }
     ]
   }
