@@ -1851,14 +1851,15 @@
 			"name": "Write a template in Word or LibreOffice with placeholders in it.",
 			"source": "competitor-derived",
 			"sourceRef": "Carbone office-file-native templates; Docmosis; Templater",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplatesController.php has only index/show/create/update/destroy/duplicate/lock/unlock (no upload/import endpoint); no docx/odt template upload found in routes.php or src/. openspec/changes/office-template-authoring/tasks.md: 0/17 done.",
-				"change": "openspec/changes/office-template-authoring"
+				"evidence": "Office templates (office-template-authoring): POST api/templates/office takes a DOCX or ODT (ODT normalised to DOCX by LibreOffice, original kept), refuses macro files (.docm/.dotm or a vbaProject.bin part), oversized, mislabelled and damaged files with 422 (OfficeSourceInspector), reads the ${...} tags with PhpWord TemplateProcessor and checks them against the bound schema read from OpenRegister (TagClassifier: known/fragment/unknown, templates_unknown_tag_severity warning or blocking). template 1.5.0 in register filinq 8.45.0 carries templateType, sourceFileId, originalFileId, contentHash, boundRegister, boundSchema, mergeFields, fieldMap, tagReport; the source is a file in the app data folder (OfficeSourceStore, never overwritten). Generation, preview and multi-format output branch on templateType (DocumentRenderPipeline::renderBody, TemplatePreviewService, MultiFormatOutputProducer): OfficeTemplateFiller fills fragments, blocks, table rows and tags (XML-escaped, field mapping, warning per empty tag), OfficeConverter makes PDF (LibreOffice tagged, else PhpWord + mPDF), DOCX passthrough, ODT and HTML (LibreOffice). Text fragments (textFragment 1.0.0, api/fragments) resolve as ${fragment:slug} in office and Twig templates. Bulk import of a ZIP as a templateImportJob (TemplateImportService, TemplateImportJob). Versions, restore and duplicate carry the source. UI: Upload office template, Import ZIP, Text fragments tab, office panel on the template page. Tests: tests/unit/Service/OfficeTemplate/*Test.php (payloads validated with Opis against the real fragments).",
+				"change": "openspec/changes/office-template-authoring",
+				"readOn": "2026-10-02"
 			},
-			"reachedOn": "nothing reaches it; not built",
+			"reachedOn": "Templates in the menu: Upload office template, Import ZIP and the Text fragments tab; the office panel on a template page",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "office-template-authoring",
