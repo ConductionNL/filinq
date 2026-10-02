@@ -28,6 +28,7 @@ namespace OCA\Filinq\AppInfo;
 use OCA\Filinq\Dashboard\AnonymizationWidget;
 use OCA\Filinq\Dashboard\FileEntitiesWidget;
 use OCA\Filinq\EventListener\DossierCheckedOnListener;
+use OCA\Filinq\EventListener\DocumentRegistrationWriteGuard;
 use OCA\Filinq\EventListener\FilinqEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -46,6 +47,11 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) This class IS the list of
+ * listeners the app registers, so its coupling is the count of them. The
+ * fourteenth is DocumentRegistrationWriteGuard, which refuses a change to a
+ * registration number before the write lands.
  */
 class ObjectEventRegistrar {
 	/**
@@ -60,18 +66,54 @@ class ObjectEventRegistrar {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function register(IRegistrationContext $context): void {
 		// Register dashboard widgets.
 		$context->registerDashboardWidget(AnonymizationWidget::class);
 		$context->registerDashboardWidget(FileEntitiesWidget::class);
 
+		// The intake inbox listens to its own event. A channel says a document
+		// arrived; only this app turns that into a document waiting for a clerk.
+		$context->registerEventListener(
+			'OCA\\Filinq\\Event\\IntakeDocumentReceivedEvent',
+			'OCA\\Filinq\\EventListener\\IntakeDocumentReceivedListener'
+		);
+
 		// Register event listeners for OpenRegister events.
 		// When documents are created/updated/deleted in OpenRegister,
 		// Filinq will enrich metadata and manage consent tracking.
 		$context->registerEventListener(ObjectCreatedEvent::class, FilinqEventListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, FilinqEventListener::class);
+
+		// The PRE-write event, so a registration number already issued cannot be
+		// moved. The past-tense listener above cannot do this: by the time it
+		// fires the number has already changed. Verified rather than assumed:
+		// MagicMapper dispatches ObjectUpdatingEvent before the update and
+		// throws HookStoppedException when a listener stops propagation.
+		$context->registerEventListener(
+			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
+			DocumentRegistrationWriteGuard::class
+		);
+		// A contract saved without a notice deadline gets end date minus
+		// notice period, however it is saved (contract-lifecycle-management).
+		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $preWrite) {
+			$context->registerEventListener(
+				'OCA\\OpenRegister\\Event\\' . $preWrite,
+				'OCA\\Filinq\\EventListener\\ContractNoticeDeadlineListener'
+			);
+		}
+
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);
+
+		// A deleted anonymisation link takes its reversible-pseudonymisation
+		// key with it. Listener named by string, like the one below, to keep
+		// this class's coupling where it is.
+		$context->registerEventListener(
+			ObjectDeletedEvent::class,
+			'OCA\Filinq\EventListener\PseudonymMapLinkDeletedListener'
+		);
 
 		// REGISTERED BY STRING, NOT BY `::class`. `EntityRelationDecisionUpdatedEvent`
 		// belongs to OpenRegister, which is an OPTIONAL peer — a `use` plus

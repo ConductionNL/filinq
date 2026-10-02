@@ -49,6 +49,9 @@
 					{{ dossierStore.dossier.description }}
 				</p>
 
+				<LegalHoldBadge
+					:objectId="dossierId"
+					@held="underLegalHold = $event" />
 				<NcNoteCard v-if="folderWarning" type="warning">
 					{{ folderWarning }}
 				</NcNoteCard>
@@ -89,6 +92,11 @@
 						</template>
 						{{ t('filinq', 'Anonymise this dossier') }}
 					</NcButton>
+
+					<WizardEntryActions
+						register="filinq"
+						schema="dossier"
+						:objectId="dossierId" />
 				</div>
 			</header>
 
@@ -177,6 +185,15 @@
 								</template>
 								<NcActionButton
 									closeAfterClick
+									:disabled="underLegalHold"
+									:title="
+										underLegalHold
+											? t(
+													'filinq',
+													'This dossier is under a legal hold.',
+												)
+											: ''
+									"
 									@click="confirmRemove(doc)">
 									<template #icon>
 										<Delete :size="20" />
@@ -267,6 +284,8 @@ import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
+import WizardEntryActions from '../../components/WizardEntryActions.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import { dossierStore } from '../../store/store.js'
 
@@ -289,12 +308,14 @@ export default {
 		EyeOffOutline,
 		FilePdfBox,
 		FolderAccount,
+		LegalHoldBadge,
 		NcActionButton,
 		NcActions,
 		NcButton,
 		NcEmptyContent,
 		NcNoteCard,
 		Plus,
+		WizardEntryActions,
 	},
 
 	data() {
@@ -306,6 +327,9 @@ export default {
 			generatingPdf: false,
 			removeTarget: null,
 			removeMode: 'unlink',
+			// e-discovery-legal-hold: set by LegalHoldBadge; removing (which can
+			// trash a file) is switched off while the dossier is held.
+			underLegalHold: false,
 			statusColorMap: {
 				[t('filinq', 'Open')]: 'default',
 				[t('filinq', 'In review')]: 'warning',

@@ -116,8 +116,9 @@ class DocumentValidationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCleanDocumentPasses(): void {
-		// A PDF with one page and plenty of text operators.
-		$pdf = "%PDF-1.7\n/Type /Page \n" . str_repeat('(text) Tj ', 40);
+		// A tagged PDF/UA with one page and plenty of text operators: an
+		// untagged PDF gets the accessibility warnings (AccessibilityChecksTest).
+		$pdf = (string) file_get_contents(__DIR__ . '/../../sample-documents/pdfua/tagged-pdfua.pdf') . str_repeat('(text) Tj ', 40);
 		$file = $this->file($pdf, 'application/pdf', 'clean.pdf');
 		$result = $this->service()->validate($file, [], 'default');
 

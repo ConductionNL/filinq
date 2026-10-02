@@ -252,6 +252,8 @@ class PdfControllerTest extends TestCase {
 
 		$this->assertInstanceOf(DataDownloadResponse::class, $result);
 		$this->assertEquals('3-B', $result->getHeaders()['X-Docudesk-Pdfa3-Conformance']);
+		// No verdict from the service reads as skipped, never as verified.
+		$this->assertSame('skipped', $result->getHeaders()['X-Docudesk-Pdfa3-Verified']);
 
 	}//end testRenderPdfADelegatesToPdfa3ServiceWithMetadata()
 

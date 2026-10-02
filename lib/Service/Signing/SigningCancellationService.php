@@ -143,7 +143,7 @@ class SigningCancellationService {
 		}
 
 		try {
-			$this->providers->getActiveProvider()->cancelSigning($externalId);
+			$this->providerFor(request: $request)->cancelSigning($externalId);
 		} catch (SigningCancellationNotSupportedException $e) {
 			// The provider CANNOT cancel. The request is still live, and the caller
 			// is told so rather than being shown a success they cannot rely on.
@@ -255,4 +255,25 @@ class SigningCancellationService {
 			]
 		);
 	}//end recordAttempt()
+	/**
+	 * The provider that holds this request: the one it names, else the active one.
+	 *
+	 * A request made while LibreSign was the provider stays at LibreSign after
+	 * the admin picks another, so the withdrawal must go there.
+	 *
+	 * @param array<string, mixed> $request The request
+	 *
+	 * @return SigningProviderInterface The provider.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	private function providerFor(array $request): SigningProviderInterface {
+		$named = (string)($request['provider'] ?? '');
+		if ($named !== '') {
+			return $this->providers->getProvider(identifier: $named);
+		}
+
+		return $this->providers->getActiveProvider();
+
+	}//end providerFor()
 }//end class

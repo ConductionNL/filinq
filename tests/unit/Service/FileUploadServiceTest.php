@@ -71,10 +71,17 @@ class FileUploadServiceTest extends TestCase {
 		$this->mockRootFolder = $this->createMock(IRootFolder::class);
 		$this->mockUserSession = $this->createMock(IUserSession::class);
 
+		// The policy double ALLOWS everything, so these tests keep testing the
+		// upload and not the policy. What the policy refuses is asserted in
+		// UploadPolicyServiceTest, against the bytes it refuses it for.
+		$policy = $this->createMock(\OCA\Filinq\Service\UploadPolicyService::class);
+		$policy->method('check')->willReturn(['detectedType' => 'text/plain', 'policy' => '', 'checked' => false]);
+
 		$this->service = new FileUploadService(
 			$this->mockLogger,
 			$this->mockRootFolder,
-			$this->mockUserSession
+			$this->mockUserSession,
+			$policy
 		);
 
 	}//end setUp()

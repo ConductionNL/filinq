@@ -21,6 +21,8 @@ bespoke per-document sidebar-tab or widget system SHALL be introduced for these 
 
 #### Scenario: Contacts, activity, and shares tabs appear on the document record
 
+@e2e tests/e2e/workflows/document-detail-leaf-widgets.spec.ts
+
 - GIVEN a document/report record open on its detail page
 - AND NC Contacts, the activity leaf, and NC sharing are available
 - WHEN the detail page renders
@@ -31,12 +33,19 @@ bespoke per-document sidebar-tab or widget system SHALL be introduced for these 
 
 #### Scenario: A leaf is hidden when its app is absent
 
+@e2e tests/e2e/workflows/document-detail-leaf-widgets.spec.ts
+
 - GIVEN a document/report record whose host instance does not have NC Contacts installed
 - WHEN the detail page renders
 - THEN the contacts leaf tab SHALL NOT be present
 - AND the page SHALL render the remaining enabled leaf tabs without error
 
 #### Scenario: In-app document surfaces are untouched
+
+@e2e exclude the app-owned anonymisation review surface only opens once a document has
+been through a real detection run, which this suite cannot provision without a detector;
+the leaf section is mounted BELOW that surface and touches none of its markup, which
+`git diff` shows and no browser assertion would add to.
 
 - GIVEN the document detail page with its app-owned `Anonimisatie`, `Redactie`, and
   `Handtekeningen` tabs

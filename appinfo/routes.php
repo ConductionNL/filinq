@@ -56,6 +56,10 @@ $extra = [
 
         // Document validation route.
         ['name' => 'validation#validate', 'url' => 'api/validation/validate', 'verb' => 'POST'],
+        // PDF/A conformance reports (veraPDF).
+        ['name' => 'conformance#status', 'url' => 'api/validation/conformance-status', 'verb' => 'GET'],
+        ['name' => 'conformance#show', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\d+']],
+        ['name' => 'conformance#check', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
 
         // Document comparison route.
         ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
@@ -64,6 +68,71 @@ $extra = [
         ['name' => 'version#index', 'url' => 'api/documents/{fileId}/versions', 'verb' => 'GET'],
         ['name' => 'version#download', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/download', 'verb' => 'GET'],
         ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
+
+        // Final document routes (final-documents-frozen).
+        ['name' => 'finalDocument#show', 'url' => 'api/documents/{fileId}/final', 'verb' => 'GET'],
+        ['name' => 'finalDocument#finalise', 'url' => 'api/documents/{fileId}/final', 'verb' => 'POST'],
+        ['name' => 'finalDocument#correct', 'url' => 'api/documents/{fileId}/final/correction', 'verb' => 'POST'],
+        ['name' => 'finalDocument#unfreeze', 'url' => 'api/documents/{fileId}/final', 'verb' => 'DELETE'],
+        ['name' => 'finalDocument#declareRule', 'url' => 'api/document-finality-rules', 'verb' => 'POST'],
+        ['name' => 'finalDocument#applyStateChange', 'url' => 'api/document-finality-rules/apply', 'verb' => 'POST'],
+
+        // Document intake inbox routes (document-intake-inbox).
+        ['name' => 'intake#index', 'url' => 'api/intake/documents', 'verb' => 'GET'],
+        ['name' => 'intake#assign', 'url' => 'api/intake/documents/{uuid}/assign', 'verb' => 'POST'],
+        ['name' => 'intake#reject', 'url' => 'api/intake/documents/{uuid}/reject', 'verb' => 'POST'],
+
+        // Inbound worklist, party suggestions and routing (inbound-documents-and-the-worklist).
+        ['name' => 'intake#detached', 'url' => 'api/intake/detached', 'verb' => 'GET'],
+        ['name' => 'intake#detach', 'url' => 'api/intake/documents/detach', 'verb' => 'POST'],
+        ['name' => 'intake#decideParty', 'url' => 'api/intake/party-decisions', 'verb' => 'POST'],
+        ['name' => 'intake#declareRouting', 'url' => 'api/intake/routing-rules', 'verb' => 'POST'],
+
+        // Case documents: the flat list, the domains and the upload policy
+        // (case-documents-and-the-flat-list).
+        ['name' => 'caseDocuments#files', 'url' => 'api/case-documents/files', 'verb' => 'GET'],
+        ['name' => 'caseDocuments#linkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'POST'],
+        ['name' => 'caseDocuments#unlinkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'DELETE'],
+        ['name' => 'caseDocuments#mine', 'url' => 'api/case-documents/mine', 'verb' => 'GET'],
+        ['name' => 'caseDocuments#uploadPolicy', 'url' => 'api/case-documents/upload-policy', 'verb' => 'GET'],
+
+        // The post register's derived reads. The open post list is offered here
+        // rather than as an ADR-066 leaf because filinq ships no `leaves`
+        // webpack entry yet; a leaf registered without one is DARK, and the
+        // list is real behaviour that should not wait for the surface.
+        ['name' => 'postRegister#openPost', 'url' => 'api/post-register/open', 'verb' => 'GET'],
+        ['name' => 'postRegister#answers', 'url' => 'api/post-register/answers', 'verb' => 'GET'],
+        ['name' => 'postRegister#series', 'url' => 'api/post-register/series', 'verb' => 'GET'],
+
+        // Layouts, bundles, periodic documents and reviews
+        // (documents-from-a-template).
+        ['name' => 'documentProduction#layoutVersions', 'url' => 'api/page-layouts', 'verb' => 'GET'],
+        ['name' => 'documentProduction#editLayout', 'url' => 'api/page-layouts', 'verb' => 'POST'],
+        ['name' => 'documentProduction#createLayout', 'url' => 'api/page-layouts/new', 'verb' => 'POST'],
+        ['name' => 'documentProduction#archivePreflight', 'url' => 'api/case-archive/preflight', 'verb' => 'GET'],
+        ['name' => 'documentProduction#archiveManifest', 'url' => 'api/case-archive/manifest', 'verb' => 'POST'],
+        ['name' => 'documentProduction#runPeriodic', 'url' => 'api/periodic-documents/run', 'verb' => 'POST'],
+        ['name' => 'documentProduction#dueForReview', 'url' => 'api/documents/due-for-review', 'verb' => 'GET'],
+        ['name' => 'documentProduction#markReviewed', 'url' => 'api/documents/{uuid}/reviewed', 'verb' => 'POST'],
+
+        // Merge to PDF (merge-documents-to-pdf).
+        ['name' => 'merge#create', 'url' => 'api/merge', 'verb' => 'POST'],
+        ['name' => 'merge#show', 'url' => 'api/merge/{id}', 'verb' => 'GET'],
+
+        // Paper intake: separator sheets, scan profiles and batch splitting
+        // (scan-intake-with-separator-sheets).
+        ['name' => 'scanIntake#separators', 'url' => 'api/scan/separators', 'verb' => 'POST'],
+        ['name' => 'scanIntake#listProfiles', 'url' => 'api/scan/profiles', 'verb' => 'GET'],
+        ['name' => 'scanIntake#declareProfiles', 'url' => 'api/scan/profiles', 'verb' => 'POST'],
+        ['name' => 'scanIntake#split', 'url' => 'api/scan/batches/{fileId}/split', 'verb' => 'POST'],
+
+        // What leaves the building: the review mark, the composed publication
+        // list and the conditions a gated download waits on
+        // (redaction-and-what-leaves-the-building).
+        ['name' => 'redactionOutput#markChecked', 'url' => 'api/redaction/documents/{fileId}/checked', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'redactionOutput#composeList', 'url' => 'api/redaction/publication-list', 'verb' => 'POST'],
+        ['name' => 'redactionOutput#agreement', 'url' => 'api/redaction/agreement', 'verb' => 'GET'],
+        ['name' => 'redactionOutput#acceptAgreement', 'url' => 'api/redaction/agreement/accept', 'verb' => 'POST'],
 
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
@@ -140,17 +209,96 @@ $extra = [
         ['name' => 'print#downloadPdfA', 'url' => 'api/print/pdf-a', 'verb' => 'POST'],
 
         // Print job queue routes (for external print services).
+        // OCR (ocr-trigger-surface): run on a file the caller can open, read its result.
+        ['name' => 'ocr#index', 'url' => 'api/ocr', 'verb' => 'GET'],
+        ['name' => 'ocr#run', 'url' => 'api/ocr/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'ocr#show', 'url' => 'api/ocr/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // Reversible pseudonymisation: does a redacted copy keep a key, and restore it (gated, audited).
+        ['name' => 'pseudonymisation#status', 'url' => 'api/pseudonymisation/status/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'pseudonymisation#restore', 'url' => 'api/pseudonymisation/{linkId}/restore', 'verb' => 'POST'],
+        // Legal hold cases (e-discovery-legal-hold): the hold register, gated on hold authority in the service.
+        // Contracts (contract-lifecycle-management): only the actions; CRUD is OpenRegister's object API.
+        ['name' => 'contract#renew', 'url' => 'api/contracts/{id}/renew', 'verb' => 'POST'],
+        ['name' => 'contract#terminate', 'url' => 'api/contracts/{id}/terminate', 'verb' => 'POST'],
+        ['name' => 'contract#suggest', 'url' => 'api/contracts/{id}/suggestions', 'verb' => 'POST'],
+        ['name' => 'contract#decideSuggestion', 'url' => 'api/contracts/{id}/suggestions/{index}', 'verb' => 'PUT', 'requirements' => ['index' => '\\d+']],
+        ['name' => 'contract#linkSigning', 'url' => 'api/contracts/{id}/signing', 'verb' => 'POST'],
+        ['name' => 'contract#parties', 'url' => 'api/contracts/{id}/parties', 'verb' => 'GET'],
+        // Document sanitization: a clean copy beside the file, and what earlier runs removed.
+        ['name' => 'sanitization#sanitize', 'url' => 'api/sanitization/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'sanitization#status', 'url' => 'api/sanitization/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // Email ingestion (email-ingestion): the filed and failed emails, a re-scan, a conversion retry and the inbox mapping. Admins only.
+        ['name' => 'emailIngestion#index', 'url' => 'api/email-ingestion', 'verb' => 'GET'],
+        ['name' => 'emailIngestion#scan', 'url' => 'api/email-ingestion/scan', 'verb' => 'POST'],
+        ['name' => 'emailIngestion#settings', 'url' => 'api/email-ingestion/settings', 'verb' => 'GET'],
+        ['name' => 'emailIngestion#updateSettings', 'url' => 'api/email-ingestion/settings', 'verb' => 'PUT'],
+        ['name' => 'emailIngestion#retry', 'url' => 'api/email-ingestion/{uuid}/convert', 'verb' => 'POST'],
+        // Guided document wizard (guided-document-wizard): author the wizard of a template, find the wizards for an object, prefill a run. Generation stays on api/documents/generate.
+        ['name' => 'wizard#index', 'url' => 'api/wizards', 'verb' => 'GET'],
+        ['name' => 'wizard#create', 'url' => 'api/wizards', 'verb' => 'POST'],
+        ['name' => 'wizard#show', 'url' => 'api/wizards/{id}', 'verb' => 'GET'],
+        ['name' => 'wizard#update', 'url' => 'api/wizards/{id}', 'verb' => 'PUT'],
+        ['name' => 'wizard#destroy', 'url' => 'api/wizards/{id}', 'verb' => 'DELETE'],
+        ['name' => 'wizard#prefill', 'url' => 'api/wizards/{id}/prefill', 'verb' => 'POST'],
+        ['name' => 'wizard#forTemplate', 'url' => 'api/templates/{id}/wizard', 'verb' => 'GET'],
+        // Inbound classification (inbound-auto-classification): suggestions wait for a person; only a confirmation changes the document.
+        ['name' => 'classification#pending', 'url' => 'api/classification/pending', 'verb' => 'GET'],
+        ['name' => 'classification#confirm', 'url' => 'api/classification/{fileId}/confirm', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'classification#reject', 'url' => 'api/classification/{fileId}/reject', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'classification#show', 'url' => 'api/classification/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#show', 'url' => 'api/legal-holds/{id}', 'verb' => 'GET'],
+        ['name' => 'legalHoldCase#addScope', 'url' => 'api/legal-holds/{id}/scope', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#retry', 'url' => 'api/legal-holds/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'legalHoldCase#release', 'url' => 'api/legal-holds/{id}/release', 'verb' => 'POST'],
+        // Entity search (entity-search): gate, log and enrichment in EntitySearchService; access before {entityUuid}.
+        ['name' => 'entitySearch#access', 'url' => 'api/entity-search/access', 'verb' => 'GET'],
+        ['name' => 'entitySearch#index', 'url' => 'api/entity-search', 'verb' => 'GET'],
+        ['name' => 'entitySearch#show', 'url' => 'api/entity-search/{entityUuid}', 'verb' => 'GET'],
+        // Subject erasure (erase-a-person-while-the-records-stay): authority checked in the services.
+        ['name' => 'subjectErasure#index', 'url' => 'api/subject-erasures', 'verb' => 'GET'],
+        ['name' => 'subjectErasure#create', 'url' => 'api/subject-erasures', 'verb' => 'POST'],
+        ['name' => 'subjectErasure#show', 'url' => 'api/subject-erasures/{id}', 'verb' => 'GET'],
+        ['name' => 'subjectErasure#preview', 'url' => 'api/subject-erasures/{id}/preview', 'verb' => 'POST'],
+        ['name' => 'subjectErasure#exclude', 'url' => 'api/subject-erasures/{id}/exclusions', 'verb' => 'PUT'],
+        ['name' => 'subjectErasure#run', 'url' => 'api/subject-erasures/{id}/run', 'verb' => 'POST'],
+        ['name' => 'subjectErasure#certificate', 'url' => 'api/subject-erasures/{id}/certificate', 'verb' => 'GET'],
+        ['name' => 'printJob#index', 'url' => 'api/print/jobs', 'verb' => 'GET'],
         ['name' => 'printJob#create', 'url' => 'api/print/jobs', 'verb' => 'POST'],
         ['name' => 'printJob#batch', 'url' => 'api/print/batch', 'verb' => 'POST'],
         ['name' => 'printJob#show', 'url' => 'api/print/jobs/{id}', 'verb' => 'GET'],
         ['name' => 'printJob#download', 'url' => 'api/print/jobs/{id}/download', 'verb' => 'GET'],
         ['name' => 'printJob#updateStatus', 'url' => 'api/print/jobs/{id}/status', 'verb' => 'PUT'],
 
+        // Woo publication pipeline (woo-publicatie-pipeline). The log has no
+        // update or delete route: an entry is written once.
+        ['name' => 'publication#index', 'url' => 'api/publications', 'verb' => 'GET'],
+        ['name' => 'publication#create', 'url' => 'api/publications', 'verb' => 'POST'],
+        ['name' => 'publication#categories', 'url' => 'api/publications/categories', 'verb' => 'GET'],
+        ['name' => 'publication#show', 'url' => 'api/publications/{id}', 'verb' => 'GET'],
+        ['name' => 'publication#readiness', 'url' => 'api/publications/{id}/readiness', 'verb' => 'POST'],
+        ['name' => 'publication#metadata', 'url' => 'api/publications/{id}/metadata', 'verb' => 'PUT'],
+        ['name' => 'publication#handoff', 'url' => 'api/publications/{id}/handoff', 'verb' => 'POST'],
+        ['name' => 'publication#withdraw', 'url' => 'api/publications/{id}/withdraw', 'verb' => 'POST'],
+        ['name' => 'publication#destructionDate', 'url' => 'api/publications/{id}/destruction-date', 'verb' => 'POST'],
+
         // Document generation routes (document-creatie-sjablonen).
         ['name' => 'document#generate', 'url' => 'api/documents/generate', 'verb' => 'POST'],
+        ['name' => 'format#instance', 'url' => 'api/documents/formats', 'verb' => 'GET'],
+        ['name' => 'format#template', 'url' => 'api/templates/{id}/formats', 'verb' => 'GET'],
         ['name' => 'document#preview', 'url' => 'api/documents/generate/preview', 'verb' => 'POST'],
         ['name' => 'document#generateBulk', 'url' => 'api/documents/generate/bulk', 'verb' => 'POST'],
         ['name' => 'document#jobStatus', 'url' => 'api/documents/jobs/{jobId}', 'verb' => 'GET'],
+
+        // External render contract (filinq-configurable-report-templates): a
+        // stable, slug-addressed endpoint for server-to-server callers (e.g.
+        // learniq's ReportCardPdfDelegationService) that already hold their
+        // data and only need a school-styled PDF back, not filinq's
+        // register/schema data-resolution model.
+        ['name' => 'reportRender#render', 'url' => 'api/v1/documents/render', 'verb' => 'POST'],
+        ['name' => 'reportRender#renderBatch', 'url' => 'api/v1/documents/render/batch', 'verb' => 'POST'],
 
         // Correspondence routes.
         ['name' => 'correspondence#generate', 'url' => 'api/correspondence/generate', 'verb' => 'POST'],
@@ -182,6 +330,37 @@ $extra = [
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
+        // Bulk send (bulk-signing-field-builder REQ-DDBSF-002): upload + report, confirm, progress, cancel.
+        ['name' => 'bulkSigning#index', 'url' => 'api/signing/batches', 'verb' => 'GET'],
+        ['name' => 'bulkSigning#create', 'url' => 'api/signing/batches', 'verb' => 'POST'],
+        ['name' => 'bulkSigning#show', 'url' => 'api/signing/batches/{id}', 'verb' => 'GET'],
+        ['name' => 'bulkSigning#confirm', 'url' => 'api/signing/batches/{id}/confirm', 'verb' => 'POST'],
+        ['name' => 'bulkSigning#cancel', 'url' => 'api/signing/batches/{id}/cancel', 'verb' => 'POST'],
+        // Envelopes (bulk-signing-field-builder REQ-DDBSF-004): several documents, one ceremony.
+        ['name' => 'signingEnvelope#index', 'url' => 'api/signing/envelopes', 'verb' => 'GET'],
+        ['name' => 'signingEnvelope#create', 'url' => 'api/signing/envelopes', 'verb' => 'POST'],
+        ['name' => 'signingEnvelope#show', 'url' => 'api/signing/envelopes/{id}', 'verb' => 'GET'],
+        ['name' => 'signingEnvelope#signAll', 'url' => 'api/signing/envelopes/{id}/sign', 'verb' => 'POST'],
+        ['name' => 'signingEnvelope#cancel', 'url' => 'api/signing/envelopes/{id}/cancel', 'verb' => 'POST'],
+
+        // Signer identity rails (signer-identity-rails): the step-up start
+        // (signing ownership check in the service) and the broker callback
+        // (state-bound, no CSRF token), then the admin panel's settings,
+        // reference-only; admin gated by #[AuthorizedAdminSetting].
+        ['name' => 'signerIdentity#start', 'url' => 'api/signing/requests/{id}/identity', 'verb' => 'POST'],
+        ['name' => 'signerIdentity#callback', 'url' => 'api/signing/identity/callback', 'verb' => 'GET'],
+        ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
+        ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
+
+        // Signing folder routes (signing-folder-across-cases): everything
+        // pending for one signer across every record, and the pass that signs
+        // a selection of it through the per-request path above. The mandate
+        // declarations are instance configuration, so they are admin-only.
+        ['name' => 'signingFolder#folder', 'url' => 'api/signing/folder', 'verb' => 'GET'],
+        ['name' => 'signingFolder#signFolder', 'url' => 'api/signing/folder/sign', 'verb' => 'POST'],
+        ['name' => 'signingFolder#mandates', 'url' => 'api/signing/mandates', 'verb' => 'GET'],
+        ['name' => 'signingFolder#declareMandate', 'url' => 'api/signing/mandates', 'verb' => 'POST'],
+        ['name' => 'signingFolder#withdrawMandate', 'url' => 'api/signing/mandates/{typeApp}/{typeSchema}', 'verb' => 'DELETE'],
 
         // Portal signing receiver routes (portal-signing-actions,
         // portal-signing-surface): the A6 endpoint-forward targets portaliq

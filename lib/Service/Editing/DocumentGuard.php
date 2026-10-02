@@ -26,6 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\FinalDocumentService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -67,15 +69,42 @@ class DocumentGuard {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
+		private readonly FinalDocumentService $finalDocuments,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * Refuse to edit a version somebody has made final.
+	 *
+	 * A final version is the record of what was published. Editing it does not
+	 * correct the document, it destroys the only proof of what the document
+	 * said. The correction is a new version, and the refusal says so.
+	 *
+	 * FAILS CLOSED, like the signature check and for the same reason: an
+	 * unreachable register is exactly when an unnoticed edit to a besluit is
+	 * most likely.
+	 *
+	 * @param File $file The file to check.
+	 *
+	 * @return string|null A refusal message, or null when the version is not final.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 */
+	public function finalRefusal(File $file): ?string {
+		return $this->finalDocuments->refusalFor(
+			fileId: $file->getId(),
+			action: 'edit this document'
+		);
+
+	}//end finalRefusal()
 
 	/**
 	 * Refuse to edit a file that is under a live signature process.
@@ -171,13 +200,18 @@ class DocumentGuard {
 	 */
 	private function query(string $schema, array $filter): ?array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjects(
-				query: ([
-					'@self' => [
-						'register' => self::REGISTER,
-						'schema' => $schema,
-					],
-				] + $filter)
+			// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+			// `self::REGISTER` is `filinq` and `$schema` is a slug too, and
+			// `searchObjects` reads both as numeric ids: it answered every
+			// call here with zero rows and no error. Because zero rows arrive
+			// as `[]` and not as `null`, signatureRefusal() walked an empty
+			// list and returned no refusal, so a document under a live signing
+			// request was editable. The docblock above it says FAILS CLOSED;
+			// with the slug call it failed open.
+			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: self::REGISTER,
+				schemaSlug: $schema,
+				filters: $filter
 			);
 
 			if (is_array($results) === false) {
@@ -185,6 +219,19 @@ class DocumentGuard {
 			}
 
 			return $results;
+		} catch (DoesNotExistException $e) {
+			// 🔴 AN ABSENT SCHEMA IS `[]`, NOT `null`. `null` means "could not
+			// read" and makes signatureRefusal() refuse every edit. A schema
+			// this instance never imported holds no rows, which is a real
+			// answer: there is no signing request and no anonymisation output,
+			// so the edit is free to proceed. Returning `null` here would take
+			// editing down on every instance that never enabled signing.
+			$this->logger->warning(
+				'Filinq document guard found no ' . $schema . ' schema on this instance, so nothing is guarded by it',
+				['schema' => $schema, 'error' => $e->getMessage()]
+			);
+
+			return [];
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Filinq document guard could not query ' . $schema . ': ' . $e->getMessage(),

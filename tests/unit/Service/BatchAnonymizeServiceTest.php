@@ -151,6 +151,34 @@ class BatchAnonymizeServiceTest extends TestCase {
 	}//end testAnonymizeBatchProcessesExtractedFiles()
 
 	/**
+	 * Each batch entry names the backend that looked and what it found.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 */
+	public function testEachEntryCarriesTheDetectionOutcome(): void {
+		$detection = ['ran' => true, 'backend' => 'presidio', 'entitiesRedacted' => 0, 'outcome' => 'nothing_found'];
+		$this->mockStateService->method('getBatch')->willReturn(
+			['batchId' => 'batch-d', 'status' => 'review', 'files' => [['fileId' => 21, 'status' => 'extracted']]]
+		);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'anon-21', 'detection' => $detection]);
+
+		$saved = null;
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $id, array $batch) use (&$saved): void {
+				$saved = $batch;
+			}
+		);
+
+		$this->service->anonymizeBatch(batchId: 'batch-d', entities: []);
+
+		$this->assertSame($detection, $saved['files'][0]['detection']);
+
+	}//end testEachEntryCarriesTheDetectionOutcome()
+
+	/**
 	 * Test anonymizeBatch records error when anonymization throws
 	 *
 	 * @return void

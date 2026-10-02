@@ -1,6 +1,6 @@
 # Tasks: woo-request-workflow
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 15.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register + seed data
@@ -53,3 +53,6 @@
 
 - [ ] 4.5 Documentation `docs/features/woo-request-workflow.md` with Playwright MCP screenshots (ADR-010); run `openspec validate woo-request-workflow --strict`
   - Documents the statutory-term semantics, the grondslagen reuse and the ZyLAB-category positioning.
+
+- [ ] 4.6 Collect entity-search hits into a collecting request (moved from entity-search REQ-DDESR-006): "Collect into Woo-verzoek" on the entity detail, shown only with a request in `collecting`, handing the selected readable file ids to the collection step, and `collectedInto` on the entity search log row
+  - The entity search page and `entitySearchLog.collectedInto` exist (openspec/changes/archive/2026-09-29-entity-search).

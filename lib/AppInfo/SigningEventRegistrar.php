@@ -28,6 +28,8 @@ namespace OCA\Filinq\AppInfo;
 use OCA\Filinq\Event\DocumentSigningRequestedEvent;
 use OCA\Filinq\EventListener\DocumentSigningRequestedListener;
 use OCA\Filinq\EventListener\SigningTaskListener;
+use OCA\Filinq\Service\Signing\LibreSignClient;
+use OCA\Filinq\Service\Signing\OcsLibreSignClient;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -96,6 +98,11 @@ class SigningEventRegistrar {
 			DocumentSigningRequestedEvent::class,
 			DocumentSigningRequestedListener::class
 		);
+
+		// The LibreSign provider talks to LibreSign through this seam; the
+		// OCS client loads no LibreSign class, so the binding is safe on an
+		// instance without LibreSign (libresign-signing-provider task 1.3).
+		$context->registerServiceAlias(LibreSignClient::class, OcsLibreSignClient::class);
 
 	}//end register()
 }//end class

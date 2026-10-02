@@ -51,6 +51,17 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							:size="18"
 							class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
+						<span
+							v-if="ocrBadgeFor(row)"
+							class="my-documents-ocr-badge"
+							:title="
+								t(
+									'filinq',
+									'Text recognised by OCR, with its confidence',
+								)
+							">
+							{{ ocrBadgeFor(row) }}
+						</span>
 					</div>
 				</template>
 
@@ -163,6 +174,30 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 						<NcActionButton
 							v-if="!row.isFolder"
 							closeAfterClick
+							data-testid="document-sanitize"
+							@click="sanitizeDocument(row)">
+							<template #icon>
+								<BroomIcon :size="20" />
+							</template>
+							{{ t('filinq', 'Sanitize') }}
+						</NcActionButton>
+						<NcActionButton
+							v-if="ocrOfferedFor(row)"
+							:disabled="Boolean(ocrRunning[row.fileId])"
+							closeAfterClick
+							@click="runOcrOn(row)">
+							<template #icon>
+								<TextRecognition :size="20" />
+							</template>
+							{{
+								ocrRunning[row.fileId]
+									? t('filinq', 'Running OCR…')
+									: t('filinq', 'Run OCR')
+							}}
+						</NcActionButton>
+						<NcActionButton
+							v-if="!row.isFolder"
+							closeAfterClick
 							@click="compareDocument(row)">
 							<template #icon>
 								<Compare :size="20" />
@@ -189,6 +224,12 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			</DdIndexPage>
 		</template>
 
+		<SanitizationReportModal
+			:show="sanitization.show"
+			:loading="sanitization.loading"
+			:error="sanitization.error"
+			:result="sanitization.result"
+			@close="sanitization.show = false" />
 		<ValidationResultModal
 			:show="validation.show"
 			:loading="validation.loading"
@@ -226,6 +267,7 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
+import BroomIcon from 'vue-material-design-icons/Broom.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
@@ -239,14 +281,24 @@ import Eye from 'vue-material-design-icons/Eye.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import History from 'vue-material-design-icons/History.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
+import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
+import {
+	fetchOcrStatus,
+	isOcrCandidate,
+	ocrBadgeLabel,
+	ocrErrorMessage,
+	runOcr,
+} from '../../services/ocr.js'
+import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
 
 const VIEW_MODE_STORAGE_KEY = 'filinq:myDocuments:viewMode'
@@ -283,6 +335,8 @@ export default {
 		DdIcon,
 		FileViewerPage,
 		ValidationResultModal,
+		SanitizationReportModal,
+		BroomIcon,
 		ConfirmActionDialog,
 		DotsHorizontal,
 		Eye,
@@ -290,6 +344,7 @@ export default {
 		// EyeOffOutline,
 		Download,
 		ShieldCheckOutline,
+		TextRecognition,
 		Compare,
 		History,
 		Delete,
@@ -306,6 +361,13 @@ export default {
 			viewMode: loadPersistedViewMode(),
 			bulkSelect: false,
 			selectedIds: [],
+			sanitization: {
+				show: false,
+				loading: false,
+				error: '',
+				result: null,
+			},
+
 			validation: {
 				show: false,
 				loading: false,
@@ -323,6 +385,12 @@ export default {
 			deleteTarget: null, // row awaiting delete confirmation, or null
 			bulkDeleteNames: [], // file names awaiting bulk-delete confirmation
 			deleting: false,
+
+			// OCR (ocr-trigger-surface): whether it can run here, the last
+			// result per file id, and which files are running now.
+			ocrAvailable: false,
+			ocrResults: {},
+			ocrRunning: {},
 		}
 	},
 
@@ -418,6 +486,19 @@ export default {
 	/**
 	 * @spec exclude Lifecycle bootstrap (fetch + keyboard listener wiring).
 	 */
+	watch: {
+		paginatedDocuments: {
+			/**
+			 * Read the OCR status when the files on screen change.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+			 */
+			handler(rows) {
+				this.loadOcrStatus(rows)
+			},
+		},
+	},
+
 	mounted() {
 		myDocumentsStore.fetchDocuments()
 		window.addEventListener('keydown', this.onKeydown)
@@ -428,6 +509,88 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Read whether OCR can run, and the results for the images and PDFs on this page.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async loadOcrStatus(rows) {
+			const ids = (rows || [])
+				.filter(
+					(row) =>
+						!row.isFolder && row.fileId && isOcrCandidate(row.mimeType),
+				)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const status = await fetchOcrStatus(ids)
+				this.ocrAvailable = status.capability?.available === true
+				this.ocrResults = { ...this.ocrResults, ...(status.results || {}) }
+			} catch {
+				// No status: no action and no badge. The list itself still shows.
+			}
+		},
+
+		/**
+		 * Whether Run OCR is offered on a row. The server checks again.
+		 *
+		 * @param {object} row The row.
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrOfferedFor(row) {
+			return this.ocrAvailable && !row.isFolder && isOcrCandidate(row.mimeType)
+		},
+
+		/**
+		 * The OCR badge for a row.
+		 *
+		 * @param {object} row The row.
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrBadgeFor(row) {
+			return ocrBadgeLabel(this.ocrResults[String(row.fileId)] ?? null)
+		},
+
+		/**
+		 * Run OCR on a row and update its badge without a reload.
+		 *
+		 * @param {object} row The row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async runOcrOn(row) {
+			this.ocrRunning = { ...this.ocrRunning, [row.fileId]: true }
+			try {
+				const result = await runOcr(row.fileId)
+				if (result.ocrProcessed) {
+					this.ocrResults = {
+						...this.ocrResults,
+						[String(row.fileId)]: result,
+					}
+					showSuccess(
+						t('filinq', 'OCR read {length} characters.', {
+							length: result.textLength,
+						}),
+					)
+				} else {
+					showError(ocrErrorMessage(result))
+				}
+			} catch (error) {
+				showError(ocrErrorMessage(error))
+				if ([409, 503].includes(error?.response?.status)) {
+					this.ocrAvailable = false
+				}
+			} finally {
+				this.ocrRunning = { ...this.ocrRunning, [row.fileId]: false }
+			}
+		},
+
 		/**
 		 * Global keydown handler. Escape cancels bulk-selection mode so the
 		 * user can bail out of a bulk action without reaching for the menu.
@@ -734,6 +897,30 @@ export default {
 		},
 
 		/**
+		 * Sanitize a document into a clean copy beside it and show what was removed.
+		 *
+		 * @param {object} row Document row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/document-sanitization/tasks.md#4-1
+		 */
+		async sanitizeDocument(row) {
+			if (!row || !row.fileId) return
+			this.sanitization = {
+				show: true,
+				loading: true,
+				error: '',
+				result: null,
+			}
+			const answer = await sanitizeFile(row.fileId)
+			this.sanitization.loading = false
+			if (!answer.ok) {
+				this.sanitization.error = answer.error
+				return
+			}
+			this.sanitization.result = answer.data
+		},
+
+		/**
 		 * Run on-demand validation for a document and surface the verdict +
 		 * findings in a modal. Nothing is persisted by this call.
 		 *
@@ -950,5 +1137,14 @@ export default {
 	.my-documents-name__icon {
 		transition: none;
 	}
+}
+
+.my-documents-ocr-badge {
+	margin-inline-start: 8px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 0.85em;
 }
 </style>

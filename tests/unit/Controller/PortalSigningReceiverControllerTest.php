@@ -52,6 +52,7 @@ use OCP\Security\Bruteforce\IThrottler;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Exception\StepUpRequiredException;
 
 /**
  * Tests for PortalSigningReceiverController.
@@ -150,7 +151,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	 *
 	 * @return PortalSigningReceiverController
 	 */
-	private function controller(): PortalSigningReceiverController {
+	private function controller(?IThrottler $throttler = null): PortalSigningReceiverController {
 		return new PortalSigningReceiverController(
 			appName: 'filinq',
 			request: $this->mockRequest,
@@ -164,7 +165,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 			registerResolver: new OpenRegisterResolver(settingsService: $this->mockSettingsService),
 			logger: $this->mockLogger,
 			documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder),
-			throttler: $this->createMock(IThrottler::class)
+			throttler: ($throttler ?? $this->createMock(IThrottler::class))
 		);
 
 	}//end controller()
@@ -493,6 +494,32 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	}//end testSignDocumentHappyPath()
 
 	/**
+	 * The portal answer names the assurance the signature recorded, so the
+	 * signer sees AES or SES and never QES (portal-signing-surface REQ-DDPSS-005).
+	 *
+	 * @return void
+	 */
+	public function testSignDocumentExposesTheRecordedAssurance(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: [
+				'signingRequestId' => 'request-uuid-1',
+				'consent' => true,
+			]
+		);
+
+		$this->mockSigningService->method('sign')
+			->willReturn(['status' => 'SIGNED', 'signatureAssurance' => 'SES']);
+
+		$result = $this->controller()->signDocument();
+
+		$this->assertSame(Http::STATUS_OK, $result->getStatus());
+		$this->assertSame('SES', $result->getData()['assurance'] ?? null);
+
+	}//end testSignDocumentExposesTheRecordedAssurance()
+
+	/**
 	 * Happy-path declineDocument: reason recorded, drives
 	 * `SigningService::decline()` with the verified actor.
 	 *
@@ -548,6 +575,30 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		$this->assertStringNotContainsString('already responded', (string)$body);
 
 	}//end testDownstreamFailureReturns502()
+
+	/**
+	 * A guardian-consent refusal is a refused act, not a downstream failure
+	 * (signer-identity-rails REQ-DDSIR-008/009): 403, a generic body, and no
+	 * rejected-assertion count, because the assertion itself was valid.
+	 *
+	 * @return void
+	 */
+	public function testAGuardianConsentRefusalReturns403(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$this->mockSigningService->method('sign')->willThrowException(
+			new \RuntimeException('A signer under 16 signs only with a guardian, and this request names no guardian for them', 403)
+		);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$result = $this->controller(throttler: $throttler)->signDocument();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+		$this->assertSame(['error' => 'signing_refused'], $result->getData());
+
+	}//end testAGuardianConsentRefusalReturns403()
 
 	/**
 	 * viewDocument happy path: returns the target document as base64 JSON,
@@ -606,4 +657,29 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
 
 	}//end testViewDocumentNullRequestReturns403()
+	/**
+	 * A portal signer below the request's assurance is refused with 403, not 502, and is not
+	 * counted as a rejected assertion (REQ-DDSIR-007 part b).
+	 *
+	 * @return void
+	 */
+	public function testAPortalSignerBelowTheRequestAssuranceIsRefused(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+		$refusal = new StepUpRequiredException(reason: 'insufficient', requiredAssurance: 'high', heldAssurance: 'substantial', provider: 'nextcloud-session');
+		$this->mockSigningService->method('sign')->willThrowException($refusal);
+		$this->mockSigningService->method('decline')->willThrowException($refusal);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$signed = $this->controller(throttler: $throttler)->signDocument();
+		$declined = $this->controller(throttler: $throttler)->declineDocument();
+
+		foreach ([$signed, $declined] as $result) {
+			$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+			$this->assertSame(['error' => 'signing_refused'], $result->getData());
+		}
+
+	}//end testAPortalSignerBelowTheRequestAssuranceIsRefused()
+
 }//end class

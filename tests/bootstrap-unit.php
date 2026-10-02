@@ -55,6 +55,12 @@ require_once __DIR__ . '/stubs/GlobalStubs.php';
 // Load Nextcloud OCP stubs (no NC server required).
 require_once __DIR__ . '/stubs/NextcloudStubs.php';
 
+// OpenRegister's sanitizer value classes, verbatim, and the office sanitizer's public surface.
+require_once __DIR__ . '/stubs/OpenRegisterSanitizerStubs.php';
+
+// OpenRegister's EML value classes (email-ingestion).
+require_once __DIR__ . '/stubs/OpenRegisterEmlStubs.php';
+
 // Load OCP event-dispatcher contracts before OR stubs that reference them
 // (Event / IEventDispatcher / IEventListener). The OCP package ships them
 // in vendor/nextcloud/ocp but does not classmap-autoload, so we require
@@ -95,6 +101,22 @@ if (is_dir($ocpMigrationDir) === true) {
 	}
 }
 
+// The real ICrypto contract (reversible-pseudonymization): the key store
+// encrypts with it, and a double of the real interface cannot grow a method
+// Nextcloud does not have.
+$ocpCryptoPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Security/ICrypto.php';
+if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto') === false) {
+	require_once $ocpCryptoPath;
+}
+
+// The real contacts manager contract (contract-lifecycle-management): contract
+// parties take their names from contacts, and a double of the real interface
+// cannot answer a search Nextcloud would not.
+$ocpContactsPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Contacts/IManager.php';
+if (is_file($ocpContactsPath) === true && interface_exists('OCP\\Contacts\\IManager') === false) {
+	require_once $ocpContactsPath;
+}
+
 $ocpDbExceptionDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/AppFramework/Db';
 if (is_dir($ocpDbExceptionDir) === true) {
 	foreach (['IMapperException.php', 'DoesNotExistException.php'] as $ocpDbFile) {
@@ -133,10 +155,44 @@ if (is_dir($ocpBruteforceDir) === true) {
 	}
 }
 
+// Load OCP's session and secure-random contracts (the signer identity rails
+// keep an OIDC state and nonce in the signer's session) — same "real file,
+// not classmapped" situation as the throttler contract above.
+foreach (['ISession.php', 'Security/ISecureRandom.php'] as $ocpSessionFile) {
+	$ocpSessionPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpSessionFile;
+	if (is_file($ocpSessionPath) === true && interface_exists('\\OCP\\' . str_replace(['/', '.php'], ['\\', ''], $ocpSessionFile)) === false) {
+		require_once $ocpSessionPath;
+	}
+}
+
+// Load OCP's app data contracts (print jobs keep their PDFs in the app data
+// folder) — same "real file, not classmapped" situation as the contracts
+// above. NotFoundException and NotPermittedException come from the stubs.
+foreach (['Files/SimpleFS/ISimpleFile.php', 'Files/SimpleFS/InMemoryFile.php', 'Files/SimpleFS/ISimpleFolder.php', 'Files/SimpleFS/ISimpleRoot.php', 'Files/IAppData.php'] as $ocpAppDataFile) {
+	$ocpAppDataPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpAppDataFile;
+	if (is_file($ocpAppDataPath) === true) {
+		require_once $ocpAppDataPath;
+	}
+}
+
 // Load OCP's file-lock contracts (the agent document-editing session takes an
 // ILockManager lock so a document open in Collabora refuses the edit rather
 // than losing the human's changes) — same "real file, not classmapped"
 // situation as the SystemTag/EventDispatcher contracts above.
+// Load OCP's user-manager contract (the nightly upload-fragment reaper sweeps
+// every seen user's documents folder, so it type-hints IUserManager) — same
+// "real file, not classmapped" situation as the EventDispatcher/SystemTag
+// contracts above. UserInterface comes first because IUserManager's docblocks
+// and signatures reference it, and without it createMock(IUserManager::class)
+// raises UnknownTypeException and every test in the job's class errors out.
+$ocpUserDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP';
+foreach (['UserInterface.php', 'IUserManager.php'] as $ocpUserFile) {
+	$ocpUserPath = $ocpUserDir . '/' . $ocpUserFile;
+	if (is_file($ocpUserPath) === true && interface_exists('\\OCP\\IUserManager') === false) {
+		require_once $ocpUserPath;
+	}
+}
+
 // `OCP\Lock\LockedException` — which OwnerLockedException extends — is already
 // declared in NextcloudStubs.php above, so it is deliberately NOT required from
 // vendor here: doing so is a fatal redeclare, not a no-op.
@@ -196,11 +252,33 @@ foreach (
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
 
+// OpenRegister's flow-node contract (IFlowNode, RegisterFlowNodesEvent and the
+// optional companions). The same file PHPStan and psalm read, so the node is
+// tested against the shape the analysers check it against.
+if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false) {
+	require_once __DIR__ . '/stubs/openregister-flow.stub.php';
+}
+
 // Shared test-only trait. The composer PSR-4 dev prefix maps
 // OCA\Filinq\Tests\ to tests/, which cannot resolve the lower-cased
 // tests/unit/ directory segment, so non-test helper classes under tests/unit
 // are required explicitly (PHPUnit loads *Test.php files by path).
 require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
+require_once __DIR__ . '/unit/Service/DetectionStates.php';
+require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
+require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';
+// The real OCP contracts the legal hold notifier implements and uses
+// (e-discovery-legal-hold), so its double cannot drift from Nextcloud's.
+foreach (['Notification/INotifier', 'Notification/UnknownNotificationException', 'L10N/IFactory'] as $ocpPath) {
+	$ocpFile = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpPath . '.php';
+	$ocpName = 'OCP\\' . str_replace('/', '\\', $ocpPath);
+	if (is_file($ocpFile) === true && interface_exists($ocpName) === false && class_exists($ocpName) === false) {
+		require_once $ocpFile;
+	}
+}
+
+require_once __DIR__ . '/unit/Service/LegalHold/FakeLegalHoldService.php';
+require_once __DIR__ . '/unit/Service/LegalHold/LegalHoldDoubles.php';
 
 // Batch-state fakes (NullCache / in-memory OpenRegister ObjectService) shared
 // by BatchStateServicePersistenceTest and BatchStateRepositoryTest. Same
@@ -210,3 +288,11 @@ require_once __DIR__ . '/unit/Service/BatchStateTestDoubles.php';
 // Per-test container mock shared by the two event-listener tests. Same
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/EventListener/RegistersContainerServices.php';
+
+// Subject erasure doubles (erase-a-person-while-the-records-stay); same
+// "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
+require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
+
+// The veraPDF service over the recorded veraPDF (tests/fixtures/verapdf).
+require_once __DIR__ . '/unit/Service/VeraPdf/VeraPdfDoubles.php';
+require_once __DIR__ . '/unit/Service/Conversion/DiskLikeSofficeRunner.php';

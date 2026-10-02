@@ -23,6 +23,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\SigningVerificationService;
@@ -45,6 +46,10 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/document-signing/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth class is
+ * StepUpRequiredException: the step-up hint the sign dialog needs rides on
+ * the error response, and only this controller knows the response shape.
  */
 class SigningController extends Controller {
 	/**
@@ -487,10 +492,17 @@ class SigningController extends Controller {
 		// no longer act as an existence-probing oracle. The status code is
 		// still honoured from the exception (e.g. 400 for invalid input) so
 		// genuine client errors are not masked as a generic 500.
-		return new JSONResponse(
-			['error' => $this->l10n->t($message)],
-			$statusCode
-		);
+		$body = ['error' => $this->l10n->t($message)];
+
+		// Identity rails (signer-identity-rails REQ-DDSIR-003): a refusal for
+		// missing, stale or insufficient identity evidence tells the sign dialog
+		// which assurance to step up to. It is thrown only after the ownership
+		// check, so only the signer the record belongs to ever sees it.
+		if ($exception instanceof StepUpRequiredException) {
+			$body['stepUp'] = $exception->stepUp();
+		}
+
+		return new JSONResponse($body, $statusCode);
 
 	}//end errorResponse()
 }//end class

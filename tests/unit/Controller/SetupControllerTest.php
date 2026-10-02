@@ -4,6 +4,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SetupController;
 use OCA\Filinq\Service\DemoDataService;
+use OCA\Filinq\Service\ExternalMountValidator;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
@@ -23,6 +24,7 @@ class SetupControllerTest extends TestCase {
 	private IAppConfig $appConfig;
 	private LoggerInterface $logger;
 	private DemoDataService $demoData;
+	private ExternalMountValidator $mountValidator;
 	private SetupController $controller;
 
 	protected function setUp(): void {
@@ -30,11 +32,24 @@ class SetupControllerTest extends TestCase {
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->demoData = $this->createMock(DemoDataService::class);
 
+		// `onlyMethods` so the double cannot answer a question the real
+		// validator does not have: a status document built on an invented
+		// method would pass here and 500 on the first screen an administrator
+		// opens.
+		$this->mountValidator = $this->getMockBuilder(ExternalMountValidator::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['validate'])
+			->getMock();
+		$this->mountValidator->method('validate')->willReturn(
+			['path' => 'Filinq', 'ok' => true, 'findings' => []]
+		);
+
 		$this->controller = new SetupController(
 			$this->createMock(IRequest::class),
 			$this->appConfig,
 			$this->logger,
-			$this->demoData
+			$this->demoData,
+			$this->mountValidator
 		);
 	}
 
@@ -94,7 +109,7 @@ class SetupControllerTest extends TestCase {
 	public function testTheChoiceIsPersisted(): void {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturn('demo');
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->mountValidator);
 		$this->demoData->method('listChoices')->willReturn([
 			['id' => 'none', 'label' => 'None', 'description' => '', 'objectCount' => 0, 'icon' => ''],
 			['id' => 'demo', 'label' => 'Example data', 'description' => '', 'objectCount' => 66, 'icon' => ''],
@@ -115,7 +130,7 @@ class SetupControllerTest extends TestCase {
 		// failure would surface one step later with no clue why.
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturn('atlantis');
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->mountValidator);
 		$this->demoData->method('listChoices')->willReturn([
 			['id' => 'none', 'label' => 'None', 'description' => '', 'objectCount' => 0, 'icon' => ''],
 		]);
@@ -134,7 +149,7 @@ class SetupControllerTest extends TestCase {
 		// choice either.
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturn(null);
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->mountValidator);
 
 		$this->appConfig->expects($this->never())->method('setValueString');
 
@@ -149,7 +164,7 @@ class SetupControllerTest extends TestCase {
 		// are, so an array must not reach `(string)` and become "Array".
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturn(['demo']);
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->mountValidator);
 		$this->demoData->method('listChoices')->willReturn([
 			['id' => 'demo', 'label' => 'Example data', 'description' => '', 'objectCount' => 1, 'icon' => ''],
 		]);
@@ -161,12 +176,97 @@ class SetupControllerTest extends TestCase {
 		$this->assertTrue($controller->saveConfig()->getData()['success']);
 	}
 
+	/**
+	 * The status document carries what the domain store cannot keep.
+	 *
+	 * 🔴 THIS IS A CALLER-SIDE ASSERTION ON PURPOSE. ExternalMountValidator's own
+	 * tests prove it reports a refusal; nothing in them can see whether anything
+	 * ever asks. Removing the `validate()` call from `domainStoreStep()` reddens
+	 * here with "Expectation failed for method name is \"validate\" ... method was
+	 * expected to be called 1 times, actually called 0 times", and the findings
+	 * assertion goes with it.
+	 *
+	 * @return void
+	 */
+	public function testStatusNamesWhatTheDomainStoreCannotKeep(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+		$this->demoData->method('listChoices')->willReturn([]);
+
+		$validator = $this->getMockBuilder(ExternalMountValidator::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['validate'])
+			->getMock();
+		$validator->expects($this->once())
+			->method('validate')
+			->willReturn(
+				[
+					'path' => 'Filinq',
+					'ok' => false,
+					'findings' => [
+						[
+							'requirement' => 'reconcile the folder to the domain',
+							'verdict' => 'cannot',
+							'message' => 'a group removed from the domain keeps its access',
+						],
+					],
+				]
+			);
+
+		$controller = new SetupController(
+			$this->createMock(IRequest::class),
+			$this->appConfig,
+			$this->logger,
+			$this->demoData,
+			$validator
+		);
+
+		$step = $controller->status()->getData()['steps']['domain-store'];
+
+		$this->assertFalse($step['ok']);
+		$this->assertSame('reconcile the folder to the domain', $step['findings'][0]['requirement']);
+
+		// The step is DONE whatever the findings say: an outstanding optional
+		// step reopens the wizard over every page, and an administrator may
+		// legitimately run on a store whose permissions live elsewhere.
+		$this->assertTrue($step['done']);
+	}
+
+	/**
+	 * A validator that throws reports a finding, and never takes setup down.
+	 *
+	 * @return void
+	 */
+	public function testAFailedStoreCheckIsAFindingNotAnOutage(): void {
+		$this->appConfig->method('getValueString')->willReturn('');
+		$this->demoData->method('listChoices')->willReturn([]);
+
+		$validator = $this->getMockBuilder(ExternalMountValidator::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['validate'])
+			->getMock();
+		$validator->method('validate')->willThrowException(new \RuntimeException('storage backend down'));
+
+		$controller = new SetupController(
+			$this->createMock(IRequest::class),
+			$this->appConfig,
+			$this->logger,
+			$this->demoData,
+			$validator
+		);
+
+		$step = $controller->status()->getData()['steps']['domain-store'];
+
+		// "The check did not run" and "the store is fine" must not look the same.
+		$this->assertFalse($step['ok']);
+		$this->assertStringContainsString('storage backend down', $step['findings'][0]['message']);
+	}
+
 	public function testAValueThatIsNotAStringIsRefused(): void {
 		// The body is whatever the browser posted. A nested array would
 		// otherwise reach `(string)` and raise a fatal.
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturn([['demo']]);
-		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData);
+		$controller = new SetupController($request, $this->appConfig, $this->logger, $this->demoData, $this->mountValidator);
 
 		$this->appConfig->expects($this->never())->method('setValueString');
 
