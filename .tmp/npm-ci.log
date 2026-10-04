@@ -1,0 +1,61 @@
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: stylelint-config-html@2.0.0
+npm warn Found: postcss-html@1.8.1
+npm warn node_modules/postcss-html
+npm warn   dev postcss-html@"^1.5.0" from the root project
+npm warn   1 more (stylelint-config-recommended-vue)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer postcss-html@"^2.0.0" from stylelint-config-html@2.0.0
+npm warn node_modules/stylelint-config-html
+npm warn   stylelint-config-html@">=1.0.0" from stylelint-config-recommended-vue@1.6.1
+npm warn   node_modules/stylelint-config-recommended-vue
+npm warn
+npm warn Conflicting peer dependency: postcss-html@2.0.0
+npm warn node_modules/postcss-html
+npm warn   peer postcss-html@"^2.0.0" from stylelint-config-html@2.0.0
+npm warn   node_modules/stylelint-config-html
+npm warn     stylelint-config-html@">=1.0.0" from stylelint-config-recommended-vue@1.6.1
+npm warn     node_modules/stylelint-config-recommended-vue
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'filinq@1.0.0',
+npm warn EBADENGINE   required: { node: '^22.14 || ^24 || >=26', npm: '^11.0.0' },
+npm warn EBADENGINE   current: { node: 'v22.22.0', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: '@nextcloud/files@4.0.0',
+npm warn EBADENGINE   required: { node: '^24.0.0' },
+npm warn EBADENGINE   current: { node: 'v22.22.0', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'jsdom@30.0.1',
+npm warn EBADENGINE   required: { node: '^22.22.2 || ^24.15.0 || >=26.0.0' },
+npm warn EBADENGINE   current: { node: 'v22.22.0', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+> filinq@1.0.0 prepare
+> git config core.hooksPath .githooks || true
+
+
+added 1665 packages, and audited 1666 packages in 40s
+
+379 packages are looking for funding
+  run `npm fund` for details
+
+12 vulnerabilities (6 low, 6 moderate)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+npm=0

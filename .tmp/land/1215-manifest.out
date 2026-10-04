@@ -1,0 +1,10 @@
+[validate-manifest] manifest: /home/rubenlinde/memcap-work/lq-lanes/fq/src/manifest.json
+[validate-manifest] manifest.version: 1.1.0
+[validate-manifest] pages: 33
+[validate-manifest] schema: /home/rubenlinde/memcap-work/lq-lanes/fq/node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json
+[validate-manifest] schema.version: 2.27.0
+[validate-manifest] Ajv validation: FAIL
+  - (root) must NOT have additional properties (keyword=additionalProperties)
+  - /setup/steps/1 must NOT have additional properties (keyword=additionalProperties)
+  - /pages/0/type must be equal to one of the allowed values (keyword=enum)
+  - /pages/25/type must be equal to one of the allowed values (keyword=enum)

@@ -1,0 +1,134 @@
+[hydra-gates] Delegating to conduction/hydra-gates at /home/rubenlinde/memcap-work/lq-lanes/fq/vendor/conduction/hydra-gates/hydra-gates
+[hydra-gates] findings logs: /tmp/hydra-gates.qovYUJmi
+[hydra-gates] gate package: 17811d397bbe5d7255c8d960df66bfb32941445c (git checkout at /home/rubenlinde/memcap-work/lq-lanes/fq/vendor/conduction/hydra-gates/hydra-gates/scripts)
+[hydra-gates] App dir: /home/rubenlinde/memcap-work/lq-lanes/fq (absolute)
+[hydra-gates] SCOPE-MODE: full
+[hydra-gates] File scope: the ENTIRE tracked tree — the default. A gate added or tightened after this code was written WILL surface its inherited debt here, and that is the point (hydra-gates/ADR-020-SUPERSEDED.md).
+[hydra-gates] Scope: full repo
+[hydra-gates] Delta base: none — no --base and no $HYDRA_GATE_BASE_REF.
+[hydra-gates] Gates 16, 29, 47, 48 and 61 ask what a CHANGE did and have no change to read.
+[hydra-gates] They will report NOT APPLICABLE by name, which is not a pass and does not count as one.
+[gate-1] spdx-headers: PASS
+[gate-2] forbidden-patterns: PASS
+[gate-3] stub-scan: PASS
+[gate-4] composer-audit: PASS
+[gate-5] route-auth: PASS
+[gate-6] orphan-auth: PASS
+[gate-7] no-admin-idor: PASS
+[gate-8] unsafe-auth-resolver: PASS
+[gate-9] semantic-auth: PASS
+[gate-10] initial-state: PASS
+[gate-11] admin-router: PASS
+[gate-12] nc-input-labels: PASS
+[gate-13] modal-isolation: PASS
+[gate-14] route-reachability: PASS
+[gate-15] dashboard-antipattern: PASS
+[gate-16] spec-coverage: NOT APPLICABLE — this run has NO delta base, and gate-16 is a DELTA gate — it asks which methods THIS CHANGE added or modified without an @spec anchor, which a checkout cannot answer. NO changed method was inspected and @spec traceability is UNVERIFIED by this run. This is NOT a pass, and it is not counted as one. Give it a base to judge (--base <ref> or HYDRA_GATE_BASE_REF=origin/beta); the file scope is independent and every state gate still read the whole tree.
+[gate-17] redundant-controller: PASS
+[gate-18] notification-dialect: PASS
+[gate-19] e2e-coverage: WARNING — 261 scenario(s) missing @e2e (advisory, non-blocking — see .github#477) — see /tmp/hydra-gates.qovYUJmi/hydra-gate-e2e-coverage.log
+[gate-20] or-objectservice-api: PASS
+[gate-21] conflict-markers: PASS
+[gate-22] manifest-validation: PASS
+[hydra-gates] gate-23 or-abstraction-anti-patterns: 0 rule(s) matched (see /tmp/hydra-gates.qovYUJmi/hydra-gate-or-abstraction-anti-patterns.log); WARN mode.
+[gate-23] or-abstraction-anti-patterns: PASS
+[gate-24] integration-parity: PASS
+[gate-25] contract-coverage: PASS
+[gate-26] visual-coverage: PASS
+[gate-27] no-phantom-cross-app-rpc: PASS
+[gate-28] license-triangle: PASS
+[gate-29] gitignore-then-commit: NOT APPLICABLE — this check is intrinsically diff-relative — it asks whether THIS change adds an ignore rule over files that are already tracked — and this run has NO delta base, so there is no set of newly-added rules to look up. Nothing was inspected and nothing could be, and no change to this repository could make a baseless run able to answer it. It runs on every PR, at any file scope.
+[hydra-gates] gate-30 public-monitoring: 4 monitoring endpoint(s) inspected of 4 name-matched candidate(s); 4 scrape target(s). See /tmp/hydra-gates.qovYUJmi/hydra-gate-public-monitoring-notes.log for every candidate this run did NOT judge, and why.
+[gate-30] public-monitoring: PASS
+[hydra-gates] gate-31 img-alt: 85 markup file(s) inspected, 0 unlabelled <img>.
+[gate-31] img-alt: PASS
+[hydra-gates] gate-32 semantic-controls: 85 markup file(s) inspected, 0 mouse-only click target.
+[gate-32] semantic-controls: PASS
+[gate-33] axe-core: NOT APPLICABLE — no tests/axe/report.json, and the caller did not set enable-axe — this repo has not opted into runtime accessibility enforcement. Runtime a11y (contrast / landmark / ARIA-validity / live-region) is therefore NOT enforced here, by a choice recorded in the caller's workflow rather than in this run. To enforce it, set `enable-axe: true` on ConductionNL/.github's quality.yml; this gate then becomes blocking and its absence becomes a failure.
+[gate-34] window-confirm: PASS
+[hydra-gates] gate-35 img-alt-empty-only: 85 markup file(s) inspected, 0 content image silenced with alt="".
+[gate-35] img-alt-empty-only: PASS
+[hydra-gates] gate-36 tabindex-positive: 135 file(s) inspected, 0 positive tabindex.
+[gate-36] tabindex-positive: PASS
+[gate-37] aria-hidden-focusable: PASS
+[gate-38] skip-link: PASS
+[gate-39] button-name: PASS
+[gate-40] form-label-association: PASS
+[gate-41] html-lang: PASS
+[gate-42] link-text-quality: PASS
+[gate-43] table-headers: PASS
+[gate-44] autocomplete-attr: PASS
+[gate-45] prefers-reduced-motion: PASS
+[gate-46] spec-anchor-existence: PASS
+[gate-47] security-change-has-tests: NOT APPLICABLE — this run has NO delta base, so there is no change set to classify. This gate compares a change's hunks against the tests it touched; with no base there is no such pair, and no change in this repository could create one. Give it a base (--base <ref> or HYDRA_GATE_BASE_REF) and it runs at any file scope.
+[gate-48] csrf-cochange: NOT APPLICABLE — this run has NO delta base, so there is no removal to detect. Whether a controller DROPPED @NoCSRFRequired is a property of a CHANGE SET, not of a checkout, and no change in this repository could make a baseless run able to answer it. Give it a base (--base <ref> or HYDRA_GATE_BASE_REF) and it runs at any file scope.
+[gate-49] controller-exception-translation: PASS
+[gate-50] security-config-fail-mode: PASS
+[gate-51] schema-property-titles: PASS
+[hydra-gates] gate-52 custom-widget-ratchet: the RATCHET half was NOT computed — the helper printed no base/head/delta counts, which it does only when it has a base ref to compare against. The JUSTIFICATION half (every custom kind:"widget" entry needs a `_note`) did run over 133 file(s). A PASS below covers that half only.
+[gate-52] custom-widget-ratchet: PASS
+[gate-53] effective-manifest-crossref: 1 WARN finding(s) (non-blocking) — see /tmp/hydra-gates.qovYUJmi/hydra-gate-effective-manifest-crossref.log
+[hydra-gates] gate-53 effective-manifest-crossref: the ORPHAN-PROMOTION half was NOT computed — it asks whether this CHANGE removed the last "component" reference to one of the 1 registry export(s) below, and this run has no delta base. Those WARNs stay advisory. Give the run a base (--base <ref> or HYDRA_GATE_BASE_REF) to have them judged.
+[gate-53] effective-manifest-crossref: PASS
+[gate-54] relation-dialect: PASS
+[gate-55] detail-page-discipline: PASS
+[gate-56] register-handler-resolution: PASS
+[gate-57] orphaned-write-capability: PASS
+[gate-58] e2e-networkidle: PASS
+[gate-59] unclosable-gate: PASS
+[gate-60] icon-vocabulary: PASS
+[gate-61] listener-work-placement: NOT APPLICABLE — this run computed NO diff (no delta base), and gate-61 is delta-scoped by design (ADR-078, it is about NEW debt) — so NO post-event registration was inspected and ADR-078 work placement is UNVERIFIED by this run. This is NOT a clean bill of health, and NO diff excluded anything: there was no diff. Re-measure with an explicit base (--base <ref> or HYDRA_GATE_BASE_REF=origin/beta). ADVISORY, and it decides nothing here: a whole-tree sweep of this same tree reaches 4 registration(s) carrying 0 finding(s), NONE of which this run judged — see /tmp/hydra-gates.qovYUJmi/hydra-gate-listener-work-placement.advisory.log. See /tmp/hydra-gates.qovYUJmi/hydra-gate-listener-work-placement.log.
+[gate-62] store-plane: PASS
+[gate-63] settings-surface: PASS
+[gate-64] apphost-autoload-prelude: PASS
+[gate-65] coding-standard-adoption: PASS
+[gate-66] openregister-dependency-shape: PASS
+[gate-67] openregister-contract-parity: NOT APPLICABLE — no lib/Contract/ — this repo does not own the OpenRegister contract, so it has nothing to keep in step.
+[gate-68] duplicate-index-pages: PASS
+[gate-104] reports-one-page: PASS
+[gate-107] at .: app-chrome: 5 of 5 declared chrome items present and correctly placed.
+[gate-107] app-chrome: PASS
+[gate-69] page-type-discipline: PASS
+[gate-82] public-endpoint-throttling: PASS
+[gate-84] npm-supply-chain-config: PASS
+[gate-93] composer-cooldown-config: PASS
+[gate-94] retired-git-host-metadata: PASS
+[gate-95] adr-number-collision: PASS
+[gate-96] manifest-copy-style: PASS
+[gate-102] manifest-l10n-coverage: PASS
+[gate-103] locale-duplication: PASS
+[gate-105] duplicate-page-refresh: PASS
+[gate-106] cross-app-schema-slug: PASS
+[gate-97] system-elevation-reachability: PASS
+[gate-100] setup-demo-data-first: NOT APPLICABLE — no delta base was resolved, so there is no changed-file set and no manifest was inspected. This gate judges what a change TOUCHES; with no base it has nothing to judge.
+[gate-101] demo-data-coverage: NOT APPLICABLE — no delta base was resolved, so there is no changed-file set and no descriptor was inspected. This gate judges what a change TOUCHES; with no base it has nothing to judge, and saying so is not the same as passing.
+[gate-109] seed-required-slugs: NOT APPLICABLE — this repo ships no tests/e2e/ci-seed.sh with a required-schema list, so NO slug was inspected. Saying so is not the same as passing.
+[gate-108] shipped-object-properties: NOT APPLICABLE — no delta base was resolved, so there is no changed-file set. This gate judges the objects and schemas a change TOUCHES; with no base it has nothing to judge, and saying so is not the same as passing. Give it a base (--base <ref> or HYDRA_GATE_BASE_REF) and it runs at any file scope.
+[gate-98] repair-step-registration: NOT APPLICABLE — no delta base was resolved, so there is no changed-file set to read and no repair-step registration was inspected. This gate judges what a change ADDS; with no base it has nothing to judge, and saying so is not the same as passing.
+[gate-110] migration-version-bump: NOT APPLICABLE — no delta base was resolved, so there is no merge-base version to compare against. This gate judges what a change ADDS; with no base it has nothing to judge, and saying so is not the same as passing. Give it a base (--base <ref> or HYDRA_GATE_BASE_REF) and it runs at any file scope.
+[gate-70] walkthrough-flows-stop: PASS
+
+[gate-83] contract-surface-shift: NOT APPLICABLE — no lib/Contract/ — this repo publishes no contract interface, so it exposes no method surface whose magic-versus-declared shape consumers could have doubled.
+[hydra-gates] COVERAGE: 76 of 90 declared gates reported a result (14 not applicable to this repo/diff; 76 of 76 applicable gates ran).
+[hydra-gates] NOT APPLICABLE — subject matter absent from this repo or this diff.
+[hydra-gates] These do NOT count against coverage. Each stated its own reason above:
+[hydra-gates]   gate-16 spec-coverage
+[hydra-gates]   gate-29 gitignore-then-commit
+[hydra-gates]   gate-33 axe-core
+[hydra-gates]   gate-47 security-change-has-tests
+[hydra-gates]   gate-48 csrf-cochange
+[hydra-gates]   gate-61 listener-work-placement
+[hydra-gates]   gate-67 openregister-contract-parity
+[hydra-gates]   gate-83 contract-surface-shift
+[hydra-gates]   gate-98 repair-step-registration
+[hydra-gates]   gate-100 setup-demo-data-first
+[hydra-gates]   gate-101 demo-data-coverage
+[hydra-gates]   gate-108 shipped-object-properties
+[hydra-gates]   gate-109 seed-required-slugs
+[hydra-gates]   gate-110 migration-version-bump
+[hydra-gates] 1 gate(s) reported ADVISORY findings — real, measured, and NOT blocking this run.
+[hydra-gates] They are named WARNING above, each with its count and its tracking issue.
+[hydra-gates] A green verdict below means 'nothing BLOCKING failed', not 'nothing was found'.
+[hydra-gates] ALL 76 APPLICABLE GATES GREEN — and all 76 of them ran.
+[hydra-gates] The other 14 are not applicable to this repo/diff and are named above.
+[hydra-gates] This is NOT 'all 90 gates green' — it is 'nothing applicable was left unchecked'.

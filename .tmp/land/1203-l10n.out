@@ -1,0 +1,2 @@
+l10n-check [filinq]: scanned 129 files, 792 distinct literal keys used, 1386 keys in en.json
+l10n-check: OK — every used translation key is present in l10n/en.json

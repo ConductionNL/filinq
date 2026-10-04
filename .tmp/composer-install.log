@@ -1,0 +1,559 @@
+Installing dependencies from lock file (including require-dev)
+Verifying lock file contents can be installed on current platform.
+Package operations: 118 installs, 0 updates, 0 removals
+As there is no 'unzip' nor '7z' command installed zip files are being unpacked using the PHP zip extension.
+This may cause invalid reports of corrupted archives. Besides, any UNIX permissions (e.g. executable) defined in the archives will be lost.
+Installing 'unzip' or '7z' (21.01+) may remediate them.
+    0 [>---------------------------]    0 [->--------------------------]
+  - Installing bamarni/composer-bin-plugin (1.9.1): Extracting archive
+  - Installing package-url/packageurl-php (1.1.2): Extracting archive
+  - Installing opis/string (2.1.0): Extracting archive
+  - Installing opis/uri (1.1.0): Extracting archive
+  - Installing opis/json-schema (2.6.0): Extracting archive
+  - Installing cyclonedx/cyclonedx-library (v4.1.0): Extracting archive
+  - Installing composer/spdx-licenses (1.6.0): Extracting archive
+    0 [>---------------------------]    0 [->--------------------------]
+  - Installing cyclonedx/cyclonedx-php-composer (v6.2.0): Extracting archive
+  - Installing squizlabs/php_codesniffer (4.0.4): Extracting archive
+  - Installing dealerdirect/phpcodesniffer-composer-installer (v1.2.1): Extracting archive
+  - Installing adbario/php-dot-notation (3.5.0): Extracting archive
+  - Installing composer/pcre (3.3.2): Extracting archive
+  - Installing php-cs-fixer/shim (v3.95.18): Extracting archive
+  - Installing kubawerlos/php-cs-fixer-custom-fixers (v3.37.2): Extracting archive
+  - Installing nextcloud/coding-standard (v1.5.0): Extracting archive
+  - Installing conduction/coding-standard (v1.0.0): Extracting archive
+  - Installing conduction/hydra-gates (v1.16.1): Extracting archive
+  - Installing symfony/finder (v7.4.14): Extracting archive
+  - Installing psr/event-dispatcher (1.0.0): Extracting archive
+  - Installing symfony/event-dispatcher-contracts (v3.7.1): Extracting archive
+  - Installing symfony/event-dispatcher (v7.4.15): Extracting archive
+  - Installing symfony/polyfill-mbstring (v1.38.2): Extracting archive
+  - Installing symfony/polyfill-intl-normalizer (v1.38.0): Extracting archive
+  - Installing symfony/polyfill-intl-grapheme (v1.41.0): Extracting archive
+  - Installing symfony/polyfill-ctype (v1.37.0): Extracting archive
+  - Installing symfony/deprecation-contracts (v3.7.1): Extracting archive
+  - Installing symfony/string (v7.4.15): Extracting archive
+  - Installing psr/container (2.0.2): Extracting archive
+  - Installing symfony/service-contracts (v3.7.1): Extracting archive
+  - Installing symfony/console (v7.4.16): Extracting archive
+  - Installing psr/log (3.0.2): Extracting archive
+  - Installing dflydev/dot-access-data (v3.0.3): Extracting archive
+  - Installing consolidation/output-formatters (4.7.1): Extracting archive
+  - Installing consolidation/annotated-command (4.10.5): Extracting archive
+  - Installing grasmash/expander (3.0.1): Extracting archive
+  - Installing consolidation/config (3.2.1): Extracting archive
+  - Installing consolidation/log (3.1.2): Extracting archive
+  - Installing twig/twig (v3.28.0): Extracting archive
+  - Installing symfony/yaml (v6.4.42): Extracting archive
+  - Installing symfony/process (v7.4.13): Extracting archive
+  - Installing symfony/filesystem (v7.4.15): Extracting archive
+  - Installing symfony/polyfill-php81 (v1.38.1): Extracting archive
+  - Installing phootwork/lang (v3.2.3): Extracting archive
+  - Installing phootwork/collection (v3.2.3): Extracting archive
+  - Installing phpowermove/docblock (v4.0): Extracting archive
+  - Installing league/container (4.2.5): Extracting archive
+  - Installing consolidation/robo (5.1.1): Extracting archive
+  - Installing edgedesign/phpqa (v1.27.2): Extracting archive
+  - Installing setasign/fpdi (v2.6.8): Extracting archive
+  - Installing psr/http-message (2.0): Extracting archive
+  - Installing paragonie/random_compat (v9.99.100): Extracting archive
+  - Installing myclabs/deep-copy (1.13.4): Extracting archive
+  - Installing mpdf/psr-log-aware-trait (v3.0.0): Extracting archive
+  - Installing mpdf/psr-http-message-shim (v2.0.1): Extracting archive
+  - Installing mpdf/mpdf (v8.3.1): Extracting archive
+  - Installing symfony/polyfill-php85 (v1.41.0): Extracting archive
+  - Installing symfony/polyfill-php84 (v1.38.1): Extracting archive
+  - Installing psr/http-client (1.0.3): Extracting archive
+  - Installing psr/clock (1.0.0): Extracting archive
+  - Installing nextcloud/ocp (dev-master f04ec4a): Extracting archive
+  - Installing phpcsstandards/phpcsutils (1.2.3): Extracting archive
+  - Installing phpcsstandards/phpcsextra (1.5.1): Extracting archive
+  - Installing webmozart/assert (2.4.1): Extracting archive
+  - Installing phpstan/phpdoc-parser (2.3.3): Extracting archive
+  - Installing phpdocumentor/reflection-common (2.2.0): Extracting archive
+  - Installing doctrine/deprecations (1.1.6): Extracting archive
+  - Installing phpdocumentor/type-resolver (1.12.0): Extracting archive
+  - Installing phpdocumentor/reflection-docblock (5.6.7): Extracting archive
+  - Installing symfony/var-exporter (v7.4.14): Extracting archive
+  - Installing symfony/dependency-injection (v7.4.14): Extracting archive
+  - Installing symfony/config (v7.4.14): Extracting archive
+  - Installing pdepend/pdepend (2.16.2): Extracting archive
+  - Installing composer/xdebug-handler (3.0.5): Extracting archive
+  - Installing phpmd/phpmd (2.15.0): Extracting archive
+  - Installing nikic/php-parser (v4.19.5): Extracting archive
+  - Installing phpmetrics/phpmetrics (v2.11.0): Extracting archive
+  - Installing phpoffice/math (0.3.0): Extracting archive
+  - Installing phpoffice/phpword (1.4.0): Extracting archive
+  - Installing phpstan/phpstan (2.2.13): Extracting archive
+  - Installing sebastian/version (4.0.1): Extracting archive
+  - Installing sebastian/type (4.0.0): Extracting archive
+  - Installing sebastian/recursion-context (5.0.1): Extracting archive
+  - Installing sebastian/object-reflector (3.0.0): Extracting archive
+  - Installing sebastian/object-enumerator (5.0.0): Extracting archive
+  - Installing sebastian/global-state (6.0.2): Extracting archive
+  - Installing sebastian/exporter (5.1.4): Extracting archive
+  - Installing sebastian/environment (6.1.0): Extracting archive
+  - Installing sebastian/diff (5.1.1): Extracting archive
+  - Installing sebastian/comparator (5.0.5): Extracting archive
+  - Installing sebastian/code-unit (2.0.0): Extracting archive
+  - Installing sebastian/cli-parser (2.0.1): Extracting archive
+  - Installing phpunit/php-timer (6.0.0): Extracting archive
+  - Installing phpunit/php-text-template (3.0.1): Extracting archive
+  - Installing phpunit/php-invoker (4.0.0): Extracting archive
+  - Installing phpunit/php-file-iterator (4.1.0): Extracting archive
+  - Installing theseer/tokenizer (1.3.1): Extracting archive
+  - Installing sebastian/lines-of-code (2.0.2): Extracting archive
+  - Installing sebastian/complexity (3.2.0): Extracting archive
+  - Installing sebastian/code-unit-reverse-lookup (3.0.0): Extracting archive
+  - Installing phpunit/php-code-coverage (10.1.16): Extracting archive
+  - Installing phar-io/version (3.2.1): Extracting archive
+  - Installing phar-io/manifest (2.0.4): Extracting archive
+  - Installing phpunit/phpunit (10.5.64): Extracting archive
+  - Installing roave/security-advisories (dev-latest 3c9ad68)
+  - Installing setasign/fpdf (1.9.0): Extracting archive
+  - Installing symfony/polyfill-uuid (v1.37.0): Extracting archive
+  - Installing symfony/uid (v6.4.32): Extracting archive
+  - Installing thiagoalessio/tesseract_ocr (2.13.0): Extracting archive
+  - Installing spatie/array-to-xml (3.4.4): Extracting archive
+  - Installing netresearch/jsonmapper (v4.5.0): Extracting archive
+  - Installing fidry/cpu-core-counter (1.3.0): Extracting archive
+  - Installing felixfbecker/language-server-protocol (v1.5.3): Extracting archive
+  - Installing felixfbecker/advanced-json-rpc (v3.2.1): Extracting archive
+  - Installing dnoegel/php-xdg-base-dir (v0.1.1): Extracting archive
+  - Installing composer/semver (3.4.4): Extracting archive
+  - Installing amphp/amp (v2.6.5): Extracting archive
+  - Installing amphp/byte-stream (v1.8.2): Extracting archive
+  - Installing vimeo/psalm (5.26.1): Extracting archive
+  0/97 [>---------------------------]   0%
+ 10/97 [==>-------------------------]  10%
+ 40/97 [===========>----------------]  41%
+ 60/97 [=================>----------]  61%
+ 80/97 [=======================>----]  82%
+ 97/97 [============================] 100%
+Generating optimized autoload files
+Class OCA\Filinq\Tests\Unit\BackgroundJob\FolderExtractionJobTest located in ./tests/unit/BackgroundJob/FolderExtractionJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\BackgroundJob\BatchDocumentJobTest located in ./tests/unit/BackgroundJob/BatchDocumentJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\BackgroundJob\DomainFolderReconciliationJobTest located in ./tests/unit/BackgroundJob/DomainFolderReconciliationJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\BackgroundJob\UploadFragmentReaperJobTest located in ./tests/unit/BackgroundJob/UploadFragmentReaperJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\BackgroundJob\SigningExpirationJobTest located in ./tests/unit/BackgroundJob/SigningExpirationJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\BackgroundJob\BatchCorrespondenceJobTest located in ./tests/unit/BackgroundJob/BatchCorrespondenceJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\BackgroundJob\BatchPrintJobTest located in ./tests/unit/BackgroundJob/BatchPrintJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\BatchAnonymizationControllerOutputFormatTest located in ./tests/unit/Controller/BatchAnonymizationControllerOutputFormatTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PolicyControllerTest located in ./tests/unit/Controller/PolicyControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\AnonymizationControllerTest located in ./tests/unit/Controller/AnonymizationControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\AnonymizationControllerPublicationClearanceTest located in ./tests/unit/Controller/AnonymizationControllerPublicationClearanceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\CustomDictionaryControllerTest located in ./tests/unit/Controller/CustomDictionaryControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\SigningFolderControllerTest located in ./tests/unit/Controller/SigningFolderControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PrintJobControllerTest located in ./tests/unit/Controller/PrintJobControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\MetadataControllerTest located in ./tests/unit/Controller/MetadataControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\Pdfa3ConversionControllerTest located in ./tests/unit/Controller/Pdfa3ConversionControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\DashboardControllerTest located in ./tests/unit/Controller/DashboardControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\RedactionOutputDownloadPathTest located in ./tests/unit/Controller/RedactionOutputDownloadPathTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\EmlPreviewControllerTest located in ./tests/unit/Controller/EmlPreviewControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PdfControllerTest located in ./tests/unit/Controller/PdfControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\DossierManagementControllerTest located in ./tests/unit/Controller/DossierManagementControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\TemplateRequestHandlerTest located in ./tests/unit/Controller/TemplateRequestHandlerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\BatchAnonymizationControllerProfileAuthTest located in ./tests/unit/Controller/BatchAnonymizationControllerProfileAuthTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\RedactionOutputControllerTest located in ./tests/unit/Controller/RedactionOutputControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\BatchAnonymizationControllerSummaryFlagTest located in ./tests/unit/Controller/BatchAnonymizationControllerSummaryFlagTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\TemplateVersionsControllerTest located in ./tests/unit/Controller/TemplateVersionsControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\DossierControllerTest located in ./tests/unit/Controller/DossierControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\IntakeControllerContractTest located in ./tests/unit/Controller/IntakeControllerContractTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\TemplatesControllerTest located in ./tests/unit/Controller/TemplatesControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PreferencesControllerTest located in ./tests/unit/Controller/PreferencesControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\AnonymizationControllerContractTest located in ./tests/unit/Controller/AnonymizationControllerContractTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\AnonymiserWarningControllerTest located in ./tests/unit/Controller/AnonymiserWarningControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\SettingsControllerTest located in ./tests/unit/Controller/SettingsControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\BatchAnonymizationControllerContractTest located in ./tests/unit/Controller/BatchAnonymizationControllerContractTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PrintControllerTest located in ./tests/unit/Controller/PrintControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\AnonymizationControllerOutputFormatTest located in ./tests/unit/Controller/AnonymizationControllerOutputFormatTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\VersionControllerTest located in ./tests/unit/Controller/VersionControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\ConsentControllerTest located in ./tests/unit/Controller/ConsentControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\ReportRenderControllerTest located in ./tests/unit/Controller/ReportRenderControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PostRegisterControllerTest located in ./tests/unit/Controller/PostRegisterControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\BatchAnonymizationControllerFolderTest located in ./tests/unit/Controller/BatchAnonymizationControllerFolderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\MergePollAnswersTruthfullyTest located in ./tests/unit/Controller/MergePollAnswersTruthfullyTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PolicyControllerDeleteTest located in ./tests/unit/Controller/PolicyControllerDeleteTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\ExtractionControllerTest located in ./tests/unit/Controller/ExtractionControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\ScanIntakeControllerTest located in ./tests/unit/Controller/ScanIntakeControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\SigningControllerTest located in ./tests/unit/Controller/SigningControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\SigningControllerAuditTest located in ./tests/unit/Controller/SigningControllerAuditTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\CorrespondenceControllerTest located in ./tests/unit/Controller/CorrespondenceControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\PortalSigningReceiverControllerTest located in ./tests/unit/Controller/PortalSigningReceiverControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\SetupControllerTest located in ./tests/unit/Controller/SetupControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\TemplatesControllerLockingTest located in ./tests/unit/Controller/TemplatesControllerLockingTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\CaseDocumentsControllerContractTest located in ./tests/unit/Controller/CaseDocumentsControllerContractTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\GlAccountSuggestionControllerTest located in ./tests/unit/Controller/GlAccountSuggestionControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\DocumentControllerTest located in ./tests/unit/Controller/DocumentControllerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\BatchAnonymizationControllerBasesTest located in ./tests/unit/Controller/BatchAnonymizationControllerBasesTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Controller\DocumentProductionControllerContractTest located in ./tests/unit/Controller/DocumentProductionControllerContractTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Middleware\LanguageNegotiationMiddlewareTest located in ./tests/unit/Middleware/LanguageNegotiationMiddlewareTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\UserPreferenceStore located in ./tests/unit/Repair/MigrateUserPreferencesTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\MigrateUserPreferencesTest located in ./tests/unit/Repair/MigrateUserPreferencesTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\AppConfigStore located in ./tests/unit/Repair/MigrateAppConfigKeysTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\MigrateAppConfigKeysTest located in ./tests/unit/Repair/MigrateAppConfigKeysTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\ConsolidateRegistersDecisionsTest located in ./tests/unit/Repair/ConsolidateRegistersDecisionsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\MigrateSchemaApplicationIdTest located in ./tests/unit/Repair/MigrateSchemaApplicationIdTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\ConsolidateRegistersTest located in ./tests/unit/Repair/ConsolidateRegistersTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Repair\ShardDatabase located in ./tests/unit/Repair/ConsolidateRegistersTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Event\GlAccountSuggestedEventTest located in ./tests/unit/Event/GlAccountSuggestedEventTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Event\SigningConcludedEventTest located in ./tests/unit/Event/SigningConcludedEventTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Event\FinancialExtractionCompletedEventTest located in ./tests/unit/Event/FinancialExtractionCompletedEventTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Event\SigningEventsTest located in ./tests/unit/Event/SigningEventsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Flow\FilinqFlowNodeListenerTest located in ./tests/unit/Flow/FilinqFlowNodeListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Flow\GenerateDocumentNodeTest located in ./tests/unit/Flow/GenerateDocumentNodeTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\AppInfo\RouteNameUniquenessTest located in ./tests/unit/AppInfo/RouteNameUniquenessTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\AppInfo\BootstrapOrderIndependenceTest located in ./tests/unit/AppInfo/BootstrapOrderIndependenceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\AppInfo\DocumentGenerationWiringTest located in ./tests/unit/AppInfo/DocumentGenerationWiringTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\AppInfo\RetiredApprovalSurfaceTest located in ./tests/unit/AppInfo/RetiredApprovalSurfaceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ScanBatchServiceTest located in ./tests/unit/Service/ScanBatchServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchStateServiceKeepAliveTest located in ./tests/unit/Service/BatchStateServiceKeepAliveTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentDomainServiceTest located in ./tests/unit/Service/DocumentDomainServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Pdfa3ConversionServiceTest located in ./tests/unit/Service/Pdfa3ConversionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchExtractionServiceTest located in ./tests/unit/Service/BatchExtractionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\CorrespondenceServiceTest located in ./tests/unit/Service/CorrespondenceServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Signing\SigningProviderFactoryTest located in ./tests/unit/Service/Signing/SigningProviderFactoryTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Signing\ValidSignProviderTest located in ./tests/unit/Service/Signing/ValidSignProviderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Signing\NativeSigningProviderTest located in ./tests/unit/Service/Signing/NativeSigningProviderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Signing\SigningCancellationServiceTest located in ./tests/unit/Service/Signing/SigningCancellationServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Signing\GuardianConsentGuardTest located in ./tests/unit/Service/Signing/GuardianConsentGuardTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\GlAccountSuggestionServiceTest located in ./tests/unit/Service/GlAccountSuggestionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SlugContractReadPathTest located in ./tests/unit/Service/SlugContractReadPathTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ExternalMountValidatorTest located in ./tests/unit/Service/ExternalMountValidatorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FinalDocumentFailureMapperTest located in ./tests/unit/Service/FinalDocumentFailureMapperTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SigningFolderServiceTest located in ./tests/unit/Service/SigningFolderServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ConsentServiceTest located in ./tests/unit/Service/ConsentServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FolderBatchServiceTest located in ./tests/unit/Service/FolderBatchServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\UploadPolicyServiceTest located in ./tests/unit/Service/UploadPolicyServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\CustomDictionaryServiceTest located in ./tests/unit/Service/CustomDictionaryServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FinancialExtractionServiceTest located in ./tests/unit/Service/FinancialExtractionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DomainFolderServiceTest located in ./tests/unit/Service/DomainFolderServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SigningAuditServiceTest located in ./tests/unit/Service/SigningAuditServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentValidationServiceTest located in ./tests/unit/Service/DocumentValidationServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FinalDocumentServiceTest located in ./tests/unit/Service/FinalDocumentServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SigningMandateServiceTest located in ./tests/unit/Service/SigningMandateServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\LanguageClassifierTest located in ./tests/unit/Service/LanguageClassifierTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\EmlPdfAssemblyServiceTest located in ./tests/unit/Service/EmlPdfAssemblyServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\MetadataServiceTest located in ./tests/unit/Service/MetadataServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DomainFolderReconcilerTest located in ./tests/unit/Service/DomainFolderReconcilerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentReviewServiceTest located in ./tests/unit/Service/DocumentReviewServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SigningServiceGuardianConsentTest located in ./tests/unit/Service/SigningServiceGuardianConsentTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ReportRenderServiceTest located in ./tests/unit/Service/ReportRenderServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PdfServiceTest located in ./tests/unit/Service/PdfServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ConsentScopeValidatorTest located in ./tests/unit/Service/ConsentScopeValidatorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchStateServicePersistenceTest located in ./tests/unit/Service/BatchStateServicePersistenceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DomainDirectoryTest located in ./tests/unit/Service/DomainDirectoryTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FinalDocumentWritePathsTest located in ./tests/unit/Service/FinalDocumentWritePathsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PeriodicDocumentServiceTest located in ./tests/unit/Service/PeriodicDocumentServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchReportServiceTest located in ./tests/unit/Service/BatchReportServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\AnonymizationServiceReviewGateTest located in ./tests/unit/Service/Redaction/AnonymizationServiceReviewGateTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\RedactionIrreversibilityVerifierTest located in ./tests/unit/Service/Redaction/RedactionIrreversibilityVerifierTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\RedactionVerdictRecorderTest located in ./tests/unit/Service/Redaction/RedactionVerdictRecorderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\DownloadAgreementGateTest located in ./tests/unit/Service/Redaction/DownloadAgreementGateTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\RedactionMessagesAreTranslatedTest located in ./tests/unit/Service/Redaction/RedactionMessagesAreTranslatedTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\RedactionReviewGateTest located in ./tests/unit/Service/Redaction/RedactionReviewGateTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\RedactionOutputGuardTest located in ./tests/unit/Service/Redaction/RedactionOutputGuardTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Redaction\PublicationListComposerTest located in ./tests/unit/Service/Redaction/PublicationListComposerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PdfConversionServiceTest located in ./tests/unit/Service/PdfConversionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationResultParserTest located in ./tests/unit/Service/AnonymizationResultParserTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DataResolverServiceTest located in ./tests/unit/Service/DataResolverServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FinalDocumentUnfreezeServiceTest located in ./tests/unit/Service/FinalDocumentUnfreezeServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\OpenRegisterAvailabilityServiceTest located in ./tests/unit/Service/OpenRegisterAvailabilityServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentGenerationRequestServiceTest located in ./tests/unit/Service/DocumentGenerationRequestServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\PackageMetadataCodecTest located in ./tests/unit/Service/Editing/PackageMetadataCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\SpreadsheetCodecTest located in ./tests/unit/Service/Editing/SpreadsheetCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\EditSessionAgentSurfacesTest located in ./tests/unit/Service/Editing/EditSessionAgentSurfacesTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\XlsxSpreadsheetCodecTest located in ./tests/unit/Service/Editing/XlsxSpreadsheetCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\BlockStyleCodecTest located in ./tests/unit/Service/Editing/BlockStyleCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\DocumentGuardTest located in ./tests/unit/Service/Editing/DocumentGuardTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\PackagePartIoTest located in ./tests/unit/Service/Editing/PackagePartIoTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\EditSessionServiceTest located in ./tests/unit/Service/Editing/EditSessionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\PptxPresentationCodecTest located in ./tests/unit/Service/Editing/PptxPresentationCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\AgentArtefactMarkerTest located in ./tests/unit/Service/Editing/AgentArtefactMarkerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\RoundTripFidelityTest located in ./tests/unit/Service/Editing/RoundTripFidelityTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\BlockStyleCodecsTest located in ./tests/unit/Service/Editing/BlockStyleCodecsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\OdpPresentationCodecTest located in ./tests/unit/Service/Editing/OdpPresentationCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\DocumentGuardFormatTest located in ./tests/unit/Service/Editing/DocumentGuardFormatTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\OdsSpreadsheetCodecTest located in ./tests/unit/Service/Editing/OdsSpreadsheetCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\XmlBlockScannerTest located in ./tests/unit/Service/Editing/XmlBlockScannerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\PackageCodecTest located in ./tests/unit/Service/Editing/PackageCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\DocumentAgentServiceTest located in ./tests/unit/Service/Editing/DocumentAgentServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\ChartCodecTest located in ./tests/unit/Service/Editing/ChartCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\PresentationCodecTest located in ./tests/unit/Service/Editing/PresentationCodecTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Editing\GuardedWriterTest located in ./tests/unit/Service/Editing/GuardedWriterTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ConsentNotesHelperTest located in ./tests/unit/Service/ConsentNotesHelperTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationLinkServiceTest located in ./tests/unit/Service/AnonymizationLinkServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationServiceOutputFormatTest located in ./tests/unit/Service/AnonymizationServiceOutputFormatTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PolicyRuleNormaliserTranslatableTest located in ./tests/unit/Service/PolicyRuleNormaliserTranslatableTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SigningServiceMandateGuardTest located in ./tests/unit/Service/SigningServiceMandateGuardTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Extraction\KvkExtractorTest located in ./tests/unit/Service/Extraction/KvkExtractorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Extraction\AmountExtractorTest located in ./tests/unit/Service/Extraction/AmountExtractorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Extraction\DateExtractorTest located in ./tests/unit/Service/Extraction/DateExtractorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Extraction\TotalsReconcilerTest located in ./tests/unit/Service/Extraction/TotalsReconcilerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Extraction\VatIdExtractorTest located in ./tests/unit/Service/Extraction/VatIdExtractorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Extraction\IbanExtractorTest located in ./tests/unit/Service/Extraction/IbanExtractorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ListReferenceResolverTest located in ./tests/unit/Service/ListReferenceResolverTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\OpenRegisterResolverTest located in ./tests/unit/Service/OpenRegisterResolverTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\LegalBasesSummaryServiceTest located in ./tests/unit/Service/LegalBasesSummaryServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\TemplateServiceTest located in ./tests/unit/Service/TemplateServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\LibreOfficeHeadlessBackendTest located in ./tests/unit/Service/Conversion/LibreOfficeHeadlessBackendTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\OfficeAppBackendTest located in ./tests/unit/Service/Conversion/OfficeAppBackendTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\OutputLayoutResolverTest located in ./tests/unit/Service/Conversion/OutputLayoutResolverTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\PhpWordBackendTest located in ./tests/unit/Service/Conversion/PhpWordBackendTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\MpdfBackendTest located in ./tests/unit/Service/Conversion/MpdfBackendTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\FakeOrFileService located in ./tests/unit/Service/Conversion/EmlBackendTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\FakeOrFileServiceWithoutApi located in ./tests/unit/Service/Conversion/EmlBackendTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Conversion\EmlBackendTest located in ./tests/unit/Service/Conversion/EmlBackendTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\LegalBasisProposalServiceTest located in ./tests/unit/Service/LegalBasisProposalServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentTextExtractorTest located in ./tests/unit/Service/DocumentTextExtractorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationServiceTest located in ./tests/unit/Service/AnonymizationServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentVersionServiceTest located in ./tests/unit/Service/DocumentVersionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ConsentUpdateHandlerTest located in ./tests/unit/Service/ConsentUpdateHandlerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymiserBackendStateClientTest located in ./tests/unit/Service/AnonymiserBackendStateClientTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationServiceSingleFileRegressionTest located in ./tests/unit/Service/AnonymizationServiceSingleFileRegressionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\TemplateSlugResolverTest located in ./tests/unit/Service/TemplateSlugResolverTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\WooProfileServiceTest located in ./tests/unit/Service/WooProfileServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\IntakeRoutingServiceTest located in ./tests/unit/Service/IntakeRoutingServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BasesResolverServiceTest located in ./tests/unit/Service/BasesResolverServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\IntakeAuthorizationGateTest located in ./tests/unit/Service/IntakeAuthorizationGateTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DemoDataServiceTest located in ./tests/unit/Service/DemoDataServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentServiceTest located in ./tests/unit/Service/DocumentServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PolicyRetroactiveServiceTest located in ./tests/unit/Service/PolicyRetroactiveServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchAnonymizeServiceTest located in ./tests/unit/Service/BatchAnonymizeServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchStateRepositoryTest located in ./tests/unit/Service/BatchStateRepositoryTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BuildsAnonymizationService located in ./tests/unit/Service/BuildsAnonymizationService.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Intake\ScanFolderIntakeFeederTest located in ./tests/unit/Service/Intake/ScanFolderIntakeFeederTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Intake\IntakeReadingProgressTest located in ./tests/unit/Service/Intake/IntakeReadingProgressTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Intake\IntakeNotificationReachTest located in ./tests/unit/Service/Intake/IntakeNotificationReachTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FileListingServiceTest located in ./tests/unit/Service/FileListingServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\TextAnalysisServiceTest located in ./tests/unit/Service/TextAnalysisServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\TemplatePreviewServiceTest located in ./tests/unit/Service/TemplatePreviewServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\CustomDictionaryMatchServiceTest located in ./tests/unit/Service/CustomDictionaryMatchServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SeparatorSheetServiceTest located in ./tests/unit/Service/SeparatorSheetServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SubjectErasure\SubjectErasureRulesTest located in ./tests/unit/Service/SubjectErasure/SubjectErasureRulesTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SubjectErasure\SubjectErasurePreviewTest located in ./tests/unit/Service/SubjectErasure/SubjectErasurePreviewTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SubjectErasure\SubjectErasureJobTest located in ./tests/unit/Service/SubjectErasure/SubjectErasureJobTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchAnonymizeServiceOutputLayoutTest located in ./tests/unit/Service/BatchAnonymizeServiceOutputLayoutTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationServiceCustomDictionaryTest located in ./tests/unit/Service/AnonymizationServiceCustomDictionaryTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\TemplateLanguageServiceTest located in ./tests/unit/Service/TemplateLanguageServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PartySuggestionServiceTest located in ./tests/unit/Service/PartySuggestionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PrintJobServiceTest located in ./tests/unit/Service/PrintJobServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\TemplateVersionServiceTest located in ./tests/unit/Service/TemplateVersionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FileUploadServiceTest located in ./tests/unit/Service/FileUploadServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PageLayoutServiceTest located in ./tests/unit/Service/PageLayoutServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PlainLanguageRenditionServiceTest located in ./tests/unit/Service/PlainLanguageRenditionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\CaseArchiveServiceTest located in ./tests/unit/Service/CaseArchiveServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DossierManagementServiceTest located in ./tests/unit/Service/DossierManagementServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\IntakeServiceTest located in ./tests/unit/Service/IntakeServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\RegisterDiscoveryServiceTest located in ./tests/unit/Service/RegisterDiscoveryServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchUploadServiceTest located in ./tests/unit/Service/BatchUploadServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ConfidentialityLabelServiceTest located in ./tests/unit/Service/ConfidentialityLabelServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentFinalityRuleServiceTest located in ./tests/unit/Service/DocumentFinalityRuleServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationServiceProhibitionTest located in ./tests/unit/Service/AnonymizationServiceProhibitionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FakePolicyMatchService located in ./tests/unit/Service/AnonymizationServiceProhibitionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\EntityConsolidationServiceTest located in ./tests/unit/Service/EntityConsolidationServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SigningServiceTest located in ./tests/unit/Service/SigningServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\UploadFragmentReaperTest located in ./tests/unit/Service/UploadFragmentReaperTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\NullCacheFake located in ./tests/unit/Service/BatchStateTestDoubles.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\InMemoryCacheFake located in ./tests/unit/Service/BatchStateTestDoubles.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\StoredObjectFake located in ./tests/unit/Service/BatchStateTestDoubles.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\InMemoryObjectServiceFake located in ./tests/unit/Service/BatchStateTestDoubles.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FixedResultObjectServiceFake located in ./tests/unit/Service/BatchStateTestDoubles.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\RefusingObjectServiceFake located in ./tests/unit/Service/BatchStateTestDoubles.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\RecordingLoggerFake located in ./tests/unit/Service/BatchStateTestDoubles.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\EntityConsolidationProhibitionTest located in ./tests/unit/Service/EntityConsolidationProhibitionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PolicyCrudServiceDeleteTest located in ./tests/unit/Service/PolicyCrudServiceDeleteTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Charts\ChartSvgRendererTest located in ./tests/unit/Service/Charts/ChartSvgRendererTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Charts\TableHtmlRendererTest located in ./tests/unit/Service/Charts/TableHtmlRendererTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationServicePublicationClearanceTest located in ./tests/unit/Service/AnonymizationServicePublicationClearanceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PolicyMatchServiceTest located in ./tests/unit/Service/PolicyMatchServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\IntakeDefaultRuleServiceTest located in ./tests/unit/Service/IntakeDefaultRuleServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\IntakeDetachmentServiceTest located in ./tests/unit/Service/IntakeDetachmentServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentMergeServiceTest located in ./tests/unit/Service/DocumentMergeServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentStorageServiceTest located in ./tests/unit/Service/DocumentStorageServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DossierObjectReaderTest located in ./tests/unit/Service/DossierObjectReaderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FakePreviewOrFileService located in ./tests/unit/Service/EmlPreviewServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\EmlPreviewServiceTest located in ./tests/unit/Service/EmlPreviewServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Suggestion\SupplierIdentityResolverTest located in ./tests/unit/Service/Suggestion/SupplierIdentityResolverTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Suggestion\HistoryRankerTest located in ./tests/unit/Service/Suggestion/HistoryRankerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Suggestion\CategoryKeywordMapperTest located in ./tests/unit/Service/Suggestion/CategoryKeywordMapperTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DossierContextServiceTest located in ./tests/unit/Service/DossierContextServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SettingsInitializerTest located in ./tests/unit/Service/SettingsInitializerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\AnonymizationServiceConfidentialityTest located in ./tests/unit/Service/AnonymizationServiceConfidentialityTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\RegisterBindingResolutionTest located in ./tests/unit/Service/RegisterBindingResolutionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FileEntityStatsServiceTest located in ./tests/unit/Service/FileEntityStatsServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\EntityDetectionServiceTest located in ./tests/unit/Service/EntityDetectionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DossierFileServiceTest located in ./tests/unit/Service/DossierFileServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SigningVerificationServiceTest located in ./tests/unit/Service/SigningVerificationServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ObjectionDeadlineCheckerTest located in ./tests/unit/Service/ObjectionDeadlineCheckerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentDownloadRecorderTest located in ./tests/unit/Service/DocumentDownloadRecorderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\BatchStateServiceTest located in ./tests/unit/Service/BatchStateServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\TemplateRendererTest located in ./tests/unit/Service/TemplateRendererTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentServicePlainRenditionTest located in ./tests/unit/Service/DocumentServicePlainRenditionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\SettingsServiceTest located in ./tests/unit/Service/SettingsServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FlatFileListServiceTest located in ./tests/unit/Service/FlatFileListServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\DocumentComparisonServiceTest located in ./tests/unit/Service/DocumentComparisonServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Office\SupportedTypeProbeTest located in ./tests/unit/Service/Office/SupportedTypeProbeTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Office\OfficeSuiteCapabilityServiceTest located in ./tests/unit/Service/Office/OfficeSuiteCapabilityServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Office\SuiteIndependenceTest located in ./tests/unit/Service/Office/SuiteIndependenceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\Office\AnchorRoundTripTest located in ./tests/unit/Service/Office/AnchorRoundTripTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PlainRenditionAcceptanceGateTest located in ./tests/unit/Service/PlainRenditionAcceptanceGateTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ConsentCrudServiceTest located in ./tests/unit/Service/ConsentCrudServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\PostRegisterReaderTest located in ./tests/unit/Service/PostRegisterReaderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\OcrServiceTest located in ./tests/unit/Service/OcrServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\FinalDocumentCorrectionServiceTest located in ./tests/unit/Service/FinalDocumentCorrectionServiceTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Service\ScanBatchSegmentationTest located in ./tests/unit/Service/ScanBatchSegmentationTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\AppHost\ObservabilityManifestParityTest located in ./tests/unit/AppHost/ObservabilityManifestParityTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\RegistersContainerServices located in ./tests/unit/EventListener/RegistersContainerServices.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\DossierCheckedOnListenerTest located in ./tests/unit/EventListener/DossierCheckedOnListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\FakeEntityRelationDecisionUpdatedEvent located in ./tests/unit/EventListener/FakeEntityRelationDecisionUpdatedEvent.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\RegisterDocumentsLeafListenerTest located in ./tests/unit/EventListener/RegisterDocumentsLeafListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\EntityRelationDecisionListenerTest located in ./tests/unit/EventListener/EntityRelationDecisionListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\SigningTaskListenerTest located in ./tests/unit/EventListener/SigningTaskListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\SignerEventTranslatorTest located in ./tests/unit/EventListener/SignerEventTranslatorTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\FilinqEventHandlerTest located in ./tests/unit/EventListener/FilinqEventHandlerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\DocumentRegistrationWriteGuardTest located in ./tests/unit/EventListener/DocumentRegistrationWriteGuardTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\DocumentGenerationRequestedListenerTest located in ./tests/unit/EventListener/DocumentGenerationRequestedListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\DocumentSigningRequestedListenerTest located in ./tests/unit/EventListener/DocumentSigningRequestedListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\EventListener\FilinqEventListenerTest located in ./tests/unit/EventListener/FilinqEventListenerTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Command\OfficeProbeCommandTest located in ./tests/unit/Command/OfficeProbeCommandTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Sections\FilinqAdminTest located in ./tests/unit/Sections/FilinqAdminTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Exception\ConversionFailedExceptionTest located in ./tests/unit/Exception/ConversionFailedExceptionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Wave12SecurityRegressionTest located in ./tests/unit/Wave12SecurityRegressionTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Portal\PortalContributionProviderTest located in ./tests/unit/Portal/PortalContributionProviderTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Portal\PortalAssertionVerifierTest located in ./tests/unit/Portal/PortalAssertionVerifierTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\FakeResult located in ./tests/unit/RenameDutchColumnsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\FakeStatement located in ./tests/unit/RenameDutchColumnsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\RenameDutchColumnsTest located in ./tests/unit/RenameDutchColumnsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\UnifiedSearchConsistencyTest located in ./tests/unit/Settings/UnifiedSearchConsistencyTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\IntakeFailureNotificationTest located in ./tests/unit/Settings/IntakeFailureNotificationTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\RedactionReviewMarkSchemaTest located in ./tests/unit/Settings/RedactionReviewMarkSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\ServiceWrittenCreateTest located in ./tests/unit/Settings/ServiceWrittenCreateTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\FilinqAdminSettingsTest located in ./tests/unit/Settings/FilinqAdminSettingsTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\ErasureRequestSchemaTest located in ./tests/unit/Settings/ErasureRequestSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\CaseDocumentSchemaTest located in ./tests/unit/Settings/CaseDocumentSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\FinalDocumentSchemaTest located in ./tests/unit/Settings/FinalDocumentSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\LeafIntegrationsConfigurationTest located in ./tests/unit/Settings/LeafIntegrationsConfigurationTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\MergeJobSchemaTest located in ./tests/unit/Settings/MergeJobSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\SchemaAuthorizationCoverageTest located in ./tests/unit/Settings/SchemaAuthorizationCoverageTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\DocumentRegistrationSchemaTest located in ./tests/unit/Settings/DocumentRegistrationSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\IntakeDocumentSchemaTest located in ./tests/unit/Settings/IntakeDocumentSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\DocumentProductionSchemaTest located in ./tests/unit/Settings/DocumentProductionSchemaTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\DossierRegisterConfigTest located in ./tests/unit/Settings/DossierRegisterConfigTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\SchemaSlugIntegrityTest located in ./tests/unit/Settings/SchemaSlugIntegrityTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\Filinq\Tests\Unit\Settings\ProcessingActivityCatalogueTest located in ./tests/unit/Settings/ProcessingActivityCatalogueTest.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\AppHost\Controller\GenericPreferencesController located in ./tests/stubs/openregister-apphost.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\ObjectService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\OrganisationService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\RegisterService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\ViewService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\ConfigurationService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\TextExtractionService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\FileService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\RiskLevelService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\LanguageService located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\Register located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\Schema located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\View located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\ObjectEntity located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\AuditTrail located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\AuditTrailMapper located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\SchemaMapper located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\EntityRelationMapper located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\GdprEntity located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\GdprEntityMapper located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\Chunk located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\ChunkMapper located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\EntityRelation located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OC\Hooks\Emitter located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IUserSession located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class Psr\Log\LoggerInterface located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IUser located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IGroupManager located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\Folder located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\FileInfo located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\Node located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\File located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\IRootFolder located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\Task located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Db\TaskSequence located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Exception\ArchivalImmutableException located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\TaskTransitionedEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\TaskTerminalEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\TaskSequenceCompletedEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\ObjectCreatedEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\ObjectUpdatingEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\ObjectUpdatedEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\ObjectDeletedEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\AppHost\Routes located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Mcp\IMcpScannableServices located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Mcp\Attribute\McpTool located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Contract\ObjectEntityInterface located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Contract\ObjectServiceInterface located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Task\TaskState located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Integration\LeafDescriptor located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Event\RegisterLeafProvidersEvent located in ./tests/stubs/OpenRegisterStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Mcp\IMcpScannableServices located in ./tests/stubs/openregister-mcp.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Mcp\Attribute\McpTool located in ./tests/stubs/openregister-mcp.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OC located in ./tests/stubs/GlobalStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IRequest located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IL10N located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Constants located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Controller located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Http located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\OCS\OCSForbiddenException located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Http\Response located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Http\JSONResponse located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Http\DataDownloadResponse located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\App located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Bootstrap\IBootstrap located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Bootstrap\IRegistrationContext located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Bootstrap\IBootContext located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Http\TextPlainResponse located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Http\TemplateResponse located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\ICache located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\ICacheFactory located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\NotFoundException located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\NotPermittedException located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Utility\ITimeFactory located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\BackgroundJob\QueuedJob located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\BackgroundJob\TimedJob located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\BackgroundJob\IJobList located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IConfig located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IAppConfig located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\App\IAppManager located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Notification\INotification located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Notification\IManager located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\AppFramework\Middleware located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\ITempManager located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\IDBConnection located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Server located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Lock\ILockingProvider located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Lock\LockedException located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Files\Conversion\IConversionManager located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\TaskProcessing\IManager located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\TaskProcessing\Task located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\TaskProcessing\TaskTypes\TextToText located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\TextProcessing\IManager located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\TextProcessing\Task located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\TextProcessing\FreePromptTaskType located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\DB\Exception located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\DB\IResult located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\DB\IPreparedStatement located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Http\Client\IResponse located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Http\Client\IClient located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCP\Http\Client\IClientService located in ./tests/stubs/NextcloudStubs.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Flow\IFlowNode located in ./tests/stubs/openregister-flow.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Flow\IFlowNodeConfigKeys located in ./tests/stubs/openregister-flow.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Flow\IFlowNodeConfigForm located in ./tests/stubs/openregister-flow.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Flow\IFlowNodeTaxonomy located in ./tests/stubs/openregister-flow.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Flow\FlowNodeRegistry located in ./tests/stubs/openregister-flow.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+Class OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent located in ./tests/stubs/openregister-flow.stub.php does not comply with psr-4 autoloading standard (rule: OCA\Filinq\Tests\ => ./tests). Skipping.
+[bamarni-bin] The setting "extra.bamarni-bin.bin-links" will be set to "false" from 2.x onwards. If you wish to keep it to "true", you need to set it explicitly.
+[bamarni-bin] The setting "extra.bamarni-bin.forward-command" will be set to "true" from 2.x onwards. If you wish to keep it to "false", you need to set it explicitly.
+71 packages you are using are looking for funding.
+Use the `composer fund` command to find out more!
+PHP CodeSniffer Config installed_paths set to ../../phpcsstandards/phpcsextra,../../phpcsstandards/phpcsutils
+[bamarni-bin] [30;43mCould not find any bin namespace.[39;49m
+> git config core.hooksPath .githooks || true
+composer=0

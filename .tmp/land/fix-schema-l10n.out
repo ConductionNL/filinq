@@ -1,0 +1,8 @@
+765 schema string(s); 217 uncovered, baseline 213
+
+4 schema string(s) added with no catalogue key — they will render
+in English inside an otherwise translated form.
+
+Add them to l10n/en.json (identity) and l10n/nl.json (translated), then
+run `npm run l10n:build`. See what is uncovered with:
+  node scripts/check-schema-l10n.js --list

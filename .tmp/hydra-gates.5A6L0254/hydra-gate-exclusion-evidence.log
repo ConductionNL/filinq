@@ -1,0 +1,2 @@
+[gate-113] exclusion-evidence: 222 exclusion(s) — 78 name a test that is here, 1 name one in another repository, 107 claim a tier without naming a member of it, 36 name no evidence at all.
+[gate-113] exclusion-evidence: PASS — every exclusion that names an artifact names one that exists.

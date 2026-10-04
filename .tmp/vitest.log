@@ -1,0 +1,13 @@
+
+ RUN  v5.0.0 /home/rubenlinde/memcap-work/lq-lanes/fq
+
+
+ Test Files  16 passed (16)
+      Tests  89 passed (89)
+   Start at  20:45:28
+   Duration  11.63s (transform 79%, environment 14%, import 5%, tests 1%)
+
+  Transform  transforming modules took 77.08s · 79% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

@@ -1,0 +1,1 @@
+lib/Service/SettingsService.php:166: NOTE security-relevant config read of "enable_keyword_extraction" is unguarded but sits in an array-literal value position, where no guard can be written — demoted, not ignored. Guard it at the consumer of the assembled array.

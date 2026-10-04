@@ -1,0 +1,16 @@
+FAIL filinq: register 'filinq' schema 'archiveJob' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'documentRegistration' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'downloadAgreement' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'erasureCertificate' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'intakeDefaultRule' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'intakeDocument' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'intakePartyCorrection' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'intakeRoutingRule' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'mergeJob' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'pageLayout' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'periodicDocument' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'redactionReviewMark' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'scanBatch' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'subjectErasureRequest' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+FAIL filinq: register 'filinq' schema 'uploadPolicy' has 0 demo object(s), needs 3 (ADR-111 rule 1). Regenerate with `python3 vendor/conduction/hydra-gates/scripts/lib/generate_mock_register.py .`
+checked 39 schema(s)

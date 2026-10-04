@@ -1,0 +1,20 @@
+{
+ "{level} needs at least {floor}. Signers below it confirm their identity before they sign.": "{level} vraagt minstens {floor}. Ondertekenaars daaronder bevestigen eerst hun identiteit.",
+ "Confirm my identity": "Mijn identiteit bevestigen",
+ "Confirm who you are": "Bevestig wie u bent",
+ "high": "hoog",
+ "High: DigiD Hoog or eHerkenning EH4": "Hoog: DigiD Hoog of eHerkenning EH4",
+ "Identity check for signers": "Identiteitscontrole voor ondertekenaars",
+ "Log in once more with DigiD, eHerkenning or your bank. You come back here and sign.": "Log nog een keer in met DigiD, eHerkenning of uw bank. U komt hier terug en ondertekent.",
+ "low": "laag",
+ "Low: a Nextcloud login is enough": "Laag: een Nextcloud-login is genoeg",
+ "Sign now": "Nu ondertekenen",
+ "substantial": "substantieel",
+ "Substantial: DigiD Midden, eHerkenning EH3 or iDIN": "Substantieel: DigiD Midden, eHerkenning EH3 of iDIN",
+ "The identity check could not start. Ask your administrator to check the identity broker.": "De identiteitscontrole kon niet starten. Vraag uw beheerder de identiteitsmakelaar te controleren.",
+ "This document asks for assurance {level}. Your Nextcloud login is not enough for it.": "Dit document vraagt betrouwbaarheidsniveau {level}. Uw Nextcloud-login is daarvoor niet genoeg.",
+ "You signed this document.": "U hebt dit document ondertekend.",
+ "Your identity could not be confirmed. Try again, or ask your administrator to check the identity broker.": "Uw identiteit kon niet worden bevestigd. Probeer het opnieuw, of vraag uw beheerder de identiteitsmakelaar te controleren.",
+ "Your identity is confirmed. Sign now; the confirmation counts for 15 minutes.": "Uw identiteit is bevestigd. Onderteken nu; de bevestiging geldt 15 minuten.",
+ "This document asks for a stronger identity check": "Dit document vraagt een sterkere identiteitscontrole"
+}

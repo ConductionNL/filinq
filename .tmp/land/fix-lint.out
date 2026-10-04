@@ -1,0 +1,225 @@
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/scripts/sync-l10n-ellipsis.js
+  23:1  warning  Missing JSDoc @param "file" description  jsdoc/require-param-description
+  23:1  warning  Missing JSDoc @param "file" type         jsdoc/require-param-type
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/App.vue
+  119:1  warning  Unexpected inline JSDoc tag. Did you mean to use {@nextcloud}, \@nextcloud, or `@nextcloud`?  jsdoc/escape-inline-tags
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdButton.vue
+  34:1  warning  Unexpected inline JSDoc tag. Did you mean to use {@click}, \@click, or `@click`?  jsdoc/escape-inline-tags
+  35:1  warning  Unexpected inline JSDoc tag. Did you mean to use {@click}, \@click, or `@click`?  jsdoc/escape-inline-tags
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdDataTable.vue
+   18:34  warning  The "toggle-select-all" event has been triggered but not declared on `emits` option  vue/require-explicit-emits
+   53:20  warning  The "row-click" event has been triggered but not declared on `emits` option          vue/require-explicit-emits
+   61:34  warning  The "toggle-select" event has been triggered but not declared on `emits` option      vue/require-explicit-emits
+  203:1   warning  Prefer a more specific type to `*`                                                   jsdoc/reject-any-type
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdDocumentCard.vue
+  16:17  warning  The "click" event has been triggered but not declared on `defineEmits`          vue/require-explicit-emits
+  17:23  warning  The "click" event has been triggered but not declared on `defineEmits`          vue/require-explicit-emits
+  18:31  warning  The "click" event has been triggered but not declared on `defineEmits`          vue/require-explicit-emits
+  24:30  warning  The "toggle-select" event has been triggered but not declared on `defineEmits`  vue/require-explicit-emits
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdEntityCard.vue
+   69:20  warning  The "toggle" event has been triggered but not declared on `defineEmits`     vue/require-explicit-emits
+   99:31  warning  The "set-bases" event has been triggered but not declared on `defineEmits`  vue/require-explicit-emits
+  172:13  warning  Boolean prop should only be defaulted to false                              vue/no-boolean-default
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdIndexPage.vue
+   29:21  warning  The "row-click" event has been triggered but not declared on `emits` option          vue/require-explicit-emits
+   30:25  warning  The "toggle-select" event has been triggered but not declared on `emits` option      vue/require-explicit-emits
+   31:28  warning  The "toggle-select-all" event has been triggered but not declared on `emits` option  vue/require-explicit-emits
+   73:24  warning  The "page-changed" event has been triggered but not declared on `emits` option       vue/require-explicit-emits
+   74:28  warning  The "page-size-changed" event has been triggered but not declared on `emits` option  vue/require-explicit-emits
+  154:13  warning  Boolean prop should only be defaulted to false                                       vue/no-boolean-default
+  246:15  warning  The "update:view-mode" event has been triggered but not declared on `emits` option   vue/require-explicit-emits
+  247:15  warning  The "view-mode-change" event has been triggered but not declared on `emits` option   vue/require-explicit-emits
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdPagination.vue
+  162:16  warning  The "page-changed" event has been triggered but not declared on `emits` option       vue/require-explicit-emits
+  173:16  warning  The "page-size-changed" event has been triggered but not declared on `emits` option  vue/require-explicit-emits
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdSearchBar.vue
+  65:13  warning  Boolean prop should only be defaulted to false  vue/no-boolean-default
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/DdToggle.vue
+  36:1  warning  Unexpected inline JSDoc tag. Did you mean to use {@update}, \@update, or `@update`?  jsdoc/escape-inline-tags
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/FileIcon.vue
+  29:3  warning  'fileExtension' of property found, but never used  vue/no-unused-properties
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/components/ValidationFindingsPanel.vue
+  29:20  warning  The "ocr" event has been triggered but not declared on `emits` option  vue/require-explicit-emits
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/dialogs/AnonymizationUploadDialog.vue
+  141:13  warning  Boolean prop should only be defaulted to false  vue/no-boolean-default
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/modals/ValidationResultModal.vue
+  12:17  warning  The "close" event has been triggered but not declared on `emits` option  vue/require-explicit-emits
+  22:17  warning  The "ocr" event has been triggered but not declared on `emits` option    vue/require-explicit-emits
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/store/modules/consent.js
+   64:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+   64:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+   87:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+   87:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+   88:1  warning  Missing JSDoc @param "data" description        jsdoc/require-param-description
+   88:1  warning  Missing JSDoc @param "data" type               jsdoc/require-param-type
+  118:1  warning  Missing JSDoc @param "documentId" description  jsdoc/require-param-description
+  118:1  warning  Missing JSDoc @param "documentId" type         jsdoc/require-param-type
+  140:1  warning  Missing JSDoc @param "data" description        jsdoc/require-param-description
+  140:1  warning  Missing JSDoc @param "data" type               jsdoc/require-param-type
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/store/modules/myDocuments.js
+  281:1  warning  @param "state" does not match an existing function parameter  jsdoc/check-param-names
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/store/modules/settings.js
+  78:1  warning  Missing JSDoc @param "settingsData" description  jsdoc/require-param-description
+  78:1  warning  Missing JSDoc @param "settingsData" type         jsdoc/require-param-type
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/store/modules/signing.js
+   47:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+   47:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+   70:1  warning  Missing JSDoc @param "data" description        jsdoc/require-param-description
+   70:1  warning  Missing JSDoc @param "data" type               jsdoc/require-param-type
+   94:1  warning  Missing JSDoc @param "requestId" description   jsdoc/require-param-description
+   94:1  warning  Missing JSDoc @param "requestId" type          jsdoc/require-param-type
+   95:1  warning  Missing JSDoc @param "signerId" description    jsdoc/require-param-description
+   95:1  warning  Missing JSDoc @param "signerId" type           jsdoc/require-param-type
+  120:1  warning  Missing JSDoc @param "requestId" description   jsdoc/require-param-description
+  120:1  warning  Missing JSDoc @param "requestId" type          jsdoc/require-param-type
+  121:1  warning  Missing JSDoc @param "signerId" description    jsdoc/require-param-description
+  121:1  warning  Missing JSDoc @param "signerId" type           jsdoc/require-param-type
+  122:1  warning  Missing JSDoc @param "reason" description      jsdoc/require-param-description
+  122:1  warning  Missing JSDoc @param "reason" type             jsdoc/require-param-type
+  147:1  warning  Missing JSDoc @param "requestId" description   jsdoc/require-param-description
+  147:1  warning  Missing JSDoc @param "requestId" type          jsdoc/require-param-type
+  166:1  warning  Missing JSDoc @param "requestIds" description  jsdoc/require-param-description
+  166:1  warning  Missing JSDoc @param "requestIds" type         jsdoc/require-param-type
+  241:1  warning  Missing JSDoc @param "fileId" description      jsdoc/require-param-description
+  241:1  warning  Missing JSDoc @param "fileId" type             jsdoc/require-param-type
+  263:1  warning  Missing JSDoc @param "requestId" description   jsdoc/require-param-description
+  263:1  warning  Missing JSDoc @param "requestId" type          jsdoc/require-param-type
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/store/modules/template.js
+   67:1  warning  Missing JSDoc @param "filters" description     jsdoc/require-param-description
+   67:1  warning  Missing JSDoc @param "filters" type            jsdoc/require-param-type
+   99:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+   99:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+  124:1  warning  Missing JSDoc @param "data" description        jsdoc/require-param-description
+  124:1  warning  Missing JSDoc @param "data" type               jsdoc/require-param-type
+  148:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+  148:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+  149:1  warning  Missing JSDoc @param "data" description        jsdoc/require-param-description
+  149:1  warning  Missing JSDoc @param "data" type               jsdoc/require-param-type
+  173:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+  173:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+  194:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+  194:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+  216:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+  216:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+  239:1  warning  Missing JSDoc @param "templateId" description  jsdoc/require-param-description
+  239:1  warning  Missing JSDoc @param "templateId" type         jsdoc/require-param-type
+  240:1  warning  Missing JSDoc @param "versionId" description   jsdoc/require-param-description
+  240:1  warning  Missing JSDoc @param "versionId" type          jsdoc/require-param-type
+  265:1  warning  Missing JSDoc @param "content" description     jsdoc/require-param-description
+  265:1  warning  Missing JSDoc @param "content" type            jsdoc/require-param-type
+  266:1  warning  Missing JSDoc @param "data" description        jsdoc/require-param-description
+  266:1  warning  Missing JSDoc @param "data" type               jsdoc/require-param-type
+  286:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+  286:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+  305:1  warning  Missing JSDoc @param "id" description          jsdoc/require-param-description
+  305:1  warning  Missing JSDoc @param "id" type                 jsdoc/require-param-type
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/anonymization/EntityReviewTable.vue
+  26:20  warning  Variable 't' is already declared in the upper scope  vue/no-template-shadow
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/consent/ConsentDetail.vue
+  373:1  warning  Missing JSDoc @param "item" description     jsdoc/require-param-description
+  479:1  warning  Missing JSDoc @param "checked" description  jsdoc/require-param-description
+  510:1  warning  Missing JSDoc @param "dateStr" description  jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/consent/ConsentIndex.vue
+    8:7  warning  'indexPage' is defined as ref, but never used  vue/no-unused-refs
+  263:1  warning  Missing JSDoc @param "consent" description     jsdoc/require-param-description
+  286:1  warning  Missing JSDoc @param "page" description        jsdoc/require-param-description
+  296:1  warning  Missing JSDoc @param "size" description        jsdoc/require-param-description
+  307:1  warning  Missing JSDoc @param "status" description      jsdoc/require-param-description
+  328:1  warning  Missing JSDoc @param "decision" description    jsdoc/require-param-description
+  345:1  warning  Missing JSDoc @param "dateStr" description     jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/customDictionary/CustomDictionaryIndex.vue
+   19:8  warning  'indexPage' is defined as ref, but never used                                           vue/no-unused-refs
+  340:1  warning  Unexpected inline JSDoc tag. Did you mean to use {@confirm}, \@confirm, or `@confirm`?  jsdoc/escape-inline-tags
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/myDocuments/MyDocumentsIndex.vue
+  507:3  warning  JSDoc @return declaration present but return expression not available in function       jsdoc/require-returns-check
+  630:3  warning  JSDoc @return declaration present but return expression not available in function       jsdoc/require-returns-check
+  656:1  warning  Unexpected inline JSDoc tag. Did you mean to use {@confirm}, \@confirm, or `@confirm`?  jsdoc/escape-inline-tags
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/policy/ProhibitionIndex.vue
+  9:8  warning  'indexPage' is defined as ref, but never used  vue/no-unused-refs
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/policy/StandingConsentIndex.vue
+    9:8  warning  'indexPage' is defined as ref, but never used                                           vue/no-unused-refs
+  390:1  warning  Unexpected inline JSDoc tag. Did you mean to use {@confirm}, \@confirm, or `@confirm`?  jsdoc/escape-inline-tags
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/settings/EntityTypeSelector.vue
+  100:15  warning  The "input" event has been triggered but not declared on `emits` option  vue/require-explicit-emits
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/settings/Settings.vue
+  1041:1  warning  Missing JSDoc @param "type" description    jsdoc/require-param-description
+  1216:1  warning  Missing JSDoc @param "type" description    jsdoc/require-param-description
+  1435:1  warning  Missing JSDoc @param "url" description     jsdoc/require-param-description
+  1436:1  warning  Missing JSDoc @param "target" description  jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/signing/BulkSigningPanel.vue
+  105:1  warning  Missing JSDoc @param "id" description  jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/signing/SigningRequestDetail.vue
+  94:1  warning  Missing JSDoc @param "props" description  jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/templates/TemplateDetail.vue
+  169:5  warning  'v-html' directive can lead to XSS attack                   vue/no-v-html
+  215:5  warning  'v-html' directive can lead to XSS attack                   vue/no-v-html
+  429:1  warning  Missing JSDoc @param "cmd" description                      jsdoc/require-param-description
+  440:1  warning  Missing JSDoc @param "tag" description                      jsdoc/require-param-description
+  462:1  warning  Missing JSDoc @param "event" description                    jsdoc/require-param-description
+  516:1  warning  Missing JSDoc @param "ver" description                      jsdoc/require-param-description
+  526:1  warning  @param "ver" does not match an existing function parameter  jsdoc/check-param-names
+  526:1  warning  Missing JSDoc @param "ver" description                      jsdoc/require-param-description
+  586:1  warning  Missing JSDoc @param "fieldName" description                jsdoc/require-param-description
+  598:1  warning  Missing JSDoc @param "root0" description                    jsdoc/require-param-description
+  599:1  warning  Missing JSDoc @param "root0.field" description              jsdoc/require-param-description
+  600:1  warning  Missing JSDoc @param "root0.op" description                 jsdoc/require-param-description
+  601:1  warning  Missing JSDoc @param "root0.value" description              jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/templates/TemplateIndex.vue
+  188:1  warning  Missing JSDoc @param "tmpl" description  jsdoc/require-param-description
+  209:1  warning  Missing JSDoc @param "tmpl" description  jsdoc/require-param-description
+  222:1  warning  Missing JSDoc @param "tmpl" description  jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/versions/VersionsView.vue
+  161:46  warning  Boolean prop should only be defaulted to false  vue/no-boolean-default
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/widgets/AnonymizationDashboardWidget.vue
+  187:1  warning  Missing JSDoc @param "files" description     jsdoc/require-param-description
+  211:3  warning  'title' of property found, but never used    vue/no-unused-properties
+  249:1  warning  Missing JSDoc @param "event" description     jsdoc/require-param-description
+  264:1  warning  Missing JSDoc @param "event" description     jsdoc/require-param-description
+  321:1  warning  Missing JSDoc @param "entry" description     jsdoc/require-param-description
+  322:1  warning  Missing JSDoc @param "mimeType" description  jsdoc/require-param-description
+  392:1  warning  Missing JSDoc @param "filePath" description  jsdoc/require-param-description
+  414:1  warning  Missing JSDoc @param "filePath" description  jsdoc/require-param-description
+  428:1  warning  Missing JSDoc @param "status" description    jsdoc/require-param-description
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/src/views/widgets/FileEntitiesDashboardWidget.vue
+  111:3  warning  'title' of property found, but never used    vue/no-unused-properties
+  165:1  warning  Missing JSDoc @param "filePath" description  jsdoc/require-param-description
+  189:1  warning  Missing JSDoc @param "level" description     jsdoc/require-param-description
+  206:1  warning  Missing JSDoc @param "status" description    jsdoc/require-param-description
+
+✖ 152 problems (0 errors, 152 warnings)
+

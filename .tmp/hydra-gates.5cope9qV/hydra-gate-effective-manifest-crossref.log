@@ -1,0 +1,8 @@
+[build_effective_manifest] base=/home/rubenlinde/memcap-work/lq-lanes/fq/src/manifest.json fragments=0 menu-layout=yes
+[check_manifest] base schema: /home/rubenlinde/memcap-work/lq-lanes/fq/vendor/conduction/hydra-gates/hydra-gates/scripts/schemas/app-manifest-v2.schema.json
+[check_manifest] AppHost blocks (observability, deepLinks) validated against the hydra-vendored canonical ADR-040 schema
+[check_manifest] Ajv validation against merged canonical schema: PASS
+{"status":"passed","checked":1,"failed":0}
+at /pages: WARN src/registry.js exports 'FlowDetailSidebar' (kind 'page') but no manifest tabs[]/sections[]/page entry names it — the surface it renders has no entry point. Wire it, or delete it
+{"file":".tmp/hydra-gates.5cope9qV/hydra-gate53-effective.oAxhce.json","schemaVersion":"v2-effective","findings":[{"path":"/pages","check":"registry-crossref","severity":"warn","message":"src/registry.js exports 'FlowDetailSidebar' (kind 'page') but no manifest tabs[]/sections[]/page entry names it — the surface it renders has no entry point. Wire it, or delete it"}]}
+{"status":"passed","checked":1,"failed":0}

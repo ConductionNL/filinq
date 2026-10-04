@@ -1,0 +1,2502 @@
+
+=== lint ===
+No syntax errors detected in ./node_modules/flatted/php/flatted.php
+No syntax errors detected in ./tests/bootstrap.php
+No syntax errors detected in ./tests/scripts/boot-without-openregister.php
+No syntax errors detected in ./tests/unit/BackgroundJob/FolderExtractionJobTest.php
+No syntax errors detected in ./tests/unit/BackgroundJob/BatchDocumentJobTest.php
+No syntax errors detected in ./tests/unit/BackgroundJob/DomainFolderReconciliationJobTest.php
+No syntax errors detected in ./tests/unit/BackgroundJob/UploadFragmentReaperJobTest.php
+No syntax errors detected in ./tests/unit/BackgroundJob/SigningExpirationJobTest.php
+No syntax errors detected in ./tests/unit/BackgroundJob/BatchCorrespondenceJobTest.php
+No syntax errors detected in ./tests/unit/BackgroundJob/BatchPrintJobTest.php
+No syntax errors detected in ./tests/unit/Controller/BatchAnonymizationControllerOutputFormatTest.php
+No syntax errors detected in ./tests/unit/Controller/PolicyControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/AnonymizationControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/AnonymizationControllerPublicationClearanceTest.php
+No syntax errors detected in ./tests/unit/Controller/CustomDictionaryControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/SigningFolderControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/PrintJobControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/MetadataControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/Pdfa3ConversionControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/DashboardControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/RedactionOutputDownloadPathTest.php
+No syntax errors detected in ./tests/unit/Controller/EmlPreviewControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/PdfControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/DossierManagementControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/TemplateRequestHandlerTest.php
+No syntax errors detected in ./tests/unit/Controller/BatchAnonymizationControllerProfileAuthTest.php
+No syntax errors detected in ./tests/unit/Controller/RedactionOutputControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/BatchAnonymizationControllerSummaryFlagTest.php
+No syntax errors detected in ./tests/unit/Controller/TemplateVersionsControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/DossierControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/IntakeControllerContractTest.php
+No syntax errors detected in ./tests/unit/Controller/TemplatesControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/PreferencesControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/AnonymizationControllerContractTest.php
+No syntax errors detected in ./tests/unit/Controller/AnonymiserWarningControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/SettingsControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/BatchAnonymizationControllerContractTest.php
+No syntax errors detected in ./tests/unit/Controller/PrintControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/AnonymizationControllerOutputFormatTest.php
+No syntax errors detected in ./tests/unit/Controller/VersionControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/ConsentControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/ReportRenderControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/PostRegisterControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/BatchAnonymizationControllerFolderTest.php
+No syntax errors detected in ./tests/unit/Controller/MergePollAnswersTruthfullyTest.php
+No syntax errors detected in ./tests/unit/Controller/PolicyControllerDeleteTest.php
+No syntax errors detected in ./tests/unit/Controller/ExtractionControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/ScanIntakeControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/SigningControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/SigningControllerAuditTest.php
+No syntax errors detected in ./tests/unit/Controller/CorrespondenceControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/PortalSigningReceiverControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/SetupControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/TemplatesControllerLockingTest.php
+No syntax errors detected in ./tests/unit/Controller/CaseDocumentsControllerContractTest.php
+No syntax errors detected in ./tests/unit/Controller/GlAccountSuggestionControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/DocumentControllerTest.php
+No syntax errors detected in ./tests/unit/Controller/BatchAnonymizationControllerBasesTest.php
+No syntax errors detected in ./tests/unit/Controller/DocumentProductionControllerContractTest.php
+No syntax errors detected in ./tests/unit/Middleware/LanguageNegotiationMiddlewareTest.php
+No syntax errors detected in ./tests/unit/Repair/MigrateUserPreferencesTest.php
+No syntax errors detected in ./tests/unit/Repair/MigrateAppConfigKeysTest.php
+No syntax errors detected in ./tests/unit/Repair/ConsolidateRegistersDecisionsTest.php
+No syntax errors detected in ./tests/unit/Repair/MigrateSchemaApplicationIdTest.php
+No syntax errors detected in ./tests/unit/Repair/ConsolidateRegistersTest.php
+No syntax errors detected in ./tests/unit/Event/GlAccountSuggestedEventTest.php
+No syntax errors detected in ./tests/unit/Event/SigningConcludedEventTest.php
+No syntax errors detected in ./tests/unit/Event/FinancialExtractionCompletedEventTest.php
+No syntax errors detected in ./tests/unit/Event/SigningEventsTest.php
+No syntax errors detected in ./tests/unit/AppInfo/RouteNameUniquenessTest.php
+No syntax errors detected in ./tests/unit/AppInfo/BootstrapOrderIndependenceTest.php
+No syntax errors detected in ./tests/unit/AppInfo/RetiredApprovalSurfaceTest.php
+No syntax errors detected in ./tests/unit/Service/ScanBatchServiceTest.php
+No syntax errors detected in ./tests/unit/Service/BatchStateServiceKeepAliveTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentDomainServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Pdfa3ConversionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/BatchExtractionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/CorrespondenceServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Signing/SigningProviderFactoryTest.php
+No syntax errors detected in ./tests/unit/Service/Signing/ValidSignProviderTest.php
+No syntax errors detected in ./tests/unit/Service/Signing/NativeSigningProviderTest.php
+No syntax errors detected in ./tests/unit/Service/Signing/SigningCancellationServiceTest.php
+No syntax errors detected in ./tests/unit/Service/GlAccountSuggestionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SlugContractReadPathTest.php
+No syntax errors detected in ./tests/unit/Service/ExternalMountValidatorTest.php
+No syntax errors detected in ./tests/unit/Service/FinalDocumentFailureMapperTest.php
+No syntax errors detected in ./tests/unit/Service/SigningFolderServiceTest.php
+No syntax errors detected in ./tests/unit/Service/ConsentServiceTest.php
+No syntax errors detected in ./tests/unit/Service/FolderBatchServiceTest.php
+No syntax errors detected in ./tests/unit/Service/UploadPolicyServiceTest.php
+No syntax errors detected in ./tests/unit/Service/CustomDictionaryServiceTest.php
+No syntax errors detected in ./tests/unit/Service/FinancialExtractionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DomainFolderServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SigningAuditServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentValidationServiceTest.php
+No syntax errors detected in ./tests/unit/Service/FinalDocumentServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SigningMandateServiceTest.php
+No syntax errors detected in ./tests/unit/Service/LanguageClassifierTest.php
+No syntax errors detected in ./tests/unit/Service/EmlPdfAssemblyServiceTest.php
+No syntax errors detected in ./tests/unit/Service/MetadataServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DomainFolderReconcilerTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentReviewServiceTest.php
+No syntax errors detected in ./tests/unit/Service/ReportRenderServiceTest.php
+No syntax errors detected in ./tests/unit/Service/PdfServiceTest.php
+No syntax errors detected in ./tests/unit/Service/ConsentScopeValidatorTest.php
+No syntax errors detected in ./tests/unit/Service/BatchStateServicePersistenceTest.php
+No syntax errors detected in ./tests/unit/Service/DomainDirectoryTest.php
+No syntax errors detected in ./tests/unit/Service/FinalDocumentWritePathsTest.php
+No syntax errors detected in ./tests/unit/Service/PeriodicDocumentServiceTest.php
+No syntax errors detected in ./tests/unit/Service/BatchReportServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/AnonymizationServiceReviewGateTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/RedactionIrreversibilityVerifierTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/RedactionVerdictRecorderTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/DownloadAgreementGateTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/RedactionMessagesAreTranslatedTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/RedactionReviewGateTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/RedactionOutputGuardTest.php
+No syntax errors detected in ./tests/unit/Service/Redaction/PublicationListComposerTest.php
+No syntax errors detected in ./tests/unit/Service/PdfConversionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationResultParserTest.php
+No syntax errors detected in ./tests/unit/Service/DataResolverServiceTest.php
+No syntax errors detected in ./tests/unit/Service/FinalDocumentUnfreezeServiceTest.php
+No syntax errors detected in ./tests/unit/Service/OpenRegisterAvailabilityServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/PackageMetadataCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/SpreadsheetCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/EditSessionAgentSurfacesTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/XlsxSpreadsheetCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/BlockStyleCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/DocumentGuardTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/PackagePartIoTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/EditSessionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/PptxPresentationCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/AgentArtefactMarkerTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/RoundTripFidelityTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/BlockStyleCodecsTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/OdpPresentationCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/DocumentGuardFormatTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/OdsSpreadsheetCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/XmlBlockScannerTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/PackageCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/DocumentAgentServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/ChartCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/PresentationCodecTest.php
+No syntax errors detected in ./tests/unit/Service/Editing/GuardedWriterTest.php
+No syntax errors detected in ./tests/unit/Service/ConsentNotesHelperTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationLinkServiceTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationServiceOutputFormatTest.php
+No syntax errors detected in ./tests/unit/Service/PolicyRuleNormaliserTranslatableTest.php
+No syntax errors detected in ./tests/unit/Service/SigningServiceMandateGuardTest.php
+No syntax errors detected in ./tests/unit/Service/Extraction/KvkExtractorTest.php
+No syntax errors detected in ./tests/unit/Service/Extraction/AmountExtractorTest.php
+No syntax errors detected in ./tests/unit/Service/Extraction/DateExtractorTest.php
+No syntax errors detected in ./tests/unit/Service/Extraction/TotalsReconcilerTest.php
+No syntax errors detected in ./tests/unit/Service/Extraction/VatIdExtractorTest.php
+No syntax errors detected in ./tests/unit/Service/Extraction/IbanExtractorTest.php
+No syntax errors detected in ./tests/unit/Service/ListReferenceResolverTest.php
+No syntax errors detected in ./tests/unit/Service/OpenRegisterResolverTest.php
+No syntax errors detected in ./tests/unit/Service/LegalBasesSummaryServiceTest.php
+No syntax errors detected in ./tests/unit/Service/TemplateServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Conversion/LibreOfficeHeadlessBackendTest.php
+No syntax errors detected in ./tests/unit/Service/Conversion/OfficeAppBackendTest.php
+No syntax errors detected in ./tests/unit/Service/Conversion/OutputLayoutResolverTest.php
+No syntax errors detected in ./tests/unit/Service/Conversion/PhpWordBackendTest.php
+No syntax errors detected in ./tests/unit/Service/Conversion/MpdfBackendTest.php
+No syntax errors detected in ./tests/unit/Service/Conversion/EmlBackendTest.php
+No syntax errors detected in ./tests/unit/Service/LegalBasisProposalServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentTextExtractorTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentVersionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/ConsentUpdateHandlerTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymiserBackendStateClientTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationServiceSingleFileRegressionTest.php
+No syntax errors detected in ./tests/unit/Service/WooProfileServiceTest.php
+No syntax errors detected in ./tests/unit/Service/IntakeRoutingServiceTest.php
+No syntax errors detected in ./tests/unit/Service/BasesResolverServiceTest.php
+No syntax errors detected in ./tests/unit/Service/IntakeAuthorizationGateTest.php
+No syntax errors detected in ./tests/unit/Service/DemoDataServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentServiceTest.php
+No syntax errors detected in ./tests/unit/Service/PolicyRetroactiveServiceTest.php
+No syntax errors detected in ./tests/unit/Service/BatchAnonymizeServiceTest.php
+No syntax errors detected in ./tests/unit/Service/BatchStateRepositoryTest.php
+No syntax errors detected in ./tests/unit/Service/BuildsAnonymizationService.php
+No syntax errors detected in ./tests/unit/Service/Intake/ScanFolderIntakeFeederTest.php
+No syntax errors detected in ./tests/unit/Service/Intake/IntakeReadingProgressTest.php
+No syntax errors detected in ./tests/unit/Service/Intake/IntakeNotificationReachTest.php
+No syntax errors detected in ./tests/unit/Service/FileListingServiceTest.php
+No syntax errors detected in ./tests/unit/Service/TextAnalysisServiceTest.php
+No syntax errors detected in ./tests/unit/Service/TemplatePreviewServiceTest.php
+No syntax errors detected in ./tests/unit/Service/CustomDictionaryMatchServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SeparatorSheetServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SubjectErasure/SubjectErasureRulesTest.php
+No syntax errors detected in ./tests/unit/Service/SubjectErasure/SubjectErasurePreviewTest.php
+No syntax errors detected in ./tests/unit/Service/SubjectErasure/SubjectErasureJobTest.php
+No syntax errors detected in ./tests/unit/Service/BatchAnonymizeServiceOutputLayoutTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationServiceCustomDictionaryTest.php
+No syntax errors detected in ./tests/unit/Service/TemplateLanguageServiceTest.php
+No syntax errors detected in ./tests/unit/Service/PartySuggestionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/PrintJobServiceTest.php
+No syntax errors detected in ./tests/unit/Service/TemplateVersionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/FileUploadServiceTest.php
+No syntax errors detected in ./tests/unit/Service/PageLayoutServiceTest.php
+No syntax errors detected in ./tests/unit/Service/PlainLanguageRenditionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/CaseArchiveServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DossierManagementServiceTest.php
+No syntax errors detected in ./tests/unit/Service/IntakeServiceTest.php
+No syntax errors detected in ./tests/unit/Service/RegisterDiscoveryServiceTest.php
+No syntax errors detected in ./tests/unit/Service/BatchUploadServiceTest.php
+No syntax errors detected in ./tests/unit/Service/ConfidentialityLabelServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentFinalityRuleServiceTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationServiceProhibitionTest.php
+No syntax errors detected in ./tests/unit/Service/EntityConsolidationServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SigningServiceTest.php
+No syntax errors detected in ./tests/unit/Service/UploadFragmentReaperTest.php
+No syntax errors detected in ./tests/unit/Service/BatchStateTestDoubles.php
+No syntax errors detected in ./tests/unit/Service/EntityConsolidationProhibitionTest.php
+No syntax errors detected in ./tests/unit/Service/PolicyCrudServiceDeleteTest.php
+No syntax errors detected in ./tests/unit/Service/Charts/ChartSvgRendererTest.php
+No syntax errors detected in ./tests/unit/Service/Charts/TableHtmlRendererTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationServicePublicationClearanceTest.php
+No syntax errors detected in ./tests/unit/Service/PolicyMatchServiceTest.php
+No syntax errors detected in ./tests/unit/Service/IntakeDefaultRuleServiceTest.php
+No syntax errors detected in ./tests/unit/Service/IntakeDetachmentServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentMergeServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentStorageServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DossierObjectReaderTest.php
+No syntax errors detected in ./tests/unit/Service/EmlPreviewServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Suggestion/SupplierIdentityResolverTest.php
+No syntax errors detected in ./tests/unit/Service/Suggestion/HistoryRankerTest.php
+No syntax errors detected in ./tests/unit/Service/Suggestion/CategoryKeywordMapperTest.php
+No syntax errors detected in ./tests/unit/Service/DossierContextServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SettingsInitializerTest.php
+No syntax errors detected in ./tests/unit/Service/TemplateServiceSlugResolutionTest.php
+No syntax errors detected in ./tests/unit/Service/AnonymizationServiceConfidentialityTest.php
+No syntax errors detected in ./tests/unit/Service/RegisterBindingResolutionTest.php
+No syntax errors detected in ./tests/unit/Service/FileEntityStatsServiceTest.php
+No syntax errors detected in ./tests/unit/Service/EntityDetectionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DossierFileServiceTest.php
+No syntax errors detected in ./tests/unit/Service/SigningVerificationServiceTest.php
+No syntax errors detected in ./tests/unit/Service/ObjectionDeadlineCheckerTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentDownloadRecorderTest.php
+No syntax errors detected in ./tests/unit/Service/BatchStateServiceTest.php
+No syntax errors detected in ./tests/unit/Service/TemplateRendererTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentServicePlainRenditionTest.php
+No syntax errors detected in ./tests/unit/Service/SettingsServiceTest.php
+No syntax errors detected in ./tests/unit/Service/FlatFileListServiceTest.php
+No syntax errors detected in ./tests/unit/Service/DocumentComparisonServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Office/SupportedTypeProbeTest.php
+No syntax errors detected in ./tests/unit/Service/Office/OfficeSuiteCapabilityServiceTest.php
+No syntax errors detected in ./tests/unit/Service/Office/SuiteIndependenceTest.php
+No syntax errors detected in ./tests/unit/Service/Office/AnchorRoundTripTest.php
+No syntax errors detected in ./tests/unit/Service/PlainRenditionAcceptanceGateTest.php
+No syntax errors detected in ./tests/unit/Service/ConsentCrudServiceTest.php
+No syntax errors detected in ./tests/unit/Service/PostRegisterReaderTest.php
+No syntax errors detected in ./tests/unit/Service/OcrServiceTest.php
+No syntax errors detected in ./tests/unit/Service/FinalDocumentCorrectionServiceTest.php
+No syntax errors detected in ./tests/unit/Service/ScanBatchSegmentationTest.php
+No syntax errors detected in ./tests/unit/AppHost/ObservabilityManifestParityTest.php
+No syntax errors detected in ./tests/unit/EventListener/RegistersContainerServices.php
+No syntax errors detected in ./tests/unit/EventListener/DossierCheckedOnListenerTest.php
+No syntax errors detected in ./tests/unit/EventListener/FakeEntityRelationDecisionUpdatedEvent.php
+No syntax errors detected in ./tests/unit/EventListener/RegisterDocumentsLeafListenerTest.php
+No syntax errors detected in ./tests/unit/EventListener/EntityRelationDecisionListenerTest.php
+No syntax errors detected in ./tests/unit/EventListener/SigningTaskListenerTest.php
+No syntax errors detected in ./tests/unit/EventListener/SignerEventTranslatorTest.php
+No syntax errors detected in ./tests/unit/EventListener/FilinqEventHandlerTest.php
+No syntax errors detected in ./tests/unit/EventListener/DocumentRegistrationWriteGuardTest.php
+No syntax errors detected in ./tests/unit/EventListener/DocumentSigningRequestedListenerTest.php
+No syntax errors detected in ./tests/unit/EventListener/FilinqEventListenerTest.php
+No syntax errors detected in ./tests/unit/Command/OfficeProbeCommandTest.php
+No syntax errors detected in ./tests/unit/Sections/FilinqAdminTest.php
+No syntax errors detected in ./tests/unit/Exception/ConversionFailedExceptionTest.php
+No syntax errors detected in ./tests/unit/Wave12SecurityRegressionTest.php
+No syntax errors detected in ./tests/unit/Portal/PortalContributionProviderTest.php
+No syntax errors detected in ./tests/unit/Portal/PortalAssertionVerifierTest.php
+No syntax errors detected in ./tests/unit/RenameDutchColumnsTest.php
+No syntax errors detected in ./tests/unit/Settings/UnifiedSearchConsistencyTest.php
+No syntax errors detected in ./tests/unit/Settings/IntakeFailureNotificationTest.php
+No syntax errors detected in ./tests/unit/Settings/RedactionReviewMarkSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/ServiceWrittenCreateTest.php
+No syntax errors detected in ./tests/unit/Settings/FilinqAdminSettingsTest.php
+No syntax errors detected in ./tests/unit/Settings/ErasureRequestSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/CaseDocumentSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/FinalDocumentSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/LeafIntegrationsConfigurationTest.php
+No syntax errors detected in ./tests/unit/Settings/MergeJobSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/SchemaAuthorizationCoverageTest.php
+No syntax errors detected in ./tests/unit/Settings/DocumentRegistrationSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/IntakeDocumentSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/DocumentProductionSchemaTest.php
+No syntax errors detected in ./tests/unit/Settings/DossierRegisterConfigTest.php
+No syntax errors detected in ./tests/unit/Settings/ProcessingActivityCatalogueTest.php
+No syntax errors detected in ./tests/stubs/openregister-apphost.stub.php
+No syntax errors detected in ./tests/stubs/OpenRegisterStubs.php
+No syntax errors detected in ./tests/stubs/openregister-mcp.stub.php
+No syntax errors detected in ./tests/stubs/GlobalStubs.php
+No syntax errors detected in ./tests/stubs/NextcloudStubs.php
+No syntax errors detected in ./tests/bootstrap-unit.php
+No syntax errors detected in ./tests/e2e/ci-router.php
+No syntax errors detected in ./tests/bootstrap-standalone.php
+No syntax errors detected in ./templates/settings/admin.php
+No syntax errors detected in ./templates/index.php
+No syntax errors detected in ./scripts/coverage-guard.php
+No syntax errors detected in ./appinfo/routes.php
+No syntax errors detected in ./lib/BackgroundJob/DomainFolderReconciliationJob.php
+No syntax errors detected in ./lib/BackgroundJob/FolderExtractionJob.php
+No syntax errors detected in ./lib/BackgroundJob/MergeDocumentsJob.php
+No syntax errors detected in ./lib/BackgroundJob/SigningExpirationJob.php
+No syntax errors detected in ./lib/BackgroundJob/UploadFragmentReaperJob.php
+No syntax errors detected in ./lib/BackgroundJob/BatchDocumentJob.php
+No syntax errors detected in ./lib/BackgroundJob/BatchCorrespondenceJob.php
+No syntax errors detected in ./lib/BackgroundJob/BatchPrintJob.php
+No syntax errors detected in ./lib/Controller/HealthController.php
+No syntax errors detected in ./lib/Controller/MergeController.php
+No syntax errors detected in ./lib/Controller/SettingsController.php
+No syntax errors detected in ./lib/Controller/PrintController.php
+No syntax errors detected in ./lib/Controller/TemplatePreviewController.php
+No syntax errors detected in ./lib/Controller/DashboardController.php
+No syntax errors detected in ./lib/Controller/VersionController.php
+No syntax errors detected in ./lib/Controller/Pdfa3ConversionController.php
+No syntax errors detected in ./lib/Controller/ExtractionController.php
+No syntax errors detected in ./lib/Controller/CaseDocumentsController.php
+No syntax errors detected in ./lib/Controller/TemplateVersionsController.php
+No syntax errors detected in ./lib/Controller/PreferencesController.php
+No syntax errors detected in ./lib/Controller/ConsentController.php
+No syntax errors detected in ./lib/Controller/AnonymiserWarningController.php
+No syntax errors detected in ./lib/Controller/PostRegisterController.php
+No syntax errors detected in ./lib/Controller/RedactionOutputController.php
+No syntax errors detected in ./lib/Controller/EmlPreviewController.php
+No syntax errors detected in ./lib/Controller/ScanIntakeController.php
+No syntax errors detected in ./lib/Controller/PrintJobController.php
+No syntax errors detected in ./lib/Controller/GlAccountSuggestionController.php
+No syntax errors detected in ./lib/Controller/ValidationController.php
+No syntax errors detected in ./lib/Controller/DocumentController.php
+No syntax errors detected in ./lib/Controller/ReportRenderController.php
+No syntax errors detected in ./lib/Controller/FinalDocumentController.php
+No syntax errors detected in ./lib/Controller/MetadataController.php
+No syntax errors detected in ./lib/Controller/DossierController.php
+No syntax errors detected in ./lib/Controller/StandingConsentController.php
+No syntax errors detected in ./lib/Controller/PortalSigningReceiverController.php
+No syntax errors detected in ./lib/Controller/DocumentProductionController.php
+No syntax errors detected in ./lib/Controller/DossierManagementController.php
+No syntax errors detected in ./lib/Controller/CustomDictionaryController.php
+No syntax errors detected in ./lib/Controller/MetricsController.php
+No syntax errors detected in ./lib/Controller/TemplateRequestHandler.php
+No syntax errors detected in ./lib/Controller/ComparisonController.php
+No syntax errors detected in ./lib/Controller/TemplatesController.php
+No syntax errors detected in ./lib/Controller/BatchAnonymizationController.php
+No syntax errors detected in ./lib/Controller/PolicyController.php
+No syntax errors detected in ./lib/Controller/PdfController.php
+No syntax errors detected in ./lib/Controller/SetupController.php
+No syntax errors detected in ./lib/Controller/AnonymizationController.php
+No syntax errors detected in ./lib/Controller/IntakeController.php
+No syntax errors detected in ./lib/Controller/CorrespondenceController.php
+No syntax errors detected in ./lib/Controller/SigningFolderController.php
+No syntax errors detected in ./lib/Controller/SigningController.php
+No syntax errors detected in ./lib/Middleware/LanguageNegotiationMiddleware.php
+No syntax errors detected in ./lib/Repair/ConsolidateRegisters.php
+No syntax errors detected in ./lib/Repair/ConsolidateRegistersDecisions.php
+No syntax errors detected in ./lib/Repair/RenameDutchColumns.php
+No syntax errors detected in ./lib/Repair/MigrateAppConfigKeys.php
+No syntax errors detected in ./lib/Repair/MigrateUserPreferences.php
+No syntax errors detected in ./lib/Repair/MigrateSchemaApplicationId.php
+No syntax errors detected in ./lib/Repair/ConsolidateRegistersGateway.php
+No syntax errors detected in ./lib/Event/SigningConcludedEventFactory.php
+No syntax errors detected in ./lib/Event/SignerStepRejectedEvent.php
+No syntax errors detected in ./lib/Event/IntakeDocumentReceivedEvent.php
+No syntax errors detected in ./lib/Event/SigningConcludedEvent.php
+No syntax errors detected in ./lib/Event/GlAccountSuggestedEvent.php
+No syntax errors detected in ./lib/Event/SignerStepApprovedEvent.php
+No syntax errors detected in ./lib/Event/DocumentSigningRequestedEvent.php
+No syntax errors detected in ./lib/Event/FinancialExtractionCompletedEvent.php
+No syntax errors detected in ./lib/Event/SignerStepPendingEvent.php
+No syntax errors detected in ./lib/Event/SignerChainCompletedEvent.php
+No syntax errors detected in ./lib/Event/SigningProvenance.php
+No syntax errors detected in ./lib/AppInfo/RegistrationBootstrap.php
+No syntax errors detected in ./lib/AppInfo/OpenRegisterAutoloader.php
+No syntax errors detected in ./lib/AppInfo/PdfConversionRegistrar.php
+No syntax errors detected in ./lib/AppInfo/ObjectEventRegistrar.php
+No syntax errors detected in ./lib/AppInfo/Application.php
+No syntax errors detected in ./lib/AppInfo/IntegrationLeafRegistrar.php
+No syntax errors detected in ./lib/AppInfo/SigningEventRegistrar.php
+No syntax errors detected in ./lib/AppInfo/MetricsEngineFactory.php
+No syntax errors detected in ./lib/AppInfo/ObservabilityRegistrar.php
+No syntax errors detected in ./lib/Mcp/FilinqScannableServices.php
+No syntax errors detected in ./lib/Service/SigningVerificationService.php
+No syntax errors detected in ./lib/Service/UploadFragmentReaper.php
+No syntax errors detected in ./lib/Service/DocumentFinalityRuleService.php
+No syntax errors detected in ./lib/Service/ConsentRecordWriter.php
+No syntax errors detected in ./lib/Service/AnonymizationResultParser.php
+No syntax errors detected in ./lib/Service/LegalBasesSummaryService.php
+No syntax errors detected in ./lib/Service/DossierContextService.php
+No syntax errors detected in ./lib/Service/AnonymizeRequestValidator.php
+No syntax errors detected in ./lib/Service/FolderFileEnumerator.php
+No syntax errors detected in ./lib/Service/MergeJobRepository.php
+No syntax errors detected in ./lib/Service/Signing/NativeSigningProvider.php
+No syntax errors detected in ./lib/Service/Signing/SigningProviderInterface.php
+No syntax errors detected in ./lib/Service/Signing/SigningCancellationService.php
+No syntax errors detected in ./lib/Service/Signing/ValidSignProvider.php
+No syntax errors detected in ./lib/Service/Signing/AssertionCanonicalizer.php
+No syntax errors detected in ./lib/Service/Signing/SigningProviderFactory.php
+No syntax errors detected in ./lib/Service/DomainFolderService.php
+No syntax errors detected in ./lib/Service/DocumentMergeService.php
+No syntax errors detected in ./lib/Service/EmlEnvelopeRenderer.php
+No syntax errors detected in ./lib/Service/DocumentDownloadRecorder.php
+No syntax errors detected in ./lib/Service/MetadataService.php
+No syntax errors detected in ./lib/Service/RelationSkipDecisionService.php
+No syntax errors detected in ./lib/Service/SigningMandateService.php
+No syntax errors detected in ./lib/Service/TemplateService.php
+No syntax errors detected in ./lib/Service/DossierObjectRepository.php
+No syntax errors detected in ./lib/Service/PdfStreamReaderFactory.php
+No syntax errors detected in ./lib/Service/BatchRequestService.php
+No syntax errors detected in ./lib/Service/EmlStructureReader.php
+No syntax errors detected in ./lib/Service/PartySuggestionService.php
+No syntax errors detected in ./lib/Service/FinancialExtractionService.php
+No syntax errors detected in ./lib/Service/ProhibitionPolicyService.php
+No syntax errors detected in ./lib/Service/SigningConclusionEmitter.php
+No syntax errors detected in ./lib/Service/ConsentScopeValidator.php
+No syntax errors detected in ./lib/Service/SigningFolderService.php
+No syntax errors detected in ./lib/Service/DocumentDomainService.php
+No syntax errors detected in ./lib/Service/SignedArtifactProducer.php
+No syntax errors detected in ./lib/Service/DocumentVersionService.php
+No syntax errors detected in ./lib/Service/PolicyRuleNormaliser.php
+No syntax errors detected in ./lib/Service/IntakeDefaultRuleService.php
+No syntax errors detected in ./lib/Service/GlAccountSuggestionService.php
+No syntax errors detected in ./lib/Service/SeparatorSheetService.php
+No syntax errors detected in ./lib/Service/SigningRequestValidator.php
+No syntax errors detected in ./lib/Service/TextAnalysisService.php
+No syntax errors detected in ./lib/Service/AnonymizeRequestService.php
+No syntax errors detected in ./lib/Service/DocumentObjectServiceResolver.php
+No syntax errors detected in ./lib/Service/TemplateLanguageService.php
+No syntax errors detected in ./lib/Service/ScanProfileService.php
+No syntax errors detected in ./lib/Service/SigningActorResolver.php
+No syntax errors detected in ./lib/Service/DossierObjectReader.php
+No syntax errors detected in ./lib/Service/ConsentService.php
+No syntax errors detected in ./lib/Service/FolderBatchService.php
+No syntax errors detected in ./lib/Service/ExternalMountValidator.php
+No syntax errors detected in ./lib/Service/EmlAttachmentRenderer.php
+No syntax errors detected in ./lib/Service/TemplatePreviewService.php
+No syntax errors detected in ./lib/Service/AnonymiserBackendStateClient.php
+No syntax errors detected in ./lib/Service/IntakeFilePlacement.php
+No syntax errors detected in ./lib/Service/EmlPdfAssemblyService.php
+No syntax errors detected in ./lib/Service/DocumentService.php
+No syntax errors detected in ./lib/Service/BatchStateRepository.php
+No syntax errors detected in ./lib/Service/DocumentValidationService.php
+No syntax errors detected in ./lib/Service/Redaction/RedactionOutputModes.php
+No syntax errors detected in ./lib/Service/Redaction/RedactionReviewGate.php
+No syntax errors detected in ./lib/Service/Redaction/RedactionOutputGuard.php
+No syntax errors detected in ./lib/Service/Redaction/DownloadAgreementGate.php
+No syntax errors detected in ./lib/Service/Redaction/DownloadAgreementRepository.php
+No syntax errors detected in ./lib/Service/Redaction/PublicationListComposer.php
+No syntax errors detected in ./lib/Service/Redaction/AnonymizationLinkReader.php
+No syntax errors detected in ./lib/Service/Redaction/RedactionVerdictRecorder.php
+No syntax errors detected in ./lib/Service/Redaction/DetectionRunIdentity.php
+No syntax errors detected in ./lib/Service/Redaction/RedactionReviewMarkRepository.php
+No syntax errors detected in ./lib/Service/Redaction/RedactionIrreversibilityVerifier.php
+No syntax errors detected in ./lib/Service/Redaction/RedactionLeakRoute.php
+No syntax errors detected in ./lib/Service/ConfidentialityLabelService.php
+No syntax errors detected in ./lib/Service/TextNormaliser.php
+No syntax errors detected in ./lib/Service/BatchExtractionService.php
+No syntax errors detected in ./lib/Service/EmlPreviewService.php
+No syntax errors detected in ./lib/Service/SigningAuditService.php
+No syntax errors detected in ./lib/Service/DossierEntityCollector.php
+No syntax errors detected in ./lib/Service/BasesResolverService.php
+No syntax errors detected in ./lib/Service/LegalBasisProposalService.php
+No syntax errors detected in ./lib/Service/BaseLabelResolver.php
+No syntax errors detected in ./lib/Service/ObjectResultExtractor.php
+No syntax errors detected in ./lib/Service/DemoDataService.php
+No syntax errors detected in ./lib/Service/CustomDictionaryMatchService.php
+No syntax errors detected in ./lib/Service/Editing/OdfBlockStyleCodec.php
+No syntax errors detected in ./lib/Service/Editing/PackageCodec.php
+No syntax errors detected in ./lib/Service/Editing/SpreadsheetFamilyCodec.php
+No syntax errors detected in ./lib/Service/Editing/OdpPresentationCodec.php
+No syntax errors detected in ./lib/Service/Editing/GuardedWriter.php
+No syntax errors detected in ./lib/Service/Editing/EditSessionService.php
+No syntax errors detected in ./lib/Service/Editing/DocumentGuard.php
+No syntax errors detected in ./lib/Service/Editing/OoxmlBlockStyleCodec.php
+No syntax errors detected in ./lib/Service/Editing/PptxPresentationCodec.php
+No syntax errors detected in ./lib/Service/Editing/DocumentAgentService.php
+No syntax errors detected in ./lib/Service/Editing/AgentArtefactMarker.php
+No syntax errors detected in ./lib/Service/Editing/PresentationCodec.php
+No syntax errors detected in ./lib/Service/Editing/PresentationFamilyCodec.php
+No syntax errors detected in ./lib/Service/Editing/ChartCodec.php
+No syntax errors detected in ./lib/Service/Editing/SpreadsheetCodec.php
+No syntax errors detected in ./lib/Service/Editing/XlsxSpreadsheetCodec.php
+No syntax errors detected in ./lib/Service/Editing/OdsSpreadsheetCodec.php
+No syntax errors detected in ./lib/Service/Editing/DocumentCodecs.php
+No syntax errors detected in ./lib/Service/Editing/PackageMetadataCodec.php
+No syntax errors detected in ./lib/Service/Editing/PackagePartIo.php
+No syntax errors detected in ./lib/Service/Editing/XmlBlockScanner.php
+No syntax errors detected in ./lib/Service/Editing/BlockStyleFamilyCodec.php
+No syntax errors detected in ./lib/Service/Editing/BlockStyleCodec.php
+No syntax errors detected in ./lib/Service/LanguageClassifier.php
+No syntax errors detected in ./lib/Service/EmlTemplateLoader.php
+No syntax errors detected in ./lib/Service/CustomDictionaryDetectionRunner.php
+No syntax errors detected in ./lib/Service/IntakeRepository.php
+No syntax errors detected in ./lib/Service/PostRegisterReader.php
+No syntax errors detected in ./lib/Service/ReplacementVerificationService.php
+No syntax errors detected in ./lib/Service/Extraction/AmountExtractor.php
+No syntax errors detected in ./lib/Service/Extraction/VatIdExtractor.php
+No syntax errors detected in ./lib/Service/Extraction/IbanExtractor.php
+No syntax errors detected in ./lib/Service/Extraction/DateExtractor.php
+No syntax errors detected in ./lib/Service/Extraction/KvkExtractor.php
+No syntax errors detected in ./lib/Service/Extraction/TotalsReconciler.php
+No syntax errors detected in ./lib/Service/DossierPlaceholderRanker.php
+No syntax errors detected in ./lib/Service/CorrespondenceService.php
+No syntax errors detected in ./lib/Service/Validation/DocumentFileInspector.php
+No syntax errors detected in ./lib/Service/Validation/ValidationProfileResolver.php
+No syntax errors detected in ./lib/Service/Conversion/MpdfBackend.php
+No syntax errors detected in ./lib/Service/Conversion/PhpWordIo.php
+No syntax errors detected in ./lib/Service/Conversion/PhpWordBackend.php
+No syntax errors detected in ./lib/Service/Conversion/OutputLayoutResolver.php
+No syntax errors detected in ./lib/Service/Conversion/ConversionBackendInterface.php
+No syntax errors detected in ./lib/Service/Conversion/OfficeAppBackend.php
+No syntax errors detected in ./lib/Service/Conversion/LibreOfficeHeadlessBackend.php
+No syntax errors detected in ./lib/Service/Conversion/EmlBackend.php
+No syntax errors detected in ./lib/Service/Conversion/SofficeProcessRunner.php
+No syntax errors detected in ./lib/Service/LegalBasisCatalog.php
+No syntax errors detected in ./lib/Service/ConfidentialityLabel.php
+No syntax errors detected in ./lib/Service/ScanBatchRepository.php
+No syntax errors detected in ./lib/Service/CustomDictionaryAccessGate.php
+No syntax errors detected in ./lib/Service/DocumentReviewService.php
+No syntax errors detected in ./lib/Service/OpenRegisterResolver.php
+No syntax errors detected in ./lib/Service/ConsentCrudService.php
+No syntax errors detected in ./lib/Service/MergedPdfDocument.php
+No syntax errors detected in ./lib/Service/DossierSummaryDataService.php
+No syntax errors detected in ./lib/Service/SigningService.php
+No syntax errors detected in ./lib/Service/PlainLanguageRenditionService.php
+No syntax errors detected in ./lib/Service/FlatFileListService.php
+No syntax errors detected in ./lib/Service/FinalDocumentFailureMapper.php
+No syntax errors detected in ./lib/Service/PolicyMatchService.php
+No syntax errors detected in ./lib/Service/SavedViewReader.php
+No syntax errors detected in ./lib/Service/BatchUploadService.php
+No syntax errors detected in ./lib/Service/ConsentPolicyReferentValidator.php
+No syntax errors detected in ./lib/Service/UploadPolicyService.php
+No syntax errors detected in ./lib/Service/FileListingService.php
+No syntax errors detected in ./lib/Service/FileUploadService.php
+No syntax errors detected in ./lib/Service/EmlAnonymizationService.php
+No syntax errors detected in ./lib/Service/EntityDetectionService.php
+No syntax errors detected in ./lib/Service/Intake/ScanFolderIntakeFeeder.php
+No syntax errors detected in ./lib/Service/Intake/IntakeNotificationReach.php
+No syntax errors detected in ./lib/Service/Intake/IntakeReadingProgress.php
+No syntax errors detected in ./lib/Service/CustomDictionaryRepository.php
+No syntax errors detected in ./lib/Service/DomainFolderGateway.php
+No syntax errors detected in ./lib/Service/ObjectionDeadlineChecker.php
+No syntax errors detected in ./lib/Service/ConsentNotesHelper.php
+No syntax errors detected in ./lib/Service/PolicyCrudService.php
+No syntax errors detected in ./lib/Service/FinalDocumentRepository.php
+No syntax errors detected in ./lib/Service/PortalSigningDocumentResolver.php
+No syntax errors detected in ./lib/Service/SubjectErasure/SubjectErasurePreview.php
+No syntax errors detected in ./lib/Service/SubjectErasure/SubjectErasureJob.php
+No syntax errors detected in ./lib/Service/SubjectErasure/SubjectErasureRules.php
+No syntax errors detected in ./lib/Service/PageLayoutService.php
+No syntax errors detected in ./lib/Service/AnonymizationPersistenceService.php
+No syntax errors detected in ./lib/Service/PdfService.php
+No syntax errors detected in ./lib/Service/DocumentTextExtractor.php
+No syntax errors detected in ./lib/Service/IntakeService.php
+No syntax errors detected in ./lib/Service/OpenRegisterAvailabilityService.php
+No syntax errors detected in ./lib/Service/ScanPageReader.php
+No syntax errors detected in ./lib/Service/NextcloudMountCapabilityProbe.php
+No syntax errors detected in ./lib/Service/ProhibitionOverrideCommitter.php
+No syntax errors detected in ./lib/Service/SettingsService.php
+No syntax errors detected in ./lib/Service/DomainDirectory.php
+No syntax errors detected in ./lib/Service/TemplateVersionService.php
+No syntax errors detected in ./lib/Service/GrondslagenPdfWriter.php
+No syntax errors detected in ./lib/Service/FileEntityStatsService.php
+No syntax errors detected in ./lib/Service/ScanBatchService.php
+No syntax errors detected in ./lib/Service/Pdfa3ConversionService.php
+No syntax errors detected in ./lib/Service/OcrService.php
+No syntax errors detected in ./lib/Service/DocumentAnonymizeRunner.php
+No syntax errors detected in ./lib/Service/PhpWordHtmlRenderer.php
+No syntax errors detected in ./lib/Service/OpenRegisterServiceLocator.php
+No syntax errors detected in ./lib/Service/UnredactedEntitiesValidator.php
+No syntax errors detected in ./lib/Service/ProhibitionGateService.php
+No syntax errors detected in ./lib/Service/GeneratedDocumentLogger.php
+No syntax errors detected in ./lib/Service/Charts/BarChartRenderer.php
+No syntax errors detected in ./lib/Service/Charts/ChartLegendRenderer.php
+No syntax errors detected in ./lib/Service/Charts/SvgPrimitives.php
+No syntax errors detected in ./lib/Service/Charts/TableDataNormalizer.php
+No syntax errors detected in ./lib/Service/Charts/ChartLabelFormatter.php
+No syntax errors detected in ./lib/Service/Charts/CartesianFrame.php
+No syntax errors detected in ./lib/Service/Charts/ThousandsFormatter.php
+No syntax errors detected in ./lib/Service/Charts/ChartDataNormalizer.php
+No syntax errors detected in ./lib/Service/Charts/TableCellFormatter.php
+No syntax errors detected in ./lib/Service/Charts/TableHtmlRenderer.php
+No syntax errors detected in ./lib/Service/Charts/ChartSvgRenderer.php
+No syntax errors detected in ./lib/Service/Charts/ChartRenderError.php
+No syntax errors detected in ./lib/Service/Charts/ChartScale.php
+No syntax errors detected in ./lib/Service/Charts/ChartPalette.php
+No syntax errors detected in ./lib/Service/Charts/PieChartRenderer.php
+No syntax errors detected in ./lib/Service/Charts/LineChartRenderer.php
+No syntax errors detected in ./lib/Service/ProhibitionSkipTier.php
+No syntax errors detected in ./lib/Service/PdfDocumentFactory.php
+No syntax errors detected in ./lib/Service/PrintJobService.php
+No syntax errors detected in ./lib/Service/PeriodicDocumentService.php
+No syntax errors detected in ./lib/Service/CaseArchiveService.php
+No syntax errors detected in ./lib/Service/ConsentUpdateHandler.php
+No syntax errors detected in ./lib/Service/TemplateRenderer.php
+No syntax errors detected in ./lib/Service/DocumentStorageService.php
+No syntax errors detected in ./lib/Service/BatchReportService.php
+No syntax errors detected in ./lib/Service/Suggestion/SupplierIdentityResolver.php
+No syntax errors detected in ./lib/Service/Suggestion/HistoryRanker.php
+No syntax errors detected in ./lib/Service/Suggestion/CategoryKeywordMapper.php
+No syntax errors detected in ./lib/Service/PdfConversionService.php
+No syntax errors detected in ./lib/Service/RegisterDiscoveryService.php
+No syntax errors detected in ./lib/Service/CustomDictionaryPayloadNormaliser.php
+No syntax errors detected in ./lib/Service/Comparison/WordDiffer.php
+No syntax errors detected in ./lib/Service/Comparison/RedactionAnnotator.php
+No syntax errors detected in ./lib/Service/FinalDocumentUnfreezeService.php
+No syntax errors detected in ./lib/Service/Pdfa3MetadataAssembler.php
+No syntax errors detected in ./lib/Service/IntakeDetachmentService.php
+No syntax errors detected in ./lib/Service/FinalDocumentCorrectionService.php
+No syntax errors detected in ./lib/Service/MergeCoverRenderer.php
+No syntax errors detected in ./lib/Service/PlainRenditionAcceptanceGate.php
+No syntax errors detected in ./lib/Service/SettingsInitializer.php
+No syntax errors detected in ./lib/Service/AnonymisedPdfOutputService.php
+No syntax errors detected in ./lib/Service/IntakeAuthorizationGate.php
+No syntax errors detected in ./lib/Service/DossierManagementService.php
+No syntax errors detected in ./lib/Service/BatchStateService.php
+No syntax errors detected in ./lib/Service/ListReferenceResolver.php
+No syntax errors detected in ./lib/Service/WooProfileService.php
+No syntax errors detected in ./lib/Service/DomainFolderReconciler.php
+No syntax errors detected in ./lib/Service/MountCapabilityProbe.php
+No syntax errors detected in ./lib/Service/GrondslagenSummaryAttacher.php
+No syntax errors detected in ./lib/Service/EntityConsolidationService.php
+No syntax errors detected in ./lib/Service/BatchAnonymizeService.php
+No syntax errors detected in ./lib/Service/DocumentComparisonService.php
+No syntax errors detected in ./lib/Service/Office/SupportedTypeProbe.php
+No syntax errors detected in ./lib/Service/Office/OfficeSuiteCapabilityService.php
+No syntax errors detected in ./lib/Service/DossierFileService.php
+No syntax errors detected in ./lib/Service/DataResolverService.php
+No syntax errors detected in ./lib/Service/CustomDictionaryService.php
+No syntax errors detected in ./lib/Service/AnonymizationService.php
+No syntax errors detected in ./lib/Service/DocumentRenderPipeline.php
+No syntax errors detected in ./lib/Service/PolicyRetroactiveService.php
+No syntax errors detected in ./lib/Service/IntakeRoutingService.php
+No syntax errors detected in ./lib/Service/FinalDocumentService.php
+No syntax errors detected in ./lib/Service/ReportRenderService.php
+No syntax errors detected in ./lib/EventListener/EnrichmentRunner.php
+No syntax errors detected in ./lib/EventListener/FilinqEventListener.php
+No syntax errors detected in ./lib/EventListener/EntityRelationDecisionListener.php
+No syntax errors detected in ./lib/EventListener/RegisterDocumentsLeafListener.php
+No syntax errors detected in ./lib/EventListener/FilinqEventHandler.php
+No syntax errors detected in ./lib/EventListener/DocumentSigningRequestedListener.php
+No syntax errors detected in ./lib/EventListener/IntakeDocumentReceivedListener.php
+No syntax errors detected in ./lib/EventListener/ValidationRunner.php
+No syntax errors detected in ./lib/EventListener/DossierCheckedOnListener.php
+No syntax errors detected in ./lib/EventListener/SigningTaskListener.php
+No syntax errors detected in ./lib/EventListener/DocumentRegistrationWriteGuard.php
+No syntax errors detected in ./lib/EventListener/SignerEventTranslator.php
+No syntax errors detected in ./lib/Command/OfficeProbeCommand.php
+No syntax errors detected in ./lib/Sections/FilinqAdmin.php
+No syntax errors detected in ./lib/Exception/MergeRefusedException.php
+No syntax errors detected in ./lib/Exception/PolicyRejectedException.php
+No syntax errors detected in ./lib/Exception/Pdfa3ConversionException.php
+No syntax errors detected in ./lib/Exception/AgreementStoreUnreadableException.php
+No syntax errors detected in ./lib/Exception/ConversionFailedException.php
+No syntax errors detected in ./lib/Exception/DocumentFinalException.php
+No syntax errors detected in ./lib/Exception/SigningCancellationNotSupportedException.php
+No syntax errors detected in ./lib/Exception/UploadRefusedException.php
+No syntax errors detected in ./lib/Exception/RegisterNotConfiguredException.php
+No syntax errors detected in ./lib/Exception/MergeJobStoreUnreadableException.php
+No syntax errors detected in ./lib/Exception/IntakeRefusedException.php
+No syntax errors detected in ./lib/Exception/PlainRenditionRefusedException.php
+No syntax errors detected in ./lib/Exception/RedactionNotReviewedException.php
+No syntax errors detected in ./lib/Exception/ComparisonException.php
+No syntax errors detected in ./lib/Exception/ProhibitionGateException.php
+No syntax errors detected in ./lib/Dashboard/AnonymizationWidget.php
+No syntax errors detected in ./lib/Dashboard/FileEntitiesWidget.php
+No syntax errors detected in ./lib/Portal/PortalAssertionVerifier.php
+No syntax errors detected in ./lib/Portal/PortalContributionProvider.php
+No syntax errors detected in ./lib/Settings/FilinqAdmin.php
+No syntax errors detected in ./.php-cs-fixer.dist.php
+No syntax errors detected in ./phpstan-bootstrap.php
+
+=== phpcs ===
+.[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m.[33mW[0m.[33mW[0m[33mW[0m[33mW[0m[33mW[0m.[33mW[0m.[33mW[0m[33mW[0m[33mW[0m..[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m..[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m.[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m 60 / 74 (81%)
+[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m[33mW[0m.[33mW[0m.[33mW[0m                                               74 / 74 (100%)
+
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Controller/TemplateRequestHandler.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 40 | [33mWARNING[0m | Class TemplateRequestHandler is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/ComparisonController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 50 | [33mWARNING[0m | Class ComparisonController is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/PrintController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 54 | [33mWARNING[0m | Class PrintController is missing @spec PHPDoc tag — link back
+    |         | to openspec/specs/{capability}/spec.md#requirement-{slug}, not
+    |         | a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/TemplatesController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 48 | [33mWARNING[0m | Class TemplatesController is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...linde/memcap-work/lq-lanes/fq/lib/Controller/TemplatePreviewController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 45 | [33mWARNING[0m | Class TemplatePreviewController is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/DashboardController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 53 | [33mWARNING[0m | Class DashboardController is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/MetadataController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 46 | [33mWARNING[0m | Class MetadataController is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nlinde/memcap-work/lq-lanes/fq/lib/Event/DocumentSigningRequestedEvent.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 16 WARNINGS AFFECTING 16 LINES[0m
+--------------------------------------------------------------------------------
+ 105 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::getProvenance()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 114 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::getSourceApp() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 123 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::getSubjectRegister() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 132 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::getSubjectSchema() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 141 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::getSubjectId() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 150 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::getSubjectLabel()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 159 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::getDocumentReference() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 168 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::getSigners() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 177 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::getSignatureLevel() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 186 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::getSigningMode()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 195 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::getExternalReference() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 204 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::getCorrelationId() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 213 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::getSigningRequestId() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 224 | [33mWARNING[0m | Public method
+     |         | DocumentSigningRequestedEvent::setSigningRequestId() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 234 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::isHandled() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 245 | [33mWARNING[0m | Public method DocumentSigningRequestedEvent::setHandled() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/DossierController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  68 | [33mWARNING[0m | Class DossierController is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 107 | [33mWARNING[0m | Public method DossierController::generateGrondslagenSummary()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Event/IntakeDocumentReceivedEvent.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 8 WARNINGS AFFECTING 8 LINES[0m
+--------------------------------------------------------------------------------
+ 110 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getChannel() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 120 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getFileId() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 130 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getFileName() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 140 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getSubject() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 150 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getSender() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 160 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getSourceRef() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 170 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getReceivedAt() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 185 | [33mWARNING[0m | Public method IntakeDocumentReceivedEvent::getArrivedWith() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/EmlPreviewController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  47 | [33mWARNING[0m | Class EmlPreviewController is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 130 | [33mWARNING[0m | Public method EmlPreviewController::preview() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/AppInfo/Application.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+ 36 | [33mWARNING[0m | Class Application is missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+ 69 | [33mWARNING[0m | Public method Application::register() is missing @spec PHPDoc
+    |         | tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 82 | [33mWARNING[0m | Public method Application::boot() is missing @spec PHPDoc tag
+    |         | — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/AppInfo/IntegrationLeafRegistrar.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 50 | [33mWARNING[0m | Class IntegrationLeafRegistrar is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+ 74 | [33mWARNING[0m | Public method IntegrationLeafRegistrar::register() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Event/SigningProvenance.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 6 WARNINGS AFFECTING 6 LINES[0m
+--------------------------------------------------------------------------------
+  69 | [33mWARNING[0m | Public method SigningProvenance::getSourceApp() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+  78 | [33mWARNING[0m | Public method SigningProvenance::getSubjectRegister() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+  87 | [33mWARNING[0m | Public method SigningProvenance::getSubjectSchema() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+  96 | [33mWARNING[0m | Public method SigningProvenance::getSubjectId() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 105 | [33mWARNING[0m | Public method SigningProvenance::getExternalReference() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 114 | [33mWARNING[0m | Public method SigningProvenance::getCorrelationId() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...linde/memcap-work/lq-lanes/fq/lib/Controller/StandingConsentController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 49 | [33mWARNING[0m | Class StandingConsentController is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ome/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/PolicyController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+  47 | [33mWARNING[0m | Class PolicyController is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  78 | [33mWARNING[0m | Public method PolicyController::indexProhibitions() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 105 | [33mWARNING[0m | Public method PolicyController::showProhibition() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 135 | [33mWARNING[0m | Public method PolicyController::createProhibition() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 165 | [33mWARNING[0m | Public method PolicyController::updateProhibition() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Service/AnonymizationResultParser.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 37 | [33mWARNING[0m | Class AnonymizationResultParser is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/memcap-work/lq-lanes/fq/lib/Middleware/LanguageNegotiationMiddleware.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  64 | [33mWARNING[0m | Class LanguageNegotiationMiddleware is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 213 | [33mWARNING[0m | Public method LanguageNegotiationMiddleware::afterController()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ome/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/HealthController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 62 | [33mWARNING[0m | Class HealthController is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/MetricsController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 59 | [33mWARNING[0m | Class MetricsController is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...rubenlinde/memcap-work/lq-lanes/fq/lib/Service/DossierObjectRepository.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  49 | [33mWARNING[0m | Class DossierObjectRepository is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  91 | [33mWARNING[0m | Public method DossierObjectRepository::resolveDossierFolder()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 183 | [33mWARNING[0m | Public method DossierObjectRepository::loadDossierContext() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/ValidationController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 50 | [33mWARNING[0m | Class ValidationController is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/AppInfo/RegistrationBootstrap.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  53 | [33mWARNING[0m | Class RegistrationBootstrap is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  61 | [33mWARNING[0m | Public method RegistrationBootstrap::register() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 154 | [33mWARNING[0m | Public method RegistrationBootstrap::boot() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...inde/memcap-work/lq-lanes/fq/lib/Service/DocumentObjectServiceResolver.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 41 | [33mWARNING[0m | Class DocumentObjectServiceResolver is missing @spec PHPDoc tag
+    |         | — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+ 64 | [33mWARNING[0m | Public method DocumentObjectServiceResolver::resolve() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/AppInfo/OpenRegisterAutoloader.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 49 | [33mWARNING[0m | Class OpenRegisterAutoloader is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/EmlStructureReader.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+  37 | [33mWARNING[0m | Class EmlStructureReader is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  50 | [33mWARNING[0m | Public method EmlStructureReader::prop() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+  75 | [33mWARNING[0m | Public method EmlStructureReader::headers() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 152 | [33mWARNING[0m | Public method EmlStructureReader::attachments() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 168 | [33mWARNING[0m | Public method EmlStructureReader::inlineImages() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...inde/memcap-work/lq-lanes/fq/lib/Controller/TemplateVersionsController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 47 | [33mWARNING[0m | Class TemplateVersionsController is missing @spec PHPDoc tag
+    |         | — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/AppInfo/PdfConversionRegistrar.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 45 | [33mWARNING[0m | Class PdfConversionRegistrar is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Service/LegalBasesSummaryService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  66 | [33mWARNING[0m | Class LegalBasesSummaryService is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 275 | [33mWARNING[0m | Public method LegalBasesSummaryService::authorizeAccess() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/TemplateService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 49 | [33mWARNING[0m | Class TemplateService is missing @spec PHPDoc tag — link back
+    |         | to openspec/specs/{capability}/spec.md#requirement-{slug}, not
+    |         | a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/AppInfo/ObjectEventRegistrar.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  56 | [33mWARNING[0m | Class ObjectEventRegistrar is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  70 | [33mWARNING[0m | Public method ObjectEventRegistrar::register() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 136 | [33mWARNING[0m | Public method ObjectEventRegistrar::boot() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Controller/PreferencesController.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 78 | [33mWARNING[0m | Class PreferencesController is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...cap-work/lq-lanes/fq/lib/Service/Redaction/DownloadAgreementRepository.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 34 | [33mWARNING[0m | Class DownloadAgreementRepository is missing @spec PHPDoc tag
+    |         | — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nde/memcap-work/lq-lanes/fq/lib/Service/Redaction/RedactionOutputModes.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  36 | [33mWARNING[0m | Class RedactionOutputModes is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 126 | [33mWARNING[0m | Public method RedactionOutputModes::isVerified() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/FolderFileEnumerator.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 48 | [33mWARNING[0m | Class FolderFileEnumerator is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...p-work/lq-lanes/fq/lib/Service/Redaction/RedactionReviewMarkRepository.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 32 | [33mWARNING[0m | Class RedactionReviewMarkRepository is missing @spec PHPDoc tag
+    |         | — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...inde/memcap-work/lq-lanes/fq/lib/Service/Redaction/RedactionReviewGate.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 47 | [33mWARNING[0m | Class RedactionReviewGate is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/BatchExtractionService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 41 | [33mWARNING[0m | Class BatchExtractionService is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Service/LegalBasisProposalService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+ 159 | [33mWARNING[0m | Public method
+     |         | LegalBasisProposalService::getSelectableEntityTypes() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 173 | [33mWARNING[0m | Public method
+     |         | LegalBasisProposalService::getEnabledEntityTypes() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 194 | [33mWARNING[0m | Public method
+     |         | LegalBasisProposalService::getEntityTypeWhitelist() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 245 | [33mWARNING[0m | Public method LegalBasisProposalService::getMapping() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 283 | [33mWARNING[0m | Public method LegalBasisProposalService::getAvailableBases()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../memcap-work/lq-lanes/fq/lib/Service/Redaction/PublicationListComposer.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 43 | [33mWARNING[0m | Class PublicationListComposer is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nde/memcap-work/lq-lanes/fq/lib/Service/Redaction/RedactionOutputGuard.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 40 | [33mWARNING[0m | Class RedactionOutputGuard is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../memcap-work/lq-lanes/fq/lib/Service/Redaction/AnonymizationLinkReader.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 31 | [33mWARNING[0m | Class AnonymizationLinkReader is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...memcap-work/lq-lanes/fq/lib/Service/Redaction/RedactionVerdictRecorder.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 47 | [33mWARNING[0m | Class RedactionVerdictRecorder is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/BaseLabelResolver.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  40 | [33mWARNING[0m | Class BaseLabelResolver is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  88 | [33mWARNING[0m | Public method BaseLabelResolver::resolve() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 123 | [33mWARNING[0m | Public method BaseLabelResolver::groupByName() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nde/memcap-work/lq-lanes/fq/lib/Service/Redaction/DetectionRunIdentity.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 40 | [33mWARNING[0m | Class DetectionRunIdentity is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/EmlPreviewService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 48 | [33mWARNING[0m | Class EmlPreviewService is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+ 90 | [33mWARNING[0m | Public method EmlPreviewService::renderOriginalPreview() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...de/memcap-work/lq-lanes/fq/lib/Service/Redaction/DownloadAgreementGate.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 53 | [33mWARNING[0m | Class DownloadAgreementGate is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/EmlAttachmentRenderer.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 6 WARNINGS AFFECTING 6 LINES[0m
+--------------------------------------------------------------------------------
+  44 | [33mWARNING[0m | Class EmlAttachmentRenderer is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 141 | [33mWARNING[0m | Public method EmlAttachmentRenderer::attachmentsOf() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 152 | [33mWARNING[0m | Public method EmlAttachmentRenderer::metaOf() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 189 | [33mWARNING[0m | Public method EmlAttachmentRenderer::writeDivider() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 240 | [33mWARNING[0m | Public method EmlAttachmentRenderer::renderBytes() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 284 | [33mWARNING[0m | Public method EmlAttachmentRenderer::isRenderable() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ork/lq-lanes/fq/lib/Service/Redaction/RedactionIrreversibilityVerifier.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 49 | [33mWARNING[0m | Class RedactionIrreversibilityVerifier is missing @spec PHPDoc
+    |         | tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/EmlPdfAssemblyService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  52 | [33mWARNING[0m | Class EmlPdfAssemblyService is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 150 | [33mWARNING[0m | Public method EmlPdfAssemblyService::assemble() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/TemplatePreviewService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class TemplatePreviewService is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...linde/memcap-work/lq-lanes/fq/lib/Service/Redaction/RedactionLeakRoute.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 45 | [33mWARNING[0m | Class RedactionLeakRoute is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Service/Editing/PresentationCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 42 | [33mWARNING[0m | Class PresentationCodec is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ome/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/EmlEnvelopeRenderer.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 4 WARNINGS AFFECTING 4 LINES[0m
+--------------------------------------------------------------------------------
+  40 | [33mWARNING[0m | Class EmlEnvelopeRenderer is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  90 | [33mWARNING[0m | Public method EmlEnvelopeRenderer::render() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 129 | [33mWARNING[0m | Public method EmlEnvelopeRenderer::writeMinimal() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 155 | [33mWARNING[0m | Public method EmlEnvelopeRenderer::subjectOf() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...enlinde/memcap-work/lq-lanes/fq/lib/Service/Editing/OdfBlockStyleCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 38 | [33mWARNING[0m | Class OdfBlockStyleCodec is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/DossierEntityCollector.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  45 | [33mWARNING[0m | Class DossierEntityCollector is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  95 | [33mWARNING[0m | Public method DossierEntityCollector::walkDossierFiles() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 144 | [33mWARNING[0m | Public method
+     |         | DossierEntityCollector::loadAnonymisedEntitiesForFile() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Service/Editing/SpreadsheetCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class SpreadsheetCodec is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...linde/memcap-work/lq-lanes/fq/lib/Service/Editing/XlsxSpreadsheetCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 38 | [33mWARNING[0m | Class XlsxSpreadsheetCodec is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/Conversion/EmlBackend.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+  66 | [33mWARNING[0m | Class EmlBackend is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 107 | [33mWARNING[0m | Public method EmlBackend::name() is missing @spec PHPDoc tag
+     |         | — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 119 | [33mWARNING[0m | Public method EmlBackend::isAvailable() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 146 | [33mWARNING[0m | Public method EmlBackend::canHandle() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 167 | [33mWARNING[0m | Public method EmlBackend::convert() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nlinde/memcap-work/lq-lanes/fq/lib/Service/Editing/OdsSpreadsheetCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 38 | [33mWARNING[0m | Class OdsSpreadsheetCodec is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/LanguageClassifier.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 35 | [33mWARNING[0m | Class LanguageClassifier is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/PolicyMatchService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 202 | [33mWARNING[0m | Public method PolicyMatchService::matchProhibition() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Service/DossierPlaceholderRanker.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  47 | [33mWARNING[0m | Class DossierPlaceholderRanker is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 150 | [33mWARNING[0m | Public method DossierPlaceholderRanker::sortKey() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/Editing/DocumentCodecs.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 37 | [33mWARNING[0m | Class DocumentCodecs is missing @spec PHPDoc tag — link back
+    |         | to openspec/specs/{capability}/spec.md#requirement-{slug}, not
+    |         | a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ome/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/TextAnalysisService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 40 | [33mWARNING[0m | Class TextAnalysisService is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/EmlTemplateLoader.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 36 | [33mWARNING[0m | Class EmlTemplateLoader is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+ 50 | [33mWARNING[0m | Public method EmlTemplateLoader::load() is missing @spec PHPDoc
+    |         | tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...mcap-work/lq-lanes/fq/lib/Service/SubjectErasure/SubjectErasurePreview.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 47 | [33mWARNING[0m | Class SubjectErasurePreview is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Service/ObjectionDeadlineChecker.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 45 | [33mWARNING[0m | Class ObjectionDeadlineChecker is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/OpenRegisterResolver.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 38 | [33mWARNING[0m | Class OpenRegisterResolver is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...linde/memcap-work/lq-lanes/fq/lib/Service/Editing/OoxmlBlockStyleCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 35 | [33mWARNING[0m | Class OoxmlBlockStyleCodec is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/BatchUploadService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class BatchUploadService is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+ 60 | [33mWARNING[0m | Public method BatchUploadService::getUserId() is missing @spec
+    |         | PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...linde/memcap-work/lq-lanes/fq/lib/Service/Editing/OdpPresentationCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 42 | [33mWARNING[0m | Class OdpPresentationCodec is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/memcap-work/lq-lanes/fq/lib/Service/SubjectErasure/SubjectErasureJob.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 58 | [33mWARNING[0m | Class SubjectErasureJob is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Service/Conversion/PhpWordBackend.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+  64 | [33mWARNING[0m | Class PhpWordBackend is missing @spec PHPDoc tag — link back
+     |         | to openspec/specs/{capability}/spec.md#requirement-{slug}, not
+     |         | a change dir
+ 128 | [33mWARNING[0m | Public method PhpWordBackend::name() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 139 | [33mWARNING[0m | Public method PhpWordBackend::isAvailable() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 156 | [33mWARNING[0m | Public method PhpWordBackend::canHandle() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 185 | [33mWARNING[0m | Public method PhpWordBackend::convert() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...memcap-work/lq-lanes/fq/lib/Service/SubjectErasure/SubjectErasureRules.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 62 | [33mWARNING[0m | Class SubjectErasureRules is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/Editing/GuardedWriter.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 51 | [33mWARNING[0m | Class GuardedWriter is missing @spec PHPDoc tag — link back
+    |         | to openspec/specs/{capability}/spec.md#requirement-{slug}, not
+    |         | a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...de/memcap-work/lq-lanes/fq/lib/Service/Conversion/OutputLayoutResolver.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 6 WARNINGS AFFECTING 6 LINES[0m
+--------------------------------------------------------------------------------
+  57 | [33mWARNING[0m | Class OutputLayoutResolver is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 106 | [33mWARNING[0m | Public method OutputLayoutResolver::resolveBatchDestination()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 135 | [33mWARNING[0m | Public method
+     |         | OutputLayoutResolver::stripLegacyAnonymizedSuffix() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 152 | [33mWARNING[0m | Public method OutputLayoutResolver::isLegacyAnonymizedOutput()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 169 | [33mWARNING[0m | Public method OutputLayoutResolver::hasAnonymizedSuffix() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 180 | [33mWARNING[0m | Public method OutputLayoutResolver::readSubfolderName() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Service/DossierSummaryDataService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 9 WARNINGS AFFECTING 9 LINES[0m
+--------------------------------------------------------------------------------
+  48 | [33mWARNING[0m | Class DossierSummaryDataService is missing @spec PHPDoc tag
+     |         | — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 136 | [33mWARNING[0m | Public method DossierSummaryDataService::loadDossier() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 205 | [33mWARNING[0m | Public method DossierSummaryDataService::placeholderRanking()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 216 | [33mWARNING[0m | Public method DossierSummaryDataService::placeholderSortKey()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 228 | [33mWARNING[0m | Public method DossierSummaryDataService::walkDossierFiles() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 240 | [33mWARNING[0m | Public method
+     |         | DossierSummaryDataService::loadAnonymisedEntitiesForFile() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 251 | [33mWARNING[0m | Public method DossierSummaryDataService::resolveBaseLabels()
+     |         | is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 262 | [33mWARNING[0m | Public method DossierSummaryDataService::groupBasesByName() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 274 | [33mWARNING[0m | Public method
+     |         | DossierSummaryDataService::updateDossierConfiguration() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...cap-work/lq-lanes/fq/lib/Service/Conversion/ConversionBackendInterface.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 4 WARNINGS AFFECTING 4 LINES[0m
+--------------------------------------------------------------------------------
+ 56 | [33mWARNING[0m | Public method ConversionBackendInterface::name() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 66 | [33mWARNING[0m | Public method ConversionBackendInterface::isAvailable() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 77 | [33mWARNING[0m | Public method ConversionBackendInterface::canHandle() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 96 | [33mWARNING[0m | Public method ConversionBackendInterface::convert() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/PolicyCrudService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 9 WARNINGS AFFECTING 9 LINES[0m
+--------------------------------------------------------------------------------
+  50 | [33mWARNING[0m | Class PolicyCrudService is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 145 | [33mWARNING[0m | Public method PolicyCrudService::listProhibitions() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 160 | [33mWARNING[0m | Public method PolicyCrudService::listStandingConsents() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 184 | [33mWARNING[0m | Public method PolicyCrudService::getProhibition() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 202 | [33mWARNING[0m | Public method PolicyCrudService::getStandingConsent() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 229 | [33mWARNING[0m | Public method PolicyCrudService::createProhibition() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 255 | [33mWARNING[0m | Public method PolicyCrudService::updateProhibition() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 322 | [33mWARNING[0m | Public method PolicyCrudService::createStandingConsent() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 349 | [33mWARNING[0m | Public method PolicyCrudService::updateStandingConsent() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...inde/memcap-work/lq-lanes/fq/lib/Service/Editing/PptxPresentationCodec.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 38 | [33mWARNING[0m | Class PptxPresentationCodec is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...inde/memcap-work/lq-lanes/fq/lib/Service/Intake/ScanFolderIntakeFeeder.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 48 | [33mWARNING[0m | Class ScanFolderIntakeFeeder is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ome/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/PhpWordHtmlRenderer.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 45 | [33mWARNING[0m | Class PhpWordHtmlRenderer is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+ 88 | [33mWARNING[0m | Public method PhpWordHtmlRenderer::renderToHtml() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nde/memcap-work/lq-lanes/fq/lib/Service/Intake/IntakeNotificationReach.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 48 | [33mWARNING[0m | Class IntakeNotificationReach is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nlinde/memcap-work/lq-lanes/fq/lib/Service/Conversion/OfficeAppBackend.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+  55 | [33mWARNING[0m | Class OfficeAppBackend is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 119 | [33mWARNING[0m | Public method OfficeAppBackend::name() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 132 | [33mWARNING[0m | Public method OfficeAppBackend::isAvailable() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 168 | [33mWARNING[0m | Public method OfficeAppBackend::canHandle() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 205 | [33mWARNING[0m | Public method OfficeAppBackend::convert() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...linde/memcap-work/lq-lanes/fq/lib/Service/Intake/IntakeReadingProgress.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 49 | [33mWARNING[0m | Class IntakeReadingProgress is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/GrondslagenPdfWriter.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  45 | [33mWARNING[0m | Class GrondslagenPdfWriter is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  92 | [33mWARNING[0m | Public method GrondslagenPdfWriter::renderPerDocumentPdf() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 118 | [33mWARNING[0m | Public method GrondslagenPdfWriter::renderDossierPdf() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/BatchReportService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class BatchReportService is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/FileUploadService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 42 | [33mWARNING[0m | Class FileUploadService is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...rubenlinde/memcap-work/lq-lanes/fq/lib/Service/GeneratedDocumentLogger.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class GeneratedDocumentLogger is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/ConsentUpdateHandler.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 41 | [33mWARNING[0m | Class ConsentUpdateHandler is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/PdfService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 472 | [33mWARNING[0m | Public method PdfService::applyPrintCss() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/FileEntityStatsService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 41 | [33mWARNING[0m | Class FileEntityStatsService is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/DocumentTextExtractor.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 41 | [33mWARNING[0m | Class DocumentTextExtractor is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Service/PolicyRetroactiveService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 4 WARNINGS AFFECTING 4 LINES[0m
+--------------------------------------------------------------------------------
+  53 | [33mWARNING[0m | Class PolicyRetroactiveService is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 100 | [33mWARNING[0m | Public method
+     |         | PolicyRetroactiveService::applyProhibitionMutation() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 218 | [33mWARNING[0m | Public method
+     |         | PolicyRetroactiveService::applyStandingConsentMutation() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 232 | [33mWARNING[0m | Public method PolicyRetroactiveService::applyRuleRemoval() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/TemplateVersionService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 40 | [33mWARNING[0m | Class TemplateVersionService is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...nlinde/memcap-work/lq-lanes/fq/lib/Exception/ConversionFailedException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 43 | [33mWARNING[0m | Class ConversionFailedException is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+ 85 | [33mWARNING[0m | Public method ConversionFailedException::getAttempts() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Exception/DocumentFinalException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 73 | [33mWARNING[0m | Public method DocumentFinalException::getVersion() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Service/RegisterDiscoveryService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 43 | [33mWARNING[0m | Class RegisterDiscoveryService is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/EventListener/FilinqEventListener.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 45 | [33mWARNING[0m | Class FilinqEventListener is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+ 64 | [33mWARNING[0m | Public method FilinqEventListener::handle() is missing @spec
+    |         | PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/WooProfileService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 40 | [33mWARNING[0m | Class WooProfileService is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Exception/UploadRefusedException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 78 | [33mWARNING[0m | Public method UploadRefusedException::getDetectedType() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 88 | [33mWARNING[0m | Public method UploadRefusedException::getPolicy() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/memcap-work/lq-lanes/fq/lib/Exception/RegisterNotConfiguredException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class RegisterNotConfiguredException is missing @spec PHPDoc
+    |         | tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...mcap-work/lq-lanes/fq/lib/EventListener/EntityRelationDecisionListener.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 96 | [33mWARNING[0m | Public method EntityRelationDecisionListener::handle() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/Exception/IntakeRefusedException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 71 | [33mWARNING[0m | Public method IntakeRefusedException::getStatus() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...de/memcap-work/lq-lanes/fq/lib/Exception/RedactionNotReviewedException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+ 28 | [33mWARNING[0m | Class RedactionNotReviewedException is missing @spec PHPDoc tag
+    |         | — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+ 57 | [33mWARNING[0m | Public method RedactionNotReviewedException::getReason() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 67 | [33mWARNING[0m | Public method RedactionNotReviewedException::getDocument() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 77 | [33mWARNING[0m | Public method RedactionNotReviewedException::getCheckedRun() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 87 | [33mWARNING[0m | Public method RedactionNotReviewedException::getCurrentRun() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Exception/ComparisonException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class ComparisonException is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+ 76 | [33mWARNING[0m | Public method ComparisonException::getStatusCode() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 85 | [33mWARNING[0m | Public method ComparisonException::getReason() is missing @spec
+    |         | PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/memcap-work/lq-lanes/fq/lib/Exception/PlainRenditionRefusedException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 71 | [33mWARNING[0m | Public method PlainRenditionRefusedException::getUnresolved()
+    |         | is missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...enlinde/memcap-work/lq-lanes/fq/lib/Exception/ProhibitionGateException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 4 WARNINGS AFFECTING 4 LINES[0m
+--------------------------------------------------------------------------------
+ 38 | [33mWARNING[0m | Class ProhibitionGateException is missing @spec PHPDoc tag —
+    |         | link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+ 65 | [33mWARNING[0m | Public method
+    |         | ProhibitionGateException::getMissingProhibitionMatches() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 74 | [33mWARNING[0m | Public method ProhibitionGateException::getRejectedOverrides()
+    |         | is missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 83 | [33mWARNING[0m | Public method ProhibitionGateException::getBackendUnavailable()
+    |         | is missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...e/rubenlinde/memcap-work/lq-lanes/fq/lib/Dashboard/AnonymizationWidget.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 41 | [33mWARNING[0m | Class AnonymizationWidget is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Dashboard/FileEntitiesWidget.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 42 | [33mWARNING[0m | Class FileEntitiesWidget is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ome/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/SettingsInitializer.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 46 | [33mWARNING[0m | Class SettingsInitializer is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...me/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/MountCapabilityProbe.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 93 | [33mWARNING[0m | Public method MountCapabilityProbe::isWritable() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/PdfDocumentFactory.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 151 | [33mWARNING[0m | Inline comments must end in full-stops, exclamation marks, or
+     |         | question marks
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...ubenlinde/memcap-work/lq-lanes/fq/lib/EventListener/FilinqEventHandler.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+  47 | [33mWARNING[0m | Class FilinqEventHandler is missing @spec PHPDoc tag — link
+     |         | back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 320 | [33mWARNING[0m | Public method FilinqEventHandler::handleObjectDeleted() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/Conversion/MpdfBackend.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 5 WARNINGS AFFECTING 5 LINES[0m
+--------------------------------------------------------------------------------
+  51 | [33mWARNING[0m | Class MpdfBackend is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+  84 | [33mWARNING[0m | Public method MpdfBackend::name() is missing @spec PHPDoc tag
+     |         | — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+  95 | [33mWARNING[0m | Public method MpdfBackend::isAvailable() is missing @spec
+     |         | PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 109 | [33mWARNING[0m | Public method MpdfBackend::canHandle() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 149 | [33mWARNING[0m | Public method MpdfBackend::convert() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Sections/FilinqAdmin.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 38 | [33mWARNING[0m | Class FilinqAdmin is missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...rubenlinde/memcap-work/lq-lanes/fq/lib/Exception/MergeRefusedException.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 71 | [33mWARNING[0m | Public method MergeRefusedException::getStatus() is missing
+    |         | @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Settings/FilinqAdmin.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  52 | [33mWARNING[0m | Class FilinqAdmin is missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 144 | [33mWARNING[0m | Public method FilinqAdmin::getName() is missing @spec PHPDoc
+     |         | tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 159 | [33mWARNING[0m | Public method FilinqAdmin::getAuthorizedAppConfig() is missing
+     |         | @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...benlinde/memcap-work/lq-lanes/fq/lib/Service/Office/SupportedTypeProbe.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 39 | [33mWARNING[0m | Class SupportedTypeProbe is missing @spec PHPDoc tag — link
+    |         | back to openspec/specs/{capability}/spec.md#requirement-{slug},
+    |         | not a change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/OcrService.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 1 WARNING AFFECTING 1 LINE[0m
+--------------------------------------------------------------------------------
+ 54 | [33mWARNING[0m | Class OcrService is missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+--------------------------------------------------------------------------------
+
+
+[1mFILE: .../rubenlinde/memcap-work/lq-lanes/fq/lib/Service/DocumentRenderPipeline.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 3 WARNINGS AFFECTING 3 LINES[0m
+--------------------------------------------------------------------------------
+  41 | [33mWARNING[0m | Class DocumentRenderPipeline is missing @spec PHPDoc tag —
+     |         | link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+     |         | change dir
+ 113 | [33mWARNING[0m | Public method DocumentRenderPipeline::buildPdfOptions() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+ 197 | [33mWARNING[0m | Public method DocumentRenderPipeline::produceOutput() is
+     |         | missing @spec PHPDoc tag — link back to
+     |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+
+[1mFILE: ...mcap-work/lq-lanes/fq/lib/EventListener/DocumentRegistrationWriteGuard.php[0m
+--------------------------------------------------------------------------------
+[1mFOUND 0 ERRORS AND 2 WARNINGS AFFECTING 2 LINES[0m
+--------------------------------------------------------------------------------
+ 56 | [33mWARNING[0m | Class DocumentRegistrationWriteGuard is missing @spec PHPDoc
+    |         | tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}, not a
+    |         | change dir
+ 90 | [33mWARNING[0m | Public method DocumentRegistrationWriteGuard::handle() is
+    |         | missing @spec PHPDoc tag — link back to
+    |         | openspec/specs/{capability}/spec.md#requirement-{slug}
+--------------------------------------------------------------------------------
+
+Time: 3.97 secs; Memory: 8MB
+
+=== phpmd ===
+/home/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/ReportRenderController.php:158  CyclomaticComplexity      The method renderBatch() has a Cyclomatic Complexity of 10. The configured cyclomatic complexity threshold is 10.
+/home/rubenlinde/memcap-work/lq-lanes/fq/lib/Controller/ReportRenderController.php:158  NPathComplexity           The method renderBatch() has an NPath complexity of 288. The configured NPath complexity threshold is 200.
+/home/rubenlinde/memcap-work/lq-lanes/fq/lib/Service/TemplateService.php:49             ExcessiveClassComplexity  The class TemplateService has an overall complexity of 55 which is very high. The configured complexity threshold is 50.
+Script E=0; php -d memory_limit=2G ./vendor/bin/phpmd lib text phpmd.xml || E=$?; php -d memory_limit=2G ./vendor/bin/phpmd lib text vendor/conduction/hydra-gates/quality-config/phpmd-unusedparams.xml || E=$?; exit $E handling the phpmd event returned with error code 2
+
+=== psalm ===
+Target PHP version: 8.3 (inferred from composer.json).
+Scanning files...
+Analyzing files...
+
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  60 / 368 (16%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 120 / 368 (32%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 180 / 368 (48%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 240 / 368 (65%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 300 / 368 (81%)
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 360 / 368 (97%)
+░░░░░░░░
+
+------------------------------
+[42;2m                              [0m
+[42;30;2m       No errors found!       [0m
+[42;2m                              [0m
+------------------------------
+775 other issues found.
+You can display them with [30;48;5;195m--show-info=true[0m
+------------------------------
+
+Checks took 88.40 seconds and used 323.271MB of memory
+Psalm was able to infer types for 94.3174% of the codebase
+
+=== phpstan ===
+Note: Using configuration file /home/rubenlinde/memcap-work/lq-lanes/fq/phpstan.neon.
+   0/365 [░░░░░░░░░░░░░░░░░░░░░░░░░░░░]   0%
+ 346/365 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░]  94%
+ 365/365 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100%
+
+
+ [OK] No errors                                                                 
+
+
+=== test:all ===
+PHPUnit 10.5.64 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.6
+Configuration: /home/rubenlinde/memcap-work/lq-lanes/fq/phpunit.xml
+
+.............................................................   61 / 2435 (  2%)
+.............................................................  122 / 2435 (  5%)
+.............................................................  183 / 2435 (  7%)
+............................................[36;1mS[0m................  244 / 2435 ( 10%)
+.............................................................  305 / 2435 ( 12%)
+.............................................................  366 / 2435 ( 15%)
+.............................................................  427 / 2435 ( 17%)
+.............................................................  488 / 2435 ( 20%)
+.............................................................  549 / 2435 ( 22%)
+.............................................................  610 / 2435 ( 25%)
+.............................................................  671 / 2435 ( 27%)
+.............................................................  732 / 2435 ( 30%)
+.............................................................  793 / 2435 ( 32%)
+.............................................................  854 / 2435 ( 35%)
+.............................................................  915 / 2435 ( 37%)
+.............................................................  976 / 2435 ( 40%)
+............................................................. 1037 / 2435 ( 42%)
+............................................................. 1098 / 2435 ( 45%)
+............................................................. 1159 / 2435 ( 47%)
+............................................................. 1220 / 2435 ( 50%)
+............................................................. 1281 / 2435 ( 52%)
+............................................................. 1342 / 2435 ( 55%)
+............................................................. 1403 / 2435 ( 57%)
+............................................................. 1464 / 2435 ( 60%)
+............................................................. 1525 / 2435 ( 62%)
+............................................................. 1586 / 2435 ( 65%)
+............................................................. 1647 / 2435 ( 67%)
+............................................................. 1708 / 2435 ( 70%)
+............................................................. 1769 / 2435 ( 72%)
+......[36;1mS[0m...................................................... 1830 / 2435 ( 75%)
+................................................[36;1mS[0m............ 1891 / 2435 ( 77%)
+............................................................. 1952 / 2435 ( 80%)
+............................................................. 2013 / 2435 ( 82%)
+............................................................. 2074 / 2435 ( 85%)
+............................................................. 2135 / 2435 ( 87%)
+............................................................. 2196 / 2435 ( 90%)
+............................................................. 2257 / 2435 ( 92%)
+............................................................. 2318 / 2435 ( 95%)
+.....[41;37mF[0m....................................................... 2379 / 2435 ( 97%)
+........................................................      2435 / 2435 (100%)
+
+Time: 00:19.352, Memory: 104.50 MB
+
+There was 1 failure:
+
+1) OCA\Filinq\Tests\Unit\Settings\DocumentProductionSchemaTest::testATemplateCanDeclareItsPlainLanguageCounterpart
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'1.3.0'
++'1.4.0'
+
+/home/rubenlinde/memcap-work/lq-lanes/fq/tests/unit/Settings/DocumentProductionSchemaTest.php:155
+
+[37;41mFAILURES![0m
+[37;41mTests: 2435[0m[37;41m, Assertions: 7764[0m[37;41m, Failures: 1[0m[37;41m, Skipped: 3[0m[37;41m.[0m
+Script ./vendor/bin/phpunit --colors=always --no-coverage handling the test:all event returned with error code 1
+
+SOME CHECKS FAILED (see above)
+Script E=0; for CMD in lint phpcs phpmd psalm phpstan test:all; do echo; echo "=== $CMD ==="; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo "ALL CHECKS PASSED"; else echo "SOME CHECKS FAILED (see above)"; fi; exit $E handling the check:strict event returned with error code 1

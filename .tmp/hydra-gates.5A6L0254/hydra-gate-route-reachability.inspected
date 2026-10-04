@@ -1,0 +1,4 @@
+lib/Controller/PortalSigningReceiverController.php
+portalSigningReceiver#declineDocument
+portalSigningReceiver#signDocument
+portalSigningReceiver#viewDocument
