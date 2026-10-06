@@ -96,10 +96,10 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         the app cannot function there. Declaring 30 advertised a range this app
         cannot deliver. Same defect as openconnector#1173.
 
-        CI already tests stable32 only, so this changes the advertised app-store
-        range and nothing about what runs.
+        CI derives its Nextcloud matrix from this element (min..max-version),
+        so the advertised range and the tested range are the same thing.
         -->
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="32" max-version="35"/>
     </dependencies>
     <background-jobs>
         <job>OCA\Filinq\BackgroundJob\SigningExpirationJob</job>
