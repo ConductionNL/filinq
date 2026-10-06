@@ -4,6 +4,16 @@ kind: code
 
 # Proposal: anonymization-review-workbench
 
+## Summary
+
+Every input is reviewed on one PDF rendition with a text layer that the anonymisation link records, and the review screen tells a certain finding from an uncertain one using the organisation's two thresholds.
+
+- Rows: 4.25 and 14.15.
+- Wave 2.
+- Dependencies: `openregister/anonymisation-discloses-itself` (https://github.com/ConductionNL/openregister/issues/4379).
+- Decisions: D2 (detection stays in OpenRegister, review stays in filinq).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 Every serious buyer of anonymisation software demands a human-review surface,

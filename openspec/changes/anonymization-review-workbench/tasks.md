@@ -67,7 +67,7 @@ checkbox cap of 20 holds.
 - [ ] 5.4 Strings, docs and e2e. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/review-workbench.md` (the rendition, the two thresholds and why there are two), `tests/e2e/spec-coverage/review-workbench.spec.ts` (a `.docx` reviewed as its rendition with the link shown; the threshold panel).
   - Test: the Playwright spec.
 
-Verification for section 5 (plain bullets on purpose). The building agent follows `~/memcap-work/woo-build/LANE-RULES-BUILD.md`:
+Verification for section 5 (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
 - Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
 - PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.
