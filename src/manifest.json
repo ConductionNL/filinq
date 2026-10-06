@@ -1635,5 +1635,19 @@
 				]
 			}
 		]
+	},
+	"discovery": {
+		"public": true,
+		"standards": [
+			{
+				"id": "pdf-a",
+				"name": "PDF/A-3b archival PDF (conversion and rendering, embedded attachments, veraPDF-checked)",
+				"version": "3b",
+				"role": "provides",
+				"access": "authenticated",
+				"endpoint": "/apps/filinq/api/pdfa3",
+				"specUrl": "https://www.iso.org/standard/57229.html"
+			}
+		]
 	}
 }
