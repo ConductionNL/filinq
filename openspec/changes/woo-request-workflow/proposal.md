@@ -4,6 +4,16 @@ kind: code
 
 # Proposal: woo-request-workflow
 
+## Summary
+
+filinq drafts the Woo decision letter and the inventory from two seeded, organisation-editable templates, from a checked `wooDecision` data contract that dossiq sends on `DocumentGenerationRequestedEvent`.
+
+- Rows: 7.9 (filinq's half; dossiq's half is in `dossiq/woo-request-takes-over-from-opencatalogi`).
+- Wave 1.
+- Dependencies: `dossiq/woo-refusal-grounds-list` (https://github.com/ConductionNL/dossiq/issues/3288), `filinq/grondslagen-read-from-dossiq` (https://github.com/ConductionNL/filinq/issues/1346), which share the grounds resolver. Called by `dossiq/woo-request-takes-over-from-opencatalogi` (https://github.com/ConductionNL/dossiq/issues/3289).
+- Decisions: D1 (dossiq owns the Woo request; filinq keeps only the letter and the inventory).
+- Build rules: openspec/woo-build-rules.md
+
 ## Re-scope 2026-10-05 (decision D1): filinq keeps the decision letter and the inventory
 
 This section governs. Where the original proposal below says otherwise, it is

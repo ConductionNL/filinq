@@ -47,7 +47,7 @@ renders any data it is given.
 - [ ] 4.1 Strings, docs and end-to-end. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/woo-decision-templates.md`, `tests/e2e/workflows/woo-request-workflow.spec.ts` (edit `woo-besluit` in the template editor, generate through the API with the fixture, open the stored PDF).
   - Test: the Playwright spec.
 
-Verification (plain bullets on purpose). The building agent follows `~/memcap-work/woo-build/LANE-RULES-BUILD.md`:
+Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
 - Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
 - PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.
