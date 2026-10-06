@@ -4,6 +4,16 @@ kind: code
 
 # Proposal: image-redaction
 
+## Summary
+
+A reviewer redacts a whole page, a range of pages or a whole document in one action, as one decision with its grounds, with OpenRegister's image seam doing the burn.
+
+- Rows: 4.24.
+- Wave 2.
+- Dependencies: `openregister/anonymisation-image-seam` (https://github.com/ConductionNL/openregister/issues/4380). The archive of this delta waits on `filinq/anonymization-main-spec-valid` (repairs the main `anonymization` spec).
+- Decisions: D2 (the guarantees live in the engine), D5 (an OCR text layer over the burned raster is allowed, built by opencatalogi) and D6 (object detection belongs to anonymiq behind the seam).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 Robert's project branch (merged into `development`, PR #314) is the new

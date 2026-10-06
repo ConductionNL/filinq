@@ -67,7 +67,7 @@ of 20 holds.
 - [ ] 6.4 Docs. Files: `docs/features/image-redaction.md` (the three scopes, why a withheld document has no output, and that OpenRegister does the pixel work).
   - Test: the docs build.
 
-Verification for section 6 (plain bullets on purpose). The building agent follows `~/memcap-work/woo-build/LANE-RULES-BUILD.md`:
+Verification for section 6 (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
 - Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
 - PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.
