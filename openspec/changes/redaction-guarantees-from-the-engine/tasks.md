@@ -37,7 +37,7 @@ modify; if not, say so in the PR body.
 - [ ] 6 End to end. Files: `tests/e2e/spec-coverage/redaction-guarantees-from-the-engine.spec.ts` (with `anonymisation.requireReview` on: a batch with one undecided document shows the engine's refusal for it; decide, mark reviewed, run again, read `clean` on the link).
   - Test: the Playwright spec.
 
-Verification (plain bullets on purpose). The building agent follows `~/memcap-work/woo-build/LANE-RULES-BUILD.md`:
+Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
 - Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
 - PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver. This change deletes central classes, so run the full suite, not a filter.

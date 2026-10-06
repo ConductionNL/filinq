@@ -5,6 +5,16 @@ depends_on: []
 
 # Proposal: redaction-guarantees-from-the-engine
 
+## Summary
+
+filinq consumes OpenRegister's redaction guarantees (irreversibility verdict, review mark, term lists and policy profiles) and retires its own copies, keeping its review workbench on top.
+
+- Rows: supporting, supports 4.5, 4.27, 18.1, 18.2 and 18.3, which the two OpenRegister changes close.
+- Wave 3.
+- Dependencies: `openregister/redaction-release-safeguards` (https://github.com/ConductionNL/openregister/issues/4392), `openregister/redaction-policy-as-data` (https://github.com/ConductionNL/openregister/issues/4402), `filinq/anonymization-review-workbench` (https://github.com/ConductionNL/filinq/issues/1345), and the unarchived `filinq/redaction-and-what-leaves-the-building` (no issue; https://github.com/ConductionNL/filinq/tree/development/openspec/changes/redaction-and-what-leaves-the-building), which must archive first.
+- Decisions: D2 (the redaction guarantees move into OpenRegister's engine).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 Ruben's decision **D2** of 2026-10-05: the redaction guarantees move into
