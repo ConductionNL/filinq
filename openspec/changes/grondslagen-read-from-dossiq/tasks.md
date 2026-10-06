@@ -35,7 +35,7 @@ pickers read `base` objects.
 - [ ] 6 Docs. Files: `docs/features/grondslagen.md` (one list in dossiq, the snapshot for redaction only, the repair report).
   - Test: the docs build.
 
-Verification (plain bullets on purpose). The building agent follows `~/memcap-work/woo-build/LANE-RULES-BUILD.md`:
+Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
 - Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
 - PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.

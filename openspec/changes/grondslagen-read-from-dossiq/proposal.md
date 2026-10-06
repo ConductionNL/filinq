@@ -5,6 +5,16 @@ depends_on: []
 
 # Proposal: grondslagen-read-from-dossiq
 
+## Summary
+
+filinq reads the Woo refusal grounds from dossiq's one list through a single resolver, and falls back to a read-only statutory snapshot for redaction only when dossiq is absent.
+
+- Rows: supporting, supports 12.29 and 13.28, which `dossiq/woo-refusal-grounds-list` closes.
+- Wave 2.
+- Dependencies: `dossiq/woo-refusal-grounds-list` (https://github.com/ConductionNL/dossiq/issues/3288). Shares the resolver class with `filinq/woo-request-workflow` (https://github.com/ConductionNL/filinq/issues/1343).
+- Decisions: D3 (one list of grounds, in dossiq) and D12 (a read-only fallback for redaction only).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 There are four lists of Woo art. 5 refusal grounds in the fleet and they
