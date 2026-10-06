@@ -22,6 +22,8 @@ Provides a complete document anonymization pipeline: files are stored as **OR Fi
 - **Decision 2** — `anonymizationResult` objects (if stored separately) carry `x-openregister-archival.retention: P1Y` (Archiefwet cat. 1.2: operational processing logs). File attachments inherit OR's standard retention; DPO sign-off required for legal-hold override.
 - **Decision 5** — Status strings on the wire stay the same (`uploaded`, `extracted`, `anonymized`). Lifecycle annotation maps these states; no renaming.
 
+## Requirements
+
 ### Requirement: File Input via OR File Attachments (REQ-ANON-00)
 
 @e2e exclude Backend FileUploadService persistence as OR file attachment and OR virus-scan-hook rejection (HTTP 422) — service/contract behaviour, no UI assertion. Covered by PHPUnit (FileUploadService) and Newman (upload endpoint).
@@ -78,7 +80,7 @@ Uploaded files MUST be stored as OR File Attachments, not by filinq-specific sto
 | ANON-CAL-001 | `x-openregister-calculations` declared for: anonymizationConfidence, riskScore, riskLevel, entityDensity, redactionCoverage | MUST | Implementing |
 | ANON-CAL-002 | AnonymizationService does not contain direct writes to calculated fields | MUST | Apply-phase |
 | ANON-CAL-003 | OR PR raised if file-attachment schema is upstream and needs the extension | SHOULD | Apply-phase |
-## Requirements
+
 ### Requirement: File Upload to User-Scoped Folder (REQ-ANON-01)
 
 **Priority:** MUST
