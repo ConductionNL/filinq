@@ -24,7 +24,7 @@ never checks opencatalogi's schema.
 - [ ] 4 Docs and e2e. Files: `docs/features/woo-publicatie-pipeline.md` (the field, the refusal, and that existing summaries are cleaned by opencatalogi's repair step), `tests/e2e/workflows/woo-publicatie-pipeline.spec.ts` (hand off a record and read `documentsoort` on the opencatalogi publication, with the summary empty).
   - Test: the Playwright spec.
 
-Verification (plain bullets on purpose). The building agent follows `~/memcap-work/woo-build/LANE-RULES-BUILD.md`:
+Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
 - Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
 - PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.

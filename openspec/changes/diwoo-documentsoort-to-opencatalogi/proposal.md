@@ -5,6 +5,16 @@ depends_on: []
 
 # Proposal: diwoo-documentsoort-to-opencatalogi
 
+## Summary
+
+filinq writes a handed-off record's DiWoo documentsoort to opencatalogi's new `documentsoort` publication field instead of `summary`, and refuses the handoff when opencatalogi does not declare the field.
+
+- Rows: supporting, supports 2.3 (statutory; the plan names no article) and 2.25, which `opencatalogi/diwoo-metadata-on-the-publication` closes.
+- Wave 1.
+- Dependencies: `opencatalogi/diwoo-metadata-on-the-publication` (https://github.com/ConductionNL/opencatalogi/issues/1753), paired in the same wave.
+- Decisions: D8 (the opencatalogi field ships with a paired filinq change that writes it).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 filinq hands a ready Woo record to opencatalogi and writes the DiWoo
