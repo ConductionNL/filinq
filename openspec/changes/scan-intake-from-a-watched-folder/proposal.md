@@ -24,14 +24,25 @@ intake as a consumer. integriq specs the hand-over in `sources-sftp-adapter-inta
 and `intakeApp: filinq` it dispatches
 
 ```
-new \OCA\Integriq\Event\WatchedFileArrivedEvent(string $synchronizationId, string $intakeApp,
+namespace OCA\Integriq\Event;
+
+new WatchedFileArrivedEvent(string $synchronizationId, string $sourceId, string $intakeApp,
     int $fileId, string $path, string $ownerUid)
+getSynchronizationId(): string
+getSourceId(): string
+getIntakeApp(): string
+getFileId(): int
+getPath(): string
+getOwnerUid(): string
+accept(string $appId, string $reference): bool
+getResult(): array
 ```
 
-with `accept(string $reference): void` and `getResult(): array` answering `accepted` (bool),
-`intakeApp` (string) and `reference` (string or null). The result starts as not accepted, and only
-an acceptance marks or moves the file; a hand-over nobody accepts stays in the folder as
-`unclaimed`.
+`getResult()` answers `accepted` (bool), `intakeApp` (string) and `reference` (string or null). The
+result starts as not accepted. `accept()` answers `true` only when `$appId` equals the event's
+intake app, the reference is not empty and nothing accepted before; otherwise it answers `false`
+and changes nothing. Only an acceptance marks or moves the file; a hand-over nobody accepts stays in
+the folder as `unclaimed`.
 
 filinq's side does not exist. `scan-intake-with-separator-sheets` (5 of 9 tasks done) left task 3.2
 open: "Point the watched-folder job at `ScanBatchService::receive()` for profile folders", noting
@@ -45,16 +56,17 @@ takes it.
 ## What changes
 
 1. A listener, `OCA\Filinq\EventListener\WatchedFileArrivedListener`, registered for
-   `OCA\Integriq\Event\WatchedFileArrivedEvent`. It acts only when the event's `intakeApp` is
-   `filinq`, and does nothing for any other intake.
+   `OCA\Integriq\Event\WatchedFileArrivedEvent`. It acts only when `getIntakeApp()` is `filinq`,
+   and does nothing for any other intake.
 2. One intake path for both entries. The find-or-receive-then-split flow of
    `ScanIntakeController::split()` moves into one service method,
    `OCA\Filinq\Service\ScanBatchService::take(File $file, array $profile): array`, which answers the
    batch (`split` or `failed`). The controller and the listener both call it.
-3. The listener resolves the file by `fileId` in the owner's folder
+3. The listener resolves the file by `getFileId()` in the folder of `getOwnerUid()`
    (`IRootFolder::getUserFolder($ownerUid)->getById($fileId)`), resolves the scan profile the way
-   `ScanIntakeController::resolveProfile()` does for the file's path, calls `take()`, and then calls
-   `accept()` with the batch's uuid.
+   `ScanIntakeController::resolveProfile()` does for `getPath()`, calls `take()`, and then calls
+   `accept('filinq', $batchUuid)`. When `accept()` answers `false` the listener logs it and leaves
+   the stored batch as it is: the batch owns the file, and integriq reports the file `unclaimed`.
 4. Once per file. A file that already has a `scanBatch` (`findByFile()`) is accepted with that
    batch's uuid and is not received or cut again.
 
@@ -79,12 +91,14 @@ A batch that is stored but cannot be cut is accepted: the `scanBatch` in `failed
   `docs/features/watched-folder.md` asks of a consumer. The controller upload keeps working.
 - filinq absent: integriq's side (no listener accepts, the file is `unclaimed`).
 
-## What the event does not name
+## The contract, on both sides
 
-integriq's spec names the constructor arguments, `accept()` and `getResult()`, but no accessors for
-`synchronizationId`, `intakeApp`, `fileId`, `path` and `ownerUid`. The builder reads them from the
-real class on integriq `development` and copies their names into the contract test with the source
-line. If the class is not merged, the builder stops and says so; it does not guess the accessor names.
+The signature above is integriq's REQ-SFTP-005 in `sources-sftp-adapter-intake-hand-over`
+(integriq issue #2551), written on 2026-10-06 to name the getters and the accepting app id. Both
+sides hold the same literals in a test: integriq's
+`WatchedFileArrivedEventTest::testThePublicSurfaceIsTheContract` and filinq's
+`WatchedFileArrivedContractTest::testTheEventMatchesIntegriqsSpec`. If the merged class differs from
+these literals, the builder stops and says so; it does not adapt to a guessed name.
 
 ## Dependencies and wave
 

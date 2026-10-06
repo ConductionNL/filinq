@@ -7,9 +7,12 @@ Supports Woo row 1.7. Decision D4. Wave 2. Build rules: `openspec/woo-build-rule
 
 **Do not start before** `integriq/sources-sftp-adapter-intake-hand-over` is merged on integriq
 `development`. Then read `lib/Event/WatchedFileArrivedEvent.php` and `docs/features/watched-folder.md`
-there: the constructor, `accept()`, `getResult()` and its keys, and the accessors for
-`synchronizationId`, `intakeApp`, `fileId`, `path` and `ownerUid`. integriq's spec names no
-accessors; use the real ones and never guess. If it is not merged, stop and say so.
+there and check them against integriq's REQ-SFTP-005: the constructor
+`(string $synchronizationId, string $sourceId, string $intakeApp, int $fileId, string $path, string $ownerUid)`,
+`getSynchronizationId(): string`, `getSourceId(): string`, `getIntakeApp(): string`,
+`getFileId(): int`, `getPath(): string`, `getOwnerUid(): string`,
+`accept(string $appId, string $reference): bool` and `getResult(): array`. If it is not merged, or
+the merged class differs from these literals, stop and say so; never guess a name.
 
 Every test named here fails on `development` today: no listener for the event exists and
 `ScanBatchService::take()` does not exist. Show one failing line in the PR body.
@@ -23,15 +26,16 @@ Every test named here fails on `development` today: no listener for the event ex
 ## 2. The listener
 
 - [ ] 2.1 Add `lib/EventListener/WatchedFileArrivedListener.php` and register it for `\OCA\Integriq\Event\WatchedFileArrivedEvent::class` in the registrar that holds the other cross-app listeners (`lib/AppInfo/IntegrationLeafRegistrar.php` or its sibling), with the `class_exists` guard (REQ-SCW-001, REQ-SCW-003).
-  - GIVEN an event for `intakeApp: filinq` and a PDF in a profile folder WHEN dispatched THEN a batch is taken and `accept()` gets its uuid.
+  - GIVEN an event whose `getIntakeApp()` is `filinq` and a PDF in a profile folder WHEN dispatched THEN a batch is taken and the listener calls `accept('filinq', <uuid>)`, which answers `true`.
+  - GIVEN `accept()` answers `false` WHEN the listener has stored the batch THEN it logs the refusal and does not retry or accept under another app id.
   - GIVEN an event for another app WHEN dispatched THEN nothing is written and nothing accepted.
-  - Test: PHPUnit `WatchedFileArrivedListenerTest::testABatchIsTakenAndAccepted`, `::testAnotherIntakesFileIsIgnored`, `::testAnUnrelatedEventIsIgnored`, constructing the REAL integriq event class (autoload it from integriq's source in the test bootstrap, or skip with a stated reason when integriq is not available, and say so in the PR body).
+  - Test: PHPUnit `WatchedFileArrivedListenerTest::testABatchIsTakenAndAccepted`, `::testAnotherIntakesFileIsIgnored`, `::testAnUnrelatedEventIsIgnored`, `::testARefusedAcceptIsLoggedNotRetried` (an event already accepted, so `accept()` answers `false`), constructing the REAL integriq event class (autoload it from integriq's source in the test bootstrap, or skip with a stated reason when integriq is not available, and say so in the PR body).
 - [ ] 2.2 Fail closed and once per file (REQ-SCW-002).
   - Test: PHPUnit `WatchedFileArrivedListenerTest::testWithoutAProfileNothingIsAccepted`, `::testAFolderIdIsNotAccepted`, `::testAMissingFileIsNotAccepted`, `::testANonPdfIsNotAccepted`, `::testAStoreFailureIsNotAccepted`, `::testAFailedCutIsAcceptedWithItsBatch`, `::testASecondHandOverIsAcceptedWithTheSameBatch`. Double `IRootFolder` and `ScanBatchRepository` after reading their real signatures; `findByFile()` answers null, it does not throw.
 - [ ] 2.3 Through the caller: dispatch the real event through a real `IEventDispatcher` wired by `Application::register()` (REQ-SCW-001).
   - Test: PHPUnit `tests/integration/WatchedFolderScanIntakeTest.php::testTheDispatcherReachesTheListener` asserts `getResult()` is `['accepted' => true, 'intakeApp' => 'filinq', 'reference' => <uuid>]`.
 - [ ] 2.4 Contract test on filinq's side (REQ-SCW-001).
-  - Test: PHPUnit `WatchedFileArrivedContractTest::testTheEventMatchesIntegriqsSpec` asserts the constructor parameter names and types, `accept(string)`, the three `getResult()` keys and the accessor names, as literals copied from integriq's class with its source line. Name integriq's `WatchedFileIngestJobTest::testAnAcceptedHandOverMarksTheFile` in the PR body.
+  - Test: PHPUnit `WatchedFileArrivedContractTest::testTheEventMatchesIntegriqsSpec` asserts by reflection the constructor parameter names and types `(string $synchronizationId, string $sourceId, string $intakeApp, int $fileId, string $path, string $ownerUid)`, the six getters with their return types, `accept(string $appId, string $reference): bool` and the three `getResult()` keys, as the literals of integriq's REQ-SFTP-005. integriq's `WatchedFileArrivedEventTest::testThePublicSurfaceIsTheContract` asserts the same literals; name it and `WatchedFileIngestJobTest::testAnAcceptedHandOverMarksTheFile` in the PR body.
 
 ## 3. Bookkeeping and docs
 
