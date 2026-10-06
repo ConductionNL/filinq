@@ -68,7 +68,7 @@ service exists. Acceptance lines are plain bullets, so the checkbox cap holds.
 - [ ] 6.5 Strings, docs and e2e. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/pdfua-verapdf-matterhorn.md` (the three tags, the gate, why imported PDFs are never converted), `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts`.
   - Test: the Playwright spec covers the attach scenario and the imported-PDF scenario.
 
-Verification for section 6 (plain bullets on purpose). The building agent follows `~/memcap-work/woo-build/LANE-RULES-BUILD.md`:
+Verification for section 6 (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
 - Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
 - PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.

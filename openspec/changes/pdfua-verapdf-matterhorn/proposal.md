@@ -5,6 +5,16 @@ depends_on: [pdfua-accessible-output, verapdf-validation]
 
 # Proposal: pdfua-verapdf-matterhorn
 
+## Summary
+
+filinq checks every PDF attached to an OpenRegister object for PDF/UA, shows the verdict as a file label, gates publication readiness on it, and offers an accessible copy only for documents filinq generated.
+
+- Rows: 15.3 and 15.7 (15.7 tops out at partial by decision D5).
+- Wave 1.
+- Dependencies: none planned. Builds on the archived `filinq/verapdf-validation` (veraPDF backend on `development`).
+- Decisions: D5 (the spec wins for imported files: an imported PDF that fails is reported and gated, never repaired).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 Wave-1 `pdfua-accessible-output` made accessibility *visible* but only
