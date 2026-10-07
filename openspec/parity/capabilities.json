@@ -786,7 +786,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: lib/Service/IntakeService.php:104-117 receive() de-duplicates silently on sourceRef: it logs an info-level message and returns the existing document unchanged. No field or UI surfaces a 'this looks like a duplicate' warning to a clerk; IntakeIndex.vue has no duplicate indicator.",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/intake-worklist-deadline-and-duplicates"
 			},
 			"reachedOn": "nothing detects content-level duplicates; the sourceRef re-delivery skip is intended",
 			"provider": "filinq",
@@ -814,7 +815,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: Searched lib/Service/Intake*, lib/Service/IntakeService.php, lib/Service/IntakeRepository.php and lib/Settings/filinq_register.json for handlingDeadline/afhandeltermijn/overdue: no match. lib/Service/ObjectionDeadlineChecker.php exists but is unrelated - it checks GDPR publication-objection deadlines on consent records (openspec/specs/consent-management), not intake handling deadlines."
+				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: Searched lib/Service/Intake*, lib/Service/IntakeService.php, lib/Service/IntakeRepository.php and lib/Settings/filinq_register.json for handlingDeadline/afhandeltermijn/overdue: no match. lib/Service/ObjectionDeadlineChecker.php exists but is unrelated - it checks GDPR publication-objection deadlines on consent records (openspec/specs/consent-management), not intake handling deadlines.",
+				"change": "openspec/changes/intake-worklist-deadline-and-duplicates"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -841,7 +843,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: Grepped lib/ for 'acknowledg*': all hits are print-job acknowledgement (PrintJobController) or anonymisation-override acknowledgement (AnonymizeRequestValidator, ProhibitionGateService) - none is a sender acknowledgement-of-receipt on document registration. No template or auto-send-on-registration found."
+				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: Grepped lib/ for 'acknowledg*': all hits are print-job acknowledgement (PrintJobController) or anonymisation-override acknowledgement (AnonymizeRequestValidator, ProhibitionGateService) - none is a sender acknowledgement-of-receipt on document registration. No template or auto-send-on-registration found.",
+				"change": "openspec/changes/intake-acknowledge-and-stamp"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -983,7 +986,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found."
+				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found.",
+				"change": "openspec/changes/intake-paper-archive-digitisation"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -1037,7 +1041,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-mailbox-archive-import on 2026-09-27. Before: openspec/changes/email-ingestion/design.md Non-Goals: 'No native .msg (Outlook CFBF) parsing and no PST/MBOX bulk-archive splitter in v1 (the cluster's bulk import PST/MBOX story needs a container-format decision first - deferred).' email-ingestion itself is entirely unbuilt."
+				"evidence": "Specified in openspec/changes/intake-mailbox-archive-import on 2026-09-27. Before: openspec/changes/email-ingestion/design.md Non-Goals: 'No native .msg (Outlook CFBF) parsing and no PST/MBOX bulk-archive splitter in v1 (the cluster's bulk import PST/MBOX story needs a container-format decision first - deferred).' email-ingestion itself is entirely unbuilt.",
+				"change": "openspec/changes/intake-mailbox-archive-import"
 			},
 			"reachedOn": "nothing reaches it (explicit non-goal, unbuilt)",
 			"provider": "filinq",
@@ -1116,7 +1121,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-base-registry-enrichment on 2026-09-27. Before: lib/Service/MetadataService.php (@spec metadata-enrichment) is text-analysis only (language detection, keyword extraction, topic classification per the processing-activity catalogue entry 'docudesk-metadata-enrichment' in src/views/settings/Settings.vue) - grep for BAG/BRP/KVK/basisregist* in it returns nothing. metadata#enrich route (routes.php:55) is 'none' in route-reach.txt and has no frontend caller either."
+				"evidence": "Specified in openspec/changes/intake-base-registry-enrichment on 2026-09-27. Before: lib/Service/MetadataService.php (@spec metadata-enrichment) is text-analysis only (language detection, keyword extraction, topic classification per the processing-activity catalogue entry 'docudesk-metadata-enrichment' in src/views/settings/Settings.vue) - grep for BAG/BRP/KVK/basisregist* in it returns nothing. metadata#enrich route (routes.php:55) is 'none' in route-reach.txt and has no frontend caller either.",
+				"change": "openspec/changes/intake-base-registry-enrichment"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -1342,7 +1348,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/generate-draft-and-attended-edit on 2026-09-27. Before: No edit-before-store step found: src/views/templates/TemplateDetail.vue:213-215 preview is read-only (v-html); src/views/correspondence/CorrespondenceIndex.vue:_triggerDownload downloads the generated blob immediately with no intermediate edit step. openspec/specs/document-rich-editing/spec.md covers agent edits of ALREADY-stored documents' style/metadata, not pre-store editing of a fresh generation."
+				"evidence": "Specified in openspec/changes/generate-draft-and-attended-edit on 2026-09-27. Before: No edit-before-store step found: src/views/templates/TemplateDetail.vue:213-215 preview is read-only (v-html); src/views/correspondence/CorrespondenceIndex.vue:_triggerDownload downloads the generated blob immediately with no intermediate edit step. openspec/specs/document-rich-editing/spec.md covers agent edits of ALREADY-stored documents' style/metadata, not pre-store editing of a fresh generation.",
+				"change": "openspec/changes/generate-draft-and-attended-edit"
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",
@@ -2647,7 +2654,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/work-document-notes on 2026-09-27. Before: No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names."
+				"evidence": "Specified in openspec/changes/work-document-notes on 2026-09-27. Before: No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names.",
+				"change": "openspec/changes/work-document-notes"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -2758,7 +2766,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/work-content-search on 2026-09-27. Before: No document-content search exists. src/services caseDocumentsService and MyDocumentsIndex's DdSearchBar only filter by file NAME (searchQuery). The unified-search-provider spec (openspec/specs/unified-search-provider/spec.md) only makes `template` and `signingRequest` OBJECT records searchable by their own fields, not by document body text. openspec/changes/entity-search/proposal.md states plainly: 'Filinq detects entities per file and reviews them per batch, but ... no cross-document search' -- confirming no search-by-content capability exists anywhere in the app."
+				"evidence": "Specified in openspec/changes/work-content-search on 2026-09-27. Before: No document-content search exists. src/services caseDocumentsService and MyDocumentsIndex's DdSearchBar only filter by file NAME (searchQuery). The unified-search-provider spec (openspec/specs/unified-search-provider/spec.md) only makes `template` and `signingRequest` OBJECT records searchable by their own fields, not by document body text. openspec/changes/entity-search/proposal.md states plainly: 'Filinq detects entities per file and reviews them per batch, but ... no cross-document search' -- confirming no search-by-content capability exists anywhere in the app.",
+				"change": "openspec/changes/work-content-search"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -3275,7 +3284,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/anonymization-review-workbench (an open change found in the openspec pass on 2026-09-27). Before: No UI or endpoint to mark arbitrary hand-selected text as an entity to redact: PATCH api/anonymization/relations/{id} (updateRelation, lib/Controller/AnonymizationController.php:414-425) only toggles include/skip on an EXISTING detected relation via RelationSkipDecisionService; there is no POST/create-relation endpoint. Grepped src/views/anonymization for 'manual', no hits."
+				"evidence": "Specified in openspec/changes/anonymization-review-workbench (an open change found in the openspec pass on 2026-09-27). Before: No UI or endpoint to mark arbitrary hand-selected text as an entity to redact: PATCH api/anonymization/relations/{id} (updateRelation, lib/Controller/AnonymizationController.php:414-425) only toggles include/skip on an EXISTING detected relation via RelationSkipDecisionService; there is no POST/create-relation endpoint. Grepped src/views/anonymization for 'manual', no hits.",
+				"change": "openspec/changes/anonymization-review-workbench"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -4502,7 +4512,8 @@
 			"built": {
 				"state": "building",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/archive/2026-09-28-portal-signing-surface: every task done (T06, the SES/AES cap with signerRecord.signatureAssurance, landed 2026-09-28). Still building because portal-signing-actions waits on the portaliq signerEmail claim and its Newman collection. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes."
+				"evidence": "openspec/changes/portal-signing-actions/tasks.md: 11/15 done. openspec/changes/archive/2026-09-28-portal-signing-surface: every task done (T06, the SES/AES cap with signerRecord.signatureAssurance, landed 2026-09-28). Still building because portal-signing-actions waits on the portaliq signerEmail claim and its Newman collection. lib/Controller/PortalSigningReceiverController.php implements the bearer-guarded receiver (signDocument/declineDocument/viewDocument, routes.php:271-273). The rendering surface is portaliq's generic contribution/rowActions renderer (confirmed present: portaliq's lib/Contribution/PortalManifestNormaliser.php, lib/Controller/ContributionController.php, src/portal/components/CollectionTable.jsx), which is manifest-driven rather than hardcoded per app, so it needs no literal 'filinq' string to reach these routes.",
+				"change": "openspec/changes/portal-signing-actions"
 			},
 			"reachedOn": "external: portaliq's shared external portal (cross-app), calling filinq's api/portal/signing/* routes",
 			"provider": "filinq",
@@ -5587,7 +5598,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: Grepped lib/ and src/ for shareLink/time-limited/expiringLink/publicShare/'share.*link': no feature-relevant match (only an unrelated docblock hit in DocumentAnonymizeRunner.php about a shared code path, and an unrelated UI-copy string in FolderAnonymizationView.vue)."
+				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: Grepped lib/ and src/ for shareLink/time-limited/expiringLink/publicShare/'share.*link': no feature-relevant match (only an unrelated docblock hit in DocumentAnonymizeRunner.php about a shared code path, and an unrelated UI-copy string in FolderAnonymizationView.vue).",
+				"change": "openspec/changes/share-document-links"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5614,7 +5626,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: No time-limited external share exists to revoke (see sh-link); no revoke-access endpoint or service found anywhere in lib/Controller or lib/Service."
+				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: No time-limited external share exists to revoke (see sh-link); no revoke-access endpoint or service found anywhere in lib/Controller or lib/Service.",
+				"change": "openspec/changes/share-document-links"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -5778,7 +5791,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/connect-openapi-documentation on 2026-09-27 for the missing half: an OpenAPI document that covers every route, published with the app, where today openapi.json documents 2 of about 150 routes. Before: appinfo/routes.php declares ~150 REST routes covering every controller/service function. openapi.json exists at the repo root but python parse shows only 2 documented paths ('/api/anonymization/batch/folder' and an unrelated ocs path) out of the ~150 routes."
+				"evidence": "Specified in openspec/changes/connect-openapi-documentation on 2026-09-27 for the missing half: an OpenAPI document that covers every route, published with the app, where today openapi.json documents 2 of about 150 routes. Before: appinfo/routes.php declares ~150 REST routes covering every controller/service function. openapi.json exists at the repo root but python parse shows only 2 documented paths ('/api/anonymization/batch/folder' and an unrelated ocs path) out of the ~150 routes.",
+				"change": "openspec/changes/connect-openapi-documentation"
 			},
 			"reachedOn": "external frontend, not in this repo (any HTTP client can call the routes); the OpenAPI documentation itself is far from complete",
 			"provider": "filinq",
@@ -5889,7 +5903,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/zgw-document-bridge (an open change found in the openspec pass on 2026-09-27). Before: Grepped lib/ for zgw/documenten.*api/zaaksysteem: no match anywhere in the repo."
+				"evidence": "Specified in openspec/changes/zgw-document-bridge (an open change found in the openspec pass on 2026-09-27). Before: Grepped lib/ for zgw/documenten.*api/zaaksysteem: no match anywhere in the repo.",
+				"change": "openspec/changes/zgw-document-bridge"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -6024,7 +6039,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/connect-document-webhooks on 2026-09-27. Before: Grepped lib/ for 'webhook': no match anywhere in the app."
+				"evidence": "Specified in openspec/changes/connect-document-webhooks on 2026-09-27. Before: Grepped lib/ for 'webhook': no match anywhere in the app.",
+				"change": "openspec/changes/connect-document-webhooks"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -6448,7 +6464,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/opencatalogi",
 				"evidence": "filinq: no withdraw or depublish code; grep -ri 'depublic|depublish|unpublish|publicatiedatum' lib src finds nothing about publication (only signing-mandate withdrawal, lib/Controller/SigningFolderController.php:204). The withdraw flow is only designed: openspec/changes/woo-publicatie-pipeline/design.md:165 (0 of 16 tasks done). opencatalogi@a00f9f84 has it for its own publications: appinfo/routes.php:82 POST /api/publications/depublish -> lib/Controller/DepublicationController.php:126 depublish() (no src/ caller), and src/dialogs/attachment/MassAttachmentModal.vue:234 massDepublishAttachments, opened from src/modals/object/ViewObject.vue:2328.",
-				"change": "ConductionNL/opencatalogi openspec/changes/publications-publish-and-withdraw-action"
+				"change": "ConductionNL/opencatalogi openspec/changes/archive/2026-09-30-publications-publish-and-withdraw-action"
 			},
 			"reachedOn": "nothing reaches it from filinq: filinq hands no document to opencatalogi, so nothing filinq published exists there to withdraw",
 			"provider": "opencatalogi",
@@ -6542,7 +6558,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/extraction-model-filled-fields on 2026-09-27 for the missing half: a model fills the fields a document type or record schema declares, not only the fixed invoice fields for one consumer. Before: a model fills a fixed set of invoice fields only: lib/Service/FinancialExtractionService.php:242 extractFinancial() calls applyAiEnhancement() (:509), which runs a Nextcloud TaskProcessing TextToText task (:877) for the fields the heuristics left empty. Reached via POST api/extraction/financial (appinfo/routes.php:276), called by shillinq, no filinq page. General enrichment (lib/Service/MetadataService.php:100 enhanceTextMetadata) fills language, keywords and topic with heuristics (lib/Service/TextAnalysisService.php:95 word counts), not a model, and not the document's own schema fields."
+				"evidence": "Specified in openspec/changes/extraction-model-filled-fields on 2026-09-27 for the missing half: a model fills the fields a document type or record schema declares, not only the fixed invoice fields for one consumer. Before: a model fills a fixed set of invoice fields only: lib/Service/FinancialExtractionService.php:242 extractFinancial() calls applyAiEnhancement() (:509), which runs a Nextcloud TaskProcessing TextToText task (:877) for the fields the heuristics left empty. Reached via POST api/extraction/financial (appinfo/routes.php:276), called by shillinq, no filinq page. General enrichment (lib/Service/MetadataService.php:100 enhanceTextMetadata) fills language, keywords and topic with heuristics (lib/Service/TextAnalysisService.php:95 word counts), not a model, and not the document's own schema fields.",
+				"change": "openspec/changes/extraction-model-filled-fields"
 			},
 			"reachedOn": "machine consumer: shillinq via POST api/extraction/financial; enrichment runs on document object writes (toggle at /settings)",
 			"provider": "filinq",
@@ -6572,7 +6589,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done)."
+				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done).",
+				"change": "openspec/changes/intake-acknowledge-and-stamp"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6694,7 +6712,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: no share code: grep -ri 'IShare|ShareManager|shareLink|share link' lib src finds nothing; the only ZIP handling is office package I/O (lib/Service/Editing/PackagePartIo.php:78). Nearest: lib/Controller/MergeController.php merges several documents into one PDF, which is a file, not a link."
+				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: no share code: grep -ri 'IShare|ShareManager|shareLink|share link' lib src finds nothing; the only ZIP handling is office package I/O (lib/Service/Editing/PackagePartIo.php:78). Nearest: lib/Controller/MergeController.php merges several documents into one PDF, which is a file, not a link.",
+				"change": "openspec/changes/share-document-links"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6724,7 +6743,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-pdf-password-removal on 2026-09-27. Before: filinq detects and refuses, it does not decrypt: lib/Service/DocumentValidationService.php:306 encryptionFindings() reports 'The PDF is encrypted or password-protected and cannot be anonymised.' (:323); grep -ri 'decrypt|qpdf|pikepdf|password' lib finds no removal step."
+				"evidence": "Specified in openspec/changes/intake-pdf-password-removal on 2026-09-27. Before: filinq detects and refuses, it does not decrypt: lib/Service/DocumentValidationService.php:306 encryptionFindings() reports 'The PDF is encrypted or password-protected and cannot be anonymised.' (:323); grep -ri 'decrypt|qpdf|pikepdf|password' lib finds no removal step.",
+				"change": "openspec/changes/intake-pdf-password-removal"
 			},
 			"reachedOn": "nothing reaches it (the encrypted-PDF check is shown at /my-documents via ValidationResultModal.vue)",
 			"provider": "filinq",
@@ -6753,7 +6773,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/signing-field-validation on 2026-09-27. Before: no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done). Corrections round 8 (2026-09-28), filinq#1209: the create form also offers no signer or field composition (src/views/signing/SigningRequestForm.vue:12-54), which openspec/specs/orphaned-surface-restoration/spec.md:106 requires, at 9fd042f."
+				"evidence": "Specified in openspec/changes/signing-field-validation on 2026-09-27. Before: no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done). Corrections round 8 (2026-09-28), filinq#1209: the create form also offers no signer or field composition (src/views/signing/SigningRequestForm.vue:12-54), which openspec/specs/orphaned-surface-restoration/spec.md:106 requires, at 9fd042f.",
+				"change": "openspec/changes/signing-field-validation"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6784,7 +6805,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/signing-accept-only-recipient on 2026-09-27. Before: no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role."
+				"evidence": "Specified in openspec/changes/signing-accept-only-recipient on 2026-09-27. Before: no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role.",
+				"change": "openspec/changes/signing-accept-only-recipient"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -7012,7 +7034,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/redaction-at-scale (an open change found in the openspec pass on 2026-09-27). Before: no sampling QA: grep -ri 'sample|random|steekproef' lib src finds only template preview sample data (lib/Service/TemplatePreviewService.php:56). Specified only: openspec/changes/redaction-at-scale/proposal.md:64 'Sampling QA: an admin-configurable random sample (default 5%)', tasks.md:28 sampler unchecked (0 of 18 tasks done)."
+				"evidence": "Specified in openspec/changes/redaction-at-scale (an open change found in the openspec pass on 2026-09-27). Before: no sampling QA: grep -ri 'sample|random|steekproef' lib src finds only template preview sample data (lib/Service/TemplatePreviewService.php:56). Specified only: openspec/changes/redaction-at-scale/proposal.md:64 'Sampling QA: an admin-configurable random sample (default 5%)', tasks.md:28 sampler unchecked (0 of 18 tasks done).",
+				"change": "openspec/changes/redaction-at-scale"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -7069,7 +7092,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/generate-draft-and-attended-edit on 2026-09-27. Before: no saved half-finished generation: grep -ri 'draft|resume|save for later' lib src finds only finalisation drafts of existing files (lib/Service/FinalDocumentCorrectionService.php:102) and machine-drafted plain renditions. The guided wizard puts it out of scope: openspec/changes/guided-document-wizard/proposal.md:119 'Multi-user / resumable wizard sessions persisted server-side' (a run is one sitting; abandoning the browser discards the draft)."
+				"evidence": "Specified in openspec/changes/generate-draft-and-attended-edit on 2026-09-27. Before: no saved half-finished generation: grep -ri 'draft|resume|save for later' lib src finds only finalisation drafts of existing files (lib/Service/FinalDocumentCorrectionService.php:102) and machine-drafted plain renditions. The guided wizard puts it out of scope: openspec/changes/guided-document-wizard/proposal.md:119 'Multi-user / resumable wizard sessions persisted server-side' (a run is one sitting; abandoning the browser discards the draft).",
+				"change": "openspec/changes/generate-draft-and-attended-edit"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
