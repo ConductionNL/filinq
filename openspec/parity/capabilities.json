@@ -476,7 +476,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/intake/IntakeIndex.vue (CnIndexPage listing 'documents', mode='waiting') calls src/services/intakeService.js:21 listWaitingDocuments() -> GET api/intake/documents (routes.php:77) -> lib/Controller/IntakeController.php:89 index() -> lib/Service/IntakeService.php:230 listWaiting() -> IntakeRepository::findWaiting()."
+				"evidence": "src/views/intake/IntakeIndex.vue (CnIndexPage listing 'documents', mode='waiting') calls src/services/intakeService.js:21 listWaitingDocuments() -> GET api/intake/documents (routes.php:77) -> lib/Controller/IntakeController.php:89 index() -> lib/Service/IntakeService.php:230 listWaiting() -> IntakeRepository::findWaiting().",
+				"change": "openspec/changes/document-intake-inbox"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue)",
 			"provider": "filinq",
@@ -504,7 +505,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/intake/IntakeIndex.vue:67-72 (Assign action) opens src/dialogs/IntakeAssignDialog.vue -> src/services/intakeService.js:35 assignIntakeDocument() -> POST api/intake/documents/{uuid}/assign (routes.php:78) -> IntakeController.php:131 assign() -> IntakeService.php:254 assign(); reject is symmetric via routes.php:79 -> IntakeController.php:182 reject() -> IntakeService.php:392 reject(), reason required."
+				"evidence": "src/views/intake/IntakeIndex.vue:67-72 (Assign action) opens src/dialogs/IntakeAssignDialog.vue -> src/services/intakeService.js:35 assignIntakeDocument() -> POST api/intake/documents/{uuid}/assign (routes.php:78) -> IntakeController.php:131 assign() -> IntakeService.php:254 assign(); reject is symmetric via routes.php:79 -> IntakeController.php:182 reject() -> IntakeService.php:392 reject(), reason required.",
+				"change": "openspec/changes/document-intake-inbox"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue, IntakeAssignDialog.vue, FinalDocumentReasonDialog.vue)",
 			"provider": "filinq",
@@ -531,7 +533,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match."
+				"evidence": "lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match.",
+				"change": "openspec/changes/scan-intake-with-separator-sheets"
 			},
 			"reachedOn": "nothing reaches it (no watched-folder job registered, no frontend caller)",
 			"provider": "filinq",
@@ -558,7 +561,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue)."
+				"evidence": "lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
+				"change": "openspec/changes/scan-intake-with-separator-sheets"
 			},
 			"reachedOn": "nothing reaches it (no admin UI, no frontend caller)",
 			"provider": "filinq",
@@ -675,7 +679,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/IntakeService.php:148 receive() calls PartySuggestionService::suggestFor(fileId) automatically and stores 'partySuggestion' on the intake document; lib/Controller/IntakeController.php:271 decideParty() -> PartySuggestionService::recordDecision() is routed at intake#decideParty (FE per route-reach.txt) and exported as src/services/intakeService.js:97 decidePartySuggestion(), but grep of src/ for 'decidePartySuggestion|partySuggestion' shows only that export - no .vue component calls it or renders the suggestion. IntakeIndex.vue's tableColumns (channel/sender/subject/receivedAt) do not include partySuggestion."
+				"evidence": "lib/Service/IntakeService.php:148 receive() calls PartySuggestionService::suggestFor(fileId) automatically and stores 'partySuggestion' on the intake document; lib/Controller/IntakeController.php:271 decideParty() -> PartySuggestionService::recordDecision() is routed at intake#decideParty (FE per route-reach.txt) and exported as src/services/intakeService.js:97 decidePartySuggestion(), but grep of src/ for 'decidePartySuggestion|partySuggestion' shows only that export - no .vue component calls it or renders the suggestion. IntakeIndex.vue's tableColumns (channel/sender/subject/receivedAt) do not include partySuggestion.",
+				"change": "openspec/changes/inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "nothing reaches it (suggestion computed and stored server-side; no UI displays it or calls decidePartySuggestion)",
 			"provider": "filinq",
@@ -703,7 +708,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Settings/filinq_register.json:127 postRegisterEntry.registrationNumber declares x-openregister-generated {sequence: 'filinq-post', format: '{year}-{seq:5}', resetOn: 'year'} (schema comment: 'Filinq keeps no counter... drawn from a platform sequence and reset each year'), enforced immutable by lib/EventListener/DocumentRegistrationWriteGuard.php (stops ObjectUpdatingEvent on a changed number). lib/Controller/PostRegisterController.php only exposes three READ endpoints (openPost/answers/series, all 'none' in route-reach.txt) and its docblock states 'THE LEAF IS NOT THIS. ADR-066's leaf... is blocked on filinq shipping no leaves webpack entry' - note webpack.config.js:74 DOES now declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf."
+				"evidence": "lib/Settings/filinq_register.json:127 postRegisterEntry.registrationNumber declares x-openregister-generated {sequence: 'filinq-post', format: '{year}-{seq:5}', resetOn: 'year'} (schema comment: 'Filinq keeps no counter... drawn from a platform sequence and reset each year'), enforced immutable by lib/EventListener/DocumentRegistrationWriteGuard.php (stops ObjectUpdatingEvent on a changed number). lib/Controller/PostRegisterController.php only exposes three READ endpoints (openPost/answers/series, all 'none' in route-reach.txt) and its docblock states 'THE LEAF IS NOT THIS. ADR-066's leaf... is blocked on filinq shipping no leaves webpack entry' - note webpack.config.js:74 DOES now declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf.",
+				"change": "openspec/changes/documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it (no manifest page, no leaf, no frontend caller; number issuance happens only via direct OpenRegister object-create calls, and the series is instance-wide not per-unit as the row describes)",
 			"provider": "filinq",
@@ -731,7 +737,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/IntakeService.php:119-127 receive() stores 'sender', 'channel' (direction/way it arrived) and 'receivedAt' on every intake document; src/views/intake/IntakeIndex.vue:174-181 tableColumns render 'sender' and 'receivedAt' (formatted via formatDate())."
+				"evidence": "lib/Service/IntakeService.php:119-127 receive() stores 'sender', 'channel' (direction/way it arrived) and 'receivedAt' on every intake document; src/views/intake/IntakeIndex.vue:174-181 tableColumns render 'sender' and 'receivedAt' (formatted via formatDate()).",
+				"change": "openspec/changes/document-intake-inbox"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue)",
 			"provider": "filinq",
@@ -758,7 +765,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/IntakeService.php:285 assign() calls IntakeRoutingService::apply() on every assignment (real code path, not decorative). lib/Controller/IntakeController.php:325 declareRouting() -> IntakeRoutingService::declare() is routed at intake#declareRouting (routes.php:85, route-reach.txt='none'); no frontend caller found and no sibling reference to this route fragment turned up in the sibling greps performed for this pack."
+				"evidence": "lib/Service/IntakeService.php:285 assign() calls IntakeRoutingService::apply() on every assignment (real code path, not decorative). lib/Controller/IntakeController.php:325 declareRouting() -> IntakeRoutingService::declare() is routed at intake#declareRouting (routes.php:85, route-reach.txt='none'); no frontend caller found and no sibling reference to this route fragment turned up in the sibling greps performed for this pack.",
+				"change": "openspec/changes/inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "nothing reaches it for declaring a rule (no known caller); apply() runs on every assign() but has nothing to apply without a declared intakeRoutingRule",
 			"provider": "filinq",
@@ -870,7 +878,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/modals/ValidationResultModal.vue and src/components/ValidationFindingsPanel.vue in src/views/myDocuments/MyDocumentsIndex.vue call validationService.js -> POST api/validation/validate (routes.php:58, FE in route-reach.txt) -> lib/Controller/ValidationController.php -> lib/Service/DocumentValidationService.php, which checks for missing text layer, encryption and incompleteness before use."
+				"evidence": "src/modals/ValidationResultModal.vue and src/components/ValidationFindingsPanel.vue in src/views/myDocuments/MyDocumentsIndex.vue call validationService.js -> POST api/validation/validate (routes.php:58, FE in route-reach.txt) -> lib/Controller/ValidationController.php -> lib/Service/DocumentValidationService.php, which checks for missing text layer, encryption and incompleteness before use.",
+				"change": "openspec/changes/archive/2026-06-15-document-validation-checks"
 			},
 			"reachedOn": "/my-documents (MyDocumentsIndex.vue, ValidationResultModal.vue)",
 			"provider": "filinq",
@@ -958,7 +967,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/FileUploadService.php:159 calls UploadPolicyService::check(fileName, contents) on every upload; FileUploadService is used by lib/Service/BatchUploadService.php, which backs batchAnonymization#batchUpload (routes.php:157, FE-prefix per route-reach.txt) reached from the Anonymization/FolderAnonymization upload flows."
+				"evidence": "lib/Service/FileUploadService.php:159 calls UploadPolicyService::check(fileName, contents) on every upload; FileUploadService is used by lib/Service/BatchUploadService.php, which backs batchAnonymization#batchUpload (routes.php:157, FE-prefix per route-reach.txt) reached from the Anonymization/FolderAnonymization upload flows.",
+				"change": "openspec/changes/case-documents-and-the-flat-list"
 			},
 			"reachedOn": "/anonymization, /folder-anonymization (batch upload flow)",
 			"provider": "filinq",
@@ -1014,7 +1024,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/intake/IntakeIndex.vue:43-49 'Taken off a record' mode button calls src/services/intakeService.js:69 listDetachedDocuments() -> GET api/intake/detached (routes.php:82, FE) -> IntakeController.php:206 detached() -> IntakeService.php:218 listDetached(). Detaching itself: lib/Service/IntakeDetachmentService.php via POST api/intake/documents/detach (routes.php:83, FE) -> IntakeController.php:237 detach()."
+				"evidence": "src/views/intake/IntakeIndex.vue:43-49 'Taken off a record' mode button calls src/services/intakeService.js:69 listDetachedDocuments() -> GET api/intake/detached (routes.php:82, FE) -> IntakeController.php:206 detached() -> IntakeService.php:218 listDetached(). Detaching itself: lib/Service/IntakeDetachmentService.php via POST api/intake/documents/detach (routes.php:83, FE) -> IntakeController.php:237 detach().",
+				"change": "openspec/changes/inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue, mode='detached')",
 			"provider": "filinq",
@@ -1068,7 +1079,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/ExtractionController.php:91 financial() -> lib/Service/FinancialExtractionService.php:236 extractFinancial() (supplier/IBAN/KvK/BTW, invoice number, dates, currency, VAT breakdown) dispatches FinancialExtractionCompletedEvent at line 957. Route api/extraction/financial (routes.php:276) has no filinq frontend caller, but shillinq (dq-flow/procest sibling clone check n/a - verified in shillinq) calls it directly: lib/Service/Extraction/DocudeskExtractionClient.php:71 'POST /api/extraction/financial' and consumes the completion event via ExtractionCompletedListener (shillinq lib/Listener/ExtractionCompletedListener.php:117 matches OCA\\Filinq\\Event\\FinancialExtractionCompletedEvent)."
+				"evidence": "lib/Controller/ExtractionController.php:91 financial() -> lib/Service/FinancialExtractionService.php:236 extractFinancial() (supplier/IBAN/KvK/BTW, invoice number, dates, currency, VAT breakdown) dispatches FinancialExtractionCompletedEvent at line 957. Route api/extraction/financial (routes.php:276) has no filinq frontend caller, but shillinq (dq-flow/procest sibling clone check n/a - verified in shillinq) calls it directly: lib/Service/Extraction/DocudeskExtractionClient.php:71 'POST /api/extraction/financial' and consumes the completion event via ExtractionCompletedListener (shillinq lib/Listener/ExtractionCompletedListener.php:117 matches OCA\\Filinq\\Event\\FinancialExtractionCompletedEvent).",
+				"change": "openspec/changes/archive/2026-07-12-financial-document-field-extraction"
 			},
 			"reachedOn": "machine consumer: shillinq (lib/Service/Extraction/DocudeskExtractionClient.php POSTs api/extraction/financial directly; lib/Listener/ExtractionCompletedListener.php consumes filinq's FinancialExtractionCompletedEvent)",
 			"provider": "filinq",
@@ -1094,7 +1106,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/ExtractionController.php -> lib/Service/GlAccountSuggestionService.php, routed at glAccountSuggestion#suggestAccount (routes.php:280, api/extraction/{id}/suggest-account). shillinq's lib/Service/Extraction/GlAccountSuggestionClient.php:12-15 calls 'POST /api/extraction/{id}/suggest-account' and 'POST /api/extraction/{id}/corrections' directly."
+				"evidence": "lib/Controller/ExtractionController.php -> lib/Service/GlAccountSuggestionService.php, routed at glAccountSuggestion#suggestAccount (routes.php:280, api/extraction/{id}/suggest-account). shillinq's lib/Service/Extraction/GlAccountSuggestionClient.php:12-15 calls 'POST /api/extraction/{id}/suggest-account' and 'POST /api/extraction/{id}/corrections' directly.",
+				"change": "openspec/changes/archive/2026-07-13-ai-gl-account-suggestion"
 			},
 			"reachedOn": "machine consumer: shillinq (lib/Service/Extraction/GlAccountSuggestionClient.php)",
 			"provider": "filinq",
@@ -1149,7 +1162,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php:205 generate(templateId, dataRefs, options) resolves data via DataResolverService and renders via TemplateRenderer. Route correspondence#generate api/correspondence/generate (routes.php:220). Also reached headlessly by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:160 calls OCA\\Filinq\\Service\\DocumentService::generateDocument() directly via DI (lib/Service/DocumentService.php:168)."
+				"evidence": "lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php:205 generate(templateId, dataRefs, options) resolves data via DataResolverService and renders via TemplateRenderer. Route correspondence#generate api/correspondence/generate (routes.php:220). Also reached headlessly by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:160 calls OCA\\Filinq\\Service\\DocumentService::generateDocument() directly via DI (lib/Service/DocumentService.php:168).",
+				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation"
 			},
 			"reachedOn": "/correspondence (src/views/correspondence/CorrespondenceIndex.vue, via src/store/modules/correspondence.js:83); also machine consumer: dossiq (procest/dq-flow) BeschikkingComposerDialog.vue -> CaseDocumentGenerationController -> FilinqTemplateEngineAdapter",
 			"provider": "filinq",
@@ -1178,7 +1192,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/CorrespondenceService.php:678-684 produceOutput() 'pdf' case calls PdfService::renderPdf (lib/Service/PdfService.php:91). Default format (DEFAULT_FORMAT='pdf', line 71/138)."
+				"evidence": "lib/Service/CorrespondenceService.php:678-684 produceOutput() 'pdf' case calls PdfService::renderPdf (lib/Service/PdfService.php:91). Default format (DEFAULT_FORMAT='pdf', line 71/138).",
+				"change": "openspec/changes/archive/2026-03-21-pdf-generation"
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue, format select defaults to PDF)",
 			"provider": "filinq",
@@ -1206,7 +1221,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PrintController.php:255-282 downloadPdfA() sets options['pdfa']=true then calls PdfService::renderPdf (mPDF PDF/A-3b, class docblock lib/Service/PdfService.php:8,41). FE: src/components/PrintPreview.vue:111 posts to /apps/filinq/api/print/pdf-a."
+				"evidence": "lib/Controller/PrintController.php:255-282 downloadPdfA() sets options['pdfa']=true then calls PdfService::renderPdf (mPDF PDF/A-3b, class docblock lib/Service/PdfService.php:8,41). FE: src/components/PrintPreview.vue:111 posts to /apps/filinq/api/print/pdf-a.",
+				"change": "openspec/changes/archive/2026-07-16-pdfa3-conversion"
 			},
 			"reachedOn": "/print-preview/:templateId? (PrintPreview.vue, registered as manifest page + src/registry.js:108)",
 			"provider": "filinq",
@@ -1233,7 +1249,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/CorrespondenceService.php:672-676 produceOutput() 'docx' case calls convertToDocx(). FE: src/views/correspondence/CorrespondenceIndex.vue:262-264 format dropdown offers 'PDF' and 'DOCX (editable)'."
+				"evidence": "lib/Service/CorrespondenceService.php:672-676 produceOutput() 'docx' case calls convertToDocx(). FE: src/views/correspondence/CorrespondenceIndex.vue:262-264 format dropdown offers 'PDF' and 'DOCX (editable)'.",
+				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation"
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
 			"provider": "filinq",
@@ -1290,7 +1307,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PrintController.php:190 preview() -> PdfService::renderHtmlPreview(); lib/Controller/DocumentController.php:168 preview(). FE: src/components/PrintPreview.vue:53 posts to api/print/preview; src/views/templates/TemplateDetail.vue 'Refresh preview' button (line ~197) calls templateStore.previewTemplate -> route templatePreview#previewTemplate (FE, routes.php:234)."
+				"evidence": "lib/Controller/PrintController.php:190 preview() -> PdfService::renderHtmlPreview(); lib/Controller/DocumentController.php:168 preview(). FE: src/components/PrintPreview.vue:53 posts to api/print/preview; src/views/templates/TemplateDetail.vue 'Refresh preview' button (line ~197) calls templateStore.previewTemplate -> route templatePreview#previewTemplate (FE, routes.php:234).",
+				"spec": "openspec/specs/print-preview"
 			},
 			"reachedOn": "/print-preview/:templateId? and /templates/:id preview tab (TemplateDetail.vue)",
 			"provider": "filinq",
@@ -1378,7 +1396,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/CorrespondenceController.php:250 generateBatch() -> lib/Service/CorrespondenceService.php:281 generateBatch() (sync <=10, else BackgroundJob/BatchCorrespondenceJob.php). Route correspondence#generateBatch (routes.php:221) + correspondence#jobStatus api/correspondence/jobs/{jobId} (routes.php:222) -> CorrespondenceController::jobStatus (line 317). FE: src/store/modules/correspondence.js:125 generateBatch(), :179 pollJobStatus(); progress UI in CorrespondenceIndex.vue:197-222."
+				"evidence": "lib/Controller/CorrespondenceController.php:250 generateBatch() -> lib/Service/CorrespondenceService.php:281 generateBatch() (sync <=10, else BackgroundJob/BatchCorrespondenceJob.php). Route correspondence#generateBatch (routes.php:221) + correspondence#jobStatus api/correspondence/jobs/{jobId} (routes.php:222) -> CorrespondenceController::jobStatus (line 317). FE: src/store/modules/correspondence.js:125 generateBatch(), :179 pollJobStatus(); progress UI in CorrespondenceIndex.vue:197-222.",
+				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation"
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue batch mode)",
 			"provider": "filinq",
@@ -1407,7 +1426,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DocumentService.php:734 storeOutputIfRequested() + options.output.mode/caseId (line 258); reached by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:152-169 calls generateDocument(..., ['output'=>['mode'=>'both'], 'caseId'=>$caseId, ...]) for every beschikking, and dossiq's CaseDocumentGenerationController files the returned informatieobject on the case."
+				"evidence": "lib/Service/DocumentService.php:734 storeOutputIfRequested() + options.output.mode/caseId (line 258); reached by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:152-169 calls generateDocument(..., ['output'=>['mode'=>'both'], 'caseId'=>$caseId, ...]) for every beschikking, and dossiq's CaseDocumentGenerationController files the returned informatieobject on the case.",
+				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template"
 			},
 			"reachedOn": "machine consumer: dossiq (procest/dq-flow) CaseDocumentGenerationController -> BeschikkingGenerationService/FilinqTemplateEngineAdapter",
 			"provider": "filinq",
@@ -1436,7 +1456,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/TemplateRenderer.php:312+ converts data-condition-field/op/value HTML attributes to Twig if-blocks before rendering. UI: src/views/templates/TemplateDetail.vue:155 'Insert conditional section' toolbar button + insertConditionalSection() method (~line 604) inserts the data-condition markup."
+				"evidence": "lib/Service/TemplateRenderer.php:312+ converts data-condition-field/op/value HTML attributes to Twig if-blocks before rendering. UI: src/views/templates/TemplateDetail.vue:155 'Insert conditional section' toolbar button + insertConditionalSection() method (~line 604) inserts the data-condition markup.",
+				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
 			},
 			"reachedOn": "/templates/:id (TemplateDetail.vue editor tab)",
 			"provider": "filinq",
@@ -1665,7 +1686,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DocumentService.php storeOutputIfRequested() (line 734) with options.output.mode='files'/'both' stores the rendered output to Nextcloud Files instead of/alongside returning it (line 419-423 refuses unless mode='files'/'both'). Reached by dossiq: FilinqTemplateEngineAdapter.php:167 sets ['output'=>['mode'=>'both']] on every beschikking render."
+				"evidence": "lib/Service/DocumentService.php storeOutputIfRequested() (line 734) with options.output.mode='files'/'both' stores the rendered output to Nextcloud Files instead of/alongside returning it (line 419-423 refuses unless mode='files'/'both'). Reached by dossiq: FilinqTemplateEngineAdapter.php:167 sets ['output'=>['mode'=>'both']] on every beschikking render.",
+				"change": "openspec/changes/document-output-destinations-and-bulk-retention"
 			},
 			"reachedOn": "machine consumer: dossiq via output.mode=both/files",
 			"provider": "filinq",
@@ -1721,7 +1743,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Standard Nextcloud REST routes (api/documents/generate, api/correspondence/generate, etc., appinfo/routes.php) are callable by any authenticated external caller (app password / Bearer token per docs/api/openapi.md Authentication section). docs/api/openapi.md documents the pattern and points to an OAS file."
+				"evidence": "Standard Nextcloud REST routes (api/documents/generate, api/correspondence/generate, etc., appinfo/routes.php) are callable by any authenticated external caller (app password / Bearer token per docs/api/openapi.md Authentication section). docs/api/openapi.md documents the pattern and points to an OAS file.",
+				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template"
 			},
 			"reachedOn": "external API caller (documented at docs/api/openapi.md)",
 			"provider": "filinq",
@@ -1834,7 +1857,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/templates/TemplateDetail.vue: contenteditable WYSIWYG area (~line 163-170), toolbar with bold/italic/underline/headings/lists (lines ~90-155), raw-HTML toggle (showRaw). Route templates#show/update (routes.php:228-229) via src/store/modules/template.js fetchTemplate/updateTemplate."
+				"evidence": "src/views/templates/TemplateDetail.vue: contenteditable WYSIWYG area (~line 163-170), toolbar with bold/italic/underline/headings/lists (lines ~90-155), raw-HTML toggle (showRaw). Route templates#show/update (routes.php:228-229) via src/store/modules/template.js fetchTemplate/updateTemplate.",
+				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
 			},
 			"reachedOn": "/templates/:id (TemplateDetail.vue)",
 			"provider": "filinq",
@@ -1946,7 +1970,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplateVersionsController.php:84 versions(), :120 restoreVersion() -> lib/Service/TemplateVersionService.php. FE: src/store/modules/template.js:219 fetchVersions(), :243 restoreVersion(); UI in TemplateDetail.vue versions tab (lines 226-253)."
+				"evidence": "lib/Controller/TemplateVersionsController.php:84 versions(), :120 restoreVersion() -> lib/Service/TemplateVersionService.php. FE: src/store/modules/template.js:219 fetchVersions(), :243 restoreVersion(); UI in TemplateDetail.vue versions tab (lines 226-253).",
+				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
 			},
 			"reachedOn": "/templates/:id versions tab (TemplateDetail.vue)",
 			"provider": "filinq",
@@ -2000,7 +2025,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplatesController.php:292 lock(), :331 unlock(). FE: src/store/modules/template.js:289 acquireLock(), :308 releaseLock(); TemplateDetail.vue acquires a lock on mount and shows 'Locked by {user}' (lines 17-19, 391-393)."
+				"evidence": "lib/Controller/TemplatesController.php:292 lock(), :331 unlock(). FE: src/store/modules/template.js:289 acquireLock(), :308 releaseLock(); TemplateDetail.vue acquires a lock on mount and shows 'Locked by {user}' (lines 17-19, 391-393).",
+				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
 			},
 			"reachedOn": "/templates/:id (TemplateDetail.vue, on open/close)",
 			"provider": "filinq",
@@ -2026,7 +2052,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplatesController.php:263 duplicate(). FE: src/store/modules/template.js:197 duplicateTemplate() posts to /apps/filinq/api/templates/{id}/duplicate."
+				"evidence": "lib/Controller/TemplatesController.php:263 duplicate(). FE: src/store/modules/template.js:197 duplicateTemplate() posts to /apps/filinq/api/templates/{id}/duplicate.",
+				"change": "openspec/changes/archive/2026-06-14-advanced-template-management"
 			},
 			"reachedOn": "/templates (TemplateIndex.vue duplicate action)",
 			"provider": "filinq",
@@ -2248,7 +2275,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/dossiq",
-				"evidence": "dossiq (procest) src/dialogs/BeschikkingComposerDialog.vue:21-23 renders an NcSelect bound to v-model=templateId, letting a user pick a filinq template from a case screen; on submit (line 211) it POSTs to /apps/dossiq/api/cases/{caseId}/dossier/generate -> caseDocumentGeneration#generateDocument (procest routes.php:940) -> CaseDocumentGenerationController -> BeschikkingGenerationService -> filinq's DocumentService::generateDocument()."
+				"evidence": "dossiq (procest) src/dialogs/BeschikkingComposerDialog.vue:21-23 renders an NcSelect bound to v-model=templateId, letting a user pick a filinq template from a case screen; on submit (line 211) it POSTs to /apps/dossiq/api/cases/{caseId}/dossier/generate -> caseDocumentGeneration#generateDocument (procest routes.php:940) -> CaseDocumentGenerationController -> BeschikkingGenerationService -> filinq's DocumentService::generateDocument().",
+				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template"
 			},
 			"reachedOn": "machine consumer: dossiq (procest) case detail screen, BeschikkingComposerDialog.vue",
 			"provider": "dossiq",
@@ -2275,7 +2303,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/fileViewer/FileViewerPage.vue picks a viewer by format (src/components/viewers/PdfViewer.vue, WordViewer.vue, OdtViewer.vue, TextViewer.vue); mounted from src/views/myDocuments/MyDocumentsIndex.vue:8 (`<FileViewerPage v-if=\"fileViewerStore.currentFile\" />`) and from the anonymisation widget per manifest.json:404 note."
+				"evidence": "src/views/fileViewer/FileViewerPage.vue picks a viewer by format (src/components/viewers/PdfViewer.vue, WordViewer.vue, OdtViewer.vue, TextViewer.vue); mounted from src/views/myDocuments/MyDocumentsIndex.vue:8 (`<FileViewerPage v-if=\"fileViewerStore.currentFile\" />`) and from the anonymisation widget per manifest.json:404 note.",
+				"spec": "openspec/specs/document-preview"
 			},
 			"reachedOn": "/my-documents (MyDocumentsIndex.vue) and the Anonymization page's viewer widget",
 			"provider": "filinq",
@@ -2301,7 +2330,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/services/fileViewerService.js:84 emlPreviewUrl() called from src/views/fileViewer/FileViewerPage.vue:176; route GET /api/anonymization/eml-preview/{fileId} (routes.php:140) -> lib/Controller/EmlPreviewController.php -> lib/Service/EmlPdfAssemblyService.php, which renders the envelope, body AND attachments (renderAttachment/renderNestedEml, lines 281-383) into one PDF."
+				"evidence": "src/services/fileViewerService.js:84 emlPreviewUrl() called from src/views/fileViewer/FileViewerPage.vue:176; route GET /api/anonymization/eml-preview/{fileId} (routes.php:140) -> lib/Controller/EmlPreviewController.php -> lib/Service/EmlPdfAssemblyService.php, which renders the envelope, body AND attachments (renderAttachment/renderNestedEml, lines 281-383) into one PDF.",
+				"spec": "openspec/specs/document-preview"
 			},
 			"reachedOn": "/my-documents (MyDocumentsIndex.vue -> FileViewerPage.vue)",
 			"provider": "filinq",
@@ -2328,7 +2358,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/comparison/ComparisonView.vue:221 calls compareDocuments() (src/services/comparisonService.js) -> POST /api/comparison/compare (routes.php:61) -> lib/Controller/ComparisonController.php -> DocumentComparisonService."
+				"evidence": "src/views/comparison/ComparisonView.vue:221 calls compareDocuments() (src/services/comparisonService.js) -> POST /api/comparison/compare (routes.php:61) -> lib/Controller/ComparisonController.php -> DocumentComparisonService.",
+				"change": "openspec/changes/archive/2026-06-15-document-comparison"
 			},
 			"reachedOn": "/comparison (ComparisonView.vue)",
 			"provider": "filinq",
@@ -2355,7 +2386,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/versions/VersionsView.vue calls src/services/versionService.js (restoreVersion etc.) -> GET/POST /api/documents/{fileId}/versions* (routes.php:64-66) -> lib/Controller/VersionController.php, a thin layer over Nextcloud's own files_versions."
+				"evidence": "src/views/versions/VersionsView.vue calls src/services/versionService.js (restoreVersion etc.) -> GET/POST /api/documents/{fileId}/versions* (routes.php:64-66) -> lib/Controller/VersionController.php, a thin layer over Nextcloud's own files_versions.",
+				"spec": "openspec/specs/document-versions"
 			},
 			"reachedOn": "/versions (VersionsView.vue)",
 			"provider": "filinq",
@@ -2383,7 +2415,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/versions/VersionsView.vue:47-491 (finalise/correct/unfreeze buttons) calls src/services/finalDocumentService.js -> GET/POST/DELETE /api/documents/{fileId}/final(/correction) (routes.php:69-72) -> lib/Controller/FinalDocumentController.php (show/finalise/correct/unfreeze)."
+				"evidence": "src/views/versions/VersionsView.vue:47-491 (finalise/correct/unfreeze buttons) calls src/services/finalDocumentService.js -> GET/POST/DELETE /api/documents/{fileId}/final(/correction) (routes.php:69-72) -> lib/Controller/FinalDocumentController.php (show/finalise/correct/unfreeze).",
+				"change": "openspec/changes/final-documents-frozen"
 			},
 			"reachedOn": "/versions (VersionsView.vue)",
 			"provider": "filinq",
@@ -2410,7 +2443,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/FinalDocumentController.php:250 declareRule() and :306 applyStateChange() are fully implemented (stores a consuming app's finality rule, then finalises documents on a state change), exposed at POST /api/document-finality-rules (FE-tagged, but no caller in src/) and POST /api/document-finality-rules/apply (route-reach: none). src/services/finalDocumentService.js:84 exports declareFinalityRule() but grep found zero callers in src/."
+				"evidence": "lib/Controller/FinalDocumentController.php:250 declareRule() and :306 applyStateChange() are fully implemented (stores a consuming app's finality rule, then finalises documents on a state change), exposed at POST /api/document-finality-rules (FE-tagged, but no caller in src/) and POST /api/document-finality-rules/apply (route-reach: none). src/services/finalDocumentService.js:84 exports declareFinalityRule() but grep found zero callers in src/.",
+				"change": "openspec/changes/final-documents-frozen"
 			},
 			"reachedOn": "nothing reaches it: no filinq page calls declareFinalityRule(); checked dq-flow, procest and zaakafhandelapp (git grep 'document-finality-rules|declareFinalityRule|applyStateChange' on origin/development lib src) with no hits either",
 			"provider": "filinq",
@@ -2437,7 +2471,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/DocumentProductionController.php:179 runPeriodic(), :194 dueForReview(), :215 markReviewed() are implemented over lib/Service/DocumentReviewService.php (listDue/markReviewed). Routes GET /api/documents/due-for-review and POST /api/documents/{uuid}/reviewed are both route-reach 'none' (no frontend literal)."
+				"evidence": "lib/Controller/DocumentProductionController.php:179 runPeriodic(), :194 dueForReview(), :215 markReviewed() are implemented over lib/Service/DocumentReviewService.php (listDue/markReviewed). Routes GET /api/documents/due-for-review and POST /api/documents/{uuid}/reviewed are both route-reach 'none' (no frontend literal).",
+				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen"
 			},
 			"reachedOn": "nothing reaches it: no src/ component calls due-for-review or reviewed; appinfo/info.xml <background-jobs> registers only SigningExpirationJob, DomainFolderReconciliationJob, UploadFragmentReaperJob, none of which touch review or runPeriodic",
 			"provider": "filinq",
@@ -2491,7 +2526,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Mcp/FilinqScannableServices.php lists OCA\\Filinq\\Service\\Editing\\DocumentAgentService as an MCP-scannable service; its #[McpTool]-attributed methods (anchor-addressed paragraph edits, tests/unit/Service/Editing/EditSessionServiceTest.php etc.) let an MCP-connected AI assistant change a document's text in place. openspec/specs/document-editing/spec.md states explicitly this has 'no Filinq UI of its own'."
+				"evidence": "lib/Mcp/FilinqScannableServices.php lists OCA\\Filinq\\Service\\Editing\\DocumentAgentService as an MCP-scannable service; its #[McpTool]-attributed methods (anchor-addressed paragraph edits, tests/unit/Service/Editing/EditSessionServiceTest.php etc.) let an MCP-connected AI assistant change a document's text in place. openspec/specs/document-editing/spec.md states explicitly this has 'no Filinq UI of its own'.",
+				"spec": "openspec/specs/document-editing"
 			},
 			"reachedOn": "machine consumer: an MCP client (e.g. an AI assistant) calling lib/Mcp/FilinqScannableServices.php -> Service/Editing/DocumentAgentService; not reached from any filinq page",
 			"provider": "filinq",
@@ -2519,7 +2555,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/components/PrintPreview.vue:111 POST /apps/filinq/api/print/pdf-a (routes.php:204) -> lib/Controller/PrintController.php -> Pdfa3ConversionService/PdfConversionService (openspec/specs/pdf-conversion/spec.md: convertToPdf() -> PDF/A-3b, cascade of backends). Also reused by anonymisation and correspondence output per the spec's Purpose section."
+				"evidence": "src/components/PrintPreview.vue:111 POST /apps/filinq/api/print/pdf-a (routes.php:204) -> lib/Controller/PrintController.php -> Pdfa3ConversionService/PdfConversionService (openspec/specs/pdf-conversion/spec.md: convertToPdf() -> PDF/A-3b, cascade of backends). Also reused by anonymisation and correspondence output per the spec's Purpose section.",
+				"spec": "openspec/specs/pdf-conversion"
 			},
 			"reachedOn": "/print-preview/:templateId? (PrintPreview component, manifest page PrintPreview)",
 			"provider": "filinq",
@@ -2601,7 +2638,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/components/PrintPreview.vue:53-56 POST /api/print/preview (routes.php:203) renders HTML into a sandboxed iframe for preview, and :111-120 POST /api/print/pdf-a downloads it as PDF/A -> lib/Controller/PrintController.php."
+				"evidence": "src/components/PrintPreview.vue:53-56 POST /api/print/preview (routes.php:203) renders HTML into a sandboxed iframe for preview, and :111-120 POST /api/print/pdf-a downloads it as PDF/A -> lib/Controller/PrintController.php.",
+				"spec": "openspec/specs/print-preview"
 			},
 			"reachedOn": "/print-preview/:templateId? (PrintPreview, manifest page PrintPreview)",
 			"provider": "filinq",
@@ -2627,7 +2665,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/AppInfo/ObjectEventRegistrar.php:85-86 registers FilinqEventListener on ObjectCreatedEvent/ObjectUpdatedEvent for EVERY object on the instance; lib/EventListener/FilinqEventListener.php:67 resolves MetadataService, whose lib/Service/MetadataService.php:91-120 fills language (detectLanguage), keywords (extractKeywords) and topic (classifyTopic) when absent. src/views/settings/Settings.vue:200/961 exposes the 'Document metadata enrichment' admin toggle."
+				"evidence": "lib/AppInfo/ObjectEventRegistrar.php:85-86 registers FilinqEventListener on ObjectCreatedEvent/ObjectUpdatedEvent for EVERY object on the instance; lib/EventListener/FilinqEventListener.php:67 resolves MetadataService, whose lib/Service/MetadataService.php:91-120 fills language (detectLanguage), keywords (extractKeywords) and topic (classifyTopic) when absent. src/views/settings/Settings.vue:200/961 exposes the 'Document metadata enrichment' admin toggle.",
+				"change": "openspec/changes/archive/2026-03-21-metadata-enrichment"
 			},
 			"reachedOn": "event-driven (any document object create/update); toggle at /settings (Settings.vue)",
 			"provider": "filinq",
@@ -2711,7 +2750,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The 'My Documents' page (src/views/myDocuments/MyDocumentsIndex.vue) that a user reaches at /my-documents lists files via a Nextcloud WebDAV PROPFIND on the user's OWN folder (src/store/modules/myDocuments.js:304-330 fetchDocuments()), i.e. personal file browsing, not a curated 'produced by me or waiting for me' query. The dedicated backend for that -- lib/Controller/CaseDocumentsController.php:176 mine() -> DomainDirectory::listMine() at GET /api/case-documents/mine -- is route-reach 'none': no src/ component calls it."
+				"evidence": "The 'My Documents' page (src/views/myDocuments/MyDocumentsIndex.vue) that a user reaches at /my-documents lists files via a Nextcloud WebDAV PROPFIND on the user's OWN folder (src/store/modules/myDocuments.js:304-330 fetchDocuments()), i.e. personal file browsing, not a curated 'produced by me or waiting for me' query. The dedicated backend for that -- lib/Controller/CaseDocumentsController.php:176 mine() -> DomainDirectory::listMine() at GET /api/case-documents/mine -- is route-reach 'none': no src/ component calls it.",
+				"change": "openspec/changes/case-documents-and-the-flat-list"
 			},
 			"reachedOn": "/my-documents (MyDocumentsIndex.vue) shows the user's own file folder; the purpose-built 'documents involving me' endpoint has no caller",
 			"provider": "filinq",
@@ -2738,7 +2778,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/CaseDocumentsController.php:135 linkDomain() and :158 unlinkDomain() (POST/DELETE /api/case-documents/{uuid}/domains, routes.php:90-91) let one document record carry multiple {register,schema,id} domain links via lib/Service (DomainDirectory). Both routes are route-reach 'none'."
+				"evidence": "lib/Controller/CaseDocumentsController.php:135 linkDomain() and :158 unlinkDomain() (POST/DELETE /api/case-documents/{uuid}/domains, routes.php:90-91) let one document record carry multiple {register,schema,id} domain links via lib/Service (DomainDirectory). Both routes are route-reach 'none'.",
+				"change": "openspec/changes/case-documents-and-the-flat-list"
 			},
 			"reachedOn": "nothing reaches it: grep for linkDomain/unlinkDomain/case-documents...domains in src/ found no caller; checked dq-flow, procest, zaakafhandelapp (git grep on origin/development lib src) with no hits",
 			"provider": "filinq",
@@ -2825,7 +2866,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "lib/Service/AnonymizationService.php:200-236 runExtraction() calls OR's TextExtractionService::extractFile() and OR's EntityRelationMapper::findEntitiesForFile() automatically on every extract call. Route api/anonymization/extract/{fileId} POST (routes.php:135, FE-tagged), reached from AnonymizationController::extract (lib/Controller/AnonymizationController.php:244), called from AnonymizationIndex.vue's extract action."
+				"evidence": "lib/Service/AnonymizationService.php:200-236 runExtraction() calls OR's TextExtractionService::extractFile() and OR's EntityRelationMapper::findEntitiesForFile() automatically on every extract call. Route api/anonymization/extract/{fileId} POST (routes.php:135, FE-tagged), reached from AnonymizationController::extract (lib/Controller/AnonymizationController.php:244), called from AnonymizationIndex.vue's extract action.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue)",
 			"provider": "openregister",
@@ -2886,7 +2928,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/CustomDictionaryDetectionRunner.php runs every active organisation dictionary's matcher over a file's OR chunks and writes CUSTOM_DICTIONARY entity relations (lib/Service/AnonymizationService.php:220-225 calls dictionaryRunner->run()). Manifest pages CustomDictionary (/custom-dictionaries) and CustomDictionaryDetail (/custom-dictionaries/:id) manage the dictionaries; lib/Controller/CustomDictionaryController.php is the CRUD surface."
+				"evidence": "lib/Service/CustomDictionaryDetectionRunner.php runs every active organisation dictionary's matcher over a file's OR chunks and writes CUSTOM_DICTIONARY entity relations (lib/Service/AnonymizationService.php:220-225 calls dictionaryRunner->run()). Manifest pages CustomDictionary (/custom-dictionaries) and CustomDictionaryDetail (/custom-dictionaries/:id) manage the dictionaries; lib/Controller/CustomDictionaryController.php is the CRUD surface.",
+				"change": "openspec/changes/archive/2026-07-23-custom-dictionary-recognition"
 			},
 			"reachedOn": "/custom-dictionaries (CustomDictionaryIndex.vue) + automatic pass inside /anonymization extract",
 			"provider": "filinq",
@@ -2945,7 +2988,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/EntityDetectionService.php TYPED_PII_TYPES includes 'KVK', 'BTW', 'VAT', 'ACCOUNT'/'ACCOUNT_NUMBER'/'BANK_ACCOUNT', 'CASE_NUMBER'/'CASE_REFERENCE' — business/financial identifiers always forwarded for redaction. Separately, lib/Controller/ExtractionController.php + lib/Service/FinancialExtractionService.php implement 'scan-en-herken' financial FIELD extraction, but that is a different feature (extracting invoice fields for GL matching, not confidentiality-scope redaction) and its route (api/extraction/financial) is tagged 'none' in _lane/shared/route-reach.txt with no frontend caller found in src/."
+				"evidence": "lib/Service/EntityDetectionService.php TYPED_PII_TYPES includes 'KVK', 'BTW', 'VAT', 'ACCOUNT'/'ACCOUNT_NUMBER'/'BANK_ACCOUNT', 'CASE_NUMBER'/'CASE_REFERENCE' — business/financial identifiers always forwarded for redaction. Separately, lib/Controller/ExtractionController.php + lib/Service/FinancialExtractionService.php implement 'scan-en-herken' financial FIELD extraction, but that is a different feature (extracting invoice fields for GL matching, not confidentiality-scope redaction) and its route (api/extraction/financial) is tagged 'none' in _lane/shared/route-reach.txt with no frontend caller found in src/.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) for the typed business identifiers; the financial extraction feature has nothing reaching it",
 			"provider": "filinq",
@@ -3170,7 +3214,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/manifest.json AnonymizationReport dashboard page (route /reports/anonymization) shows org-wide stat/chart widgets sourced from the filinq.anonymizationBatch register/schema: counts by status (review/completed/error), a by-status donut, a by-source donut, and a recent-runs table."
+				"evidence": "src/manifest.json AnonymizationReport dashboard page (route /reports/anonymization) shows org-wide stat/chart widgets sourced from the filinq.anonymizationBatch register/schema: counts by status (review/completed/error), a by-status donut, a by-source donut, and a recent-runs table.",
+				"spec": "none"
 			},
 			"reachedOn": "/reports/anonymization (dashboard-type manifest page, reads openregister objects directly)",
 			"provider": "filinq",
@@ -3224,7 +3269,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/EmlAnonymizationService.php + route api/anonymization/eml-preview/{fileId} GET (routes.php:140, FE-tagged, emlPreview#preview). AnonymizationService.php:440-441 documents EML inputs routed to OR's dedicated anonymise-EML API and assembled into a redacted PDF/A-3b by EmlPdfAssemblyService. .eml is in ALLOWED_EXTENSIONS/ALLOWED_MIMES in src/services/anonymizationUpload.js."
+				"evidence": "lib/Service/EmlAnonymizationService.php + route api/anonymization/eml-preview/{fileId} GET (routes.php:140, FE-tagged, emlPreview#preview). AnonymizationService.php:440-441 documents EML inputs routed to OR's dedicated anonymise-EML API and assembled into a redacted PDF/A-3b by EmlPdfAssemblyService. .eml is in ALLOWED_EXTENSIONS/ALLOWED_MIMES in src/services/anonymizationUpload.js.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) via the eml-preview route",
 			"provider": "filinq",
@@ -3315,7 +3361,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The mechanism is built: src/services/anonymizationUpload.js docblock describes true byte-level removal per format (PHPWord for docx, OpenRegister's in-place XML surgery for odt, byte-level replace for txt, the SAPP byte-replace pipeline for pdf), and lib/Service/Redaction/RedactionIrreversibilityVerifier.php verifies the produced bytes for every known leak route rather than trusting the claim. But this all runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard::assertMayWrite() gate as red-review, which always refuses (see red-review evidence). So no copy is ever actually produced to verify."
+				"evidence": "The mechanism is built: src/services/anonymizationUpload.js docblock describes true byte-level removal per format (PHPWord for docx, OpenRegister's in-place XML surgery for odt, byte-level replace for txt, the SAPP byte-replace pipeline for pdf), and lib/Service/Redaction/RedactionIrreversibilityVerifier.php verifies the produced bytes for every known leak route rather than trusting the claim. But this all runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard::assertMayWrite() gate as red-review, which always refuses (see red-review evidence). So no copy is ever actually produced to verify.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue); blocked before the write",
 			"provider": "openregister",
@@ -3346,7 +3393,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/services/anonymizationUpload.js: ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'], ALLOWED_MIMES covers Word/ODT/plain-text/PDF/eml — Word, PDF, OpenDocument and plain text are all accepted formats with real per-format handling described in the same file's docblock. But every one of those formats routes through AnonymizationService::runAnonymize -> RedactionOutputGuard::assertMayWrite (lib/Service/AnonymizationService.php:616), which always refuses (see red-review evidence), so no anonymised file is ever produced for any format today."
+				"evidence": "src/services/anonymizationUpload.js: ALLOWED_EXTENSIONS = ['docx','odt','txt','pdf','eml'], ALLOWED_MIMES covers Word/ODT/plain-text/PDF/eml — Word, PDF, OpenDocument and plain text are all accepted formats with real per-format handling described in the same file's docblock. But every one of those formats routes through AnonymizationService::runAnonymize -> RedactionOutputGuard::assertMayWrite (lib/Service/AnonymizationService.php:616), which always refuses (see red-review evidence), so no anonymised file is ever produced for any format today.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "/anonymization upload dialog (AnonymizationUploadDialog.vue) accepts all four formats; the anonymise action always fails",
 			"provider": "filinq",
@@ -3375,7 +3423,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/AnonymisedPdfOutputService.php implements the pdf-only/pdf output-format cascade (convertResultToPdf/runPdfCascade, lines 85-162), selected via AnonymizationController::resolveOutputFormat (VALID_OUTPUT_FORMATS 'pdf-only'|'pdf'|'preserve', tenant default falls back to 'pdf-only'). This runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard gate as red-review, so it never executes for a real request today."
+				"evidence": "lib/Service/AnonymisedPdfOutputService.php implements the pdf-only/pdf output-format cascade (convertResultToPdf/runPdfCascade, lines 85-162), selected via AnonymizationController::resolveOutputFormat (VALID_OUTPUT_FORMATS 'pdf-only'|'pdf'|'preserve', tenant default falls back to 'pdf-only'). This runs inside DocumentAnonymizeRunner, downstream of the same RedactionOutputGuard gate as red-review, so it never executes for a real request today.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) output-format selector; blocked before the write",
 			"provider": "filinq",
@@ -3494,7 +3543,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The folder job itself is built and reachable: /folder-anonymization (FolderAnonymizationView.vue) drives BatchAnonymizationController (routes.php:156-166: folderBatch, batchUpload, batchExtract, batchStatus, batchEntities, batchAnonymize, batchReport, all FE). But BatchAnonymizeService::processDocument (lib/Service/BatchAnonymizeService.php:346,356) calls AnonymizationService::anonymizeDocumentWithBasisSummary()/anonymizeDocument(), which funnel into the exact same runAnonymize -> RedactionOutputGuard::assertMayWrite gate as red-review, so every per-document anonymise call in the batch refuses."
+				"evidence": "The folder job itself is built and reachable: /folder-anonymization (FolderAnonymizationView.vue) drives BatchAnonymizationController (routes.php:156-166: folderBatch, batchUpload, batchExtract, batchStatus, batchEntities, batchAnonymize, batchReport, all FE). But BatchAnonymizeService::processDocument (lib/Service/BatchAnonymizeService.php:346,356) calls AnonymizationService::anonymizeDocumentWithBasisSummary()/anonymizeDocument(), which funnel into the exact same runAnonymize -> RedactionOutputGuard::assertMayWrite gate as red-review, so every per-document anonymise call in the batch refuses.",
+				"change": "openspec/changes/archive/2026-06-14-folder-analysis-anonymization"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue); extraction/review/status/report all work, the anonymise step always fails per document",
 			"provider": "filinq",
@@ -3523,7 +3573,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/dossier/DossierDetail.vue has an 'Anonymise this dossier' button (line ~90); AnonymizationService.php:461-464 documents scope='dossier' forwarded to OpenRegister for 'consistent numbering across the dossier folder' with a stable dossierKey. This still calls anonymizeDocumentWithBasisSummary()/anonymizeDocument() -> runAnonymize -> the same RedactionOutputGuard gate as red-review, so it refuses."
+				"evidence": "src/views/dossier/DossierDetail.vue has an 'Anonymise this dossier' button (line ~90); AnonymizationService.php:461-464 documents scope='dossier' forwarded to OpenRegister for 'consistent numbering across the dossier folder' with a stable dossierKey. This still calls anonymizeDocumentWithBasisSummary()/anonymizeDocument() -> runAnonymize -> the same RedactionOutputGuard gate as red-review, so it refuses.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "/dossiers/:id (DossierDetail.vue) 'Anonymise this dossier' button",
 			"provider": "filinq",
@@ -3550,7 +3601,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/anonymization/FolderAnonymizationView.vue Step 3 ('Entity review', v-if=\"store.batchStatus === 'review'\", review-section, lines ~148-149) shows detected entities across the whole batch in one screen before any write is attempted. This review/display step is not gated by RedactionOutputGuard (that only blocks the terminal anonymise write, not viewing detections)."
+				"evidence": "src/views/anonymization/FolderAnonymizationView.vue Step 3 ('Entity review', v-if=\"store.batchStatus === 'review'\", review-section, lines ~148-149) shows detected entities across the whole batch in one screen before any write is attempted. This review/display step is not gated by RedactionOutputGuard (that only blocks the terminal anonymise write, not viewing detections).",
+				"change": "openspec/changes/archive/2026-06-14-folder-analysis-anonymization"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue) review step",
 			"provider": "filinq",
@@ -3637,7 +3689,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "The machine-consumer wiring exists: dq-flow (dossiq)'s lib/Service/FilinqRedactionClient.php resolves filinq's AnonymizationService via cross-app DI (FleetAppId::getService) and calls extractAndDetectEntities() then anonymizeDocument() directly from WOORedactionService, as a one-click hand-off from dossiq's own Woo case screen. But this hits the exact same runAnonymize -> RedactionOutputGuard gate as red-review: dossiq's own catch block (FilinqRedactionClient.php, around line 146) already anticipates a Throwable and rethrows as 'filinq_redaction_failed', so this integration is currently 100% non-functional, confirmed from BOTH sides of the cross-app call."
+				"evidence": "The machine-consumer wiring exists: dq-flow (dossiq)'s lib/Service/FilinqRedactionClient.php resolves filinq's AnonymizationService via cross-app DI (FleetAppId::getService) and calls extractAndDetectEntities() then anonymizeDocument() directly from WOORedactionService, as a one-click hand-off from dossiq's own Woo case screen. But this hits the exact same runAnonymize -> RedactionOutputGuard gate as red-review: dossiq's own catch block (FilinqRedactionClient.php, around line 146) already anticipates a Throwable and rethrows as 'filinq_redaction_failed', so this integration is currently 100% non-functional, confirmed from BOTH sides of the cross-app call.",
+				"change": "openspec/changes/archive/2026-03-21-anonymization"
 			},
 			"reachedOn": "machine consumer: dossiq's Woo case screen -> dq-flow lib/Service/FilinqRedactionClient.php -> filinq's AnonymizationService (cross-app DI, no HTTP route)",
 			"provider": "filinq",
@@ -3695,7 +3748,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/Redaction/AnonymizationLinkReader.php reads 'anonymizationLink' rows pairing a source file with its redacted copy (SCHEMA constant, line 38), used by PublicationListComposer to resolve which redacted copy belongs to which original for a Woo publication list. But this link record is written only as part of a successful anonymise-and-write, which the RedactionOutputGuard defect (see red-review) blocks on every path today, so no new links are being created."
+				"evidence": "lib/Service/Redaction/AnonymizationLinkReader.php reads 'anonymizationLink' rows pairing a source file with its redacted copy (SCHEMA constant, line 38), used by PublicationListComposer to resolve which redacted copy belongs to which original for a Woo publication list. But this link record is written only as part of a successful anonymise-and-write, which the RedactionOutputGuard defect (see red-review) blocks on every path today, so no new links are being created.",
+				"spec": "openspec/specs/anonymization-link"
 			},
 			"reachedOn": "/anonymization pipeline; blocked before any link would be written",
 			"provider": "filinq",
@@ -3749,7 +3803,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/WooProfileService.php persists ONE reusable anonymize/keep entity-type profile via IAppConfig (getProfile/saveProfile), exposed through GET/PUT api/anonymization/profiles (routes.php:165-166, FE, batchAnonymization#getProfiles/#updateProfiles)."
+				"evidence": "lib/Service/WooProfileService.php persists ONE reusable anonymize/keep entity-type profile via IAppConfig (getProfile/saveProfile), exposed through GET/PUT api/anonymization/profiles (routes.php:165-166, FE, batchAnonymization#getProfiles/#updateProfiles).",
+				"spec": "openspec/specs/batch-anonymization"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue) profile settings",
 			"provider": "filinq",
@@ -3806,7 +3861,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/anonymization/EntityReviewTable.vue:56-127 lets an operator pick a 'grondslag' (Woo exemption ground, WOO_BASES from src/constants/grondslagen.js) per detected entity/redacted passage and save it, persisted via relation ids. Reached from src/views/anonymization/FolderAnonymizationView.vue."
+				"evidence": "src/views/anonymization/EntityReviewTable.vue:56-127 lets an operator pick a 'grondslag' (Woo exemption ground, WOO_BASES from src/constants/grondslagen.js) per detected entity/redacted passage and save it, persisted via relation ids. Reached from src/views/anonymization/FolderAnonymizationView.vue.",
+				"spec": "openspec/specs/anonymisation-grondslagen-summary"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue -> EntityReviewTable.vue)",
 			"provider": "filinq",
@@ -3833,7 +3889,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/dossier/DossierDetail.vue:470 POST /apps/filinq/api/anonymization/dossier/{dossierId}/grondslagen-pdf (routes.php:143) -> lib/Controller/DossierController.php:107 generateGrondslagenSummary() -> LegalBasesSummaryService::renderDossierSummary(), which aggregates every entity + its grondslag into grondslagen.pdf."
+				"evidence": "src/views/dossier/DossierDetail.vue:470 POST /apps/filinq/api/anonymization/dossier/{dossierId}/grondslagen-pdf (routes.php:143) -> lib/Controller/DossierController.php:107 generateGrondslagenSummary() -> LegalBasesSummaryService::renderDossierSummary(), which aggregates every entity + its grondslag into grondslagen.pdf.",
+				"spec": "openspec/specs/anonymisation-grondslagen-summary"
 			},
 			"reachedOn": "/dossiers/:id (DossierDetail.vue)",
 			"provider": "filinq",
@@ -3860,7 +3917,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/settings/Settings.vue:151-194 admin setting 'Propose a default legal basis (grondslag) per detected entity type'; backed by lib/Service/LegalBasisProposalService.php:348 proposeForDetection(), called from lib/Service/AnonymizationService.php during the anonymize flow to pre-fill a grondslag per entity type."
+				"evidence": "src/views/settings/Settings.vue:151-194 admin setting 'Propose a default legal basis (grondslag) per detected entity type'; backed by lib/Service/LegalBasisProposalService.php:348 proposeForDetection(), called from lib/Service/AnonymizationService.php during the anonymize flow to pre-fill a grondslag per entity type.",
+				"change": "openspec/changes/propose-grondslag-per-entity-type"
 			},
 			"reachedOn": "configured at /settings (Settings.vue); applied automatically during /anonymization and /folder-anonymization analysis",
 			"provider": "filinq",
@@ -4004,7 +4062,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/consent/ConsentIndex.vue lists PublicationConsent records with notificationStatus/consentStatus/objectionDeadline (columns at lines 101-210); lib/Service/ConsentService.php creates a consent record per detected entity with an automatic objectionDeadline (openspec/specs/consent-management/spec.md, status: implemented). But ConsentService's own docblock (lines 100-103) states 'CONS-049 reaffirmed: new records receive notificationStatus: \"pending\"... NO email or postal notification is dispatched' -- filinq tracks the objection period but does not itself ask the third party."
+				"evidence": "src/views/consent/ConsentIndex.vue lists PublicationConsent records with notificationStatus/consentStatus/objectionDeadline (columns at lines 101-210); lib/Service/ConsentService.php creates a consent record per detected entity with an automatic objectionDeadline (openspec/specs/consent-management/spec.md, status: implemented). But ConsentService's own docblock (lines 100-103) states 'CONS-049 reaffirmed: new records receive notificationStatus: \"pending\"... NO email or postal notification is dispatched' -- filinq tracks the objection period but does not itself ask the third party.",
+				"change": "openspec/changes/archive/2026-03-21-consent-management"
 			},
 			"reachedOn": "/consent (ConsentIndex.vue, ConsentDetail.vue)",
 			"provider": "filinq",
@@ -4031,7 +4090,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/settings/Settings.vue:26/868 settings.publication_objection_period_days (default 28 = 4 weeks) -> lib/Service/SettingsService.php:156-158 -> lib/Service/ObjectionDeadlineChecker.php:96 getObjectionPeriodDays(), used when computing each consent record's objectionDeadline."
+				"evidence": "src/views/settings/Settings.vue:26/868 settings.publication_objection_period_days (default 28 = 4 weeks) -> lib/Service/SettingsService.php:156-158 -> lib/Service/ObjectionDeadlineChecker.php:96 getObjectionPeriodDays(), used when computing each consent record's objectionDeadline.",
+				"change": "openspec/changes/archive/2026-03-21-consent-management"
 			},
 			"reachedOn": "/settings (Settings.vue)",
 			"provider": "filinq",
@@ -4057,7 +4117,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/policy/ProhibitionIndex.vue (manifest page Prohibitions, menu 'Publish never') manages prohibition rules via POST/PUT/DELETE /api/policy/prohibitions (routes.php:169-173, all FE-tagged) -> lib/Controller/PolicyController.php. lib/Service/ProhibitionPolicyService.php:94 runGate() is called from AnonymizationService during anonymisation with an $overrides array {ruleId, entityId, reason}, and lib/Service/ProhibitionGateService.php:94/129 writes an audit entry for every released override."
+				"evidence": "src/views/policy/ProhibitionIndex.vue (manifest page Prohibitions, menu 'Publish never') manages prohibition rules via POST/PUT/DELETE /api/policy/prohibitions (routes.php:169-173, all FE-tagged) -> lib/Controller/PolicyController.php. lib/Service/ProhibitionPolicyService.php:94 runGate() is called from AnonymizationService during anonymisation with an $overrides array {ruleId, entityId, reason}, and lib/Service/ProhibitionGateService.php:94/129 writes an audit entry for every released override.",
+				"spec": "openspec/specs/entity-publication-policies"
 			},
 			"reachedOn": "/policy/prohibitions (ProhibitionIndex.vue)",
 			"provider": "filinq",
@@ -4083,7 +4144,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/policy/StandingConsentIndex.vue (manifest page StandingConsents, menu 'Publish always') manages standing-consent records via /api/policy/standing-consents (routes.php:176-180, FE-tagged) -> lib/Controller/StandingConsentController.php. lib/Service/ProhibitionPolicyService.php:104-108 (applyPolicyDecisions) auto-skips anonymisation for entities matching a standing-consent record on every later document."
+				"evidence": "src/views/policy/StandingConsentIndex.vue (manifest page StandingConsents, menu 'Publish always') manages standing-consent records via /api/policy/standing-consents (routes.php:176-180, FE-tagged) -> lib/Controller/StandingConsentController.php. lib/Service/ProhibitionPolicyService.php:104-108 (applyPolicyDecisions) auto-skips anonymisation for entities matching a standing-consent record on every later document.",
+				"spec": "openspec/specs/entity-publication-policies"
 			},
 			"reachedOn": "/policy/standing-consents (StandingConsentIndex.vue)",
 			"provider": "filinq",
@@ -4109,7 +4171,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/ProhibitionPolicyService.php's runGate() and applyPolicyDecisions() (called from lib/Service/AnonymizationService.php, not only from any Woo-specific publication path) apply the same prohibition/standing-consent rules to ordinary single-file and folder anonymisation."
+				"evidence": "lib/Service/ProhibitionPolicyService.php's runGate() and applyPolicyDecisions() (called from lib/Service/AnonymizationService.php, not only from any Woo-specific publication path) apply the same prohibition/standing-consent rules to ordinary single-file and folder anonymisation.",
+				"spec": "openspec/specs/entity-publication-policies"
 			},
 			"reachedOn": "/anonymization and /folder-anonymization (any anonymise action)",
 			"provider": "filinq",
@@ -4338,7 +4401,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue. Corrections round 8 (2026-09-28), filinq#1209: the form at /signing/new cannot name a signer, it asks for file id, name, level and mode only (src/views/signing/SigningRequestForm.vue:12-54) and posts signers: [] (:80), so lib/Service/SigningService.php:189-193 saves a PENDING request with nobody to sign it; signers can only be passed by an API caller or by another app through the signing event (lib/EventListener/DocumentSigningRequestedListener.php:149), and each is then told by the signerRecord signingRequested notification (lib/Settings/filinq_register.json:2716), at 9fd042f."
+				"evidence": "POST api/signing/requests (routes.php:240, FE, signing#createRequest) -> SigningController::createRequest -> SigningService::createRequest. Reached from src/views/signing/SigningRequestForm.vue. Corrections round 8 (2026-09-28), filinq#1209: the form at /signing/new cannot name a signer, it asks for file id, name, level and mode only (src/views/signing/SigningRequestForm.vue:12-54) and posts signers: [] (:80), so lib/Service/SigningService.php:189-193 saves a PENDING request with nobody to sign it; signers can only be passed by an API caller or by another app through the signing event (lib/EventListener/DocumentSigningRequestedListener.php:149), and each is then told by the signerRecord signingRequested notification (lib/Settings/filinq_register.json:2716), at 9fd042f.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue)",
 			"provider": "filinq",
@@ -4369,7 +4433,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/signing/SigningRequestForm.vue:46-50 has a signingMode <select> with 'sequential'/'parallel' options (default 'sequential', line 79). lib/Service/SigningRequestValidator.php:87 validates signingMode against exactly ['sequential','parallel']; SigningService.php:154 persists it and :199 persists a per-signer 'order' field. Corrections round 8 (2026-09-28), filinq#1209: the mode on the form has nothing to order, because the form sends no signers (src/views/signing/SigningRequestForm.vue:80); and the choice is stored but never read: signingMode is written only at lib/Service/SigningService.php:154 and order only at :199, sign() (:383) lets any pending signer sign (:424), and every signerRecord is notified on creation (lib/Settings/filinq_register.json:2716), at 9fd042f."
+				"evidence": "src/views/signing/SigningRequestForm.vue:46-50 has a signingMode <select> with 'sequential'/'parallel' options (default 'sequential', line 79). lib/Service/SigningRequestValidator.php:87 validates signingMode against exactly ['sequential','parallel']; SigningService.php:154 persists it and :199 persists a per-signer 'order' field. Corrections round 8 (2026-09-28), filinq#1209: the mode on the form has nothing to order, because the form sends no signers (src/views/signing/SigningRequestForm.vue:80); and the choice is stored but never read: signingMode is written only at lib/Service/SigningService.php:154 and order only at :199, sign() (:383) lets any pending signer sign (:424), and every signerRecord is notified on creation (lib/Settings/filinq_register.json:2716), at 9fd042f.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue)",
 			"provider": "filinq",
@@ -4397,7 +4462,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "signatureLevel is a real, honoured field: NativeSigningProvider::supportsLevel() (lib/Service/Signing/NativeSigningProvider.php:275-277) returns true only for 'SES'; ValidSignProvider::supportsLevel() (lib/Service/Signing/ValidSignProvider.php:190-192) returns true for SES/AdES/QES. produceSignedArtifact() on both providers now checks supportsLevel() before producing (NativeSigningProvider.php:327, ValidSignProvider.php:212-217, both citing REQ-DDSTR-002/signing-trust-rebuild), and SignedArtifactProducer.php:130 explicitly documents 'no fallback to getActiveProvider()/native' on a level mismatch."
+				"evidence": "signatureLevel is a real, honoured field: NativeSigningProvider::supportsLevel() (lib/Service/Signing/NativeSigningProvider.php:275-277) returns true only for 'SES'; ValidSignProvider::supportsLevel() (lib/Service/Signing/ValidSignProvider.php:190-192) returns true for SES/AdES/QES. produceSignedArtifact() on both providers now checks supportsLevel() before producing (NativeSigningProvider.php:327, ValidSignProvider.php:212-217, both citing REQ-DDSTR-002/signing-trust-rebuild), and SignedArtifactProducer.php:130 explicitly documents 'no fallback to getActiveProvider()/native' on a level mismatch.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "/signing/new (SigningRequestForm.vue) level selector",
 			"provider": "filinq",
@@ -4542,7 +4608,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "POST api/signing/requests/{id}/decline (routes.php:245, FE, signing#decline) -> SigningController::decline -> SigningService::decline() (lib/Service/SigningService.php:476-520), which takes a $reason param, records declineReason on the signer, and (per signing-trust-rebuild REQ-DDSTR-003, comment at line 481-485) now gates on isValidTransition() BEFORE any mutation — closing the #282 residual where decline() used to skip the status machine."
+				"evidence": "POST api/signing/requests/{id}/decline (routes.php:245, FE, signing#decline) -> SigningController::decline -> SigningService::decline() (lib/Service/SigningService.php:476-520), which takes a $reason param, records declineReason on the signer, and (per signing-trust-rebuild REQ-DDSTR-003, comment at line 481-485) now gates on isValidTransition() BEFORE any mutation — closing the #282 residual where decline() used to skip the status machine.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "/signing/:id (SigningRequestDetail.vue) decline action",
 			"provider": "filinq",
@@ -4570,7 +4637,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "GET api/signing/requests/{id}/audit (routes.php:248, FE, signing#getAudit) -> SigningController::getAudit (lib/Controller/SigningController.php:418+), gated to initiator/signer/admin. lib/Service/SigningAuditService.php routes through OR's hash-chained AuditTrailMapper per signing-audit-via-or (status done per openspec/specs/signing-audit-via-or)."
+				"evidence": "GET api/signing/requests/{id}/audit (routes.php:248, FE, signing#getAudit) -> SigningController::getAudit (lib/Controller/SigningController.php:418+), gated to initiator/signer/admin. lib/Service/SigningAuditService.php routes through OR's hash-chained AuditTrailMapper per signing-audit-via-or (status done per openspec/specs/signing-audit-via-or).",
+				"spec": "openspec/specs/signing-audit-via-or"
 			},
 			"reachedOn": "/signing/:id (SigningRequestDetail.vue) audit trail",
 			"provider": "filinq",
@@ -4627,7 +4695,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "GET api/signing/verify/{fileId} (routes.php:247, FE, signing#verify) -> SigningController::verify (line 389) -> SigningVerificationService::verifyDocument (line 73), which checks every embedded signature assertion (verifyAssertion, line 255) and works on any document, not only ones the caller signed themselves."
+				"evidence": "GET api/signing/verify/{fileId} (routes.php:247, FE, signing#verify) -> SigningController::verify (line 389) -> SigningVerificationService::verifyDocument (line 73), which checks every embedded signature assertion (verifyAssertion, line 255) and works on any document, not only ones the caller signed themselves.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
 			"provider": "filinq",
@@ -4682,7 +4751,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/SigningVerificationService.php implements an honest tri-state verdict: 'invalid' maps to 'tampered' (lines 104-126), distinguished from 'unverifiable' (inability to check, e.g. legacy v1 assertions or unconfigured secret) so tampering is never confused with 'could not verify'. Reached via the same verify() endpoint as sig-verify."
+				"evidence": "lib/Service/SigningVerificationService.php implements an honest tri-state verdict: 'invalid' maps to 'tampered' (lines 104-126), distinguished from 'unverifiable' (inability to check, e.g. legacy v1 assertions or unconfigured secret) so tampering is never confused with 'could not verify'. Reached via the same verify() endpoint as sig-verify.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
 			"provider": "filinq",
@@ -4710,7 +4780,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "POST api/signing/bulk (routes.php:246, FE, signing#bulkSign) -> SigningController::bulkSign (line 355-376) -> SigningService::bulkSign(requestIds). Reached from src/views/signing/BulkSigningPanel.vue."
+				"evidence": "POST api/signing/bulk (routes.php:246, FE, signing#bulkSign) -> SigningController::bulkSign (line 355-376) -> SigningService::bulkSign(requestIds). Reached from src/views/signing/BulkSigningPanel.vue.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "BulkSigningPanel.vue (signing area)",
 			"provider": "filinq",
@@ -4739,7 +4810,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "GET api/signing/folder + POST api/signing/folder/sign (routes.php:254-255, both FE, signingFolder#folder/#signFolder) -> SigningFolderController. src/manifest.json's own note on the SigningFolder page describes it as 'a cross-case queue assembled by filinq from signing requests the signer holds a mandate for' with a multi-select bulk-sign action. openspec/changes/signing-folder-across-cases/tasks.md: 8/10 done."
+				"evidence": "GET api/signing/folder + POST api/signing/folder/sign (routes.php:254-255, both FE, signingFolder#folder/#signFolder) -> SigningFolderController. src/manifest.json's own note on the SigningFolder page describes it as 'a cross-case queue assembled by filinq from signing requests the signer holds a mandate for' with a multi-select bulk-sign action. openspec/changes/signing-folder-across-cases/tasks.md: 8/10 done.",
+				"change": "openspec/changes/signing-folder-across-cases"
 			},
 			"reachedOn": "/signing-folder (SigningFolder.vue)",
 			"provider": "filinq",
@@ -4766,7 +4838,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "GET/POST api/signing/mandates + DELETE api/signing/mandates/{typeApp}/{typeSchema} (routes.php:256-258, all tagged 'none' in _lane/shared/route-reach.txt) -> SigningFolderController::mandates/declareMandate/withdrawMandate. Grepped all of src/ for 'mandate'; the only hit is the manifest's own descriptive note (src/manifest.json:372) assuming mandates already exist — there is no UI anywhere to declare, view or withdraw one."
+				"evidence": "GET/POST api/signing/mandates + DELETE api/signing/mandates/{typeApp}/{typeSchema} (routes.php:256-258, all tagged 'none' in _lane/shared/route-reach.txt) -> SigningFolderController::mandates/declareMandate/withdrawMandate. Grepped all of src/ for 'mandate'; the only hit is the manifest's own descriptive note (src/manifest.json:372) assuming mandates already exist — there is no UI anywhere to declare, view or withdraw one.",
+				"change": "openspec/changes/signing-folder-across-cases"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5000,7 +5073,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Settings/filinq_register.json declares 39 OpenRegister schemas (documentRegistration, template, correspondence, generatedDocument, signingRequest, dossier, intakeDocument, documentVersion, ...), each carrying structured metadata beyond the raw file bytes. Multiple own pages CRUD these objects (Templates, Correspondence, SigningRequests, Dossiers, Intake), all via OpenRegister's object API."
+				"evidence": "lib/Settings/filinq_register.json declares 39 OpenRegister schemas (documentRegistration, template, correspondence, generatedDocument, signingRequest, dossier, intakeDocument, documentVersion, ...), each carrying structured metadata beyond the raw file bytes. Multiple own pages CRUD these objects (Templates, Correspondence, SigningRequests, Dossiers, Intake), all via OpenRegister's object API.",
+				"change": "openspec/changes/archive/2026-03-21-document-register"
 			},
 			"reachedOn": "most manifest pages (e.g. /templates, /correspondence, /dossiers, /signing, /intake)",
 			"provider": "filinq",
@@ -5028,7 +5102,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "Filinq ships fixed schemas in lib/Settings/filinq_register.json but does not implement its own schema-design UI. Schema/metadata-field design is OpenRegister's own capability: ConductionNL/openregister src/modals/schema/{EditSchema,EditSchemaProperty,ValidateSchema,UploadSchema}.vue provide a full schema editor over any register, including filinq's."
+				"evidence": "Filinq ships fixed schemas in lib/Settings/filinq_register.json but does not implement its own schema-design UI. Schema/metadata-field design is OpenRegister's own capability: ConductionNL/openregister src/modals/schema/{EditSchema,EditSchemaProperty,ValidateSchema,UploadSchema}.vue provide a full schema editor over any register, including filinq's.",
+				"spec": "openspec/specs/openregister-bridge"
 			},
 			"reachedOn": "external frontend, not in this repo (OpenRegister's own schema admin UI)",
 			"provider": "openregister",
@@ -5172,7 +5247,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Same engine as wk-to-pdfa: lib/Service/Pdfa3ConversionService.php / PdfConversionService produce genuine PDF/A-3b (mPDF PDFA/PDFAauto/PDFAversion=3-B, XMP pdfaid markers). Reached from /print-preview (PrintPreview.vue -> POST /api/print/pdf-a) and available as an opt-in output mode from anonymisation and document generation."
+				"evidence": "Same engine as wk-to-pdfa: lib/Service/Pdfa3ConversionService.php / PdfConversionService produce genuine PDF/A-3b (mPDF PDFA/PDFAauto/PDFAversion=3-B, XMP pdfaid markers). Reached from /print-preview (PrintPreview.vue -> POST /api/print/pdf-a) and available as an opt-in output mode from anonymisation and document generation.",
+				"spec": "openspec/specs/pdf-conversion"
 			},
 			"reachedOn": "/print-preview/:templateId? (PrintPreview)",
 			"provider": "filinq",
@@ -5258,7 +5334,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "src/views/settings/Settings.vue:656-759 'AVG Art. 30 processing-activity register (provided by OpenRegister)' section links out to 'Open processing-activity log in OpenRegister'. openspec/specs/processing-activity-export/spec.md (status: done) confirms filinq deliberately declares only 4 x-openregister-processing catalogue annotations and 'SHALL NOT implement an aggregation service, export controller, or register template of its own' -- the actual Art. 30 register and its export live in OpenRegister by design (ADR-022)."
+				"evidence": "src/views/settings/Settings.vue:656-759 'AVG Art. 30 processing-activity register (provided by OpenRegister)' section links out to 'Open processing-activity log in OpenRegister'. openspec/specs/processing-activity-export/spec.md (status: done) confirms filinq deliberately declares only 4 x-openregister-processing catalogue annotations and 'SHALL NOT implement an aggregation service, export controller, or register template of its own' -- the actual Art. 30 register and its export live in OpenRegister by design (ADR-022).",
+				"change": "openspec/changes/archive/2026-06-14-processing-activity-export"
 			},
 			"reachedOn": "/settings (Settings.vue), linking out to OpenRegister's own processing-activity register UI",
 			"provider": "openregister",
@@ -5285,7 +5362,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/dossier/DossierDetail.vue:61-73 lifecycle transition buttons call dossierStore.transitionDossier() -> PUT /api/dossiers/{id}/status -> lib/Service/DossierManagementService.php:301 transition(), which enforces a declared state machine (open/processed/published/closed). Documents are linked via POST /api/dossiers/{id}/documents."
+				"evidence": "src/views/dossier/DossierDetail.vue:61-73 lifecycle transition buttons call dossierStore.transitionDossier() -> PUT /api/dossiers/{id}/status -> lib/Service/DossierManagementService.php:301 transition(), which enforces a declared state machine (open/processed/published/closed). Documents are linked via POST /api/dossiers/{id}/documents.",
+				"spec": "openspec/specs/dossier-register"
 			},
 			"reachedOn": "/dossiers and /dossiers/:id (DossierIndex.vue, DossierDetail.vue)",
 			"provider": "filinq",
@@ -5395,7 +5473,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/signing/SigningRequestDetail.vue:33-43 renders signingStore.auditTrail, fetched from GET /api/signing/requests/{id}/audit (routes.php:248) -> lib/Controller/SigningController.php:418 getAudit() -> lib/Service/SigningAuditService.php, which writes every signing action through OpenRegister's native, hash-chained AuditTrailMapper (openspec/specs/signing-audit-via-or/spec.md, status: done). A second, more general mechanism -- src/sidebars/FileViewerSidebar.vue:448-455 <DocumentLeafTabs register=\"filinq\" schema=\"anonymizationLink\"> -- renders OpenRegister's own generic per-object activity leaf."
+				"evidence": "src/views/signing/SigningRequestDetail.vue:33-43 renders signingStore.auditTrail, fetched from GET /api/signing/requests/{id}/audit (routes.php:248) -> lib/Controller/SigningController.php:418 getAudit() -> lib/Service/SigningAuditService.php, which writes every signing action through OpenRegister's native, hash-chained AuditTrailMapper (openspec/specs/signing-audit-via-or/spec.md, status: done). A second, more general mechanism -- src/sidebars/FileViewerSidebar.vue:448-455 <DocumentLeafTabs register=\"filinq\" schema=\"anonymizationLink\"> -- renders OpenRegister's own generic per-object activity leaf.",
+				"spec": "openspec/specs/signing-audit-via-or"
 			},
 			"reachedOn": "/signing/:id (SigningRequestDetail.vue) for signing actions; the file viewer sidebar's activity tab for anonymizationLink objects",
 			"provider": "filinq",
@@ -5513,7 +5592,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/correspondence/CorrespondenceIndex.vue -> src/store/modules/correspondence.js:83 -> POST api/correspondence/generate (routes.php:220, FE) -> lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php (VALID_FORMATS = ['pdf','docx','html','email'], line 78) composes from an approved template. Composition returns a DataDownloadResponse|JSONResponse (download or content) - grep of lib/ for IMailer/OCP\\Mail found no match, so the 'email' format only produces email-safe HTML (line 670 case 'email', line 690 strips page CSS for email clients); nothing dispatches it."
+				"evidence": "src/views/correspondence/CorrespondenceIndex.vue -> src/store/modules/correspondence.js:83 -> POST api/correspondence/generate (routes.php:220, FE) -> lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php (VALID_FORMATS = ['pdf','docx','html','email'], line 78) composes from an approved template. Composition returns a DataDownloadResponse|JSONResponse (download or content) - grep of lib/ for IMailer/OCP\\Mail found no match, so the 'email' format only produces email-safe HTML (line 670 case 'email', line 690 strips page CSS for email clients); nothing dispatches it.",
+				"change": "openspec/changes/archive/2026-06-14-letter-correspondence-generation"
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
 			"provider": "filinq",
@@ -5543,7 +5623,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PostRegisterController.php (openPost/answers/series, routes.php:99-101, all 'none' in route-reach.txt) -> lib/Service/PostRegisterReader.php implements the three derived reads over the postRegisterEntry schema. Controller docblock: 'THE LEAF IS NOT THIS. ADR-066's leaf for the open post list is blocked on filinq shipping no leaves webpack entry.' webpack.config.js:74 now DOES declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf - grep of src/ found no consumer of these three routes."
+				"evidence": "lib/Controller/PostRegisterController.php (openPost/answers/series, routes.php:99-101, all 'none' in route-reach.txt) -> lib/Service/PostRegisterReader.php implements the three derived reads over the postRegisterEntry schema. Controller docblock: 'THE LEAF IS NOT THIS. ADR-066's leaf for the open post list is blocked on filinq shipping no leaves webpack entry.' webpack.config.js:74 now DOES declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf - grep of src/ found no consumer of these three routes.",
+				"change": "openspec/changes/documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it (no leaf, no manifest page, no frontend caller)",
 			"provider": "filinq",
@@ -5654,7 +5735,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PortalSigningReceiverController.php (@spec portal-signing-actions, portal-signing-surface) exposes signDocument/declineDocument/viewDocument (routes.php:271-273, 'none' in route-reach.txt, PublicPage server-to-server for portaliq) scoped strictly to ONE document mid-signing, resolved with _rbac:false behind a token binding - not a general 'see and download every document of my request' portal. No broader citizen document-listing surface found."
+				"evidence": "lib/Controller/PortalSigningReceiverController.php (@spec portal-signing-actions, portal-signing-surface) exposes signDocument/declineDocument/viewDocument (routes.php:271-273, 'none' in route-reach.txt, PublicPage server-to-server for portaliq) scoped strictly to ONE document mid-signing, resolved with _rbac:false behind a token binding - not a general 'see and download every document of my request' portal. No broader citizen document-listing surface found.",
+				"change": "openspec/changes/archive/2026-09-28-portal-signing-surface"
 			},
 			"reachedOn": "machine consumer: portaliq (server-to-server signing callbacks only, not a document list)",
 			"provider": "filinq",
@@ -5821,7 +5903,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/AppInfo/ObjectEventRegistrar.php and lib/EventListener/DocumentRegistrationWriteGuard.php, ValidationRunner.php, DossierCheckedOnListener.php, FilinqEventListener.php, FilinqEventHandler.php all listen to OpenRegister's ObjectCreatingEvent/ObjectUpdatingEvent/ObjectTransitionedEvent and react automatically (e.g. DocumentRegistrationWriteGuard refuses an update that changes an issued registration number; the register comment documents validationStatus/validationFindings as x-openregister-calculations with 'the event-listener fallback dispatches the same service' automatically on change)."
+				"evidence": "lib/AppInfo/ObjectEventRegistrar.php and lib/EventListener/DocumentRegistrationWriteGuard.php, ValidationRunner.php, DossierCheckedOnListener.php, FilinqEventListener.php, FilinqEventHandler.php all listen to OpenRegister's ObjectCreatingEvent/ObjectUpdatingEvent/ObjectTransitionedEvent and react automatically (e.g. DocumentRegistrationWriteGuard refuses an update that changes an issued registration number; the register comment documents validationStatus/validationFindings as x-openregister-calculations with 'the event-listener fallback dispatches the same service' automatically on change).",
+				"change": "openspec/changes/archive/2026-03-21-document-register"
 			},
 			"reachedOn": "internal, not a manifest page - fires automatically whenever a document register object is created/updated/transitioned",
 			"provider": "filinq",
@@ -5848,7 +5931,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "Grepped lib/ for WorkflowEngine/IOperation/IEntity: no match, so filinq registers no operations into Nextcloud's core Workflow Engine app. Filinq does ship a 'Flows' page (src/manifest.json:1199-1213, /flows and /flows/:id, CnFlowDetail canvas + useFlowStore) and declares 'openregister.flows' as an installable store type (src/manifest.json store.types) - this is OpenRegister's own flow/automation engine, a different system from NC's core Workflow app."
+				"evidence": "Grepped lib/ for WorkflowEngine/IOperation/IEntity: no match, so filinq registers no operations into Nextcloud's core Workflow Engine app. Filinq does ship a 'Flows' page (src/manifest.json:1199-1213, /flows and /flows/:id, CnFlowDetail canvas + useFlowStore) and declares 'openregister.flows' as an installable store type (src/manifest.json store.types) - this is OpenRegister's own flow/automation engine, a different system from NC's core Workflow app.",
+				"spec": "ConductionNL/openregister openspec/specs/flow-engine"
 			},
 			"reachedOn": "/flows (Flows/FlowDetail pages) - via OpenRegister's flow engine, not Nextcloud's core Workflow app",
 			"provider": "openregister",
@@ -5876,7 +5960,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Mcp/FilinqScannableServices.php implements OpenRegister's IMcpScannableServices, listing filinq's #[McpTool]-attributed classes (CorrespondenceService, Service/Editing/DocumentAgentService per its use-statements) - real curated tools, not just a declaration. filinq_register.json also declares configuration.x-openregister-mcp (search+get) on 8 schemas for derived read tools, all cross-checked against each schema's properties map per the changelog."
+				"evidence": "lib/Mcp/FilinqScannableServices.php implements OpenRegister's IMcpScannableServices, listing filinq's #[McpTool]-attributed classes (CorrespondenceService, Service/Editing/DocumentAgentService per its use-statements) - real curated tools, not just a declaration. filinq_register.json also declares configuration.x-openregister-mcp (search+get) on 8 schemas for derived read tools, all cross-checked against each schema's properties map per the changelog.",
+				"change": "openspec/changes/filinq-mcp-adoption"
 			},
 			"reachedOn": "machine consumer: any MCP-capable agent client (curated tools via lib/Mcp/FilinqScannableServices.php; derived read tools via OpenRegister's MCP framework)",
 			"provider": "filinq",
@@ -5932,7 +6017,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "webpack.config.js:74-76 declares a dedicated 'leaves' entry (filename appId + '-leaves.js'); src/leaves.js calls registerDocumentsLeaf() from src/integrations/registerDocumentsLeaf.js, which mounts CnFilinqDocumentsWidget for SURFACES = ['detail-page','single-entity'] under integration id 'filinq-documents'. Its own docblock: 'This entry is what OpenRegister's LeafScriptListener enqueues on OTHER apps' pages, so a case page in another app can show the documents Filinq holds for that case.' The underlying data is caseDocuments#files (routes.php:89, FE in route-reach.txt)."
+				"evidence": "webpack.config.js:74-76 declares a dedicated 'leaves' entry (filename appId + '-leaves.js'); src/leaves.js calls registerDocumentsLeaf() from src/integrations/registerDocumentsLeaf.js, which mounts CnFilinqDocumentsWidget for SURFACES = ['detail-page','single-entity'] under integration id 'filinq-documents'. Its own docblock: 'This entry is what OpenRegister's LeafScriptListener enqueues on OTHER apps' pages, so a case page in another app can show the documents Filinq holds for that case.' The underlying data is caseDocuments#files (routes.php:89, FE in route-reach.txt).",
+				"change": "openspec/changes/case-documents-and-the-flat-list"
 			},
 			"reachedOn": "another app's record page (via OpenRegister's LeafScriptListener enqueuing filinq-leaves.js, integration id 'filinq-documents')",
 			"provider": "filinq",
@@ -5958,7 +6044,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/EventListener/DocumentSigningRequestedListener.php: 'any installed consumer app dispatches DocumentSigningRequestedEvent and Filinq raises the signing request here, writing the resolved signingRequestId back onto the event' -> lib/Service/SigningService.php createRequest(); outcome flows back via lib/Event/SigningConcludedEvent.php + SigningConclusionEmitter.php. shillinq's lib/Service/Signing/SigningDelegationService.php:135 resolves and dispatches OCA\\Filinq\\Event\\DocumentSigningRequestedEvent via FleetAppId::resolveClass(), and shillinq's SigningConcludedListener.php consumes filinq's SigningConcludedEvent (matched under every namespace filinq has shipped it under)."
+				"evidence": "lib/EventListener/DocumentSigningRequestedListener.php: 'any installed consumer app dispatches DocumentSigningRequestedEvent and Filinq raises the signing request here, writing the resolved signingRequestId back onto the event' -> lib/Service/SigningService.php createRequest(); outcome flows back via lib/Event/SigningConcludedEvent.php + SigningConclusionEmitter.php. shillinq's lib/Service/Signing/SigningDelegationService.php:135 resolves and dispatches OCA\\Filinq\\Event\\DocumentSigningRequestedEvent via FleetAppId::resolveClass(), and shillinq's SigningConcludedListener.php consumes filinq's SigningConcludedEvent (matched under every namespace filinq has shipped it under).",
+				"change": "openspec/changes/filinq-signing-events"
 			},
 			"reachedOn": "machine consumer: shillinq (SigningDelegationService dispatches DocumentSigningRequestedEvent; SigningConcludedListener consumes the outcome)",
 			"provider": "filinq",
@@ -5985,7 +6072,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "dossiq's lib/Service/Beschikking/FilinqTemplateEngineAdapter.php resolves filinq's DocumentService via FleetAppId and calls generateDocument() (filinq lib/Service/DocumentService.php:168) directly through PHP DI, described as 'Filinq owns document generation for the fleet (ADR-075)'. Counter-evidence: learniq (formerly scholiq) lib/Service/ReportCardPdfDelegationService.php:199-200 now resolves the app id through FleetAppId::path($this->appManager, 'filinq', ...) and POSTs to the documents/render path under it, but that render endpoint still does not exist in filinq, so the report-card half is unbuilt on filinq's side (corrected 2026-09-26).",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen"
 			},
 			"reachedOn": "machine consumer: dossiq (FilinqTemplateEngineAdapter, via direct DI to DocumentService::generateDocument())",
 			"provider": "filinq",
@@ -6012,7 +6100,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "filinq_register.json changelog v7.5.0 (unified-search-provider): 'corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable... No bespoke OCP\\Search\\IProvider - org scoping inherited from openregister_objects.' Deep-link routing lives in src/manifest.json deepLinks[] (template, signingRequest, publicationConsent, dossier, customDictionary all declare urlTemplate)."
+				"evidence": "filinq_register.json changelog v7.5.0 (unified-search-provider): 'corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable... No bespoke OCP\\Search\\IProvider - org scoping inherited from openregister_objects.' Deep-link routing lives in src/manifest.json deepLinks[] (template, signingRequest, publicationConsent, dossier, customDictionary all declare urlTemplate).",
+				"change": "openspec/changes/archive/2026-07-23-unified-search-provider"
 			},
 			"reachedOn": "Nextcloud unified search results (via OpenRegister's shared IProvider, deep-linked through src/manifest.json deepLinks[])",
 			"provider": "openregister",
@@ -6067,7 +6156,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/AppInfo/ObjectEventRegistrar.php:72-73 calls $context->registerDashboardWidget(AnonymizationWidget::class) and registerDashboardWidget(FileEntitiesWidget::class); lib/Dashboard/AnonymizationWidget.php and lib/Dashboard/FileEntitiesWidget.php implement Nextcloud's dashboard IWidget contract (@spec openspec/specs/dashboard/spec.md)."
+				"evidence": "lib/AppInfo/ObjectEventRegistrar.php:72-73 calls $context->registerDashboardWidget(AnonymizationWidget::class) and registerDashboardWidget(FileEntitiesWidget::class); lib/Dashboard/AnonymizationWidget.php and lib/Dashboard/FileEntitiesWidget.php implement Nextcloud's dashboard IWidget contract (@spec openspec/specs/dashboard/spec.md).",
+				"change": "openspec/changes/archive/2026-03-21-dashboard"
 			},
 			"reachedOn": "Nextcloud's own /apps/dashboard home screen (AnonymizationWidget, FileEntitiesWidget panels)",
 			"provider": "filinq",
@@ -6093,7 +6183,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Settings/FilinqAdmin.php:52 class FilinqAdmin implements IDelegatedSettings; :92 getForm(), :116 getSection(), :159 getAuthorizedAppConfig(). Registered as a Nextcloud admin settings section."
+				"evidence": "lib/Settings/FilinqAdmin.php:52 class FilinqAdmin implements IDelegatedSettings; :92 getForm(), :116 getSection(), :159 getAuthorizedAppConfig(). Registered as a Nextcloud admin settings section.",
+				"change": "openspec/changes/archive/2026-03-21-admin-settings"
 			},
 			"reachedOn": "Nextcloud Administration settings > Filinq admin section",
 			"provider": "filinq",
@@ -6119,7 +6210,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/manifest.json 'setup' block (steps: welcome/demo-data/load-demo-data/done), completionConfigKey 'setup_completed_version', backed by lib/Service/DemoDataService.php and lib/Controller/SetupController.php."
+				"evidence": "src/manifest.json 'setup' block (steps: welcome/demo-data/load-demo-data/done), completionConfigKey 'setup_completed_version', backed by lib/Service/DemoDataService.php and lib/Controller/SetupController.php.",
+				"change": "openspec/changes/archive/2026-03-21-admin-settings"
 			},
 			"reachedOn": "first-visit setup wizard (declared in src/manifest.json)",
 			"provider": "filinq",
@@ -6145,7 +6237,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/MetricsController.php:119 index() (TextPlainResponse, Prometheus format) route metrics#index api/metrics; lib/Controller/HealthController.php:123 index() route health#index api/health (routes.php:40-41, duplicated again at 315-316 for an OCS-style alias)."
+				"evidence": "lib/Controller/MetricsController.php:119 index() (TextPlainResponse, Prometheus format) route metrics#index api/metrics; lib/Controller/HealthController.php:123 index() route health#index api/health (routes.php:40-41, duplicated again at 315-316 for an OCS-style alias).",
+				"change": "openspec/changes/archive/2026-03-21-prometheus-metrics"
 			},
 			"reachedOn": "external monitoring caller: GET /apps/filinq/api/metrics and /api/health",
 			"provider": "filinq",
@@ -6172,7 +6265,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/manifest.json pages 'Reports' (/reports, type:reports, picker), 'SigningReport' (/reports/signing), 'AnonymizationReport' (/reports/anonymization), 'ProducedDocumentsReport' (/reports/documents) -- all type:dashboard declarative pages reading filinq's own register (signingRequest/signerRecord/signingAuditEntry, anonymizationBatch, generatedDocument/correspondence) with stat/chart/object-table widgets and no bespoke controller (per the manifest's own ADR-112/ADR-114 note)."
+				"evidence": "src/manifest.json pages 'Reports' (/reports, type:reports, picker), 'SigningReport' (/reports/signing), 'AnonymizationReport' (/reports/anonymization), 'ProducedDocumentsReport' (/reports/documents) -- all type:dashboard declarative pages reading filinq's own register (signingRequest/signerRecord/signingAuditEntry, anonymizationBatch, generatedDocument/correspondence) with stat/chart/object-table widgets and no bespoke controller (per the manifest's own ADR-112/ADR-114 note).",
+				"spec": "none"
 			},
 			"reachedOn": "/reports, /reports/signing, /reports/anonymization, /reports/documents",
 			"provider": "filinq",
@@ -6200,7 +6294,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/views/dashboard/DashboardIndex.vue: consent KPI tiles (lines 30-73, bound to consentStore.consentStats) and an anonymization widget (line 112 #widget-anonymization, line 197/220 'Quick Anonymization')."
+				"evidence": "src/views/dashboard/DashboardIndex.vue: consent KPI tiles (lines 30-73, bound to consentStore.consentStats) and an anonymization widget (line 112 #widget-anonymization, line 197/220 'Quick Anonymization').",
+				"change": "openspec/changes/archive/2026-03-21-dashboard"
 			},
 			"reachedOn": "/ (Dashboard page, DashboardIndex.vue)",
 			"provider": "filinq",
@@ -6227,7 +6322,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Filinq is a standard Nextcloud app (appinfo/info.xml) with a self-hostable office/conversion stack: deploy/office-suites/docker-compose.yml (LibreOffice), lib/Service/Conversion/, lib/Service/PdfService.php (mPDF). No mandatory external SaaS dependency found for core document generation/anonymisation."
+				"evidence": "Filinq is a standard Nextcloud app (appinfo/info.xml) with a self-hostable office/conversion stack: deploy/office-suites/docker-compose.yml (LibreOffice), lib/Service/Conversion/, lib/Service/PdfService.php (mPDF). No mandatory external SaaS dependency found for core document generation/anonymisation.",
+				"spec": "none"
 			},
 			"reachedOn": "self-hosted Nextcloud + Docker deployment (deploy/office-suites/docker-compose.yml)",
 			"provider": "filinq",
@@ -6256,7 +6352,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "LICENSE file at repo root: European Union Public Licence v1.2 (EUPL). Every PHP file's docblock also carries '@license EUPL-1.2'. Public repo ConductionNL/filinq."
+				"evidence": "LICENSE file at repo root: European Union Public Licence v1.2 (EUPL). Every PHP file's docblock also carries '@license EUPL-1.2'. Public repo ConductionNL/filinq.",
+				"spec": "none"
 			},
 			"reachedOn": "repository root LICENSE file",
 			"provider": "filinq",
@@ -6320,7 +6417,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "l10n/ contains de.json, en.json, es.json, fr.json, it.json, nl.json -- standard Nextcloud app translation files, applied automatically per the user's Nextcloud language preference."
+				"evidence": "l10n/ contains de.json, en.json, es.json, fr.json, it.json, nl.json -- standard Nextcloud app translation files, applied automatically per the user's Nextcloud language preference.",
+				"spec": "none"
 			},
 			"reachedOn": "automatic, driven by the user's Nextcloud language setting",
 			"provider": "filinq",
@@ -6408,7 +6506,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/PreferencesController.php:107 getPreference(), :146 setPreference(); routes preferences#getPreference/setPreference api/preferences/{key} (routes.php:294-295, duplicated 313-314). Route comment: 'Generic per-user preferences (used by shared nextcloud-vue widgets...)'."
+				"evidence": "lib/Controller/PreferencesController.php:107 getPreference(), :146 setPreference(); routes preferences#getPreference/setPreference api/preferences/{key} (routes.php:294-295, duplicated 313-314). Route comment: 'Generic per-user preferences (used by shared nextcloud-vue widgets...)'.",
+				"spec": "openspec/specs/preferences-api"
 			},
 			"reachedOn": "consumed indirectly by shared nextcloud-vue widget components across the app (e.g. dashboard widget layout/order), not a dedicated filinq preferences screen",
 			"provider": "filinq",
@@ -6434,7 +6533,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "src/manifest.json 'walkthrough' block (line 1272): enabled:true, completionConfigKey 'walkthrough_completed_version', tour 'filinq:getting-started' with trigger 'first-visit' and multiple steps ('Welcome to Filinq...')."
+				"evidence": "src/manifest.json 'walkthrough' block (line 1272): enabled:true, completionConfigKey 'walkthrough_completed_version', tour 'filinq:getting-started' with trigger 'first-visit' and multiple steps ('Welcome to Filinq...').",
+				"spec": "none"
 			},
 			"reachedOn": "first-visit walkthrough tour (declared in src/manifest.json)",
 			"provider": "filinq",
@@ -6620,7 +6720,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "filinq offers no list export: its document lists switch the shared export off (src/views/intake/IntakeIndex.vue:27 and src/views/dossier/DossierIndex.vue:20 :showMassExport=\"false\"), and no manifest index page lists documentRegistration (lib/Settings/filinq_register.json:71). openregister@86a2fb87 exports any schema's objects as Excel or CSV: appinfo/routes.php:1172 GET /api/objects/{register}/{schema}/export, from src/modals/register/ExportRegister.vue:89 opened in src/components/cards/RegisterSchemaCard.vue:304."
+				"evidence": "filinq offers no list export: its document lists switch the shared export off (src/views/intake/IntakeIndex.vue:27 and src/views/dossier/DossierIndex.vue:20 :showMassExport=\"false\"), and no manifest index page lists documentRegistration (lib/Settings/filinq_register.json:71). openregister@86a2fb87 exports any schema's objects as Excel or CSV: appinfo/routes.php:1172 GET /api/objects/{register}/{schema}/export, from src/modals/register/ExportRegister.vue:89 opened in src/components/cards/RegisterSchemaCard.vue:304.",
+				"spec": "ConductionNL/openregister openspec/specs/data-import-export"
 			},
 			"reachedOn": "OpenRegister's own register page (RegisterSchemaCard export action), not a filinq page",
 			"provider": "openregister",
@@ -6834,7 +6935,8 @@
 			"built": {
 				"state": "built",
 				"owner": "nextcloud/server",
-				"evidence": "filinq sends a removed document to the Nextcloud trash: src/views/dossier/DossierDetail.vue:390 tells the user it 'will be moved to the trash, where you can still restore it' -> lib/Controller/DossierManagementController.php:201 removeDocument() -> lib/Service/DossierManagementService.php:401 -> lib/Service/DossierFileService.php:324 $node->delete(), which routes through files_trashbin. Restore and the automatic expiry are Nextcloud Files' trashbin, not filinq code."
+				"evidence": "filinq sends a removed document to the Nextcloud trash: src/views/dossier/DossierDetail.vue:390 tells the user it 'will be moved to the trash, where you can still restore it' -> lib/Controller/DossierManagementController.php:201 removeDocument() -> lib/Service/DossierManagementService.php:401 -> lib/Service/DossierFileService.php:324 $node->delete(), which routes through files_trashbin. Restore and the automatic expiry are Nextcloud Files' trashbin, not filinq code.",
+				"spec": "openspec/specs/dossier-register"
 			},
 			"reachedOn": "/dossiers/:id (DossierDetail.vue) remove action; restore in Nextcloud Files, Deleted files",
 			"provider": "nextcloud",
@@ -6921,7 +7023,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib)."
+				"evidence": "per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib).",
+				"change": "openspec/changes/final-documents-frozen"
 			},
 			"reachedOn": "/versions (VersionsView.vue) checksum warning for one final document at a time",
 			"provider": "filinq",
@@ -6949,7 +7052,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "declared reminder, executed by OpenRegister: lib/Settings/filinq_register.json:2735 signerRecord x-openregister-notifications 'signingDeadline', trigger scheduled every 86400 s for status PENDING, channel nc-notification, recipient the signer's userId. openregister@86a2fb87 runs scheduled triggers in lib/BackgroundJob/ScheduledNotificationJob.php:215, registered in appinfo/info.xml:148. Signer records are written PENDING by lib/Service/SigningService.php:194."
+				"evidence": "declared reminder, executed by OpenRegister: lib/Settings/filinq_register.json:2735 signerRecord x-openregister-notifications 'signingDeadline', trigger scheduled every 86400 s for status PENDING, channel nc-notification, recipient the signer's userId. openregister@86a2fb87 runs scheduled triggers in lib/BackgroundJob/ScheduledNotificationJob.php:215, registered in appinfo/info.xml:148. Signer records are written PENDING by lib/Service/SigningService.php:194.",
+				"change": "openspec/changes/archive/2026-06-14-document-signing"
 			},
 			"reachedOn": "automatic: OpenRegister's scheduled notification job, as a Nextcloud notification to account holders",
 			"provider": "filinq",
@@ -7063,7 +7167,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "testing works: src/views/templates/TemplateDetail.vue:200 sample-data box and 'Refresh preview' -> :486 templateStore.previewTemplate -> src/store/modules/template.js:273 POST api/templates/preview (appinfo/routes.php:227) -> lib/Service/TemplatePreviewService.php:56. There is no publish step to test before: the template schema (lib/Settings/filinq_register.json:549) has no status or published property, so a saved template is usable at once; only an edit lock exists (lib/Controller/TemplatesController.php:292)."
+				"evidence": "testing works: src/views/templates/TemplateDetail.vue:200 sample-data box and 'Refresh preview' -> :486 templateStore.previewTemplate -> src/store/modules/template.js:273 POST api/templates/preview (appinfo/routes.php:227) -> lib/Service/TemplatePreviewService.php:56. There is no publish step to test before: the template schema (lib/Settings/filinq_register.json:549) has no status or published property, so a saved template is usable at once; only an edit lock exists (lib/Controller/TemplatesController.php:292).",
+				"change": "openspec/changes/archive/2026-03-21-template-management"
 			},
 			"reachedOn": "/templates/:id (TemplateDetail.vue) preview tab",
 			"provider": "filinq",
