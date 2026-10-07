@@ -2898,7 +2898,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
 				"evidence": "lib/Service/EntityDetectionService.php:51-52 TYPED_PII_TYPES includes 'BSN' and 'IBAN' (always redacted regardless of length, closes #285). No detector produces a licence plate: filinq lists KENTEKEN as a selectable type (src/services/entityTypes.js:31, lib/Service/LegalBasisProposalService.php:103), but OpenRegister has no plate pattern and drops every type it cannot map before calling Presidio or anonymiq (lib/Service/TextExtraction/EntityRecognitionHandler.php:873-876 at 555af72), and anonymiq defines DutchLicensePlateRecognizer without registering it (src/api/services/text_analyzer.py:70-79 at eb4e7b0). Corrections round 8 (2026-09-28), openregister#4104: TYPED_PII_TYPES is a filter over the entities OpenRegister returns (lib/Service/EntityDetectionService.php:177 at 9fd042f) and produces none itself, and OpenRegister never returns a BSN entity: its regex set is e-mail, phone and IBAN only (lib/Service/TextExtraction/EntityRecognitionHandler.php:505-526 at 555af72), so a BSN is at best labelled PHONE (:515); Presidio is asked for US_SSN (:869); and anonymiq's own BSN recogniser is never asked for, because its default entities omit BSN (anonymiq src/api/config.py:17 at eb4e7b0) and a whitelist that names BSN loses it at EntityRecognitionHandler.php:873-876. IBAN is recognised (EntityRecognitionHandler.php:520).",
-				"change": "ConductionNL/openregister openspec/changes/detection-dutch-licence-plates"
+				"change": "openregister/detection-dutch-licence-plates"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) via the same detect/extract pipeline as det-auto",
 			"provider": "openregister",
@@ -2958,7 +2958,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
 				"evidence": "AnonymiserBackendStateClient::getState() (lib/Service/AnonymiserBackendStateClient.php) only READS the current method; filinq's own Settings.vue (lines ~846, 1048) only displays the current backend and shows a warning when it is 'regex'. No picker/action anywhere in filinq lets a user or admin choose the engine. OpenRegister owns the actual choice: OR's FileSettingsController / AnonymisationBackendController (git grep on origin/development) implement the setting.",
-				"change": "ConductionNL/openregister openspec/changes/anonymiser-backend-selection"
+				"change": "openregister/anonymiser-backend-selection"
 			},
 			"reachedOn": "nothing in filinq; the engine is chosen in OpenRegister's own admin settings",
 			"provider": "openregister",
@@ -6564,7 +6564,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/opencatalogi",
 				"evidence": "filinq: no withdraw or depublish code; grep -ri 'depublic|depublish|unpublish|publicatiedatum' lib src finds nothing about publication (only signing-mandate withdrawal, lib/Controller/SigningFolderController.php:204). The withdraw flow is only designed: openspec/changes/woo-publicatie-pipeline/design.md:165 (0 of 16 tasks done). opencatalogi@a00f9f84 has it for its own publications: appinfo/routes.php:82 POST /api/publications/depublish -> lib/Controller/DepublicationController.php:126 depublish() (no src/ caller), and src/dialogs/attachment/MassAttachmentModal.vue:234 massDepublishAttachments, opened from src/modals/object/ViewObject.vue:2328.",
-				"change": "ConductionNL/opencatalogi openspec/changes/archive/2026-09-30-publications-publish-and-withdraw-action"
+				"change": "opencatalogi/2026-09-30-publications-publish-and-withdraw-action"
 			},
 			"reachedOn": "nothing reaches it from filinq: filinq hands no document to opencatalogi, so nothing filinq published exists there to withdraw",
 			"provider": "opencatalogi",
@@ -6782,7 +6782,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/hermiq",
 				"evidence": "filinq mounts the shared AI companion: src/App.vue:14 :aiCompanion=\"true\" -> nextcloud-vue v2.39.0 (filinq's lockfile) src/components/CnAppRoot/CnAppRoot.vue:410 <CnAiCompanion>, which talks to hermiq by default (src/composables/aiChatConfig.js DEFAULT_CHAT_APP_ID). hermiq@5277c0df appinfo/routes.php:514 chat#sendMessage returns sources (lib/Controller/ChatController.php:1161), but the companion at v2.39.0 renders none (grep '\\.sources' in src/components hits only CnIconBrowser), and nothing scopes a chat to one document. filinq's own MCP tools (lib/Mcp/FilinqScannableServices.php:73-74) expose correspondence and editing, not document reading.",
-				"change": "ConductionNL/hermiq openspec/changes/companion-everywhere"
+				"change": "hermiq/companion-everywhere"
 			},
 			"reachedOn": "floating AI companion on every filinq page, shown only when hermiq's /api/chat/health answers",
 			"provider": "hermiq",
@@ -6994,7 +6994,7 @@
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
 				"evidence": "filinq has no export or import of its own (grep -ri 'function export|function import' lib/Controller finds only a custom dictionary term import, lib/Controller/CustomDictionaryController.php:271). openregister@86a2fb87 exports a configuration with its objects: src/modals/configuration/ExportConfiguration.vue:23 'Include related objects' -> :140 includeObjects -> GET /api/configurations/{id}/export (appinfo/routes.php:1715), and imports through src/modals/configuration/ImportConfiguration.vue:940 POST /api/configurations/import. The metadata objects travel; the document files live in Nextcloud storage and are not in that export (no file content handling in lib/Service/Configuration).",
-				"change": "ConductionNL/openregister openspec/changes/import-preview-and-conflict-policy"
+				"change": "openregister/import-preview-and-conflict-policy"
 			},
 			"reachedOn": "OpenRegister's own configuration page (ExportConfiguration and ImportConfiguration modals), not a filinq page",
 			"provider": "openregister",
