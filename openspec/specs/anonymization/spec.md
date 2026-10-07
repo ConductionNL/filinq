@@ -952,6 +952,60 @@ The Filinq admin settings panel MUST expose the tenant default `filinq.anonymisa
 - **WHEN** the whitelist is handed to the detector
 - **THEN** `KENTEKEN` is present in the whitelist and reaches OpenAnonymiser unchanged
 
+### Requirement: The anonymisation upload widget MUST accept ODT files
+
+The Filinq anonymisation upload surface (`AnonymizationWidget.vue`) MUST accept `.odt` (OpenDocument Text, MIME `application/vnd.oasis.opendocument.text`) files for anonymisation, alongside the existing `docx`/`txt`/`pdf`/`eml` formats. Acceptance MUST hold both when the browser supplies the MIME type and when only the filename extension is available (drag-and-drop). The file input's `accept` attribute, the upload allow-list, and the user-facing "supported formats" copy MUST all include ODT, and the copy MUST have NL and EN translations.
+
+#### Scenario: An ODT selected from the file picker is accepted
+
+- **GIVEN** a file `brief.odt` with MIME `application/vnd.oasis.opendocument.text`
+- **WHEN** it is partitioned by the upload allow-list
+- **THEN** it is accepted (not rejected)
+
+#### Scenario: An ODT dropped without a MIME type is accepted by extension
+
+- **GIVEN** a file `brief.odt` whose browser-supplied MIME is empty
+- **WHEN** it is partitioned by the upload allow-list
+- **THEN** it is accepted on its `.odt` extension
+
+#### Scenario: Previously-supported formats still pass and unsupported formats are still rejected
+
+- **GIVEN** a batch containing `.docx`, `.odt`, `.pdf`, `.txt`, `.eml`, and an unsupported `.xlsx`
+- **WHEN** the batch is partitioned
+- **THEN** the docx/odt/pdf/txt/eml files are accepted
+- **AND** the `.xlsx` file is rejected and reported in the "supported formats" skip message
+
+### Requirement: The grondslagen seed MUST be the Woo Art. 5 grounds (A–S)
+
+The `dossier` register's `base` seed MUST contain the 19 Woo Art. 5 exception grounds (legend A–S), with article-derived slugs (`art-5-1-1-a` … `art-5-2-2`), a legend-prefixed Dutch `name` (e.g. "J — Persoonlijke levenssfeer"), and the Woo text + article reference in `description`. Demo seed references (`bases[]`) MUST use the new slugs.
+
+#### Scenario: The 19 grounds are seeded
+
+- **WHEN** the Filinq register configuration is imported
+- **THEN** the `base` objects include all 19 Woo Art. 5 grounds A–S with `art-5-*` slugs
+- **AND** no demo `dossier`/reference still points at a removed legacy slug
+
+### Requirement: Grondslag pickers MUST source the list from the register
+
+The anonymisation grondslag pickers MUST fetch the `base` objects from OpenRegister rather than a hardcoded list, display each grondslag's human `name`, and store its `slug`. On a fetch error the UI MUST fall back to a known slug list so the pickers keep working. No hardcoded grondslagen mirror may remain in the picker components.
+
+#### Scenario: Pickers show names and store slugs
+
+- **GIVEN** the register returns the seeded `base` objects
+- **WHEN** a grondslag picker renders its options
+- **THEN** each option shows the grondslag `name` and, when selected, persists the `slug`
+
+#### Scenario: Fetch failure falls back to the slug list
+
+- **GIVEN** the register is unreachable or returns no `base` objects
+- **WHEN** a grondslag picker loads
+- **THEN** it falls back to the known slug list and remains usable
+
+#### Scenario: No hardcoded mirror remains
+
+- **WHEN** the picker components are inspected
+- **THEN** they contain no hardcoded `BASES_OPTIONS` grondslagen list (they consume the shared fetch)
+
 ## Data Model
 
 ### File Entry (API response)

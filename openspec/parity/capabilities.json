@@ -1687,7 +1687,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/DocumentService.php storeOutputIfRequested() (line 734) with options.output.mode='files'/'both' stores the rendered output to Nextcloud Files instead of/alongside returning it (line 419-423 refuses unless mode='files'/'both'). Reached by dossiq: FilinqTemplateEngineAdapter.php:167 sets ['output'=>['mode'=>'both']] on every beschikking render.",
-				"change": "openspec/changes/document-output-destinations-and-bulk-retention"
+				"change": "openspec/changes/archive/2026-10-07-document-output-destinations-and-bulk-retention"
 			},
 			"reachedOn": "machine consumer: dossiq via output.mode=both/files",
 			"provider": "filinq",
@@ -1774,7 +1774,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/CorrespondenceService.php:190-205 #[McpTool(name: 'generateCorrespondence', ...)] on generate(). lib/Mcp/FilinqScannableServices.php:73-79 getScannableServiceClasses() returns [CorrespondenceService::class, DocumentAgentService::class], registered under IMcpScannableServices for OpenRegister's AttributeToolScanner. openspec/changes/filinq-mcp-adoption/tasks.md: 12/12 done.",
-				"change": "openspec/changes/filinq-mcp-adoption"
+				"change": "openspec/changes/archive/2026-10-07-filinq-mcp-adoption"
 			},
 			"reachedOn": "machine consumer: MCP client (AI assistant) via OpenRegister's AttributeToolScanner; no Filinq UI page",
 			"provider": "filinq",
@@ -2416,7 +2416,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/versions/VersionsView.vue:47-491 (finalise/correct/unfreeze buttons) calls src/services/finalDocumentService.js -> GET/POST/DELETE /api/documents/{fileId}/final(/correction) (routes.php:69-72) -> lib/Controller/FinalDocumentController.php (show/finalise/correct/unfreeze).",
-				"change": "openspec/changes/final-documents-frozen"
+				"change": "openspec/changes/archive/2026-10-07-final-documents-frozen"
 			},
 			"reachedOn": "/versions (VersionsView.vue)",
 			"provider": "filinq",
@@ -2444,7 +2444,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/FinalDocumentController.php:250 declareRule() and :306 applyStateChange() are fully implemented (stores a consuming app's finality rule, then finalises documents on a state change), exposed at POST /api/document-finality-rules (FE-tagged, but no caller in src/) and POST /api/document-finality-rules/apply (route-reach: none). src/services/finalDocumentService.js:84 exports declareFinalityRule() but grep found zero callers in src/.",
-				"change": "openspec/changes/final-documents-frozen"
+				"change": "openspec/changes/archive/2026-10-07-final-documents-frozen"
 			},
 			"reachedOn": "nothing reaches it: no filinq page calls declareFinalityRule(); checked dq-flow, procest and zaakafhandelapp (git grep 'document-finality-rules|declareFinalityRule|applyStateChange' on origin/development lib src) with no hits either",
 			"provider": "filinq",
@@ -3300,7 +3300,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "The entity-level review step is built and reachable: src/views/anonymization/EntityReviewTable.vue lets a user include/skip each detected entity (persistSkip -> PATCH api/anonymization/relations/{id}, routes.php:137, FE). But the sentence's second half never happens: AnonymizationService::runAnonymize (lib/Service/AnonymizationService.php:594-624) unconditionally calls RedactionOutputGuard::assertMayWrite() at line 616 BEFORE any file is written, and that guard (lib/Service/Redaction/RedactionReviewGate.php:98-155) always refuses when no RedactionReviewMark exists. The ONLY way a mark is created is RedactionOutputController::markChecked (lib/Controller/RedactionOutputController.php:92) via POST api/redaction/documents/{fileId}/checked (routes.php:127) — grepped src/ entirely (components, views, services, store) for markChecked/redaction/documents/checked, zero hits; _lane/shared/route-reach.txt line 53 independently tags that route 'none'; also grepped all 5 available sibling repos (procest, dq-flow, shillinq, opencatalogi, scholiq) on origin/development, zero hits.",
-				"change": "openspec/changes/redaction-and-what-leaves-the-building"
+				"change": "openspec/changes/archive/2026-10-07-redaction-and-what-leaves-the-building"
 			},
 			"reachedOn": "/anonymization (AnonymizationIndex.vue) and /folder-anonymization (FolderAnonymizationView.vue) for the review step; the commit step always throws RedactionNotReviewedException",
 			"provider": "filinq",
@@ -3720,7 +3720,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "The capability is fully implemented server-side and completely unreachable: RedactionOutputController::markChecked (lib/Controller/RedactionOutputController.php:92) records checkedBy from the SESSION user (never the payload, per the method's own comment 'THE CHECKER IS THE SESSION'), which is exactly a second-person sign-off distinct from whoever ran detection. Route POST api/redaction/documents/{fileId}/checked (routes.php:127) is tagged 'none' in _lane/shared/route-reach.txt; grepped all of src/ and all 5 available sibling repos, zero callers anywhere.",
-				"change": "openspec/changes/redaction-and-what-leaves-the-building"
+				"change": "openspec/changes/archive/2026-10-07-redaction-and-what-leaves-the-building"
 			},
 			"reachedOn": "nothing reaches it — no frontend caller, no sibling caller",
 			"provider": "filinq",
@@ -4199,7 +4199,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/RedactionOutputController.php:130 composeList() (POST /api/redaction/publication-list, route-reach 'none') -> PublicationListComposer, which resolves each record's redacted copy through its anonymizationLink. No src/ component calls this endpoint (grep found none).",
-				"change": "openspec/changes/redaction-and-what-leaves-the-building"
+				"change": "openspec/changes/archive/2026-10-07-redaction-and-what-leaves-the-building"
 			},
 			"reachedOn": "nothing reaches it: no page in src/ calls composeList; not adopted by dq-flow/procest/zaakafhandelapp either (git grep 'redaction/publication-list|composeList' on origin/development lib src, no hits)",
 			"provider": "filinq",
@@ -4348,7 +4348,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/RedactionOutputController.php:151 agreement() (GET /api/redaction/agreement) and :169 acceptAgreement() (POST /api/redaction/agreement/accept) are implemented over DownloadAgreementGate, part of the mostly-complete (11/12 tasks) redaction-and-what-leaves-the-building change. Both routes are route-reach 'none'; grep for 'agreement' across all of src/ (.vue/.js) found zero references.",
-				"change": "openspec/changes/redaction-and-what-leaves-the-building"
+				"change": "openspec/changes/archive/2026-10-07-redaction-and-what-leaves-the-building"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -5964,7 +5964,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Mcp/FilinqScannableServices.php implements OpenRegister's IMcpScannableServices, listing filinq's #[McpTool]-attributed classes (CorrespondenceService, Service/Editing/DocumentAgentService per its use-statements) - real curated tools, not just a declaration. filinq_register.json also declares configuration.x-openregister-mcp (search+get) on 8 schemas for derived read tools, all cross-checked against each schema's properties map per the changelog.",
-				"change": "openspec/changes/filinq-mcp-adoption"
+				"change": "openspec/changes/archive/2026-10-07-filinq-mcp-adoption"
 			},
 			"reachedOn": "machine consumer: any MCP-capable agent client (curated tools via lib/Mcp/FilinqScannableServices.php; derived read tools via OpenRegister's MCP framework)",
 			"provider": "filinq",
@@ -6048,7 +6048,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/EventListener/DocumentSigningRequestedListener.php: 'any installed consumer app dispatches DocumentSigningRequestedEvent and Filinq raises the signing request here, writing the resolved signingRequestId back onto the event' -> lib/Service/SigningService.php createRequest(); outcome flows back via lib/Event/SigningConcludedEvent.php + SigningConclusionEmitter.php. shillinq's lib/Service/Signing/SigningDelegationService.php:135 resolves and dispatches OCA\\Filinq\\Event\\DocumentSigningRequestedEvent via FleetAppId::resolveClass(), and shillinq's SigningConcludedListener.php consumes filinq's SigningConcludedEvent (matched under every namespace filinq has shipped it under).",
-				"change": "openspec/changes/filinq-signing-events"
+				"change": "openspec/changes/archive/2026-10-07-filinq-signing-events"
 			},
 			"reachedOn": "machine consumer: shillinq (SigningDelegationService dispatches DocumentSigningRequestedEvent; SigningConcludedListener consumes the outcome)",
 			"provider": "filinq",
@@ -7029,7 +7029,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib).",
-				"change": "openspec/changes/final-documents-frozen"
+				"change": "openspec/changes/archive/2026-10-07-final-documents-frozen"
 			},
 			"reachedOn": "/versions (VersionsView.vue) checksum warning for one final document at a time",
 			"provider": "filinq",
