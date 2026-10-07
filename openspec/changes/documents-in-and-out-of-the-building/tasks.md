@@ -1,5 +1,7 @@
 # Tasks: documents-in-and-out-of-the-building
 
+> Archive pass 2026-10-07: left open; partial: 1.2, 1.4, 2.2, 3.3, 4.1, 4.2, 5.1 (marked [~]: each note names an OpenRegister platform gap or a missing download route, so the requirements are not fully met)
+
 <!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 12. -->
 
 ## 1. The registration entry
