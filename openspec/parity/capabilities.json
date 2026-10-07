@@ -3215,7 +3215,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/manifest.json AnonymizationReport dashboard page (route /reports/anonymization) shows org-wide stat/chart widgets sourced from the filinq.anonymizationBatch register/schema: counts by status (review/completed/error), a by-status donut, a by-source donut, and a recent-runs table.",
-				"spec": "none"
+				"spec": "openspec/specs/management-reports"
 			},
 			"reachedOn": "/reports/anonymization (dashboard-type manifest page, reads openregister objects directly)",
 			"provider": "filinq",
@@ -6269,7 +6269,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/manifest.json pages 'Reports' (/reports, type:reports, picker), 'SigningReport' (/reports/signing), 'AnonymizationReport' (/reports/anonymization), 'ProducedDocumentsReport' (/reports/documents) -- all type:dashboard declarative pages reading filinq's own register (signingRequest/signerRecord/signingAuditEntry, anonymizationBatch, generatedDocument/correspondence) with stat/chart/object-table widgets and no bespoke controller (per the manifest's own ADR-112/ADR-114 note).",
-				"spec": "none"
+				"spec": "openspec/specs/management-reports"
 			},
 			"reachedOn": "/reports, /reports/signing, /reports/anonymization, /reports/documents",
 			"provider": "filinq",
@@ -6438,7 +6438,8 @@
 				"paperless-ngx": "source read at v3.2.1, not driven: Dutch is a selectable UI and backend language (src-ui/src/app/services/settings.service.ts:175, src/paperless/settings/__init__.py:580) next to English, but src-ui/src/locale/messages.nl_NL.xlf still marks 290 of 1452 strings needs-translation, so parts of the UI fall back to English.",
 				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-08 Hungarian added as a language option in the Sender UI and signing screen besides the existing ones; the product and knowledge base run in Dutch and English (validsign.eu/nl, validsign.eu)",
 				"smartdocuments": "docs-only, read 2026-09-26: https://smartdocuments.com/productfeatures/ SmartWizard languages NL, DE, SE, EN, ES, FR, HU, CZ"
-			}
+			},
+			"note": "spec stays none (decision 81): translation runs on Nextcloud's l10n mechanism, not filinq code. The open change filinq-nl-locale-parity (0 of 14 tasks on 7 Oct 2026) is about the completeness of the Dutch strings and did not deliver this row."
 		},
 		{
 			"id": "op-a11y",
@@ -6537,7 +6538,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/manifest.json 'walkthrough' block (line 1272): enabled:true, completionConfigKey 'walkthrough_completed_version', tour 'filinq:getting-started' with trigger 'first-visit' and multiple steps ('Welcome to Filinq...').",
-				"spec": "none"
+				"spec": "openspec/specs/getting-started-tour"
 			},
 			"reachedOn": "first-visit walkthrough tour (declared in src/manifest.json)",
 			"provider": "filinq",
