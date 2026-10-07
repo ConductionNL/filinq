@@ -3215,7 +3215,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/manifest.json AnonymizationReport dashboard page (route /reports/anonymization) shows org-wide stat/chart widgets sourced from the filinq.anonymizationBatch register/schema: counts by status (review/completed/error), a by-status donut, a by-source donut, and a recent-runs table.",
-				"spec": "none"
+				"spec": "openspec/specs/management-reports"
 			},
 			"reachedOn": "/reports/anonymization (dashboard-type manifest page, reads openregister objects directly)",
 			"provider": "filinq",
@@ -4224,19 +4224,20 @@
 			"name": "Hand approved documents to the publication platform.",
 			"source": "competitor-derived",
 			"sourceRef": "procest round 4 C-decisions-14; GPP-Woo publicatiebank",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
-				"owner": "ConductionNL/opencatalogi",
-				"evidence": "openspec/changes/woo-publicatie-pipeline/proposal.md (0 of 16 tasks done) states: 'sibling apps own the endpoint: OpenCatalogi publishes OR publication objects with DiWoo/TOOI-validated Woo-index sitemaps...What is missing is the pipeline that chains them: nothing today answers is this document ready to publish, assembles the DiWoo metadata, [or] hands the redacted result off to the publication endpoint.' lib/Service/DossierContextService.php:286 comment confirms: 'The woo-publicatie-pipeline has not shipped.'",
-				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline"
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Read at development b9e834e6. lib/Service/Publication/PublicationPipelineService.php:197 handoff() re-checks readiness (anonymisation reviewed, consent clear, prohibitions clear) and the metadata, reads the redacted copy, writes an OpenCatalogi publication object (register and schema 'publication') through OpenRegister via PublicationStore::savePlatformPublication() and attaches the redacted copy shared (OpenCatalogiPlatform.php:124 attach()); routes appinfo/routes.php:276-284 (api/publications/*, PublicationController). Reached from the Publish button in the file viewer (src/views/fileViewer/FileViewerPage.vue:64, startPublication) and the Publications page (/publications, src/views/publications/PublicationsPage.vue:196-222 'Hand off for publication'). Shipped by PR #1262.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-10-07"
 			},
-			"reachedOn": "nothing reaches it",
-			"provider": "opencatalogi",
+			"reachedOn": "/publications (Hand off for publication) and the Publish button in the file viewer",
+			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
 			"featureConfidence": "high",
-			"note": "OpenCatalogi is the publication platform itself and already exists; the gap is entirely the filinq-side hand-off pipeline that would give redacted, approved documents to it.",
+			"note": "OpenCatalogi is the publication platform; filinq readies the document, assembles the metadata and hands it off. Re-rated 7 Oct 2026 from the code (decision 78): the row read specified while its change was archived.",
 			"zylab": "unknown",
 			"datamask": "partial",
 			"smartdocuments": "unknown",
@@ -4255,15 +4256,16 @@
 			"name": "Feed the national Woo index with what was published.",
 			"source": "competitor-derived",
 			"sourceRef": "GPP-Woo DiWoo feed; KOOP Woo-index",
-			"filinq": "no",
+			"filinq": "partial",
 			"built": {
 				"state": "specified",
-				"owner": "ConductionNL/opencatalogi",
-				"evidence": "Same as woo-publish: openspec/changes/woo-publicatie-pipeline/proposal.md confirms OpenCatalogi already produces DiWoo/TOOI-validated Woo-index sitemaps for objects IT publishes, but since filinq has no built pipeline handing documents to OpenCatalogi at all (0/16 tasks), filinq users get no Woo-index feed through filinq today.",
-				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline"
+				"owner": "ConductionNL/filinq",
+				"evidence": "Read at development b9e834e6 and opencatalogi development 7a5a8a492. The hand-off reaches OpenCatalogi (see woo-publish), but lib/Service/Publication/OpenCatalogiPublicationMap.php:58 FIELDS and toPublication() (:76) write no wooCategory, while OpenCatalogi's category sitemaps, which the national Woo index harvests, list only publications whose wooCategory matches (opencatalogi lib/Service/SitemapService.php:374). OpenCatalogi added that field on 30 Sep (schema 0.0.5), a day after filinq's pipeline was archived. The picker also stores the TOOI URI basename (c_…, OpenCatalogiPlatform.php:91) where OpenCatalogi's enum takes infocat001-017. So nothing filinq hands off reaches the index yet.",
+				"change": "openspec/changes/woo-hand-off-files-its-category",
+				"readOn": "2026-10-07"
 			},
-			"reachedOn": "nothing reaches it",
-			"provider": "opencatalogi",
+			"reachedOn": "nothing reaches it: handed-off publications carry no wooCategory, so no category sitemap lists them",
+			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
 			"featureConfidence": "high",
@@ -4275,7 +4277,8 @@
 			"decos-join": "unknown",
 			"evidence": {
 				"paperless-ngx": "source read at v3.2.1, not driven: grep -riE 'woo|wob|publish|zienswijze' src/documents src-ui/src/app finds no publication or Woo concept; no metadata feed or index export beyond the generic webhook (src/documents/models.py:1626) and the document_exporter command, neither in a Woo index format."
-			}
+			},
+			"note": "Missing: write wooCategory on the hand-off, in OpenCatalogi's code. Specified in woo-hand-off-files-its-category (7 Oct 2026). Previously linked the archived woo-publicatie-pipeline, which delivered the hand-off but not the category."
 		},
 		{
 			"id": "woo-active",
@@ -6266,7 +6269,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/manifest.json pages 'Reports' (/reports, type:reports, picker), 'SigningReport' (/reports/signing), 'AnonymizationReport' (/reports/anonymization), 'ProducedDocumentsReport' (/reports/documents) -- all type:dashboard declarative pages reading filinq's own register (signingRequest/signerRecord/signingAuditEntry, anonymizationBatch, generatedDocument/correspondence) with stat/chart/object-table widgets and no bespoke controller (per the manifest's own ADR-112/ADR-114 note).",
-				"spec": "none"
+				"spec": "openspec/specs/management-reports"
 			},
 			"reachedOn": "/reports, /reports/signing, /reports/anonymization, /reports/documents",
 			"provider": "filinq",
@@ -6435,7 +6438,8 @@
 				"paperless-ngx": "source read at v3.2.1, not driven: Dutch is a selectable UI and backend language (src-ui/src/app/services/settings.service.ts:175, src/paperless/settings/__init__.py:580) next to English, but src-ui/src/locale/messages.nl_NL.xlf still marks 290 of 1452 strings needs-translation, so parts of the UI fall back to English.",
 				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/release-notes/release-notes-2026-09-08 Hungarian added as a language option in the Sender UI and signing screen besides the existing ones; the product and knowledge base run in Dutch and English (validsign.eu/nl, validsign.eu)",
 				"smartdocuments": "docs-only, read 2026-09-26: https://smartdocuments.com/productfeatures/ SmartWizard languages NL, DE, SE, EN, ES, FR, HU, CZ"
-			}
+			},
+			"note": "spec stays none (decision 81): translation runs on Nextcloud's l10n mechanism, not filinq code. The open change filinq-nl-locale-parity (0 of 14 tasks on 7 Oct 2026) is about the completeness of the Dutch strings and did not deliver this row."
 		},
 		{
 			"id": "op-a11y",
@@ -6534,7 +6538,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/manifest.json 'walkthrough' block (line 1272): enabled:true, completionConfigKey 'walkthrough_completed_version', tour 'filinq:getting-started' with trigger 'first-visit' and multiple steps ('Welcome to Filinq...').",
-				"spec": "none"
+				"spec": "openspec/specs/getting-started-tour"
 			},
 			"reachedOn": "first-visit walkthrough tour (declared in src/manifest.json)",
 			"provider": "filinq",
@@ -6559,19 +6563,20 @@
 			"sourceRef": "tender: https://www.tenderned.nl/aankondigingen/overzicht/407973 (Dordrecht WOO Publicatietool, requirement VPB-05)",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/407973",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
-				"owner": "ConductionNL/opencatalogi",
-				"evidence": "filinq: no withdraw or depublish code; grep -ri 'depublic|depublish|unpublish|publicatiedatum' lib src finds nothing about publication (only signing-mandate withdrawal, lib/Controller/SigningFolderController.php:204). The withdraw flow is only designed: openspec/changes/woo-publicatie-pipeline/design.md:165 (0 of 16 tasks done). opencatalogi@a00f9f84 has it for its own publications: appinfo/routes.php:82 POST /api/publications/depublish -> lib/Controller/DepublicationController.php:126 depublish() (no src/ caller), and src/dialogs/attachment/MassAttachmentModal.vue:234 massDepublishAttachments, opened from src/modals/object/ViewObject.vue:2328.",
-				"change": "opencatalogi/2026-09-30-publications-publish-and-withdraw-action"
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Read at development b9e834e6. lib/Service/Publication/PublicationPipelineService.php:246 withdraw() requires a reason, refuses a record that was never handed off (409), and sets depublicationDate to now on the OpenCatalogi publication (OpenCatalogiPublicationMap.php:100 withdrawal()), never deleting it; the record moves to depublication_requested and then depublished (sync(), :313), each step in the append-only log. Route POST api/publications/{id}/withdraw (appinfo/routes.php:283). Reached on /publications: src/views/publications/PublicationsPage.vue:226-238 'Why is it withdrawn?' plus 'Withdraw publication'. Shipped by PR #1262. OpenCatalogi's own depublish action (its archived change 2026-09-30-publications-publish-and-withdraw-action) covers publications made in OpenCatalogi.",
+				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
+				"readOn": "2026-10-07"
 			},
-			"reachedOn": "nothing reaches it from filinq: filinq hands no document to opencatalogi, so nothing filinq published exists there to withdraw",
-			"provider": "opencatalogi",
+			"reachedOn": "/publications, Withdraw section of a handed-off publication",
+			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "woo-publicatie-pipeline",
 			"featureConfidence": "high",
-			"note": "OpenCatalogi can depublish what it holds (attachments from its own object view); the gap is filinq's hand-off, the same gap as woo-publish. Specified in ConductionNL/opencatalogi openspec/changes/publications-publish-and-withdraw-action (opencatalogi lane, OpenSpec pass 2026-09-27). built.change previously named openspec/changes/woo-publicatie-pipeline, which carried the built half.",
+			"note": "Re-rated 7 Oct 2026 from the code (decision 78). Round 1 linked opencatalogi/2026-09-30-publications-publish-and-withdraw-action; filinq's own withdraw shipped in woo-publicatie-pipeline, so the link now points there.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
