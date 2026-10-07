@@ -7073,6 +7073,29 @@
 			}
 		},
 		{
+			"id": "sig-notify",
+			"area": "signing",
+			"name": "Get a Nextcloud notification when a document waits for my signature and when my signing request is complete.",
+			"source": "spec-round-2026-10-07",
+			"filinq": "yes",
+			"built": {
+				"state": "built",
+				"owner": "ConductionNL/filinq",
+				"evidence": "Declared in lib/Settings/filinq_register.json as x-openregister-notifications rules that OpenRegister's notification engine runs: signerRecord signingRequested (line 2994, trigger created, recipient the signer's userId), signingEnvelope envelopeRequested (line 10075, recipients the envelope's signers), signingRequest signingCompleted (line 2463, recipient initiatorUserId). Delivered by the filinq-notifications spec; not driven in a browser in this round.",
+				"readOn": "2026-10-07",
+				"spec": "openspec/specs/filinq-notifications"
+			},
+			"provider": "filinq",
+			"providerHow": "read-from-code",
+			"feature": "filinq-notifications",
+			"zylab": "unchecked",
+			"datamask": "unchecked",
+			"smartdocuments": "unchecked",
+			"validsign": "unchecked",
+			"paperless-ngx": "unchecked",
+			"decos-join": "unchecked"
+		},
+		{
 			"id": "woo-withheld-page",
 			"area": "woo",
 			"name": "Replace pages that are withheld in full by one page that says why.",
