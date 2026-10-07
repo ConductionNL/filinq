@@ -78,7 +78,7 @@ async function api(
  * Choose the shipped dataset, and answer with the id that was chosen.
  *
  * 🔴 THE TEST HAS TO MAKE THE DECISION IT ASSERTS AGAINST. The demo-data step
- * is a choice followed by a load step now, and the CI seed settles the optional
+ * is a cards choice whose cards load themselves, and the CI seed settles the optional
  * steps by posting `skip-demo-data` — which records "none". A load that follows
  * correctly imports nothing, so an install test that skips this arranges no
  * precondition and measures the seed instead of the app.
@@ -137,7 +137,9 @@ test.describe('ADR-111 demo data', () => {
 		expect(steps, 'setup/status must report the choice step').toContain(
 			'demo-data',
 		)
-		expect(steps, 'setup/status must report the load step').toContain(
+		// The cards load themselves (`loadAction`), so the separate load step is
+		// gone from the manifest and from the status document.
+		expect(steps, 'the run-action load step is retired').not.toContain(
 			'load-demo-data',
 		)
 	})
@@ -182,7 +184,7 @@ test.describe('ADR-111 demo data', () => {
 		expect(demo.objectCount).toBeGreaterThan(0)
 	})
 
-	test('declining closes both steps, so the wizard stops covering the app', async ({
+	test('declining closes the step, so the wizard stops covering the app', async ({
 		page,
 	}) => {
 		// 🔴 THE DEFECT THIS FIXES. This app implemented `skip-demo-data` and no
@@ -196,7 +198,19 @@ test.describe('ADR-111 demo data', () => {
 
 		const status = await api(page, 'GET', `${BASE}/api/setup/status`)
 		expect(status.json?.steps?.['demo-data']?.done).toBe(true)
-		expect(status.json?.steps?.['load-demo-data']?.done).toBe(true)
+	})
+
+	test('a card that names an unknown dataset loads nothing', async ({ page }) => {
+		// The card's Load button posts `{ dataset }` to the step's loadAction.
+		const res = await api(
+			page,
+			'POST',
+			`${BASE}/api/setup/action/load-demo-data`,
+			{ dataset: 'atlantis' },
+		)
+
+		expect(res.status).toBe(400)
+		expect(res.json?.success).toBe(false)
 	})
 
 	test('a dataset that does not exist is refused rather than stored', async ({
@@ -259,12 +273,14 @@ test.describe('ADR-111 demo data', () => {
 		// The step body tells the operator it is "safe to run more than once".
 		// That sentence is a contract; this asserts the server keeps it rather
 		// than erroring or reporting failure on a second pass.
-		await pickShippedDataset(page)
+		const shipped = await pickShippedDataset(page)
 
+		// Posted the way a dataset card's Load button posts it.
 		const again = await api(
 			page,
 			'POST',
 			`${BASE}/api/setup/action/load-demo-data`,
+			{ dataset: shipped },
 		)
 
 		expect(again.status).toBe(200)
