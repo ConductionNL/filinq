@@ -7088,12 +7088,12 @@
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "filinq-notifications",
-			"zylab": "unchecked",
-			"datamask": "unchecked",
-			"smartdocuments": "unchecked",
-			"validsign": "unchecked",
-			"paperless-ngx": "unchecked",
-			"decos-join": "unchecked"
+			"zylab": "unknown",
+			"datamask": "unknown",
+			"smartdocuments": "unknown",
+			"validsign": "unknown",
+			"paperless-ngx": "unknown",
+			"decos-join": "unknown"
 		},
 		{
 			"id": "woo-withheld-page",
