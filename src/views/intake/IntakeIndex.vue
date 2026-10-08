@@ -6,6 +6,11 @@ The intake inbox: every document that arrived through a scanner, a shared
 mailbox or digital post and does not belong to a record yet. A clerk assigns one
 to a record or rejects it with a reason, and either way it leaves the inbox.
 
+@visual exclude No pixel baseline CI runs yet: the page is driven through its /intake route by
+	tests/e2e/workflows/intake-inbox.spec.ts (list, assign, reject, reject without a reason), which
+	reaches it by URL rather than by component name. Its baseline in tests/e2e/visual is not collected
+	by the CI Playwright project.
+
 @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 -->
 
