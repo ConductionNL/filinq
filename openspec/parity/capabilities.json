@@ -514,6 +514,7 @@
 			"specs": [
 				"document-creatie-sjablonen",
 				"letter-correspondence-generation",
+				"template-management",
 				"template-charts",
 				"generated-document-names-its-template-version",
 				"guided-document-wizard",
@@ -944,7 +945,8 @@
 			"area": "operate",
 			"overlay": null,
 			"specs": [
-				"multi-tenant-hardening"
+				"multi-tenant-hardening",
+				"upload-dropzone-keyboard-access"
 			]
 		}
 	],
