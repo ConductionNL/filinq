@@ -8874,6 +8874,12 @@
 		}
 	],
 	"specScreens": {
+		"accessible-redaction-output": {
+			"board": [
+				"FqDocument",
+				"FqAnonimiseren"
+			]
+		},
 		"admin-settings": {
 			"board": [
 				"FqInstellingen"
@@ -8882,6 +8888,10 @@
 		"adopt-apphost": {
 			"board": null,
 			"reason": "Health and metrics endpoints for monitoring tools; no screen by nature."
+		},
+		"ai-gl-account-suggestion": {
+			"board": null,
+			"reason": "A suggestion served to shillinq over the API; shillinq shows it on its own invoice screen."
 		},
 		"anonymisation-detector-honesty": {
 			"board": [
@@ -9005,9 +9015,17 @@
 			"board": null,
 			"reason": "Internal: plumbing onto OpenRegister's shared abstractions."
 		},
+		"filinq-signing-events": {
+			"board": null,
+			"reason": "Signing events other apps listen to in the background; there is nothing to show."
+		},
 		"filinq-store-migration": {
 			"board": null,
 			"reason": "Internal: frontend store migration."
+		},
+		"financial-document-field-extraction": {
+			"board": null,
+			"reason": "Extraction served to shillinq over the API; shillinq shows the fields."
 		},
 		"first-time-setup": {
 			"board": [
@@ -9017,6 +9035,11 @@
 		"flow-document-generation": {
 			"board": [
 				"FqFlow"
+			]
+		},
+		"folder-analysis-anonymization": {
+			"board": [
+				"FqMapAnalyse"
 			]
 		},
 		"folder-batch-analysis": {
@@ -9062,6 +9085,11 @@
 		"multi-format-output": {
 			"board": [
 				"FqCorrespondentie"
+			]
+		},
+		"ocr-trigger-surface": {
+			"board": [
+				"FqMijnDocumenten"
 			]
 		},
 		"office-suite-portability": {
@@ -9132,9 +9160,20 @@
 			"board": null,
 			"reason": "A render API other apps call; it has no screen of its own."
 		},
+		"reversible-pseudonymization": {
+			"board": [
+				"FqDocument"
+			]
+		},
 		"signing-audit-via-or": {
 			"board": [
 				"FqOndertekenverzoek"
+			]
+		},
+		"signing-via-or-approval-with-provider-plugins": {
+			"board": [
+				"FqNieuwOndertekenverzoek",
+				"FqInstellingen"
 			]
 		},
 		"template-charts": {
@@ -9145,6 +9184,15 @@
 		"template-management": {
 			"board": [
 				"FqSjablonen"
+			]
+		},
+		"unified-search-provider": {
+			"board": null,
+			"reason": "Results appear in Nextcloud's own unified search; Filinq draws no screen for it."
+		},
+		"upload-dropzone-keyboard-access": {
+			"board": [
+				"FqMijnDocumenten"
 			]
 		},
 		"verapdf-validation": {
