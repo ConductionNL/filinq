@@ -5674,10 +5674,7 @@
                         "maxLength": 500000
                     },
                     "documentType": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "title": "Document type",
                         "description": "The document type a person confirmed for this document. Set only by a confirmed classification, never by the classifier itself.",
                         "enum": [
@@ -5693,10 +5690,7 @@
                         "facetable": true
                     },
                     "correspondent": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
+                        "type": "object",
                         "title": "Correspondent",
                         "description": "Who the document is from, as a person confirmed it.",
                         "properties": {
@@ -11258,10 +11252,7 @@
                         "facetable": true
                     },
                     "suggestedCorrespondent": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
+                        "type": "object",
                         "title": "Suggested correspondent",
                         "description": "Who the document is from, picked out of the entities OpenRegister detected. Empty when there was no candidate: the name is never made up.",
                         "properties": {
@@ -11297,10 +11288,7 @@
                         "description": "True while entity detection has not run for the file yet. The suggestion is replaced once it has."
                     },
                     "suggestedDossier": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "title": "Suggested dossier",
                         "description": "The dossier the document seems to belong to, only on an exact match of the correspondent or a case reference with the dossier name.",
                         "maxLength": 64
@@ -11324,10 +11312,7 @@
                         "facetable": true
                     },
                     "confirmedDocumentType": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "title": "Confirmed type",
                         "description": "The type the reviewer confirmed. Differs from the suggested type when the reviewer corrected it.",
                         "enum": [
@@ -11342,10 +11327,7 @@
                         ]
                     },
                     "confirmedCorrespondent": {
-                        "type": [
-                            "object",
-                            "null"
-                        ],
+                        "type": "object",
                         "title": "Confirmed correspondent",
                         "description": "The correspondent the reviewer confirmed or typed.",
                         "properties": {
@@ -11376,19 +11358,13 @@
                         }
                     },
                     "confirmedDossier": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "title": "Confirmed dossier",
                         "description": "The dossier the reviewer filed the document in.",
                         "maxLength": 64
                     },
                     "filing": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "title": "Filing",
                         "description": "What the confirmation did with the file: moved into the dossier folder, or recorded only because the dossier has no folder the reviewer can reach.",
                         "enum": [
@@ -11398,19 +11374,13 @@
                         ]
                     },
                     "confirmedBy": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "title": "Decided by",
                         "description": "User id of the person who confirmed or rejected the suggestion.",
                         "maxLength": 64
                     },
                     "confirmedAt": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "title": "Decided at",
                         "description": "When the suggestion was confirmed or rejected (ISO 8601).",
                         "format": "date-time"
