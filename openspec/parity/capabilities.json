@@ -8037,6 +8037,7 @@
 			"reachedOn": "unclear; Nextcloud's own web frontend is generally usable on a phone browser, but filinq shows no deliberate mobile-specific design work",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
+			"feature": "open-platform",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "yes",
@@ -8052,8 +8053,7 @@
 				"paperless-ngx": "source read at v3.2.1, not driven: the web UI is responsive with a collapsing navbar and mobile search (src-ui/src/app/components/app-frame/app-frame.component.html:2, 31) and ships a web app manifest (src-ui/src/index.html:10); there is no official mobile app, docs/usage.md:190-193 points to community-maintained third-party apps.",
 				"validsign": "docs-only, read 2026-09-26: https://kb.validsign.eu/nl/aan-de-slag/validsign-mobiele-app-na-update (ValidSign mobile app)"
 			},
-			"note": "built.state was 'pending', outside the schema enum (the pending marker is the row's status field); set to 'none' 2026-09-27 because the evidence found no mobile or responsive work in filinq. Ratings unchanged.",
-			"feature": "open-platform"
+			"note": "built.state was 'pending', outside the schema enum (the pending marker is the row's status field); set to 'none' 2026-09-27 because the evidence found no mobile or responsive work in filinq. Ratings unchanged."
 		}
 	]
 }
