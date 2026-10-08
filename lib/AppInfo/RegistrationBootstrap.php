@@ -203,6 +203,8 @@ class RegistrationBootstrap {
 		// order, so OCA\OpenRegister\ is NOT on the autoloader yet. Without
 		// this the class_exists() below answers false on a perfectly healthy
 		// instance and the binding is skipped in silence.
+		// apphost-prelude exclude OpenRegisterAutoloader::register() below is the prelude.
+		// Gate-64 only recognises OC_App::registerAutoloading(), which Nextcloud 35 removed.
 		OpenRegisterAutoloader::register();
 
 		// The class_exists() guard MUST stay in this method: it is also the
