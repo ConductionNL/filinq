@@ -1,6 +1,13 @@
 OC.L10N.register(
     "filinq",
     {
+        "Documents waiting to be filed": "Dokumente, die auf Ablage warten",
+        "Looking up waiting documents": "Wartende Dokumente werden gesucht",
+        "No documents are waiting to be filed.": "Es warten keine Dokumente auf Ablage.",
+        "Names this record": "Nennt diesen Datensatz",
+        "File on this record": "In diesem Datensatz ablegen",
+        "The waiting documents could not be read.": "Die wartenden Dokumente konnten nicht gelesen werden.",
+        "The document could not be filed on this record.": "Das Dokument konnte nicht in diesem Datensatz abgelegt werden.",
         "Print separator sheets": "Trennblätter drucken",
         "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Legen Sie vor jedes Dokument im Scanstapel ein Blatt. Der Stapel wird an jedem Blatt geteilt, und jeder Teil landet mit seiner Vorgangsnummer im Posteingang.",
         "No scan profile is set up yet. An administrator adds one in the settings.": "Es ist noch kein Scanprofil eingerichtet. Eine Administratorin oder ein Administrator fügt eines in den Einstellungen hinzu.",

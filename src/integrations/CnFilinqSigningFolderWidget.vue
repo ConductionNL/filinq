@@ -7,7 +7,7 @@ signer's signature, across every record, and a link to the full folder where
 they are read and signed. Plain markup only, because the leaves bundle loads on
 other apps' pages and carries no component library.
 
-@spec openspec/changes/signing-folder-across-cases/tasks.md#task-1.2
+@spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
 -->
 
 <template>
@@ -67,7 +67,7 @@ import {
 /**
  * The first entries of the signing folder, read on every mount.
  *
- * @spec openspec/changes/signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 export default {
 	name: 'CnFilinqSigningFolderWidget',

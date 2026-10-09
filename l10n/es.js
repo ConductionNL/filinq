@@ -1,6 +1,13 @@
 OC.L10N.register(
     "filinq",
     {
+        "Documents waiting to be filed": "Documentos pendientes de archivar",
+        "Looking up waiting documents": "Buscando documentos pendientes",
+        "No documents are waiting to be filed.": "No hay documentos pendientes de archivar.",
+        "Names this record": "Menciona este registro",
+        "File on this record": "Archivar en este registro",
+        "The waiting documents could not be read.": "No se pudieron leer los documentos pendientes.",
+        "The document could not be filed on this record.": "No se pudo archivar el documento en este registro.",
         "Print separator sheets": "Imprimir hojas separadoras",
         "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Coloque una hoja delante de cada documento del lote de escaneo. El lote se corta en cada hoja y cada parte llega a la bandeja de entrada con su número de expediente.",
         "No scan profile is set up yet. An administrator adds one in the settings.": "Todavía no hay ningún perfil de escaneo. Un administrador añade uno en la configuración.",

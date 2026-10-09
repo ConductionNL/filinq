@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/intake-failure-reaches-someone/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
  */
 
 import { readFileSync } from 'node:fs'

@@ -20,6 +20,7 @@ import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
+import { registerDocumentIntakeLeaf } from './integrations/registerDocumentIntakeLeaf.js'
 import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
 import { registerDownloadAllFilesLeaf } from './integrations/registerDownloadAllFilesLeaf.js'
 import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
@@ -457,3 +458,4 @@ registerDocumentsLeaf()
 registerMergeToPdfLeaf()
 registerDownloadAllFilesLeaf()
 registerSigningFolderLeaf()
+registerDocumentIntakeLeaf()

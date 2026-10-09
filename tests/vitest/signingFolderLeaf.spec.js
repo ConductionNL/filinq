@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 
 import { describe, expect, it, vi } from 'vitest'

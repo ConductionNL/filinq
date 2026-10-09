@@ -1,16 +1,16 @@
 <?php
 
 /**
- * Filinq RegisterSigningFolderLeafListener.
+ * Filinq RegisterDocumentIntakeLeafListener.
  *
- * Contributes the `filinq-signing-folder` leaf to OpenRegister's cross-app
- * leaf catalogue (`RegisterLeafProvidersEvent`, ADR-066), so dossiq, decidiq
- * and any other app place the same signing folder on a dashboard: everything
- * still waiting for the signer's signature, across every record. The folder is
- * per signer, not per record, so it targets the dashboard surfaces only.
+ * Contributes the `filinq-document-intake` leaf to OpenRegister's cross-app
+ * leaf catalogue (`RegisterLeafProvidersEvent`, ADR-066), so a case page in
+ * dossiq or any other app lists the documents waiting in filinq's intake inbox
+ * and lets a clerk assign one to that record. The leaf assigns through filinq's
+ * own route and invokes nothing in the host app (ADR-066 decision 2).
  *
  * The JS half lives under the same id in
- * `src/integrations/registerSigningFolderLeaf.js`.
+ * `src/integrations/registerDocumentIntakeLeaf.js`.
  *
  * @category EventListener
  * @package  OCA\Filinq\EventListener
@@ -23,7 +23,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Registers the signing folder leaf.
+ * Registers the document intake leaf.
  *
  * @category EventListener
  * @package  OCA\Filinq\EventListener
@@ -50,23 +50,23 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
-class RegisterSigningFolderLeafListener implements IEventListener {
+class RegisterDocumentIntakeLeafListener implements IEventListener {
 
 	/**
 	 * The leaf id, shared with the JS half.
 	 *
 	 * @var string
 	 */
-	public const LEAF_ID = 'filinq-signing-folder';
+	public const LEAF_ID = 'filinq-document-intake';
 
 	/**
 	 * The icon, shared with the JS half.
 	 *
 	 * @var string
 	 */
-	public const ICON = 'FileSign';
+	public const ICON = 'InboxArrowDown';
 
 	/**
 	 * The surfaces, written out so both halves can be compared.
@@ -74,8 +74,8 @@ class RegisterSigningFolderLeafListener implements IEventListener {
 	 * @var string[]
 	 */
 	public const SURFACES = [
-		'user-dashboard',
-		'app-dashboard',
+		'detail-page',
+		'single-entity',
 	];
 
 	/**
@@ -97,7 +97,7 @@ class RegisterSigningFolderLeafListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+	 * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof RegisterLeafProvidersEvent === false) {
@@ -107,11 +107,11 @@ class RegisterSigningFolderLeafListener implements IEventListener {
 		try {
 			$descriptor = new LeafDescriptor(
 				id: self::LEAF_ID,
-				label: $this->l10n->t('Waiting for your signature'),
+				label: $this->l10n->t('Documents waiting to be filed'),
 				icon: self::ICON,
 				kinds: [LeafDescriptor::KIND_RENDER_SURFACE],
 				requiredApp: Application::APP_ID,
-				group: 'signing',
+				group: 'documents',
 				surfaces: self::SURFACES,
 				referenceType: self::LEAF_ID,
 				renderMode: LeafDescriptor::RENDER_MODE_MOUNT,
@@ -120,7 +120,7 @@ class RegisterSigningFolderLeafListener implements IEventListener {
 			$event->registerLeaf($descriptor, null);
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'Filinq could not register the filinq-signing-folder leaf: ' . $e->getMessage(),
+				'Filinq could not register the filinq-document-intake leaf: ' . $e->getMessage(),
 				['exception' => $e]
 			);
 		}//end try

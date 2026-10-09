@@ -1,6 +1,13 @@
 OC.L10N.register(
     "filinq",
     {
+        "Documents waiting to be filed": "Documents waiting to be filed",
+        "Looking up waiting documents": "Looking up waiting documents",
+        "No documents are waiting to be filed.": "No documents are waiting to be filed.",
+        "Names this record": "Names this record",
+        "File on this record": "File on this record",
+        "The waiting documents could not be read.": "The waiting documents could not be read.",
+        "The document could not be filed on this record.": "The document could not be filed on this record.",
         "Print separator sheets": "Print separator sheets",
         "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.",
         "No scan profile is set up yet. An administrator adds one in the settings.": "No scan profile is set up yet. An administrator adds one in the settings.",

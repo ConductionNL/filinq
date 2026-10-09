@@ -2,20 +2,20 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The JS half of the `filinq-signing-folder` leaf. The server half is
- * `lib/EventListener/RegisterSigningFolderLeafListener.php`; a PHPUnit test
- * compares the two. The widget shows what is waiting for the signer's
- * signature across every record, on a dashboard, and links to the full folder.
+ * The JS half of the `filinq-document-intake` leaf. The server half is
+ * `lib/EventListener/RegisterDocumentIntakeLeafListener.php`; a PHPUnit test
+ * compares the two. The widget lists the documents waiting in filinq's intake
+ * inbox on another app's record and assigns one to that record.
  *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
 import { translate as t } from '@nextcloud/l10n'
 import { createApp } from 'vue'
-import CnFilinqSigningFolderWidget from './CnFilinqSigningFolderWidget.vue'
+import CnFilinqDocumentIntakeWidget from './CnFilinqDocumentIntakeWidget.vue'
 
-export const SIGNING_FOLDER_INTEGRATION_ID = 'filinq-signing-folder'
+export const DOCUMENT_INTAKE_INTEGRATION_ID = 'filinq-document-intake'
 
-export const SIGNING_FOLDER_SURFACES = ['user-dashboard', 'app-dashboard']
+export const DOCUMENT_INTAKE_SURFACES = ['detail-page', 'single-entity']
 
 const mountedApps = new Map()
 
@@ -23,17 +23,17 @@ const mountedApps = new Map()
  * Mount the widget into a host element.
  *
  * @param {HTMLElement} el    The element the host hands over.
- * @param {object}      props The host context (unused: the folder is per signer).
+ * @param {object}      props The host record: { register, schema, objectId, … }.
  *
  * @return {void}
  *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
 export function mount(el, props) {
 	if (el === undefined || el === null || mountedApps.has(el) === true) {
 		return
 	}
-	const app = createApp(CnFilinqSigningFolderWidget, { ...(props || {}) })
+	const app = createApp(CnFilinqDocumentIntakeWidget, { ...(props || {}) })
 	app.config.globalProperties.t = t
 	app.mount(el)
 	mountedApps.set(el, app)
@@ -46,7 +46,7 @@ export function mount(el, props) {
  *
  * @return {void}
  *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
 export function unmount(el) {
 	const app = mountedApps.get(el)
@@ -57,15 +57,15 @@ export function unmount(el) {
 	app.unmount()
 }
 
-export const signingFolderLeafDescriptor = {
-	id: SIGNING_FOLDER_INTEGRATION_ID,
-	label: t('filinq', 'Waiting for your signature'),
-	icon: 'FileSign',
+export const documentIntakeLeafDescriptor = {
+	id: DOCUMENT_INTAKE_INTEGRATION_ID,
+	label: t('filinq', 'Documents waiting to be filed'),
+	icon: 'InboxArrowDown',
 	requiredApp: 'filinq',
-	order: 40,
-	group: 'signing',
-	surfaces: SIGNING_FOLDER_SURFACES,
-	referenceType: SIGNING_FOLDER_INTEGRATION_ID,
+	order: 33,
+	group: 'documents',
+	surfaces: DOCUMENT_INTAKE_SURFACES,
+	referenceType: DOCUMENT_INTAKE_INTEGRATION_ID,
 	renderMode: 'mount',
 	mount,
 	unmount,
@@ -80,9 +80,9 @@ export const signingFolderLeafDescriptor = {
  *
  * @return {void}
  *
- * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
  */
-export function registerSigningFolderLeaf(globalRef) {
+export function registerDocumentIntakeLeaf(globalRef) {
 	const target = globalRef || (typeof window !== 'undefined' ? window : null)
 	if (target === null) {
 		return
@@ -97,5 +97,5 @@ export function registerSigningFolderLeaf(globalRef) {
 		},
 	}
 
-	target.OCA.OpenRegister.integrations.register(signingFolderLeafDescriptor)
+	target.OCA.OpenRegister.integrations.register(documentIntakeLeafDescriptor)
 }

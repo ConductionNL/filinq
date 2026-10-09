@@ -22,8 +22,8 @@
 
 ## 4. Inbox
 
-- [~] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
-  - The intake dialog pre-selects; the leaf still does not.
+- [x] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
+  - The intake dialog pre-selects; the `filinq-document-intake` leaf (built 2026-10-09) lists documents whose `sourceRef` names the host record first and marks them (`orderForHost()` in `src/services/intakeLeaf.js`, tests/vitest/documentIntakeLeaf.spec.js).
 
 ## 5. Quality
 

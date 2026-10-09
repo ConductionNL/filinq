@@ -1,6 +1,13 @@
 OC.L10N.register(
     "filinq",
     {
+        "Documents waiting to be filed": "Documenten die wachten om te worden ingedeeld",
+        "Looking up waiting documents": "Wachtende documenten worden opgezocht",
+        "No documents are waiting to be filed.": "Er wachten geen documenten om te worden ingedeeld.",
+        "Names this record": "Noemt dit dossier",
+        "File on this record": "Op dit dossier indelen",
+        "The waiting documents could not be read.": "De wachtende documenten konden niet worden gelezen.",
+        "The document could not be filed on this record.": "Het document kon niet op dit dossier worden ingedeeld.",
         "Print separator sheets": "Scheidingsvellen afdrukken",
         "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Leg een vel vóór elk document in de scanstapel. De stapel wordt bij elk vel geknipt, en elk deel komt met zijn zaaknummer in de inbox.",
         "No scan profile is set up yet. An administrator adds one in the settings.": "Er is nog geen scanprofiel ingesteld. Een beheerder voegt er een toe in de instellingen.",

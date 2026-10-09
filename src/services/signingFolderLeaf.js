@@ -6,7 +6,7 @@
  * the signer's pending requests, read on every mount and never stored, the
  * same endpoint the signing folder page reads.
  *
- * @spec openspec/changes/signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -21,7 +21,7 @@ export const SIGNING_FOLDER_PREVIEW_SIZE = 5
  *
  * @param {number} limit How many entries to read.
  * @return {Promise<{entries: Array, total: number}>} The entries, oldest deadline first, and the total.
- * @spec openspec/changes/signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 export async function fetchSigningFolderPreview(
 	limit = SIGNING_FOLDER_PREVIEW_SIZE,
@@ -42,7 +42,7 @@ export async function fetchSigningFolderPreview(
  * The URL of the full signing folder page in filinq.
  *
  * @return {string} The page URL.
- * @spec openspec/changes/signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 export function signingFolderPageUrl() {
 	return generateUrl('/apps/filinq/signing-folder')
@@ -53,7 +53,7 @@ export function signingFolderPageUrl() {
  *
  * @param {string} value An ISO date or date-time.
  * @return {string} The local date, the raw value when it does not parse, or ''.
- * @spec openspec/changes/signing-folder-across-cases/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
  */
 export function formatDeadline(value) {
 	if (!value) {
