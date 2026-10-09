@@ -2847,8 +2847,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "lib/Settings/filinq_register.json ~line 721-732: template schema's authorization block: read=[authenticated], create=[authenticated], update/delete=[docudesk-template-editors]. Enforced by OpenRegister's PermissionHandler, per openspec/changes/consumer-schema-authorization-audit (8/9 tasks done; the 1 open task is a fleet-communication task, not code) which closed a proven cross-user write exploit (documented in the register's own v7.9.0 changelog: an unrestricted cascade let ddauth-bob overwrite ddauth-alice's private template via PUT).",
-				"change": "openspec/changes/consumer-schema-authorization-audit"
+				"evidence": "lib/Settings/filinq_register.json ~line 721-732: template schema's authorization block: read=[authenticated], create=[authenticated], update/delete=[docudesk-template-editors]. Enforced by OpenRegister's PermissionHandler, per openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit (8/9 tasks done; the 1 open task is a fleet-communication task, not code) which closed a proven cross-user write exploit (documented in the register's own v7.9.0 changelog: an unrestricted cascade let ddauth-bob overwrite ddauth-alice's private template via PUT).",
+				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit"
 			},
 			"reachedOn": "OpenRegister's own permission/group mechanism (Nextcloud group membership of 'docudesk-template-editors'); no dedicated filinq settings page for this",
 			"provider": "openregister",
@@ -7741,8 +7741,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "lib/Settings/filinq_register.json: verified programmatically that all 39 declared schemas carry a complete authorization block (read/create/update/delete all present, none null/empty). This is openspec/changes/consumer-schema-authorization-audit applied (8/9 tasks done, the 1 open task is a fleet-communication item not code); the register's own v7.9.0 changelog documents the pre-fix exploit it closed (cross-user template overwrite via PUT) and the current per-schema grants (e.g. financialExtraction/publicationConsent/signing schemas further restrict read to specific groups beyond the default 'authenticated').",
-				"change": "openspec/changes/consumer-schema-authorization-audit"
+				"evidence": "lib/Settings/filinq_register.json: verified programmatically that all 39 declared schemas carry a complete authorization block (read/create/update/delete all present, none null/empty). This is openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit applied (8/9 tasks done, the 1 open task is a fleet-communication item not code); the register's own v7.9.0 changelog documents the pre-fix exploit it closed (cross-user template overwrite via PUT) and the current per-schema grants (e.g. financialExtraction/publicationConsent/signing schemas further restrict read to specific groups beyond the default 'authenticated').",
+				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit"
 			},
 			"reachedOn": "OpenRegister's own permission/group enforcement (PermissionHandler); declared per-schema in lib/Settings/filinq_register.json, no dedicated filinq permissions page",
 			"provider": "openregister",

@@ -32,7 +32,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/consumer-schema-authorization-audit/specs/consumer-schema-authorization-audit/spec.md
+ * @spec openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit/specs/consumer-schema-authorization-audit/spec.md
  */
 
 declare(strict_types=1);
