@@ -69,7 +69,7 @@ class OutputLayoutResolver {
 	/**
 	 * Regex that valid subfolder names must match.
 	 */
-	private const SUBFOLDER_NAME_REGEX = '/^[a-z0-9_-]+$/';
+	public const SUBFOLDER_NAME_REGEX = '/^[a-z0-9_-]+$/';
 
 	/**
 	 * Trailing-`_anonymized` strip pattern; matches the literal suffix on

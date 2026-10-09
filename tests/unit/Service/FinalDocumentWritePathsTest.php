@@ -25,6 +25,7 @@ use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\DocumentVersionService;
 use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCA\Filinq\Service\FinalDocumentService;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCA\Filinq\Service\GrondslagenPdfWriter;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\SignedArtifactProducer;
@@ -202,7 +203,8 @@ class FinalDocumentWritePathsTest extends TestCase {
 	public function testTheAnonymisationOutputRefusesToAppendToAFinalDocument(): void {
 		$writer = new GrondslagenPdfWriter(
 			pdfService: $this->createMock(PdfService::class),
-			finalDocuments: $this->refusing()
+			finalDocuments: $this->refusing(),
+			layoutResolver: $this->createMock(OutputLayoutResolver::class)
 		);
 
 		$this->expectException(DocumentFinalException::class);

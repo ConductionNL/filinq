@@ -1011,10 +1011,6 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
-import {
-	disallowedSubfolderCharacters,
-	isValidSubfolderName,
-} from '../../services/outputSubfolder.js'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
@@ -1024,6 +1020,10 @@ import {
 	emptyBackendState,
 } from '../../services/anonymiserBackendState.js'
 import { fetchValidatorStatus } from '../../services/conformance.js'
+import {
+	disallowedSubfolderCharacters,
+	isValidSubfolderName,
+} from '../../services/outputSubfolder.js'
 import { initialSections } from '../../services/settingsSections.js'
 
 /** The object types whose register and schema this page binds. */

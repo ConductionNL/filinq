@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use InvalidArgumentException;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -223,6 +225,12 @@ class SettingsService {
 				$this->appName,
 				'filinq.anonymisation.default_output_format',
 				'pdf-only'
+			),
+			// Where batch and folder anonymisation put redacted copies.
+			OutputLayoutResolver::SUBFOLDER_CONFIG_KEY => $this->config->getValueString(
+				$this->appName,
+				OutputLayoutResolver::SUBFOLDER_CONFIG_KEY,
+				OutputLayoutResolver::DEFAULT_SUBFOLDER_NAME
 			),
 			// OCR document scanning (ocr-document-scanning) and reading on
 			// arrival (intake-ocr-on-arrival).
@@ -435,6 +443,7 @@ class SettingsService {
 		'legal_hold_authority_groups',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
+		OutputLayoutResolver::SUBFOLDER_CONFIG_KEY,
 	];
 
 	/**
@@ -449,10 +458,14 @@ class SettingsService {
 	 * @return array<string, mixed> The updated settings configuration
 	 *
 	 * @throws \RuntimeException If settings update fails
+	 * @throws InvalidArgumentException When a value is refused; nothing is written then.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function updateSettings(array $data): array {
+		$this->assertValidSubfolderName(data: $data);
+
 		try {
 			foreach ($data as $key => $value) {
 				if (empty($key) === true) {
@@ -488,6 +501,50 @@ class SettingsService {
 		}//end try
 
 	}//end updateSettings()
+
+	/**
+	 * Refuse an output subfolder name that is not one safe path segment.
+	 *
+	 * Checked before anything is written, so a refused save changes nothing.
+	 * The message names each disallowed character.
+	 *
+	 * @param array<string, mixed> $data The settings data to update.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the name is empty or holds a disallowed character.
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 */
+	private function assertValidSubfolderName(array $data): void {
+		if (array_key_exists(OutputLayoutResolver::SUBFOLDER_CONFIG_KEY, $data) === false) {
+			return;
+		}
+
+		$name = (string)$data[OutputLayoutResolver::SUBFOLDER_CONFIG_KEY];
+		if (preg_match(OutputLayoutResolver::SUBFOLDER_NAME_REGEX, $name) === 1) {
+			return;
+		}
+
+		if ($name === '') {
+			throw new InvalidArgumentException('The output subfolder name cannot be empty.');
+		}
+
+		$bad = array_values(
+			array_unique(
+				array_filter(
+					mb_str_split($name),
+					static fn (string $char): bool => preg_match('/^[a-z0-9_-]$/', $char) !== 1
+				)
+			)
+		);
+		$quoted = array_map(static fn (string $char): string => '"' . $char . '"', $bad);
+		throw new InvalidArgumentException(
+			'The output subfolder name may only hold lowercase letters, digits, hyphens and underscores; it contains '
+			. implode(', ', $quoted) . '.'
+		);
+
+	}//end assertValidSubfolderName()
 
 	/**
 	 * Resolve the signingRequest register/schema binding, or null when unset.

@@ -83,7 +83,7 @@ export function partitionFiles(files) {
  * @return {{ asksDossierName: boolean, dossierName: string|null }}
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
  */
-function dossierPlanX(files, name) {
+export function dossierPlan(files, name) {
 	const asksDossierName = Array.from(files).length > 1
 	const trimmed = (name || '').trim()
 	return {
