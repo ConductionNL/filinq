@@ -175,7 +175,7 @@ class IntakeService {
 	 *
 	 * @throws IntakeRefusedException When a channel is not one this app accepts.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function receiveMessage(IntakeDocumentReceivedEvent $message, array $attachments = []): array {
 		$stored = $this->receive(event: $message);
@@ -208,7 +208,7 @@ class IntakeService {
 	 *
 	 * @return array<int, array<string, mixed>> The attachments.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function attachmentsOf(string $uuid): array {
 		return $this->repository->findArrivedWith(uuid: $uuid);
@@ -220,7 +220,7 @@ class IntakeService {
 	 *
 	 * @return array<int, array<string, mixed>> The detached documents.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function listDetached(): array {
 		return $this->repository->findByStatus(status: IntakeRepository::STATUS_DETACHED);
@@ -256,7 +256,7 @@ class IntakeService {
 	 *                                not write one of the two schemas.
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function assign(string $uuid, array $target): array {
 		$register = trim((string)($target['register'] ?? ''));
@@ -322,7 +322,7 @@ class IntakeService {
 	 *
 	 * @throws IntakeRefusedException When the message itself cannot be assigned.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function assignWithAttachments(string $uuid, array $target): array {
 		$assigned = $this->assign(uuid: $uuid, target: $target);
@@ -353,7 +353,7 @@ class IntakeService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	private function noteOnMessage(string $messageUuid, string $attachmentUuid, array $target): void {
 		$message = $this->repository->findByUuid(uuid: $messageUuid);

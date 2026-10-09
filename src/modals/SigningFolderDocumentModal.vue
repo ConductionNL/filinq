@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+@spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 -->
 
 <template>
@@ -45,7 +45,7 @@ export default {
 	 *
 	 * @return {object} The bindings the template reads.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	setup() {
 		return { t }
@@ -61,7 +61,7 @@ export default {
 		 *
 		 * @return {string} The file URL.
 		 *
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		documentUrl() {
 			return generateUrl(`/f/${this.fileId}`)

@@ -124,7 +124,7 @@ class IntakeRepository {
 	 *
 	 * @throws RuntimeException When the register could not be read.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function findByStatus(string $status): array {
 		return $this->search(filters: ['status' => $status]);
@@ -138,7 +138,7 @@ class IntakeRepository {
 	 *
 	 * @return array<int, array<string, mixed>> The attachments.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function findArrivedWith(string $uuid): array {
 		if ($uuid === '') {
@@ -156,7 +156,7 @@ class IntakeRepository {
 	 *
 	 * @return array<string, mixed>|null The document, or null when the file never had one.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function findByFile(int $fileId): ?array {
 		if ($fileId <= 0) {

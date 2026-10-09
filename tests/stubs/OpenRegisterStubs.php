@@ -1821,6 +1821,37 @@ interface IGroupManager {
 	 * @return bool Whether the user is in the group.
 	 */
 	public function isInGroup(string $userId, string $group): bool;
+
+	/**
+	 * Signature pinned to OCP\IGroupManager::get($gid) at HEAD.
+	 *
+	 * @param string $gid The group id.
+	 *
+	 * @return IGroup|null The group, or null when it does not exist.
+	 */
+	public function get($gid);
+}//end interface
+
+/**
+ * Stub for OCP\IGroup
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+interface IGroup {
+	public function getGID(): string;
+
+	/**
+	 * Signature pinned to OCP\IGroup::count() at HEAD.
+	 *
+	 * @param string $search Optional search.
+	 *
+	 * @return int|bool The member count, or false when the backend cannot count.
+	 */
+	public function count(string $search = ''): int|bool;
 }//end interface
 
 namespace OCP\Files;

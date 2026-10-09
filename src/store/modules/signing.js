@@ -196,7 +196,7 @@ export const useSigningStore = defineStore('signing', {
 		 *
 		 * @param {number} limit Page size.
 		 * @param {number} offset Page offset.
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		async fetchSigningFolder(limit = 50, offset = 0) {
 			this.loading = true
@@ -221,7 +221,7 @@ export const useSigningStore = defineStore('signing', {
 		 * Sign a selection from the folder in one pass.
 		 *
 		 * @param {Array} requestIds The selected signing requests.
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		async signFolderSelection(requestIds) {
 			this.loading = true

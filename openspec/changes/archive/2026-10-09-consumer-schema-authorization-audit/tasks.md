@@ -61,7 +61,8 @@ Acceptance criteria:
 
 ## 5. Raise it beyond this app
 
-- [ ] Report the finding to the fleet: any consumer app assuming OR's RBAC guards it has the same question
+- [x] Report the finding to the fleet: any consumer app assuming OR's RBAC guards it has the same question
+  - Filed 2026-10-09 for the coordinator as ask 1 in `~/memcap-work/build-all/for-ruben/filinq-sibling-asks.md` (a lane does not write into other repos): the measured finding, the four steps each app takes, and filinq's record and ratchet as the pattern.
 
 Acceptance criteria:
 - Filinq is where this was measured, not necessarily where it is worst.

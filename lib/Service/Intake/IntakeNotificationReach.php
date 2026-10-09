@@ -35,7 +35,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-failure-reaches-someone/specs/filinq-notifications/spec.md
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/specs/filinq-notifications/spec.md
  */
 
 declare(strict_types=1);
@@ -69,7 +69,7 @@ class IntakeNotificationReach {
 	 *
 	 * @return array<string, mixed> What to show.
 	 *
-	 * @spec openspec/changes/intake-failure-reaches-someone/specs/filinq-notifications/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/specs/filinq-notifications/spec.md
 	 */
 	public function describe(int $failureCount, int $groupMembers): array {
 		$staffed = ($groupMembers > 0);

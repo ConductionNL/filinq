@@ -25,9 +25,11 @@
  * `./manifest.json`, no component library.
  */
 import { loadTranslations } from '@nextcloud/l10n'
+import { registerDocumentIntakeLeaf } from './integrations/registerDocumentIntakeLeaf.js'
 import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
 import { registerDownloadAllFilesLeaf } from './integrations/registerDownloadAllFilesLeaf.js'
 import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
+import { registerSigningFolderLeaf } from './integrations/registerSigningFolderLeaf.js'
 
 // Register FIRST, translate second.
 //
@@ -40,6 +42,8 @@ import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js
 registerDocumentsLeaf()
 registerMergeToPdfLeaf()
 registerDownloadAllFilesLeaf()
+registerSigningFolderLeaf()
+registerDocumentIntakeLeaf()
 
 // `loadTranslations` REJECTS on a 404, which is any locale for which
 // l10n/<lang>.json was never generated, so an unguarded call here would raise an

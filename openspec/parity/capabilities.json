@@ -1263,7 +1263,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/IntakeService.php:148 receive() calls PartySuggestionService::suggestFor(fileId) automatically and stores 'partySuggestion' on the intake document; lib/Controller/IntakeController.php:271 decideParty() -> PartySuggestionService::recordDecision() is routed at intake#decideParty (FE per route-reach.txt) and exported as src/services/intakeService.js:97 decidePartySuggestion(), but grep of src/ for 'decidePartySuggestion|partySuggestion' shows only that export - no .vue component calls it or renders the suggestion. IntakeIndex.vue's tableColumns (channel/sender/subject/receivedAt) do not include partySuggestion.",
-				"change": "openspec/changes/inbound-documents-and-the-worklist"
+				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "nothing reaches it (suggestion computed and stored server-side; no UI displays it or calls decidePartySuggestion)",
 			"provider": "filinq",
@@ -1361,7 +1361,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/IntakeService.php:285 assign() calls IntakeRoutingService::apply() on every assignment (real code path, not decorative). lib/Controller/IntakeController.php:325 declareRouting() -> IntakeRoutingService::declare() is routed at intake#declareRouting (routes.php:85, route-reach.txt='none'); no frontend caller found and no sibling reference to this route fragment turned up in the sibling greps performed for this pack.",
-				"change": "openspec/changes/inbound-documents-and-the-worklist"
+				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "nothing reaches it for declaring a rule (no known caller); apply() runs on every assign() but has nothing to apply without a declared intakeRoutingRule",
 			"provider": "filinq",
@@ -1623,7 +1623,7 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found.",
+				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found.",
 				"change": "openspec/changes/intake-paper-archive-digitisation"
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -1656,7 +1656,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/intake/IntakeIndex.vue:43-49 'Taken off a record' mode button calls src/services/intakeService.js:69 listDetachedDocuments() -> GET api/intake/detached (routes.php:82, FE) -> IntakeController.php:206 detached() -> IntakeService.php:218 listDetached(). Detaching itself: lib/Service/IntakeDetachmentService.php via POST api/intake/documents/detach (routes.php:83, FE) -> IntakeController.php:237 detach().",
-				"change": "openspec/changes/inbound-documents-and-the-worklist"
+				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue, mode='detached')",
 			"provider": "filinq",
@@ -2847,8 +2847,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "lib/Settings/filinq_register.json ~line 721-732: template schema's authorization block: read=[authenticated], create=[authenticated], update/delete=[docudesk-template-editors]. Enforced by OpenRegister's PermissionHandler, per openspec/changes/consumer-schema-authorization-audit (8/9 tasks done; the 1 open task is a fleet-communication task, not code) which closed a proven cross-user write exploit (documented in the register's own v7.9.0 changelog: an unrestricted cascade let ddauth-bob overwrite ddauth-alice's private template via PUT).",
-				"change": "openspec/changes/consumer-schema-authorization-audit"
+				"evidence": "lib/Settings/filinq_register.json ~line 721-732: template schema's authorization block: read=[authenticated], create=[authenticated], update/delete=[docudesk-template-editors]. Enforced by OpenRegister's PermissionHandler, per openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit (8/9 tasks done; the 1 open task is a fleet-communication task, not code) which closed a proven cross-user write exploit (documented in the register's own v7.9.0 changelog: an unrestricted cascade let ddauth-bob overwrite ddauth-alice's private template via PUT).",
+				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit"
 			},
 			"reachedOn": "OpenRegister's own permission/group mechanism (Nextcloud group membership of 'docudesk-template-editors'); no dedicated filinq settings page for this",
 			"provider": "openregister",
@@ -5884,8 +5884,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "GET api/signing/folder + POST api/signing/folder/sign (routes.php:254-255, both FE, signingFolder#folder/#signFolder) -> SigningFolderController. src/manifest.json's own note on the SigningFolder page describes it as 'a cross-case queue assembled by filinq from signing requests the signer holds a mandate for' with a multi-select bulk-sign action. openspec/changes/signing-folder-across-cases/tasks.md: 8/10 done.",
-				"change": "openspec/changes/signing-folder-across-cases"
+				"evidence": "GET api/signing/folder + POST api/signing/folder/sign (routes.php:254-255, both FE, signingFolder#folder/#signFolder) -> SigningFolderController. src/manifest.json's own note on the SigningFolder page describes it as 'a cross-case queue assembled by filinq from signing requests the signer holds a mandate for' with a multi-select bulk-sign action. openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md: 8/10 done.",
+				"change": "openspec/changes/archive/2026-10-09-signing-folder-across-cases"
 			},
 			"reachedOn": "/signing-folder (SigningFolder.vue)",
 			"provider": "filinq",
@@ -5917,7 +5917,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "GET/POST api/signing/mandates + DELETE api/signing/mandates/{typeApp}/{typeSchema} (routes.php:256-258, all tagged 'none' in _lane/shared/route-reach.txt) -> SigningFolderController::mandates/declareMandate/withdrawMandate. Grepped all of src/ for 'mandate'; the only hit is the manifest's own descriptive note (src/manifest.json:372) assuming mandates already exist — there is no UI anywhere to declare, view or withdraw one.",
-				"change": "openspec/changes/signing-folder-across-cases"
+				"change": "openspec/changes/archive/2026-10-09-signing-folder-across-cases"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -7741,8 +7741,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/openregister",
-				"evidence": "lib/Settings/filinq_register.json: verified programmatically that all 39 declared schemas carry a complete authorization block (read/create/update/delete all present, none null/empty). This is openspec/changes/consumer-schema-authorization-audit applied (8/9 tasks done, the 1 open task is a fleet-communication item not code); the register's own v7.9.0 changelog documents the pre-fix exploit it closed (cross-user template overwrite via PUT) and the current per-schema grants (e.g. financialExtraction/publicationConsent/signing schemas further restrict read to specific groups beyond the default 'authenticated').",
-				"change": "openspec/changes/consumer-schema-authorization-audit"
+				"evidence": "lib/Settings/filinq_register.json: verified programmatically that all 39 declared schemas carry a complete authorization block (read/create/update/delete all present, none null/empty). This is openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit applied (8/9 tasks done, the 1 open task is a fleet-communication item not code); the register's own v7.9.0 changelog documents the pre-fix exploit it closed (cross-user template overwrite via PUT) and the current per-schema grants (e.g. financialExtraction/publicationConsent/signing schemas further restrict read to specific groups beyond the default 'authenticated').",
+				"change": "openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit"
 			},
 			"reachedOn": "OpenRegister's own permission/group enforcement (PermissionHandler); declared per-schema in lib/Settings/filinq_register.json, no dedicated filinq permissions page",
 			"provider": "openregister",
@@ -8603,9 +8603,9 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Settings/filinq_register.json:5140-5158 declares intakeDocument.readingState/readingError/readingUpdatedAt and a 'readingFailed' x-openregister-notifications rule (line ~5269, coalesced hourly, digested 08:30, addressed to group 'docudesk-woo-officers' which ships EMPTY per the register changelog). lib/Service/Intake/IntakeNotificationReach.php::describe() computes whether the rule reaches anybody (PHPUnit + mutation-tested per openspec/changes/intake-failure-reaches-someone/tasks.md 3.1/3.2, both checked) but grep -rl 'IntakeNotificationReach' lib/ src/ shows no caller anywhere else - task 3.3 'Wire describe() into the inbox view' is unchecked."
+				"evidence": "lib/Settings/filinq_register.json:5140-5158 declares intakeDocument.readingState/readingError/readingUpdatedAt and a 'readingFailed' x-openregister-notifications rule (line ~5269, coalesced hourly, digested 08:30, addressed to group 'docudesk-woo-officers' which ships EMPTY per the register changelog). lib/Service/Intake/IntakeNotificationReach.php::describe() computes whether the rule reaches anybody (PHPUnit + mutation-tested per openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md 3.1/3.2, both checked) but grep -rl 'IntakeNotificationReach' lib/ src/ shows no caller anywhere else - task 3.3 'Wire describe() into the inbox view' is unchecked."
 			},
-			"reachedOn": "declarative only: x-openregister-notifications rule evaluated by OpenRegister's notification engine, not a Filinq call site; IntakeNotificationReach::describe() has no caller",
+			"reachedOn": "declarative only: x-openregister-notifications rule evaluated by OpenRegister's notification engine, not a Filinq call site; IntakeController::index() returns IntakeNotificationReach::describe() as notificationReach and IntakeIndex.vue shows its warning (tests/unit/Controller/IntakeControllerContractTest.php, tests/vitest/intakeNotificationReach.spec.js)",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "document-intake-inbox",

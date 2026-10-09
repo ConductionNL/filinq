@@ -46,7 +46,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
 class SigningFolderService {
 
@@ -89,7 +89,7 @@ class SigningFolderService {
 	 *
 	 * @throws RuntimeException When there is no authenticated user.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function folder(string $userId, int $limit = 50, int $offset = 0): array {
 		if ($userId === '') {
@@ -139,7 +139,7 @@ class SigningFolderService {
 	 *
 	 * @throws RuntimeException When there is no authenticated user.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function signSelection(array $requestIds, string $userId): array {
 		if ($userId === '') {
@@ -174,7 +174,7 @@ class SigningFolderService {
 	 *
 	 * @return array<string, mixed> The per-document result.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function signOne(string $requestId, string $userId): array {
 		$signerId = null;
@@ -230,7 +230,7 @@ class SigningFolderService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function refusal(string $requestId, string $reason): array {
 		return [
@@ -249,7 +249,7 @@ class SigningFolderService {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function entryFor(array $request, string $userId): ?array {
 		if (in_array((string)($request['status'] ?? ''), self::OPEN_STATUSES, true) === false) {
@@ -288,7 +288,7 @@ class SigningFolderService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function project(array $request, string $signerId): array {
 		$requestId = (string)($request['id'] ?? ($request['uuid'] ?? ''));
@@ -327,7 +327,7 @@ class SigningFolderService {
 	 *
 	 * @return string An ISO 8601 timestamp, or ''.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function requestedAt(array $request): string {
 		$self = ($request['@self'] ?? []);
@@ -355,7 +355,7 @@ class SigningFolderService {
 	 * @psalm-suppress UnusedReturnValue usort() consumes the comparison; psalm
 	 * reads the callable array no better than PHPMD does.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function compareEntries(array $left, array $right): int {
 		$leftDeadline = (string)($left['deadline'] ?? '');

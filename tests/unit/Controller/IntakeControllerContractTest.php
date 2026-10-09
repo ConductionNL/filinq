@@ -18,7 +18,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,11 +30,14 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\IntakeController;
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\IntakeDetachmentService;
 use OCA\Filinq\Service\IntakeRoutingService;
 use OCA\Filinq\Service\IntakeService;
 use OCA\Filinq\Service\PartySuggestionService;
 use OCP\AppFramework\Http;
+use OCP\IGroup;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -144,6 +147,13 @@ class IntakeControllerContractTest extends TestCase {
 	 *
 	 * @return IntakeController The controller.
 	 */
+	/**
+	 * Members of the notified group, or null when the group does not exist.
+	 *
+	 * @var int|null
+	 */
+	private ?int $groupMembers = 0;
+
 	private function controller(bool $signedIn = true): IntakeController {
 		$session = $this->createMock(IUserSession::class);
 		if ($signedIn === true) {
@@ -161,10 +171,104 @@ class IntakeControllerContractTest extends TestCase {
 			$this->createMock(IntakeDetachmentService::class),
 			$this->routing,
 			$this->parties,
-			$session
+			$session,
+			new IntakeNotificationReach(),
+			$this->groupManager()
 		);
 
 	}//end controller()
+
+	/**
+	 * A group manager whose notified group has $this->groupMembers people.
+	 *
+	 * @return IGroupManager The double.
+	 */
+	private function groupManager(): IGroupManager {
+		$manager = $this->createMock(IGroupManager::class);
+		if ($this->groupMembers === null) {
+			$manager->method('get')->willReturn(null);
+
+			return $manager;
+		}
+
+		$group = $this->createMock(IGroup::class);
+		$group->method('count')->willReturn($this->groupMembers);
+		$manager->method('get')->willReturnCallback(
+			fn (string $gid): ?IGroup => ($gid === IntakeNotificationReach::GROUP ? $group : null)
+		);
+
+		return $manager;
+
+	}//end groupManager()
+
+	/**
+	 * The inbox answer carries whether a failed reading reaches anybody, and
+	 * names the group when it reaches nobody.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+	 *
+	 * @return void
+	 */
+	public function testTheInboxSaysWhenAFailedReadingReachesNobody(): void {
+		$this->intake->method('listWaiting')->willReturn(
+			[
+				['uuid' => 'a', 'readingState' => 'failed'],
+				['uuid' => 'b', 'readingState' => 'read'],
+				['uuid' => 'c', 'readingState' => 'failed'],
+			]
+		);
+		$this->groupMembers = 0;
+
+		$data = $this->controller()->index()->getData();
+
+		$reach = $data['notificationReach'];
+		$this->assertSame(2, $reach['failureCount'], 'the two failed readings are counted, the read one is not');
+		$this->assertSame(0, $reach['notificationReaches'], 'an empty group reaches nobody');
+		$this->assertFalse($reach['staffed']);
+		$this->assertSame(IntakeNotificationReach::GROUP, $reach['group'], 'the group is named so a person can fix it');
+		$this->assertStringContainsString(IntakeNotificationReach::GROUP, $reach['warning']);
+		$this->assertSame(3, $data['total'], 'the worklist itself is unchanged');
+
+	}//end testTheInboxSaysWhenAFailedReadingReachesNobody()
+
+	/**
+	 * A staffed group: the inbox says how many people are told and warns about nothing.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+	 *
+	 * @return void
+	 */
+	public function testTheInboxCountsThePeopleAStaffedGroupReaches(): void {
+		$this->intake->method('listWaiting')->willReturn([['uuid' => 'a', 'readingState' => 'failed']]);
+		$this->groupMembers = 3;
+
+		$reach = $this->controller()->index()->getData()['notificationReach'];
+
+		$this->assertSame(3, $reach['notificationReaches']);
+		$this->assertTrue($reach['staffed']);
+		$this->assertSame('', $reach['warning']);
+
+	}//end testTheInboxCountsThePeopleAStaffedGroupReaches()
+
+	/**
+	 * A group that does not exist reaches nobody, and the inbox says so even
+	 * with nothing failing yet.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+	 *
+	 * @return void
+	 */
+	public function testAMissingGroupIsWarnedAboutBeforeAnythingFails(): void {
+		$this->intake->method('listWaiting')->willReturn([]);
+		$this->groupMembers = null;
+
+		$reach = $this->controller()->index()->getData()['notificationReach'];
+
+		$this->assertSame(0, $reach['failureCount']);
+		$this->assertFalse($reach['staffed']);
+		$this->assertNotSame('', $reach['warning']);
+
+	}//end testAMissingGroupIsWarnedAboutBeforeAnythingFails()
 
 	/**
 	 * The detached worklist answers results and a total that agrees with them.

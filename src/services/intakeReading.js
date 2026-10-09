@@ -11,7 +11,7 @@
  * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-2.2
  */
 
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 
 /**
  * The label for a reading state.
@@ -46,4 +46,37 @@ export function readingColorMap() {
 		[readingLabel('read')]: 'success',
 		[readingLabel('failed')]: 'error',
 	}
+}
+
+/**
+ * What the inbox says when a failed reading would reach nobody.
+ *
+ * The group is named, because that turns the warning into a two-minute fix.
+ * The warning is shown even with nothing failed yet: an empty group is worth
+ * knowing about before the night it is needed.
+ *
+ * @param {object|null|undefined} reach The notificationReach of the inbox answer.
+ * @return {string} The warning, or '' when somebody will be told.
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+ */
+export function reachWarning(reach) {
+	if (!reach || reach.staffed !== false) {
+		return ''
+	}
+	const group = reach.group || ''
+	const failed = Number(reach.failureCount) || 0
+	if (failed === 0) {
+		return t(
+			'filinq',
+			'Nobody is in "{group}", so if a document cannot be read, no one will be told. Add at least one person to that group.',
+			{ group },
+		)
+	}
+	return n(
+		'filinq',
+		'%n document could not be read and nobody in "{group}" will be told. Add at least one person to that group.',
+		'%n documents could not be read and nobody in "{group}" will be told. Add at least one person to that group.',
+		failed,
+		{ group },
+	)
 }

@@ -19,7 +19,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/intake-failure-reaches-someone/specs/filinq-notifications/spec.md
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/specs/filinq-notifications/spec.md
  */
 
 declare(strict_types=1);

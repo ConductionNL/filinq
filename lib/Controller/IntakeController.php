@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\IntakeDetachmentService;
 use OCA\Filinq\Service\IntakeRoutingService;
 use OCA\Filinq\Service\IntakeService;
@@ -35,6 +36,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Throwable;
@@ -62,6 +64,8 @@ class IntakeController extends Controller {
 	 * @param IntakeRoutingService $routing What a consuming app declared per record type.
 	 * @param PartySuggestionService $parties Party suggestions and the corrections corpus.
 	 * @param IUserSession $userSession The current session.
+	 * @param IntakeNotificationReach $reach Whether a failed reading reaches anybody.
+	 * @param IGroupManager $groups Counts the people in the notified group.
 	 *
 	 * @return void
 	 */
@@ -73,6 +77,8 @@ class IntakeController extends Controller {
 		private readonly IntakeRoutingService $routing,
 		private readonly PartySuggestionService $parties,
 		private readonly IUserSession $userSession,
+		private readonly IntakeNotificationReach $reach,
+		private readonly IGroupManager $groups,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -96,7 +102,11 @@ class IntakeController extends Controller {
 			$waiting = $this->intake->listWaiting();
 
 			return new JSONResponse(
-				data: ['results' => $waiting, 'total' => count($waiting)],
+				data: [
+					'results' => $waiting,
+					'total' => count($waiting),
+					'notificationReach' => $this->notificationReach(waiting: $waiting),
+				],
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {
@@ -104,6 +114,44 @@ class IntakeController extends Controller {
 		}
 
 	}//end index()
+
+	/**
+	 * Whether the readingFailed notification reaches anybody, said on the inbox.
+	 *
+	 * Counts the failed readings in the worklist and the people in the group the
+	 * rule addresses. A group that does not exist, or a backend that cannot
+	 * count, reaches nobody.
+	 *
+	 * @param array<int, array<string, mixed>> $waiting The waiting documents.
+	 *
+	 * @return array<string, mixed> The reach, the failure count and the group name.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+	 */
+	private function notificationReach(array $waiting): array {
+		$failed = 0;
+		foreach ($waiting as $document) {
+			if (($document['readingState'] ?? null) === 'failed') {
+				$failed++;
+			}
+		}
+
+		$members = 0;
+		$group   = $this->groups->get(IntakeNotificationReach::GROUP);
+		if ($group !== null) {
+			$counted = $group->count();
+			if (is_int($counted) === true) {
+				$members = $counted;
+			}
+		}
+
+		$reach = $this->reach->describe(failureCount: $failed, groupMembers: $members);
+		$reach['failureCount'] = $failed;
+		$reach['group']        = IntakeNotificationReach::GROUP;
+
+		return $reach;
+
+	}//end notificationReach()
 
 	/**
 	 * Assign one waiting document to a record.
@@ -200,7 +248,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The worklist.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function detached(): JSONResponse {
@@ -231,7 +279,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The intake document, now on the worklist.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function detach(int $fileId, string $reason = '', string $documentName = ''): JSONResponse {
@@ -265,7 +313,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The stored correction.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function decideParty(
@@ -319,7 +367,7 @@ class IntakeController extends Controller {
 	 * not branch this method at all, so there is no second responsibility here
 	 * to split off.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function declareRouting(

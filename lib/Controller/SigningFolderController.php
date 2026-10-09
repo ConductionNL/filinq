@@ -46,7 +46,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+ * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
  */
 class SigningFolderController extends Controller {
 
@@ -84,7 +84,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse The folder page.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[NoAdminRequired]
 	public function folder(int $limit = 50, int $offset = 0): JSONResponse {
@@ -109,7 +109,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse A result per selected document.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[NoAdminRequired]
 	public function signFolder(): JSONResponse {
@@ -144,7 +144,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse The declarations, keyed by type reference.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function mandates(): JSONResponse {
@@ -161,7 +161,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse The stored declaration.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function declareMandate(): JSONResponse {
@@ -198,7 +198,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse Whether a declaration was withdrawn.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function withdrawMandate(string $typeApp, string $typeSchema): JSONResponse {
@@ -217,7 +217,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function currentUserId(): string {
 		$user = $this->userSession->getUser();
@@ -241,7 +241,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	private function errorResponse(string $message, Exception $exception): JSONResponse {
 		$this->logger->error($message . ': ' . $exception->getMessage(), ['exception' => $exception]);

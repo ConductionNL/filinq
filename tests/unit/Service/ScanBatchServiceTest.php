@@ -26,6 +26,8 @@ use OCA\Filinq\Service\ScanBatchService;
 use OCA\Filinq\Service\ScanPageReader;
 use OCA\Filinq\Service\SeparatorSheetService;
 use OCP\EventDispatcher\IEventDispatcher;
+use Opis\JsonSchema\Errors\ErrorFormatter;
+use Opis\JsonSchema\Validator;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use PHPUnit\Framework\TestCase;
@@ -470,4 +472,107 @@ class ScanBatchServiceTest extends TestCase {
 		$this->assertSame('scan', $this->dispatched[0]->getChannel());
 
 	}//end testTheSplitterAssignsNothing()
+
+	/**
+	 * Receiving a batch stores one the `scanBatch` schema admits, in `received`,
+	 * with the scanner and the separator mode of its profile.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 */
+	public function testReceiveStoresABatchTheSchemaAdmits(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(42);
+
+		$stored = $this->service(texts: [])->receive(file: $file, profile: ['id' => 'postkamer', 'separatorMode' => 'blankPage']);
+
+		$this->assertSame('received', $stored['status']);
+		$this->assertSame(42, $stored['file']);
+		$this->assertSame('postkamer', $stored['scannerId']);
+		$this->assertSame('blankPage', $stored['separatorMode']);
+		$this->assertValidScanBatch(batch: $this->stored[0]);
+
+	}//end testReceiveStoresABatchTheSchemaAdmits()
+
+	/**
+	 * A profile naming no known mode falls back to QR, a value the schema admits.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 */
+	public function testAnUnknownModeIsReceivedAsQr(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(7);
+
+		$stored = $this->service(texts: [])->receive(file: $file, profile: ['id' => 'balie', 'separatorMode' => 'barcode']);
+
+		$this->assertSame('qr', $stored['separatorMode']);
+		$this->assertValidScanBatch(batch: $this->stored[0]);
+
+	}//end testAnUnknownModeIsReceivedAsQr()
+
+	/**
+	 * Every batch a split stores, split or failed, is one the schema admits.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 */
+	public function testEveryBatchASplitStoresIsOneTheSchemaAdmits(): void {
+		$this->service(texts: ['een', 'filinq:sep:v1:postkamer', 'twee'])->split(
+			batch: ['uuid' => 'batch-1', 'file' => 42, 'scannerId' => 'postkamer', 'status' => 'received'],
+			profile: ['id' => 'postkamer', 'separatorMode' => 'qr'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+		$this->service(texts: ['een'], readerAvailable: false)->split(
+			batch: ['uuid' => 'batch-2', 'file' => 43, 'scannerId' => 'postkamer', 'status' => 'received'],
+			profile: ['id' => 'postkamer', 'separatorMode' => 'qr'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+
+		$this->assertNotSame([], $this->stored);
+		foreach ($this->stored as $batch) {
+			$this->assertValidScanBatch(batch: $batch);
+		}
+
+	}//end testEveryBatchASplitStoresIsOneTheSchemaAdmits()
+
+	/**
+	 * Validate a stored batch against the real `scanBatch` fragment of the register.
+	 *
+	 * @param array<string, mixed> $batch The batch as it would be saved.
+	 *
+	 * @return void
+	 */
+	private function assertValidScanBatch(array $batch): void {
+		$register = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'));
+		$schema = $register->components->schemas->scanBatch;
+		$properties = new \stdClass();
+		foreach ($schema->properties as $name => $property) {
+			$copy = clone $property;
+			// A boolean `required` on a property is OpenRegister's, not JSON Schema's.
+			unset($copy->required);
+			$properties->{$name} = $copy;
+		}
+
+		$jsonSchema = (object)[
+			'type' => 'object',
+			'required' => $schema->required,
+			'properties' => $properties,
+			'additionalProperties' => false,
+		];
+		unset($batch['uuid']);
+		$result = (new Validator())->validate(json_decode((string)json_encode($batch)), json_encode($jsonSchema));
+		$message = '';
+		if ($result->isValid() === false) {
+			$message = (string)json_encode((new ErrorFormatter())->format($result->error()));
+		}
+
+		$this->assertTrue($result->isValid(), 'scanBatch payload refused: ' . $message);
+
+	}//end assertValidScanBatch()
 }//end class

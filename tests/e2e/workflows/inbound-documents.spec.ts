@@ -95,7 +95,7 @@ test.describe('Inbound documents and the worklist', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#one-attachment-belongs-elsewhere
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#one-attachment-belongs-elsewhere
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#one-attachment-belongs-elsewhere
 	test('an attachment assigned on its own is recorded on both records', async ({
 		page,
@@ -132,7 +132,7 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(notes[0]?.attachment).toBe(attachment)
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-document-removed-from-the-wrong-case
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-document-removed-from-the-wrong-case
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#a-document-removed-from-the-wrong-case
 	test('a document taken off a record lands on the worklist with its reason', async ({
 		page,
@@ -166,7 +166,7 @@ test.describe('Inbound documents and the worklist', () => {
 		).toBeVisible({ timeout: 15000 })
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-document-that-never-had-an-intake-record
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-document-that-never-had-an-intake-record
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#a-document-that-never-had-an-intake-record
 	test('a document that never passed through the inbox gets a record when it is detached', async ({
 		page,
@@ -185,7 +185,7 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(body.file).toBe(888888)
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#detaching-without-a-reason
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#detaching-without-a-reason
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#a-document-removed-from-the-wrong-case
 	test('detaching without a reason is refused', async ({ page }) => {
 		const refused = await page.request.post(`${API}/intake/documents/detach`, {
@@ -195,7 +195,7 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(refused.status()).toBe(400)
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-bezwaar-routes-to-the-jurists
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-bezwaar-routes-to-the-jurists
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#a-bezwaar-routes-to-the-jurists
 	test('a declared record type routes the document and asks for acceptance', async ({
 		page,
@@ -242,7 +242,7 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(declarations.status()).toBe(200)
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#no-declaration-no-routing
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#no-declaration-no-routing
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#no-declaration-no-routing
 	test('a record type nobody declared is assigned without routing', async ({
 		page,
@@ -271,7 +271,7 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(stored.routing).toBe('')
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-rejection-teaches-the-corpus
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-rejection-teaches-the-corpus
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#a-rejection-teaches-the-corpus
 	test('rejecting a party suggestion is recorded as a correction', async ({
 		page,
@@ -298,7 +298,7 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(Array.isArray(stored?.results)).toBe(true)
 	})
 
-	// @e2e openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#the-classifier-suggests-it-does-not-overwrite
+	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#the-classifier-suggests-it-does-not-overwrite
 	// @e2e openspec/specs/inbound-auto-classification/spec.md#the-classifier-suggests-it-does-not-overwrite
 	test('a decision that is neither accept, edit nor reject is refused', async ({
 		page,

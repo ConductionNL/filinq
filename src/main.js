@@ -20,9 +20,11 @@ import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
+import { registerDocumentIntakeLeaf } from './integrations/registerDocumentIntakeLeaf.js'
 import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
 import { registerDownloadAllFilesLeaf } from './integrations/registerDownloadAllFilesLeaf.js'
 import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
+import { registerSigningFolderLeaf } from './integrations/registerSigningFolderLeaf.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
 import pinia from './pinia.js'
@@ -455,3 +457,5 @@ app.mount('#filinq-app')
 registerDocumentsLeaf()
 registerMergeToPdfLeaf()
 registerDownloadAllFilesLeaf()
+registerSigningFolderLeaf()
+registerDocumentIntakeLeaf()

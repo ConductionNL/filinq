@@ -106,7 +106,7 @@ class SigningFolderControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function testASelectionIsSignedForThePersonAsking(): void {
 		$service = $this->folderService();
@@ -126,7 +126,7 @@ class SigningFolderControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function testAnEmptySelectionIsRefused(): void {
 		$service = $this->folderService();
@@ -142,7 +142,7 @@ class SigningFolderControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function testNothingIsSignedForNobody(): void {
 		$service = $this->folderService();
