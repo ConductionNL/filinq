@@ -1,5 +1,13 @@
 {
     "translations": {
+        "Print separator sheets": "Imprimer les feuilles de séparation",
+        "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Placez une feuille devant chaque document du lot de numérisation. Le lot est coupé à chaque feuille, et chaque partie arrive dans la boîte de réception avec son numéro de dossier.",
+        "No scan profile is set up yet. An administrator adds one in the settings.": "Aucun profil de numérisation n'est encore configuré. Un administrateur en ajoute un dans les paramètres.",
+        "Scan profile": "Profil de numérisation",
+        "Case numbers, one per line": "Numéros de dossier, un par ligne",
+        "Print %n sheet": ["Imprimer %n feuille", "Imprimer %n feuilles"],
+        "The scan profiles could not be read.": "Les profils de numérisation n'ont pas pu être lus.",
+        "The separator sheets could not be made. Check the case numbers and try again.": "Les feuilles de séparation n'ont pas pu être créées. Vérifiez les numéros de dossier et réessayez.",
         "Waiting for your signature": "En attente de votre signature",
         "Reading the signing folder": "Lecture du parapheur",
         "The signing folder could not be read.": "Le parapheur n'a pas pu être lu.",

@@ -57,6 +57,12 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						@click="setMode('detached')">
 						{{ t('filinq', 'Taken off a record') }}
 					</NcButton>
+					<NcButton
+						variant="tertiary"
+						data-testid="intake-print-separators"
+						@click="separatorsOpen = true">
+						{{ t('filinq', 'Print separator sheets') }}
+					</NcButton>
 				</div>
 			</template>
 
@@ -115,6 +121,10 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			:confirmLabel="t('filinq', 'Reject')"
 			@confirm="reject"
 			@cancel="closeDialogs" />
+
+		<SeparatorSheetsDialog
+			v-if="separatorsOpen"
+			@close="separatorsOpen = false" />
 	</div>
 </template>
 
@@ -127,6 +137,7 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
+import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
 import {
 	reachWarning,
 	readingColorMap,
@@ -151,6 +162,7 @@ export default {
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		SeparatorSheetsDialog,
 		NcActionButton,
 		NcActions,
 	},
@@ -167,6 +179,7 @@ export default {
 			actionError: '',
 			loadError: '',
 			notificationReach: null,
+			separatorsOpen: false,
 			readingColorMap: readingColorMap(),
 			channelColorMap: {
 				[t('filinq', 'Scan')]: 'primary',

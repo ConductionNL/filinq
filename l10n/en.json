@@ -1,5 +1,14 @@
 {
     "translations": {
+        "Print separator sheets": "Print separator sheets",
+        "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.",
+        "No scan profile is set up yet. An administrator adds one in the settings.": "No scan profile is set up yet. An administrator adds one in the settings.",
+        "Scan profile": "Scan profile",
+        "Case numbers, one per line": "Case numbers, one per line",
+        "Print %n sheet": ["Print %n sheet", "Print %n sheets"],
+        "Print %n sheets": "Print %n sheets",
+        "The scan profiles could not be read.": "The scan profiles could not be read.",
+        "The separator sheets could not be made. Check the case numbers and try again.": "The separator sheets could not be made. Check the case numbers and try again.",
         "Waiting for your signature": "Waiting for your signature",
         "Reading the signing folder": "Reading the signing folder",
         "The signing folder could not be read.": "The signing folder could not be read.",

@@ -1,6 +1,14 @@
 OC.L10N.register(
     "filinq",
     {
+        "Print separator sheets": "Stampa fogli separatori",
+        "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Metti un foglio davanti a ogni documento del lotto di scansione. Il lotto viene diviso a ogni foglio e ogni parte arriva nella posta in arrivo con il suo numero di pratica.",
+        "No scan profile is set up yet. An administrator adds one in the settings.": "Non è ancora configurato alcun profilo di scansione. Un amministratore ne aggiunge uno nelle impostazioni.",
+        "Scan profile": "Profilo di scansione",
+        "Case numbers, one per line": "Numeri di pratica, uno per riga",
+        "Print %n sheet": ["Stampa %n foglio","Stampa %n fogli"],
+        "The scan profiles could not be read.": "Non è stato possibile leggere i profili di scansione.",
+        "The separator sheets could not be made. Check the case numbers and try again.": "Non è stato possibile creare i fogli separatori. Controlla i numeri di pratica e riprova.",
         "Waiting for your signature": "In attesa della tua firma",
         "Reading the signing folder": "Lettura della cartella firme",
         "The signing folder could not be read.": "Non è stato possibile leggere la cartella firme.",

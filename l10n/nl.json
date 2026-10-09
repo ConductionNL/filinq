@@ -1,5 +1,13 @@
 {
     "translations": {
+        "Print separator sheets": "Scheidingsvellen afdrukken",
+        "Put a sheet in front of each document in the scanner batch. The batch is cut at every sheet, and each part lands in the inbox with its case number.": "Leg een vel vóór elk document in de scanstapel. De stapel wordt bij elk vel geknipt, en elk deel komt met zijn zaaknummer in de inbox.",
+        "No scan profile is set up yet. An administrator adds one in the settings.": "Er is nog geen scanprofiel ingesteld. Een beheerder voegt er een toe in de instellingen.",
+        "Scan profile": "Scanprofiel",
+        "Case numbers, one per line": "Zaaknummers, één per regel",
+        "Print %n sheet": ["%n vel afdrukken", "%n vellen afdrukken"],
+        "The scan profiles could not be read.": "De scanprofielen konden niet worden gelezen.",
+        "The separator sheets could not be made. Check the case numbers and try again.": "De scheidingsvellen konden niet worden gemaakt. Controleer de zaaknummers en probeer het opnieuw.",
         "Waiting for your signature": "Wacht op je handtekening",
         "Reading the signing folder": "De ondertekenmap wordt gelezen",
         "The signing folder could not be read.": "De ondertekenmap kon niet worden gelezen.",
