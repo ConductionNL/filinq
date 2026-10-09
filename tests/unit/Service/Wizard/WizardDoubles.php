@@ -189,6 +189,8 @@ class WizardObjectStore extends ObjectService {
 	 *
 	 * Property-level `required: false` flags and the presentation keys OpenRegister
 	 * adds are not JSON Schema; they are dropped, everything else is checked.
+	 * A property that is not required accepts null, as OpenRegister's own
+	 * validation lets it (see widenOptionalToNull()).
 	 *
 	 * @param string               $schema  The schema slug.
 	 * @param array<string, mixed> $payload The object as written.
@@ -198,12 +200,14 @@ class WizardObjectStore extends ObjectService {
 	public static function assertValid(string $schema, array $payload): void {
 		$register = json_decode((string) file_get_contents(__DIR__ . '/../../../../lib/Settings/filinq_register.json'));
 		$fragment = self::clean(node: $register->components->schemas->{$schema});
-		$jsonSchema = (object) [
-			'type' => 'object',
-			'required' => $fragment->required ?? [],
-			'properties' => $fragment->properties,
-			'additionalProperties' => false,
-		];
+		$jsonSchema = self::widenOptionalToNull(
+			schema: (object) [
+				'type' => 'object',
+				'required' => $fragment->required ?? [],
+				'properties' => $fragment->properties,
+				'additionalProperties' => false,
+			]
+		);
 		unset($payload['uuid'], $payload['version']);
 		$result = (new Validator())->validate(json_decode((string) json_encode($payload)), json_encode($jsonSchema));
 		if ($result->isValid() === false) {
@@ -211,6 +215,50 @@ class WizardObjectStore extends ObjectService {
 		}
 
 	}//end assertValid()
+
+	/**
+	 * Let every top-level property that is not required accept null.
+	 *
+	 * This mirrors OpenRegister's ValidateObject: before validating a write it
+	 * turns `"type": "string"` into `["string", "null"]` on each property not
+	 * listed in `required`, and leaves an enum alone unless the enum itself
+	 * lists null. OpenRegister's schema import refuses a union `type` array, so
+	 * a register fragment declares the single type and relies on this widening;
+	 * a test validator without it refuses writes the live instance accepts.
+	 *
+	 * @param object $schema The validator schema, with `required` and `properties`.
+	 *
+	 * @return object The same schema, widened.
+	 */
+	public static function widenOptionalToNull(object $schema): object {
+		$required = [];
+		if (is_array($schema->required ?? null) === true) {
+			$required = $schema->required;
+		}
+
+		if (is_object($schema->properties ?? null) === false) {
+			return $schema;
+		}
+
+		foreach (get_object_vars($schema->properties) as $name => $property) {
+			if (is_object($property) === false || in_array($name, $required, true) === true) {
+				continue;
+			}
+
+			if (is_array($property->enum ?? null) === true && in_array(null, $property->enum, true) === false) {
+				continue;
+			}
+
+			if (is_string($property->type ?? null) === true) {
+				$property->type = [$property->type, 'null'];
+			} else if (is_array($property->type ?? null) === true && in_array('null', $property->type, true) === false) {
+				$property->type[] = 'null';
+			}
+		}
+
+		return $schema;
+
+	}//end widenOptionalToNull()
 
 	/**
 	 * Drop the non-JSON-Schema keys from a fragment, recursively.

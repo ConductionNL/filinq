@@ -7485,7 +7485,6 @@
           "source": "ner"
         },
         "correspondentPending": false,
-        "suggestedDossier": null,
         "status": "suggested"
       },
       {
@@ -7524,9 +7523,7 @@
         "suggestedDocumentType": "overig",
         "documentTypeConfidence": 0.2,
         "method": "rules",
-        "suggestedCorrespondent": null,
         "correspondentPending": true,
-        "suggestedDossier": null,
         "status": "suggested"
       }
     ]
