@@ -164,7 +164,7 @@ class SetupController extends Controller {
 	 *
 	 * @return array<string, mixed> The step.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function domainStoreStep(): array {
 		try {

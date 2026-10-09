@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
  * reconciliation is reported as pinned, with the reason, rather than quietly
  * omitted: the whole point of pinning is that the next person reads why.
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class DomainFolderService {
 
@@ -99,7 +99,7 @@ class DomainFolderService {
 	 *
 	 * @return string The path.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function pathFor(array $domain): string {
 		$id = trim((string)($domain['id'] ?? $domain['uuid'] ?? ''));
@@ -115,7 +115,7 @@ class DomainFolderService {
 	 *
 	 * @return array{created: bool, path: string, error: ?string} What happened.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function ensureFolder(array $domain, string $owner): array {
 		$path = $this->pathFor(domain: $domain);
@@ -163,7 +163,7 @@ class DomainFolderService {
 	 * @SuppressWarnings(PHPMD.NPathComplexity) Same reason: the paths are the
 	 * outcome matrix, not nesting that could be flattened.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function reconcile(array $domain, string $owner): array {
 		$path = $this->pathFor(domain: $domain);

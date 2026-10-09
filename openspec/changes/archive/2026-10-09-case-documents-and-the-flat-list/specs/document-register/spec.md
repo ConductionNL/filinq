@@ -18,7 +18,10 @@ candidates. Consumed by dossiq on its Files tab.
 Filinq MUST offer a list of every file on every document record of a
 given object, carrying the record each file belongs to as a column. The
 list MUST page and filter. It MUST be offered as a leaf per ADR-066 so a
-consuming app places it beside, not instead of, the record view.
+consuming app places it beside, not instead of, the record view. That leaf
+is `filinq-documents` (decision 128, Ruben, 9 Oct 2026): it renders the list
+in plain markup, because the leaves bundle loads on other apps' pages and
+carries no component library.
 
 #### Scenario: The jurist finds the attachment
 

@@ -148,7 +148,7 @@ class FileUploadService {
 	 * @throws \OCA\Filinq\Exception\UploadRefusedException If the administered policy refuses the file
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function uploadFile(string $fileName, string $fileContent): array {
 		// CHECKED BEFORE THE BYTES ARE STORED, and before the name is even

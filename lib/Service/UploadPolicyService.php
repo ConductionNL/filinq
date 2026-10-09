@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class UploadPolicyService {
 
@@ -79,7 +79,7 @@ class UploadPolicyService {
 	 *
 	 * @throws UploadRefusedException When the policy refuses the file.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function check(string $fileName, string $contents): array {
 		$policy = $this->activePolicy();
@@ -117,7 +117,7 @@ class UploadPolicyService {
 	 *
 	 * @throws UploadRefusedException When the file is over the ceiling.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function refuseOversize(string $contents, array $policy, string $name): void {
 		$size = strlen($contents);
@@ -146,7 +146,7 @@ class UploadPolicyService {
 	 *
 	 * @throws UploadRefusedException When the extension is not on the list.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function refuseExtension(string $fileName, array $policy, string $name): void {
 		$extensions = $this->stringList(value: ($policy['allowedExtensions'] ?? []));
@@ -179,7 +179,7 @@ class UploadPolicyService {
 	 *
 	 * @throws UploadRefusedException When the policy refuses unreadable types.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function unreadableType(string $fileName, array $policy, string $name): array {
 		if (($policy['refuseUnknownType'] ?? true) === true) {
@@ -210,7 +210,7 @@ class UploadPolicyService {
 	 *
 	 * @throws UploadRefusedException When the type is not on the list.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function refuseMediaType(string $detected, array $policy, string $name): void {
 		$types = $this->stringList(value: ($policy['allowedMediaTypes'] ?? []));
@@ -231,7 +231,7 @@ class UploadPolicyService {
 	 *
 	 * @return array<string, mixed>|null The active policy.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function activePolicy(): ?array {
 		try {
@@ -282,7 +282,7 @@ class UploadPolicyService {
 	 *
 	 * @return string The media type, or an empty string when it could not be read.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function detect(string $contents): string {
 		if ($contents === '') {

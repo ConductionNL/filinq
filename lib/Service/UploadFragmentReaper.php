@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -61,7 +61,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class UploadFragmentReaper {
 
@@ -92,7 +92,7 @@ class UploadFragmentReaper {
 	 *
 	 * @return bool True when the name carries a fragment suffix.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function isFragmentName(string $name): bool {
 		$lower = strtolower($name);
@@ -122,7 +122,7 @@ class UploadFragmentReaper {
 	 *
 	 * @return array{removed: int, bytes: int, kept: int, refused: array<int, array{path: string, reason: string}>} What the sweep did.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function reap(Folder $folder, int $maxAgeSeconds, int $now): array {
 		$removed = 0;
