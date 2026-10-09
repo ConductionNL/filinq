@@ -14,17 +14,12 @@ The standing-consent feature MUST be presented to users as "Publish always" and 
 - **WHEN** the Publish-always or Publish-never page is opened
 - **THEN** its title uses the new label and its add/edit dialog reads "Add/Edit publish-always rule" / "Add/Edit publish-never rule"
 
-### Requirement: The main menu is trimmed to the focused workflow
+### Requirement: The two publication-policy pages are in the navigation
 
-The main navigation MUST NOT surface the Dashboard, Folder Analysis, Consent Management, or Templates entries. Their routes and components MUST remain so the pages stay reachable by direct URL (hiding is navigation-only, not removal).
+The navigation MUST list "Publish always" and "Publish never" directly beneath Consent Management, each with a registered icon, so both pages open from the menu and not only by a typed URL. The earlier trim of Dashboard, Folder Analysis, Consent Management and Templates is superseded: those are core entries.
 
-#### Scenario: Hidden entries are absent from the menu
+#### Scenario: Both policy pages open from the menu
 
 - **WHEN** the main navigation is rendered
-- **THEN** it does not contain Dashboard, Folder Analysis, Consent Management, or Templates entries
-
-#### Scenario: Hidden pages remain routable
-
-- **GIVEN** a hidden page's route (e.g. `/dashboard`, `/templates`)
-- **WHEN** it is navigated to directly
-- **THEN** the page still loads (the route and component are retained)
+- **THEN** it lists "Publish always" and "Publish never" beneath Consent Management
+- **AND** choosing either opens its page

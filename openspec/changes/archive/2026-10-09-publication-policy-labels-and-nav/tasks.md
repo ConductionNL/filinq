@@ -18,8 +18,9 @@
 > product filinq has become; Dashboard, Templates, Consent Management and Folder
 > Analysis are all core surfaces today. It is recorded here rather than reopened.
 
-- [ ] 1.1 ~~Remove the Dashboard, Folder Analysis, Consent Management, and Templates entries from `MainMenu.vue`~~ — superseded; those four are core menu entries today.
-- [ ] 1.2 ~~Remove now-unused icon imports/registrations and stale `ACTIVE_GROUPS` entries~~ — superseded with 1.1; `MainMenu.vue` and `ACTIVE_GROUPS` no longer exist.
+- [x] 1.1 ~~Remove the Dashboard, Folder Analysis, Consent Management, and Templates entries from `MainMenu.vue`~~ — superseded; those four are core menu entries today.
+- [x] 1.2 ~~Remove now-unused icon imports/registrations and stale `ACTIVE_GROUPS` entries~~ — superseded with 1.1; `MainMenu.vue` and `ACTIVE_GROUPS` no longer exist.
+  - Closed as superseded 2026-10-09: the delta's "main menu is trimmed" requirement is replaced by the delivered one (both policy pages in the navigation, section 1b), so the main spec does not learn a menu the product does not have.
 
 ## 1b. Menu placement for the two policy pages (delivered 2026-09-06)
 

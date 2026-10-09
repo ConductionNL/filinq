@@ -18,9 +18,11 @@ Spec only. Build rules: `openspec/woo-build-rules.md`.
 
 ## 2. After merge
 
-- [ ] 2.1 Once the spec PR is merged on `development`, re-run the check of 1.1 on `development` and
+- [x] 2.1 Once the spec PR is merged on `development`, re-run the check of 1.1 on `development` and
   archive this change with `openspec archive anonymization-main-spec-valid --yes`.
   - Test: the archive succeeds, and `openspec validate anonymization --type spec --strict` is still
     valid afterwards with 28 requirements.
-- [ ] 2.2 One PR for the archive, `--base development`; merge `development` in, never rebase; no
+- [x] 2.2 One PR for the archive, `--base development`; merge `development` in, never rebase; no
   `Co-Authored-By` trailer. Done means merged on `development` with CI green.
+
+2026-10-09: the repair is on `development` (`openspec validate anonymization --type spec --strict` valid); archived on `build/openspecs-1`, whose PR to `development` is the one PR of 2.2.
