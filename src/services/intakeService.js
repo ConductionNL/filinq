@@ -13,6 +13,21 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
 /**
+ * The waiting documents and whether a failed reading reaches anybody.
+ *
+ * @return {Promise<{results: Array, notificationReach: object|null}>} The inbox answer.
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+ */
+export async function fetchWaitingInbox() {
+	const url = generateUrl('/apps/filinq/api/intake/documents')
+	const { data } = await axios.get(url)
+	return {
+		results: Array.isArray(data?.results) ? data.results : [],
+		notificationReach: data?.notificationReach ?? null,
+	}
+}
+
+/**
  * Read the documents waiting for a clerk.
  *
  * @return {Promise<object[]>} The waiting documents.

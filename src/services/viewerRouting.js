@@ -13,7 +13,7 @@ import { emlPreviewUrl } from './fileViewerService.js'
  *
  * @param {object|null} file Current file descriptor from the store.
  * @return {string|null} 'pdf' | 'word' | 'odt' | 'text' | 'eml' | null when unsupported.
- * @spec openspec/changes/eml-viewer-preview/tasks.md#task-7
+ * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-7
  */
 export function detectViewer(file) {
 	if (!file) return null
@@ -40,7 +40,7 @@ export function detectViewer(file) {
  *
  * @param {string|null} kind Viewer kind from detectViewer().
  * @return {string|null} Component name, or null when nothing can render it.
- * @spec openspec/changes/eml-viewer-preview/tasks.md#task-7
+ * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-7
  */
 export function viewerComponentFor(kind) {
 	switch (kind) {
@@ -65,7 +65,7 @@ export function viewerComponentFor(kind) {
  * @param {object|null} file Current file descriptor from the store.
  * @param {string|null} kind Viewer kind from detectViewer().
  * @return {object} Props to bind on the viewer component.
- * @spec openspec/changes/eml-viewer-preview/tasks.md#task-7
+ * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-7
  */
 export function viewerPropsFor(file, kind) {
 	if (!file) return {}

@@ -15,5 +15,5 @@
 
 - [x] 3.1 PHPUnit over the declared rule and over the reach, including the storm case and the unstaffed case
 - [x] 3.2 Mutation-check the reach: each assertion reddens when the rule it guards is broken
-- [ ] 3.3 Wire `describe()` into the inbox view, so the warning is on the screen and not only returned
-  - The inbox surface is `document-intake-inbox`'s; this change ships the answer and the assertion, not the template.
+- [x] 3.3 Wire `describe()` into the inbox view, so the warning is on the screen and not only returned
+  - `IntakeController::index()` returns `notificationReach` (failure count, group name, reach) from `IntakeNotificationReach::describe()` and the group's member count (tests/unit/Controller/IntakeControllerContractTest.php); `IntakeIndex.vue` shows `reachWarning()` in a warning note card (tests/vitest/intakeNotificationReach.spec.js), in all six locales.

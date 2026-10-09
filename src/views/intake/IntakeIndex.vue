@@ -38,6 +38,12 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			data-testid="intake-index"
 			@refresh="refresh">
 			<template #below-header>
+				<NcNoteCard
+					v-if="reachWarningText"
+					type="warning"
+					data-testid="intake-reach-warning">
+					{{ reachWarningText }}
+				</NcNoteCard>
 				<div class="intake-modes">
 					<NcButton
 						:variant="mode === 'waiting' ? 'primary' : 'secondary'"
@@ -115,23 +121,28 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 <script>
 import { CnIndexPage, CnStatusBadge, NcButton } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcActionButton, NcActions } from '@nextcloud/vue'
+import { NcActionButton, NcActions, NcNoteCard } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
-import { readingColorMap, readingLabel } from '../../services/intakeReading.js'
+import {
+	reachWarning,
+	readingColorMap,
+	readingLabel,
+} from '../../services/intakeReading.js'
 import {
 	assignIntakeDocument,
+	fetchWaitingInbox,
 	listDetachedDocuments,
-	listWaitingDocuments,
 	rejectIntakeDocument,
 } from '../../services/intakeService.js'
 
 export default {
 	name: 'IntakeIndex',
 	components: {
+		NcNoteCard,
 		CnIndexPage,
 		CnStatusBadge,
 		NcButton,
@@ -155,6 +166,7 @@ export default {
 			rejectTarget: null,
 			actionError: '',
 			loadError: '',
+			notificationReach: null,
 			readingColorMap: readingColorMap(),
 			channelColorMap: {
 				[t('filinq', 'Scan')]: 'primary',
@@ -165,6 +177,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The warning shown when a failed reading would reach nobody.
+		 *
+		 * @return {string} The warning, or '' when somebody will be told.
+		 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+		 */
+		reachWarningText() {
+			return reachWarning(this.notificationReach)
+		},
+
 		title() {
 			return this.mode === 'detached'
 				? t('filinq', 'Taken off a record')
@@ -288,12 +310,17 @@ export default {
 			this.loading = true
 			this.loadError = ''
 			try {
-				this.documents =
-					this.mode === 'detached'
-						? await listDetachedDocuments()
-						: await listWaitingDocuments()
+				if (this.mode === 'detached') {
+					this.documents = await listDetachedDocuments()
+					this.notificationReach = null
+				} else {
+					const inbox = await fetchWaitingInbox()
+					this.documents = inbox.results
+					this.notificationReach = inbox.notificationReach
+				}
 			} catch {
 				this.documents = []
+				this.notificationReach = null
 				this.loadError = t('filinq', 'The intake inbox could not be read.')
 			} finally {
 				this.loading = false

@@ -1,5 +1,7 @@
 {
     "translations": {
+        "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Personne n'est dans « {group} » : si un document ne peut pas être lu, personne ne sera prévenu. Ajoutez au moins une personne à ce groupe.",
+        "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n document n'a pas pu être lu et personne dans « {group} » ne sera prévenu. Ajoutez au moins une personne à ce groupe.", "%n documents n'ont pas pu être lus et personne dans « {group} » ne sera prévenu. Ajoutez au moins une personne à ce groupe."],
         "{count} suggestions could not be confirmed. Someone may have decided them already.": "{count} suggestions n'ont pas pu être confirmées. Quelqu'un a peut-être déjà décidé.",
         "Classification": "Classification",
         "Classification suggestions": "Suggestions de classification",

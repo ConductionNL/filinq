@@ -8,7 +8,7 @@
  * routes through PdfViewer with the preview URL keyed by the file id, and
  * every other kind loads its bytes from the WebDAV path.
  *
- * @spec openspec/changes/eml-viewer-preview/tasks.md#task-10
+ * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-10
  */
 
 import { describe, expect, it } from 'vitest'
@@ -21,11 +21,18 @@ import {
 
 describe('detectViewer', () => {
 	it('routes message/rfc822 to the eml viewer', () => {
-		expect(detectViewer({ fileName: 'mail', mimeType: 'message/rfc822' })).toBe('eml')
+		expect(detectViewer({ fileName: 'mail', mimeType: 'message/rfc822' })).toBe(
+			'eml',
+		)
 	})
 
 	it('routes an .eml name to the eml viewer whatever the mime says', () => {
-		expect(detectViewer({ fileName: 'Bericht.EML', mimeType: 'application/octet-stream' })).toBe('eml')
+		expect(
+			detectViewer({
+				fileName: 'Bericht.EML',
+				mimeType: 'application/octet-stream',
+			}),
+		).toBe('eml')
 	})
 
 	it('keeps pdf, word, odt and text on their own viewers', () => {
@@ -37,7 +44,9 @@ describe('detectViewer', () => {
 
 	it('answers null for no file and for an unsupported type', () => {
 		expect(detectViewer(null)).toBe(null)
-		expect(detectViewer({ fileName: 'a.zip', mimeType: 'application/zip' })).toBe(null)
+		expect(
+			detectViewer({ fileName: 'a.zip', mimeType: 'application/zip' }),
+		).toBe(null)
 	})
 })
 
@@ -64,7 +73,9 @@ describe('viewerPropsFor', () => {
 	})
 
 	it('gives every other kind the path only, so it loads over WebDAV', () => {
-		expect(viewerPropsFor({ fileId: 42, path: '/a.pdf' }, 'pdf')).toEqual({ path: '/a.pdf' })
+		expect(viewerPropsFor({ fileId: 42, path: '/a.pdf' }, 'pdf')).toEqual({
+			path: '/a.pdf',
+		})
 	})
 
 	it('gives nothing when there is no file', () => {

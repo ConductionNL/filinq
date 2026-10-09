@@ -16,7 +16,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-failure-reaches-someone/specs/filinq-notifications/spec.md
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/specs/filinq-notifications/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;

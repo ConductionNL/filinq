@@ -1,6 +1,8 @@
 OC.L10N.register(
     "filinq",
     {
+        "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Nessuno è in \"{group}\", quindi se un documento non può essere letto nessuno verrà avvisato. Aggiungi almeno una persona a quel gruppo.",
+        "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n documento non è stato letto e nessuno in \"{group}\" verrà avvisato. Aggiungi almeno una persona a quel gruppo.","%n documenti non sono stati letti e nessuno in \"{group}\" verrà avvisato. Aggiungi almeno una persona a quel gruppo."],
         "{count} suggestions could not be confirmed. Someone may have decided them already.": "Non è stato possibile confermare {count} suggerimenti. Forse qualcuno ha già deciso.",
         "Classification": "Classificazione",
         "Classification suggestions": "Suggerimenti di classificazione",
