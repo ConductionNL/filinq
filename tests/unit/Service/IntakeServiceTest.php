@@ -560,7 +560,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testAMessageWithThreeAttachmentsBecomesFourLinkedRecords(): void {
 		$service = $this->service(rows: []);
@@ -597,7 +597,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testAnAttachmentAssignedElsewhereIsNotedOnItsMessage(): void {
 		$message = $this->waitingRow();
@@ -625,7 +625,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testAssigningAMessageCanTakeItsAttachmentsAlong(): void {
 		$message = $this->waitingRow();
@@ -650,7 +650,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testADetachedDocumentCanBeAssignedAgain(): void {
 		$row = $this->waitingRow();
@@ -672,7 +672,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testTheWorklistHoldsTheDetachedDocuments(): void {
 		$detached = $this->waitingRow();

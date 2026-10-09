@@ -248,7 +248,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The worklist.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function detached(): JSONResponse {
@@ -279,7 +279,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The intake document, now on the worklist.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function detach(int $fileId, string $reason = '', string $documentName = ''): JSONResponse {
@@ -313,7 +313,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The stored correction.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function decideParty(
@@ -367,7 +367,7 @@ class IntakeController extends Controller {
 	 * not branch this method at all, so there is no second responsibility here
 	 * to split off.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	#[NoAdminRequired]
 	public function declareRouting(

@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -125,7 +125,7 @@ class PartySuggestionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testTheNawBlockIsOfferedAndNotFiled(): void {
 		$service = $this->service(
@@ -152,7 +152,7 @@ class PartySuggestionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testAFullBlockReadsAsFullConfidenceAndSaysWhatThatMeans(): void {
 		$service = $this->service(
@@ -176,7 +176,7 @@ class PartySuggestionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testADocumentWithNothingToReadOffersNothing(): void {
 		$service = $this->service(entities: [$this->entity('IBAN', 'NL00BANK0123456789')]);
@@ -190,7 +190,7 @@ class PartySuggestionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testWithoutEntityDetectionThereIsNoSuggestion(): void {
 		$service = $this->service(entities: null);
@@ -204,7 +204,7 @@ class PartySuggestionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testARejectionTeachesTheCorpus(): void {
 		$service = $this->service(entities: []);
@@ -228,7 +228,7 @@ class PartySuggestionServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testAnEditRecordsBothTheProposalAndWhatWasFiled(): void {
 		$service = $this->service(entities: []);

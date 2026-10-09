@@ -36,7 +36,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 
 declare(strict_types=1);
@@ -92,7 +92,7 @@ class IntakeReadingProgress {
 	 *
 	 * @return array<string, mixed> The progress to store on the intake record.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function progressFor(string $state, string $error = '', string $moment = ''): array {
 		$reached = $state;
@@ -143,7 +143,7 @@ class IntakeReadingProgress {
 	 *
 	 * @return bool True, always.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function showsInInbox(array $document): bool {
 		unset($document);
@@ -162,7 +162,7 @@ class IntakeReadingProgress {
 	 *
 	 * @return array<string, mixed> The counts and what they mean.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function summarise(array $documents): array {
 		$counts = array_fill_keys(self::STATES, 0);

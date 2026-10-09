@@ -79,7 +79,7 @@ export async function rejectIntakeDocument(uuid, reason) {
  * Read the documents taken back off a record.
  *
  * @return {Promise<object[]>} The worklist.
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 export async function listDetachedDocuments() {
 	const url = generateUrl('/apps/filinq/api/intake/detached')
@@ -94,7 +94,7 @@ export async function listDetachedDocuments() {
  * @param {string} reason Why it does not belong there.
  * @param {string} documentName The document name, for a file that never had an intake record.
  * @return {Promise<object>} The intake document, now on the worklist.
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 export async function detachDocument(fileId, reason, documentName = '') {
 	const url = generateUrl('/apps/filinq/api/intake/documents/detach')
@@ -107,7 +107,7 @@ export async function detachDocument(fileId, reason, documentName = '') {
  *
  * @param {object} decision The decision: sender, decision, suggested, accepted, intakeDocument.
  * @return {Promise<object>} The stored correction.
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 export async function decidePartySuggestion(decision) {
 	const url = generateUrl('/apps/filinq/api/intake/party-decisions')

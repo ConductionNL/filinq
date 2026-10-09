@@ -1263,7 +1263,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/IntakeService.php:148 receive() calls PartySuggestionService::suggestFor(fileId) automatically and stores 'partySuggestion' on the intake document; lib/Controller/IntakeController.php:271 decideParty() -> PartySuggestionService::recordDecision() is routed at intake#decideParty (FE per route-reach.txt) and exported as src/services/intakeService.js:97 decidePartySuggestion(), but grep of src/ for 'decidePartySuggestion|partySuggestion' shows only that export - no .vue component calls it or renders the suggestion. IntakeIndex.vue's tableColumns (channel/sender/subject/receivedAt) do not include partySuggestion.",
-				"change": "openspec/changes/inbound-documents-and-the-worklist"
+				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "nothing reaches it (suggestion computed and stored server-side; no UI displays it or calls decidePartySuggestion)",
 			"provider": "filinq",
@@ -1361,7 +1361,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/IntakeService.php:285 assign() calls IntakeRoutingService::apply() on every assignment (real code path, not decorative). lib/Controller/IntakeController.php:325 declareRouting() -> IntakeRoutingService::declare() is routed at intake#declareRouting (routes.php:85, route-reach.txt='none'); no frontend caller found and no sibling reference to this route fragment turned up in the sibling greps performed for this pack.",
-				"change": "openspec/changes/inbound-documents-and-the-worklist"
+				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "nothing reaches it for declaring a rule (no known caller); apply() runs on every assign() but has nothing to apply without a declared intakeRoutingRule",
 			"provider": "filinq",
@@ -1623,7 +1623,7 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found.",
+				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found.",
 				"change": "openspec/changes/intake-paper-archive-digitisation"
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -1656,7 +1656,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/intake/IntakeIndex.vue:43-49 'Taken off a record' mode button calls src/services/intakeService.js:69 listDetachedDocuments() -> GET api/intake/detached (routes.php:82, FE) -> IntakeController.php:206 detached() -> IntakeService.php:218 listDetached(). Detaching itself: lib/Service/IntakeDetachmentService.php via POST api/intake/documents/detach (routes.php:83, FE) -> IntakeController.php:237 detach().",
-				"change": "openspec/changes/inbound-documents-and-the-worklist"
+				"change": "openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue, mode='detached')",
 			"provider": "filinq",

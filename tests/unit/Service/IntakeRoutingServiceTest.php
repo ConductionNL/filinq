@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -97,7 +97,7 @@ class IntakeRoutingServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testADeclaredTypeRoutesToItsGroupAndWaitsForAcceptance(): void {
 		$service = $this->service(
@@ -124,7 +124,7 @@ class IntakeRoutingServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testARecordTypeNobodyDeclaredRoutesNowhere(): void {
 		$service = $this->service(declarations: []);
@@ -141,7 +141,7 @@ class IntakeRoutingServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testDeclaringAgainReplacesTheEarlierDeclaration(): void {
 		$service = $this->service(
@@ -173,7 +173,7 @@ class IntakeRoutingServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testADeclarationWithoutAnAppOrATypeIsRefused(): void {
 		$service = $this->service(declarations: []);

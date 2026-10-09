@@ -270,7 +270,7 @@ export default {
 		 *
 		 * @param {string} mode Either 'waiting' or 'detached'.
 		 * @return {Promise<void>} Resolves once the list has settled.
-		 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 		 */
 		async setMode(mode) {
 			this.mode = mode

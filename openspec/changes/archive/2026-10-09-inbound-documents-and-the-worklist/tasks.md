@@ -23,10 +23,10 @@
 ## 4. Worklist and search
 
 - [x] 4.1 Detaching a document returns it to its intake record as `detached` with the reason and the actor; the inbox lists them (REQ-IDW-04)
-- [ ] 4.2 Write the recognised text to the document's searchable content through the existing OCR path (REQ-IDW-06)
-  - The OCR path is the scan feeder's, so it lands with `scan-intake-with-separator-sheets`.
-- [ ] 4.3 Classification and extraction run as background jobs with progress on the intake record, and the inbox shows what is still being read (REQ-IDW-06)
-  - `classificationProgress` is on the record and the inbox reads it; the background job that moves it is still to come.
+- [x] 4.2 Write the recognised text to the document's searchable content through the existing OCR path (REQ-IDW-06)
+  - Landed with the archived `intake-ocr-on-arrival`: `lib/BackgroundJob/IntakeOcrJob.php` reads the file through `OcrService` (local Tesseract) and writes `contentText` on the intake record, the field the inbox search and the classifier read (tests/unit/BackgroundJob/IntakeOcrJobTest.php). Verified 2026-10-09.
+- [x] 4.3 Classification and extraction run as background jobs with progress on the intake record, and the inbox shows what is still being read (REQ-IDW-06)
+  - Verified 2026-10-09: reading runs in `IntakeOcrJob` (a queued job) and records `readingState` queued, reading, read or failed on the intake record (`IntakeReadingProgress`); classification runs from the enrichment path on the save that job makes (`FilinqEventHandler` → `EnrichmentRunner::classify()`), so it runs in the job's process, not the request. The inbox lists every received document whatever its reading state and shows that state in its Text column (`src/views/intake/IntakeIndex.vue`, tests/vitest/intakeReading.spec.js). The integer `classificationProgress` the schema also declares is not written: the reading state is the progress the inbox shows.
 
 ## 5. Quality
 
