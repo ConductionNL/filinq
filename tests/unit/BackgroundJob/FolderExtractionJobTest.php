@@ -26,6 +26,7 @@ use Exception;
 use OCA\Filinq\BackgroundJob\FolderExtractionJob;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
@@ -117,7 +118,7 @@ class FolderExtractionJobTest extends TestCase {
 			$this->mockStateService,
 			$this->mockLogger,
 			$this->mockLayoutResolver,
-			$this->mockRootFolder
+			new OutputLayoutMover($this->mockLayoutResolver, $this->mockRootFolder, $this->mockLogger)
 		);
 		// phpcs:enable CustomSn.Functions.NamedParameters
 

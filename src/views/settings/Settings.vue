@@ -145,6 +145,31 @@
 					}}</em>
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="settings['anonymisation.output_subfolder_name']"
+					:label="t('filinq', 'Subfolder for anonymised copies')"
+					:error="!!outputSubfolderError"
+					:helperText="
+						outputSubfolderError
+							|| t(
+								'filinq',
+								'Use lowercase letters, digits, hyphens and underscores only.',
+							)
+					"
+					@update:modelValue="
+						settings['anonymisation.output_subfolder_name'] = $event
+					" />
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.',
+						)
+					}}
+				</div>
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -978,6 +1003,7 @@ import {
 	NcNoteCard,
 	NcSelect,
 	NcSettingsSection,
+	NcTextField,
 } from '@nextcloud/vue'
 import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import FileExportOutline from 'vue-material-design-icons/FileExportOutline.vue'
@@ -985,6 +1011,10 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import {
+	disallowedSubfolderCharacters,
+	isValidSubfolderName,
+} from '../../services/outputSubfolder.js'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
@@ -1008,6 +1038,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcCheckboxRadioSwitch,
+		NcTextField,
 		CnAdminSettingsShell,
 		AnonymiserBackendWarning,
 		Plus,
@@ -1062,6 +1093,7 @@ export default {
 				signing_request_expiry_days: 30,
 				signing_guardian_consent_age: 16,
 				'filinq.anonymisation.default_output_format': 'pdf-only',
+				'anonymisation.output_subfolder_name': 'anonymised',
 				// files-confidential-labels — off by default (design.md D3).
 				'filinq.confidentiality.prioritise_analysis': false,
 				'filinq.confidentiality.label_vocabulary': {
@@ -1098,6 +1130,27 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Why the output subfolder name cannot be saved, or '' when it can.
+		 *
+		 * @return {string} Localised reason.
+		 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+		 */
+		outputSubfolderError() {
+			const name = this.settings['anonymisation.output_subfolder_name'] || ''
+			if (name === '') {
+				return t('filinq', 'Enter a name for the subfolder.')
+			}
+			if (isValidSubfolderName(name)) {
+				return ''
+			}
+			return t('filinq', 'The subfolder name cannot contain: {characters}', {
+				characters: disallowedSubfolderCharacters(name)
+					.map((c) => (c === ' ' ? '␣' : c))
+					.join(' '),
+			})
+		},
+
 		// `base` records as NcSelect options (value = slug, label = name).
 		grondslagBaseOptions() {
 			return (this.grondslagBases || []).map((base) => ({
@@ -1294,6 +1347,8 @@ export default {
 					this.settings['filinq.anonymisation.default_output_format'] =
 						data['filinq.anonymisation.default_output_format']
 						?? 'pdf-only'
+					this.settings['anonymisation.output_subfolder_name'] =
+						data['anonymisation.output_subfolder_name'] || 'anonymised'
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
 						data['filinq.anonymisation.enabled_entity_types'] || []
@@ -1444,6 +1499,11 @@ export default {
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
 		 */
 		saveAll() {
+			if (this.outputSubfolderError) {
+				showError(this.outputSubfolderError)
+				return
+			}
+
 			this.saving = true
 
 			// Build OCR language string from checkboxes
@@ -1507,6 +1567,9 @@ export default {
 					? this.settings['filinq.anonymisation.default_output_format']
 					: 'pdf-only',
 
+				'anonymisation.output_subfolder_name':
+					this.settings['anonymisation.output_subfolder_name'],
+
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,
 				// Sent as an array; the backend json-encodes it for storage.
@@ -1539,7 +1602,14 @@ export default {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(payload),
 			})
-				.then((response) => response.json())
+				.then(async (response) => {
+					// A refused value comes back as 400 with an `error`; it
+					// must not read as saved.
+					const body = await response.json().catch(() => ({}))
+					if (!response.ok) {
+						throw new Error(body.error || response.statusText)
+					}
+				})
 				.then(() => {
 					showSuccess(t('filinq', 'All settings saved successfully'))
 				})

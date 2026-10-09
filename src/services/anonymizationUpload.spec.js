@@ -13,6 +13,7 @@ import {
 	ACCEPT_ATTR,
 	ALLOWED_EXTENSIONS,
 	ALLOWED_MIMES,
+	dossierPlan,
 	partitionFiles,
 } from './anonymizationUpload.js'
 
@@ -81,5 +82,25 @@ describe('partitionFiles', () => {
 		])
 		expect(accepted.map((f) => f.name)).toEqual(['keep.odt'])
 		expect(rejected.map((f) => f.name)).toEqual(['drop.xlsx', 'drop.png'])
+	})
+})
+
+describe('dossierPlan (REQ-DDDMU-005)', () => {
+	// @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+	it('asks no dossier name for a single document, even if one was typed', () => {
+		const plan = dossierPlan([file('a.pdf')], 'Havenkwartier')
+		expect(plan.asksDossierName).toBe(false)
+		expect(plan.dossierName).toBeNull()
+	})
+
+	it('asks a dossier name for two or more documents in one action', () => {
+		const plan = dossierPlan([file('a.pdf'), file('b.pdf'), file('c.pdf')], '')
+		expect(plan.asksDossierName).toBe(true)
+	})
+
+	it('creates a dossier only when a name was given', () => {
+		const files = [file('a.pdf'), file('b.pdf')]
+		expect(dossierPlan(files, '  Havenkwartier ').dossierName).toBe('Havenkwartier')
+		expect(dossierPlan(files, '   ').dossierName).toBeNull()
 	})
 })

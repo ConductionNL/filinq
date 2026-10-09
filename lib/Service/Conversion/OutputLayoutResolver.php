@@ -76,7 +76,7 @@ class OutputLayoutResolver {
 	 * the base name (post-strip of the extension) so `Report_anonymized`
 	 * becomes `Report` while `_anonymized_summary` is untouched.
 	 */
-	private const LEGACY_SUFFIX_REGEX = '/_anonymized$/';
+	private const LEGACY_SUFFIX_REGEX = '/(_anonymized)+$/';
 
 	/**
 	 * Constructor.
@@ -130,7 +130,8 @@ class OutputLayoutResolver {
 	 *
 	 * @param string $baseName Source base name (without extension).
 	 *
-	 * @return string Base name with one trailing `_anonymized` stripped, if present.
+	 * @return string Base name with every trailing `_anonymized` stripped, if present
+	 *                (a re-anonymised legacy output carries two).
 	 */
 	public function stripLegacyAnonymizedSuffix(string $baseName): string {
 		$stripped = preg_replace(self::LEGACY_SUFFIX_REGEX, '', $baseName);

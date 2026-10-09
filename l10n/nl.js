@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
+        "Subfolder for anonymised copies": "Submap voor geanonimiseerde kopieën",
+        "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Anonimiseren per batch of map zet de gelakte kopieën in deze submap, naast de originelen.",
+        "Use lowercase letters, digits, hyphens and underscores only.": "Gebruik alleen kleine letters, cijfers, koppeltekens en liggende streepjes.",
+        "The subfolder name cannot contain: {characters}": "De naam van de submap mag dit niet bevatten: {characters}",
+        "Enter a name for the subfolder.": "Vul een naam in voor de submap.",
         "Documents waiting to be filed": "Documenten die wachten om te worden ingedeeld",
         "Looking up waiting documents": "Wachtende documenten worden opgezocht",
         "No documents are waiting to be filed.": "Er wachten geen documenten om te worden ingedeeld.",
@@ -1209,7 +1215,6 @@ OC.L10N.register(
         "ADDRESS": "ADRES",
         "AdES - Advanced": "AdES - Geavanceerd",
         "Advanced template editing with WYSIWYG, preview, versioning, and conditional sections.": "Geavanceerde sjabloonbewerking met WYSIWYG, voorbeeldweergave, versiebeheer en voorwaardelijke secties.",
-        "All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.": "Alle documenten in de map zijn geanonimiseerd. Geanonimiseerde kopieën zijn opgeslagen met het achtervoegsel _anonymized.",
         "All settings saved successfully": "Alle instellingen succesvol opgeslagen",
         "All types": "Alle typen",
         "Always export anonymised documents as PDF": "Geanonimiseerde documenten altijd als PDF exporteren",
