@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "This dossier does not exist or you may not read it.": "This dossier does not exist or you may not read it.",
         "%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": "%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.",
         "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.",
         "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.","%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group."],

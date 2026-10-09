@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "This dossier does not exist or you may not read it.": "Dieses Dossier existiert nicht oder Sie dürfen es nicht lesen.",
         "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Niemand ist in \"{group}\". Wenn ein Dokument nicht gelesen werden kann, erfährt es also niemand. Fügen Sie dieser Gruppe mindestens eine Person hinzu.",
         "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n Dokument konnte nicht gelesen werden, und niemand in \"{group}\" erfährt es. Fügen Sie dieser Gruppe mindestens eine Person hinzu.","%n Dokumente konnten nicht gelesen werden, und niemand in \"{group}\" erfährt es. Fügen Sie dieser Gruppe mindestens eine Person hinzu."],
         "{count} suggestions could not be confirmed. Someone may have decided them already.": "{count} Vorschläge konnten nicht bestätigt werden. Vielleicht hat schon jemand darüber entschieden.",
