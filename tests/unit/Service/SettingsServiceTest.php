@@ -293,7 +293,8 @@ class SettingsServiceTest extends TestCase {
 				]
 			);
 			$this->fail('An invalid subfolder name was accepted.');
-		} catch (\InvalidArgumentException $e) {
+		} catch (\RuntimeException $e) {
+			$this->assertSame(400, $e->getCode());
 			$this->assertStringContainsString('"."', $e->getMessage());
 			$this->assertStringContainsString('"/"', $e->getMessage());
 		}
@@ -308,10 +309,26 @@ class SettingsServiceTest extends TestCase {
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function testEmptyOutputSubfolderNameIsRefused(): void {
-		$this->expectException(\InvalidArgumentException::class);
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionCode(400);
 		$this->settingsService->updateSettings(['anonymisation.output_subfolder_name' => '']);
 
 	}//end testEmptyOutputSubfolderNameIsRefused()
+
+	/**
+	 * The settings key is the one the resolver reads.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 */
+	public function testSubfolderKeyMatchesTheResolver(): void {
+		$this->assertSame(
+			\OCA\Filinq\Service\Conversion\OutputLayoutResolver::SUBFOLDER_CONFIG_KEY,
+			'anonymisation.output_subfolder_name'
+		);
+
+	}//end testSubfolderKeyMatchesTheResolver()
 
 	/**
 	 * The guardian consent age is an admin setting, 16 until someone changes it

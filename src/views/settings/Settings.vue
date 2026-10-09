@@ -153,10 +153,10 @@
 					:error="!!outputSubfolderError"
 					:helperText="
 						outputSubfolderError
-							|| t(
-								'filinq',
-								'Use lowercase letters, digits, hyphens and underscores only.',
-							)
+						|| t(
+							'filinq',
+							'Use lowercase letters, digits, hyphens and underscores only.',
+						)
 					"
 					@update:modelValue="
 						settings['anonymisation.output_subfolder_name'] = $event

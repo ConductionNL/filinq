@@ -26,7 +26,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
-use InvalidArgumentException;
 use OCA\Filinq\Service\AnonymiserBackendStateClient;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Settings\FilinqAdmin;
@@ -203,9 +202,6 @@ class SettingsController extends Controller {
 			$updatedData = $this->settingsService->updateSettings($data);
 
 			return new JSONResponse($updatedData);
-		} catch (InvalidArgumentException $e) {
-			// A refused value: nothing was written, and the admin is told why.
-			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		} catch (Exception $e) {
 			$this->logger->error(
 				'Failed to update settings',

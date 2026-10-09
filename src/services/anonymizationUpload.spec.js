@@ -100,7 +100,9 @@ describe('dossierPlan (REQ-DDDMU-005)', () => {
 
 	it('creates a dossier only when a name was given', () => {
 		const files = [file('a.pdf'), file('b.pdf')]
-		expect(dossierPlan(files, '  Havenkwartier ').dossierName).toBe('Havenkwartier')
+		expect(dossierPlan(files, '  Havenkwartier ').dossierName).toBe(
+			'Havenkwartier',
+		)
 		expect(dossierPlan(files, '   ').dossierName).toBeNull()
 	})
 })

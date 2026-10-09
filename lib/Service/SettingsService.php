@@ -31,8 +31,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use InvalidArgumentException;
-use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -226,12 +224,6 @@ class SettingsService {
 				'filinq.anonymisation.default_output_format',
 				'pdf-only'
 			),
-			// Where batch and folder anonymisation put redacted copies.
-			OutputLayoutResolver::SUBFOLDER_CONFIG_KEY => $this->config->getValueString(
-				$this->appName,
-				OutputLayoutResolver::SUBFOLDER_CONFIG_KEY,
-				OutputLayoutResolver::DEFAULT_SUBFOLDER_NAME
-			),
 			// OCR document scanning (ocr-document-scanning) and reading on
 			// arrival (intake-ocr-on-arrival).
 			...$this->loadOcrSettings(),
@@ -353,6 +345,8 @@ class SettingsService {
 			);
 			$data = array_merge($data, $this->loadFeatureToggles());
 			$data['ocrStatus'] = $this->getOcrStatus();
+			// Where batch and folder anonymisation put redacted copies.
+			$data[self::SUBFOLDER_KEY] = $this->config->getValueString($this->appName, self::SUBFOLDER_KEY, 'anonymised');
 
 			// Data for the grondslag-per-entity-type selector: the curated
 			// entity types and the available `base` records (slug + name).
@@ -407,6 +401,13 @@ class SettingsService {
 	}//end convertValueToString()
 
 	/**
+	 * Config key of the output subfolder name; equals
+	 * OutputLayoutResolver::SUBFOLDER_CONFIG_KEY (pinned by SettingsServiceTest),
+	 * spelled out so this class does not couple to the resolver.
+	 */
+	private const SUBFOLDER_KEY = 'anonymisation.output_subfolder_name';
+
+	/**
 	 * Keys that are permitted to be written via the settings endpoint.
 	 *
 	 * This allowlist prevents any authenticated user (wave-3 C1) from
@@ -443,7 +444,7 @@ class SettingsService {
 		'legal_hold_authority_groups',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
-		OutputLayoutResolver::SUBFOLDER_CONFIG_KEY,
+		self::SUBFOLDER_KEY,
 	];
 
 	/**
@@ -458,7 +459,7 @@ class SettingsService {
 	 * @return array<string, mixed> The updated settings configuration
 	 *
 	 * @throws \RuntimeException If settings update fails
-	 * @throws InvalidArgumentException When a value is refused; nothing is written then.
+	 * @throws RuntimeException With code 400 when a value is refused; nothing is written then.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
@@ -512,22 +513,22 @@ class SettingsService {
 	 *
 	 * @return void
 	 *
-	 * @throws InvalidArgumentException When the name is empty or holds a disallowed character.
+	 * @throws RuntimeException With code 400 when the name is empty or holds a disallowed character.
 	 *
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	private function assertValidSubfolderName(array $data): void {
-		if (array_key_exists(OutputLayoutResolver::SUBFOLDER_CONFIG_KEY, $data) === false) {
+		if (array_key_exists(self::SUBFOLDER_KEY, $data) === false) {
 			return;
 		}
 
-		$name = (string)$data[OutputLayoutResolver::SUBFOLDER_CONFIG_KEY];
-		if (preg_match(OutputLayoutResolver::SUBFOLDER_NAME_REGEX, $name) === 1) {
+		$name = (string)$data[self::SUBFOLDER_KEY];
+		if (preg_match('/^[a-z0-9_-]+$/', $name) === 1) {
 			return;
 		}
 
 		if ($name === '') {
-			throw new InvalidArgumentException('The output subfolder name cannot be empty.');
+			throw new RuntimeException('The output subfolder name cannot be empty.', 400);
 		}
 
 		$bad = array_values(
@@ -539,9 +540,10 @@ class SettingsService {
 			)
 		);
 		$quoted = array_map(static fn (string $char): string => '"' . $char . '"', $bad);
-		throw new InvalidArgumentException(
+		throw new RuntimeException(
 			'The output subfolder name may only hold lowercase letters, digits, hyphens and underscores; it contains '
-			. implode(', ', $quoted) . '.'
+			. implode(', ', $quoted) . '.',
+			400
 		);
 
 	}//end assertValidSubfolderName()
