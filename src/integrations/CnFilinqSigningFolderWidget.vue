@@ -82,6 +82,11 @@ export default {
 		}
 	},
 
+	/**
+	 * Read the first entries of the signing folder.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
+	 */
 	async mounted() {
 		try {
 			const preview = await fetchSigningFolderPreview()
@@ -103,6 +108,7 @@ export default {
 		 *
 		 * @param {object} entry A folder entry.
 		 * @return {string} The date, or '' when there is none.
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md#task-1.2
 		 */
 		deadline(entry) {
 			return formatDeadline(entry?.deadline)

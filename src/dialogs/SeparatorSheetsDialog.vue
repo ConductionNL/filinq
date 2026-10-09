@@ -93,10 +93,20 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The case numbers typed so far, one sheet each.
+		 *
+		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+		 */
 		caseNumbers() {
 			return parseCaseNumbers(this.caseNumbersText)
 		},
 
+		/**
+		 * Whether a profile is chosen and at least one case number is typed.
+		 *
+		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+		 */
 		canPrint() {
 			return (
 				Boolean(this.profile?.id)
@@ -106,6 +116,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Read the scan profiles, and pick the only one when there is one.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+	 */
 	async mounted() {
 		try {
 			this.profiles = await listScanProfiles()

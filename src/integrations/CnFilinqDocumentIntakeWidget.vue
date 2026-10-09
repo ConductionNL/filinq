@@ -80,6 +80,11 @@ export default {
 		}
 	},
 
+	/**
+	 * Read the waiting documents and order them for this record.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+	 */
 	async mounted() {
 		try {
 			const waiting = await listWaitingDocuments()

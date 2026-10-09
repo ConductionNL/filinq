@@ -240,6 +240,7 @@ export default {
 		 * Map viewer kind to the actual component name.
 		 *
 		 * @return {string|null}
+		 * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-10
 		 */
 		viewerComponent() {
 			return viewerComponentFor(this.viewerKind)
@@ -251,6 +252,7 @@ export default {
 		 * endpoint (keyed by file id) rather than the WebDAV path.
 		 *
 		 * @return {object}
+		 * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-10
 		 */
 		viewerProps() {
 			return viewerPropsFor(fileViewerStore.currentFile, this.viewerKind)
