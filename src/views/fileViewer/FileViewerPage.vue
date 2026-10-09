@@ -121,7 +121,6 @@ import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
 import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
-import { emlPreviewUrl } from '../../services/fileViewerService.js'
 import {
 	fetchOcrStatus,
 	isOcrCandidate,
@@ -131,32 +130,12 @@ import {
 } from '../../services/ocr.js'
 import { startPublication } from '../../services/publications.js'
 import { publicationReadiness } from '../../services/validationService.js'
+import {
+	detectViewer,
+	viewerComponentFor,
+	viewerPropsFor,
+} from '../../services/viewerRouting.js'
 import { fileViewerStore } from '../../store/store.js'
-
-/**
- * Match a file (by MIME + name) to one of the supported in-app viewers.
- *
- * @param {object} file Current file descriptor from the store.
- * @return {string|null} 'pdf' | 'word' | 'odt' | 'text' | 'eml' | null when unsupported.
- */
-function detectViewer(file) {
-	if (!file) return null
-	const name = (file.fileName || '').toLowerCase()
-	const mime = (file.mimeType || '').toLowerCase()
-	if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
-	if (
-		mime
-			=== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-		|| name.endsWith('.docx')
-	)
-		return 'word'
-	if (mime === 'application/vnd.oasis.opendocument.text' || name.endsWith('.odt'))
-		return 'odt'
-	if (mime === 'message/rfc822' || name.endsWith('.eml')) return 'eml'
-	if (mime.startsWith('text/') || name.match(/\.(txt|md|markdown|log|csv)$/))
-		return 'text'
-	return null
-}
 
 export default {
 	name: 'FileViewerPage',
@@ -263,21 +242,7 @@ export default {
 		 * @return {string|null}
 		 */
 		viewerComponent() {
-			switch (this.viewerKind) {
-				case 'pdf':
-					return 'PdfViewer'
-				case 'word':
-					return 'WordViewer'
-				case 'odt':
-					return 'OdtViewer'
-				case 'text':
-					return 'TextViewer'
-				// EML is rendered as a server-side PDF preview via PdfViewer.
-				case 'eml':
-					return 'PdfViewer'
-				default:
-					return null
-			}
+			return viewerComponentFor(this.viewerKind)
 		},
 
 		/**
@@ -288,12 +253,7 @@ export default {
 		 * @return {object}
 		 */
 		viewerProps() {
-			const file = fileViewerStore.currentFile
-			if (!file) return {}
-			if (this.viewerKind === 'eml') {
-				return { path: file.path, url: emlPreviewUrl(file.fileId) }
-			}
-			return { path: file.path }
+			return viewerPropsFor(fileViewerStore.currentFile, this.viewerKind)
 		},
 
 		/**

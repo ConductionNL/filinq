@@ -13,7 +13,7 @@ Server-rendered original-EML preview reusing the `eml-pdf-assembly` pipeline (em
 - [x] 7. `src/views/fileViewer/FileViewerPage.vue`: `detectViewer()` maps `message/rfc822` / `.eml` → `eml`; map `eml` → `PdfViewer`; add a `viewerProps` computed that binds `{ path, url: emlPreviewUrl(fileId) }` for EML and `{ path }` otherwise; bind the dynamic component with `v-bind="viewerProps"`.
 - [x] 8. Unit tests `tests/unit/Service/EmlPreviewServiceTest.php`: renders via the assembly service and passes an EMPTY entity set; guards throw when OpenRegister is missing, the node is not a `File`, or the anonymise-EML API is absent (assembly never invoked in the failure cases).
 - [x] 9. Rebuild the frontend bundle and confirm the preview URL is present.
-- [ ] 10. Frontend component/e2e test for the EML viewer routing (`detectViewer` → `eml`, `viewerProps` wiring) — deferred; covered manually for now.
+- [x] 10. Frontend test for the EML viewer routing: `detectViewer` → `eml`, `eml` → `PdfViewer`, and the preview URL in the viewer props. The routing moved to `src/services/viewerRouting.js` (FileViewerPage imports it), tested in `tests/vitest/viewerRouting.spec.js`.
 
 ## Acceptance Criteria
 
