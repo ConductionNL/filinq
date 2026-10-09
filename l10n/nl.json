@@ -1,5 +1,13 @@
 {
     "translations": {
+        "Waiting for your signature": "Wacht op je handtekening",
+        "Reading the signing folder": "De ondertekenmap wordt gelezen",
+        "The signing folder could not be read.": "De ondertekenmap kon niet worden gelezen.",
+        "Nothing is waiting for your signature.": "Er wacht niets op je handtekening.",
+        "%n document is waiting for your signature": ["%n document wacht op je handtekening", "%n documenten wachten op je handtekening"],
+        "Untitled document": "Document zonder titel",
+        "sign by {date}": "tekenen vóór {date}",
+        "Open the signing folder": "Open de ondertekenmap",
         "This dossier does not exist or you may not read it.": "Dit dossier bestaat niet of je mag het niet lezen.",
         "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Niemand zit in \"{group}\", dus als een document niet gelezen kan worden, hoort niemand het. Voeg minstens één persoon aan die groep toe.",
         "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n document kon niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe.", "%n documenten konden niet gelezen worden en niemand in \"{group}\" hoort het. Voeg minstens één persoon aan die groep toe."],

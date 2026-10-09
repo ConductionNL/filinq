@@ -5884,8 +5884,8 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "GET api/signing/folder + POST api/signing/folder/sign (routes.php:254-255, both FE, signingFolder#folder/#signFolder) -> SigningFolderController. src/manifest.json's own note on the SigningFolder page describes it as 'a cross-case queue assembled by filinq from signing requests the signer holds a mandate for' with a multi-select bulk-sign action. openspec/changes/signing-folder-across-cases/tasks.md: 8/10 done.",
-				"change": "openspec/changes/signing-folder-across-cases"
+				"evidence": "GET api/signing/folder + POST api/signing/folder/sign (routes.php:254-255, both FE, signingFolder#folder/#signFolder) -> SigningFolderController. src/manifest.json's own note on the SigningFolder page describes it as 'a cross-case queue assembled by filinq from signing requests the signer holds a mandate for' with a multi-select bulk-sign action. openspec/changes/archive/2026-10-09-signing-folder-across-cases/tasks.md: 8/10 done.",
+				"change": "openspec/changes/archive/2026-10-09-signing-folder-across-cases"
 			},
 			"reachedOn": "/signing-folder (SigningFolder.vue)",
 			"provider": "filinq",
@@ -5917,7 +5917,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "GET/POST api/signing/mandates + DELETE api/signing/mandates/{typeApp}/{typeSchema} (routes.php:256-258, all tagged 'none' in _lane/shared/route-reach.txt) -> SigningFolderController::mandates/declareMandate/withdrawMandate. Grepped all of src/ for 'mandate'; the only hit is the manifest's own descriptive note (src/manifest.json:372) assuming mandates already exist — there is no UI anywhere to declare, view or withdraw one.",
-				"change": "openspec/changes/signing-folder-across-cases"
+				"change": "openspec/changes/archive/2026-10-09-signing-folder-across-cases"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

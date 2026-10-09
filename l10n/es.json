@@ -1,5 +1,13 @@
 {
     "translations": {
+        "Waiting for your signature": "Pendiente de su firma",
+        "Reading the signing folder": "Leyendo la carpeta de firma",
+        "The signing folder could not be read.": "No se pudo leer la carpeta de firma.",
+        "Nothing is waiting for your signature.": "No hay nada pendiente de su firma.",
+        "%n document is waiting for your signature": ["%n documento está pendiente de su firma", "%n documentos están pendientes de su firma"],
+        "Untitled document": "Documento sin título",
+        "sign by {date}": "firmar antes del {date}",
+        "Open the signing folder": "Abrir la carpeta de firma",
         "This dossier does not exist or you may not read it.": "Este expediente no existe o no tiene permiso para leerlo.",
         "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "No hay nadie en \"{group}\", así que si un documento no se puede leer, nadie se enterará. Añada al menos una persona a ese grupo.",
         "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n documento no se pudo leer y nadie en \"{group}\" se enterará. Añada al menos una persona a ese grupo.", "%n documentos no se pudieron leer y nadie en \"{group}\" se enterará. Añada al menos una persona a ese grupo."],

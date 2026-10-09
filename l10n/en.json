@@ -1,5 +1,14 @@
 {
     "translations": {
+        "Waiting for your signature": "Waiting for your signature",
+        "Reading the signing folder": "Reading the signing folder",
+        "The signing folder could not be read.": "The signing folder could not be read.",
+        "Nothing is waiting for your signature.": "Nothing is waiting for your signature.",
+        "%n document is waiting for your signature": ["%n document is waiting for your signature", "%n documents are waiting for your signature"],
+        "%n documents are waiting for your signature": "%n documents are waiting for your signature",
+        "Untitled document": "Untitled document",
+        "sign by {date}": "sign by {date}",
+        "Open the signing folder": "Open the signing folder",
         "This dossier does not exist or you may not read it.": "This dossier does not exist or you may not read it.",
         "%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": "%n documents could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.",
         "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.",

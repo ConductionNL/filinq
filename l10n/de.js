@@ -1,6 +1,14 @@
 OC.L10N.register(
     "filinq",
     {
+        "Waiting for your signature": "Wartet auf Ihre Unterschrift",
+        "Reading the signing folder": "Die Signaturmappe wird gelesen",
+        "The signing folder could not be read.": "Die Signaturmappe konnte nicht gelesen werden.",
+        "Nothing is waiting for your signature.": "Nichts wartet auf Ihre Unterschrift.",
+        "%n document is waiting for your signature": ["%n Dokument wartet auf Ihre Unterschrift","%n Dokumente warten auf Ihre Unterschrift"],
+        "Untitled document": "Dokument ohne Titel",
+        "sign by {date}": "unterschreiben bis {date}",
+        "Open the signing folder": "Signaturmappe öffnen",
         "This dossier does not exist or you may not read it.": "Dieses Dossier existiert nicht oder Sie dürfen es nicht lesen.",
         "Nobody is in \"{group}\", so if a document cannot be read, no one will be told. Add at least one person to that group.": "Niemand ist in \"{group}\". Wenn ein Dokument nicht gelesen werden kann, erfährt es also niemand. Fügen Sie dieser Gruppe mindestens eine Person hinzu.",
         "%n document could not be read and nobody in \"{group}\" will be told. Add at least one person to that group.": ["%n Dokument konnte nicht gelesen werden, und niemand in \"{group}\" erfährt es. Fügen Sie dieser Gruppe mindestens eine Person hinzu.","%n Dokumente konnten nicht gelesen werden, und niemand in \"{group}\" erfährt es. Fügen Sie dieser Gruppe mindestens eine Person hinzu."],

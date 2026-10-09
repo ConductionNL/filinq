@@ -5,7 +5,7 @@
 ## 1. The folder
 
 - [x] 1.1 A folder query over pending signer records for the asking user, across every record, ordered by deadline then age, paged, read at request time and never stored (REQ-SFC-01)
-- [ ] 1.2 Offer the folder as a leaf per ADR-066 so dossiq and decidiq place the same one (REQ-SFC-01), NOT BUILT: filinq ships no leaf infrastructure at all (no `RegisterLeafProvidersEvent` listener, no `registerIntegration`, no `leaves` webpack entry), and a leaf built against none of that is a dark leaf nobody can see. Reported in the PR body rather than guessed at. The folder ships as its own page, which dossiq and decidiq can link to today.
+- [x] 1.2 Offer the folder as a leaf per ADR-066 so dossiq and decidiq place the same one (REQ-SFC-01). Built 2026-10-09, now that filinq has leaf infrastructure (`IntegrationLeafRegistrar`, the `filinq-leaves` entry): `lib/EventListener/RegisterSigningFolderLeafListener.php` contributes `filinq-signing-folder` for the `user-dashboard` and `app-dashboard` surfaces (the folder is per signer, not per record), and `src/integrations/registerSigningFolderLeaf.js` mounts `CnFilinqSigningFolderWidget.vue` in both bundles: the first five documents waiting, the total, and a link to the folder page. Tests: tests/unit/EventListener/RegisterSigningFolderLeafListenerTest.php (both halves agree, registrar wires it), tests/vitest/signingFolderLeaf.spec.js.
 - [x] 1.3 Project the record reference, the document kind, the requester, the request date and the deadline onto each entry, as a semantic reference and not a copy of the consuming app's fields (REQ-SFC-02)
 - [x] 1.4 Read the document from the folder without leaving it (REQ-SFC-02)
 
