@@ -17,6 +17,7 @@
  *   lib/Service/Flow/IFlowNodeConfigKeys.php
  *   lib/Service/Flow/IFlowNodeConfigForm.php
  *   lib/Service/Flow/IFlowNodeTaxonomy.php
+ *   lib/Service/Flow/IFlowDirectlyInvokable.php
  *   lib/Service/Flow/RegisterFlowNodesEvent.php
  *   lib/Service/Flow/FlowNodeRegistry.php (register() and all() only)
  * Keep them in sync when OpenRegister changes one.
@@ -126,6 +127,12 @@ interface IFlowNodeConfigForm {
 	 * @return array<int, array<string, mixed>> The field descriptions.
 	 */
 	public function configForm(): array;
+}//end interface
+
+/**
+ * Opt-in marker: the node type may be run directly, out of graph, on one subject.
+ */
+interface IFlowDirectlyInvokable {
 }//end interface
 
 /**
