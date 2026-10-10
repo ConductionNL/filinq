@@ -114,6 +114,12 @@ export default {
 			},
 		},
 
+		/**
+		 * Reload when the host points the viewer at another URL.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-the-split-view-is-mountable-by-another-app-req-ddarw-014
+		 */
 		url() {
 			this.load()
 		},
