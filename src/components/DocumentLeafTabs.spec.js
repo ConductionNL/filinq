@@ -23,14 +23,29 @@ jest.mock('@conduction/nextcloud-vue', () => {
 	const { h: render } = jest.requireActual('vue')
 	return {
 		useIntegrationRegistry: () => ({
-			integrations: { get value() { return mockRegistry.value } },
+			integrations: {
+				get value() {
+					return mockRegistry.value
+				},
+			},
 			resolveTab: () => null,
 		}),
 		CnIntegrationTab: {
 			name: 'CnIntegrationTab',
-			props: ['integrationId', 'register', 'schema', 'objectId', 'emptyLabel', 'unavailableLabel'],
+			props: [
+				'integrationId',
+				'register',
+				'schema',
+				'objectId',
+				'emptyLabel',
+				'unavailableLabel',
+			],
 			render() {
-				return render('div', { 'data-generic': this.integrationId }, this.emptyLabel)
+				return render(
+					'div',
+					{ 'data-generic': this.integrationId },
+					this.emptyLabel,
+				)
 			},
 		},
 		CnLeafMountHost: {
@@ -65,7 +80,9 @@ async function mount(props) {
  * @return {string[]} The data-leaf values.
  */
 function rendered(el) {
-	return [...el.querySelectorAll('[data-leaf]')].map((node) => node.getAttribute('data-leaf'))
+	return [...el.querySelectorAll('[data-leaf]')].map((node) =>
+		node.getAttribute('data-leaf'),
+	)
 }
 
 const RECORD = { register: 'filinq', schema: 'signingRequest', objectId: 'sr-1' }
@@ -78,7 +95,10 @@ describe('DocumentLeafTabs on a record surface', () => {
 			{ id: 'contacts', label: 'Contacts', available: true },
 		]
 
-		const el = await mount({ ...RECORD, leafIds: leafIdsForSchema('signingRequest') })
+		const el = await mount({
+			...RECORD,
+			leafIds: leafIdsForSchema('signingRequest'),
+		})
 
 		expect(rendered(el)).toEqual(['email', 'calendar'])
 		expect(el.querySelector('[data-generic="email"]')).not.toBeNull()
@@ -90,7 +110,12 @@ describe('DocumentLeafTabs on a record surface', () => {
 			{ id: 'deck', label: 'Deck', available: false },
 		]
 
-		const el = await mount({ register: 'filinq', schema: 'dossier', objectId: 'd-1', leafIds: leafIdsForSchema('dossier') })
+		const el = await mount({
+			register: 'filinq',
+			schema: 'dossier',
+			objectId: 'd-1',
+			leafIds: leafIdsForSchema('dossier'),
+		})
 
 		expect(rendered(el)).toEqual(['files'])
 	})
@@ -101,7 +126,10 @@ describe('DocumentLeafTabs on a record surface', () => {
 			{ id: 'calendar', label: 'Calendar', available: false },
 		]
 
-		const el = await mount({ ...RECORD, leafIds: leafIdsForSchema('signingRequest') })
+		const el = await mount({
+			...RECORD,
+			leafIds: leafIdsForSchema('signingRequest'),
+		})
 
 		expect(el.querySelector('.document-leaf-tabs')).toBeNull()
 	})
@@ -109,16 +137,26 @@ describe('DocumentLeafTabs on a record surface', () => {
 	it('hands a mount-mode leaf to the mount host', async () => {
 		const noop = () => {}
 		mockRegistry.value = [
-			{ id: 'calendar', label: 'Calendar', available: true, renderMode: 'mount', mount: noop, unmount: noop },
+			{
+				id: 'calendar',
+				label: 'Calendar',
+				available: true,
+				renderMode: 'mount',
+				mount: noop,
+				unmount: noop,
+			},
 		]
 
-		const el = await mount({ ...RECORD, leafIds: leafIdsForSchema('signingRequest') })
+		const el = await mount({
+			...RECORD,
+			leafIds: leafIdsForSchema('signingRequest'),
+		})
 
 		expect(el.querySelector('[data-mounted="calendar"]')).not.toBeNull()
 		expect(el.querySelector('[data-generic="calendar"]')).toBeNull()
 	})
 
-	it('shows the surface\'s own empty text in the generic host', async () => {
+	it("shows the surface's own empty text in the generic host", async () => {
 		mockRegistry.value = [{ id: 'files', label: 'Files', available: true }]
 
 		const el = await mount({
@@ -129,6 +167,8 @@ describe('DocumentLeafTabs on a record surface', () => {
 			emptyLabel: 'Nothing linked here yet',
 		})
 
-		expect(el.querySelector('[data-generic="files"]').textContent).toBe('Nothing linked here yet')
+		expect(el.querySelector('[data-generic="files"]').textContent).toBe(
+			'Nothing linked here yet',
+		)
 	})
 })

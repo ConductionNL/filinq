@@ -168,7 +168,7 @@ describe('record surfaces take their leaves from the schema (leaf-integrations 2
 		expect(leafIdsForSchema('')).toEqual([])
 	})
 
-	it('renders a signing request\'s mail and calendar leaves when both apps are on', () => {
+	it("renders a signing request's mail and calendar leaves when both apps are on", () => {
 		const tabs = visibleLeafTabs(
 			[leaf('contacts'), leaf('calendar', true), leaf('email', true)],
 			RECORD,
@@ -214,17 +214,24 @@ describe('leafRenderPath', () => {
 
 	it('hands a mount-mode leaf a bare element', () => {
 		expect(
-			leafRenderPath({ id: 'x', renderMode: 'mount', mount: noop, unmount: noop }, null),
+			leafRenderPath(
+				{ id: 'x', renderMode: 'mount', mount: noop, unmount: noop },
+				null,
+			),
 		).toBe('mount')
 	})
 
-	it('renders a component leaf\'s own tab, else the generic host', () => {
+	it("renders a component leaf's own tab, else the generic host", () => {
 		const tab = { name: 'LeafTab' }
 		expect(leafRenderPath({ id: 'x', renderMode: 'component' }, tab)).toBe('tab')
-		expect(leafRenderPath({ id: 'x', renderMode: 'component' }, null)).toBe('generic')
+		expect(leafRenderPath({ id: 'x', renderMode: 'component' }, null)).toBe(
+			'generic',
+		)
 	})
 
 	it('does not treat a mount leaf without its pair as mountable', () => {
-		expect(leafRenderPath({ id: 'x', renderMode: 'mount' }, null)).toBe('generic')
+		expect(leafRenderPath({ id: 'x', renderMode: 'mount' }, null)).toBe(
+			'generic',
+		)
 	})
 })

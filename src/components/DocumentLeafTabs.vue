@@ -129,7 +129,9 @@ export default {
 		 * @spec openspec/changes/leaf-integrations/tasks.md#2-1
 		 */
 		emptyText() {
-			return this.emptyLabel || t('filinq', 'Nothing linked to this document yet')
+			return (
+				this.emptyLabel || t('filinq', 'Nothing linked to this document yet')
+			)
 		},
 	},
 }

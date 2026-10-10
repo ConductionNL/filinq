@@ -143,7 +143,11 @@ export function leafRenderPath(descriptor, tab) {
  * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
  * @spec openspec/changes/leaf-integrations/tasks.md#2-2
  */
-export function visibleLeafTabs(integrations, binding = {}, leafIds = DOCUMENT_LEAF_IDS) {
+export function visibleLeafTabs(
+	integrations,
+	binding = {},
+	leafIds = DOCUMENT_LEAF_IDS,
+) {
 	const objectId = String(binding.objectId ?? '').trim()
 	if (objectId === '') {
 		return []
@@ -157,9 +161,9 @@ export function visibleLeafTabs(integrations, binding = {}, leafIds = DOCUMENT_L
 	}
 
 	const wanted = Array.isArray(leafIds) ? leafIds : DOCUMENT_LEAF_IDS
-	return wanted.map((id) => registered.get(id)).filter(
-		(entry) => entry !== undefined && entry.available !== false,
-	)
+	return wanted
+		.map((id) => registered.get(id))
+		.filter((entry) => entry !== undefined && entry.available !== false)
 }
 
 /**

@@ -45,7 +45,10 @@ async function pipeline(
 		route.fulfill({
 			json: {
 				results: [
-					{ code: 'infocat001', label: 'Wetten en algemeen verbindende voorschriften' },
+					{
+						code: 'infocat001',
+						label: 'Wetten en algemeen verbindende voorschriften',
+					},
 					{ code: 'infocat009', label: 'Adviezen' },
 				],
 			},
@@ -177,7 +180,7 @@ test.describe('woo publication pipeline', () => {
 		await expect(page).toHaveURL(/\/anonymization/)
 	})
 
-	test('the category picker offers OpenCatalogi\'s codes and a change is saved on the record', async ({
+	test("the category picker offers OpenCatalogi's codes and a change is saved on the record", async ({
 		page,
 	}) => {
 		// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#changing-the-category-moves-the-publication
@@ -205,7 +208,9 @@ test.describe('woo publication pipeline', () => {
  * unless FILINQ_LIVE_WOO_PUBLICATION names a handed-off publication as
  * "<catalog slug>:<publication uuid>:<category code>".
  */
-test('a handed-off publication is listed in its category sitemap', async ({ page }) => {
+test('a handed-off publication is listed in its category sitemap', async ({
+	page,
+}) => {
 	// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
 	const live = process.env.FILINQ_LIVE_WOO_PUBLICATION || ''
 	test.skip(live === '', 'live pass only: set FILINQ_LIVE_WOO_PUBLICATION')
