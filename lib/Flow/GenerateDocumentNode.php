@@ -79,6 +79,16 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	public const DEFAULT_REQUESTING_APP = 'flow';
 
 	/**
+	 * The trigger OpenRegister records on a run that invokes ONE node directly
+	 * against one subject (`FlowRunService::TRIGGER_DIRECT_NODE`, or-flow-run-node).
+	 * Spelled here rather than read from OpenRegister so this class still loads
+	 * on an OpenRegister that predates direct invocation.
+	 *
+	 * @var string
+	 */
+	public const DIRECT_TRIGGER = 'direct-node';
+
+	/**
 	 * Every configuration key this node reads.
 	 *
 	 * @var array<int, string>
@@ -304,7 +314,7 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	 *
 	 * @param array<int, array<string, mixed>> $items   The incoming items.
 	 * @param array<string, mixed>             $config  The step configuration.
-	 * @param array<string, mixed>             $context The run context.
+	 * @param array<string, mixed>             $context The run context; `triggeredBy` tells a direct run.
 	 *
 	 * @return array<int, array<string, mixed>> The items, each carrying its document.
 	 *
@@ -313,7 +323,13 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-a-flow-step-generates-a-document-per-item
 	 */
 	public function execute(array $items, array $config, array $context): array {
-		unset($context);
+		// A direct run was authorized against its SUBJECT only (the caller's
+		// update right on that object), so the document may land nowhere else:
+		// a configured register/schema/objectId is not honoured there.
+		$objectConfig = $config;
+		if (($context['triggeredBy'] ?? '') === self::DIRECT_TRIGGER) {
+			$objectConfig = [];
+		}
 
 		$outputKey = trim((string)($config['output'] ?? self::DEFAULT_OUTPUT));
 		if ($outputKey === '') {
@@ -331,7 +347,7 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 
 			$request = $config;
 			$request['data'] = $json;
-			$request['object'] = $this->objectOf(json: $json, config: $config);
+			$request['object'] = $this->objectOf(json: $json, config: $objectConfig);
 
 			$document = $this->generator->generate(request: $request, requestingApp: $requestingApp);
 
@@ -355,8 +371,11 @@ class GenerateDocumentNode implements IFlowNode, IFlowNodeConfigKeys, IFlowNodeC
 	 * An OpenRegister object on a flow item carries its identity under
 	 * `@self`; a bare record may carry `id` or `uuid` at the top level.
 	 *
+	 * A direct run passes no configuration here: the item is the subject the
+	 * caller was authorized against.
+	 *
 	 * @param array<string, mixed> $json   The item's record.
-	 * @param array<string, mixed> $config The step configuration.
+	 * @param array<string, mixed> $config The step configuration, or [] on a direct run.
 	 *
 	 * @return array{register: string, schema: string, id: string} The reference, parts possibly empty.
 	 */
