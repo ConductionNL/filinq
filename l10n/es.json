@@ -1,5 +1,6 @@
 {
     "translations": {
+        "Original": "Original",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Todos los documentos de la carpeta se han anonimizado. Las copias anonimizadas están en una subcarpeta aparte, junto a los originales.",
         "Subfolder for anonymised copies": "Subcarpeta para copias anonimizadas",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "La anonimización por lotes y por carpeta guarda las copias censuradas en esta subcarpeta, junto a los originales.",

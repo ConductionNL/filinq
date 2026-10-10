@@ -22,7 +22,10 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { fetchFileAsArrayBuffer } from '../../services/fileViewerService.js'
+import {
+	fetchFileAsArrayBuffer,
+	fetchUrlAsArrayBuffer,
+} from '../../services/fileViewerService.js'
 import {
 	applyDomHighlights,
 	clearDomHighlights,
@@ -54,6 +57,14 @@ export default {
 		path: {
 			type: String,
 			required: true,
+		},
+
+		// Optional: read the bytes from this same-origin URL instead of the
+		// WebDAV path, for a file outside the user's storage (the compare view
+		// mounted by another app).
+		url: {
+			type: String,
+			default: '',
 		},
 	},
 
@@ -102,6 +113,10 @@ export default {
 			},
 		},
 
+		url() {
+			this.load()
+		},
+
 		highlightEntities: {
 			deep: true,
 			handler() {
@@ -132,7 +147,9 @@ export default {
 			try {
 				const [jsZipModule, arrayBuffer] = await Promise.all([
 					loadJsZip(),
-					fetchFileAsArrayBuffer(this.path),
+					this.url
+						? fetchUrlAsArrayBuffer(this.url)
+						: fetchFileAsArrayBuffer(this.path),
 				])
 				const JSZip = jsZipModule.default || jsZipModule
 				const zip = await JSZip.loadAsync(arrayBuffer)

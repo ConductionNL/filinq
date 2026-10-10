@@ -1,5 +1,6 @@
 {
     "translations": {
+        "Original": "Original",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.",
         "Subfolder for anonymised copies": "Subfolder for anonymised copies",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.",
