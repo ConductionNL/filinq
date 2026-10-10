@@ -160,6 +160,9 @@ $generationSurface = [
 	'OCA\\Filinq\\EventListener\\DocumentGenerationRequestedListener',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
 	'OCA\\Filinq\\Event\\DocumentGeneratedEvent',
+	'OCA\\Filinq\\Event\\DocumentStampRequestedEvent',
+	'OCA\\Filinq\\EventListener\\DocumentStampRequestedListener',
+	'OCA\\Filinq\\Service\\PdfStampService',
 ];
 foreach ($generationSurface as $surfaceClass) {
 	if (class_exists($surfaceClass) === false) {
@@ -172,6 +175,7 @@ $context->events = [];
 $expectedGeneration = [
 	'OCA\\OpenRegister\\Service\\Flow\\RegisterFlowNodesEvent',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
+	'OCA\\Filinq\\Event\\DocumentStampRequestedEvent',
 ];
 if ($context->events !== $expectedGeneration) {
 	bootProofFail('unexpected document-generation registrations: ' . implode(', ', $context->events));
