@@ -445,6 +445,11 @@ class SettingsService {
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 		self::SUBFOLDER_KEY,
+		// The anonymisation choices on the admin page. Readers fall back to the
+		// default on a value they do not know, so none of these can widen access.
+		'filinq.anonymisation.default_output_format',
+		'filinq.grondslagen.entity_type_bases',
+		'filinq.anonymisation.enabled_entity_types',
 	];
 
 	/**

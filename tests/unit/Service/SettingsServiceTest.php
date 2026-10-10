@@ -438,7 +438,9 @@ class SettingsServiceTest extends TestCase {
 			}
 		);
 		$this->mockConfig->method('getValueString')->willReturnCallback(
-			static fn (string $app, string $key, string $default = ''): string => $written[$key] ?? $default
+			static function (string $app, string $key, string $default = '') use (&$written): string {
+				return $written[$key] ?? $default;
+			}
 		);
 
 		$result = $this->settingsService->updateSettings(
