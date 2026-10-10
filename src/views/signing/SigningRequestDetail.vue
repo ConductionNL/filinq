@@ -86,6 +86,12 @@
 			<p v-else>
 				{{ t('filinq', 'No audit entries yet.') }}
 			</p>
+			<DocumentLeafTabs
+				register="filinq"
+				schema="signingRequest"
+				:objectId="id"
+				:leafIds="leafIds"
+				:emptyLabel="t('filinq', 'Nothing linked here yet')" />
 		</template>
 	</div>
 </template>
@@ -93,14 +99,17 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import DocumentLeafTabs from '../../components/DocumentLeafTabs.vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
+import { leafIdsForSchema } from '../../services/documentLeafTabs.js'
 import { stepUpReturn } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
 	name: 'SigningRequestDetail',
 	components: {
+		DocumentLeafTabs,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -137,7 +146,9 @@ export default {
 		const signingStore = useSigningStore()
 		signingStore.fetchSigningRequest(props.id)
 		signingStore.fetchAuditTrail(props.id)
-		return { signingStore, t }
+		// The leaves the signingRequest schema links (leaf-integrations 2.1).
+		const leafIds = leafIdsForSchema('signingRequest')
+		return { signingStore, t, leafIds }
 	},
 
 	data() {

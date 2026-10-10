@@ -114,6 +114,13 @@ class PublicationPipelineServiceTest extends TestCase {
 	private string $accessibilityGate = 'warn';
 
 	/**
+	 * The platform the last pipeline() built.
+	 *
+	 * @var OpenCatalogiPlatform
+	 */
+	private OpenCatalogiPlatform $platformUnderTest;
+
+	/**
 	 * The pipeline over the in-memory world.
 	 *
 	 * @return PublicationPipelineService
@@ -222,7 +229,7 @@ class PublicationPipelineServiceTest extends TestCase {
 			store: $store,
 			readiness: new PublicationReadiness(consents: $consentService, consentConfig: $consentConfig, policies: $policies, marks: $marks, store: $store, accessibility: new RedactionAccessibilityService($appConfig)),
 			map: new OpenCatalogiPublicationMap(),
-			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
+			platform: $this->platformUnderTest = new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
 			clock: $clock
 		);
 
@@ -424,13 +431,98 @@ class PublicationPipelineServiceTest extends TestCase {
 		$pipeline = $this->pipeline();
 		$record = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
 
-		$this->assertSame('c_8c840238', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'c_8c840238'], actor: 'anna')['wooCategory']);
+		$this->assertSame('infocat009', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'infocat009'], actor: 'anna')['wooCategory']);
+		// A TOOI code from before is accepted and stored as OpenCatalogi's code.
+		$this->assertSame('infocat009', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'c_8c840238'], actor: 'anna')['wooCategory']);
 
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionCode(400);
 		$pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'besluiten'], actor: 'anna');
 
 	}//end testTheCategoryComesFromOpenCatalogisList()
+
+	/**
+	 * The picker offers OpenCatalogi's code, and both forms translate to it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1-1
+	 */
+	public function testThePlatformTranslatesKeysAndTooiCodes(): void {
+		$this->pipeline();
+		$platform = $this->platformUnderTest;
+
+		$this->assertSame(['infocat001', 'infocat009'], array_column($platform->categories(), 'code'));
+		$this->assertSame('Adviezen', $platform->categories()[1]['label']);
+		$this->assertSame('infocat001', $platform->toPlatformCode('infocat001'));
+		$this->assertSame('infocat009', $platform->toPlatformCode('c_8c840238'));
+		$this->assertNull($platform->toPlatformCode('c_unknown'));
+		$this->assertNull($platform->toPlatformCode(''));
+
+	}//end testThePlatformTranslatesKeysAndTooiCodes()
+
+	/**
+	 * A hand-off files the publication under OpenCatalogi's category code, also for an old record.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1-2
+	 */
+	public function testTheHandoffFilesTheCategoryCode(): void {
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		// A record stored before this change holds the TOOI code.
+		$record['wooCategory'] = 'c_8c840238';
+
+		$record = $pipeline->handoff(record: $record, actor: 'anna');
+
+		$this->assertSame('infocat009', $this->rows['publication'][$record['endpointPublicationRef']]['wooCategory']);
+
+	}//end testTheHandoffFilesTheCategoryCode()
+
+	/**
+	 * A category neither form knows blocks the hand-off with its reason.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1-2
+	 */
+	public function testAnUnknownCategoryBlocksTheHandoff(): void {
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		$record['wooCategory'] = 'c_unknown';
+
+		try {
+			$pipeline->handoff(record: $record, actor: 'anna');
+			$this->fail('An unknown category must block the hand-off');
+		} catch (PublicationNotReadyException $e) {
+			$this->assertContains('Unknown Woo category: c_unknown', $e->getReasons());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+
+	}//end testAnUnknownCategoryBlocksTheHandoff()
+
+	/**
+	 * A category edit after the hand-off reaches the publication.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1-3
+	 */
+	public function testACategoryEditAfterHandoffFollowsThrough(): void {
+		$pipeline = $this->pipeline();
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+		$publications = count(array_filter($this->saves, static fn (array $save): bool => $save[0] === 'publication'));
+
+		$record = $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'infocat001'], actor: 'anna');
+
+		$after = array_values(array_filter($this->saves, static fn (array $save): bool => $save[0] === 'publication'));
+		$this->assertCount($publications + 1, $after);
+		$this->assertSame('infocat001', end($after)[1]['wooCategory']);
+		$this->assertSame('infocat001', $this->rows['publication'][$record['endpointPublicationRef']]['wooCategory']);
+
+	}//end testACategoryEditAfterHandoffFollowsThrough()
 
 	/**
 	 * Withdrawing needs a reason, sets the depublication date and never deletes.

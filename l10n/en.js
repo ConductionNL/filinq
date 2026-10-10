@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Nothing linked here yet": "Nothing linked here yet",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.",
         "Subfolder for anonymised copies": "Subfolder for anonymised copies",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.",
@@ -1018,7 +1019,7 @@ OC.L10N.register(
         "Step": "Step",
         "The Nextcloud file id of the original document. The original is never handed off.": "The Nextcloud file id of the original document. The original is never handed off.",
         "The Nextcloud file id of the redacted copy that is published.": "The Nextcloud file id of the redacted copy that is published.",
-        "The Woo information category as a TOOI code, for example c_8c840238.": "The Woo information category as a TOOI code, for example c_8c840238.",
+        "The Woo information category as OpenCatalogi's code, for example infocat009. A record stored before register 8.46.0 may hold the TOOI code (c_8c840238); the hand-off translates it.": "The Woo information category as OpenCatalogi's code, for example infocat009. A record stored before register 8.46.0 may hold the TOOI code (c_8c840238); the hand-off translates it.",
         "The date the source system destroys the document; passed to the platform so the publication goes offline then too.": "The date the source system destroys the document; passed to the platform so the publication goes offline then too.",
         "The dossier the document belongs to, if any.": "The dossier the document belongs to, if any.",
         "The id of the publication object at the publication platform.": "The id of the publication object at the publication platform.",

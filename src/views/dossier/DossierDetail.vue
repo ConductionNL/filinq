@@ -254,6 +254,14 @@
 					}}
 				</p>
 			</section>
+
+			<!-- Files and deck leaves the schema links (leaf-integrations 2.1). -->
+			<DocumentLeafTabs
+				register="filinq"
+				schema="dossier"
+				:objectId="dossierId"
+				:leafIds="leafIds"
+				:emptyLabel="t('filinq', 'Nothing linked here yet')" />
 		</template>
 
 		<ConfirmActionDialog
@@ -284,9 +292,11 @@ import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import DocumentLeafTabs from '../../components/DocumentLeafTabs.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import { leafIdsForSchema } from '../../services/documentLeafTabs.js'
 import { dossierStore } from '../../store/store.js'
 
 /**
@@ -304,6 +314,7 @@ export default {
 		CnStatusBadge,
 		ConfirmActionDialog,
 		Delete,
+		DocumentLeafTabs,
 		DotsHorizontal,
 		EyeOffOutline,
 		FilePdfBox,
@@ -321,6 +332,8 @@ export default {
 	data() {
 		return {
 			dossierStore,
+			// The leaves the dossier schema links (leaf-integrations 2.1).
+			leafIds: leafIdsForSchema('dossier'),
 			renaming: false,
 			draftName: '',
 			folderWarning: '',

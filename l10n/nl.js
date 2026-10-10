@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Nothing linked here yet": "Hier is nog niets gekoppeld",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
         "Subfolder for anonymised copies": "Submap voor geanonimiseerde kopieën",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Anonimiseren per batch of map zet de gelakte kopieën in deze submap, naast de originelen.",
@@ -1015,7 +1016,7 @@ OC.L10N.register(
         "Step": "Stap",
         "The Nextcloud file id of the original document. The original is never handed off.": "Het Nextcloud-bestands-id van het originele document. Het origineel wordt nooit overgedragen.",
         "The Nextcloud file id of the redacted copy that is published.": "Het Nextcloud-bestands-id van de geredigeerde kopie die wordt gepubliceerd.",
-        "The Woo information category as a TOOI code, for example c_8c840238.": "De Woo-informatiecategorie als TOOI-code, bijvoorbeeld c_8c840238.",
+        "The Woo information category as OpenCatalogi's code, for example infocat009. A record stored before register 8.46.0 may hold the TOOI code (c_8c840238); the hand-off translates it.": "De Woo-informatiecategorie als code van OpenCatalogi, bijvoorbeeld infocat009. Een record van vóór register 8.46.0 kan nog de TOOI-code bevatten (c_8c840238); de overdracht vertaalt die.",
         "The date the source system destroys the document; passed to the platform so the publication goes offline then too.": "De datum waarop het bronsysteem het document vernietigt; doorgegeven aan het platform zodat de publicatie dan ook offline gaat.",
         "The dossier the document belongs to, if any.": "Het dossier waar het document bij hoort, als dat er is.",
         "The id of the publication object at the publication platform.": "Het id van het publicatieobject op het publicatieplatform.",

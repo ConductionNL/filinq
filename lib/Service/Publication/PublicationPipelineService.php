@@ -157,11 +157,16 @@ class PublicationPipelineService {
 	 */
 	public function updateMetadata(array $record, array $metadata, string $actor): array {
 		$category = (string) ($metadata['wooCategory'] ?? '');
-		$codes = array_column($this->platform->categories(), 'code');
-		if ($category !== '' && $codes !== [] && in_array($category, $codes, true) === false) {
-			throw new InvalidArgumentException('Unknown Woo information category: ' . $category, 400);
+		if ($category !== '' && $this->platform->categories() !== []) {
+			$code = $this->platform->toPlatformCode(value: $category);
+			if ($code === null) {
+				throw new InvalidArgumentException('Unknown Woo information category: ' . $category, 400);
+			}
+
+			$metadata['wooCategory'] = $code;
 		}
 
+		$categoryBefore = (string) ($record['wooCategory'] ?? '');
 		foreach (self::METADATA as $field) {
 			if (array_key_exists($field, $metadata) === true) {
 				$record[$field] = (string) $metadata[$field];
@@ -169,6 +174,7 @@ class PublicationPipelineService {
 		}
 
 		$record = $this->store->saveRecord(record: $record, uuid: (string) $record['uuid']);
+		$this->followCategoryEdit(record: $record, categoryBefore: $categoryBefore);
 		$details = '';
 		if (trim((string) ($metadata['accessibilityOverrideReason'] ?? '')) !== '') {
 			// The reason to publish a copy that lost its accessibility goes in the log as well.
@@ -180,6 +186,30 @@ class PublicationPipelineService {
 		return $record;
 
 	}//end updateMetadata()
+
+	/**
+	 * After the hand-off, a changed category reaches the publication.
+	 *
+	 * The publication is filed in the sitemap of its category, so an edit
+	 * that stayed on the record would leave it in the wrong list.
+	 *
+	 * @param array<string, mixed> $record         The stored record.
+	 * @param string               $categoryBefore The category before the edit.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1-3
+	 */
+	private function followCategoryEdit(array $record, string $categoryBefore): void {
+		$publication = (string) ($record['endpointPublicationRef'] ?? '');
+		$category = (string) ($record['wooCategory'] ?? '');
+		if ($publication === '' || $category === '' || $category === $categoryBefore) {
+			return;
+		}
+
+		$this->store->savePlatformPublication(publication: ['wooCategory' => $category], uuid: $publication);
+
+	}//end followCategoryEdit()
 
 	/**
 	 * Hand a ready publication to the platform with its redacted copy.
@@ -203,14 +233,23 @@ class PublicationPipelineService {
 		$missing = array_values(
 			array_filter(['officieleTitel', 'wooCategory', 'publicatiedatum'], static fn (string $f): bool => (string) ($record[$f] ?? '') === '')
 		);
-		if ($record['status'] !== 'ready' || $missing !== []) {
+		$code = null;
+		if ($missing === []) {
+			$code = $this->platform->toPlatformCode(value: (string) $record['wooCategory']);
+		}
+
+		if ($record['status'] !== 'ready' || $missing !== [] || $code === null) {
 			$reasons = (array) $record['readinessReasons'];
 			if ($missing !== []) {
 				$reasons[] = 'Missing Woo metadata: ' . implode(', ', $missing);
+			} else if ($code === null) {
+				$reasons[] = 'Unknown Woo category: ' . (string) $record['wooCategory'];
 			}
 
 			throw new PublicationNotReadyException(reasons: $reasons);
 		}
+
+		$record['wooCategory'] = $code;
 
 		$copy = $this->platform->readCopy(fileId: (string) $record['redactedFileRef'], actor: $actor);
 		$publication = $this->store->savePlatformPublication(

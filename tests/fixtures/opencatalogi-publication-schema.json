@@ -1,69 +1,192 @@
 {
-    "_source": "ConductionNL/opencatalogi development lib/Settings/publication_register.json, schema publication 0.0.4, read 2026-09-29. Update this copy when OpenCatalogi changes the schema; the drift test then shows what Filinq must follow.",
+    "_source": "ConductionNL/opencatalogi development @f4241e445 lib/Settings/publication_register.json, schema publication 0.0.5, read 2026-10-10. Update this copy when OpenCatalogi changes the schema; the drift test then shows what Filinq must follow.",
     "required": [
         "title"
     ],
     "properties": {
         "title": {
             "type": "string",
-            "maxLength": 255
+            "description": "The title of the publication",
+            "maxLength": 255,
+            "minLength": 1,
+            "facetable": true,
+            "title": "Title"
         },
         "summary": {
             "type": "string",
-            "maxLength": 255
+            "description": "Brief description of the publication",
+            "maxLength": 255,
+            "facetable": false,
+            "title": "Summary"
         },
         "description": {
             "type": "string",
-            "maxLength": 2555
+            "description": "Detailed description of the publication",
+            "maxLength": 2555,
+            "facetable": false,
+            "title": "Description"
         },
         "organization": {
             "type": "string",
-            "format": "uuid"
+            "description": "Reference to the organisation that owns this publication, resolved against OpenRegister's shared organisation.",
+            "format": "uuid",
+            "$ref": "nc-organisation",
+            "facetable": true,
+            "title": "Organization"
         },
         "themes": {
-            "type": "array"
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uuid",
+                "$ref": "theme"
+            },
+            "description": "List of themes associated with this publication",
+            "facetable": true,
+            "title": "Themes"
+        },
+        "wooCategory": {
+            "type": "string",
+            "title": "Woo information category",
+            "description": "The information category of the Woo this publication is filed under. The sitemap of that category lists it for the national Woo index.",
+            "enum": [
+                "infocat001",
+                "infocat002",
+                "infocat003",
+                "infocat004",
+                "infocat005",
+                "infocat006",
+                "infocat007",
+                "infocat008",
+                "infocat009",
+                "infocat010",
+                "infocat011",
+                "infocat012",
+                "infocat013",
+                "infocat014",
+                "infocat015",
+                "infocat016",
+                "infocat017"
+            ],
+            "x-enum-labels": {
+                "infocat001": "Laws and generally binding regulations",
+                "infocat002": "Other decisions of general scope",
+                "infocat003": "Draft legislation sent out for advice",
+                "infocat004": "Organisation and working methods",
+                "infocat005": "Contact details",
+                "infocat006": "Documents received by representative bodies",
+                "infocat007": "Meeting documents of the States General",
+                "infocat008": "Meeting documents of local and regional governments",
+                "infocat009": "Agendas and decision lists of executive boards",
+                "infocat010": "Advice",
+                "infocat011": "Covenants",
+                "infocat012": "Annual plans and annual reports",
+                "infocat013": "Subsidy obligations other than by decision",
+                "infocat014": "Woo requests and decisions",
+                "infocat015": "Research reports",
+                "infocat016": "Individual decisions",
+                "infocat017": "Complaint rulings"
+            },
+            "facetable": true
         },
         "publicationDate": {
             "type": "string",
-            "format": "date-time"
+            "description": "Publication date (WOO/DIWOO) — when set to a date in the past, this publication is live and publicly accessible",
+            "format": "date-time",
+            "facetable": true,
+            "title": "Publication Date"
         },
         "depublicationDate": {
             "type": "string",
-            "format": "date-time"
+            "description": "Depublication date (WOO/DIWOO) — when set and in the past, this publication is withdrawn from public access. A future value schedules automatic depublication via the OpenRegister published-predicate.",
+            "format": "date-time",
+            "facetable": true,
+            "title": "Depublication Date"
         },
         "retentionCategory": {
             "type": "string",
-            "maxLength": 255
+            "description": "Selectielijst / WOO information-category reference that keys the statutory retention term (RET-003).",
+            "maxLength": 255,
+            "facetable": true,
+            "title": "Retention Category"
         },
         "retentionTermMonths": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Statutory retention term in months, counted from the publication date (RET-003).",
+            "minimum": 0,
+            "facetable": true,
+            "title": "Retention Term (Months)"
         },
         "retentionAction": {
             "type": "string",
+            "description": "Action taken when the retention term expires: review (flag only), depublish (set depublicationDate), or archive (lifecycle transition) (RET-003).",
             "enum": [
                 "review",
                 "depublish",
                 "archive"
-            ]
+            ],
+            "facetable": true,
+            "title": "Retention Action"
         },
         "retentionExpiresAt": {
             "type": "string",
-            "format": "date-time"
+            "description": "Computed retention expiry = publication date + retentionTermMonths. May be manually overridden, in which case retentionNote is required (RET-003).",
+            "format": "date-time",
+            "facetable": true,
+            "title": "Retention Expires At"
         },
         "retentionNote": {
             "type": "string",
-            "maxLength": 2555
+            "description": "Legal basis or exception rationale for the retention decision; mandatory when retentionExpiresAt is manually overridden or extended (RET-003).",
+            "maxLength": 2555,
+            "facetable": false,
+            "title": "Retention Note"
         },
         "retentionLastEvaluatedAt": {
             "type": "string",
-            "format": "date-time"
+            "description": "Idempotency marker recording the date the retention evaluation job last actioned this publication (RET-005).",
+            "format": "date-time",
+            "facetable": false,
+            "title": "Retention Last Evaluated At"
         },
         "status": {
             "type": "string",
+            "description": "Lifecycle status of the publication; the archived state retains the object internally while removing it from every public surface (RET-006).",
             "enum": [
                 "published",
                 "archived"
-            ]
+            ],
+            "facetable": true,
+            "title": "Status"
+        },
+        "plooiStatus": {
+            "type": "string",
+            "description": "Whether this publication reached PLOOI, the delivery API of open.overheid.nl: delivered or failed. Empty until a catalogue with PLOOI delivery on delivers it.",
+            "enum": [
+                "delivered",
+                "failed"
+            ],
+            "facetable": true,
+            "title": "PLOOI status"
+        },
+        "plooiDeliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the PLOOI delivery was last attempted.",
+            "facetable": false,
+            "title": "PLOOI delivered at"
+        },
+        "plooiIdentifier": {
+            "type": "string",
+            "description": "The identifier PLOOI gave this publication.",
+            "facetable": false,
+            "title": "PLOOI identifier"
+        },
+        "plooiReason": {
+            "type": "string",
+            "description": "Why the last PLOOI delivery failed, as the platform or the connection said it.",
+            "facetable": false,
+            "title": "PLOOI failure reason"
         }
     }
 }

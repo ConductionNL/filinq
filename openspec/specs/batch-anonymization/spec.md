@@ -237,3 +237,27 @@ When the resolved mode is `pdf-only`, every file in the batch that is converted 
 - **THEN** the affected file still reports a successful outcome with its PDF metadata
 - **AND** the delete failure is logged at warning level
 - **AND** the remaining files are processed and cleaned up normally
+
+### Requirement: WOO Profile Update Endpoint Declares An Explicit Auth Attribute
+
+`BatchAnonymizationController::updateProfiles()`, routed as
+`PUT api/anonymization/profiles`, MUST carry an explicit auth attribute and
+MUST NOT rely on Nextcloud's implicit "no annotation = admin-only" default.
+The write is admin-only: a profile decides which entity types get redacted for
+every user, so it is instance policy. It carries
+`#[AuthorizedAdminSetting(FilinqAdmin::class)]`; the sibling read
+`getProfiles()` stays user-level.
+
+#### Scenario: The method declares an explicit attribute
+
+- GIVEN `lib/Controller/BatchAnonymizationController.php`
+- WHEN the attributes on `updateProfiles()` are inspected
+- THEN `#[AuthorizedAdminSetting]` SHALL be present
+- AND no `@NoAdminRequired` annotation SHALL be present
+
+#### Scenario: Access level is an explicit decision, not an accident
+
+- GIVEN `getProfiles()` is user-level (operator read access)
+- WHEN `updateProfiles()`'s access level is inspected
+- THEN it SHALL be explicitly narrowed to admin-only, documented on the method
+

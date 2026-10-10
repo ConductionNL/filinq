@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Nothing linked here yet": "Qui non è ancora collegato nulla",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Tutti i documenti della cartella sono stati anonimizzati. Le copie anonimizzate si trovano in una sottocartella separata, accanto agli originali.",
         "Subfolder for anonymised copies": "Sottocartella per le copie anonimizzate",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "L'anonimizzazione in batch e per cartella mette le copie oscurate in questa sottocartella, accanto agli originali.",
@@ -1017,7 +1018,7 @@ OC.L10N.register(
         "Step": "Passaggio",
         "The Nextcloud file id of the original document. The original is never handed off.": "L'id del file Nextcloud del documento originale. L'originale non viene mai consegnato.",
         "The Nextcloud file id of the redacted copy that is published.": "L'id del file Nextcloud della copia oscurata che viene pubblicata.",
-        "The Woo information category as a TOOI code, for example c_8c840238.": "La categoria di informazione Woo come codice TOOI, per esempio c_8c840238.",
+        "The Woo information category as OpenCatalogi's code, for example infocat009. A record stored before register 8.46.0 may hold the TOOI code (c_8c840238); the hand-off translates it.": "La categoria di informazione Woo come codice di OpenCatalogi, per esempio infocat009. Un record salvato prima del registro 8.46.0 può contenere il codice TOOI (c_8c840238); il passaggio lo traduce.",
         "The date the source system destroys the document; passed to the platform so the publication goes offline then too.": "La data in cui il sistema di origine distrugge il documento; passata alla piattaforma così la pubblicazione va offline anche allora.",
         "The dossier the document belongs to, if any.": "Il fascicolo a cui appartiene il documento, se c'è.",
         "The id of the publication object at the publication platform.": "L'id dell'oggetto di pubblicazione sulla piattaforma di pubblicazione.",

@@ -28,7 +28,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\AppInfo;
 
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
+use OCA\Filinq\Event\DocumentStampRequestedEvent;
 use OCA\Filinq\EventListener\DocumentGenerationRequestedListener;
+use OCA\Filinq\EventListener\DocumentStampRequestedListener;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
@@ -76,6 +78,13 @@ class DocumentGenerationRegistrar {
 		$context->registerEventListener(
 			event: DocumentGenerationRequestedEvent::class,
 			listener: DocumentGenerationRequestedListener::class
+		);
+
+		// A sibling app asks filinq to stamp a text on every page of a PDF
+		// (work-stamp-text-on-every-page, REQ-PST-002).
+		$context->registerEventListener(
+			event: DocumentStampRequestedEvent::class,
+			listener: DocumentStampRequestedListener::class
 		);
 
 	}//end register()
