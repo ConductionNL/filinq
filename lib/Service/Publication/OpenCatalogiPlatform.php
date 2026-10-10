@@ -84,9 +84,14 @@ class OpenCatalogiPlatform {
 	/**
 	 * The Woo information categories, from OpenCatalogi's own TOOI value list.
 	 *
-	 * @return list<array{code: string, label: string}> The categories, empty when OpenCatalogi is not there.
+	 * The code is the list's key (`infocat001`), the value OpenCatalogi's
+	 * publication schema accepts and files its sitemaps under. filinq keeps
+	 * no category list of its own.
+	 *
+	 * @return list<array{code: string, label: string, uri: string}> The categories, empty when OpenCatalogi is not there.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1-1
 	 */
 	public function categories(): array {
 		if ($this->available() === false) {
@@ -100,13 +105,46 @@ class OpenCatalogiPlatform {
 		}
 
 		$categories = [];
-		foreach ((array) $list as $entry) {
-			$categories[] = ['code' => basename((string) ($entry['uri'] ?? '')), 'label' => (string) ($entry['label'] ?? '')];
+		foreach ((array) $list as $key => $entry) {
+			$categories[] = [
+				'code' => (string) $key,
+				'label' => (string) ($entry['label'] ?? ''),
+				'uri' => (string) ($entry['uri'] ?? ''),
+			];
 		}
 
 		return $categories;
 
 	}//end categories()
+
+	/**
+	 * OpenCatalogi's category code for a stored value: a code already, or a TOOI code.
+	 *
+	 * Records stored before the hand-off carried the category hold the TOOI
+	 * code (`c_8c840238`), the basename of the category's URI. Both forms map
+	 * to the list key; anything else answers null, and the caller refuses.
+	 *
+	 * @param string $value The stored category.
+	 *
+	 * @return string|null The code, or null when neither form matches.
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1-1
+	 */
+	public function toPlatformCode(string $value): ?string {
+		$value = trim($value);
+		if ($value === '') {
+			return null;
+		}
+
+		foreach ($this->categories() as $category) {
+			if ($category['code'] === $value || basename($category['uri']) === $value) {
+				return $category['code'];
+			}
+		}
+
+		return null;
+
+	}//end toPlatformCode()
 
 	/**
 	 * Attach the redacted copy to the platform's publication, shared so the public sees it.

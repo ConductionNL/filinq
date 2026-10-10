@@ -16,6 +16,8 @@
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#successful-handoff-creates-the-endpoint-publication
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#withdraw-a-publication
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#wizard-reflects-gate-state
+// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
+// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#changing-the-category-moves-the-publication
 
 import type { Page } from '@playwright/test'
 
@@ -41,7 +43,12 @@ async function pipeline(
 	let record = { uuid: 'pub-1', platformAvailable: true, log: [], ...initial }
 	await page.route('**/apps/filinq/api/publications/categories', (route) =>
 		route.fulfill({
-			json: { results: [{ code: 'c_8c840238', label: 'Adviezen' }] },
+			json: {
+				results: [
+					{ code: 'infocat001', label: 'Wetten en algemeen verbindende voorschriften' },
+					{ code: 'infocat009', label: 'Adviezen' },
+				],
+			},
 		}),
 	)
 	await page.route('**/apps/filinq/api/publications/pub-1**', async (route) => {
@@ -66,7 +73,7 @@ const clear = {
 	prohibitionsClear: true,
 	readinessReasons: [],
 	officieleTitel: 'Besluit 2025-017',
-	wooCategory: 'c_8c840238',
+	wooCategory: 'infocat009',
 	publicatiedatum: '2026-09-29',
 }
 
@@ -169,4 +176,42 @@ test.describe('woo publication pipeline', () => {
 		await check.getByRole('link', { name: 'Resolve this' }).click()
 		await expect(page).toHaveURL(/\/anonymization/)
 	})
+
+	test('the category picker offers OpenCatalogi\'s codes and a change is saved on the record', async ({
+		page,
+	}) => {
+		// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#changing-the-category-moves-the-publication
+		let sent: Record<string, unknown> = {}
+		await pipeline(
+			page,
+			{ ...clear, status: 'published', endpointPublicationRef: 'oc-1' },
+			(step, _r, body) => {
+				sent = body
+				return step === 'metadata'
+					? { json: { wooCategory: body.wooCategory } }
+					: { json: {} }
+			},
+		)
+		await go(page, 'publications/pub-1')
+		await page.getByLabel('Information category').selectOption('infocat001')
+		await page.getByRole('button', { name: 'Save metadata' }).click()
+		await expect.poll(() => sent.wooCategory).toBe('infocat001')
+	})
+})
+
+/*
+ * Live pass only (decision 139): on an instance with filinq and OpenCatalogi,
+ * hand off a record and find it in the sitemap of its category. Skipped
+ * unless FILINQ_LIVE_WOO_PUBLICATION names a handed-off publication as
+ * "<catalog slug>:<publication uuid>:<category code>".
+ */
+test('a handed-off publication is listed in its category sitemap', async ({ page }) => {
+	// @e2e openspec/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
+	const live = process.env.FILINQ_LIVE_WOO_PUBLICATION || ''
+	test.skip(live === '', 'live pass only: set FILINQ_LIVE_WOO_PUBLICATION')
+	const [catalog, uuid, code] = live.split(':')
+	await page.goto(
+		`/index.php/apps/opencatalogi/api/${catalog}/sitemaps/sitemapindex-diwoo-${code}.xml`,
+	)
+	await expect(page.locator('body')).toContainText(uuid)
 })

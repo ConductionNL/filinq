@@ -1020,7 +1020,7 @@
         "Step": "Étape",
         "The Nextcloud file id of the original document. The original is never handed off.": "L'identifiant de fichier Nextcloud du document original. L'original n'est jamais transmis.",
         "The Nextcloud file id of the redacted copy that is published.": "L'identifiant de fichier Nextcloud de la copie caviardée qui est publiée.",
-        "The Woo information category as a TOOI code, for example c_8c840238.": "La catégorie d'information Woo sous forme de code TOOI, par exemple c_8c840238.",
+        "The Woo information category as OpenCatalogi's code, for example infocat009. A record stored before register 8.46.0 may hold the TOOI code (c_8c840238); the hand-off translates it.": "La catégorie d'information Woo sous forme de code OpenCatalogi, par exemple infocat009. Un enregistrement antérieur au registre 8.46.0 peut contenir le code TOOI (c_8c840238) ; la transmission le traduit.",
         "The date the source system destroys the document; passed to the platform so the publication goes offline then too.": "La date à laquelle le système source détruit le document ; transmise à la plateforme pour que la publication soit aussi retirée à ce moment-là.",
         "The dossier the document belongs to, if any.": "Le dossier auquel appartient le document, le cas échéant.",
         "The id of the publication object at the publication platform.": "L'identifiant de l'objet de publication sur la plateforme de publication.",
