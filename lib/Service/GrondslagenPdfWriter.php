@@ -27,6 +27,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use RuntimeException;
@@ -67,11 +69,15 @@ class GrondslagenPdfWriter {
 	 * Constructor.
 	 *
 	 * @param PdfService $pdfService Twig + mPDF renderer.
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
+	 * @param OutputLayoutResolver $layoutResolver Names the subfolder the dossier summary goes in.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly PdfService $pdfService,
+		private readonly FinalDocumentService $finalDocuments,
+		private readonly OutputLayoutResolver $layoutResolver,
 	) {
 
 	}//end __construct()
@@ -139,9 +145,17 @@ class GrondslagenPdfWriter {
 	 *
 	 * @return void
 	 *
+	 * @throws DocumentFinalException When the anonymised file's current version is final.
 	 * @throws RuntimeException When FPDI merging or the file write fails.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function appendToPdf(File $anonymisedFile, string $summaryBytes): void {
+		$this->finalDocuments->assertWritable(
+			fileId: $anonymisedFile->getId(),
+			action: 'append the grondslagen summary to this document'
+		);
+
 		$combinedBytes = $this->mergeSummaryIntoPdf(
 			originalPdfBytes: (string)$anonymisedFile->getContent(),
 			summaryPdfBytes: $summaryBytes
@@ -170,7 +184,10 @@ class GrondslagenPdfWriter {
 	 *
 	 * @return array{file: File, refreshed: bool} The written file and whether it already existed.
 	 *
+	 * @throws DocumentFinalException When the existing summary's current version is final.
 	 * @throws RuntimeException When the write fails.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function writeBesideFile(File $anonymisedFile, string $summaryFileName, string $summaryBytes): array {
 		$parent = $anonymisedFile->getParent();
@@ -179,12 +196,21 @@ class GrondslagenPdfWriter {
 			if ($parent->nodeExists($summaryFileName) === true) {
 				$existing = $parent->get($summaryFileName);
 				if ($existing instanceof File) {
+					$this->finalDocuments->assertWritable(
+						fileId: $existing->getId(),
+						action: 'refresh this grondslagen summary'
+					);
 					$existing->putContent($summaryBytes);
 					return ['file' => $existing, 'refreshed' => true];
 				}
 			}
 
 			$newFile = $parent->newFile(path: $summaryFileName, content: $summaryBytes);
+		} catch (DocumentFinalException $e) {
+			// The refusal carries the sentence the caller shows. Wrapping it in a
+			// write-failure would turn "this document is final" into "the write
+			// failed", which is the one thing the reader must not conclude.
+			throw $e;
 		} catch (Exception $e) {
 			throw new RuntimeException(
 				'Grondslagen summary write failed: ' . $summaryFileName . ' — ' . $e->getMessage(),
@@ -198,32 +224,42 @@ class GrondslagenPdfWriter {
 	/**
 	 * Save the rendered per-dossier summary PDF.
 	 *
-	 * Destination convention: `<dossier-folder>/grondslagen.pdf`. Wave 2
-	 * (`anonymisation-output-folder-layout`) will introduce a
-	 * `<dossier-folder>/anonymised/` subfolder; this method will follow that
-	 * convention once the helper from Wave 2 lands. For v1, we use the flat
-	 * path inside the dossier folder.
+	 * Destination: `<dossier-folder>/<subfolder>/grondslagen.pdf`, beside the
+	 * redacted copies, in the subfolder {@see OutputLayoutResolver} names
+	 * (default `anonymised`). The subfolder is created when missing.
 	 *
 	 * @param Folder $folder The dossier folder.
 	 * @param string $pdfBytes The freshly-rendered PDF bytes.
 	 *
 	 * @return File The newly-written / refreshed summary file.
 	 *
+	 * @throws DocumentFinalException When the existing report's current version is final.
 	 * @throws RuntimeException On write failure.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-8
 	 */
 	public function saveDossierSummary(Folder $folder, string $pdfBytes): File {
 		$name = self::DOSSIER_SUMMARY_NAME;
 
 		try {
+			$folder = $this->outputFolder(dossierFolder: $folder);
 			if ($folder->nodeExists($name) === true) {
 				$existing = $folder->get($name);
 				if ($existing instanceof File) {
+					$this->finalDocuments->assertWritable(
+						fileId: $existing->getId(),
+						action: 'refresh this grondslagen report'
+					);
 					$existing->putContent($pdfBytes);
 					return $existing;
 				}
 			}
 
 			$newFile = $folder->newFile(path: $name, content: $pdfBytes);
+		} catch (DocumentFinalException $e) {
+			// See writeBesideFile(): the refusal keeps its own type and sentence.
+			throw $e;
 		} catch (Exception $e) {
 			throw new RuntimeException(
 				'Grondslagen summary: failed to write ' . $name . ' to dossier folder: ' . $e->getMessage(),
@@ -233,6 +269,32 @@ class GrondslagenPdfWriter {
 
 		return $newFile;
 	}//end saveDossierSummary()
+
+	/**
+	 * The output subfolder of a dossier folder, created when missing.
+	 *
+	 * @param Folder $dossierFolder The dossier folder.
+	 *
+	 * @return Folder The subfolder the summary is written to.
+	 *
+	 * @throws RuntimeException When the subfolder name is taken by a file.
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-8
+	 */
+	private function outputFolder(Folder $dossierFolder): Folder {
+		$name = $this->layoutResolver->getSubfolderName();
+		if ($dossierFolder->nodeExists($name) === false) {
+			return $dossierFolder->newFolder($name);
+		}
+
+		$existing = $dossierFolder->get($name);
+		if ($existing instanceof Folder) {
+			return $existing;
+		}
+
+		throw new RuntimeException('The output subfolder name "' . $name . '" is taken by a file in this dossier.');
+
+	}//end outputFolder()
 
 	/**
 	 * Merge an anonymised PDF + the freshly-rendered summary PDF into one PDF.

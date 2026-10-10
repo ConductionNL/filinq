@@ -177,6 +177,7 @@ class Pdfa3ConversionControllerTest extends TestCase {
 				'checksumSha256' => str_repeat('b', 64),
 				'pages' => 3,
 				'conformance' => '3-B',
+				'verified' => 'false',
 			]
 		);
 
@@ -187,6 +188,8 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->assertEquals(str_repeat('b', 64), $headers['X-Docudesk-Pdfa3-Checksum-Sha256']);
 		$this->assertEquals('3', $headers['X-Docudesk-Pdfa3-Pages']);
 		$this->assertEquals('3-B', $headers['X-Docudesk-Pdfa3-Conformance']);
+		// veraPDF's verdict rides beside the claim, so a caller can tell them apart.
+		$this->assertSame('false', $headers['X-Docudesk-Pdfa3-Verified']);
 
 	}//end testConvertReturnsDownloadWithCompositionHeadersOnSuccess()
 

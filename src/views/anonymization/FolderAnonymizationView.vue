@@ -215,7 +215,7 @@
 				{{
 					t(
 						'filinq',
-						'All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.',
+						'All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.',
 					)
 				}}
 			</NcNoteCard>

@@ -164,6 +164,7 @@ class Pdfa3ConversionController extends Controller {
 			$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
 			$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
 			$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
+			$response->addHeader('X-Docudesk-Pdfa3-Verified', (string) ($result['verified'] ?? 'skipped'));
 
 			return $response;
 		} catch (Pdfa3ConversionException $e) {

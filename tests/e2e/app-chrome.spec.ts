@@ -65,7 +65,7 @@ test.describe('app chrome (ADR-114)', () => {
 		await dismissSetupWizard(page)
 	})
 
-	test('the footer reads Documentation, Store, Reports, Features & roadmap, each with a glyph', async ({
+	test('the footer reads Documentation, Store, Features & roadmap, each with a glyph', async ({
 		page,
 	}) => {
 		const footer = page.locator(
@@ -84,11 +84,10 @@ test.describe('app chrome (ADR-114)', () => {
 		const seen = texts.filter((t) =>
 			/Documentation|Store|Reports|roadmap/i.test(t),
 		)
-		expect(seen.length).toBe(4)
+		expect(seen.length).toBe(3)
 		expect(seen[0]).toMatch(/Documentation/i)
 		expect(seen[1]).toMatch(/Store/i)
-		expect(seen[2]).toMatch(/Reports/i)
-		expect(seen[3]).toMatch(/roadmap/i)
+		expect(seen[2]).toMatch(/roadmap/i)
 
 		// A glyph on every row. ChartBoxOutline had to be added to src/icons.js
 		// for the Reports entry; without it the row renders a blank space where
@@ -102,6 +101,8 @@ test.describe('app chrome (ADR-114)', () => {
 
 	test('Reports lists the three reports', async ({ page }) => {
 		const nav = page.locator('[data-testid="cn-nav"]')
+		// Reports sits in the Advanced foldout, so open it first.
+		await nav.locator('[data-testid="cn-nav-settings"]').click()
 		await nav
 			.locator('[data-testid="cn-nav-entry-ReportsMenu"] a')
 			.first()

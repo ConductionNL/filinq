@@ -18,6 +18,13 @@
 					class="template-detail__lock-warning">
 					{{ t('filinq', 'Locked by {user}', { user: lockOwner }) }}
 				</span>
+				<NcButton
+					v-if="hasWizard"
+					variant="secondary"
+					data-testid="template-generate-with-wizard"
+					@click="openWizard">
+					{{ t('filinq', 'Generate with wizard') }}
+				</NcButton>
 				<NcButton variant="secondary" :disabled="saving" @click="handleBack">
 					{{ t('filinq', 'Cancel') }}
 				</NcButton>
@@ -50,6 +57,14 @@
 				:class="[{ active: activeTab === 'versions' }]"
 				@click="loadVersions">
 				{{ t('filinq', 'Versions') }}
+			</button>
+			<button
+				v-if="!isNew"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'wizard' }]"
+				data-testid="template-tab-wizard"
+				@click="activeTab = 'wizard'">
+				{{ t('filinq', 'Wizard') }}
 			</button>
 		</div>
 
@@ -204,6 +219,9 @@
 					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
 			</div>
+			<TemplateLintChecklist
+				v-if="!previewLoading && previewHtml"
+				:lint="previewLint" />
 			<NcLoadingIcon v-if="previewLoading" />
 			<div v-else-if="previewError" class="template-detail__error">
 				{{ previewError }}
@@ -259,6 +277,14 @@
 			</table>
 		</div>
 
+		<!-- WIZARD TAB -->
+		<WizardAuthoringPanel
+			v-else-if="activeTab === 'wizard'"
+			:templateId="templateStore.templateItem.id"
+			:templateName="form.name"
+			:readOnly="Boolean(lockOwner && !isLockMine)"
+			@saved="onWizardSaved" />
+
 		<!-- Dialogs (extracted per ADR-004) -->
 		<MergeFieldDialog
 			v-if="showMergeDialog"
@@ -286,9 +312,12 @@ import {
 	NcTextField,
 } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
+import WizardAuthoringPanel from './WizardAuthoringPanel.vue'
+import { loadTemplateWizard } from '../../services/wizard.js'
 import { useTemplateStore } from '../../store/modules/template.js'
 
 export default {
@@ -301,6 +330,8 @@ export default {
 		ConditionalSectionDialog,
 		MergeFieldDialog,
 		ConfirmRestoreVersionDialog,
+		TemplateLintChecklist,
+		WizardAuthoringPanel,
 	},
 
 	data() {
@@ -324,6 +355,7 @@ export default {
 			// Preview
 			previewLoading: false,
 			previewHtml: '',
+			previewLint: [],
 			previewError: '',
 			sampleDataJson: '{}',
 			// Versions
@@ -337,6 +369,8 @@ export default {
 			showMergeDialog: false,
 			showConditionalDialog: false,
 			restoreTarget: null,
+			// Guided document wizard: whether the template has an active one
+			hasWizard: false,
 		}
 	},
 
@@ -374,6 +408,17 @@ export default {
 	 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 	 */
 	async mounted() {
+		const routeId = this.$route?.params?.id
+		if (
+			routeId
+			&& routeId !== 'new'
+			&& this.templateStore.templateItem?.id !== routeId
+		) {
+			// Opened by URL (the Templates index links here): load the template
+			// the route names, so the Versions and Wizard tabs can render.
+			await this.templateStore.fetchTemplate(routeId)
+		}
+
 		if (!this.isNew) {
 			const tmpl = this.templateStore.templateItem
 			this.form.name = tmpl.name || ''
@@ -392,6 +437,9 @@ export default {
 			if (locked) {
 				this.lockOwner = locked.lockedBy || null
 			}
+
+			const wizard = await loadTemplateWizard(tmpl.id)
+			this.hasWizard = wizard.ok && Boolean(wizard.data?.wizard)
 		}
 	},
 
@@ -401,6 +449,28 @@ export default {
 
 	methods: {
 		t,
+		/**
+		 * Open the wizard runner for this template.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
+		 */
+		openWizard() {
+			this.$router.push({
+				name: 'WizardRunner',
+				params: { id: this.templateStore.templateItem.id },
+			})
+		},
+
+		/**
+		 * Keep the Generate with wizard button in step with the Wizard tab.
+		 *
+		 * @param {object|null} wizard The saved wizard, or null after a delete.
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
+		 */
+		onWizardSaved(wizard) {
+			this.hasWizard = Boolean(wizard) && wizard.active !== false
+		},
+
 		/**
 		 * Release any held lock and navigate back to the template list.
 		 *
@@ -483,10 +553,12 @@ export default {
 				// Ignore JSON parse error; use empty data.
 			}
 			try {
-				this.previewHtml = await this.templateStore.previewTemplate(
+				const preview = await this.templateStore.previewTemplate(
 					this.form.content,
 					sampleData,
 				)
+				this.previewHtml = preview?.html || ''
+				this.previewLint = preview?.lint || []
 			} catch (err) {
 				this.previewError = err.message || t('filinq', 'Preview failed')
 			} finally {

@@ -47,6 +47,24 @@ Batch state is persisted in Nextcloud `ICache` with a 2-hour TTL. No batch data 
 
 A batch **is** a folder/dossier, so `POST /api/anonymization/batch/{batchId}/anonymize` defaults to `scope: "dossier"`: a given entity gets the same scope-local placeholder number across **all** files in the batch, so the redacted set reads as one unit. Pass `scope: "document"` to number each file independently instead. See [Placeholder-numbering scope](./anonymization.md#placeholder-numbering-scope-scope) on the anonymization page for the full semantics.
 
+## Where the anonymised copies go
+
+Each redacted copy lands in a subfolder next to its original, under the original's name:
+
+```
+/Documents/Bezwaar-2026/
+  besluit.pdf             (original, unchanged)
+  anonymised/
+    besluit.pdf           (anonymised copy)
+```
+
+- The subfolder is `anonymised` unless an admin sets another name under Settings, Subfolder for anonymised copies (config key `anonymisation.output_subfolder_name`).
+- The name takes lowercase letters, digits, hyphens and underscores. Anything else is refused on save, and the error names the characters.
+- A rerun replaces a copy of the same name. Other files in the subfolder stay.
+- A copy of an old `_anonymized` file loses the suffix: `besluit_anonymized.pdf` becomes `anonymised/besluit.pdf`.
+- If the move fails, the copy stays beside the original as `<name>_anonymized.<ext>`. The file entry then carries `warning.code` `MOVE_FAILED` and the path where it stayed.
+- Anonymising a single document is unchanged: its copy stays beside the original with the `_anonymized` suffix.
+
 ## Audit Report
 
 The CSV report includes: `fileName`, `originalFileId`, `anonymizedFileId`, `entityCount`, `replacementCount`, `status`, `timestamp`. Entity values are excluded (GDPR data minimization, Recital 26).

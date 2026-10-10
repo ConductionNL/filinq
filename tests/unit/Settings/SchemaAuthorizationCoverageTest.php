@@ -32,7 +32,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/consumer-schema-authorization-audit/specs/consumer-schema-authorization-audit/spec.md
+ * @spec openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit/specs/consumer-schema-authorization-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -84,13 +84,23 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/BaseLabelResolver.php' => 1,
 		'lib/Service/BasesResolverService.php' => 1,
 		'lib/Service/BatchStateRepository.php' => 3,
+		'lib/Service/Classification/ClassificationResultRepository.php' => 2,
+		'lib/Service/Classification/ClassificationSources.php' => 1,
 		'lib/Service/ConsentPolicyReferentValidator.php' => 2,
 		'lib/Service/CustomDictionaryRepository.php' => 4,
 		'lib/Service/DossierObjectRepository.php' => 3,
+		'lib/Service/EmailIngestion/EmailDocumentRepository.php' => 3,
+		'lib/Service/EntitySearch/EntitySearchLog.php' => 1,
 		'lib/Service/LegalBasisCatalog.php' => 1,
+		'lib/Service/LegalHold/LegalHoldCaseRepository.php' => 2,
+		'lib/Service/LegalHold/LegalHoldRecordFreeze.php' => 1,
 		'lib/Service/PolicyCrudService.php' => 5,
 		'lib/Service/PolicyMatchService.php' => 2,
 		'lib/Service/PolicyRetroactiveService.php' => 2,
+		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 5,
+		'lib/Service/Redaction/AnonymizationLinkReader.php' => 1,
+		'lib/Service/SigningEnvelope/SigningEnvelopeRepository.php' => 3,
+		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 3,
 	];
 
 	/**
@@ -167,7 +177,28 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 			}
 
 			foreach (self::ACTIONS as $action) {
-				if (isset($auth[$action]) === false || $auth[$action] === []) {
+				// 🔑 A DECLARED EMPTY LIST IS A DECISION, NOT AN ABSENCE, AND
+				// THIS TEST USED TO CONFLATE THEM.
+				//
+				// `"update": []` says "no group may do this", and OpenRegister
+				// reads it exactly that way: `MagicRbacHandler::hasPermission()`
+				// returns FALSE on an empty rule list, fail-closed, with only
+				// the admin and owner bypasses surviving. That is the strongest
+				// statement a cascade can make, and it is precisely what this
+				// test's own message asks for — stated explicitly rather than
+				// left to be read out of an absence.
+				//
+				// Flagging it pushed toward the damaging fix: naming a group to
+				// satisfy the guard, which GRANTS the action the schema was
+				// written to forbid. `erasureCertificate` is the case that
+				// found this: its change is titled "a certificate cannot be
+				// amended", and it declares update and delete as empty for that
+				// reason.
+				//
+				// A MISSING key is still flagged, because that really is an
+				// absence: nobody wrote anything, and the reader cannot tell
+				// whether the author meant to.
+				if (array_key_exists($action, $auth) === false) {
 					$incomplete[] = $slug . '.' . $action;
 				}
 			}

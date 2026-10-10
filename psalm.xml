@@ -33,6 +33,15 @@
             route table and carry the same call.
         -->
         <file name="vendor/conduction/hydra-gates/hydra-gates/stubs/openregister-apphost-bootstrap.stub.php" />
+        <!--
+            OpenRegister's flow-node contract (IFlowNode and its optional
+            companions, RegisterFlowNodesEvent). Filinq's GenerateDocumentNode
+            implements it and the listener registers on the event; the real
+            classes live in the openregister sibling app. A stub lets psalm
+            check the implementation against the contract instead of
+            suppressing every reference to it.
+        -->
+        <file name="tests/stubs/openregister-flow.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
@@ -102,6 +111,21 @@
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <!--
+                  The leaf-provider event OpenRegister dispatches so an app can
+                  contribute a leaf to another app's page. Filinq listens for it
+                  by class and returns early when the event is something else,
+                  which is exactly how the listener stays harmless on an
+                  instance where openregister is absent. Same category as the
+                  object events above.
+                -->
+                <referencedClass name="OCA\OpenRegister\Event\RegisterLeafProvidersEvent"/>
+                <!--
+                  The descriptor a leaf provider hands back on that event. Same
+                  package, same absence, and the listener returns before it
+                  constructs one when openregister is not installed.
+                -->
+                <referencedClass name="OCA\OpenRegister\Service\Integration\LeafDescriptor"/>
                 <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
                 <!--
                   ADR-084's published contract. Services type-hint this interface

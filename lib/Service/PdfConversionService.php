@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\Conversion\ConversionBackendInterface;
+use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -58,6 +59,15 @@ use Throwable;
  */
 class PdfConversionService {
 	/**
+	 * The source types {@see getCapabilities()} asks every backend about.
+	 */
+	private const PROBED_INPUTS = [
+		'html' => 'text/html',
+		'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		'odt' => 'application/vnd.oasis.opendocument.text',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array<int, ConversionBackendInterface> $backends Ordered list of backends; first success wins.
@@ -74,15 +84,18 @@ class PdfConversionService {
 	 * Convert the source file to PDF via the backend cascade.
 	 *
 	 * @param File $source Source file (any supported input format).
+	 * @param array<string, mixed> $opts Per-call options: `accessible` (tagged PDF/UA
+	 *                                   through LibreOffice only), `pdfa` (keep PDF/A with it).
 	 *
 	 * @return File The newly written PDF file node.
 	 *
 	 * @throws ConversionFailedException When no backend in the cascade succeeded.
 	 *
 	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
 	 */
-	public function convertToPdf(File $source): File {
-		return $this->convertToPdfReporting(source: $source)['file'];
+	public function convertToPdf(File $source, array $opts = []): File {
+		return $this->convertToPdfReporting(source: $source, opts: $opts)['file'];
 	}//end convertToPdf()
 
 	/**
@@ -94,6 +107,7 @@ class PdfConversionService {
 	 * indistinguishable to anyone reading a log after the fact.
 	 *
 	 * @param File $source Source file (any supported input format).
+	 * @param array<string, mixed> $opts Per-call options, see {@see convertToPdf()}.
 	 *
 	 * @return array{file: File, backend: string} The PDF and the backend that produced it.
 	 *
@@ -101,7 +115,11 @@ class PdfConversionService {
 	 *
 	 * @spec openspec/specs/document-editing/spec.md#requirement-conversion-routes-through-the-nextcloud-conversion-broker
 	 */
-	public function convertToPdfReporting(File $source): array {
+	public function convertToPdfReporting(File $source, array $opts = []): array {
+		if (($opts['accessible'] ?? false) === true) {
+			return $this->convertTagged(source: $source, pdfa: (($opts['pdfa'] ?? false) === true));
+		}
+
 		$mimeType = (string)$source->getMimeType();
 		$ext = $this->extractExtension(name: $source->getName());
 
@@ -189,6 +207,111 @@ class PdfConversionService {
 		);
 
 	}//end convertToPdfReporting()
+
+	/**
+	 * What each backend could do right now, without converting anything.
+	 *
+	 * One entry per backend in cascade order, in the shape a
+	 * {@see ConversionFailedException} reports its attempts in (`name`,
+	 * `available`, `supports`, `reason`), where `supports` answers for HTML,
+	 * the intermediate every generated document starts as. `inputs` lists
+	 * which of the probed source types the backend takes. A probe that throws
+	 * reports the backend unavailable with the exception's message; this
+	 * method never throws.
+	 *
+	 * @return array<int, array{name: string, available: bool, supports: bool, inputs: string[], reason: string|null}>
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.2
+	 */
+	public function getCapabilities(): array {
+		$report = [];
+		foreach ($this->backends as $backend) {
+			if ($backend instanceof ConversionBackendInterface === false) {
+				continue;
+			}
+
+			$entry = ['name' => $backend->name(), 'available' => false, 'supports' => false, 'inputs' => [], 'reason' => null];
+			try {
+				$entry['available'] = $backend->isAvailable();
+				foreach (self::PROBED_INPUTS as $ext => $mime) {
+					if ($backend->canHandle($mime, $ext) === true) {
+						$entry['inputs'][] = $ext;
+					}
+				}
+
+				$entry['supports'] = in_array('html', $entry['inputs'], true);
+				if ($entry['available'] === false) {
+					$entry['reason'] = 'backend disabled or prerequisites not present';
+				}
+			} catch (Throwable $e) {
+				$entry['available'] = false;
+				$entry['reason'] = 'availability probe failed: ' . $e->getMessage();
+			}
+
+			$report[] = $entry;
+		}//end foreach
+
+		return $report;
+
+	}//end getCapabilities()
+
+	/**
+	 * Tagged (PDF/UA) conversion: only LibreOffice can tag, so every other
+	 * backend is recorded as unable and never asked. Without LibreOffice the
+	 * conversion fails; it never falls back to an untagged PDF.
+	 *
+	 * @param File $source The source file.
+	 * @param bool $pdfa   Whether to keep PDF/A as well.
+	 *
+	 * @return array{file: File, backend: string} The PDF beside the source.
+	 *
+	 * @throws ConversionFailedException When no tagged PDF can be made.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.1
+	 */
+	private function convertTagged(File $source, bool $pdfa): array {
+		$attempts = [];
+		foreach ($this->backends as $backend) {
+			if ($backend instanceof LibreOfficeHeadlessBackend === false) {
+				if ($backend instanceof ConversionBackendInterface === true) {
+					$attempts[] = ['name' => $backend->name(), 'available' => $backend->isAvailable(), 'supports' => false, 'reason' => 'cannot write tagged PDF'];
+				}
+
+				continue;
+			}
+
+			try {
+				$bytes = $backend->convertTagged(
+					bytes: (string) $source->getContent(),
+					extension: $this->extractExtension(name: $source->getName()),
+					pdfa: $pdfa
+				);
+			} catch (ConversionFailedException $e) {
+				$attempts = array_merge($attempts, $e->getAttempts());
+				continue;
+			}
+
+			$name = basename($source->getName());
+			$stem = $name;
+			if (strrpos($name, '.') !== false) {
+				$stem = substr($name, 0, (int) strrpos($name, '.'));
+			}
+
+			$parent = $source->getParent();
+			if ($parent->nodeExists($stem . '.pdf') === true) {
+				$parent->get($stem . '.pdf')->delete();
+			}
+
+			return ['file' => $parent->newFile($stem . '.pdf', $bytes), 'backend' => $backend->name()];
+		}//end foreach
+
+		throw new ConversionFailedException(
+			message: 'Accessible PDF output needs LibreOffice, which is not available; no untagged PDF is made instead.',
+			attempts: $attempts,
+			code: 503
+		);
+
+	}//end convertTagged()
 
 	/**
 	 * Return the lowercased extension of $name without the leading dot.

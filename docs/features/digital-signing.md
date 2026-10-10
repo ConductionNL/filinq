@@ -6,6 +6,9 @@ sidebar_position: 2
 description: Secure digital document signing, verification, and audit trail within Nextcloud
 keywords:
   - signing
+  - DigiD
+  - eHerkenning
+  - EUDI wallet
   - verification
   - eIDAS
   - digital signature
@@ -219,6 +222,128 @@ docker exec nextcloud php occ config:app:set filinq filinq_validsign_api_key --v
 | `BES` | Basic Electronic Signature            | Simple click-to-sign, no certificate required     |
 | `AES` | Advanced Electronic Signature         | Identity-linked, supports local key pairs         |
 | `QES` | Qualified Electronic Signature        | Legally equivalent to handwritten (eIDAS Art. 25) |
+
+---
+
+## Signers under the age of consent
+
+A pupil of 14 cannot sign an ontwikkelingsperspectief (OPP) on their own. Filinq refuses
+the signature until a parent or guardian stands beside them on the same request.
+
+**The age.** Set it under *Settings > Digital signing > Guardian consent age*. The default
+is 16, the age of consent in Dutch law (UAVG article 5). A request can raise it for its own
+signers: send `guardianConsentAge: 18` on a praktijkovereenkomst (POK), because a student
+under 18 is a minor under civil law. A request can never lower it.
+
+**Naming the guardian.** Give each signer entry the extra fields below. The app that asks
+for the signature knows the pupil's birth date and the parents, so it sends them.
+
+| Field              | On                | Meaning                                                          |
+|--------------------|-------------------|------------------------------------------------------------------|
+| `birthDate`        | the pupil         | `YYYY-MM-DD`. Decides whether a guardian must sign too.          |
+| `role`             | the guardian      | `guardian`. Every other entry is a `signer`.                     |
+| `guardianFor`      | the guardian      | The `userId` or `email` of the pupil's entry in the same list.   |
+| `guardianAct`      | the guardian      | `co-sign` (default): signs the document too. `consent`: agrees that the pupil signs. |
+| `consentStatement` | a `consent` act   | The text the guardian agrees to. Required for `consent`.         |
+| `guardianRef`      | the guardian      | Your own reference to the guardian, for example a learniq guardian id. |
+
+**What Filinq checks.**
+
+- A request that names a pupil under the age without a guardian is refused (400).
+- The pupil's signature is refused (403) while no guardian on the request points at them.
+- A guardian signs through the same sign action as anyone else, in Nextcloud or in the portal.
+- A guardian cannot be the pupil, and cannot be under the age themselves.
+- The age is checked at the moment the pupil signs, not when the request was made.
+- The request completes only once a guardian has acted for every pupil under the age.
+
+**What the signed document records.** The completed request and the signed file carry a
+`consentBasis`: per pupil, the signer record, the age that applied, the moment it was
+checked, and each guardian who acted, how, and how their identity was established. It never
+carries the birth date. In the signed file the basis sits inside the signature seal, so
+changing it afterwards makes verification fail.
+
+**Who uses it.** learniq for the OPP and the POK, and portaliq for toestemmingsformulieren,
+once they raise their signing requests through `DocumentSigningRequestedEvent`.
+
+Next: set the guardian consent age for your school in the signing settings.
+
+---
+
+## Signer identity: DigiD, eHerkenning and iDIN
+
+A Nextcloud login tells Filinq which account is signing. It does not say how strongly that
+person proved who they are. For a signature that needs more, a signer confirms their
+identity once more through an identity broker, just before they sign.
+
+**Assurance levels.** Filinq uses the three eIDAS levels: `low`, `substantial` and `high`.
+Each signature level has a floor, and a request can ask for more but never less.
+
+| Signature level | Assurance floor |
+|-----------------|-----------------|
+| SES             | `low`           |
+| AdES            | `substantial`   |
+| QES             | `high`          |
+
+A QES request that asks for `low` is stored at `high`, and the create response says so in
+`assuranceFloor`. A request made before this feature reads as `low`, so nothing changes for
+it.
+
+**What reaches which level.**
+
+| Identity means                      | Assurance     |
+|-------------------------------------|---------------|
+| Nextcloud login                     | `low`         |
+| DigiD Midden or Substantieel        | `substantial` |
+| DigiD Hoog                          | `high`        |
+| eHerkenning EH3                     | `substantial` |
+| eHerkenning EH4                     | `high`        |
+| iDIN (your broker's value)          | `substantial` |
+| Portal signer                       | the portal's verified trust |
+
+An unknown broker value counts as `low`, never higher.
+
+**Connect a broker.** Under *Settings > Signer identity*:
+
+1. Create the broker's client secret in the OpenRegister credential broker, on an inject-only
+   provider, and allow the app `filinq`. Copy the credential's ID.
+2. Fill in the issuer, the client ID, the authorization and token endpoints (https only) and
+   the redirect URI `https://<your-cloud>/index.php/apps/filinq/api/signing/identity/callback`.
+3. Paste the credential ID into *Credential reference*. Filinq stores this reference, never
+   the secret, and refuses anything that is not a credential ID.
+4. Add your broker's own iDIN value under *Extra acr mapping*. DigiD and eHerkenning are
+   mapped already.
+5. Choose *Identity broker* as the identity provider and save.
+
+**Signing with a stronger identity.** When a request asks for more than the signer has, the
+sign action answers 403 with a `stepUp` hint: the level needed and why. In the signing folder
+the signer then chooses *Confirm my identity*, logs in at the broker, comes back on the
+request and signs. A login stays valid for signing for 15 minutes by default; set another
+window in the settings. It counts for that one request and signer only.
+
+![The signing folder after a pass: the document asks for a stronger identity check](/screenshots/signer-identity-step-up-hint.png)
+
+![The dialog that sends the signer to the identity broker](/screenshots/signer-identity-step-up-start.png)
+
+**Parents and guardians.** A request can ask more of a guardian than of the pupil: send
+`guardianRequiredAssurance: substantial` and the parent confirms with DigiD while the pupil
+signs with their Nextcloud login. An administrator can set a minimum for every guardian under
+*Minimum assurance for a parent or guardian*.
+
+![The signer identity settings with the guardian minimum set to substantial](/screenshots/signer-identity-guardian-minimum.png)
+
+**What is recorded.** Each signer record, its audit entry and the signed file carry the
+identity evidence: provider, means, level, a pseudonym, the moment and a hash of the broker's
+token. Filinq never keeps a BSN or the token itself; the subject is always hashed with a key
+unique to your Nextcloud. The completed request carries the weakest level among its signers
+as `resolvedAssurance`, and apps that asked for the signature receive that same value.
+
+**EUDI wallet.** Every EU country must offer its citizens an EUDI wallet by December 2026,
+with qualified signatures from a phone. Filinq does not ship a wallet integration today. The
+identity seam is built so a wallet verifier can plug in as one more provider: it passes the
+provider contract tests (`tests/unit/Service/SignerAuth/SignerAuthProviderContractTestCase.php`)
+and registers, with no other change.
+
+Next: connect your identity broker under *Settings > Signer identity*.
 
 ---
 

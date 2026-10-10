@@ -26,6 +26,8 @@ namespace OCA\Filinq\AppInfo;
 use Exception;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
+use OCA\Filinq\Service\MountCapabilityProbe;
+use OCA\Filinq\Service\NextcloudMountCapabilityProbe;
 use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -55,11 +57,15 @@ class RegistrationBootstrap {
 	 * @param IRegistrationContext $context The registration context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-filinq-registers-its-node-and-still-boots-without-openregister
 	 */
 	public function register(IRegistrationContext $context): void {
 		(new ObjectEventRegistrar())->register(context: $context);
 		(new SigningEventRegistrar())->register(context: $context);
 		(new PdfConversionRegistrar())->register(context: $context);
+		(new IntegrationLeafRegistrar())->register(context: $context);
+		(new DocumentGenerationRegistrar())->register(context: $context);
 
 		$this->bindStoreController(context: $context);
 
@@ -78,6 +84,16 @@ class RegistrationBootstrap {
 		$context->registerServiceAlias(
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
+		);
+
+		// REQ-CDF-06: the one probe that talks to a real mount. Nextcloud
+		// autowires concrete classes but not interfaces, so without this binding
+		// anything asking for ExternalMountValidator fails to resolve -- and the
+		// validator is read from the setup wizard, so that would be a 500 on the
+		// first screen an administrator opens rather than a quiet gap.
+		$context->registerServiceAlias(
+			MountCapabilityProbe::class,
+			NextcloudMountCapabilityProbe::class
 		);
 
 		// ADR-063 chain 3/3: the per-app opt-in telling OpenRegister which of our
@@ -107,6 +123,10 @@ class RegistrationBootstrap {
 		// TranslationHandler resolve translatable properties on filinq
 		// objects to the right variant.
 		$context->registerMiddleware(LanguageNegotiationMiddleware::class);
+
+		// Legal holds (e-discovery-legal-hold): renders the place and release notifications.
+		// Named by string to keep this class's coupling where it is.
+		$context->registerNotifierService('OCA\\Filinq\\Notification\\LegalHoldNotifier');
 
 		// AppHost observability adoption (ADR-006 / ADR-040). Registers only the
 		// MetricsEngine; the Health/Metrics controllers auto-wire from OCP and
@@ -183,6 +203,8 @@ class RegistrationBootstrap {
 		// order, so OCA\OpenRegister\ is NOT on the autoloader yet. Without
 		// this the class_exists() below answers false on a perfectly healthy
 		// instance and the binding is skipped in silence.
+		// apphost-prelude exclude OpenRegisterAutoloader::register() below is the prelude.
+		// Gate-64 only recognises OC_App::registerAutoloading(), which Nextcloud 35 removed.
 		OpenRegisterAutoloader::register();
 
 		// The class_exists() guard MUST stay in this method: it is also the

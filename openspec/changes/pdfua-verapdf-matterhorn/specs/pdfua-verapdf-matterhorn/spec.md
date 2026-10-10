@@ -146,3 +146,90 @@ heuristic floor MUST NOT be removed or regressed by this change.
 - WHEN the operator views its accessibility state
 - THEN the state is presented as a heuristic "looks tagged" result, not a PDF/UA conformance verdict
 - @e2e exclude presentation-labelling branch — covered by Vitest on the accessibility panel state
+
+## ADDED Requirements (amendment 2026-10-05, Woo rows 15.3 and 15.7, decision D5)
+
+### Requirement: Every PDF attached to an OpenRegister object is checked for PDF/UA (REQ-DDPUM-006)
+
+Filinq SHALL listen to `NodeCreatedEvent` and `NodeWrittenEvent`, and for a
+file with MIME type `application/pdf` whose path lies under OpenRegister's
+`Open Registers` root it SHALL add one `PdfUaAttachCheckJob` (a `QueuedJob`)
+with the file id. The listener SHALL NOT read the file or run veraPDF on the
+request that created it. The job SHALL run the PDF/UA (`ua1`) check through
+`ConformanceService` with the trigger `attach`, store the
+`accessibilityConformanceReport`, and set exactly one of the system tags
+`pdfua-conform`, `pdfua-niet-conform` or `pdfua-niet-gecontroleerd` on the
+file, removing the other two. A check that did not produce a verdict SHALL
+tag `pdfua-niet-gecontroleerd`.
+
+#### Scenario: a PDF attached to a publication in opencatalogi is checked
+- GIVEN veraPDF available, and an officer who attaches `besluit.pdf` to a publication in opencatalogi
+- WHEN the background job has run
+- THEN filinq holds an accessibility conformance report for that file with trigger `attach`, and the publication's file list in opencatalogi shows the label `pdfua-conform` or `pdfua-niet-conform`
+- e2e: `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts`
+
+#### Scenario: the upload does no validation work
+- GIVEN a PDF created under `Open Registers/`
+- WHEN the listener handles the real `NodeCreatedEvent`
+- THEN one `PdfUaAttachCheckJob` is added and `ConformanceService` is not called
+- @e2e exclude a listener side effect; covered by PHPUnit `PdfUaAttachListenerTest::testTheListenerOnlyQueues`
+
+#### Scenario: a file outside OpenRegister is left to the existing paths
+- GIVEN a PDF created in a user's own Documents folder
+- WHEN the listener handles the event
+- THEN nothing is queued
+- @e2e exclude a path filter; covered by PHPUnit `PdfUaAttachListenerTest::testAFileOutsideOpenRegisterIsIgnored`
+
+#### Scenario: no validator means no claim
+- GIVEN veraPDF not installed
+- WHEN the job runs on an attached PDF
+- THEN the file is tagged `pdfua-niet-gecontroleerd` and no compliant report is stored
+- @e2e exclude a degradation path; covered by PHPUnit `PdfUaAttachCheckJobTest::testNoValidatorTagsNotChecked`
+
+### Requirement: Publication readiness counts a PDF/UA verdict that did not pass (REQ-DDPUM-007)
+
+`PublicationReadiness::evaluate()` SHALL add a readiness reason naming the
+file for every PDF of the record whose latest accessibility conformance report
+is not compliant or is missing. The reason SHALL be a warning while the
+profile severity of `pdfua-conformance-failed` is below `blocking`, and SHALL
+make the record not ready when it is `blocking`. A missing report SHALL count
+as not passed.
+
+#### Scenario: a failing PDF warns before hand-off
+- GIVEN a Woo record whose PDF is tagged `pdfua-niet-conform` and the default severity
+- WHEN readiness is evaluated
+- THEN `readinessReasons` names the file and the PDF/UA failure, and the hand-off shows the warning
+- @e2e exclude a readiness computation; covered by PHPUnit `PublicationReadinessTest::testAFailedPdfUaVerdictIsAReason`
+
+#### Scenario: an administrator makes it block
+- GIVEN the profile severity of `pdfua-conformance-failed` set to `blocking`
+- WHEN readiness is evaluated for a record with a failing or unchecked PDF
+- THEN the record is not ready and cannot be handed off
+- @e2e exclude a readiness computation; covered by PHPUnit `PublicationReadinessTest::testABlockingSeverityStopsTheHandOff`
+
+### Requirement: A document filinq generated can be regenerated as PDF/UA, an imported one cannot (REQ-DDPUM-008)
+
+For a PDF whose provenance says filinq generated it from a template, filinq
+SHALL offer an action that regenerates it through the tagged output path,
+validates the new copy with `ua1`, and stores it as a new version of the file
+only when it is compliant. A copy that is not compliant SHALL be discarded and
+the original kept, with the verdict shown. For any other PDF the action SHALL
+NOT be offered, and REQ-DDPUM-003's guidance applies unchanged (decision D5).
+
+#### Scenario: a generated decision letter becomes accessible
+- GIVEN a decision letter filinq generated from a template, tagged `pdfua-niet-conform`
+- WHEN the officer chooses to make it accessible
+- THEN a new version is stored only after the `ua1` check passes, and the file is tagged `pdfua-conform`
+- @e2e exclude needs the veraPDF binary; covered by PHPUnit `AccessibleRegenerationServiceTest::testACompliantCopyReplacesTheOriginal` and one live run recorded in the PR
+
+#### Scenario: an imported PDF is never converted
+- GIVEN an uploaded PDF filinq did not generate, tagged `pdfua-niet-conform`
+- WHEN the officer opens its conformance card
+- THEN no regenerate action is offered, and the guidance says filinq does not retag imported pages
+- e2e: `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts`
+
+#### Scenario: a regenerated copy that still fails is discarded
+- GIVEN a regeneration whose new copy fails `ua1`
+- WHEN the action completes
+- THEN the original file and its version are unchanged and the failed verdict is shown
+- @e2e exclude a failure path; covered by PHPUnit `AccessibleRegenerationServiceTest::testAFailingCopyIsDiscarded`

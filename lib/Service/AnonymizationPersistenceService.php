@@ -33,6 +33,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -131,6 +132,54 @@ class AnonymizationPersistenceService {
 
 		return $resultInfo;
 	}//end recordAnonymizationLink()
+
+	/**
+	 * Point a source file's anonymisation link at the key its last run kept.
+	 *
+	 * A second write after recordAnonymizationLink(), because the key names the
+	 * link and so can only be stored once the link has a uuid. The existing
+	 * record is written back whole with its `@self`, which is OpenRegister's
+	 * update path, so nothing else on the link changes and `runCount` does not
+	 * move. An empty `$mappingRef` says the last run kept no key.
+	 *
+	 * Unlike recordAnonymizationLink() this one throws: a link that points at a
+	 * deleted key, or at none while one exists, is exactly the drift the caller
+	 * has to report rather than swallow.
+	 *
+	 * @param int $fileId The source Nextcloud file id.
+	 * @param string $mappingRef The pseudonymMap uuid, or '' for none.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the link cannot be found or written.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 */
+	public function setMappingRef(int $fileId, string $mappingRef): void {
+		$objectService = $this->locator->get(className: 'OCA\OpenRegister\Service\ObjectService');
+		$results = $objectService->searchObjectsBySlug(
+			registerSlug: 'filinq',
+			schemaSlug: 'anonymizationLink',
+			filters: ['sourceFileId' => $fileId]
+		);
+
+		$existing = [];
+		if (is_array($results) === true && empty($results) === false) {
+			$existing = $this->extractLinkObjectData(candidate: $results[0]);
+		}
+
+		if ($existing === [] || (int) ($existing['sourceFileId'] ?? 0) !== $fileId) {
+			throw new RuntimeException('No anonymisation link for file ' . $fileId . ' to point at its key.');
+		}
+
+		$existing['mappingRef'] = $mappingRef;
+		$objectService->saveObject(
+			object: $existing,
+			register: 'filinq',
+			schema: 'anonymizationLink'
+		);
+
+	}//end setMappingRef()
 
 	/**
 	 * Create publicationConsent records for each unredacted entity after a successful anonymise run.
@@ -242,14 +291,18 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function buildLinkObject(mixed $objectService, int $fileId, array $resultInfo): array {
-		$results = $objectService->searchObjects(
-			query: [
-				'@self' => [
-					'register' => 'filinq',
-					'schema' => 'anonymizationLink',
-				],
-				'sourceFileId' => $fileId,
-			]
+		// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+		// `searchObjects` answers `filinq` / `anonymizationLink` with zero
+		// rows and no error, so `$existing` was always empty: `runCount`
+		// stayed 1 and re-anonymising the same source file wrote a new link
+		// row every time instead of updating the one already there.
+		//
+		// Only this read moves. The identical `@self` literal further down
+		// belongs to the SAVED OBJECT, not to a query, and must stay.
+		$results = $objectService->searchObjectsBySlug(
+			registerSlug: 'filinq',
+			schemaSlug: 'anonymizationLink',
+			filters: ['sourceFileId' => $fileId]
 		);
 
 		$existing = [];
@@ -285,6 +338,24 @@ class AnonymizationPersistenceService {
 		if (in_array($extension, ['pdf', 'docx', 'odt', 'txt', 'html'], true) === true) {
 			$object['outputFormat'] = $extension;
 		}
+
+		// 🔴 THE VERDICT IS WRITTEN EVEN WHEN IT IS `unverifiable`. An empty
+		// field and a clean verdict look the same to anything that filters on
+		// "was this copy checked", and one of them means nobody looked.
+		$verification = ($resultInfo['redactionVerification'] ?? null);
+		if (is_array($verification) === true) {
+			$object['verificationVerdict'] = (string)($verification['verdict'] ?? '');
+			$object['verificationOutputMode'] = (string)($verification['outputMode'] ?? '');
+			$object['verificationRoutes'] = implode(',', (array)($verification['routesChecked'] ?? []));
+			$object['verificationLeakRoutes'] = implode(
+				',',
+				array_column((array)($verification['findings'] ?? []), 'route')
+			);
+			$object['verifiedAt'] = date(format: 'c');
+		}
+
+		// Tag counts and loss reasons only, never an entity value; absent when the run recorded none.
+		$object = array_merge($object, array_intersect_key($resultInfo, ['structurePreservation' => true]));
 
 		return $object;
 	}//end buildLinkObject()

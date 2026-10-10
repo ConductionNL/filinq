@@ -26,6 +26,7 @@ use Exception;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -75,9 +76,17 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->mockAnonService = $this->createMock(AnonymizationService::class);
 		$this->mockStateService = $this->createMock(BatchStateService::class);
 
+		// Placement is covered by BatchAnonymizeServiceOutputLayoutTest; here
+		// the mover leaves every output where OpenRegister wrote it.
+		$mover = $this->createMock(OutputLayoutMover::class);
+		$mover->method('relocate')->willReturnCallback(
+			static fn (string $userId, int $fileId, string $legacyPath): array => ['path' => $legacyPath, 'warning' => null]
+		);
+
 		$this->service = new BatchAnonymizeService(
 			$this->mockAnonService,
-			$this->mockStateService
+			$this->mockStateService,
+			$mover
 		);
 
 	}//end setUp()
@@ -149,6 +158,34 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->assertEmpty($result['skippedFiles']);
 
 	}//end testAnonymizeBatchProcessesExtractedFiles()
+
+	/**
+	 * Each batch entry names the backend that looked and what it found.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 */
+	public function testEachEntryCarriesTheDetectionOutcome(): void {
+		$detection = ['ran' => true, 'backend' => 'presidio', 'entitiesRedacted' => 0, 'outcome' => 'nothing_found'];
+		$this->mockStateService->method('getBatch')->willReturn(
+			['batchId' => 'batch-d', 'status' => 'review', 'files' => [['fileId' => 21, 'status' => 'extracted']]]
+		);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'anon-21', 'detection' => $detection]);
+
+		$saved = null;
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $id, array $batch) use (&$saved): void {
+				$saved = $batch;
+			}
+		);
+
+		$this->service->anonymizeBatch(batchId: 'batch-d', entities: []);
+
+		$this->assertSame($detection, $saved['files'][0]['detection']);
+
+	}//end testEachEntryCarriesTheDetectionOutcome()
 
 	/**
 	 * Test anonymizeBatch records error when anonymization throws

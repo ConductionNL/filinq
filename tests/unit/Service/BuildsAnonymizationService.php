@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\AnonymisationRunRecords;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\AnonymizationResultParser;
@@ -47,6 +48,10 @@ use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\PdfConversionService;
 use OCA\Filinq\Service\ProhibitionGateService;
 use OCA\Filinq\Service\ProhibitionPolicyService;
+use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
+use OCA\Filinq\Service\Redaction\RedactionIrreversibilityVerifier;
+use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
+use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
 use OCP\App\IAppManager;
@@ -66,8 +71,8 @@ trait BuildsAnonymizationService {
 	 * Recognised `$deps` keys: logger, container, appManager, appConfig,
 	 * entityDetection, consentCrud, consentService, grondslagenSummary,
 	 * fileEntityStats, pdfConversion, emlAssembly, confidentialityLabel,
-	 * dictionaryRunner, userSession, rootFolder. Anything omitted gets a
-	 * permissive mock.
+	 * dictionaryRunner, userSession, rootFolder, reviewGuard, anonymizeRunner.
+	 * Anything omitted gets a permissive mock.
 	 *
 	 * NOTE on `userSession` / `rootFolder`: the DEFAULT mocks deny — an
 	 * IUserSession mock returns null from getUser(), so the relation
@@ -107,31 +112,49 @@ trait BuildsAnonymizationService {
 			)
 		);
 
-		$anonymizeRunner = new DocumentAnonymizeRunner(
-			logger: $logger,
-			locator: $locator,
-			entityDetection: $entityDetection,
-			emlAnonymizer: new EmlAnonymizationService(
-				logger: $logger,
-				entityDetection: $entityDetection,
-				emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
-			),
-			pdfOutput: new AnonymisedPdfOutputService(
-				logger: $logger,
-				pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
-			),
-			replacementVerifier: new ReplacementVerificationService(logger: $logger),
-			persistence: new AnonymizationPersistenceService(
+		$anonymizeRunner = ($deps['anonymizeRunner'] ?? null);
+		if ($anonymizeRunner === null) {
+			$persistence = new AnonymizationPersistenceService(
 				logger: $logger,
 				locator: $locator,
 				consentCrud: ($deps['consentCrud'] ?? $this->createMock(ConsentCrudService::class)),
 				consentService: ($deps['consentService'] ?? $this->createMock(ConsentService::class))
-			),
-			summaryAttacher: new GrondslagenSummaryAttacher(
+			);
+			$anonymizeRunner = new DocumentAnonymizeRunner(
 				logger: $logger,
-				grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
-			)
-		);
+				locator: $locator,
+				entityDetection: $entityDetection,
+				emlAnonymizer: new EmlAnonymizationService(
+					logger: $logger,
+					entityDetection: $entityDetection,
+					emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
+				),
+				pdfOutput: new AnonymisedPdfOutputService(
+					logger: $logger,
+					pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
+				),
+				replacementVerifier: new ReplacementVerificationService(logger: $logger),
+				persistence: $persistence,
+				summaryAttacher: new GrondslagenSummaryAttacher(
+					logger: $logger,
+					grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
+				),
+				runRecords: new AnonymisationRunRecords(
+					verdicts: new RedactionVerdictRecorder(
+						verifier: new RedactionIrreversibilityVerifier(),
+						logger: $logger
+					),
+					persistence: $persistence,
+					keys: new \OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder(
+						pairs: new \OCA\Filinq\Service\Pseudonymisation\PseudonymPairs(),
+						maps: $this->createMock(\OCA\Filinq\Service\Pseudonymisation\PseudonymMapService::class),
+						persistence: $this->createMock(AnonymizationPersistenceService::class),
+						locator: $locator,
+						logger: $logger
+					)
+				)
+			);
+		}
 
 		return new AnonymizationService(
 			logger: $logger,
@@ -142,8 +165,48 @@ trait BuildsAnonymizationService {
 			fileEntityStats: ($deps['fileEntityStats'] ?? $this->createMock(FileEntityStatsService::class)),
 			confidentialityLabel: ($deps['confidentialityLabel'] ?? $this->createMock(ConfidentialityLabelService::class)),
 			prohibitionPolicy: $prohibitionPolicy,
-			anonymizeRunner: $anonymizeRunner
+			anonymizeRunner: $anonymizeRunner,
+			reviewGuard: ($deps['reviewGuard'] ?? $this->reviewingGuardThatAllows()),
+			ocrFallback: ($deps['ocrFallback'] ?? $this->ocrFallbackThatStandsAside()),
+			backendState: ($deps['backendState'] ?? DetectionStates::clientOver(
+				DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex')
+			))
 		);
 
 	}//end makeAnonymizationServiceFrom()
+
+	/**
+	 * A review guard that lets every document through.
+	 *
+	 * The suites that use this trait are about the anonymise pipeline, not about
+	 * the human gate, so they say so here rather than each one growing a review
+	 * mark it does not care about. The gate's own behaviour, and the fact that
+	 * the service really asks it, are asserted in
+	 * {@see \OCA\Filinq\Tests\Unit\Service\Redaction\RedactionOutputGuardTest}
+	 * and
+	 * {@see \OCA\Filinq\Tests\Unit\Service\Redaction\AnonymizationServiceReviewGateTest},
+	 * which pass a refusing one.
+	 *
+	 * @return RedactionOutputGuard The permissive guard.
+	 */
+	private function ocrFallbackThatStandsAside(): OcrExtractionFallback {
+		$fallback = $this->getMockBuilder(OcrExtractionFallback::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['afterExtraction'])
+			->getMock();
+		$fallback->method('afterExtraction')->willReturn([]);
+
+		return $fallback;
+
+	}//end ocrFallbackThatStandsAside()
+
+	private function reviewingGuardThatAllows(): RedactionOutputGuard {
+		$guard = $this->getMockBuilder(RedactionOutputGuard::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['assertMayWrite'])
+			->getMock();
+
+		return $guard;
+
+	}//end reviewingGuardThatAllows()
 }//end trait

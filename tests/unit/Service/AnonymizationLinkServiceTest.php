@@ -111,6 +111,27 @@ class AnonymizationLinkServiceTest extends TestCase {
 			}//end searchObjects()
 
 			/**
+			 * The slug-aware read. AnonymizationPersistenceService asks for
+			 * the register and schema by slug, because `searchObjects` has a
+			 * numeric-id contract and answers a slug with zero rows and no
+			 * error. This fake answers both so the suite fails if the service
+			 * ever goes back to the numeric-only call.
+			 *
+			 * @param string $registerSlug The register slug.
+			 * @param string $schemaSlug The schema slug.
+			 * @param array<string, mixed> $filters Field filters.
+			 *
+			 * @return array<int, mixed>
+			 */
+			public function searchObjectsBySlug(string $registerSlug = '', string $schemaSlug = '', array $filters = []): array {
+				if ($this->searchThrows === true) {
+					throw new \RuntimeException('search boom');
+				}
+
+				return $this->searchResult;
+			}//end searchObjectsBySlug()
+
+			/**
 			 * Capture the object and return the configured value, or throw when armed.
 			 *
 			 * @param array<string, mixed> $object Object data.
@@ -296,5 +317,114 @@ class AnonymizationLinkServiceTest extends TestCase {
 		$this->assertArrayNotHasKey(key: 'anonymizationLinkId', array: $result);
 
 	}//end testRecordAnonymizationLinkIsBestEffortOnSearchFailure()
+
+	/**
+	 * The verifier's verdict is written onto the link, with the mode it holds for.
+	 *
+	 * 🔴 WITHOUT THIS, THE VERIFICATION LIVES FOR THE LENGTH OF ONE REQUEST.
+	 * Six months later, asked whether the copy that was published was ever
+	 * checked, the only honest answer is "probably".
+	 *
+	 * @return void
+	 */
+	public function testTheVerificationVerdictIsRecordedOnTheLink(): void {
+		$os = $this->makeObjectService(searchResult: [], saveReturn: ['@self' => ['id' => 'uuid-verdict']]);
+		$service = $this->buildService(objectService: $os);
+
+		$this->invokeRecord(
+			service: $service,
+			fileId: 42,
+			sourceNode: null,
+			resultInfo: [
+				'anonymizedFileId' => 99,
+				'anonymizedFileName' => 'doc_anonymized.pdf',
+				'redactionVerification' => [
+					'verdict' => 'clean',
+					'outputMode' => 'pdf/ua',
+					'routesChecked' => ['text_layer', 'xmp'],
+					'findings' => [],
+					'mayBePublished' => true,
+				],
+			]
+		);
+
+		$this->assertSame(expected: 'clean', actual: $os->captured['verificationVerdict']);
+		$this->assertSame(
+			expected: 'pdf/ua',
+			actual: $os->captured['verificationOutputMode'],
+			message: 'a verdict without its output mode claims more than it checked'
+		);
+		$this->assertSame(expected: 'text_layer,xmp', actual: $os->captured['verificationRoutes']);
+		$this->assertSame(expected: '', actual: $os->captured['verificationLeakRoutes']);
+		$this->assertNotSame(expected: '', actual: $os->captured['verifiedAt']);
+
+	}//end testTheVerificationVerdictIsRecordedOnTheLink()
+
+	/**
+	 * A verdict of `unverifiable` is written, not left blank.
+	 *
+	 * An empty field and a clean verdict are the same value to anything
+	 * filtering on "was this copy checked", and one of them means nobody
+	 * looked.
+	 *
+	 * @return void
+	 */
+	public function testAnUnverifiableCopyIsRecordedAsSuch(): void {
+		$os = $this->makeObjectService(searchResult: [], saveReturn: ['@self' => ['id' => 'uuid-unver']]);
+		$service = $this->buildService(objectService: $os);
+
+		$this->invokeRecord(
+			service: $service,
+			fileId: 42,
+			sourceNode: null,
+			resultInfo: [
+				'anonymizedFileId' => 99,
+				'redactionVerification' => [
+					'verdict' => 'unverifiable',
+					'outputMode' => 'pdf-only',
+					'routesChecked' => [],
+					'findings' => [],
+					'mayBePublished' => false,
+				],
+			]
+		);
+
+		$this->assertSame(expected: 'unverifiable', actual: $os->captured['verificationVerdict']);
+
+	}//end testAnUnverifiableCopyIsRecordedAsSuch()
+
+	/**
+	 * A leaking verdict names the routes something was found on.
+	 *
+	 * @return void
+	 */
+	public function testALeakingVerdictNamesTheRoutes(): void {
+		$os = $this->makeObjectService(searchResult: [], saveReturn: ['@self' => ['id' => 'uuid-leak']]);
+		$service = $this->buildService(objectService: $os);
+
+		$this->invokeRecord(
+			service: $service,
+			fileId: 42,
+			sourceNode: null,
+			resultInfo: [
+				'anonymizedFileId' => 99,
+				'redactionVerification' => [
+					'verdict' => 'leaking',
+					'outputMode' => 'pdf-only',
+					'routesChecked' => ['text_layer', 'xmp'],
+					'findings' => [['route' => 'xmp', 'values' => ['Fatima El-Amrani']]],
+					'mayBePublished' => false,
+				],
+			]
+		);
+
+		$this->assertSame(expected: 'leaking', actual: $os->captured['verificationVerdict']);
+		$this->assertSame(
+			expected: 'xmp',
+			actual: $os->captured['verificationLeakRoutes'],
+			message: 'a leaking verdict that does not say where is a verdict nobody can act on'
+		);
+
+	}//end testALeakingVerdictNamesTheRoutes()
 
 }//end class

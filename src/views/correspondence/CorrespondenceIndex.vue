@@ -46,14 +46,34 @@ SPDX-License-Identifier: EUPL-1.2
 					<label
 						v-for="fmt in formats"
 						:key="fmt.value"
-						class="correspondence-index__radio-label">
+						class="correspondence-index__radio-label"
+						:class="{
+							'correspondence-index__radio-label--disabled':
+								fmt.disabled,
+						}"
+						:title="fmt.reason">
 						<input
 							v-model="store.format"
 							type="radio"
-							:value="fmt.value" />
+							:value="fmt.value"
+							:disabled="fmt.disabled"
+							:aria-describedby="
+								fmt.disabled
+									? 'corr-format-reason-' + fmt.value
+									: undefined
+							" />
 						{{ fmt.label }}
+						<span
+							v-if="fmt.disabled"
+							:id="'corr-format-reason-' + fmt.value"
+							class="correspondence-index__format-reason">
+							({{ fmt.reason }})
+						</span>
 					</label>
 				</div>
+				<p v-if="formatsError" class="correspondence-index__format-reason">
+					{{ formatsError }}
+				</p>
 			</div>
 
 			<!-- Case reference -->
@@ -133,6 +153,12 @@ SPDX-License-Identifier: EUPL-1.2
 								: t('filinq', 'Generate letter')
 						}}
 					</NcButton>
+					<NcButton
+						variant="secondary"
+						:disabled="!canGenerate || printing"
+						@click="sendToPrint">
+						{{ t('filinq', 'Send to print') }}
+					</NcButton>
 				</div>
 			</template>
 
@@ -191,6 +217,12 @@ SPDX-License-Identifier: EUPL-1.2
 								: t('filinq', 'Generate batch')
 						}}
 					</NcButton>
+					<NcButton
+						variant="secondary"
+						:disabled="!canGenerateBatch || printing"
+						@click="sendToPrint">
+						{{ t('filinq', 'Send to print') }}
+					</NcButton>
 				</div>
 
 				<!-- Job status -->
@@ -225,6 +257,14 @@ SPDX-License-Identifier: EUPL-1.2
 				</div>
 			</template>
 
+			<NcNoteCard v-if="printResult" :type="printResult.type">
+				<p>{{ printResult.message }}</p>
+				<router-link
+					v-if="printResult.type === 'success'"
+					:to="{ name: 'PrintJobs' }">
+					{{ t('filinq', 'Open print jobs') }}
+				</router-link>
+			</NcNoteCard>
 			<!-- Warnings -->
 			<div v-if="store.warnings.length" class="correspondence-index__warnings">
 				<NcNoteCard type="warning">
@@ -240,8 +280,16 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import {
+	fetchFormatMatrix,
+	formatOptions,
+	usableFormat,
+} from '../../services/formatMatrix.js'
+import { buildPrintRequest } from '../../services/printJobs.js'
 import { useCorrespondenceStore } from '../../store/modules/correspondence.js'
 
 export default {
@@ -259,12 +307,10 @@ export default {
 			batchMode: false,
 			batchRegister: '',
 			batchSchema: '',
-			formats: [
-				{ value: 'pdf', label: t('filinq', 'PDF') },
-				{ value: 'docx', label: t('filinq', 'DOCX (editable)') },
-				{ value: 'html', label: t('filinq', 'HTML') },
-				{ value: 'email', label: t('filinq', 'Email body') },
-			],
+			printing: false,
+			printResult: null,
+			formats: [],
+			formatsError: '',
 		}
 	},
 
@@ -306,7 +352,34 @@ export default {
 		},
 	},
 
+	async mounted() {
+		await this.loadFormats()
+	},
+
 	methods: {
+		/**
+		 * Offer the formats the server can make now.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-4.1
+		 */
+		async loadFormats() {
+			try {
+				this.formats = formatOptions(
+					await fetchFormatMatrix('correspondence'),
+				)
+				this.store.format = usableFormat(this.store.format, this.formats)
+				this.formatsError = ''
+			} catch {
+				this.formats = []
+				this.formatsError = t(
+					'filinq',
+					'Could not load the output formats this server can make.',
+				)
+			}
+		},
+
 		t,
 
 		/**
@@ -346,6 +419,40 @@ export default {
 		 */
 		async generateBatch() {
 			await this.store.generateBatch(this.batchRegister, this.batchSchema)
+		},
+
+		/**
+		 * Send the letter, or one letter per recipient, to print as one job.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-print-jobs-in-the-app/tasks.md#task-1.4
+		 */
+		async sendToPrint() {
+			const body = buildPrintRequest({
+				templateId: this.store.templateId,
+				batchMode: this.batchMode,
+				dataRefs: this.store.dataRefs,
+				register: this.batchRegister,
+				schema: this.batchSchema,
+				recipientIds: this.store.recipientIds,
+				caseReference: this.store.caseReference,
+			})
+			this.printing = true
+			this.printResult = null
+			try {
+				await axios.post(generateUrl('/apps/filinq/api/print/batch'), body)
+				this.printResult = {
+					type: 'success',
+					message: t('filinq', 'Your letters went to print as one job.'),
+				}
+			} catch {
+				this.printResult = {
+					type: 'error',
+					message: t('filinq', 'The letters could not be sent to print.'),
+				}
+			} finally {
+				this.printing = false
+			}
 		},
 	},
 }
@@ -387,6 +494,15 @@ export default {
 	display: flex;
 	gap: 16px;
 	flex-wrap: wrap;
+}
+
+.correspondence-index__radio-label--disabled {
+	color: var(--color-text-maxcontrast);
+}
+
+.correspondence-index__format-reason {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
 }
 
 .correspondence-index__radio-label {

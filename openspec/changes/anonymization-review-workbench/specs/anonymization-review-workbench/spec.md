@@ -298,3 +298,74 @@ policy matcher cache so the next review pass uses the new rule (existing
 - WHEN a new document containing "Stichting Voorbeeld" is extracted and opened in the workbench
 - THEN the entity is pre-excluded with the standing-consent badge
 - @e2e tests/e2e/spec-coverage/review-workbench.spec.ts
+
+## ADDED Requirements (amendment 2026-10-05, Woo rows 4.25 and 14.15)
+
+### Requirement: Review runs on one PDF rendition with a text layer, and the link records it (REQ-DDARW-012)
+
+Before detection and review, filinq SHALL prepare one review rendition per
+source file: the PDF itself when it has a native text layer, a conversion
+through `PdfConversionService::convertToPdfReporting()` for office, e-mail and
+HTML inputs, and an OCR text layer through `OcrService` for scans and images.
+filinq SHALL record on the file's `anonymizationLink` a `reviewRendition` with
+`fileId`, `sha256`, `kind` (`native-pdf`, `converted`, `ocr-text-layer`),
+`backend`, `textLayer` (`native`, `ocr`, `none`) and `preparedAt`, and the
+workbench SHALL show it. The `documentReview` check SHALL store the rendition's
+`sha256`. An anonymize commit SHALL be refused when the rendition's current
+`sha256` differs from the one the check stored. A rendition with `textLayer`
+`none` SHALL be shown as such, and the document SHALL only be marked checked
+with an explicit confirmation that the pages were read by eye.
+
+#### Scenario: a Word document is reviewed as a PDF and the link says so
+- GIVEN a `.docx` with a name in it
+- WHEN the reviewer opens it in the workbench
+- THEN the preview is the converted PDF, the name is detected on it, and the link's `reviewRendition` reads kind `converted`, the backend that converted it and `textLayer` `native`
+- @e2e tests/e2e/spec-coverage/review-workbench.spec.ts
+
+#### Scenario: a scan gets a text layer
+- GIVEN a scanned PDF without text and OCR available
+- WHEN the rendition is prepared
+- THEN `reviewRendition.kind` is `ocr-text-layer`, `textLayer` is `ocr`, and detection runs on the OCR text
+- @e2e exclude needs Tesseract; covered by PHPUnit `ReviewRenditionServiceTest::testAScanGetsAnOcrTextLayer`
+
+#### Scenario: a changed rendition voids the check
+- GIVEN a document checked against rendition sha256 `a1...`
+- WHEN the rendition is prepared again with a different sha256 and the reviewer commits the anonymisation
+- THEN the commit is refused, and the workbench asks for re-review
+- @e2e exclude a server-side refusal; covered by PHPUnit `DocumentReviewControllerTest::testACheckOnAnotherRenditionDoesNotHold`
+
+#### Scenario: no text layer is not a clean page
+- GIVEN a scan and no OCR installed
+- WHEN the rendition is prepared
+- THEN `textLayer` is `none`, the workbench says detection could not read the pages, and "mark as reviewed" asks for the by-eye confirmation
+- @e2e exclude a degradation path; covered by PHPUnit `ReviewRenditionServiceTest::testNoOcrMeansNoTextLayer`
+
+### Requirement: The screen tells a certain finding from an uncertain one, by organisation settings (REQ-DDARW-013)
+
+filinq SHALL read OpenRegister's `anonymisation.confidenceThreshold` (the
+detection floor) and its own setting `filinq.review.certain_from` (default
+0.85). Saving `certain_from` below the floor SHALL be refused. A detected
+finding with confidence below `certain_from` SHALL be marked uncertain, a
+finding at or above it certain, and a manual entity certain. The workbench
+SHALL show both numbers and their source, a filter and a counter for
+uncertain findings, and SHALL pre-select an uncertain finding for redaction.
+A document SHALL NOT be marked checked while an uncertain finding has no
+explicit decision.
+
+#### Scenario: an organisation sets its thresholds
+- GIVEN OpenRegister's floor at 0.6 and `certain_from` set to 0.9 by an administrator
+- WHEN a document with findings at 0.65 and 0.95 is opened in the workbench
+- THEN the 0.65 finding is marked uncertain and the 0.95 finding certain, and the panel reads "found from 0.6 (OpenRegister), certain from 0.9 (filinq)"
+- @e2e tests/e2e/spec-coverage/review-workbench.spec.ts
+
+#### Scenario: an uncertain finding blocks the check until decided
+- GIVEN a document with one undecided uncertain finding
+- WHEN the reviewer marks it as reviewed
+- THEN the mark is refused naming the finding, and after the reviewer skips or includes it the mark succeeds
+- @e2e exclude a server-side gate; covered by PHPUnit `DocumentReviewControllerTest::testAnUndecidedUncertainFindingBlocksTheCheck`
+
+#### Scenario: a certain-from below the floor is refused
+- GIVEN OpenRegister's floor at 0.6
+- WHEN an administrator saves `certain_from` 0.5
+- THEN the save is refused naming the floor
+- @e2e exclude a validation; covered by PHPUnit `SettingsServiceTest::testCertainFromBelowTheFloorIsRefused`

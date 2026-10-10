@@ -5,6 +5,16 @@ depends_on: [pdfua-accessible-output, verapdf-validation]
 
 # Proposal: pdfua-verapdf-matterhorn
 
+## Summary
+
+filinq checks every PDF attached to an OpenRegister object for PDF/UA, shows the verdict as a file label, gates publication readiness on it, and offers an accessible copy only for documents filinq generated.
+
+- Rows: 15.3 and 15.7 (15.7 tops out at partial by decision D5).
+- Wave 1.
+- Dependencies: none planned. Builds on the archived `filinq/verapdf-validation` (veraPDF backend on `development`).
+- Decisions: D5 (the spec wins for imported files: an imported PDF that fails is reported and gated, never repaired).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 Wave-1 `pdfua-accessible-output` made accessibility *visible* but only
@@ -123,3 +133,78 @@ accessibility heuristics with validator truth when that binary is present.
   modified).
 - **No new dependencies**: no second binary; veraPDF is the same Java CLI
   `verapdf-validation` already integrates.
+
+## Amendment 2026-10-05: check every PDF attached to a publication, and gate on the verdict (Woo rows 15.3 and 15.7)
+
+Woo capability rows 15.3, "A PDF is checked for accessibility when it is
+uploaded", and 15.7, "The published document is in an accessible format, such
+as PDF/UA". Our column reads `no` for both. 15.3: "no PDF accessibility check
+on upload. openregister extracts text for search, which does not test tagging
+or reading order". 15.7: "nothing checks or converts the published file's
+format. opencatalogi lib/Service/QualityService.php scores DCAT metadata
+quality, not document accessibility, and 15.3 is no for the same reason".
+The gap register names the missing halves. 15.3: "Run the PDF/UA check
+automatically when a PDF is attached to a publication (not only on filinq's
+own upload), and show the verdict to the officer." 15.7: "Gate publication on
+a passing PDF/UA verdict (or warn), and offer conversion to an accessible PDF
+where filinq generated the document." Build plan: amend this change, wave 1,
+size M.
+
+Ruben's decision **D5** of 2026-10-05 for 15.7: the spec wins for imported
+files. REQ-DDPUM-003 keeps refusing auto remediation of an imported PDF, and
+generated documents get PDF/UA. So 15.7 tops out at `partial`: an imported
+PDF that fails is reported and gated, never repaired. This amendment says so
+in its requirements and does not soften REQ-DDPUM-003.
+
+What `development` has today, read at f0fa284c: `lib/Service/VeraPdf/`
+(`VeraPdfService`, `ConformanceService::checkFile(File $file, string $trigger)`,
+`ConformanceGuidance`) from the archived `verapdf-validation`, so the shared
+backend this change waits on exists. The only callers of `checkFile()` are the
+validation run (`ArchivalChecks`) and the manual endpoint
+(`ConformanceController`). Nothing runs a check when a file is attached to an
+OpenRegister object. `PublicationReadiness::evaluate()` adds a reason for a
+redacted copy that lost its structure, and none for a failed PDF/UA verdict.
+
+What this amendment adds, on top of tasks 1 to 5 (none of which is built):
+
+1. A check on attach. When a PDF is created or replaced inside OpenRegister's
+   object folders (`Open Registers/...`), filinq queues a one-shot job that
+   runs the PDF/UA check on it, whatever app attached it. The upload request
+   does no validation work.
+2. The verdict where the officer works. The job writes one of three system
+   tags on the file: `pdfua-conform`, `pdfua-niet-conform` or
+   `pdfua-niet-gecontroleerd`. OpenRegister returns a file's system tags as
+   its `labels` (`FileFormattingHandler`), so opencatalogi's attachment list
+   shows the verdict without opencatalogi code. The report itself stays in
+   filinq's `accessibilityConformanceReport`.
+3. A gate. `PublicationReadiness::evaluate()` adds a readiness reason for any
+   PDF of the record without a `pdfua-conform` verdict. By default it warns,
+   as REQ-DDPUA-005 says. An administrator can make it block, through the
+   existing profile severity for `pdfua-conformance-failed`.
+4. An accessible copy for what filinq generated. For a PDF filinq generated
+   from a template, an action regenerates it through the tagged output path
+   (`pdfua-accessible-output`), validates the new copy with `ua1`, and offers
+   it only when it passes. An imported PDF gets no such action (D5).
+
+Fail closed:
+
+- A check that could not run (no veraPDF binary, a timeout, unparseable
+  output) tags `pdfua-niet-gecontroleerd`, never `pdfua-conform`, and counts
+  as not passed for the gate.
+- A regenerated copy that still fails is discarded and the original stays.
+  Nothing is labelled accessible on hope.
+
+App absent:
+
+- OpenRegister absent: there are no object folders; nothing is checked on
+  attach. filinq's own upload check is unchanged.
+- opencatalogi absent: the tags still sit on the files. Nothing else
+  changes.
+- veraPDF absent: every attached PDF is tagged `pdfua-niet-gecontroleerd`.
+
+Rows: 15.3 becomes `yes` once this is built. 15.7 becomes `partial` and says
+why: generated documents can be made PDF/UA, imported ones are gated and
+reported but never converted (D5).
+
+Wave 1. Implements decision D5 for 15.7. No dependency on another planned
+change.

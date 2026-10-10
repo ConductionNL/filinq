@@ -123,10 +123,37 @@ holding token PII.
 Broker config in admin settings: issuer URL, client id, redirect URI, acr
 mapping — all non-secret, stored via IAppConfig. The client secret is stored
 ONLY as a `credentialRef` resolved at token-exchange time through the
-credential broker (same interim `ICrypto` local-custody mode behind the same
-interface as `document-waarmerk-certification` task 2.1 — reuse that resolver,
-ADR-011). Secret never in a register schema, never logged, never echoed to the
-frontend.
+credential broker. Secret never in a register schema, never logged, never
+echoed to the frontend.
+
+Amended at apply time (2026-09-28). The `document-waarmerk-certification`
+resolver this decision first pointed at is unbuilt, and ADR-064 forbids an app
+its own broker. `BrokerCredentialResolver` therefore calls OpenRegister's
+`CredentialBrokerService::resolveInjectable($credentialRef, 'filinq')`,
+looked up by class name so filinq still boots without it. An identity broker is
+an arbitrary self-hosted host that the broker's host-locked proxy cannot serve,
+which is exactly ADR-064's documented injection exception: the admin mints the
+secret in OpenRegister on an `inject_only` provider with `filinq` allowed, and
+enters the credential's UUID in filinq. The settings refuse anything that is
+not a UUID. The secret is used by `OidcTokenExchange` for the one token request
+and kept nowhere.
+
+**OIDC mechanics as built.** State and nonce live in the signer's own
+server-side session (`OidcPendingAuthentications`), bound to request, signer
+and user, single use, ten minutes. The callback carries only `code` and
+`state`, so the provider exposes `boundAct(state)` for the callback to learn
+which act to complete. The ID token comes from a direct server-side TLS call to
+an https token endpoint, so its claims are validated (`iss`, `aud`/`azp`,
+`exp`, `iat`, `nonce`, `sub`) and its signature is not: OpenID Connect Core
+section 3.1.3.7 allows TLS server validation in place of the signature check
+for exactly this case. `sub` is always hashed with a key derived from the
+instance secret (`SubjectPseudonymiser`), because filinq cannot tell a pairwise
+`sub` from one that embeds a BSN. The authorize request sends `prompt=login`
+and `acr_values` limited to the values that meet the required assurance; an old
+`auth_time` makes the evidence stale at the gate. DigiD's defaults are the
+Logius AuthnContextClassRefs, eHerkenning's the eToegang assurance classes;
+iDIN has no standard acr, so its default key is a placeholder the admin
+replaces with their broker's value.
 
 ### D5 — EUDI readiness = a conformance contract, not a stub
 
@@ -134,7 +161,7 @@ The orphaned-capability trap (fleet lesson: implemented + spec'd + green but
 nothing invokes it) is avoided by: (a) the seam ships with TWO live providers
 (`nextcloud-session` default; `oidc-broker` exercised e2e against a test OIDC
 IdP in CI), so every interface method has a real caller; (b) EUDI readiness is
-expressed as a documented conformance suite (`SignerAuthProviderContractTest`,
+expressed as a documented conformance suite (`SignerAuthProviderContractTestCase`,
 an abstract PHPUnit contract any provider must extend) + a readiness statement
 in docs naming the Dec 2026 timeline; (c) NO `eudi-wallet` class ships — a
 stub provider would be dead code. A future wallet plugin passes the contract
@@ -150,6 +177,119 @@ than a configurable max age (default 15 minutes for the signing act), and meet
 `initiateAuthentication` when the gate reports insufficient assurance. The
 gate is fail-closed: absent/expired/insufficient evidence → 403 with a
 step-up hint, nothing mutates.
+
+### D6a: The gate as built (task 3.1, 2026-09-28)
+
+`SigningAssuranceGate::evidenceForAct()` runs in `sign()` and `decline()` after
+the ownership, status and mandate checks and before any write. It takes the
+evidence from, in order: the verified portal assertion (provider `portaliq`,
+the assertion's trust, subject salted); the evidence a step-up kept for this
+exact request and signer in the signer's session (`IdentityEvidenceStore`);
+otherwise the `nextcloud-session` provider at `low`. It refuses evidence from
+an unregistered provider, older than the window (`signer_auth_evidence_max_age_minutes`,
+default 15) or below the signer's required assurance, with a
+`StepUpRequiredException` (code 403) whose hint names the reason, the required
+and held assurance and the step-up provider. `SigningController` returns that
+hint as `stepUp`; the portal receiver answers 403 `signing_refused`. The act
+records the tuple on the signer record and in the audit `metadata`
+(`identityEvidence`), then forgets the stored evidence. At completion
+`withResolvedAssurance()` writes `signerEvidence` and `resolvedAssurance` (the
+weakest recorded level, a pre-rails signer counting as `low`) onto the request;
+the evidence joins the native assertion before the MAC and
+`SigningConcludedEvent::assuranceLevel` carries `resolvedAssurance` exactly.
+
+Step-up endpoints: `POST /api/signing/requests/{id}/identity` (the signing
+ownership check, then the configured provider's challenge) and
+`GET /api/signing/identity/callback` (no CSRF token, the single-use state is
+the CSRF guard; it keeps the evidence for the state's bound act and returns
+the signer to `/signing/{id}?stepUp=done&signerId=...`).
+
+### D7: Guardian consent for signers under the age of consent (amendment, D11)
+
+Learniq round 1 decision D11 folds e-signature with parental consent into this
+change. The design choices, in the order a reviewer will question them:
+
+**Where the age comes from.** Filinq holds no person record. The consumer
+knows the learner's birth date (`LearnerProfile.birthDate` in learniq) and
+sends it on the signer entry. Filinq evaluates the age itself, at the moment of
+the signer's own act, against the admin setting `signing_guardian_consent_age`
+(default 16, UAVG article 5; unset, non-numeric or non-positive falls back to
+16). The birth date is stored on the signer record with `visible: false`,
+because the age must be evaluated at signing time and the request can sit open
+for weeks. It never leaves that record: the consent basis carries the applied
+age and the moment of evaluation, not the date. Rejected alternative: a
+consumer-computed `minor: true` flag. It minimises one field but moves the age
+rule, and the setting, out of filinq, so the configured age would be a lie.
+
+**Per-request age.** `guardianConsentAge` on the request may raise the age and
+never lower it, the same floor rule REQ-DDSIR-002 applies to
+`requiredAssurance`. A POK needs 18, because a minor under civil law is anyone
+under 18. The applied value is persisted on every request, so the record says
+which age governed it.
+
+**Who the guardian is.** A signer record with `role: guardian` and
+`guardianForSignerId`. The consumer names it on the entry with `guardianFor`,
+the `userId` or email of another entry in the same list; `createRequest()`
+resolves that to the minor's signer record id after saving the records. A
+guardian therefore goes through `SigningActorResolver` and
+`loadAuthorisedSigner()` like every signer, and gets the REQ-DDSIR-003 gate for
+free once task 3.1 lands. Rejected alternative: a separate guardian endpoint.
+It would be a second identity path, which is exactly what "the same identity
+rails" forbids.
+
+**Co-sign or consent.** `guardianAct: co-sign` (default) makes the guardian a
+party to the document, which is what an OPP asks of parents. `guardianAct:
+consent` records the toestemming of article 1:234 BW: the guardian consents to
+the minor's act against a `consentStatement` the consumer supplies, and is not
+a party. Both acts run through the same `sign()` call; only the label in the
+record differs. A standing consent given outside the request is out of scope
+(proposal), because filinq cannot verify how another app identified the
+guardian.
+
+**Enforcement points**, in `lib/Service/Signing/GuardianConsentGuard.php`:
+
+1. `createRequest()`: validate entries before anything is persisted. A
+   `guardianFor` that resolves to nobody or to the guardian itself, a `consent`
+   act without a statement, a malformed birth date, and a signer under the age
+   at creation time with no guardian all throw with code 400.
+2. `sign()`: after `loadAuthorisedSigner()` and the PENDING check, before any
+   mutation. A minor with no guardian record pointing at them, a guardian under
+   the age, and a guardian whose uid or email is the minor's all throw with
+   code 403. The controller already honours the exception code.
+3. `updateRequestStatus()`: before `SignedArtifactProducer::produce()`. The
+   guard builds the consent basis from the loaded signer records and throws
+   when a signer who signed under the age has no guardian who acted. The
+   request then stays IN_PROGRESS, the same honest-completion rule the
+   artifact gate already follows.
+
+The guard is a required constructor dependency of `SigningService`, not a
+nullable seam like `SigningMandateService`. A safety guard that silently does
+nothing when unwired is the failure this fleet keeps finding, so an unwired
+guard fails construction instead.
+
+**The identity tuple.** At the act of a minor or a guardian the guard records
+`actingIdentity: {provider, assurance, authenticatedAt}` on the signer's own
+record. In-app: `nextcloud-session`, `low` (REQ-DDSIR-002 table). Portal:
+`portaliq`, the verified assertion's `trust`, where an unknown trust becomes
+`low`. When REQ-DDSIR-004 `identityEvidence` is on the record, the tuple is
+copied from it. The portal subject reference is deliberately left out; the
+artifact already binds it for the completing actor, and the consent basis does
+not need a pseudonym to say who acted.
+
+**The record.** `signingRequest.consentBasis` (array, written at completion)
+and the same array in the native artifact assertion, before the MAC. The
+verifier recomputes over the assertion minus `mac`, so a new field stays
+verifiable with no verifier change. A request with no signer under the age
+writes no `consentBasis` and its assertion gains no field.
+
+**Schema additions** (additive, `signerRecord` 1.2.0 to 1.3.0,
+`signingRequest` 1.4.0 to 1.5.0, register 8.16.0 to 8.17.0): on
+`signerRecord`, `role`, `guardianForSignerId`, `guardianAct`,
+`consentStatement`, `guardianRef`, `birthDate` (hidden) and `actingIdentity`;
+on `signingRequest`, `guardianConsentAge` and `consentBasis`. The
+`signingRequest` schema is deprecated in favour of OR task sequences
+(`migrate-signing-to-or-tasks`); these fields are request data and travel with
+it when that migration lands, the same as `requiredAssurance`.
 
 ## OpenRegister usage (ADR-001)
 
@@ -218,3 +358,13 @@ pass-through. No new registers; no Filinq-local tables.
   same `oidc-broker` provider server-side? portaliq owns the portal auth edge
   (ADR-046); alignment conversation filed with the portaliq team at apply
   time.
+- ~~Should a guardian be held to a higher assurance than the minor?~~
+  Resolved with task 3.1 (2026-09-28): yes, when asked. A request may carry
+  `guardianRequiredAssurance` (never below its `requiredAssurance`) and the
+  admin can set a guardian minimum for every request (default `low`). The gate
+  holds a guardian to the strongest of the three. Learniq's OPP can then send
+  `guardianRequiredAssurance: substantial`, matching its own
+  `LearningPlanSignatureGuard`, while the pupil signs with a Nextcloud login.
+- Standing consents (proposal, out of scope): if learniq or portaliq later
+  record a guardian's consent through filinq's rails, a reference to that act
+  could satisfy REQ-DDSIR-008 for later requests.

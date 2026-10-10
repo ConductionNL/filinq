@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use JsonSerializable;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -122,4 +123,75 @@ class OpenRegisterServiceLocator {
 
 		return [];
 	}//end lastPlaceholderMap()
+
+	/**
+	 * Read what OpenRegister's last redaction did to the tag structure.
+	 *
+	 * `StructurePreservation::jsonSerialize()`: requested, preserved,
+	 * tagCountBefore, tagCountAfter, lossReasons. Null when OpenRegister is
+	 * too old to report it, or reported nothing: the caller treats that as
+	 * unknown, never as preserved.
+	 *
+	 * @param mixed $fileService OpenRegister FileService (resolved reflectively).
+	 *
+	 * @return array<string, mixed>|null The report, or null.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
+	 */
+	public function lastStructurePreservation(mixed $fileService): ?array {
+		if (method_exists($fileService, 'getLastStructurePreservation') === false) {
+			return null;
+		}
+
+		$report = $fileService->getLastStructurePreservation();
+		if ($report instanceof JsonSerializable) {
+			$report = $report->jsonSerialize();
+		}
+
+		if (is_array($report) === false) {
+			return null;
+		}
+
+		return $report;
+	}//end lastStructurePreservation()
+
+	/**
+	 * Read what OpenRegister's office sanitiser removed in the last anonymise run.
+	 *
+	 * FileService delegates it when it has `getLastSanitizationReport()`; an
+	 * OpenRegister without that delegation still keeps the report on the
+	 * shared DocumentProcessingHandler, so that is asked instead. Null when
+	 * neither answers, or when the run sanitised nothing (text, PDF).
+	 *
+	 * @param mixed $fileService OpenRegister FileService (resolved reflectively).
+	 *
+	 * @return array<string, mixed>|null The report's counts, or null.
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+	 */
+	public function lastSanitizationReport(mixed $fileService): ?array {
+		$source = $fileService;
+		if (method_exists($fileService, 'getLastSanitizationReport') === false) {
+			try {
+				$source = $this->get(className: 'OCA\OpenRegister\Service\File\DocumentProcessingHandler');
+			} catch (\Throwable) {
+				return null;
+			}
+		}
+
+		if (is_object($source) === false || method_exists($source, 'getLastSanitizationReport') === false) {
+			return null;
+		}
+
+		$report = $source->getLastSanitizationReport();
+		if ($report instanceof JsonSerializable) {
+			$report = $report->jsonSerialize();
+		}
+
+		if (is_array($report) === false || $report === []) {
+			return null;
+		}
+
+		return $report;
+	}//end lastSanitizationReport()
 }//end class
