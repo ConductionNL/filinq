@@ -45,12 +45,32 @@ use OCP\EventDispatcher\Event;
  */
 class DocumentStampRequestedEvent extends Event {
 
+	/**
+	 * The stamped PDF bytes, once handled.
+	 *
+	 * @var string|null
+	 */
 	private ?string $stampedPdf = null;
 
+	/**
+	 * Whether filinq stamped the PDF.
+	 *
+	 * @var bool
+	 */
 	private bool $handled = false;
 
+	/**
+	 * Why filinq did not stamp, as a code.
+	 *
+	 * @var string
+	 */
 	private string $refusalCode = '';
 
+	/**
+	 * Why filinq did not stamp, as a sentence.
+	 *
+	 * @var string
+	 */
 	private string $refusalReason = '';
 
 	/**
@@ -63,6 +83,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * @param string $correlationId The caller's own reference, echoed in the log.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function __construct(
 		private readonly string $sourceApp,
@@ -79,6 +101,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * The app that asked.
 	 *
 	 * @return string The app id.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getSourceApp(): string {
 		return $this->sourceApp;
@@ -89,6 +113,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * The PDF to stamp.
 	 *
 	 * @return string The PDF bytes.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getPdfContent(): string {
 		return $this->pdfContent;
@@ -99,6 +125,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * The stamp text.
 	 *
 	 * @return string The text.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getText(): string {
 		return $this->text;
@@ -109,6 +137,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * Where the text goes.
 	 *
 	 * @return string diagonal, footer or both.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getPlacement(): string {
 		return $this->placement;
@@ -119,6 +149,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * The caller's reference.
 	 *
 	 * @return string The correlation id.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getCorrelationId(): string {
 		return $this->correlationId;
@@ -129,6 +161,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * The stamped PDF, once handled.
 	 *
 	 * @return string|null The bytes, or null when not handled.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getStampedPdf(): ?string {
 		return $this->stampedPdf;
@@ -141,6 +175,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * @param string $stampedPdf The stamped bytes.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function setStampedPdf(string $stampedPdf): void {
 		$this->stampedPdf = $stampedPdf;
@@ -152,6 +188,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * Whether filinq stamped the PDF.
 	 *
 	 * @return bool True when the stamped PDF is in the result slot.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function isHandled(): bool {
 		return $this->handled;
@@ -164,6 +202,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * @param bool $handled Whether it was handled.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function setHandled(bool $handled): void {
 		$this->handled = $handled;
@@ -177,6 +217,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * @param string $reason A sentence for the log or the reader.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function setRefusal(string $code, string $reason): void {
 		$this->refusalCode = $code;
@@ -189,6 +231,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * The refusal code, '' when none.
 	 *
 	 * @return string The code.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getRefusalCode(): string {
 		return $this->refusalCode;
@@ -199,6 +243,8 @@ class DocumentStampRequestedEvent extends Event {
 	 * The refusal reason, '' when none.
 	 *
 	 * @return string The reason.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
 	 */
 	public function getRefusalReason(): string {
 		return $this->refusalReason;

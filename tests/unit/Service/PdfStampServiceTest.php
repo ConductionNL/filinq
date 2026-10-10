@@ -28,10 +28,10 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Mpdf\Mpdf;
 use OCA\Filinq\Exception\PdfStampRefusedException;
-use OCA\Filinq\Service\ChartSvgRenderer;
+use OCA\Filinq\Service\Charts\ChartSvgRenderer;
+use OCA\Filinq\Service\Charts\TableHtmlRenderer;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\PdfStampService;
-use OCA\Filinq\Service\TableHtmlRenderer;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;

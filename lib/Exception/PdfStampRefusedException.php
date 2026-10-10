@@ -58,6 +58,8 @@ class PdfStampRefusedException extends RuntimeException {
 	 * @param Throwable|null $previous    The underlying failure, when there was one.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1-2
 	 */
 	public function __construct(
 		private readonly string $refusalCode,
@@ -79,6 +81,8 @@ class PdfStampRefusedException extends RuntimeException {
 	 * The refusal code: not-a-pdf, encrypted, too-large or failed.
 	 *
 	 * @return string The code.
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1-2
 	 */
 	public function getRefusalCode(): string {
 		return $this->refusalCode;

@@ -98,6 +98,11 @@ class PdfStampService {
 	 */
 	private const FOOTER_LEFT_MM = 10;
 
+	/**
+	 * FPDI stream-reader seam.
+	 *
+	 * @var PdfStreamReaderFactory
+	 */
 	private readonly PdfStreamReaderFactory $streamReaderFactory;
 
 	/**
