@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: moves outbound notifications onto the shared comms abstraction

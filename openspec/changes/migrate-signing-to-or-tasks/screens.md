@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: backend migration of the signing bridge to OpenRegister tasks

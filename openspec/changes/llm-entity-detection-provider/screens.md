@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- FqInstellingen https://identity.conduction.nl/screens/board?id=filinq/FqInstellingen

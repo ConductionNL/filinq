@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: consumes OpenRegister redaction guarantees, the review workbench is unchanged

@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: server-side Tesseract text extraction in the anonymisation pipeline

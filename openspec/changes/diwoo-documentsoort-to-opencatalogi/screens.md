@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: handoff field mapping to opencatalogi, no screen of its own
