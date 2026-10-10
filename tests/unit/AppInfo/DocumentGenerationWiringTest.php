@@ -28,7 +28,9 @@ namespace OCA\Filinq\Tests\Unit\AppInfo;
 
 use OCA\Filinq\AppInfo\RegistrationBootstrap;
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
+use OCA\Filinq\Event\DocumentStampRequestedEvent;
 use OCA\Filinq\EventListener\DocumentGenerationRequestedListener;
+use OCA\Filinq\EventListener\DocumentStampRequestedListener;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use PHPUnit\Framework\TestCase;
@@ -121,4 +123,18 @@ class DocumentGenerationWiringTest extends TestCase {
 			$this->registeredListeners()
 		);
 	}//end testTheCommandListenerIsRegisteredByTheBootstrap()
+
+	/**
+	 * The stamp listener is registered for the stamp command.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2-1
+	 */
+	public function testTheStampListenerIsRegisteredByTheBootstrap(): void {
+		$this->assertContains(
+			[DocumentStampRequestedEvent::class, DocumentStampRequestedListener::class],
+			$this->registeredListeners()
+		);
+	}//end testTheStampListenerIsRegisteredByTheBootstrap()
 }//end class

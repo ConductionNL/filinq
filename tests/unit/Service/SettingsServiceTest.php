@@ -419,6 +419,63 @@ class SettingsServiceTest extends TestCase {
 	}//end testInboundClassificationDefaultsOnAndIsWritable()
 
 	/**
+	 * Every anonymisation choice the admin page sends is saved, not dropped.
+	 *
+	 * The settings page posts the output format, the per-entity-type bases and
+	 * the enabled entity types; each key is read back by getAllSettings(), so a
+	 * key missing from the allowlist made the admin's choice vanish on save.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testAnonymisationChoicesFromTheAdminPageAreWritable(): void {
+		$written = [];
+		$this->mockConfig->method('setValueString')->willReturnCallback(
+			static function (string $app, string $key, string $value) use (&$written): bool {
+				$written[$key] = $value;
+				return true;
+			}
+		);
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $written[$key] ?? $default
+		);
+
+		$result = $this->settingsService->updateSettings(
+			[
+				'filinq.anonymisation.default_output_format' => 'preserve',
+				'filinq.grondslagen.entity_type_bases'       => ['PERSON' => ['avg-art-6']],
+				'filinq.anonymisation.enabled_entity_types'  => ['PERSON', 'EMAIL'],
+			]
+		);
+
+		$this->assertSame('preserve', $written['filinq.anonymisation.default_output_format'] ?? null);
+		$this->assertSame('{"PERSON":["avg-art-6"]}', $written['filinq.grondslagen.entity_type_bases'] ?? null);
+		$this->assertSame('["PERSON","EMAIL"]', $written['filinq.anonymisation.enabled_entity_types'] ?? null);
+		$this->assertSame('preserve', $result['filinq.anonymisation.default_output_format'] ?? null);
+
+	}//end testAnonymisationChoicesFromTheAdminPageAreWritable()
+
+	/**
+	 * The allowlist names the same keys the readers use.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testAnonymisationKeysMatchTheirReaders(): void {
+		$this->assertSame(
+			'filinq.grondslagen.entity_type_bases',
+			\OCA\Filinq\Service\LegalBasisProposalService::CONFIG_KEY
+		);
+		$this->assertSame(
+			'filinq.anonymisation.enabled_entity_types',
+			\OCA\Filinq\Service\LegalBasisProposalService::ENABLED_TYPES_CONFIG_KEY
+		);
+
+	}//end testAnonymisationKeysMatchTheirReaders()
+
+	/**
 	 * Test updateSettings silently rejects unknown keys
 	 *
 	 * Keys not present in WRITABLE_KEYS must be dropped from the result and

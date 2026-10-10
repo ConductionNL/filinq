@@ -75,6 +75,7 @@ Features that are fully implemented and available in the current release.
 | [Dashboard](./dashboard.md) | dashboard.md | — | TEC-DMS-10 | Done |
 | [Document Register](./document-register.md) | document-register.md | Documentbeheercomponent | TEC-DMS-4 | Done |
 | [PDF Generation](./pdf-generation.md) | pdf-generation.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
+| [Stamp a text on every page](./pdf-page-stamping.md) | pdf-page-stamping.md | Outputmanagementcomponent | | Done |
 | [Template Management](./template-management.md) | template-management.md | Documentcreatiecomponent | TEC-DMS-1 | Done |
 | [Prometheus Metrics](./prometheus-metrics.md) | prometheus-metrics.md | — | TEC-DMS-10 | Done |
 | [OCR Document Scanning](./ocr-document-scanning.md) | ocr-document-scanning.md | Scanning-en-imagingcomponent | TEC-DMS-2 | Done |

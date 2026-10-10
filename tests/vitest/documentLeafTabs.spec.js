@@ -17,11 +17,17 @@
  * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
  */
 
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
 	DOCUMENT_LEAF_IDS,
 	documentRecordIdFor,
 	hasLeafTabs,
+	LINKED_TYPE_TO_LEAF_ID,
+	leafIdsForSchema,
+	leafRenderPath,
+	SCHEMA_LINKED_TYPES,
 	visibleLeafTabs,
 } from '../../src/services/documentLeafTabs.js'
 
@@ -122,5 +128,103 @@ describe('documentRecordIdFor', () => {
 		// hang one document's contacts on another document's record, and every
 		// layer downstream would report it as fact.
 		expect(documentRecordIdFor(links, 70)).toBe('')
+	})
+})
+
+describe('record surfaces take their leaves from the schema (leaf-integrations 2.1/2.2)', () => {
+	const register = JSON.parse(
+		readFileSync(
+			resolve(__dirname, '../../lib/Settings/filinq_register.json'),
+			'utf8',
+		),
+	)
+
+	it('carries exactly the linkedTypes the register declares', () => {
+		// The browser copy must never drift from the register it mirrors.
+		const declared = {}
+		for (const [slug, schema] of Object.entries(register.components.schemas)) {
+			const linked = schema?.configuration?.linkedTypes
+			if (Array.isArray(linked) && linked.length > 0) {
+				declared[slug] = linked
+			}
+		}
+
+		expect(SCHEMA_LINKED_TYPES).toEqual(declared)
+	})
+
+	it('asks the registry for email, not the legacy mail id', () => {
+		expect(LINKED_TYPE_TO_LEAF_ID.mail).toBe('email')
+		expect(leafIdsForSchema('signingRequest')).toEqual(['email', 'calendar'])
+		expect(leafIdsForSchema('publicationConsent')).toEqual([
+			'email',
+			'calendar',
+			'deck',
+		])
+		expect(leafIdsForSchema('dossier')).toEqual(['files', 'deck'])
+	})
+
+	it('answers no leaves for a schema that declares none', () => {
+		expect(leafIdsForSchema('anonymizationLink')).toEqual([])
+		expect(leafIdsForSchema('')).toEqual([])
+	})
+
+	it('renders a signing request\'s mail and calendar leaves when both apps are on', () => {
+		const tabs = visibleLeafTabs(
+			[leaf('contacts'), leaf('calendar', true), leaf('email', true)],
+			RECORD,
+			leafIdsForSchema('signingRequest'),
+		)
+
+		expect(tabs.map((tab) => tab.id)).toEqual(['email', 'calendar'])
+	})
+
+	it('hides the leaf of an absent app and still renders the others', () => {
+		// Deck not installed: the dossier keeps its files leaf, without error.
+		const tabs = visibleLeafTabs(
+			[leaf('files', true), leaf('deck', false)],
+			RECORD,
+			leafIdsForSchema('dossier'),
+		)
+
+		expect(tabs.map((tab) => tab.id)).toEqual(['files'])
+	})
+
+	it('renders no section when Mail, Calendar and Deck are all absent', () => {
+		const tabs = visibleLeafTabs(
+			[leaf('email', false), leaf('calendar', false), leaf('deck', false)],
+			RECORD,
+			leafIdsForSchema('publicationConsent'),
+		)
+
+		expect(tabs).toEqual([])
+	})
+
+	it('keeps the document surface on its own three leaves', () => {
+		const tabs = visibleLeafTabs(
+			[leaf('contacts'), leaf('activity'), leaf('shares'), leaf('email')],
+			RECORD,
+		)
+
+		expect(tabs.map((tab) => tab.id)).toEqual(['contacts', 'activity', 'shares'])
+	})
+})
+
+describe('leafRenderPath', () => {
+	const noop = () => {}
+
+	it('hands a mount-mode leaf a bare element', () => {
+		expect(
+			leafRenderPath({ id: 'x', renderMode: 'mount', mount: noop, unmount: noop }, null),
+		).toBe('mount')
+	})
+
+	it('renders a component leaf\'s own tab, else the generic host', () => {
+		const tab = { name: 'LeafTab' }
+		expect(leafRenderPath({ id: 'x', renderMode: 'component' }, tab)).toBe('tab')
+		expect(leafRenderPath({ id: 'x', renderMode: 'component' }, null)).toBe('generic')
+	})
+
+	it('does not treat a mount leaf without its pair as mountable', () => {
+		expect(leafRenderPath({ id: 'x', renderMode: 'mount' }, null)).toBe('generic')
 	})
 })

@@ -1,5 +1,6 @@
 {
     "translations": {
+        "Nothing linked here yet": "Rien n'est encore lié ici",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Tous les documents du dossier ont été anonymisés. Les copies anonymisées se trouvent dans un sous-dossier distinct, à côté des originaux.",
         "Subfolder for anonymised copies": "Sous-dossier pour les copies anonymisées",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "L'anonymisation par lot et par dossier place les copies caviardées dans ce sous-dossier, à côté des originaux.",

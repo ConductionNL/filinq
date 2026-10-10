@@ -254,6 +254,15 @@ import { consentStore } from '../../store/store.js'
 				{{ t('filinq', 'Save Changes') }}
 			</NcButton>
 		</div>
+
+		<!-- Mail, calendar and deck leaves the schema links (leaf-integrations 2.1). -->
+		<DocumentLeafTabs
+			v-if="consentStore.consentItem"
+			register="filinq"
+			schema="publicationConsent"
+			:objectId="id"
+			:leafIds="leafIds"
+			:emptyLabel="t('filinq', 'Nothing linked here yet')" />
 	</CnDetailPage>
 </template>
 
@@ -270,6 +279,8 @@ import {
 } from '@nextcloud/vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
+import DocumentLeafTabs from '../../components/DocumentLeafTabs.vue'
+import { leafIdsForSchema } from '../../services/documentLeafTabs.js'
 
 export default {
 	name: 'ConsentDetail',
@@ -279,6 +290,7 @@ export default {
 		NcSelect,
 		NcLoadingIcon,
 		CnDetailPage,
+		DocumentLeafTabs,
 		CnStatusBadge,
 		ArrowLeft,
 		ContentSave,
@@ -310,6 +322,8 @@ export default {
 
 	data() {
 		return {
+			// The leaves the publicationConsent schema links (leaf-integrations 2.1).
+			leafIds: leafIdsForSchema('publicationConsent'),
 			editData: {
 				consentStatus: null,
 				notificationStatus: null,
