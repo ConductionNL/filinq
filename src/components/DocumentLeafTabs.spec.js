@@ -14,8 +14,8 @@
  */
 
 import { createApp, h, nextTick, ref } from 'vue'
-import { leafIdsForSchema } from '../services/documentLeafTabs.js'
 import DocumentLeafTabs from './DocumentLeafTabs.vue'
+import { leafIdsForSchema } from '../services/documentLeafTabs.js'
 
 const mockRegistry = ref([])
 

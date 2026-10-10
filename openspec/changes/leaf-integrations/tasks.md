@@ -18,17 +18,17 @@
 
 ## 2. Host the leaves on the record surfaces (frontend)
 
-- [ ] 2.1 Ensure the signing-request, consent, correspondence, generated-document, and
+- [x] 2.1 Ensure the signing-request, consent, correspondence, generated-document, and
   dossier detail surfaces mount the registry's enabled leaf tabs/widgets for their object
   (shared registry tab host per ADR-019) — reusing the host wiring from
   `document-detail-leaf-widgets`, not a parallel tab system.
-- [ ] 2.2 Graceful degradation: with Mail / Calendar / Contacts / Deck absent, the
+- [x] 2.2 Graceful degradation: with Mail / Calendar / Contacts / Deck absent, the
   corresponding leaf is hidden and each surface renders without error.
 - [x] 2.3 nl + en translations for any new tab labels (ADR-007 / ADR-025).
 
 ## 3. Verify
 
-- [ ] 3.1 Import the register into OpenRegister on the dev instance: zero
+- [ ] 3.1 (not run: needs the live instance with NC Mail) Import the register into OpenRegister on the dev instance: zero
   configuration-validation errors; NC Mail's sidebar lists the three link-target schemas
   and offers create-from-email for consent and correspondence.
 - [x] 3.2 Create-from-email produces records in their initial state only — assert no
@@ -36,7 +36,7 @@
 - [x] 3.3 Assert the MCP surface is unchanged by this change: no tool exposes
   `signerRecord` or `publicationConsent` after the leaves are enabled (extend the MCP
   surface probe assertion rather than a one-off grep).
-- [ ] 3.4 Component/integration tests: leaves render when their apps are enabled, hidden
+- [x] 3.4 Component/integration tests: leaves render when their apps are enabled, hidden
   when absent; no second write path for `deadline` / `objectionDeadline` / `fileId`.
 - [x] 3.5 CHANGELOG entry.
 
@@ -58,6 +58,27 @@
 - **3.4 is half done.** The parity, bundle and degradation assertions exist; a
   component test of a leaf rendering has no runner in this checkout, where
   `node_modules` is absent.
+
+## Built on build/openspecs-3 (10 Oct 2026)
+
+- **2.1:** nc-vue 2.65 ships `CnIntegrationTab` and `CnLeafMountHost`, so the
+  deferral above is over. `src/components/DocumentLeafTabs.vue` now takes its
+  leaf ids as a prop and renders a mount-mode leaf through `CnLeafMountHost`.
+  `leafIdsForSchema()` in `src/services/documentLeafTabs.js` reads each
+  schema's `linkedTypes` (a copy of the register, pinned by
+  `tests/vitest/documentLeafTabs.spec.js`) and maps the legacy `mail` id to the
+  registry's `email`. Mounted on `SigningRequestDetail`, `DossierDetail` and
+  `ConsentDetail`. Correspondence and generated documents have no detail view
+  of their own, so there is no surface to mount on; their `linkedTypes` still
+  serve NC Mail's sidebar.
+- **2.2:** a leaf whose app is absent (`available: false`) is left out, the
+  others render, and with none left the section is not drawn
+  (`tests/vitest/documentLeafTabs.spec.js`, `src/components/DocumentLeafTabs.spec.js`).
+- **3.4:** `src/components/DocumentLeafTabs.spec.js` mounts the real component
+  in jsdom against a registry snapshot. No second write path: the host only
+  reads the registry.
+- Boards: no Fq board draws a leaf section on these detail pages, so the
+  section sits at the bottom of each page, as on the document sidebar.
 
 ## Acceptance criteria
 

@@ -36,6 +36,90 @@
 export const DOCUMENT_LEAF_IDS = ['contacts', 'activity', 'shares']
 
 /**
+ * Each schema's `configuration.linkedTypes`, as `lib/Settings/filinq_register.json` declares them.
+ *
+ * 🔴 THE REGISTER IS THE SOURCE; THIS IS ITS COPY FOR THE BROWSER, PINNED BY A
+ * TEST. Importing the register JSON would put the whole register (megabytes of
+ * schemas) into the main bundle to read six short lists, and fetching each
+ * schema from OpenRegister on every detail page is a round trip for a value
+ * that only changes with a filinq release. `tests/vitest/documentLeafTabs.spec.js`
+ * reads the register file and fails the moment the two differ, so a schema that
+ * gains or drops a linked type cannot drift from what its surface renders.
+ *
+ * @type {Object<string, string[]>}
+ *
+ * @spec openspec/changes/leaf-integrations/tasks.md#2-1
+ */
+export const SCHEMA_LINKED_TYPES = Object.freeze({
+	signingRequest: ['mail', 'calendar'],
+	signerRecord: ['contacts'],
+	publicationConsent: ['mail', 'calendar', 'deck'],
+	correspondence: ['mail'],
+	generatedDocument: ['files'],
+	dossier: ['files', 'deck'],
+})
+
+/**
+ * Linked-type ids OpenRegister still accepts that are not the registry's own id.
+ *
+ * 🔴 `mail` IS A LEGACY linkedTypes ID; THE REGISTRY CALLS THE LEAF `email`.
+ * OpenRegister's Schema keeps the old ids valid (its legacy allow-list), but
+ * the integration registry the tabs read from registers the mail leaf as
+ * `email`. Looking `mail` up as-is finds nothing, and the mail tab would be
+ * missing on every surface with no error anywhere.
+ *
+ * @type {Object<string, string>}
+ *
+ * @spec openspec/changes/leaf-integrations/tasks.md#2-1
+ */
+export const LINKED_TYPE_TO_LEAF_ID = Object.freeze({ mail: 'email' })
+
+/**
+ * The leaf ids a record surface consumes, from its schema's linked types.
+ *
+ * A schema with no declared linked types answers an empty list: such a record
+ * shows no leaf section rather than a guessed one.
+ *
+ * @param {string} schema The OpenRegister schema slug of the record.
+ *
+ * @return {string[]} Registry ids, in the order the schema declares them.
+ *
+ * @spec openspec/changes/leaf-integrations/tasks.md#2-1
+ */
+export function leafIdsForSchema(schema) {
+	const linkedTypes = SCHEMA_LINKED_TYPES[schema] ?? []
+	return linkedTypes.map((type) => LINKED_TYPE_TO_LEAF_ID[type] ?? type)
+}
+
+/**
+ * How one leaf renders: its own mount hand-off, its own tab, or the library's host.
+ *
+ * A `renderMode: 'mount'` leaf brings its own framework instance and must get a
+ * bare element (CnLeafMountHost); handing it to `<component :is>` renders
+ * nothing. A component leaf renders its registered tab; a descriptor with no
+ * tab of its own falls back to the library's generic CnIntegrationTab.
+ *
+ * @param {object}  descriptor The registry descriptor.
+ * @param {?object} tab        What `resolveTab(id)` returned for it.
+ *
+ * @return {'mount'|'tab'|'generic'} The render path.
+ *
+ * @spec openspec/changes/leaf-integrations/tasks.md#2-1
+ */
+export function leafRenderPath(descriptor, tab) {
+	if (
+		descriptor
+		&& descriptor.renderMode === 'mount'
+		&& typeof descriptor.mount === 'function'
+		&& typeof descriptor.unmount === 'function'
+	) {
+		return 'mount'
+	}
+
+	return tab ? 'tab' : 'generic'
+}
+
+/**
  * The leaf tabs to render for one document record.
  *
  * 🔴 NO RECORD MEANS NO TABS, NOT EMPTY TABS. A leaf tab reads
@@ -52,12 +136,14 @@ export const DOCUMENT_LEAF_IDS = ['contacts', 'activity', 'shares']
  * @param {Array<object>} integrations The registry snapshot.
  * @param {object}        binding      The record the tabs would be about.
  * @param {string}        [binding.objectId] The OpenRegister object id, '' when the document has no record.
+ * @param {string[]}      [leafIds]    The leaves this surface consumes, in render order.
  *
- * @return {Array<object>} The descriptors to render, in DOCUMENT_LEAF_IDS order.
+ * @return {Array<object>} The descriptors to render, in leafIds order.
  *
  * @spec openspec/changes/document-detail-leaf-widgets/specs/document-register/spec.md
+ * @spec openspec/changes/leaf-integrations/tasks.md#2-2
  */
-export function visibleLeafTabs(integrations, binding = {}) {
+export function visibleLeafTabs(integrations, binding = {}, leafIds = DOCUMENT_LEAF_IDS) {
 	const objectId = String(binding.objectId ?? '').trim()
 	if (objectId === '') {
 		return []
@@ -70,7 +156,8 @@ export function visibleLeafTabs(integrations, binding = {}) {
 		}
 	}
 
-	return DOCUMENT_LEAF_IDS.map((id) => registered.get(id)).filter(
+	const wanted = Array.isArray(leafIds) ? leafIds : DOCUMENT_LEAF_IDS
+	return wanted.map((id) => registered.get(id)).filter(
 		(entry) => entry !== undefined && entry.available !== false,
 	)
 }

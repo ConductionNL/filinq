@@ -24,9 +24,9 @@ import {
 	DOCUMENT_LEAF_IDS,
 	documentRecordIdFor,
 	hasLeafTabs,
-	LINKED_TYPE_TO_LEAF_ID,
 	leafIdsForSchema,
 	leafRenderPath,
+	LINKED_TYPE_TO_LEAF_ID,
 	SCHEMA_LINKED_TYPES,
 	visibleLeafTabs,
 } from '../../src/services/documentLeafTabs.js'
