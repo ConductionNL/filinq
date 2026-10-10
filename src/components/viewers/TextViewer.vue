@@ -22,7 +22,7 @@
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { entityTypeColor } from '../../services/entityTypes.js'
-import { fetchFileAsText } from '../../services/fileViewerService.js'
+import { fetchFileAsText, fetchUrlAsText } from '../../services/fileViewerService.js'
 import {
 	buildHighlightSegments,
 	PENDING_TYPE,
@@ -39,6 +39,14 @@ export default {
 		path: {
 			type: String,
 			required: true,
+		},
+
+		// Optional: read the bytes from this same-origin URL instead of the
+		// WebDAV path, for a file outside the user's storage (the compare view
+		// mounted by another app).
+		url: {
+			type: String,
+			default: '',
 		},
 	},
 
@@ -86,6 +94,16 @@ export default {
 				this.load()
 			},
 		},
+
+		/**
+		 * Reload when the host points the viewer at another URL.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-the-split-view-is-mountable-by-another-app-req-ddarw-014
+		 */
+		url() {
+			this.load()
+		},
 	},
 
 	methods: {
@@ -128,7 +146,9 @@ export default {
 			this.loading = true
 			this.error = null
 			try {
-				this.content = await fetchFileAsText(this.path)
+				this.content = this.url
+					? await fetchUrlAsText(this.url)
+					: await fetchFileAsText(this.path)
 			} catch (err) {
 				console.error('[TextViewer] failed to load text:', err)
 				this.error = err.message || t('filinq', 'Failed to load document')
