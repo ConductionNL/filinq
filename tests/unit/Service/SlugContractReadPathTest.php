@@ -241,7 +241,7 @@ class SlugContractReadPathTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testADeclaredUploadPolicyIsFound(): void {
 		$service = new UploadPolicyService(
@@ -373,7 +373,7 @@ class SlugContractReadPathTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAnInstanceWithoutTheUploadPolicySchemaDeclaresNoPolicy(): void {
 		$service = new UploadPolicyService($this->resolver(rows: [], schemaAbsent: true), new NullLogger());

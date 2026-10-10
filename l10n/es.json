@@ -1,5 +1,11 @@
 {
     "translations": {
+        "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Todos los documentos de la carpeta se han anonimizado. Las copias anonimizadas están en una subcarpeta aparte, junto a los originales.",
+        "Subfolder for anonymised copies": "Subcarpeta para copias anonimizadas",
+        "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "La anonimización por lotes y por carpeta guarda las copias censuradas en esta subcarpeta, junto a los originales.",
+        "Use lowercase letters, digits, hyphens and underscores only.": "Use solo letras minúsculas, dígitos, guiones y guiones bajos.",
+        "The subfolder name cannot contain: {characters}": "El nombre de la subcarpeta no puede contener: {characters}",
+        "Enter a name for the subfolder.": "Introduzca un nombre para la subcarpeta.",
         "Documents waiting to be filed": "Documentos pendientes de archivar",
         "Looking up waiting documents": "Buscando documentos pendientes",
         "No documents are waiting to be filed.": "No hay documentos pendientes de archivar.",
@@ -1371,7 +1377,6 @@
         "Add standing consent": "Añadir consentimiento permanente",
         "Add to anonymisation list": "Añadir a la lista de anonimización",
         "Advanced template editing with WYSIWYG, preview, versioning, and conditional sections.": "Edición avanzada de plantillas con WYSIWYG, vista previa, control de versiones y secciones condicionales.",
-        "All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.": "Todos los documentos de la carpeta se han anonimizado. Las copias anonimizadas se han guardado con el sufijo _anonymized.",
         "Already on the list — no new occurrences added.": "Ya está en la lista: no se han añadido nuevas apariciones.",
         "Always export anonymised documents as PDF": "Exportar siempre los documentos anonimizados como PDF",
         "An error occurred": "Se ha producido un error",

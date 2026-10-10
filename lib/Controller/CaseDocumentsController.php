@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class CaseDocumentsController extends Controller {
 
@@ -84,7 +84,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The page of files.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function files(
@@ -129,7 +129,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The record, with its domains.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function linkDomain(string $uuid, string $register = '', string $schema = '', string $id = ''): JSONResponse {
@@ -152,7 +152,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The record, which still exists.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function unlinkDomain(string $uuid, string $register = '', string $schema = '', string $id = ''): JSONResponse {
@@ -170,7 +170,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse Their records.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function mine(): JSONResponse {
@@ -193,7 +193,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The policy, or an empty answer when none is declared.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function uploadPolicy(): JSONResponse {
@@ -216,7 +216,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The record, or the refusal.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function domainCall(callable $handler): JSONResponse {
 		$unauthenticated = $this->requireUser();
@@ -240,7 +240,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse|null The refusal, or null when somebody is logged in.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function requireUser(): ?JSONResponse {
 		if ($this->userSession->getUser() !== null) {

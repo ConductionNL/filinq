@@ -127,7 +127,7 @@ test.describe('Case documents and the flat list', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#the-jurist-finds-the-attachment
+	// @e2e openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md#the-jurist-finds-the-attachment
 	// @e2e openspec/specs/document-register/spec.md#the-jurist-finds-the-attachment
 	test('every file on the case is in the flat list, each naming its record', async ({
 		page,
@@ -164,7 +164,7 @@ test.describe('Case documents and the flat list', () => {
 		}
 	})
 
-	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#the-jurist-finds-the-attachment
+	// @e2e openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md#the-jurist-finds-the-attachment
 	// @e2e openspec/specs/document-register/spec.md#the-jurist-finds-the-attachment
 	test('the flat list filters on the file name and pages', async ({ page }) => {
 		const filtered = await page.request.get(`${API}/case-documents/files`, {
@@ -183,7 +183,7 @@ test.describe('Case documents and the flat list', () => {
 		}
 	})
 
-	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#one-advies-three-zaaktypen
+	// @e2e openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md#one-advies-three-zaaktypen
 	// @e2e openspec/specs/document-register/spec.md#one-advies-three-zaaktypen
 	test('one record serves several domains, and unlinking the last keeps it', async ({
 		page,
@@ -234,7 +234,7 @@ test.describe('Case documents and the flat list', () => {
 		expect(fields.createdByUser).not.toBe('')
 	})
 
-	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#my-documents
+	// @e2e openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md#my-documents
 	// @e2e openspec/specs/document-register/spec.md#my-documents
 	test('a person sees the document records they created', async ({ page }) => {
 		const mine = await page.request.get(`${API}/case-documents/mine`, {
@@ -245,7 +245,7 @@ test.describe('Case documents and the flat list', () => {
 		expect(Array.isArray(body.results)).toBe(true)
 	})
 
-	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#an-executable-is-refused
+	// @e2e openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md#an-executable-is-refused
 	// @e2e openspec/specs/document-register/spec.md#an-executable-is-refused
 	test('the upload policy is readable, and says what it allows', async ({
 		page,
@@ -267,7 +267,7 @@ test.describe('Case documents and the flat list', () => {
 		}
 	})
 
-	// @e2e openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md#an-executable-is-refused
+	// @e2e openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md#an-executable-is-refused
 	// @e2e openspec/specs/document-register/spec.md#an-executable-is-refused
 	test('an executable renamed to .pdf is refused by the upload endpoint', async ({
 		page,

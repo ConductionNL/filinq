@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle Dokumente im Ordner wurden anonymisiert. Die anonymisierten Kopien liegen in einem eigenen Unterordner neben den Originalen.",
+        "Subfolder for anonymised copies": "Unterordner für anonymisierte Kopien",
+        "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Die Stapel- und Ordneranonymisierung legt die geschwärzten Kopien in diesen Unterordner, neben die Originale.",
+        "Use lowercase letters, digits, hyphens and underscores only.": "Verwenden Sie nur Kleinbuchstaben, Ziffern, Bindestriche und Unterstriche.",
+        "The subfolder name cannot contain: {characters}": "Der Name des Unterordners darf Folgendes nicht enthalten: {characters}",
+        "Enter a name for the subfolder.": "Geben Sie einen Namen für den Unterordner ein.",
         "Documents waiting to be filed": "Dokumente, die auf Ablage warten",
         "Looking up waiting documents": "Wartende Dokumente werden gesucht",
         "No documents are waiting to be filed.": "Es warten keine Dokumente auf Ablage.",
@@ -1369,7 +1375,6 @@ OC.L10N.register(
         "Add standing consent": "Dauerhafte Einwilligung hinzufügen",
         "Add to anonymisation list": "Zur Anonymisierungsliste hinzufügen",
         "Advanced template editing with WYSIWYG, preview, versioning, and conditional sections.": "Erweiterte Vorlagenbearbeitung mit WYSIWYG, Vorschau, Versionierung und bedingten Abschnitten.",
-        "All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.": "Alle Dokumente im Ordner wurden anonymisiert. Anonymisierte Kopien wurden mit dem Suffix _anonymized gespeichert.",
         "Already on the list — no new occurrences added.": "Bereits auf der Liste — keine neuen Vorkommen hinzugefügt.",
         "Always export anonymised documents as PDF": "Anonymisierte Dokumente immer als PDF exportieren",
         "An error occurred": "Ein Fehler ist aufgetreten",

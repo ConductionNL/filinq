@@ -1591,7 +1591,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/FileUploadService.php:159 calls UploadPolicyService::check(fileName, contents) on every upload; FileUploadService is used by lib/Service/BatchUploadService.php, which backs batchAnonymization#batchUpload (routes.php:157, FE-prefix per route-reach.txt) reached from the Anonymization/FolderAnonymization upload flows.",
-				"change": "openspec/changes/case-documents-and-the-flat-list"
+				"change": "openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list"
 			},
 			"reachedOn": "/anonymization, /folder-anonymization (batch upload flow)",
 			"provider": "filinq",
@@ -3554,7 +3554,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/CaseDocumentsController.php:90 files() (GET /api/case-documents/files) is called from src/integrations/CnFilinqDocumentsWidget.vue:107, but that leaf widget renders a plain <ul> of links with a status span (lines 17-30) -- a flat list, but with NO column headers or sorting. src/integrations/registerDocumentsLeaf.js registers it as a 'leaf' a CONSUMING app mounts on its own case/record page, passing the object context.",
-				"change": "openspec/changes/case-documents-and-the-flat-list"
+				"change": "openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list"
 			},
 			"reachedOn": "the filinq-documents leaf widget (CnFilinqDocumentsWidget.vue), meant to be embedded on a case page in a consuming app; checked dq-flow, procest, zaakafhandelapp for 'filinq-documents'/DOCUMENTS_INTEGRATION_ID (git grep on origin/development lib src) with no hits, so no confirmed adopter",
 			"provider": "filinq",
@@ -3586,7 +3586,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "The 'My Documents' page (src/views/myDocuments/MyDocumentsIndex.vue) that a user reaches at /my-documents lists files via a Nextcloud WebDAV PROPFIND on the user's OWN folder (src/store/modules/myDocuments.js:304-330 fetchDocuments()), i.e. personal file browsing, not a curated 'produced by me or waiting for me' query. The dedicated backend for that -- lib/Controller/CaseDocumentsController.php:176 mine() -> DomainDirectory::listMine() at GET /api/case-documents/mine -- is route-reach 'none': no src/ component calls it.",
-				"change": "openspec/changes/case-documents-and-the-flat-list"
+				"change": "openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list"
 			},
 			"reachedOn": "/my-documents (MyDocumentsIndex.vue) shows the user's own file folder; the purpose-built 'documents involving me' endpoint has no caller",
 			"provider": "filinq",
@@ -3618,7 +3618,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Controller/CaseDocumentsController.php:135 linkDomain() and :158 unlinkDomain() (POST/DELETE /api/case-documents/{uuid}/domains, routes.php:90-91) let one document record carry multiple {register,schema,id} domain links via lib/Service (DomainDirectory). Both routes are route-reach 'none'.",
-				"change": "openspec/changes/case-documents-and-the-flat-list"
+				"change": "openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list"
 			},
 			"reachedOn": "nothing reaches it: grep for linkDomain/unlinkDomain/case-documents...domains in src/ found no caller; checked dq-flow, procest, zaakafhandelapp (git grep on origin/development lib src) with no hits",
 			"provider": "filinq",
@@ -7216,7 +7216,7 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "webpack.config.js:74-76 declares a dedicated 'leaves' entry (filename appId + '-leaves.js'); src/leaves.js calls registerDocumentsLeaf() from src/integrations/registerDocumentsLeaf.js, which mounts CnFilinqDocumentsWidget for SURFACES = ['detail-page','single-entity'] under integration id 'filinq-documents'. Its own docblock: 'This entry is what OpenRegister's LeafScriptListener enqueues on OTHER apps' pages, so a case page in another app can show the documents Filinq holds for that case.' The underlying data is caseDocuments#files (routes.php:89, FE in route-reach.txt).",
-				"change": "openspec/changes/case-documents-and-the-flat-list"
+				"change": "openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list"
 			},
 			"reachedOn": "another app's record page (via OpenRegister's LeafScriptListener enqueuing filinq-leaves.js, integration id 'filinq-documents')",
 			"provider": "filinq",

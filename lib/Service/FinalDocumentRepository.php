@@ -197,7 +197,7 @@ class FinalDocumentRepository {
 	 *
 	 * @return array<int, array<string, mixed>> Their records.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function findByCreator(string $userId): array {
 		if ($userId === '') {
@@ -246,7 +246,7 @@ class FinalDocumentRepository {
 	 *
 	 * @return array<int, array<string, mixed>> The records on that domain.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function findByDomain(array $domain): array {
 		$reference = [
@@ -304,7 +304,7 @@ class FinalDocumentRepository {
 	 *
 	 * @return bool True when the record names it.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function sitsIn(array $record, array $reference): bool {
 		$domains = ($record['domains'] ?? []);
@@ -334,7 +334,7 @@ class FinalDocumentRepository {
 	 *
 	 * @return bool True when all three fields match.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function sameDomain(array $candidate, array $reference): bool {
 		foreach ($reference as $key => $value) {

@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class DomainFolderReconciliationJob extends TimedJob {
 
@@ -77,7 +77,7 @@ class DomainFolderReconciliationJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	protected function run(mixed $argument): void {
 		try {

@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class FlatFileListService {
 
@@ -77,7 +77,7 @@ class FlatFileListService {
 	 *
 	 * @return array{results: array<int, array<string, mixed>>, total: int, page: int, pages: int} The page.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = ''): array {
 		$rows = [];
@@ -143,7 +143,7 @@ class FlatFileListService {
 	 *
 	 * @return array<string, mixed>|null The row, or null when there is no readable file.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function row(array $record): ?array {
 		$fileId = (int)($record['fileId'] ?? 0);

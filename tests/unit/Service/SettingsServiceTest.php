@@ -257,6 +257,80 @@ class SettingsServiceTest extends TestCase {
 	}//end testUpdateSettingsPersistsValues()
 
 	/**
+	 * The output subfolder name is writable when it is one safe path segment.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 */
+	public function testOutputSubfolderNameIsWritable(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'anonymisation.output_subfolder_name', 'redacted');
+		$this->mockConfig->method('getValueString')->willReturn('redacted');
+
+		$result = $this->settingsService->updateSettings(['anonymisation.output_subfolder_name' => 'redacted']);
+
+		$this->assertSame('redacted', $result['anonymisation.output_subfolder_name']);
+
+	}//end testOutputSubfolderNameIsWritable()
+
+	/**
+	 * A traversal attempt is refused before anything is written, naming the characters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 */
+	public function testInvalidOutputSubfolderNameIsRefusedAndNothingIsWritten(): void {
+		$this->mockConfig->expects($this->never())->method('setValueString');
+
+		try {
+			$this->settingsService->updateSettings(
+				[
+					'signing_provider' => 'native',
+					'anonymisation.output_subfolder_name' => '../traversal',
+				]
+			);
+			$this->fail('An invalid subfolder name was accepted.');
+		} catch (\RuntimeException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertStringContainsString('"."', $e->getMessage());
+			$this->assertStringContainsString('"/"', $e->getMessage());
+		}
+
+	}//end testInvalidOutputSubfolderNameIsRefusedAndNothingIsWritten()
+
+	/**
+	 * An empty subfolder name is refused too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 */
+	public function testEmptyOutputSubfolderNameIsRefused(): void {
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionCode(400);
+		$this->settingsService->updateSettings(['anonymisation.output_subfolder_name' => '']);
+
+	}//end testEmptyOutputSubfolderNameIsRefused()
+
+	/**
+	 * The settings key is the one the resolver reads.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 */
+	public function testSubfolderKeyMatchesTheResolver(): void {
+		$this->assertSame(
+			\OCA\Filinq\Service\Conversion\OutputLayoutResolver::SUBFOLDER_CONFIG_KEY,
+			'anonymisation.output_subfolder_name'
+		);
+
+	}//end testSubfolderKeyMatchesTheResolver()
+
+	/**
 	 * The guardian consent age is an admin setting, 16 until someone changes it
 	 * (signer-identity-rails REQ-DDSIR-008).
 	 *

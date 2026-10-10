@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ namespace OCA\Filinq\Service;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 interface MountCapabilityProbe {
 
@@ -57,7 +57,7 @@ interface MountCapabilityProbe {
 	 *
 	 * @return bool|null True, false, or null when it could not be found out.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function supportsPerGroupPermissions(string $path): ?bool;
 
@@ -68,7 +68,7 @@ interface MountCapabilityProbe {
 	 *
 	 * @return bool|null True, false, or null when it could not be found out.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function writesPassThroughFilinq(string $path): ?bool;
 
@@ -79,7 +79,7 @@ interface MountCapabilityProbe {
 	 *
 	 * @return bool|null True, false, or null when it could not be found out.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function supportsVersions(string $path): ?bool;
 

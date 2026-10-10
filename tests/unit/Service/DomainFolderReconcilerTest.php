@@ -296,7 +296,7 @@ class DomainFolderReconcilerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testTheFolderIsMadeBeforeItsAccessIsReconciled(): void {
 		$folders = $this->getMockBuilder(DomainFolderService::class)
@@ -342,7 +342,7 @@ class DomainFolderReconcilerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAFolderThatCouldNotBeMadeIsRefusedNotSkipped(): void {
 		$reconciler = new DomainFolderReconciler(

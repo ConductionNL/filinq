@@ -26,6 +26,7 @@ use Exception;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -75,9 +76,17 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->mockAnonService = $this->createMock(AnonymizationService::class);
 		$this->mockStateService = $this->createMock(BatchStateService::class);
 
+		// Placement is covered by BatchAnonymizeServiceOutputLayoutTest; here
+		// the mover leaves every output where OpenRegister wrote it.
+		$mover = $this->createMock(OutputLayoutMover::class);
+		$mover->method('relocate')->willReturnCallback(
+			static fn (string $userId, int $fileId, string $legacyPath): array => ['path' => $legacyPath, 'warning' => null]
+		);
+
 		$this->service = new BatchAnonymizeService(
 			$this->mockAnonService,
-			$this->mockStateService
+			$this->mockStateService,
+			$mover
 		);
 
 	}//end setUp()

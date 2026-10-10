@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 
 /**
  * Applies a user-reviewed entity list across every file in a batch.
@@ -47,12 +48,14 @@ class BatchAnonymizeService {
 	 *
 	 * @param AnonymizationService $anonService Service that performs single-document anonymization.
 	 * @param BatchStateService $stateService Service that persists per-batch state between calls.
+	 * @param OutputLayoutMover $layoutMover Moves each redacted output into the output subfolder.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly AnonymizationService $anonService,
 		private readonly BatchStateService $stateService,
+		private readonly OutputLayoutMover $layoutMover,
 	) {
 
 	}//end __construct()
@@ -229,6 +232,12 @@ class BatchAnonymizeService {
 				entities: $entities,
 				callOptions: $callOptions
 			);
+			if ($outcome['error'] === null) {
+				$outcome['entry'] = $this->applyOutputLayout(
+					entry: $outcome['entry'],
+					userId: (string)($batch['userId'] ?? '')
+				);
+			}
 			$batch['files'][$i] = $outcome['entry'];
 
 			if ($outcome['error'] === null) {
@@ -365,6 +374,43 @@ class BatchAnonymizeService {
 	}//end anonymizeOneFile()
 
 	/**
+	 * Move a redacted output into `<source>/<subfolder>/<clean-name>`.
+	 *
+	 * OpenRegister writes the output beside the source as `<base>_anonymized`;
+	 * the batch moves it into the configured subfolder and records the new
+	 * path in `anonymizedFilePath`. A failed move keeps the legacy path and a
+	 * `MOVE_FAILED` warning, and the file still counts as anonymised. An
+	 * output without a file id is left as it is.
+	 *
+	 * @param array<string, mixed> $entry The anonymised batch entry.
+	 * @param string $userId Owner of the batch.
+	 *
+	 * @return array<string, mixed> The entry with its final output path.
+	 *
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
+	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-5
+	 */
+	private function applyOutputLayout(array $entry, string $userId): array {
+		$fileId = ($entry['anonymizedFileId'] ?? null);
+		if ($fileId === null || $userId === '') {
+			return $entry;
+		}
+
+		$moved = $this->layoutMover->relocate(
+			userId: $userId,
+			anonymizedFileId: (int)$fileId,
+			legacyPath: (string)($entry['anonymizedFilePath'] ?? '')
+		);
+		$entry['anonymizedFilePath'] = $moved['path'];
+		if ($moved['warning'] !== null) {
+			$entry['warning'] = $moved['warning'];
+		}
+
+		return $entry;
+
+	}//end applyOutputLayout()
+
+	/**
 	 * Fold a successful anonymise result into the file's batch entry.
 	 *
 	 * @param array<string, mixed> $entry The batch entry for this file.
@@ -379,6 +425,7 @@ class BatchAnonymizeService {
 		$entry['status'] = 'anonymized';
 		$entry['replacementCount'] = $result['replacementCount'] ?? 0;
 		$entry['anonymizedFileId'] = $result['anonymizedFileId'] ?? null;
+		$entry['anonymizedFilePath'] = $result['anonymizedFilePath'] ?? null;
 
 		if (isset($result['warning']) === true) {
 			$entry['warning'] = $result['warning'];

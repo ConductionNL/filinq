@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.",
+        "Subfolder for anonymised copies": "Subfolder for anonymised copies",
+        "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.",
+        "Use lowercase letters, digits, hyphens and underscores only.": "Use lowercase letters, digits, hyphens and underscores only.",
+        "The subfolder name cannot contain: {characters}": "The subfolder name cannot contain: {characters}",
+        "Enter a name for the subfolder.": "Enter a name for the subfolder.",
         "Documents waiting to be filed": "Documents waiting to be filed",
         "Looking up waiting documents": "Looking up waiting documents",
         "No documents are waiting to be filed.": "No documents are waiting to be filed.",
@@ -1197,7 +1203,6 @@ OC.L10N.register(
         "Advanced template editing with WYSIWYG, preview, versioning, and conditional sections.": "Advanced template editing with WYSIWYG, preview, versioning, and conditional sections.",
         "All categories": "All categories",
         "All consents have been handled.": "All consents have been handled.",
-        "All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.": "All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.",
         "All entity types are detected. Turn a type off to stop detecting it automatically — you can still add it manually per document.": "All entity types are detected. Turn a type off to stop detecting it automatically — you can still add it manually per document.",
         "All settings saved successfully": "All settings saved successfully",
         "All types": "All types",

@@ -23,7 +23,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class DocumentDomainService {
 
@@ -81,7 +81,7 @@ class DocumentDomainService {
 	 *
 	 * @throws RuntimeException When the record does not exist or the domain is incomplete.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function link(string $uuid, array $domain): array {
 		$domain = $this->requireDomain(domain: $domain);
@@ -114,7 +114,7 @@ class DocumentDomainService {
 	 *
 	 * @throws RuntimeException When the record does not exist or the domain is incomplete.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function unlink(string $uuid, array $domain): array {
 		$domain = $this->requireDomain(domain: $domain);
@@ -154,7 +154,7 @@ class DocumentDomainService {
 	 *
 	 * @return array<int, array<string, mixed>> Their records.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function listMine(string $userId = ''): array {
 		if ($userId === '') {
@@ -196,7 +196,7 @@ class DocumentDomainService {
 	 *
 	 * @throws RuntimeException When it does not name all three.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function requireDomain(array $domain): array {
 		$reference = [
@@ -226,7 +226,7 @@ class DocumentDomainService {
 	 *
 	 * @throws RuntimeException When there is no such record.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function requireRecord(string $uuid): array {
 		$record = $this->repository->findByUuid(uuid: $uuid);

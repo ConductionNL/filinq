@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Tutti i documenti della cartella sono stati anonimizzati. Le copie anonimizzate si trovano in una sottocartella separata, accanto agli originali.",
+        "Subfolder for anonymised copies": "Sottocartella per le copie anonimizzate",
+        "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "L'anonimizzazione in batch e per cartella mette le copie oscurate in questa sottocartella, accanto agli originali.",
+        "Use lowercase letters, digits, hyphens and underscores only.": "Usa solo lettere minuscole, cifre, trattini e trattini bassi.",
+        "The subfolder name cannot contain: {characters}": "Il nome della sottocartella non può contenere: {characters}",
+        "Enter a name for the subfolder.": "Inserisci un nome per la sottocartella.",
         "Documents waiting to be filed": "Documenti in attesa di archiviazione",
         "Looking up waiting documents": "Ricerca dei documenti in attesa",
         "No documents are waiting to be filed.": "Nessun documento è in attesa di archiviazione.",
@@ -1369,7 +1375,6 @@ OC.L10N.register(
         "Add standing consent": "Aggiungi consenso permanente",
         "Add to anonymisation list": "Aggiungi all'elenco di anonimizzazione",
         "Advanced template editing with WYSIWYG, preview, versioning, and conditional sections.": "Modifica avanzata dei modelli con WYSIWYG, anteprima, versionamento e sezioni condizionali.",
-        "All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.": "Tutti i documenti nella cartella sono stati anonimizzati. Le copie anonimizzate sono state salvate con il suffisso _anonymized.",
         "Already on the list — no new occurrences added.": "Già nell'elenco — nessuna nuova occorrenza aggiunta.",
         "Always export anonymised documents as PDF": "Esporta sempre i documenti anonimizzati come PDF",
         "An error occurred": "Si è verificato un errore",

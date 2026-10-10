@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -102,7 +102,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testOneAdviesServesThreeDomainsAsOneRecord(): void {
 		$service = $this->service(
@@ -135,7 +135,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testLinkingTheSameDomainTwiceChangesNothing(): void {
 		$service = $this->service(
@@ -158,7 +158,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testUnlinkingTheLastDomainKeepsTheRecord(): void {
 		$service = $this->service(
@@ -188,7 +188,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testARecordWithoutACreatorGetsOneWhenItIsUnlinked(): void {
 		$service = $this->service(
@@ -214,7 +214,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testADomainThatNamesLessThanARecordIsRefused(): void {
 		$service = $this->service(rows: []);
@@ -229,7 +229,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testMyDocumentsHoldsTheRecordsIMade(): void {
 		$service = $this->service(

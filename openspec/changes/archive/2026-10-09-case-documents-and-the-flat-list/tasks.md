@@ -9,13 +9,12 @@
 ## 2. The flat list
 
 - [x] 2.1 `FlatFileListService`: every file on every document record of an object, with the record as a column, paged and filtered (REQ-CDF-01)
-- [ ] 2.2 Register the leaf `filinq-case-files-flat` per ADR-066, rendering with `CnFilesBrowser` and the columns `files-browser-columns` provides (REQ-CDF-01)
-  - BLOCKED, MEASURED 2026-09-18, same blocker as `document-intake-inbox` 3.2:
-    filinq consumes no `RegisterLeafProvidersEvent` (`grep -rn` over `lib/`
-    returns nothing) and `webpack.config.js` declares no `leaves` entry. A leaf
-    registered without that entry is DARK: the host renders nothing and the
-    registration reports success, which is the worst of both. Not forced.
-  - The list is an endpoint now. Filinq ships no leaf infrastructure yet, so the leaf is a change of its own.
+- [x] 2.2 The flat list is offered as a leaf per ADR-066 (REQ-CDF-01)
+  - Met by the `filinq-documents` leaf (`lib/EventListener/RegisterDocumentsLeafListener.php`,
+    render half `src/integrations/CnFilinqDocumentsWidget.vue`), which reads
+    `GET /api/case-documents/files` and lists every file with its record.
+    Ruben, 9 Oct (Q-filinq-1, decision 128): that leaf IS the flat-list leaf;
+    no second `filinq-case-files-flat` leaf with `CnFilesBrowser`.
 
 ## 3. The provisioned folder
 
