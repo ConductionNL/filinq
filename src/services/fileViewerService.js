@@ -99,6 +99,18 @@ export async function fetchFileAsText(path) {
 	return response.data
 }
 
+/**
+ * Fetch an arbitrary same-origin URL as plain text.
+ *
+ * @param {string} url Absolute or app-relative URL returning text.
+ * @return {Promise<string>}
+ * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-the-split-view-is-mountable-by-another-app-req-ddarw-014
+ */
+export async function fetchUrlAsText(url) {
+	const response = await axios.get(url, { responseType: 'text' })
+	return response.data
+}
+
 // Lazy module promises — pdfjs (~2MB) and mammoth are only pulled in when a
 // binary document actually needs its text layer read. Mirrors the loaders in
 // PdfViewer.vue / WordViewer.vue so we don't double-bundle.

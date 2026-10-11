@@ -369,3 +369,41 @@ explicit decision.
 - WHEN an administrator saves `certain_from` 0.5
 - THEN the save is refused naming the floor
 - @e2e exclude a validation; covered by PHPUnit `SettingsServiceTest::testCertainFromBelowTheFloorIsRefused`
+
+## ADDED Requirements (amendment 2026-10-10, dossiq woo-delivered-set-is-a-record 4.2, decision 156)
+
+### Requirement: The split view is mountable by another app (REQ-DDARW-014)
+
+The original/other split view of REQ-DDARW-001 SHALL exist as one component
+(`src/components/compare/DocumentCompare.vue`) that renders each side in the
+viewer the file viewer uses for that type (`viewerRouting.js`), so the
+workbench and other apps share one split view. filinq SHALL expose it to other
+apps as `OCA.Filinq.mountCompare(el, { original, delivered, labels })` from a
+self-contained bundle `js/filinq-compare.js` (no shared chunks). A file is
+`{ fileName, mimeType, path?, url?, downloadUrl? }`: `path` is read over WebDAV
+from the user's files, `url` from a same-origin URL for a file outside them,
+and one of the two SHALL be given. `labels` optionally names the two panes.
+`mountCompare` SHALL refuse an argument that is not an element, or a side
+that is missing or names neither a path nor a URL, with a `TypeError` naming
+the side, before anything is mounted. It SHALL return a handle whose
+`unmount()` removes the view once. The component emits no events: the host
+owns its dialog and calls `unmount()` when it closes. A type no viewer renders
+SHALL show "This file type cannot be previewed." with the pane's download link.
+
+#### Scenario: another app shows an original beside what it delivered
+- GIVEN the `filinq-compare` bundle is loaded on another app's page
+- WHEN that app calls `OCA.Filinq.mountCompare(el, { original: { fileName: 'besluit.pdf', mimeType: 'application/pdf', url: '/x/original' }, delivered: { fileName: 'besluit-gelakt.docx', mimeType: '…wordprocessingml.document', url: '/x/delivered' } })`
+- THEN the element shows the original in the PDF viewer and the delivered file in the Word viewer, each read from its URL, the original first
+- @e2e exclude a mount contract for another app, with no Filinq page of its own; covered by Vitest `tests/vitest/compareView.spec.js` and Jest `src/components/compare/DocumentCompare.spec.js`, and driven live by the host's e2e (dossiq `tests/e2e/woo-delivered-set.spec.ts`)
+
+#### Scenario: an unusable call is refused before anything mounts
+- GIVEN a host that passes only the original
+- WHEN it calls `mountCompare`
+- THEN a `TypeError` says the delivered file is missing and no app is created
+- @e2e exclude argument validation; covered by Vitest `tests/vitest/compareView.spec.js`
+
+#### Scenario: a type no viewer renders
+- GIVEN a delivered file of a type no in-app viewer renders
+- WHEN the view is mounted
+- THEN that pane says the type cannot be previewed and offers the file as a download
+- @e2e exclude a rendering branch; covered by Jest `src/components/compare/DocumentCompare.spec.js`
