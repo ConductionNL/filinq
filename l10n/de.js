@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Original": "Original",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle Dokumente im Ordner wurden anonymisiert. Die anonymisierten Kopien liegen in einem eigenen Unterordner neben den Originalen.",
         "Subfolder for anonymised copies": "Unterordner für anonymisierte Kopien",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Die Stapel- und Ordneranonymisierung legt die geschwärzten Kopien in diesen Unterordner, neben die Originale.",

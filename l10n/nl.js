@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "Original": "Origineel",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Alle documenten in de map zijn geanonimiseerd. De geanonimiseerde kopieën staan in een aparte submap naast de originelen.",
         "Subfolder for anonymised copies": "Submap voor geanonimiseerde kopieën",
         "Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.": "Anonimiseren per batch of map zet de gelakte kopieën in deze submap, naast de originelen.",

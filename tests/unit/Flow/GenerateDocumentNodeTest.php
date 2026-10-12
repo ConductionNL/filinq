@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Flow;
 
+use OCA\Filinq\Flow\DirectGenerateDocumentNode;
 use OCA\Filinq\Flow\GenerateDocumentNode;
 use OCA\Filinq\Service\DocumentGenerationRequestService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
@@ -32,6 +33,7 @@ use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
+use OCA\OpenRegister\Service\Flow\IFlowDirectlyInvokable;
 use OCA\OpenRegister\Service\Flow\IFlowNodeTaxonomy;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -222,6 +224,50 @@ class GenerateDocumentNodeTest extends TestCase {
 		$this->assertSame('dossiq', $out[0]['json']['besluitDocument']['requestingApp']);
 		$this->assertArrayNotHasKey('document', $out[0]['json']);
 	}//end testConfigNamesTheObjectAndTheOutputKey()
+
+	/**
+	 * Run directly on one subject, the document lands on that subject: a
+	 * configured register/schema/objectId cannot point it at another object,
+	 * because the caller was only checked against the subject.
+	 *
+	 * @return void
+	 */
+	public function testADirectRunFilesOnTheSubjectWhateverTheConfigNames(): void {
+		$this->documents->expects($this->once())
+			->method('generateFromTemplate')
+			->with(
+				$this->anything(),
+				$this->anything(),
+				[['register' => '5', 'schema' => '7', 'id' => 'subject-1']],
+				$this->anything()
+			)
+			->willReturn($this->stored(fileId: 9));
+
+		$out = $this->node->execute(
+			items: [['json' => ['@self' => ['id' => 'subject-1', 'register' => '5', 'schema' => '7']]]],
+			config: ['template' => 'x', 'register' => 'cases', 'schema' => 'case', 'objectId' => 'someone-elses'],
+			context: ['triggeredBy' => GenerateDocumentNode::DIRECT_TRIGGER, 'nodeId' => 'generate']
+		);
+
+		$this->assertSame(9, $out[0]['json']['document']['fileId']);
+	}//end testADirectRunFilesOnTheSubjectWhateverTheConfigNames()
+
+	/**
+	 * The directly invokable variant opts in, and only it does.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheDirectVariantOptsInToDirectInvocation(): void {
+		$direct = new DirectGenerateDocumentNode(
+			generator: $this->createMock(DocumentGenerationRequestService::class),
+			urls: $this->createMock(IURLGenerator::class),
+			l10n: $this->createMock(IL10N::class)
+		);
+
+		$this->assertInstanceOf(IFlowDirectlyInvokable::class, $direct);
+		$this->assertSame(GenerateDocumentNode::NODE_ID, $direct->getId());
+		$this->assertNotInstanceOf(IFlowDirectlyInvokable::class, $this->node);
+	}//end testOnlyTheDirectVariantOptsInToDirectInvocation()
 
 	/**
 	 * With targetField the next step sees the text this step stored.

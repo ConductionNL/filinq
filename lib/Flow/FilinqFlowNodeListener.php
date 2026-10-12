@@ -94,7 +94,8 @@ class FilinqFlowNodeListener implements IEventListener {
 			return;
 		}
 
-		foreach (self::NODES as $nodeClass) {
+		foreach (self::NODES as $declared) {
+			$nodeClass = $this->classToRegister(nodeClass: $declared);
 			try {
 				$node = $this->container->get($nodeClass);
 			} catch (Throwable $e) {
@@ -108,6 +109,38 @@ class FilinqFlowNodeListener implements IEventListener {
 			$event->registerNode($node);
 		}
 	}//end handle()
+
+	/**
+	 * The class to register for a declared node: the directly invokable
+	 * variant of the generate-document node where OpenRegister knows direct
+	 * invocation, the declared class otherwise.
+	 *
+	 * @param string $nodeClass The declared node class.
+	 *
+	 * @return string The class to build.
+	 *
+	 * @spec openspec/changes/generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
+	 */
+	private function classToRegister(string $nodeClass): string {
+		if ($nodeClass === GenerateDocumentNode::class && $this->directInvocationAvailable() === true) {
+			return DirectGenerateDocumentNode::class;
+		}
+
+		return $nodeClass;
+	}//end classToRegister()
+
+	/**
+	 * Whether the installed OpenRegister offers direct node invocation.
+	 *
+	 * Asked by name, so the interface is never autoloaded where it is missing.
+	 *
+	 * @return bool True when the interface exists.
+	 *
+	 * @spec openspec/changes/generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
+	 */
+	protected function directInvocationAvailable(): bool {
+		return interface_exists('OCA\\OpenRegister\\Service\\Flow\\IFlowDirectlyInvokable');
+	}//end directInvocationAvailable()
 
 	/**
 	 * The node classes this listener registers.
