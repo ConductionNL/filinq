@@ -26,7 +26,9 @@ namespace OCA\Filinq\AppInfo;
 use Exception;
 use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
+use OCA\Filinq\Service\DomainFolderGateway;
 use OCA\Filinq\Service\MountCapabilityProbe;
+use OCA\Filinq\Service\NextcloudDomainFolderGateway;
 use OCA\Filinq\Service\NextcloudMountCapabilityProbe;
 use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\AppHost\Bootstrap;
@@ -94,6 +96,14 @@ class RegistrationBootstrap {
 		$context->registerServiceAlias(
 			MountCapabilityProbe::class,
 			NextcloudMountCapabilityProbe::class
+		);
+
+		// REQ-CDF-02: the nightly DomainFolderReconciliationJob needs this seam;
+		// without the binding its constructor cannot be resolved and the
+		// instance's whole cron pass dies on it.
+		$context->registerServiceAlias(
+			DomainFolderGateway::class,
+			NextcloudDomainFolderGateway::class
 		);
 
 		// ADR-063 chain 3/3: the per-app opt-in telling OpenRegister which of our
