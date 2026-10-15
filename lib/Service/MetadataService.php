@@ -30,6 +30,7 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -302,7 +303,7 @@ class MetadataService {
 	 *
 	 * @return mixed The saved ObjectEntity
 	 *
-	 * @throws Exception If the object cannot be found.
+	 * @throws DoesNotExistException If the object cannot be found.
 	 */
 	private function persistEnrichedMetadata(
 		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
@@ -318,7 +319,7 @@ class MetadataService {
 		);
 
 		if ($object === null) {
-			throw new Exception('Object not found: ' . $objectId);
+			throw new DoesNotExistException('Object not found: ' . $objectId);
 		}
 
 		$objectData = array_merge($object->getObject(), $metadata);
@@ -359,6 +360,11 @@ class MetadataService {
 			);
 
 			return $savedObject->getObject();
+		} catch (DoesNotExistException $e) {
+			// The object is not readable (yet): an import can dispatch the
+			// created event before the row is findable. Nothing to write to, so
+			// the caller decides how loudly to report it.
+			throw $e;
 		} catch (Exception $e) {
 			$this->logger->error(
 				'Failed to save enriched metadata: ' . $e->getMessage(),

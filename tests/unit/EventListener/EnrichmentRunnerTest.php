@@ -33,8 +33,11 @@ use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Tests\Unit\Service\Classification\ClassificationObjectStore;
 use OCA\Filinq\Tests\Unit\Service\Classification\InboundClassificationFixture;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCP\AppFramework\Db\DoesNotExistException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Psr\Log\AbstractLogger;
+use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 use RuntimeException;
 
@@ -113,6 +116,38 @@ class EnrichmentRunnerTest extends TestCase {
 		$this->assertSame([], $this->store->saves);
 
 	}//end testClassificationDisabledLeavesEnrichmentUntouched()
+
+	/**
+	 * An object that is not readable yet is a debug-level skip, not an error.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableObjectIsSkippedAtDebugLevel(): void {
+		$metadata = $this->createMock(MetadataService::class);
+		$metadata->method('enhanceMetadata')->willReturn(['language' => 'nl']);
+		$metadata->method('saveEnrichedMetadataAsSystem')
+			->willThrowException(new DoesNotExistException('not found in any magic table'));
+		$logger = new class extends AbstractLogger {
+			/**
+			 * Levels logged, in order.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $levels = [];
+
+			public function log($level, string|\Stringable $message, array $context = []): void {
+				unset($message, $context);
+				$this->levels[] = (string)$level;
+			}
+		};
+		$runner = new EnrichmentRunner(classification: null);
+
+		$runner->enrichObject($this->object(), $metadata, $this->settings(enrichment: true), $logger, 'new object');
+
+		$this->assertContains(LogLevel::DEBUG, $logger->levels);
+		$this->assertNotContains(LogLevel::ERROR, $logger->levels);
+
+	}//end testAnUnreadableObjectIsSkippedAtDebugLevel()
 
 	/**
 	 * A failing classification does not cost the object its enrichment.
