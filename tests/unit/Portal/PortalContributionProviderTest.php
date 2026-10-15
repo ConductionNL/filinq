@@ -45,6 +45,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Portal;
 
 use OCA\Filinq\Portal\PortalContributionProvider;
+use OCP\IL10N;
+use OCP\L10N\IFactory;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -112,7 +114,7 @@ final class PortalContributionProviderTest extends TestCase {
 		);
 		$this->assertSame([], $reflection->getInterfaceNames(), 'Duck-typed: no implements clause allowed');
 		$this->assertFalse($reflection->getParentClass(), 'Provider must not extend anything');
-		$this->assertNull($reflection->getConstructor(), 'Provider must have no constructor dependencies');
+		$this->assertSame(0, $reflection->getConstructor()?->getNumberOfRequiredParameters() ?? 0, 'Provider must have no required constructor dependencies');
 
 		$source = (string)file_get_contents((string)$reflection->getFileName());
 		$stripped = (preg_replace('/\/\*.*?\*\/|\/\/[^\n]*/s', '', $source) ?? '');
@@ -557,4 +559,27 @@ final class PortalContributionProviderTest extends TestCase {
 		return $keys;
 	}//end sortedKeys()
 
+
+	/**
+	 * Every label the portal shows is passed through Filinq's translator.
+	 *
+	 * @return void
+	 */
+	public function testLabelsAreTranslated(): void {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text): string => 'nl:' . $text);
+		$factory = $this->createMock(IFactory::class);
+		$factory->method('get')->with('filinq')->willReturn($l10n);
+		$provider = new PortalContributionProvider(l10nFactory: $factory);
+
+		$signer = $provider->getContribution(['audience' => 'signer']);
+		$subject = $provider->getContribution(['audience' => 'data-subject']);
+
+		$this->assertSame('nl:My publication consents', $subject['collections'][0]['label']);
+		$this->assertSame('nl:My signatures', $signer['collections'][0]['label']);
+		$this->assertSame('nl:Documents awaiting my signature', $signer['collections'][1]['label']);
+		$this->assertSame(['nl:Sign', 'nl:Decline to sign'], array_column($signer['collections'][1]['rowActions'], 'label'));
+		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:View document'], array_column($signer['actions'], 'label'));
+
+	}//end testLabelsAreTranslated()
 }//end class

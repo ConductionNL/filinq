@@ -2823,7 +2823,13 @@ OC.L10N.register(
         "Document checks": "Documentcontroles",
         "Archival checks (PDF/A)": "Archiefcontroles (PDF/A)",
         "Not PDF/A": "Geen PDF/A",
-        "Not checked against PDF/A": "Niet tegen PDF/A gecontroleerd"
+        "Not checked against PDF/A": "Niet tegen PDF/A gecontroleerd",
+        "My publication consents": "Mijn publicatietoestemmingen",
+        "My signatures": "Mijn handtekeningen",
+        "Documents awaiting my signature": "Documenten die op mijn handtekening wachten",
+        "Sign": "Ondertekenen",
+        "Decline to sign": "Ondertekenen weigeren",
+        "View document": "Document bekijken"
     },
     "nplurals=2; plural=(n != 1);"
 )

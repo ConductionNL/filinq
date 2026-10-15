@@ -29,6 +29,7 @@ namespace OCA\Filinq\EventListener;
 use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\SettingsService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -206,6 +207,14 @@ class EnrichmentRunner {
 				[
 					'objectId' => $objectId,
 					'enrichedFields' => array_keys($metadata),
+				]
+			);
+		} catch (DoesNotExistException $e) {
+			$logger->debug(
+				'Filinq: Skipped metadata enrichment for ' . $logContext . ', the object is not readable',
+				[
+					'objectId' => $objectId,
+					'exception' => $e->getMessage(),
 				]
 			);
 		} catch (\Exception $e) {

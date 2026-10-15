@@ -2734,7 +2734,13 @@ OC.L10N.register(
         "Document checks": "Document checks",
         "Archival checks (PDF/A)": "Archival checks (PDF/A)",
         "Not PDF/A": "Not PDF/A",
-        "Not checked against PDF/A": "Not checked against PDF/A"
+        "Not checked against PDF/A": "Not checked against PDF/A",
+        "My publication consents": "My publication consents",
+        "My signatures": "My signatures",
+        "Documents awaiting my signature": "Documents awaiting my signature",
+        "Sign": "Sign",
+        "Decline to sign": "Decline to sign",
+        "View document": "View document"
     },
     "nplurals=2; plural=(n != 1);"
 )

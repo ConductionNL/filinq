@@ -296,3 +296,13 @@ require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
 // The veraPDF service over the recorded veraPDF (tests/fixtures/verapdf).
 require_once __DIR__ . '/unit/Service/VeraPdf/VeraPdfDoubles.php';
 require_once __DIR__ . '/unit/Service/Conversion/DiskLikeSofficeRunner.php';
+
+// The real OCP share contracts the domain folder gateway reads and writes
+// group access through.
+foreach (['Share/IShare', 'Share/IManager'] as $ocpPath) {
+	$ocpFile = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpPath . '.php';
+	$ocpName = 'OCP\\' . str_replace('/', '\\', $ocpPath);
+	if (is_file($ocpFile) === true && interface_exists($ocpName) === false) {
+		require_once $ocpFile;
+	}
+}

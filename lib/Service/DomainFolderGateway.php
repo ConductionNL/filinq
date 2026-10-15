@@ -33,13 +33,8 @@ namespace OCA\Filinq\Service;
  * scenario the requirement names and which no amount of real-mount testing on a
  * build host would reach.
  *
- * 🔴 THE NEXTCLOUD-BACKED IMPLEMENTATION IS NOT IN THIS CHANGE, AND THAT IS
- * MEASURED RATHER THAN CHOSEN. `OCP\Share\IManager` does not exist in this
- * repository's test environment: `interface_exists()` returns false under
- * `tests/bootstrap-unit.php`, while `OCP\Files\IRootFolder` returns true. So an
- * adapter written here could be neither run nor tested, only typed, and a
- * caller-less adapter that nobody can execute is exactly the shape this lane
- * keeps finding. It is named as what waits instead.
+ * NextcloudDomainFolderGateway is the implementation bound in
+ * RegistrationBootstrap.
  *
  * Every method MAY throw. The service treats a throw as a refusal with a reason
  * and reports it; it never treats one as success.
