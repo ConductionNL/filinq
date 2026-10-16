@@ -1770,6 +1770,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 
 		/**
 		 * Reset the queue, processing flag and dossier records completely.
+		 *
 		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reset() {
