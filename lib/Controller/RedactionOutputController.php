@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
 use OCA\Filinq\Service\Redaction\PublicationListComposer;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
@@ -32,8 +33,10 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -50,6 +53,11 @@ use Throwable;
 class RedactionOutputController extends Controller {
 
 	/**
+	 * How many documents one status read may ask about.
+	 */
+	private const MAX_STATUS_IDS = 100;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string                  $appName     The app name.
@@ -58,6 +66,9 @@ class RedactionOutputController extends Controller {
 	 * @param PublicationListComposer $composer    The publication list.
 	 * @param DownloadAgreementGate   $agreements  The download conditions.
 	 * @param IUserSession            $userSession The current session.
+	 * @param AnonymizeRequestService $access      The per-file access check.
+	 * @param IL10N                   $l10n        The translator.
+	 * @param LoggerInterface         $logger      The logger.
 	 *
 	 * @return void
 	 */
@@ -68,6 +79,9 @@ class RedactionOutputController extends Controller {
 		private readonly PublicationListComposer $composer,
 		private readonly DownloadAgreementGate $agreements,
 		private readonly IUserSession $userSession,
+		private readonly AnonymizeRequestService $access,
+		private readonly IL10N $l10n,
+		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -87,15 +101,21 @@ class RedactionOutputController extends Controller {
 	 * @return JSONResponse The stored mark, or the refusal.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function markChecked(int $fileId, array $entities = [], string $note = ''): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(
-				data: ['error' => 'A check is signed by a person, and this request has none.'],
+				data: ['error' => $this->l10n->t('A check is signed by a person, and this request has none.')],
 				statusCode: Http::STATUS_UNAUTHORIZED
 			);
+		}
+
+		$denied = $this->access->verifyFileAccess(fileId: $fileId);
+		if ($denied !== null) {
+			return new JSONResponse(data: $denied['body'], statusCode: $denied['status']);
 		}
 
 		try {
@@ -106,8 +126,12 @@ class RedactionOutputController extends Controller {
 				note: $note
 			);
 		} catch (Throwable $e) {
+			$this->logger->error(
+				'The review mark could not be recorded',
+				['fileId' => $fileId, 'exception' => $e]
+			);
 			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
+				data: ['error' => $this->l10n->t('The check could not be recorded, so the document is still not checked. Try again.')],
 				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}
@@ -115,6 +139,46 @@ class RedactionOutputController extends Controller {
 		return new JSONResponse(data: $mark);
 
 	}//end markChecked()
+
+	/**
+	 * The latest review mark of each listed document the caller can open.
+	 *
+	 * A document the caller cannot open is left out, the same as one nobody
+	 * checked, so the answer says nothing about files outside their reach.
+	 *
+	 * @param string $fileIds Comma separated file ids.
+	 *
+	 * @return JSONResponse `{marks: {fileId: {checkedBy, checkedAt, entityCount}}}`.
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 */
+	#[NoAdminRequired]
+	public function checkedStatus(string $fileIds = ''): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Not authenticated')],
+				statusCode: Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		$ids = array_values(array_unique(array_filter(array_map('intval', explode(',', $fileIds)))));
+		if (count($ids) > self::MAX_STATUS_IDS) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Ask about at most %s documents at a time.', [self::MAX_STATUS_IDS])],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		$readable = array_values(
+			array_filter(
+				$ids,
+				fn (int $id): bool => $this->access->verifyFileAccess(fileId: $id) === null
+			)
+		);
+
+		return new JSONResponse(data: ['marks' => $this->guard->marksFor(fileIds: $readable)]);
+
+	}//end checkedStatus()
 
 	/**
 	 * Compose a publication list over one saved view.

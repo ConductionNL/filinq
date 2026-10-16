@@ -129,6 +129,7 @@ $extra = [
         // What leaves the building: the review mark, the composed publication
         // list and the conditions a gated download waits on
         // (redaction-and-what-leaves-the-building).
+        ['name' => 'redactionOutput#checkedStatus', 'url' => 'api/redaction/documents/checked', 'verb' => 'GET'],
         ['name' => 'redactionOutput#markChecked', 'url' => 'api/redaction/documents/{fileId}/checked', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'redactionOutput#composeList', 'url' => 'api/redaction/publication-list', 'verb' => 'POST'],
         ['name' => 'redactionOutput#agreement', 'url' => 'api/redaction/agreement', 'verb' => 'GET'],

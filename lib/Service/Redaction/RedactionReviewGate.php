@@ -227,13 +227,27 @@ class RedactionReviewGate {
 	/**
 	 * One refusal.
 	 *
+	 * `instruction` is the short line a screen shows next to the anonymise
+	 * button; `message` is the full account.
+	 *
 	 * @param string $reason  The machine-readable reason.
 	 * @param string $message What the operator reads.
 	 *
 	 * @return array<string, mixed> The refusal.
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	private function refusal(string $reason, string $message): array {
-		return ['reason' => $reason, 'message' => $message];
+		$instructions = [
+			self::CHECKED_AN_OLDER_RUN => 'The detected data changed after the check. Check them again before anonymising.',
+			self::UNATTRIBUTED => 'The check does not say who did it. Check the detected data again before anonymising.',
+		];
+
+		return [
+			'reason' => $reason,
+			'message' => $message,
+			'instruction' => $this->say(message: ($instructions[$reason] ?? 'Check the detected data first')),
+		];
 	}//end refusal()
 
 	/**

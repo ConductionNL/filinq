@@ -2740,7 +2740,26 @@ OC.L10N.register(
         "Documents awaiting my signature": "Documents awaiting my signature",
         "Sign": "Sign",
         "Decline to sign": "Decline to sign",
-        "View document": "View document"
+        "View document": "View document",
+        "Check before anonymising": "Check before anonymising",
+        "Look at every finding, then mark the document as checked. Anonymising is possible after that.": "Look at every finding, then mark the document as checked. Anonymising is possible after that.",
+        "Mark as checked": "Mark as checked",
+        "Checked by {user} on {date}": "Checked by {user} on {date}",
+        "Check the detected data first": "Check the detected data first",
+        "%n file still needs a check before it can be anonymised:": ["%n file still needs a check before it can be anonymised:","%n files still need a check before they can be anonymised:"],
+        "Anonymize checked files ({count})": "Anonymize checked files ({count})",
+        "Check per file": "Check per file",
+        "Open each file, compare it with the findings above and mark it as checked. Only checked files are anonymised. Changing the selection asks for a new check.": "Open each file, compare it with the findings above and mark it as checked. Only checked files are anonymised. Changing the selection asks for a new check.",
+        "Checked by {user}": "Checked by {user}",
+        "The checked files are anonymised. %n file was not checked and was left alone:": ["The checked files are anonymised. %n file was not checked and was left alone:","The checked files are anonymised. %n files were not checked and were left alone:"],
+        "Checked": "Checked",
+        "The detected data changed after the check. Check them again before anonymising.": "The detected data changed after the check. Check them again before anonymising.",
+        "The check does not say who did it. Check the detected data again before anonymising.": "The check does not say who did it. Check the detected data again before anonymising.",
+        "A check is signed by a person, and this request has none.": "A check is signed by a person, and this request has none.",
+        "The check could not be recorded, so the document is still not checked. Try again.": "The check could not be recorded, so the document is still not checked. Try again.",
+        "Ask about at most %s documents at a time.": "Ask about at most %s documents at a time.",
+        "%n files still need a check before they can be anonymised:": "%n files still need a check before they can be anonymised:",
+        "The checked files are anonymised. %n files were not checked and were left alone:": "The checked files are anonymised. %n files were not checked and were left alone:"
     },
     "nplurals=2; plural=(n != 1);"
 )

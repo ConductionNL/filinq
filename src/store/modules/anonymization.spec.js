@@ -1,6 +1,7 @@
 import axios from '@nextcloud/axios'
 import { createPinia, setActivePinia } from 'pinia'
-import { useAnonymizationStore } from './anonymization.js'
+import { reviewSignature } from '../../services/reviewMark.js'
+import { entryIsChecked, useAnonymizationStore } from './anonymization.js'
 
 // The store reaches for these Nextcloud helpers and the file-viewer service
 // at module load / inside actions. Mock them so the store can be exercised
@@ -35,7 +36,7 @@ jest.mock('../../services/fileViewerService.js', () => ({
  */
 function makeEntry(overrides = {}) {
 	const bases = overrides.bases ?? null
-	return {
+	const entry = {
 		id: 'file-1',
 		name: 'doc.pdf',
 		status: 'extracted',
@@ -55,6 +56,24 @@ function makeEntry(overrides = {}) {
 				...overrides,
 			},
 		],
+	}
+	entry.reviewMark = checkedMarkFor(entry)
+	return entry
+}
+
+/**
+ * The mark a reviewer's click records over the entry's included entities.
+ *
+ * @param {object} entry Queue entry.
+ * @return {{checkedBy: string, checkedAt: string, signature: string}}
+ */
+function checkedMarkFor(entry) {
+	return {
+		checkedBy: 'tester',
+		checkedAt: '2026-10-16T09:00:00+00:00',
+		signature: reviewSignature(
+			entry.entities.filter((e) => e.included !== false),
+		),
 	}
 }
 
@@ -234,6 +253,122 @@ describe('anonymiseEntry — grondslagen summary flags', () => {
 	})
 })
 
+describe('anonymiseEntry: the human check comes first', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockReset()
+	})
+
+	it('sends nothing when nobody checked the findings', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		entry.reviewMark = null
+
+		await store.anonymiseEntry(entry)
+
+		expect(axios.post).not.toHaveBeenCalled()
+		expect(entry.status).toBe('extracted')
+		expect(entry.reviewRequired).toBe(true)
+	})
+
+	it('records the check over exactly the entities the anonymise call sends', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		entry.reviewMark = null
+		axios.post
+			.mockResolvedValueOnce({
+				data: { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' },
+			})
+			.mockResolvedValueOnce({ data: { anonymizedFileId: 99 } })
+
+		await store.markEntryChecked(entry)
+		expect(entryIsChecked(entry)).toBe(true)
+		expect(entry.reviewMark.checkedBy).toBe('ingrid')
+
+		await store.anonymiseEntry(entry)
+
+		const [checkUrl, checkBody] = axios.post.mock.calls[0]
+		const [anonUrl, anonBody] = axios.post.mock.calls[1]
+		expect(checkUrl).toBe('/apps/filinq/api/redaction/documents/42/checked')
+		expect(anonUrl).toBe('/apps/filinq/api/anonymization/anonymize/42')
+		expect(checkBody.entities).toEqual(anonBody.entities)
+		expect(entry.status).toBe('completed')
+	})
+
+	it('asks for a new check when the selection changes after the check', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		entry.entities[0].included = false
+
+		await store.anonymiseEntry(entry)
+
+		expect(entryIsChecked(entry)).toBe(false)
+		expect(axios.post).not.toHaveBeenCalled()
+		expect(entry.reviewRequired).toBe(true)
+	})
+
+	it('goes back to review when the server holds no check for this run', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		const refusal = new Error('Request failed with status code 409')
+		refusal.response = {
+			status: 409,
+			data: {
+				error: 'Controleer eerst de gevonden gegevens',
+				reviewRequired: 'never_checked',
+			},
+		}
+		axios.post.mockRejectedValueOnce(refusal)
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry.status).toBe('extracted')
+		expect(entry.reviewMark).toBeNull()
+		expect(entry.error).toBe('Controleer eerst de gevonden gegevens')
+	})
+
+	it('keeps the document unchecked when the check cannot be recorded', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		entry.reviewMark = null
+		const failure = new Error('boom')
+		failure.response = { data: { error: 'De controle kon niet worden vastgelegd' } }
+		axios.post.mockRejectedValueOnce(failure)
+
+		await store.markEntryChecked(entry)
+
+		expect(entryIsChecked(entry)).toBe(false)
+		expect(entry.reviewError).toBe('De controle kon niet worden vastgelegd')
+		expect(entry.reviewing).toBe(false)
+	})
+})
+
+describe('anonymiseAllExtracted: only checked files are written', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockReset()
+		axios.post.mockResolvedValue({ data: { anonymizedFileId: 99 } })
+	})
+
+	it('anonymises the checked file and lists the unchecked one', async () => {
+		const store = useAnonymizationStore()
+		const unchecked = { ...makeEntry(), id: 'file-2', fileId: 2, name: 'b.pdf' }
+		unchecked.reviewMark = null
+		store.files = [{ ...makeEntry(), id: 'file-1', fileId: 1 }, unchecked]
+
+		await store.anonymiseAllExtracted()
+
+		expect(axios.post).toHaveBeenCalledTimes(1)
+		expect(axios.post.mock.calls[0][0]).toBe(
+			'/apps/filinq/api/anonymization/anonymize/1',
+		)
+		expect(store.batch.unreviewed).toEqual([{ fileId: 2, name: 'b.pdf' }])
+		expect(store.findByFileId(2).status).toBe('extracted')
+	})
+})
+
 describe('addManualEntity — add selected text as a new entity', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -380,7 +515,13 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 
 		expect(axios.post).toHaveBeenCalledTimes(3)
 		expect(store.files.every((f) => f.status === 'completed')).toBe(true)
-		expect(store.batch).toEqual({ running: false, total: 3, done: 3, failed: 0 })
+		expect(store.batch).toEqual({
+			running: false,
+			total: 3,
+			done: 3,
+			failed: 0,
+			unreviewed: [],
+		})
 	})
 
 	it('only anonymises files whose fileId is in the scope', async () => {
@@ -461,11 +602,14 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 			],
 		})
 
-		expect(store.findByFileId(2)).toBeDefined()
-		expect(store.findByFileId(3)).toBeDefined()
-		expect(store.batch.total).toBe(3)
-		expect(store.batch.done).toBe(3)
-		expect(store.files.every((f) => f.status === 'completed')).toBe(true)
+		// Extracted so they can be reviewed, but nobody checked them, so the
+		// run leaves them alone and names them.
+		expect(store.findByFileId(2).status).toBe('extracted')
+		expect(store.findByFileId(3).status).toBe('extracted')
+		expect(store.batch.total).toBe(1)
+		expect(store.batch.done).toBe(1)
+		expect(store.batch.unreviewed.map((f) => f.fileId)).toEqual([2, 3])
+		expect(store.findByFileId(1).status).toBe('completed')
 	})
 
 	it('does not forward the fileIds scope as an anonymise option', async () => {

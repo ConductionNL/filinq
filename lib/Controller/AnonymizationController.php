@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\FileListingService;
@@ -295,6 +296,7 @@ class AnonymizationController extends Controller {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
 	 */
 	public function anonymize(int $fileId): JSONResponse {
 		try {
@@ -371,6 +373,8 @@ class AnonymizationController extends Controller {
 					],
 					422
 				);
+			} catch (RedactionNotReviewedException $e) {
+				return $this->reviewRefusal(refusal: $e);
 			}//end try
 
 			return new JSONResponse($result['body'], $result['status']);
@@ -386,6 +390,40 @@ class AnonymizationController extends Controller {
 		}//end try
 
 	}//end anonymize()
+
+	/**
+	 * Answer a run nobody has checked with 409 and what to do about it.
+	 *
+	 * The document's state does not allow a copy yet: the reviewer marks the
+	 * detection run checked and asks again. No file was written.
+	 *
+	 * @param RedactionNotReviewedException $refusal The gate's refusal.
+	 *
+	 * @return JSONResponse The 409 with `error`, `reviewRequired` and `document`.
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 */
+	private function reviewRefusal(RedactionNotReviewedException $refusal): JSONResponse {
+		$this->logger->info(
+			$refusal->getMessage(),
+			['document' => $refusal->getDocument(), 'reason' => $refusal->getReason()]
+		);
+
+		$instruction = $refusal->getInstruction();
+		if ($instruction === '') {
+			$instruction = $this->l10n->t('Check the detected data first');
+		}
+
+		return new JSONResponse(
+			[
+				'error' => $instruction,
+				'reviewRequired' => $refusal->getReason(),
+				'document' => $refusal->getDocument(),
+			],
+			409
+		);
+
+	}//end reviewRefusal()
 
 	/**
 	 * Record a per-entity skip/include decision, guarded by the prohibition policy.

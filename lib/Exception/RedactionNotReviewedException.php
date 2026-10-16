@@ -35,6 +35,7 @@ class RedactionNotReviewedException extends RuntimeException {
 	 * @param string $document    The document that was refused.
 	 * @param string $checkedRun  The run the existing mark covers, if any.
 	 * @param string $currentRun  The run that would have been published.
+	 * @param string $instruction The short line a screen shows the reviewer.
 	 *
 	 * @return void
 	 */
@@ -44,10 +45,23 @@ class RedactionNotReviewedException extends RuntimeException {
 		private readonly string $document = '',
 		private readonly string $checkedRun = '',
 		private readonly string $currentRun = '',
+		private readonly string $instruction = '',
 	) {
 		parent::__construct(message: $message);
 
 	}//end __construct()
+
+	/**
+	 * The short line a screen shows the reviewer, in their language.
+	 *
+	 * @return string The instruction, or an empty string when the gate gave none.
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-1
+	 */
+	public function getInstruction(): string {
+		return $this->instruction;
+
+	}//end getInstruction()
 
 	/**
 	 * Why it was refused.

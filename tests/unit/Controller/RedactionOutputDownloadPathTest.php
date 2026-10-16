@@ -185,7 +185,10 @@ class RedactionOutputDownloadPathTest extends TestCase {
 					logger: new NullLogger()
 				)
 			),
-			$session
+			$session,
+			$this->createMock(\OCA\Filinq\Service\AnonymizeRequestService::class),
+			$this->createMock(\OCP\IL10N::class),
+			new NullLogger()
 		);
 
 	}//end controller()
