@@ -8,7 +8,9 @@ status: in-progress
 **OpenSpec changes**:
 - [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — wizard-driven generations validate `options.wizardContext` server-side and record the interview context (wizard id + version + answers) on the `generatedDocument` audit object (REQ-DDGDW-008) (kind: code)
 - [multi-format-output](../../changes/multi-format-output/) _(active)_ — `options.formats` produces multiple outputs from a single render pass with a JSON manifest; `docx` becomes a first-class editable generation format; every produced output is recorded on `generatedDocument.outputs` (REQ-DDMFO-001/003/006) (kind: code)
-- [document-generation-list-refs](../../changes/document-generation-list-refs/) _(active)_ — `options.listRefs` resolves an array of OpenRegister objects (via the slug-aware search path, including external DBAL registers) into the Twig context under a named key, alongside single-object `dataRefs`; scoped to generate/preview only (REQ-DDLR-001/002/003/004) (kind: code)
+- [document-generation-list-refs](../../changes/archive/2026-09-28-document-generation-list-refs/) _(archived 2026-09-28)_ — `options.listRefs` resolves an array of OpenRegister objects (via the slug-aware search path, including external DBAL registers) into the Twig context under a named key, alongside single-object `dataRefs`; scoped to generate/preview only (REQ-DDLR-001/002/003/004) (kind: code)
+- [documents-from-a-template](../../changes/archive/2026-09-28-documents-from-a-template/) _(archived 2026-09-28)_ — versioned page layouts with an admin surface, the case archive with its manifest and the download-all leaf, periodic documents, review dates, legible signature verification (REQ-DFT-01..04, 06) (kind: code)
+- [forms-as-documents](../../changes/forms-as-documents/) _(active)_ — a document reference as a form field value, and a submitted form filed as a document (REQ-DFT-05), waiting on which surface owns forms (kind: code)
 
 ## Purpose
 Generates documents from templates by merging resolved data into a sandboxed Twig template. Merge data is resolved from OpenRegister objects by register, schema, and object UUID with nested resolution up to three levels deep, optional external data via OpenConnector, and ad-hoc JSON context, while rendering supports conditional sections, iteration, and per-field warnings for missing values. This enables automated creation of formal documents such as beschikkingen from structured case data.
@@ -16,6 +18,7 @@ Generates documents from templates by merging resolved data into a sandboxed Twi
 @e2e exclude API-only generation surface (POST /api/documents/generate, /generate/preview, /generate/bulk, GET /api/documents/jobs/{jobId}) reached by no Vue component; asserted below HTTP by PHPUnit — tests/unit/Controller/DocumentControllerTest.php, tests/unit/Service/DocumentServiceTest.php, tests/unit/BackgroundJob/BatchDocumentJobTest.php
 
 ## Requirements
+
 ### Requirement: REQ-DCS-01 Data Resolution from OpenRegister (Priority: Must)
 
 The system MUST resolve merge data from OpenRegister objects by register, schema, and object UUID, with support for nested resolution and ad-hoc context data.
@@ -300,3 +303,602 @@ Mock registers MUST provide realistic test data for template merge testing durin
 | DCS-081 | KVK mock register (16 businesses) for business data merge testing | SHOULD | Planned |
 | DCS-082 | BAG mock register (32 addresses) for nested address resolution testing | SHOULD | Planned |
 
+### Requirement: listRefs resolve collections into the Twig context (REQ-DDLR-001)
+
+`DataResolverService::resolve()` MUST accept an optional `listRefs`
+parameter: an array of `{register, schema, filter?, limit?, order?, as?}`
+entries. Each entry MUST resolve via
+`OCA\OpenRegister\Service\ObjectService::setRegister()` /
+`::setSchema()` (both slug-aware) followed by `::searchObjectsPaginated()`
+— the register/schema-context pattern that also reaches a schema's
+`x-openregister-object-source` provider when one is configured (unlike
+the sibling `searchObjects()`/`searchObjectsBySlug()` methods, which never
+consult the object-source and return nothing for a DBAL-backed schema) —
+to an array of the matching objects (each serialized via `jsonSerialize()`
+where available), placed in the merged data context under the key `as`.
+When `as` is omitted it MUST default to the schema slug converted to a
+legal Twig identifier (every character outside `[a-zA-Z0-9_]` replaced
+with `_`, a leading digit prefixed with `_`) with `_list` appended — e.g.
+schema `v-app-competitors` defaults to `v_app_competitors_list`. `filter`
+entries (if present) MUST be passed through as top-level search filter
+keys; `limit` MUST be forwarded as the search's `_limit`; `order` (if an
+array) MUST be forwarded as `_order`.
+
+#### Scenario: Resolve a DBAL-backed collection with an explicit `as` key
+
+- GIVEN a virtual register `spectr-live` with schema `v-app-competitors`, reachable via OpenRegister's DBAL search path
+- WHEN a `listRefs` entry `{register: "spectr-live", schema: "v-app-competitors", filter: {app_id: 6}, limit: 5, as: "competitors"}` is resolved
+- THEN the Twig context contains a `competitors` key
+- AND it is an array of at most 5 objects, each matching `app_id: 6`
+- @e2e tests/e2e/spec-coverage/document-generation-list-refs.spec.ts
+
+#### Scenario: Default `as` key sanitises a hyphenated schema slug
+
+- GIVEN a `listRefs` entry with `schema: "v-app-competitors"` and no `as`
+- WHEN the listRef is resolved
+- THEN the resolved array appears under the context key `v_app_competitors_list`
+- AND `{% for c in v_app_competitors_list %}` is valid, renderable Twig
+- @e2e tests/e2e/spec-coverage/document-generation-list-refs.spec.ts
+
+#### Scenario: A listRef search failure is a soft, per-item error
+
+- GIVEN two `listRefs` entries, one referencing an unresolvable schema slug
+- WHEN `resolve()` runs
+- THEN the listRef with the valid slug still resolves its array under its `as` key
+- AND the failing listRef's `as` key is present with an empty array
+- AND the failure is reported in `errors` (mirroring how `dataRefs` failures are reported), not thrown
+- @e2e exclude fault-injection (an unresolvable slug at request time) is not browser-drivable — covered by PHPUnit (tests/unit/Service/ListReferenceResolverTest.php::testSearchFailureIsSoftError)
+
+### Requirement: listRefs precedence and resolution order (REQ-DDLR-002)
+
+`resolve()` MUST resolve `listRefs` AFTER `dataRefs` and BEFORE `adHocData`.
+`adHocData` MUST take precedence over a `listRefs`-resolved key on conflict,
+consistent with `adHocData`'s existing precedence over `dataRefs`
+(REQ-DCS-01). The combined precedence order is: `dataRefs` < `listRefs` <
+`adHocData`.
+
+#### Scenario: adHocData overrides a listRef's key
+
+- GIVEN a `listRefs` entry resolves under the key `competitors`
+- AND `options.adHocData` also supplies a `competitors` key
+- WHEN `resolve()` runs
+- THEN the Twig context's `competitors` value is the `adHocData` value, not the listRef's resolved array
+- @e2e exclude precedence-ordering pin; covered by PHPUnit (tests/unit/Service/DataResolverServiceTest.php::testAdHocDataOverridesListRef)
+
+### Requirement: listRefs guardrails reject malformed requests with HTTP 400 (REQ-DDLR-003)
+
+Guardrail violations MUST be validated for every `listRefs` entry BEFORE any
+OpenRegister search runs for the request (fail-fast: a malformed entry
+aborts the whole request, not just itself), and MUST surface as HTTP 400
+through `DocumentController`'s existing exception-to-status mapping
+(`Exception` code 400). The guardrails are: (a) at most 10 `listRefs`
+entries per request; (b) each entry's `filter` values MUST be scalars (or
+null) — an array/object filter value is rejected, not silently coerced or
+dropped; (c) each entry's `limit`, if present, MUST be an integer between 1
+and 500 inclusive; (d) each entry's resolved `as` key MUST match
+`/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/`; (e) no two resolved `as` keys within one
+request — across `dataRefs` schema keys and all `listRefs` — may collide.
+
+#### Scenario: More than 10 listRefs is rejected
+
+- GIVEN a request with 11 `listRefs` entries
+- WHEN `POST /api/documents/generate/preview` is called
+- THEN the response is HTTP 400
+- AND no OpenRegister search runs for any of the 11 entries
+- @e2e exclude guardrail boundary; covered by PHPUnit (tests/unit/Service/ListReferenceResolverTest.php::testTooManyListRefsRejected, ::testGuardrailViolationAbortsBeforeAnySearch)
+
+#### Scenario: A non-scalar filter value is rejected
+
+- GIVEN a `listRefs` entry with `filter: {nested: {not: "scalar"}}`
+- WHEN the request is validated
+- THEN the response is HTTP 400 and identifies the offending filter key
+- @e2e exclude guardrail boundary; covered by PHPUnit (tests/unit/Service/ListReferenceResolverTest.php::testNonScalarFilterValueRejected)
+
+#### Scenario: `as` colliding with a dataRefs key is rejected
+
+- GIVEN a `dataRefs` entry resolves under the schema key `persoon`
+- AND a `listRefs` entry explicitly sets `as: "persoon"`
+- WHEN the request is validated
+- THEN the response is HTTP 400
+- @e2e exclude guardrail boundary; covered by PHPUnit (tests/unit/Service/DataResolverServiceTest.php::testListRefAsKeyCollidesWithDataRefKey, tests/unit/Service/ListReferenceResolverTest.php::testAsKeyCollisionWithReservedKeyRejected, ::testAsKeyCollisionBetweenTwoListRefsRejected)
+
+### Requirement: listRefs are not wired into bulk generation (REQ-DDLR-004)
+
+`DocumentService::generateBulk()` MUST NOT accept or resolve
+`options.listRefs`, on either the synchronous or the async
+`BatchDocumentJob` path. This is an explicit scope exclusion, not an
+oversight: the async job
+persists per-object job status/progress but no per-object rendered output
+artifact, so a per-object-resolved list would have nowhere durable to
+attach to on the majority (>10 objects) branch, and silently doing nothing
+is worse than not offering it.
+
+#### Scenario: listRefs on a bulk request has no effect
+
+- GIVEN a `POST /api/documents/generate/bulk` request includes `options.listRefs`
+- WHEN bulk generation runs (sync or async)
+- THEN `options.listRefs` is not read or resolved by `generateBulk()`
+- AND this is documented on `DocumentService::generateBulk()`'s docblock, not silently dropped without explanation
+- @e2e exclude scope-exclusion pin, not a behaviour to browser-test; covered by code review of DocumentService::generateBulk() docblock
+
+### Requirement: The page layout is administered and versioned (REQ-DFT-01)
+
+Filinq MUST carry a `pageLayout` object declaring paper size, margins,
+header, footer, logo and whether the first page differs, and MUST version
+it. A template MUST name a layout version, and rendering MUST use that
+version. The generated document MUST record both the template version and
+the layout version it used. Editing a layout MUST create a new version
+and MUST NOT change documents already generated or templates naming an
+earlier version.
+
+#### Scenario: A besluit on the right briefpapier
+
+- GIVEN a template naming the "Gemeente, besluit" layout
+- WHEN a handler generates a besluit
+- THEN the output carries that layout's header, footer and logo, with the first page as the layout declares
+- @e2e exclude the rendered header, footer and logo are asserted by PHPUnit on PageLayoutService::pdfOptions (tests/unit/Service/PageLayoutServiceTest.php); a PDF is not inspected in a browser
+
+#### Scenario: A layout change does not rewrite history
+
+- GIVEN a besluit generated in March against layout version 2
+- WHEN the layout is edited to version 3
+- THEN the March besluit still records version 2 and its file is unchanged
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
+
+### Requirement: A dossier is downloaded as one bundle with a manifest (REQ-DFT-02)
+
+Filinq MUST offer a download of every file on an object as one archive,
+honouring an administered size ceiling. The archive MUST contain a
+manifest listing every file included, and every file left out with the
+reason. When a selection already exceeds the ceiling the user MUST be
+told before the job starts.
+
+#### Scenario: One bundle for the bezwaarcommissie
+
+- GIVEN a case with twenty files the handler may read
+- WHEN they download all case files
+- THEN one archive is produced containing those twenty files and a manifest naming them
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
+
+#### Scenario: Nothing is dropped silently
+
+- GIVEN a case whose files exceed the ceiling
+- WHEN the archive is produced
+- THEN the manifest names every file left out and the reason, and the user was warned before the job started
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
+
+#### Scenario: A file the user may not read
+
+- GIVEN a case carrying a file outside the user's access
+- WHEN they download all case files
+- THEN the file is absent and the manifest records that it was left out on permission
+- @e2e exclude a second user with a partial share is not seeded in the e2e suite; covered by PHPUnit on CaseArchiveService (tests/unit/Service/CaseArchiveServiceTest.php)
+
+### Requirement: A periodic document renders from a saved view (REQ-DFT-03)
+
+Filinq MUST render a template over the records a named saved view
+returns, on a declared cadence or on demand. Each run MUST write a new
+generated document recording the view, the number of records read and the
+moment it ran, and MUST NOT edit a document from an earlier run. A run
+against a view that no longer exists MUST fail visibly, naming the view,
+and MUST NOT produce an empty document.
+
+#### Scenario: The besluitenlijst makes itself
+
+- GIVEN a saved view of the decisions taken this month and a besluitenlijst template
+- WHEN the weekly run fires
+- THEN a new document is generated listing those decisions, recording the view and the count
+- @e2e exclude a cron cadence is not driven in a browser; covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php)
+
+#### Scenario: Last week's list is untouched
+
+- GIVEN a besluitenlijst generated last week
+- WHEN this week's run fires
+- THEN a second document is generated and the first is unchanged
+- @e2e exclude a cron cadence is not driven in a browser; covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php)
+
+#### Scenario: A deleted view fails loudly
+
+- GIVEN a schedule naming a view somebody has deleted
+- WHEN the run fires
+- THEN it fails naming the view, and no document is produced
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
+
+### Requirement: A released document is reviewed again on a date (REQ-DFT-04)
+
+A released document MUST accept a review interval, from which filinq
+computes a review date. On that date the document MUST be listed as due
+for review and its owner MUST be notified through the notification
+dialect. The document MUST stay listed as due until somebody reviews it.
+
+#### Scenario: A beleidsregel comes back
+
+- GIVEN a released beleidsregel with a review interval of twelve months
+- WHEN the review date arrives
+- THEN the document is listed as due and its owner is notified
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts
+
+#### Scenario: An unread notification changes nothing
+
+- GIVEN a due document whose owner has not read the notification
+- WHEN the list of due documents is opened
+- THEN the document is still listed as due
+- @e2e exclude notification delivery is OpenRegister's dialect; the due list is covered in tests/e2e/workflows/documents-from-a-template.spec.ts
+
+### Requirement: A verified signature says what was verified (REQ-DFT-06)
+
+When filinq verifies a signature on a document it MUST state which
+signature was checked, against which key or certificate, at what time,
+and what the result proves. A verification that could not be completed
+MUST say so rather than rendering as unverified.
+
+#### Scenario: The trust is legible
+
+- GIVEN a signed besluit whose signature verifies
+- WHEN a handler opens the document
+- THEN the result names the signer, the key, the time of checking and what it proves
+- @e2e exclude verification output is covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php)
+
+#### Scenario: An unavailable trust anchor is not a failed signature
+
+- GIVEN a signature whose certificate chain cannot be reached
+- WHEN verification runs
+- THEN the result says verification could not be completed, and does not report the signature as invalid
+- @e2e exclude verification output is covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php)
+
+### Requirement: A periodic document runs on its cadence and produces a file (REQ-PDS-001)
+
+Filinq MUST run every active periodic document whose cadence has come round
+since its last run, without a user action, and each run MUST render the
+named template over the records the saved view returns into a stored PDF.
+A run that fails MUST record the reason on the schedule and MUST NOT change
+the previous document.
+
+#### Scenario: The weekly besluitenlijst appears on Monday
+
+- GIVEN an active weekly periodic document "Besluitenlijst" last run seven days ago
+- WHEN the hourly job runs
+- THEN a new PDF of the besluitenlijst is stored and the schedule's last run points at it
+- @e2e exclude a cron cadence is not driven in a browser, covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php::testTheSweepRunsWhatIsDueAndSkipsTheRest and tests/unit/BackgroundJob/PeriodicDocumentJobTest.php)
+
+#### Scenario: A broken view is visible on the schedule
+
+- GIVEN a periodic document whose saved view was deleted
+- WHEN the job runs it
+- THEN the schedule records "The view no longer exists" and last week's document is unchanged
+- @e2e exclude a cron cadence is not driven in a browser, covered by PHPUnit (tests/unit/Service/PeriodicDocumentServiceTest.php::testABrokenViewIsWrittenOnTheScheduleAndLastWeeksDocumentStays)
+
+### Requirement: A decision letter carries its legal basis and objection deadline (REQ-DLB-001)
+
+Generation MUST add a `bezwaar` object to the template context when the data
+carries a decision date, with the term in weeks (app setting
+`bezwaar_termijn_weken`, default 6) and the last day to object, counted from
+the day after the decision date, with a deadline on a Saturday or Sunday moved
+to the Monday. Without a decision date the context MUST NOT carry `bezwaar`, and when the
+template uses `bezwaar` the generation warnings MUST say that no decision date
+was found. A resolved `base` object MUST also be offered as `grondslag`. The
+merge field dialog MUST offer the legal basis (`grondslag.name`,
+`grondslag.description`) and objection deadline fields.
+
+#### Scenario: The letter states the last day to object
+
+- GIVEN a decision letter template using `{{ bezwaar.uiterlijk }}` and data with `besluitDatum` 2026-09-01
+- WHEN the letter is generated
+- THEN it reads 13-10-2026 as the last day to object
+- @e2e exclude date arithmetic with no UI surface, covered by PHPUnit (tests/unit/Service/ObjectionTermCalculatorTest.php)
+
+#### Scenario: No decision date is a warning, not a wrong date
+
+- GIVEN a template using `bezwaar` and data without a decision date
+- WHEN the letter is generated
+- THEN the context has no `bezwaar` and the warnings name the missing decision date
+- @e2e exclude generation warning, covered by PHPUnit (tests/unit/Service/DocumentServiceDecisionLetterTest.php)
+
+#### Scenario: The author picks the fields instead of typing them
+
+- GIVEN an author in the template editor
+- WHEN they open the merge field dialog
+- THEN the legal basis and the objection deadline are in the list
+- @e2e tests/e2e/spec-coverage/templates.spec.ts
+
+### Requirement: One render request produces multiple formats from a single render pass (REQ-DDMFO-001)
+
+`POST /api/documents/generate` MUST accept `options.formats` (array of at
+least one valid output format, deduplicated) and produce every requested
+format from a **single** render pass: the template is rendered exactly once
+to its canonical intermediate (rendered HTML), and each requested format is
+converted from that intermediate. Outputs MUST be written as Nextcloud files to the
+generated-documents output folder and returned as a JSON manifest with one
+entry per format (`format`, `fileId`, `fileName`, `downloadUrl`, `size`,
+`status`, optional `error`) plus the shared generation warnings. A failure of
+the render step MUST abort the job; a failure of an individual format
+conversion MUST NOT abort the other formats (that entry reports `status:
+failed` with its error). Supplying both `options.format` and
+`options.formats` MUST be refused with HTTP 400, and requests using the
+existing single `options.format` MUST behave byte-identically to before this
+change.
+
+#### Scenario: PDF and DOCX from one render
+
+- GIVEN a seeded Twig template and resolved Demostad dossier data
+- WHEN `POST /api/documents/generate` is called with `options.formats: ["pdf", "docx"]`
+- THEN the response is a JSON manifest with two entries, both `status: generated`
+- AND both referenced files exist in the output folder and derive from the same rendered HTML
+- @e2e tests/e2e/spec-coverage/multi-format-output.spec.ts
+
+#### Scenario: One failing conversion does not sink the job
+
+- GIVEN a multi-format request `["pdf", "odf"]` on an instance where the ODF conversion fails
+- WHEN the job runs
+- THEN the manifest reports the `pdf` entry `generated` and the `odf` entry `failed` with an error message
+- @e2e exclude backend fault-injection (disabling soffice mid-job) is not browser-drivable — covered by PHPUnit (tests/unit/Service/MultiFormatOutputProducerTest.php::testPartialFormatFailure)
+
+### Requirement: Editable DOCX is a first-class document-generation format (REQ-DDMFO-003)
+
+The document generation path MUST accept `docx` as an output format: for
+templates via the shared local HTML to DOCX LibreOffice converter (promoted
+from the correspondence implementation: exactly one DOCX conversion
+implementation exists in the app). The produced file MUST be genuine
+editable WordprocessingML (openable and editable in Word/LibreOffice), never
+a renamed or wrapped PDF. Generating `docx` while no capable backend is
+available MUST fail with HTTP 503 (no silent substitution), and the
+correspondence path's existing `docx` behaviour MUST be preserved by the
+extraction.
+
+#### Scenario: Correspondence DOCX behaviour survives the extraction
+
+- GIVEN the existing correspondence generation tests
+- WHEN `CorrespondenceService` produces `docx` output through the shared converter
+- THEN the produced content and error behaviour match the pre-extraction implementation
+- @e2e exclude refactor-equivalence pin; covered by PHPUnit (tests/unit/Service/CorrespondenceServiceTest.php::testDocxGoesThroughTheSharedConverter)
+
+### Requirement: Every produced output is recorded on the generation audit object (REQ-DDMFO-006)
+
+Multi-format jobs MUST write exactly one `generatedDocument` object per
+render carrying an `outputs` array with one `{format, fileId, status,
+error?}` entry per requested format (including failed ones), with the scalar
+`format` property set to the first requested format for consumers of the
+existing field. The `generatedDocument` schema MUST gain `docx` in its
+`format` enum and the optional `outputs` property
+(`lib/Settings/filinq_register.json`, additive document-register bump).
+Single-format generations MUST keep their existing audit shape with no
+`outputs` property.
+
+#### Scenario: Audit object lists all outputs including failures
+
+- GIVEN a multi-format job where `pdf` succeeded and `odf` failed
+- WHEN the logged `generatedDocument` object is fetched
+- THEN `outputs` contains both entries with their statuses and the `odf` error
+- AND `format` equals the first requested format
+- @e2e exclude audit-shape assertion; covered by PHPUnit (tests/unit/Service/MultiFormatOutputProducerTest.php::testMultiFormatAuditOutputs)
+
+### Requirement: Wizard-driven generations record the interview context (REQ-DDGDW-008)
+
+The resulting `generatedDocument` object MUST, whenever a generation request
+carries `options.wizardContext`, include a `wizardContext` property
+containing the wizard's id, the wizard object's OpenRegister version at run
+time, and the submitted answers, alongside the existing `templateId`,
+`templateVersion`, and `dataRefs` metadata (DCS-051/DCS-072) — so the exact
+interview that produced a document can be audited and replayed. The
+`generatedDocument` schema in `lib/Settings/filinq_register.json` MUST gain
+`wizardContext` as an optional property (`generatedDocument` 1.6.0 in the
+`filinq` register 8.43.0, additive only), and generations without a wizard MUST omit it and
+behave exactly as before this change. Stored answers are personal data:
+access follows the register's existing RBAC and the property MUST be deleted
+with the object (no separate copy).
+
+#### Scenario: Generated document carries the wizard context
+
+- GIVEN a completed wizard run that generated a document
+- WHEN the logged `generatedDocument` object is fetched
+- THEN it contains `wizardContext` with the wizard id, the wizard version at run time, and every submitted answer
+- AND the existing `templateId`, `templateVersion`, and `dataRefs` metadata are present unchanged
+- @e2e tests/e2e/spec-coverage/guided-document-wizard.spec.ts
+
+#### Scenario: Non-wizard generations are unaffected
+
+- GIVEN a direct API generation without `options.wizardContext`
+- WHEN the document is generated and logged
+- THEN the `generatedDocument` object has no `wizardContext` property
+- AND the response is byte-identical in shape to the pre-change contract
+- @e2e exclude absence-of-property regression pin; covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php::testGenerationWithoutWizardContextUnchanged)
+
+### Requirement: options.output selects return, files, or both (REQ-DDOB-001)
+
+`POST /apps/filinq/api/documents/generate` MUST accept an optional
+`options.output.mode` of `return`, `files`, or `both`, defaulting to
+`return` when `options.output` is omitted entirely. `mode: return` MUST
+produce byte-for-byte the same response `DocumentController` produces
+today (`DataDownloadResponse` for pdf/odf, JSON `{content, format,
+metadata, warnings}` for html) — no added headers, no added response keys,
+no additional service calls made during generation.
+
+#### Scenario: options.output omitted behaves exactly as before
+
+- GIVEN a `POST /apps/filinq/api/documents/generate` request with no `options.output` field
+- WHEN the request is processed
+- THEN the response is identical (status, headers, body bytes) to the response produced before this change existed
+- @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
+
+#### Scenario: mode "files" stores the document and returns JSON refs
+
+- GIVEN a valid generate request with `options.output = {mode: "files"}`
+- WHEN the request is processed
+- THEN no binary download is returned
+- AND the response is JSON `{fileId, path, name, size, format}`
+- AND a file exists at `path` in the requesting user's Files, containing the generated bytes
+- @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
+
+#### Scenario: mode "both" returns the binary and stores it, with headers identifying the stored file
+
+- GIVEN a valid generate request with `options.output = {mode: "both"}`
+- WHEN the request is processed
+- THEN the response is the same binary download `mode: "return"` would have produced
+- AND the response carries `X-Docudesk-File-Id` and `X-Docudesk-File-Path` headers identifying the stored file
+- AND a file exists at that path containing the generated bytes
+- @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
+
+### Requirement: files storage location, folder creation, and filename dedupe (REQ-DDOB-002)
+
+When `options.output.mode` is `files` or `both`, the system MUST store the
+generated binary via `IRootFolder::getUserFolder($userId)` at
+`options.output.targetPath` if provided, else at
+`Filinq/<template namespace>/` by default. The destination folder MUST
+be created if it does not exist, recursively and idempotently (an existing
+folder is reused, never recreated or emptied). The stored filename MUST be
+the same name the `mode: return` download would have used for that format
+(the request's `filename` option + the format's extension); on a name
+collision within the destination folder, the filename MUST be
+disambiguated using `OCP\Files\Folder::getNonExistingName()` (Nextcloud's
+own `name (2).ext` convention). `targetPath`, if provided, MUST be
+rejected with HTTP 400 if it is not a relative path (no leading `/`),
+contains a `..` path segment, or contains characters outside
+`[A-Za-z0-9 _.-]` in any path segment — validated before any folder is
+created or file written.
+
+#### Scenario: Default target path uses the template's namespace
+
+- GIVEN a template with `namespace: "procest"` and no `options.output.targetPath`
+- WHEN a document is generated with `options.output.mode: "files"`
+- THEN the file is stored under `Filinq/procest/` in the requesting user's Files
+- @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
+
+#### Scenario: A second generation with the same filename is deduped, not overwritten
+
+- GIVEN a file `beschikking.pdf` already exists at the destination folder
+- WHEN a second document is generated with the same `filename` and destination
+- THEN the new file is stored as `beschikking (2).pdf`
+- AND the original `beschikking.pdf` is untouched
+- @e2e exclude dedupe-suffix pin; covered by PHPUnit (tests/unit/Service/DocumentStorageServiceTest.php::testDedupesFilenameOnCollision)
+
+#### Scenario: A path-traversal targetPath is rejected
+
+- GIVEN `options.output.targetPath = "../../etc"`
+- WHEN a generate request is made with `options.output.mode: "files"`
+- THEN the response is HTTP 400
+- AND no folder is created and no file is written
+- @e2e exclude security-boundary pin; covered by PHPUnit (tests/unit/Service/DocumentStorageServiceTest.php::testRejectsPathTraversalTargetPath, ::testRejectsAbsoluteTargetPath, ::testRejectsDisallowedCharset)
+
+### Requirement: storage failure handling is mode-dependent; fail-open only for "both" (REQ-DDOB-003)
+
+A `targetPath` validation failure MUST be a hard HTTP 400 in every mode,
+including `both`. A storage **execution** failure (the destination folder
+or file could not be written — quota, permissions, or any other Files-layer
+error, after `targetPath` validation already passed) MUST cause the whole
+request to fail (a 507-class JSON error) when `options.output.mode` is
+`files`. When `options.output.mode` is `both`, a storage execution failure
+MUST NOT fail the request — generation MUST succeed as if `mode: return`
+had been requested, and the response MUST include a `warnings` entry
+describing the storage failure.
+
+#### Scenario: A storage execution failure in "files" mode fails the request
+
+- GIVEN the destination folder cannot be written to (e.g., quota exceeded)
+- WHEN a generate request is made with `options.output.mode: "files"`
+- THEN the response is a 507-class JSON error and no binary is generated for the caller
+- @e2e exclude fault-injection (storage backend failure) is not browser-drivable — covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php::testFilesModeStorageFailureIsHardFailure)
+
+#### Scenario: A storage execution failure in "both" mode still returns the binary
+
+- GIVEN the destination folder cannot be written to (e.g., quota exceeded)
+- WHEN a generate request is made with `options.output.mode: "both"`
+- THEN the response is the binary download that `mode: return` would have produced
+- AND the response's `warnings` includes an entry describing the storage failure
+- AND no `X-Docudesk-File-Id` header is present
+- @e2e exclude fault-injection; covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php::testBothModeStorageFailureFailsOpenToReturn)
+
+### Requirement: generatedDocument audit trail records the stored file (REQ-DDOB-004)
+
+`DocumentService::logGeneratedDocument()` MUST record `fileId` and
+`filePath` on the `generatedDocument` audit object whenever the document
+was stored to Files (`mode: files` or `mode: both` with a successful
+store), and MUST record them as `null` otherwise. `filinq_register.json`'s
+`generatedDocument` schema MUST declare matching optional, nullable
+`fileId`/`filePath` properties.
+
+#### Scenario: A stored document's audit row references the file
+
+- GIVEN a document generated with `options.output.mode: "files"` succeeds
+- WHEN the `generatedDocument` audit object is inspected
+- THEN it has `fileId` and `filePath` matching the stored file
+- @e2e exclude audit-record assertion; covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php::testLogsFileIdAndPathWhenStored)
+
+### Requirement: async bulk generation requires output.mode "files" (REQ-DDOB-005)
+
+`DocumentService::generateBulk()` MUST reject (HTTP 400) any request for
+more than the synchronous batch limit (10 objects) whose
+`options.output.mode` is not exactly `files` — this includes `options.output`
+omitted, `mode: return`, and `mode: both`. The rejection MUST occur before
+any background job is dispatched and MUST include an actionable message
+naming the required fix (`options.output.mode: "files"`).
+
+#### Scenario: A large bulk request without output.mode=files is rejected
+
+- GIVEN a `generate/bulk` request for 12 objects with no `options.output`
+- WHEN the request is processed
+- THEN the response is HTTP 400 with a message instructing the caller to set `options.output.mode` to `"files"`
+- AND no `BatchDocumentJob` is dispatched
+- @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
+
+#### Scenario: A large bulk request with output.mode=both is rejected
+
+- GIVEN a `generate/bulk` request for 12 objects with `options.output = {mode: "both"}`
+- WHEN the request is processed
+- THEN the response is HTTP 400
+- AND no `BatchDocumentJob` is dispatched
+- @e2e exclude guardrail boundary; covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php::testAsyncBulkRejectsBothMode)
+
+### Requirement: async bulk stores per-object output under a per-job folder (REQ-DDOB-006)
+
+`BatchDocumentJob` MUST store each object's generated document to the
+initiating user's Files when a `generate/bulk` request for more than the
+synchronous batch limit is accepted (`options.output.mode: "files"`), using
+the `userId` captured in `options` at dispatch time (the same value
+already used for the job-status authorization check), under
+`<targetPath>/<jobId>/`, where `<targetPath>` is the request's
+`options.output.targetPath` if provided, else the same
+`Filinq/<template namespace>/` default single-generate uses. Each
+per-object entry in the job's `results` array MUST gain `fileId` and
+`path` on success; `GET /api/documents/jobs/{jobId}` MUST surface them
+unchanged as part of the existing `results` array.
+
+#### Scenario: A 12-object async job stores all outputs under one per-job folder
+
+- GIVEN a `generate/bulk` request for 12 objects with `options.output = {mode: "files"}` is accepted and its job is executed
+- WHEN `GET /api/documents/jobs/{jobId}` is polled after completion
+- THEN each of the 12 `results` entries with `status: "success"` has a `fileId` and `path`
+- AND all 12 paths share the same `<targetPath>/<jobId>/` parent folder
+- @e2e tests/e2e/spec-coverage/document-output-destinations.spec.ts
+
+### Requirement: sync bulk (≤10 objects) honours output.mode per object (REQ-DDOB-007)
+
+`DocumentService::generateBulkSync()` MUST honour `options.output.mode` for
+every object exactly as single-generate does: `return` (default) keeps
+today's inline `content` per result; `files` stores each object's output
+(using the single-generate default `targetPath` convention, not the
+per-job subfolder convention) and returns `{fileId, path, name, size}`
+inline instead of `content`; `both` returns both `content` and the stored
+file's refs inline.
+
+#### Scenario: A 5-object sync bulk request with mode files returns refs, not content
+
+- GIVEN a `generate/bulk` request for 5 objects with `options.output = {mode: "files"}`
+- WHEN the request is processed synchronously
+- THEN each of the 5 result entries has `fileId`, `path`, `name`, `size` and no `content` key
+- AND 5 files exist in the requesting user's Files
+- @e2e exclude sync-path assertion; covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php::testSyncBulkFilesModeReturnsRefsNotContent)
+
+### Requirement: correspondence generation is out of scope for options.output (REQ-DDOB-008)
+
+`CorrespondenceService`/`CorrespondenceController` MUST NOT be modified by
+this change. This is an explicit scope exclusion: `CorrespondenceService`
+does not depend on or share code with `DocumentService`, so extending it
+would mean re-implementing this entire change against a second,
+independent implementation rather than reusing shared plumbing.
+
+#### Scenario: Correspondence generation behaviour is unchanged
+
+- GIVEN `POST /apps/filinq/api/correspondence/generate` is called with any request body
+- WHEN the request is processed
+- THEN behaviour is identical to before this change (no `options.output` support exists on this endpoint)
+- @e2e exclude scope-exclusion pin, not a behaviour to browser-test; covered by code review confirming no changes to CorrespondenceService/CorrespondenceController

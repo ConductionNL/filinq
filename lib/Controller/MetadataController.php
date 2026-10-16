@@ -25,14 +25,17 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Service\InboundClassificationService;
 use OCA\Filinq\Service\MetadataService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Controller for metadata enrichment operations
@@ -53,6 +56,8 @@ class MetadataController extends Controller {
 	 * @param MetadataService $metadataService Service for metadata operations
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
+	 * @param InboundClassificationService $classification Suggests a type, correspondent and dossier
+	 * @param IRootFolder $rootFolder Resolves the caller's own files
 	 *
 	 * @return void
 	 */
@@ -63,6 +68,8 @@ class MetadataController extends Controller {
 		private readonly MetadataService $metadataService,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
+		private readonly InboundClassificationService $classification,
+		private readonly IRootFolder $rootFolder,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -102,11 +109,15 @@ class MetadataController extends Controller {
 			// Run metadata enhancement.
 			$metadata = $this->metadataService->enhanceMetadata($objectData);
 
+			// The same classification hook as the event path; suggestions only.
+			$classification = $this->classifyReachable(objectData: $objectData, data: $data);
+
 			if (empty($metadata) === true) {
 				return new JSONResponse(
 					[
 						'success' => true,
 						'message' => $this->l10n->t('No metadata enrichment needed'),
+						'classification' => $classification,
 					]
 				);
 			}
@@ -124,6 +135,7 @@ class MetadataController extends Controller {
 					'success' => true,
 					'enrichedFields' => array_keys($metadata),
 					'object' => $result,
+					'classification' => $classification,
 				]
 			);
 		} catch (Exception $e) {
@@ -140,6 +152,42 @@ class MetadataController extends Controller {
 		}//end try
 
 	}//end enrich()
+
+	/**
+	 * Offer the document to classification when the caller can open its file.
+	 *
+	 * The body's objectData is the caller's word, so the file is resolved in
+	 * the caller's own folder first: nobody makes a suggestion appear on a
+	 * file they cannot open.
+	 *
+	 * @param array<string, mixed> $objectData The object's fields.
+	 * @param array<string, mixed> $data       The request: objectId, register, schema.
+	 *
+	 * @return string `suggested`, `skipped` or `failed`.
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 */
+	private function classifyReachable(array $objectData, array $data): string {
+		$fileId = (int) ($objectData['file'] ?? ($objectData['fileId'] ?? 0));
+		try {
+			$uid = (string) $this->userSession->getUser()?->getUID();
+			if ($fileId <= 0 || $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId) === null) {
+				return 'skipped';
+			}
+
+			$outcome = $this->classification->classify(
+				objectData: $objectData,
+				objectRef: ['id' => (string) $data['objectId'], 'register' => (string) $data['register'], 'schema' => (string) $data['schema']]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning('Classification on enrich failed: ' . $e->getMessage(), ['exception' => $e]);
+
+			return 'failed';
+		}
+
+		return $outcome['outcome'];
+
+	}//end classifyReachable()
 
 	/**
 	 * Validate the required enrichment request parameters.

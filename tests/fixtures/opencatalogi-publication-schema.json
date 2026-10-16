@@ -1,0 +1,69 @@
+{
+    "_source": "ConductionNL/opencatalogi development lib/Settings/publication_register.json, schema publication 0.0.4, read 2026-09-29. Update this copy when OpenCatalogi changes the schema; the drift test then shows what Filinq must follow.",
+    "required": [
+        "title"
+    ],
+    "properties": {
+        "title": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "summary": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "description": {
+            "type": "string",
+            "maxLength": 2555
+        },
+        "organization": {
+            "type": "string",
+            "format": "uuid"
+        },
+        "themes": {
+            "type": "array"
+        },
+        "publicationDate": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "depublicationDate": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "retentionCategory": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "retentionTermMonths": {
+            "type": "integer"
+        },
+        "retentionAction": {
+            "type": "string",
+            "enum": [
+                "review",
+                "depublish",
+                "archive"
+            ]
+        },
+        "retentionExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "retentionNote": {
+            "type": "string",
+            "maxLength": 2555
+        },
+        "retentionLastEvaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "published",
+                "archived"
+            ]
+        }
+    }
+}

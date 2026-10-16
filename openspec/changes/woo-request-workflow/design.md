@@ -1,5 +1,33 @@
 # Design: woo-request-workflow
 
+## Re-scope 2026-10-05 (decision D1)
+
+dossiq owns the Woo request. Decisions D1 to D5 and D7 below (schemas,
+deadline arithmetic, lifecycle, collection and dedupe, grounds tagging, the
+frontend) are withdrawn and were never built. D6 survives in part: the
+inventarislijst and the besluit are still rendered by filinq's existing
+generator, now through `DocumentGenerationRequestedEvent` with `templateSlug`
+and a `woo-decision` data contract (spec REQ-DDWRW-006, 007, 010, 011). The
+package assembly half of D6 moves to dossiq.
+
+### R1. Where the contract check runs
+
+`WooDecisionContextBuilder::build(array $wooDecision, bool $allowRetiredGrounds): array`
+runs inside `DocumentGenerationRequestService::generate()` after the template
+is resolved and before `generateFromTemplate()`, only when the resolved
+template declares `dataContract: woo-decision`. It throws
+`WooDecisionContractException` carrying every problem; the listener already
+turns an exception into `setError()`, so no file is written. The enriched
+context replaces `data.wooDecision` and adds `grounds` per document as
+`{code, article, label}`.
+
+### R2. The templates
+
+Seeded in `lib/Settings/filinq_register.json` as `template` objects with
+slugs `woo-besluit` and `woo-inventarislijst`, `dataContract: woo-decision`,
+and Dutch body text with placeholders only (no personal data). The seed path
+creates a missing slug and skips an existing one.
+
 ## Context
 
 Verified at Filinq HEAD:

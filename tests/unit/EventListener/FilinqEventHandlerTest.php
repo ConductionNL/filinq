@@ -538,6 +538,33 @@ class FilinqEventHandlerTest extends TestCase {
 	}//end testHandleObjectUpdatedSkipsEnrichmentWhenContentIsUnchanged()
 
 	/**
+	 * An update without a content change is still offered to classification:
+	 * an intake document gets its OCR text (contentText) by an update, which
+	 * is not one of the enrichment content fields. The classifier skips a
+	 * file that already has a suggestion, so this does not churn.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 */
+	public function testAnUnchangedUpdateIsStillOfferedToClassification(): void {
+		$payload = ['channel' => 'scan', 'status' => 'received', 'file' => 812010, 'contentText' => 'Factuur'];
+		$old = ['channel' => 'scan', 'status' => 'received', 'file' => 812010];
+
+		$this->enrichmentRunner->expects($this->never())->method('enrichObject');
+		$this->enrichmentRunner->expects($this->once())->method('classify');
+
+		$this->handler->handleObjectUpdated(
+			new ObjectUpdatedEvent($this->makeObject($payload), $this->makeObject($old)),
+			$this->metadataService,
+			$this->settingsService,
+			$this->logger,
+			$this->retroactive
+		);
+
+	}//end testAnUnchangedUpdateIsStillOfferedToClassification()
+
+	/**
 	 * Test that a change in any single content field triggers re-enrichment
 	 *
 	 * @param string $field The content field that changed.

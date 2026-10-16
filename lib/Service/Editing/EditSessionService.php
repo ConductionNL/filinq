@@ -665,7 +665,11 @@ class EditSessionService {
 		// is refused before any question about signatures or anonymisation,
 		// because those are about this document's state and this is about the
 		// bytes being a code-execution vector at all.
+		// Final second. It is the strongest statement about this document's
+		// state, and it must be the one the user hears: a besluit that is final
+		// is refused for being final, not for whatever else is also true of it.
 		$refusal = ($this->guard->formatRefusal(file: $file)
+			?? $this->guard->finalRefusal(file: $file)
 			?? $this->guard->signatureRefusal(file: $file)
 			?? $this->guard->anonymisationRefusal(file: $file));
 		if ($refusal !== null) {

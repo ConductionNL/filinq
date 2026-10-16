@@ -183,10 +183,47 @@
 					)
 				}}
 			</NcNoteCard>
+			<section class="folder-review" :aria-label="t('filinq', 'Check per file')">
+				<h4>{{ t('filinq', 'Check per file') }}</h4>
+				<p class="muted">
+					{{
+						t(
+							'filinq',
+							'Open each file, compare it with the findings above and mark it as checked. Only checked files are anonymised. Changing the selection asks for a new check.',
+						)
+					}}
+				</p>
+				<ul class="folder-review__list">
+					<li
+						v-for="f in reviewableFiles"
+						:key="f.fileId"
+						class="folder-review__item">
+						<span class="file-name">{{ f.fileName }}</span>
+						<span
+							v-if="isReviewed(f)"
+							class="folder-review__state folder-review__state--done">
+							{{ t('filinq', 'Checked by {user}', { user: f.reviewMark.checkedBy }) }}
+						</span>
+						<NcButton
+							v-else
+							variant="secondary"
+							:disabled="!!f.reviewing || store.selectedEntityCount === 0"
+							@click="store.markFileChecked(f)">
+							{{ t('filinq', 'Mark as checked') }}
+						</NcButton>
+						<span v-if="f.reviewError" class="folder-review__error" role="alert">
+							{{ f.reviewError }}
+						</span>
+					</li>
+				</ul>
+			</section>
+			<NcNoteCard v-if="store.reviewRequired" type="warning">
+				{{ t('filinq', 'Check the detected data first') }}
+			</NcNoteCard>
 			<div class="action-bar">
 				<NcButton
 					variant="primary"
-					:disabled="store.selectedEntityCount === 0"
+					:disabled="store.selectedEntityCount === 0 || store.reviewedFiles.length === 0"
 					@click="store.anonymizeFolder()">
 					{{
 						n(
@@ -211,13 +248,30 @@
 
 		<!-- Step 5: Completed -->
 		<div v-if="store.batchStatus === 'completed'" class="completed-section">
-			<NcNoteCard type="success">
+			<NcNoteCard v-if="store.skippedUnreviewed.length === 0" type="success">
 				{{
 					t(
 						'filinq',
-						'All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.',
+						'All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.',
 					)
 				}}
+			</NcNoteCard>
+			<NcNoteCard v-else type="warning">
+				<p>
+					{{
+						n(
+							'filinq',
+							'The checked files are anonymised. %n file was not checked and was left alone:',
+							'The checked files are anonymised. %n files were not checked and were left alone:',
+							store.skippedUnreviewed.length,
+						)
+					}}
+				</p>
+				<ul class="folder-review__list">
+					<li v-for="f in store.skippedUnreviewed" :key="f.fileId">
+						{{ f.fileName }}
+					</li>
+				</ul>
 			</NcNoteCard>
 
 			<!-- Wave 4a: dossier grondslagen report -->
@@ -282,7 +336,7 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcProgressBar } from '@nextcloud/vue'
 import EntityReviewTable from './EntityReviewTable.vue'
 import { folderAnonymizationStore } from '../../store/store.js'
@@ -310,8 +364,33 @@ export default {
 		return { folderPath: '' }
 	},
 
+	computed: {
+		/**
+		 * The analysed files that can be checked: extraction succeeded.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewableFiles() {
+			return this.store.files.filter((f) => f.status === 'extracted')
+		},
+	},
+
 	methods: {
 		t,
+		n,
+
+		/**
+		 * Whether this file's check covers the selection as it is now.
+		 *
+		 * @param {object} file A file of the batch.
+		 * @return {boolean}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		isReviewed(file) {
+			return this.store.reviewedFiles.includes(file)
+		},
+
 		/**
 		 * Start a folder anonymization batch for the entered folder path.
 		 *
@@ -334,6 +413,37 @@ export default {
 </script>
 
 <style scoped>
+.folder-review {
+	margin: 16px 0;
+}
+
+.folder-review__list {
+	margin: 8px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.folder-review__item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.folder-review__state {
+	color: var(--color-text-maxcontrast);
+}
+
+.folder-review__state--done {
+	color: var(--color-success-text);
+}
+
+.folder-review__error {
+	color: var(--color-error-text);
+}
+
 .folder-anonymization {
 	padding: 20px;
 	max-width: 900px;

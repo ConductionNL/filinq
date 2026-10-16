@@ -325,6 +325,57 @@ class JSONResponse extends Response {
 }//end class
 
 /**
+ * Stub for OCP\AppFramework\Http\RedirectResponse
+ *
+ * Constructor signature as in vendor/nextcloud/ocp (default 303 See Other,
+ * Location header set to the redirect URL).
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2
+ * @link     https://www.filinq.app
+ */
+class RedirectResponse extends Response {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string $redirectURL The target.
+	 * @param int $status HTTP status code.
+	 * @param array<string, string> $headers Extra headers.
+	 *
+	 * @return void
+	 */
+	public function __construct(private string $redirectURL, private int $status = 303, array $headers = []) {
+		foreach ($headers as $name => $value) {
+			$this->addHeader($name, $value);
+		}
+
+		$this->addHeader('Location', $redirectURL);
+
+	}//end __construct()
+
+	/**
+	 * The redirect target.
+	 *
+	 * @return string
+	 */
+	public function getRedirectURL(): string {
+		return $this->redirectURL;
+	}//end getRedirectURL()
+
+	/**
+	 * The HTTP status code.
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return $this->status;
+	}//end getStatus()
+}//end class
+
+/**
  * Stub for OCP\AppFramework\Http\DataDownloadResponse
  *
  * Extends the local Response stub (matching the real
@@ -1412,6 +1463,15 @@ interface IAppManager {
 	public function isEnabledForUser(string $appId, $user = null): bool;
 
 	/**
+	 * Whether the app is enabled for at least one user (OCP since 32.0.0).
+	 *
+	 * @param string $appId The app id.
+	 *
+	 * @return bool
+	 */
+	public function isEnabledForAnyone(string $appId): bool;
+
+	/**
 	 * Get the version of an installed app.
 	 *
 	 * @param string $appId App identifier
@@ -1495,6 +1555,30 @@ interface INotification {
 	 * @return INotification
 	 */
 	public function setSubject(string $subject, array $parameters = []): INotification;
+
+	/** Real OCP method. @param \DateTime $dateTime When. @return INotification */
+	public function setDateTime(\DateTime $dateTime): INotification;
+
+	/** Real OCP method. @return string */
+	public function getApp(): string;
+
+	/** Real OCP method. @return string */
+	public function getUser(): string;
+
+	/** Real OCP method. @return string */
+	public function getSubject(): string;
+
+	/** Real OCP method. @return array */
+	public function getSubjectParameters(): array;
+
+	/** Real OCP method. @param string $subject The text. @return INotification */
+	public function setParsedSubject(string $subject): INotification;
+
+	/** Real OCP method. @param string $icon Absolute URL. @return INotification */
+	public function setIcon(string $icon): INotification;
+
+	/** Real OCP method. @param string $link Absolute URL. @return INotification */
+	public function setLink(string $link): INotification;
 }//end interface
 
 /**
@@ -2099,6 +2183,26 @@ interface IClient {
 	 * @return IResponse
 	 */
 	public function get(string $uri, array $options = []): IResponse;
+
+	/**
+	 * Issue a POST request (signature as in vendor/nextcloud/ocp IClient).
+	 *
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function post(string $uri, array $options = []): IResponse;
+
+	/**
+	 * Issue a DELETE request (signature as in vendor/nextcloud/ocp IClient).
+	 *
+	 * @param string $uri The URI.
+	 * @param array $options Request options.
+	 *
+	 * @return IResponse
+	 */
+	public function delete(string $uri, array $options = []): IResponse;
 }//end interface
 
 /**

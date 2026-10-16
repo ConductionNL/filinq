@@ -35,8 +35,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Validation\AccessibilityChecks;
+use OCA\Filinq\Service\Validation\ArchivalChecks;
 use OCA\Filinq\Service\Validation\DocumentFileInspector;
 use OCA\Filinq\Service\Validation\ValidationProfileResolver;
+use OCA\Filinq\Service\VeraPdf\ConformanceService;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -63,6 +66,46 @@ class DocumentValidationService {
 	public const CHECK_PDF_ENCRYPTED = 'pdf-encrypted';
 	public const CHECK_TEXT_LAYER_MISSING = 'text-layer-missing';
 	public const CHECK_METADATA_INCOMPLETE = 'metadata-incomplete';
+
+	/**
+	 * Archival: veraPDF finds the PDF does not meet its PDF/A level.
+	 */
+	public const CHECK_PDFA_CONFORMANCE = 'pdfa-conformance-failed';
+
+	/**
+	 * Archival: veraPDF finds fonts that are used but not embedded.
+	 */
+	public const CHECK_PDFA_FONTS = 'pdfa-font-not-embedded';
+
+	/**
+	 * Archival: an archival check is on but veraPDF cannot answer.
+	 */
+	public const CHECK_ARCHIVAL_UNAVAILABLE = 'archival-validator-unavailable';
+
+	/**
+	 * Accessibility: the PDF has no structure tags.
+	 */
+	public const CHECK_PDF_NOT_TAGGED = 'pdf-not-tagged';
+
+	/**
+	 * Accessibility: the PDF catalog names no language.
+	 */
+	public const CHECK_PDF_LANGUAGE_MISSING = 'pdf-language-missing';
+
+	/**
+	 * Accessibility: the PDF has no title.
+	 */
+	public const CHECK_PDF_TITLE_MISSING = 'pdf-title-missing';
+
+	/**
+	 * Accessibility: a tagged PDF does not say it follows PDF/UA.
+	 */
+	public const CHECK_PDFUA_IDENTIFIER_MISSING = 'pdfua-identifier-missing';
+
+	/**
+	 * The category of the content and metadata checks.
+	 */
+	public const CATEGORY_DOCUMENT = 'document';
 
 	/**
 	 * Severity values.
@@ -93,6 +136,20 @@ class DocumentValidationService {
 	private readonly DocumentFileInspector $inspector;
 
 	/**
+	 * The archival checks (veraPDF).
+	 *
+	 * @var ArchivalChecks
+	 */
+	private readonly ArchivalChecks $archival;
+
+	/**
+	 * The accessibility checks (presence heuristics).
+	 *
+	 * @var AccessibilityChecks
+	 */
+	private readonly AccessibilityChecks $accessibility;
+
+	/**
 	 * Constructor.
 	 *
 	 * The two collaborators are composed here rather than injected so the
@@ -100,14 +157,19 @@ class DocumentValidationService {
 	 * The logger and app config are consumed only by those collaborators, so
 	 * they are not retained as properties.
 	 *
-	 * @param LoggerInterface $logger Logger.
-	 * @param IAppConfig $appConfig App configuration.
+	 * @param LoggerInterface         $logger      Logger.
+	 * @param IAppConfig              $appConfig   App configuration.
+	 * @param ConformanceService|null $conformance The veraPDF conformance check for the archival checks.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.4
 	 */
-	public function __construct(LoggerInterface $logger, IAppConfig $appConfig) {
+	public function __construct(LoggerInterface $logger, IAppConfig $appConfig, ?ConformanceService $conformance = null) {
 		$this->profiles = new ValidationProfileResolver(logger: $logger, appConfig: $appConfig);
 		$this->inspector = new DocumentFileInspector(appConfig: $appConfig);
+		$this->archival = new ArchivalChecks(conformance: $conformance);
+		$this->accessibility = new AccessibilityChecks();
 
 	}//end __construct()
 
@@ -137,7 +199,9 @@ class DocumentValidationService {
 			$this->readabilityFindings(profile: $profile, contentFailed: $read['failed']),
 			$this->encryptionFindings(profile: $profile, mime: $mime, content: $read['content']),
 			$this->textLayerFindings(profile: $profile, mime: $mime, content: $read['content']),
-			$this->metadataFindings(profile: $profile, record: $record)
+			$this->metadataFindings(profile: $profile, record: $record),
+			$this->accessibility->findings(profile: $profile, mime: $mime, content: $read['content']),
+			$this->archival->findings(profile: $profile, mime: $mime, file: $file)
 		);
 
 		return [
@@ -414,6 +478,7 @@ class DocumentValidationService {
 	private function finding(string $checkId, array $profile, string $messageKey, array $params = []): array {
 		return [
 			'checkId' => $checkId,
+			'category' => self::CATEGORY_DOCUMENT,
 			'severity' => $this->checkSeverity(profile: $profile, check: $checkId),
 			'message' => $messageKey,
 			'params' => $params,

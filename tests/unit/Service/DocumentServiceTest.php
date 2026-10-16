@@ -21,6 +21,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\DataResolverService;
+use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\PdfService;
@@ -155,15 +156,15 @@ class DocumentServiceTest extends TestCase {
 				$this->renderer,
 				$this->pdfService,
 				$objectResolver,
-				$logger
+				$logger,
+				$this->passThroughRasterizer()
 			),
 			$this->storageService,
 			new \OCA\Filinq\Service\GeneratedDocumentLogger(
 				$objectResolver,
 				$logger
 			),
-			$container,
-			$this->jobList,
+			new DocumentJobStore($appConfig, $this->jobList, $logger),
 			$logger
 		);
 
@@ -571,6 +572,48 @@ class DocumentServiceTest extends TestCase {
 		$this->assertEquals('generatedDocument', 'generatedDocument');
 
 	}//end testDocumentMetadataIncludesTemplateVersion()
+
+	/**
+	 * A generation without options.wizardContext never reaches the wizard gate and logs no wizardContext.
+	 *
+	 * @return void
+	 */
+	public function testGenerationWithoutWizardContextUnchanged(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['name' => 'Brief', 'content' => '<p>x</p>', 'version' => 1]);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
+		$entries = [];
+		$this->objectSvc->method('saveObject')->willReturnCallback(
+			static function (array $entry) use (&$entries): array {
+				$entries[] = $entry;
+				return $entry;
+			}
+		);
+		$gate = $this->getMockBuilder(\OCA\Filinq\Service\Wizard\WizardGenerationGate::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['check'])
+			->getMock();
+		$gate->expects($this->never())->method('check');
+		$withGate = new \ReflectionClass(DocumentService::class);
+		$service = $withGate->newInstanceWithoutConstructor();
+		foreach ($withGate->getProperties() as $property) {
+			if ($property->getName() !== 'wizardGate' && $property->isStatic() === false && $property->isInitialized($this->service) === true) {
+				$property->setValue($service, $property->getValue($this->service));
+			}
+		}
+
+		$withGate->getProperty('wizardGate')->setValue($service, $gate);
+
+		$result = $service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: ['userId' => 'u1']);
+		$plain  = $this->service->generateDocument(templateId: 'tmpl-1', dataRefs: [], options: ['userId' => 'u1']);
+
+		$this->assertArrayNotHasKey('wizardContext', $entries[0]);
+		$this->assertSame($entries[1], $entries[0], 'the logged entry is the same with and without a wizard gate');
+		$this->assertSame(array_keys($plain), array_keys($result));
+		$this->assertSame($plain['content'], $result['content']);
+
+	}//end testGenerationWithoutWizardContextUnchanged()
 
 	/**
 	 * Test partial failure does not abort bulk batch (DCS-043).
@@ -1083,4 +1126,18 @@ class DocumentServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('fileId', $item);
 
 	}//end testSyncBulkReturnModeUnchanged()
+
+	/**
+	 * The real SvgRasterizer's method, passing HTML through unchanged.
+	 *
+	 * @return \OCA\Filinq\Service\Charts\SvgRasterizer
+	 */
+	private function passThroughRasterizer(): \OCA\Filinq\Service\Charts\SvgRasterizer {
+		$rasterizer = $this->createMock(\OCA\Filinq\Service\Charts\SvgRasterizer::class);
+		$rasterizer->method('rasterizeInlineSvg')->willReturnCallback(
+			static fn (string $html, string $format): array => ['html' => $html, 'warnings' => []]
+		);
+		return $rasterizer;
+
+	}//end passThroughRasterizer()
 }//end class

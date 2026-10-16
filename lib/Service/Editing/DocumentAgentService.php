@@ -604,7 +604,7 @@ class DocumentAgentService {
 			$this->documentLogger->log(
 				template: [
 					'id' => '',
-					'version' => 0,
+					'version' => null,
 					'name' => $note,
 				],
 				dataRefs: [],

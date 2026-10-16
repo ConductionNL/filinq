@@ -48,6 +48,14 @@ use Psr\Log\LoggerInterface;
 class CorrespondenceServiceTest extends TestCase {
 
 	/**
+	 * What the container answers for the shared office converter.
+	 *
+	 * @var \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter|null
+	 */
+	private ?\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter $officeConverter = null;
+
+
+	/**
 	 * The service under test
 	 *
 	 * @var CorrespondenceService
@@ -74,6 +82,13 @@ class CorrespondenceServiceTest extends TestCase {
 	 * @var TemplateRenderer&MockObject
 	 */
 	private TemplateRenderer $renderer;
+
+	/**
+	 * The rasterizer the DOCX path calls.
+	 *
+	 * @var \OCA\Filinq\Service\Charts\SvgRasterizer&MockObject
+	 */
+	private \OCA\Filinq\Service\Charts\SvgRasterizer $rasterizer;
 
 	/**
 	 * Mock PDF service
@@ -129,8 +144,18 @@ class CorrespondenceServiceTest extends TestCase {
 					return $appConfig;
 				}
 
+				if ($class === \OCA\Filinq\Service\Conversion\HtmlToOfficeConverter::class) {
+					return $this->officeConverter;
+				}
+
+				if ($class === \OCA\Filinq\Service\Charts\SvgRasterizer::class) {
+					return $this->rasterizer;
+				}
+
 				return null;
 			});
+
+		$this->rasterizer = $this->createMock(\OCA\Filinq\Service\Charts\SvgRasterizer::class);
 
 		$this->service = new CorrespondenceService(
 			$this->templateSvc,
@@ -228,6 +253,43 @@ class CorrespondenceServiceTest extends TestCase {
 		$this->assertEquals('<p>Hello</p>', $result['content']);
 
 	}//end testGenerateHtml()
+
+	/**
+	 * A DOCX letter goes through the shared converter; without LibreOffice it
+	 * is a 503 with the matrix's reason, as before the extraction.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.1
+	 */
+	public function testDocxGoesThroughTheSharedConverter(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Test', 'content' => '<p>Hello</p>']);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<p>Hello</p>');
+		$this->rasterizer->method('rasterizeInlineSvg')->willReturn(['html' => '<p>Hello</p>', 'warnings' => []]);
+		$logEntity = $this->createMock(ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+		$this->objectSvc->method('saveObject')->willReturn($logEntity);
+
+		$office = $this->createMock(\OCA\Filinq\Service\Conversion\HtmlToOfficeConverter::class);
+		$office->method('isAvailable')->willReturn(true);
+		$office->expects($this->once())->method('toDocx')->with('<p>Hello</p>')->willReturn('PK letter');
+		$this->officeConverter = $office;
+
+		$result = $this->service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+		$this->assertSame('PK letter', $result['content']);
+
+		try {
+			$this->officeConverter = null;
+			$this->service->generate(templateId: 'tmpl-1', dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']], options: ['format' => 'docx']);
+			$this->fail('A DOCX letter was made without LibreOffice.');
+		} catch (\Exception $e) {
+			$this->assertSame(503, $e->getCode());
+			$this->assertSame(\OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend::UNAVAILABLE_REASON, $e->getMessage());
+		}
+
+	}//end testDocxGoesThroughTheSharedConverter()
+
 
 	/**
 	 * Test invalid format throws exception
@@ -360,4 +422,52 @@ class CorrespondenceServiceTest extends TestCase {
 
 	}//end testCorrespondenceLogging()
 
+	/**
+	 * A DOCX letter sends its HTML through the rasterizer first, so a chart
+	 * reaches LibreOffice as a PNG instead of an SVG it would drop.
+	 *
+	 * @return void
+	 */
+	public function testDocxOutputRasterizesChartsBeforeConversion(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Brief', 'content' => 'x']);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<h1>Jan</h1><svg width="1" height="1"></svg>');
+
+		$this->rasterizer->expects($this->once())
+			->method('rasterizeInlineSvg')
+			->with('<h1>Jan</h1><svg width="1" height="1"></svg>', 'docx')
+			->willReturn(['html' => '<h1>Jan</h1><img src="data:image/png;base64,AA" alt="" />', 'warnings' => []]);
+
+		try {
+			$this->service->generate(templateId: 'tmpl-1', dataRefs: [], options: ['format' => 'docx']);
+		} catch (\Exception $e) {
+			// The conversion itself needs LibreOffice and answers 503 or 500 on a
+			// host without a working one. The rasterizer was asked before that,
+			// which is what the expectation above pins.
+			$this->assertContains($e->getCode(), [500, 503]);
+		}
+
+	}//end testDocxOutputRasterizesChartsBeforeConversion()
+
+	/**
+	 * A PDF letter keeps its SVG: mPDF draws it, so no rasterizing happens.
+	 *
+	 * @return void
+	 */
+	public function testPdfOutputLeavesChartsAsSvg(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Brief', 'content' => 'x']);
+		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+		$this->renderer->method('renderTemplate')->willReturn('<svg></svg>');
+		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
+		$logEntity = $this->createMock(ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+		$this->objectSvc->method('saveObject')->willReturn($logEntity);
+
+		$this->rasterizer->expects($this->never())->method('rasterizeInlineSvg');
+
+		$result = $this->service->generate(templateId: 'tmpl-1', dataRefs: [], options: ['format' => 'pdf']);
+
+		$this->assertSame('%PDF%', $result['content']);
+
+	}//end testPdfOutputLeavesChartsAsSvg()
 }//end class

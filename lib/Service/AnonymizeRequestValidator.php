@@ -78,6 +78,7 @@ class AnonymizeRequestValidator {
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 */
 	public function validateBody(array $params): array {
 		$entities = ($params['entities'] ?? []);
@@ -90,6 +91,11 @@ class AnonymizeRequestValidator {
 		$appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
 		if (is_bool($appendBasisSummary) === false) {
 			return $this->rejected(error: $appendBasisSummary);
+		}
+
+		$reversible = $this->extractReversible(params: $params);
+		if (is_bool($reversible) === false) {
+			return $this->rejected(error: $reversible);
 		}
 
 		$unredacted = ($params['unredactedEntities'] ?? []);
@@ -122,6 +128,7 @@ class AnonymizeRequestValidator {
 				'entities' => $entities,
 				'hasStrayBases' => $this->hasStrayBases(entities: $entities),
 				'appendBasisSummary' => $appendBasisSummary,
+				'reversible' => $reversible,
 				'unredactedEntities' => $unredacted,
 				'overrides' => $overrides,
 			],
@@ -154,6 +161,33 @@ class AnonymizeRequestValidator {
 
 		return $value;
 	}//end extractAppendBasisSummary()
+
+	/**
+	 * Extract and validate the reversible flag: keep a key to restore the names later.
+	 *
+	 * Omitted means irreversible, which keeps nothing. A value that is not a
+	 * boolean is refused rather than read: "false" as a string is truthy, and a
+	 * key kept by accident is the one mistake this flag must not make.
+	 *
+	 * @param array<string, mixed> $params Request parameters.
+	 *
+	 * @return bool|array{status: int, body: array<string, mixed>} False when omitted, the supplied
+	 *                                                             boolean when set, or the 400
+	 *                                                             payload on a type error.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 */
+	private function extractReversible(array $params): bool|array {
+		if (array_key_exists('reversible', $params) === false) {
+			return false;
+		}
+
+		if (is_bool($params['reversible']) === false) {
+			return $this->badRequest(message: $this->l10n->t('reversible must be true or false'));
+		}
+
+		return $params['reversible'];
+	}//end extractReversible()
 
 	/**
 	 * Validate the acknowledgedOverrides[] payload entries.

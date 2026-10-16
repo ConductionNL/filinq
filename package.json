@@ -37,7 +37,7 @@
   ],
   "dependencies": {
     "@babel/core": "^7.29.0",
-    "@conduction/nextcloud-vue": "^2.39.0",
+    "@conduction/nextcloud-vue": "^2.65.0",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
@@ -51,7 +51,7 @@
     "axe-core": "^4.12.1",
     "babel-loader": "^10.1.1",
     "css-loader": "^7.1.2",
-    "dexie": "^4.4.5",
+    "dexie": "^4.4.6",
     "dompurify": "^3.4.15",
     "gridstack": "^13.2.0",
     "jszip": "^3.10.1",

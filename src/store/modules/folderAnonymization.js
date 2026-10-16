@@ -2,6 +2,30 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 import { WOO_BASES } from '../../constants/grondslagen.js'
+import {
+	markChecked,
+	redactionPayload,
+	reviewIsCurrent,
+} from '../../services/reviewMark.js'
+
+/**
+ * The entities every per-file anonymise call of this folder sends, and each
+ * file's check covers.
+ *
+ * @param {Array<object>} entities The consolidated folder entities.
+ * @return {Array<{type: string, value: string, confidence: number}>}
+ */
+function folderPayload(entities) {
+	return redactionPayload(
+		entities
+			.filter((e) => e.included)
+			.map((e) => ({
+				type: e.type,
+				value: e.value,
+				confidence: e.highestConfidence,
+			})),
+	)
+}
 
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({
@@ -18,6 +42,10 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		processing: false,
 		pollTimer: null,
 		minConfidence: 0.0,
+		// Set when anonymise was asked for while no file was checked.
+		reviewRequired: false,
+		// Files the last anonymise run left alone because nobody checked them.
+		skippedUnreviewed: [],
 
 		// Wave 4a (anonymisation-grondslagen-summary) state.
 		// Operator can optionally create a dossier for the chosen folder so
@@ -49,6 +77,36 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			).length,
 		basesOptions: () => WOO_BASES,
 		hasDossier: (state) => state.dossier.uuid !== null,
+		/**
+		 * Extracted files whose check covers the entity selection as it is now.
+		 *
+		 * @param {object} state Store state.
+		 * @return {Array<object>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewedFiles: (state) => {
+			const payload = folderPayload(state.entities)
+			return state.files.filter(
+				(f) =>
+					f.status === 'extracted'
+					&& reviewIsCurrent(f.reviewMark, payload),
+			)
+		},
+		/**
+		 * Extracted files nobody checked for the current selection.
+		 *
+		 * @param {object} state Store state.
+		 * @return {Array<object>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		unreviewedFiles: (state) => {
+			const payload = folderPayload(state.entities)
+			return state.files.filter(
+				(f) =>
+					f.status === 'extracted'
+					&& !reviewIsCurrent(f.reviewMark, payload),
+			)
+		},
 	},
 	actions: {
 		/**
@@ -242,6 +300,32 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		},
 
 		/**
+		 * Record that the signed-in person checked this file against the
+		 * current entity selection. Called only from the reviewer's click.
+		 *
+		 * @param {object} file A file of this batch in the `extracted` state.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async markFileChecked(file) {
+			if (!file || file.status !== 'extracted') {
+				return
+			}
+			file.reviewing = true
+			file.reviewError = null
+			try {
+				file.reviewMark = await markChecked(
+					file.fileId,
+					folderPayload(this.entities),
+				)
+			} catch (err) {
+				file.reviewError = err.response?.data?.error || err.message
+			} finally {
+				file.reviewing = false
+			}
+		},
+
+		/**
 		 * Anonymise the analysed folder by calling the **tested single-file**
 		 * endpoint once per file with `scope: 'dossier'`.
 		 *
@@ -257,6 +341,18 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
 		 */
 		async anonymizeFolder() {
+			// Only files a person checked are written; the rest stay listed
+			// as unreviewed. With none checked there is nothing to send.
+			const targets = this.reviewedFiles
+			this.skippedUnreviewed = this.unreviewedFiles.map((f) => ({
+				fileId: f.fileId,
+				fileName: f.fileName,
+			}))
+			if (targets.length === 0) {
+				this.reviewRequired = true
+				return
+			}
+			this.reviewRequired = false
 			this.processing = true
 			this.error = null
 			this.batchStatus = 'anonymizing'
@@ -310,30 +406,13 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					}
 				}
 
-				// Step 2 — anonymise each file individually through the tested
-				// single-file endpoint. The same approved entity list is sent to
-				// every file; OR honours the skipAnonymization flag we just
+				// Step 2: anonymise each checked file individually through the
+				// tested single-file endpoint. The same approved entity list is
+				// sent to every file, and it is the list each file's check was
+				// recorded over; OR honours the skipAnonymization flag we just
 				// PATCHed, so skipped entities stay unredacted in the output.
-				//
-				// Longest value first: OpenRegister replaces matches in payload
-				// order via str_ireplace. If a shorter span runs first it eats
-				// its own text out of an overlapping longer span — e.g. redacting
-				// "Claudia Fischer" before "Mevrouw Claudia Fischer" leaves a
-				// dangling "Mevrouw". Sorting by descending length makes the
-				// longest overlap redact first. (Mirrors the single-file flow in
-				// anonymization.js.)
-				const selected = this.entities
-					.filter((e) => e.included)
-					.map((e) => ({
-						type: e.type,
-						value: e.value,
-						confidence: e.highestConfidence,
-					}))
-					.sort((a, b) => (b.value || '').length - (a.value || '').length)
+				const selected = folderPayload(this.entities)
 
-				// Only files that extracted successfully carry entities to redact;
-				// files that errored during extraction have nothing to anonymise.
-				const targets = this.files.filter((f) => f.status === 'extracted')
 				let succeeded = 0
 				let lastError = null
 				for (const file of targets) {
@@ -449,6 +528,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		//     return generateUrl('/apps/filinq/api/anonymization/batch/' + this.batchId + '/report')
 		// },
 
+		/**
+		 * Clear the batch, the review state and the dossier form.
+		 *
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
 		reset() {
 			this.stopPolling()
 			Object.assign(this, {
@@ -464,6 +548,8 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 				error: null,
 				processing: false,
 				minConfidence: 0.0,
+				reviewRequired: false,
+				skippedUnreviewed: [],
 				dossier: {
 					uuid: null,
 					name: '',

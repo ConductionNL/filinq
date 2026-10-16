@@ -305,6 +305,8 @@ class InMemoryObjectServiceFake extends ObjectService {
 		string $schema = '',
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
 	) {
 		$key = $this->key(register: $register, schema: $schema, uuid: $id);
 		if (array_key_exists($key, $this->stored) === false) {
@@ -446,6 +448,8 @@ class FixedResultObjectServiceFake extends ObjectService {
 		string $schema = '',
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
 	) {
 		$this->findCalls++;
 		return $this->result;

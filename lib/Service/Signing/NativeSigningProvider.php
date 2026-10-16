@@ -70,6 +70,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 * @param SettingsService $settingsService Settings service (provides OR ObjectService)
 	 * @param IAppConfig $config App config (resolves session register/schema)
 	 * @param AssertionCanonicalizer $canonicalizer Canonical-JSON encoder shared with the verifier
+	 * @param FieldPlacementRenderer $placementRenderer Draws placed fields before the MAC is computed
 	 *
 	 * @return void
 	 */
@@ -78,6 +79,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 		private readonly SettingsService $settingsService,
 		private readonly IAppConfig $config,
 		private readonly AssertionCanonicalizer $canonicalizer = new AssertionCanonicalizer(),
+		private readonly FieldPlacementRenderer $placementRenderer = new FieldPlacementRenderer(),
 	) {
 
 	}//end __construct()
@@ -321,6 +323,8 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
 	 */
 	public function produceSignedArtifact(string $documentContent, array $context): string {
 		$level = (string)($context['level'] ?? 'SES');
@@ -359,6 +363,34 @@ class NativeSigningProvider implements SigningProviderInterface {
 			if (isset($context[$portalField]) === true && $context[$portalField] !== '') {
 				$assertion[$portalField] = (string)$context[$portalField];
 			}
+		}
+
+		// Guardian consent (signer-identity-rails REQ-DDSIR-010): the consent
+		// basis of a minor's signature joins the assertion BEFORE the MAC, so a
+		// rewritten basis fails verification like a rewritten signer. Absent for
+		// a request between adults, whose assertion keeps its old shape.
+		// Identity rails (signer-identity-rails REQ-DDSIR-004) likewise: each
+		// signer's identity evidence (provider, means, assurance, pseudonym,
+		// moment and token hash). Only non-empty lists join; an empty or
+		// non-list value is left out, so an adults-only, pre-rails request keeps
+		// its old assertion shape.
+		$boundLists = array_intersect_key($context, array_flip(['consentBasis', 'signerEvidence']));
+		$assertion += array_filter(array_filter($boundLists, 'is_array'));
+
+		// Field placements (bulk-signing-field-builder REQ-DDBSF-003): the placed
+		// fields are drawn into the pages BEFORE the canonical form is hashed, so
+		// the visible blocks are inside the MAC-covered content and a moved or
+		// altered block fails verification. They join the assertion as data too.
+		// Without placements the document bytes are untouched.
+		$placements = ($context['fieldPlacements'] ?? []);
+		if (is_array($placements) === true && $placements !== []) {
+			$documentContent = $this->placementRenderer->render(
+				pdf: $documentContent,
+				placements: $placements,
+				signers: (array) ($context['signerLabels'] ?? []),
+				timestamp: $assertion['timestamp']
+			);
+			$assertion['fieldPlacements'] = $placements;
 		}
 
 		// Build the canonical (unsigned-marker) form the verifier will recompute:

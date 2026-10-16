@@ -38,6 +38,8 @@ class ObjectService {
 	 * @param string $schema Schema slug
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param bool $_render False returns the stored row: no writeOnly strip, no RBAC projection.
+	 * @param bool $_audit False skips the read audit entry.
 	 *
 	 * @return mixed
 	 */
@@ -47,6 +49,8 @@ class ObjectService {
 		string $schema = '',
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
 	) {
 		return null;
 	}//end find()
@@ -73,6 +77,35 @@ class ObjectService {
 	) {
 		return null;
 	}//end saveObject()
+
+	/**
+	 * Merge partial data into a stored object and save it.
+	 *
+	 * Signature pinned to the real OpenRegister ObjectService::patchObject()
+	 * on `development`, so a mock built from this stub refuses the named
+	 * arguments the real class would refuse.
+	 *
+	 * @param string $objectId Object id, uuid or slug.
+	 * @param array $data Partial object data to merge.
+	 * @param mixed $register Optional register scope.
+	 * @param mixed $schema Optional schema scope.
+	 * @param bool $_rbac Whether to apply RBAC checks.
+	 * @param bool $_multitenancy Whether to apply multitenancy filtering.
+	 * @param mixed $currentUser Explicit acting user.
+	 *
+	 * @return mixed
+	 */
+	public function patchObject(
+		string $objectId,
+		array $data,
+		$register = null,
+		$schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		$currentUser = null,
+	) {
+		return null;
+	}//end patchObject()
 
 	/**
 	 * Find all objects matching a set of filters
@@ -204,6 +237,21 @@ class ObjectService {
 	}//end setSchema()
 
 	/**
+	 * Get the Schema entity of the current schema context.
+	 *
+	 * Loosely typed (vs. the real `?Schema`) for the same reason as
+	 * `setSchema()`: the stub does not know OpenRegister's entity classes.
+	 * The intake gate reads the schema's `authorization.update` declaration
+	 * off this entity, so a double that could not answer it would have no way
+	 * to express "this schema is restricted".
+	 *
+	 * @return mixed The Schema entity, or null when no schema is set.
+	 */
+	public function getCurrentSchemaEntity() {
+		return null;
+	}//end getCurrentSchemaEntity()
+
+	/**
 	 * Get the current register context's resolved numeric ID.
 	 *
 	 * @return int|null
@@ -265,6 +313,43 @@ class RegisterService {
 }//end class
 
 /**
+ * Stub for ViewService (saved views).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class ViewService {
+	/**
+	 * Find one saved view.
+	 *
+	 * Loosely typed (vs. the real `View`) so the stub does not need to know
+	 * OpenRegister's entity class beyond the getters filinq reads.
+	 *
+	 * @param int|string $id The view id or slug.
+	 * @param string $owner The user asking.
+	 *
+	 * @return mixed The view.
+	 */
+	public function find($id, string $owner) {
+		return null;
+	}//end find()
+
+	/**
+	 * Every view one user can see.
+	 *
+	 * @param string $owner The user asking.
+	 *
+	 * @return array The views.
+	 */
+	public function findAll(string $owner): array {
+		return [];
+	}//end findAll()
+}//end class
+
+/**
  * Stub for ConfigurationService
  *
  * @category Tests
@@ -294,8 +379,28 @@ class ConfigurationService {
  * @link     https://www.filinq.app
  */
 class TextExtractionService {
-	public function extractFile(int $fileId, bool $force = false): void {
+	public function extractFile(int $fileId, bool $forceReExtract = false, ?array $entityTypes = null): void {
 	}//end extractFile()
+
+	/**
+	 * Mirrors OpenRegister's getExtractedText(int $fileId): ?string at development 910471dc.
+	 */
+	public function getExtractedText(int $fileId): ?string {
+		return null;
+	}//end getExtractedText()
+
+	/**
+	 * Mirrors OpenRegister's parseEmlStructured(File $file): EmlStructure at development 8e001f4e.
+	 *
+	 * @param \OCP\Files\File $file The EML file.
+	 *
+	 * @return \OCA\OpenRegister\Service\TextExtraction\EmlStructure
+	 *
+	 * @throws \OCA\OpenRegister\Exception\EmlParseException On malformed input.
+	 */
+	public function parseEmlStructured(\OCP\Files\File $file): \OCA\OpenRegister\Service\TextExtraction\EmlStructure {
+		throw new \OCA\OpenRegister\Exception\EmlParseException('stub');
+	}//end parseEmlStructured()
 }//end class
 
 /**
@@ -569,6 +674,44 @@ class Schema {
 }//end class
 
 /**
+ * Stub for the View entity.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class View {
+	/**
+	 * The stored query: registers, schemas and filters.
+	 *
+	 * @return array The query.
+	 */
+	public function getQuery(): array {
+		return [];
+	}//end getQuery()
+
+	/**
+	 * The view's name.
+	 *
+	 * @return string The name.
+	 */
+	public function getName(): string {
+		return '';
+	}//end getName()
+
+	/**
+	 * The view's id.
+	 *
+	 * @return int|null The id.
+	 */
+	public function getId() {
+		return null;
+	}//end getId()
+}//end class
+
+/**
  * Stub for ObjectEntity
  *
  * @category Tests
@@ -689,6 +832,84 @@ class ObjectEntity {
 	 *
 	 * @return array
 	 */
+	/** @var array<string, mixed>|null The retention block (legal hold lives here). */
+	protected ?array $retention = null;
+
+	/** @var string|null The owning user. */
+	protected ?string $owner = null;
+
+	/** @var int|string|null The object's folder id. */
+	protected int|string|null $folder = null;
+
+	/**
+	 * The retention block, as the real entity's magic getter returns it.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public function getRetention(): ?array {
+		return $this->retention;
+	}//end getRetention()
+
+	/**
+	 * Set the retention block.
+	 *
+	 * @param array<string, mixed>|null $retention The block.
+	 *
+	 * @return void
+	 */
+	public function setRetention(?array $retention): void {
+		$this->retention = $retention;
+	}//end setRetention()
+
+	/**
+	 * Mirrors ObjectEntity::hasActiveLegalHold().
+	 *
+	 * @return bool
+	 */
+	public function hasActiveLegalHold(): bool {
+		return (((($this->getRetention() ?? [])['legalHold'] ?? [])['active'] ?? false) === true);
+	}//end hasActiveLegalHold()
+
+	/**
+	 * The owner.
+	 *
+	 * @return string|null
+	 */
+	public function getOwner(): ?string {
+		return $this->owner;
+	}//end getOwner()
+
+	/**
+	 * Set the owner.
+	 *
+	 * @param string|null $owner The owner.
+	 *
+	 * @return void
+	 */
+	public function setOwner(?string $owner): void {
+		$this->owner = $owner;
+	}//end setOwner()
+
+	/**
+	 * The folder id.
+	 *
+	 * @return int|string|null
+	 */
+	public function getFolder(): int|string|null {
+		return $this->folder;
+	}//end getFolder()
+
+	/**
+	 * Set the folder id.
+	 *
+	 * @param int|string|null $folder The folder.
+	 *
+	 * @return void
+	 */
+	public function setFolder(int|string|null $folder): void {
+		$this->folder = $folder;
+	}//end setFolder()
+
 	public function jsonSerialize() {
 		return [];
 	}//end jsonSerialize()
@@ -855,6 +1076,9 @@ class AuditTrailMapper {
 	 * @param ObjectEntity $object The object the entry relates to.
 	 * @param string $action The action type.
 	 * @param array $context Additional context data.
+	 * @param string|null $actorId The acting user, null for the session user.
+	 * @param string|null $actorName The acting user's display name.
+	 * @param string|null $ipAddress The request's address.
 	 *
 	 * @return AuditTrail
 	 */
@@ -862,6 +1086,9 @@ class AuditTrailMapper {
 		ObjectEntity $object,
 		string $action,
 		array $context = [],
+		?string $actorId = null,
+		?string $actorName = null,
+		?string $ipAddress = null,
 	): AuditTrail {
 		$trail = new AuditTrail();
 		$trail->setObjectUuid($object->getUuid());
@@ -1504,6 +1731,15 @@ interface IUserSession {
 	 * @return \OCP\IUser|null
 	 */
 	public function getUser(): ?\OCP\IUser;
+
+	/**
+	 * Set the active user for this process only (real OCP signature, NC 29+)
+	 *
+	 * @param \OCP\IUser|null $user The user, or null to clear
+	 *
+	 * @return void
+	 */
+	public function setVolatileActiveUser(?\OCP\IUser $user): void;
 }//end interface
 
 // OCP\AppFramework\Http\JSONResponse, DataDownloadResponse, and OCP\AppFramework\Controller
@@ -1572,6 +1808,50 @@ interface IUser {
  */
 interface IGroupManager {
 	public function isAdmin(string $userId): bool;
+
+	/**
+	 * Signature pinned to OCP\IGroupManager::isInGroup($userId, $group) at
+	 * HEAD. A stub that omits a method the real interface has cannot be
+	 * configured on a mock, so the test fails at setup rather than reporting
+	 * a guard that was never exercised.
+	 *
+	 * @param string $userId The user id.
+	 * @param string $group The group id.
+	 *
+	 * @return bool Whether the user is in the group.
+	 */
+	public function isInGroup(string $userId, string $group): bool;
+
+	/**
+	 * Signature pinned to OCP\IGroupManager::get($gid) at HEAD.
+	 *
+	 * @param string $gid The group id.
+	 *
+	 * @return IGroup|null The group, or null when it does not exist.
+	 */
+	public function get($gid);
+}//end interface
+
+/**
+ * Stub for OCP\IGroup
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+interface IGroup {
+	public function getGID(): string;
+
+	/**
+	 * Signature pinned to OCP\IGroup::count() at HEAD.
+	 *
+	 * @param string $search Optional search.
+	 *
+	 * @return int|bool The member count, or false when the backend cannot count.
+	 */
+	public function count(string $search = ''): int|bool;
 }//end interface
 
 namespace OCP\Files;
@@ -1734,6 +2014,29 @@ interface Node {
 	 * @return bool
 	 */
 	public function isUpdateable();
+
+	/**
+	 * Whether the acting user may create a new node inside this one.
+	 *
+	 * Declared here because the REAL `OCP\Files\Folder` declares it
+	 * (`vendor/nextcloud/ocp/OCP/Files/Folder.php`) and this stub shadows that
+	 * interface. A stub that is missing a method the real class has makes a
+	 * double refuse to answer a call production makes every day, which is the
+	 * mirror of a double inventing one.
+	 *
+	 * @return bool
+	 */
+	public function isCreatable();
+
+	/**
+	 * Whether the acting user may read this node.
+	 *
+	 * Declared because the REAL `OCP\Files\Node` declares it, untyped, and
+	 * TemplateImageResolver asks it before reading an image for a template.
+	 *
+	 * @return bool
+	 */
+	public function isReadable();
 }//end interface
 
 /**
@@ -1756,6 +2059,15 @@ interface File extends Node {
 	 * @return void
 	 */
 	public function putContent($data): void;
+
+	/**
+	 * Open the file as a stream (mirrors OCP\Files\File::fopen()).
+	 *
+	 * @param string $mode The fopen mode.
+	 *
+	 * @return resource|false The stream.
+	 */
+	public function fopen($mode);
 
 	public function getParent(): \OCP\Files\Folder;
 
@@ -1796,6 +2108,15 @@ interface IRootFolder {
 	 * @return \OCP\Files\Folder
 	 */
 	public function getUserFolder(string $userId): \OCP\Files\Folder;
+
+	/**
+	 * The first node with this id anywhere (the real IRootFolder has it through Folder).
+	 *
+	 * @param int $id The file id
+	 *
+	 * @return \OCP\Files\Node|null
+	 */
+	public function getFirstNodeById(int $id): ?\OCP\Files\Node;
 }//end interface
 
 // ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.
@@ -2136,6 +2457,95 @@ class ObjectCreatedEvent extends Event {
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
+/**
+ * Stub for OCA\OpenRegister\Event\ObjectUpdatingEvent.
+ *
+ * The PRE-write event. Mirrors the real class, verified against
+ * openregister/lib/Event/ObjectUpdatingEvent.php on 2026-09-18: the same
+ * constructor, `getNewObject()`, `getOldObject()`, `setErrors()`,
+ * `stopPropagation()` and `isPropagationStopped()`.
+ *
+ * 🔑 THE REFUSAL IS REAL, NOT DECORATIVE, and that was checked rather than
+ * assumed: `MagicMapper` dispatches this event before an update and throws
+ * `HookStoppedException` carrying the listener's own errors when propagation
+ * was stopped. A stub that merely recorded the call would let a guard pass its
+ * tests while refusing nothing in production.
+ */
+class ObjectUpdatingEvent extends Event {
+	private array $errors = [];
+
+	private bool $stopped = false;
+
+	public function __construct(
+		private readonly ?ObjectEntity $newObject = null,
+		private readonly ?ObjectEntity $oldObject = null,
+	) {
+		parent::__construct();
+	}//end __construct()
+
+	public function getNewObject(): ?ObjectEntity {
+		return $this->newObject;
+	}//end getNewObject()
+
+	public function getOldObject(): ?ObjectEntity {
+		return $this->oldObject;
+	}//end getOldObject()
+
+	public function setErrors(array $errors): void {
+		$this->errors = $errors;
+	}//end setErrors()
+
+	public function getErrors(): array {
+		return $this->errors;
+	}//end getErrors()
+
+	public function stopPropagation(): void {
+		$this->stopped = true;
+	}//end stopPropagation()
+
+	public function isPropagationStopped(): bool {
+		return $this->stopped;
+	}//end isPropagationStopped()
+
+	/** Mirrors OR: MagicMapper merges this over the object before the update. */
+	public function setModifiedData(array $data): void {
+		$this->modifiedData = $data;
+	}//end setModifiedData()
+
+	public function getModifiedData(): array {
+		return $this->modifiedData;
+	}//end getModifiedData()
+
+	private array $modifiedData = [];
+}//end class
+
+/**
+ * Mirrors openregister/lib/Event/ObjectCreatingEvent.php (development,
+ * 2026-09-30): `getObject()`, `setModifiedData()` / `getModifiedData()`,
+ * which MagicMapper merges over the object before the insert.
+ */
+class ObjectCreatingEvent extends Event {
+	private array $modifiedData = [];
+
+	public function __construct(
+		private readonly ObjectEntity $object,
+	) {
+		parent::__construct();
+	}//end __construct()
+
+	public function getObject(): ObjectEntity {
+		return $this->object;
+	}//end getObject()
+
+	public function setModifiedData(array $data): void {
+		$this->modifiedData = $data;
+	}//end setModifiedData()
+
+	public function getModifiedData(): array {
+		return $this->modifiedData;
+	}//end getModifiedData()
+}//end class
+
 class ObjectUpdatedEvent extends Event {
 	public function __construct(
 		private readonly ?ObjectEntity $newObject = null,
@@ -2468,5 +2878,226 @@ class TaskState {
 		}
 
 		return in_array(strtolower(trim($outcome)), self::REJECTING_OUTCOMES, true);
+	}
+}//end class
+
+namespace OCA\OpenRegister\Service\Integration;
+
+/**
+ * Stub for LeafDescriptor (ADR-066): the immutable value object a sibling app
+ * hands OpenRegister to declare one leaf.
+ *
+ * Mirrors the real constructor's parameter list, order and defaults, and the
+ * accessors the tests read. A stub that accepted a different shape would let a
+ * listener pass here and throw on a live instance.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Integration
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class LeafDescriptor {
+	public const KIND_RENDER_SURFACE = 'render-surface';
+
+	public const KIND_DATA_PROVIDER = 'data-provider';
+
+	public const KIND_AGENT_RUNNER = 'agent-runner';
+
+	public const VALID_KINDS = [
+		self::KIND_RENDER_SURFACE,
+		self::KIND_DATA_PROVIDER,
+		self::KIND_AGENT_RUNNER,
+	];
+
+	public const VALID_SURFACES = [
+		'user-dashboard',
+		'app-dashboard',
+		'detail-page',
+		'single-entity',
+	];
+
+	public const RENDER_MODE_COMPONENT = 'component';
+
+	public const RENDER_MODE_MOUNT = 'mount';
+
+	public const VALID_RENDER_MODES = [
+		self::RENDER_MODE_COMPONENT,
+		self::RENDER_MODE_MOUNT,
+	];
+
+	public function __construct(
+		private string $id,
+		private string $label,
+		private string $icon,
+		private array $kinds,
+		private ?string $requiredApp = null,
+		private ?string $group = null,
+		private array $surfaces = [],
+		private ?string $referenceType = null,
+		private ?string $requiresPermission = null,
+		private string $renderMode = self::RENDER_MODE_COMPONENT,
+	) {
+		if ($kinds === []) {
+			throw new \InvalidArgumentException('A leaf must declare at least one kind');
+		}
+
+		foreach ($kinds as $kind) {
+			if (in_array($kind, self::VALID_KINDS, true) === false) {
+				throw new \InvalidArgumentException('Unknown leaf kind: ' . (string)$kind);
+			}
+		}
+
+		foreach ($surfaces as $surface) {
+			if (in_array($surface, self::VALID_SURFACES, true) === false) {
+				throw new \InvalidArgumentException('Unknown leaf surface: ' . (string)$surface);
+			}
+		}
+
+		if (in_array($renderMode, self::VALID_RENDER_MODES, true) === false) {
+			throw new \InvalidArgumentException('Unknown render mode: ' . $renderMode);
+		}
+	}
+
+	public function getId(): string {
+		return $this->id;
+	}
+
+	public function getLabel(): string {
+		return $this->label;
+	}
+
+	public function getIcon(): string {
+		return $this->icon;
+	}
+
+	public function getKinds(): array {
+		return $this->kinds;
+	}
+
+	public function getRequiredApp(): ?string {
+		return $this->requiredApp;
+	}
+
+	public function getGroup(): ?string {
+		return $this->group;
+	}
+
+	public function getSurfaces(): array {
+		return $this->surfaces;
+	}
+
+	public function getReferenceType(): ?string {
+		return $this->referenceType;
+	}
+
+	public function getRequiresPermission(): ?string {
+		return $this->requiresPermission;
+	}
+
+	public function getRenderMode(): string {
+		return $this->renderMode;
+	}
+}//end class
+
+namespace OCA\OpenRegister\Event;
+
+use OCA\OpenRegister\Service\Integration\LeafDescriptor;
+use OCP\EventDispatcher\Event;
+
+/**
+ * Stub for RegisterLeafProvidersEvent: the collector a sibling app registers
+ * its leaves on.
+ *
+ * A real collector rather than a mock, so a test reads back the descriptor the
+ * listener actually built instead of asserting that some method was called.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class RegisterLeafProvidersEvent extends Event {
+	private array $leaves = [];
+
+	public function registerLeaf(LeafDescriptor $descriptor, ?object $provider = null): void {
+		$this->leaves[] = ['descriptor' => $descriptor, 'provider' => $provider];
+	}
+
+	public function getLeaves(): array {
+		return $this->leaves;
+	}
+}//end class
+
+namespace OCA\OpenRegister\Service\Anonymisation;
+
+/**
+ * Stub for BackendInfo: one detection backend's probe record.
+ *
+ * Mirrors the real constructor (name, available, configured, lastProbedAt,
+ * latencyMs) and jsonSerialize() in OpenRegister
+ * lib/Service/Anonymisation/BackendInfo.php at development 910471dc.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Anonymisation
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class BackendInfo implements \JsonSerializable {
+	public function __construct(
+		public readonly string $name,
+		public readonly bool $available,
+		public readonly bool $configured,
+		public readonly ?string $lastProbedAt,
+		public readonly ?int $latencyMs,
+	) {
+	}
+
+	public function jsonSerialize(): array {
+		return [
+			'name' => $this->name,
+			'available' => $this->available,
+			'configured' => $this->configured,
+			'lastProbedAt' => $this->lastProbedAt,
+			'latencyMs' => $this->latencyMs,
+		];
+	}
+}//end class
+
+/**
+ * Stub for BackendState: what AnonymisationBackendService::getState() returns.
+ *
+ * Mirrors the real constructor and jsonSerialize() in OpenRegister
+ * lib/Service/Anonymisation/BackendState.php at development 910471dc.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service\Anonymisation
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+final class BackendState implements \JsonSerializable {
+	public function __construct(
+		public readonly bool $entityRecognitionEnabled,
+		public readonly string $activeMethod,
+		public readonly string $effectiveMethod,
+		public readonly array $backends,
+	) {
+	}
+
+	public function jsonSerialize(): array {
+		$backends = [];
+		foreach ($this->backends as $name => $info) {
+			$backends[$name] = $info->jsonSerialize();
+		}
+
+		return [
+			'entityRecognitionEnabled' => $this->entityRecognitionEnabled,
+			'activeMethod' => $this->activeMethod,
+			'effectiveMethod' => $this->effectiveMethod,
+			'backends' => $backends,
+		];
 	}
 }//end class

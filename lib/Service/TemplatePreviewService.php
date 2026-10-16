@@ -26,6 +26,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Validation\TemplateAccessibilityLint;
+use OCP\IConfig;
 
 /**
  * Service for rendering template previews with sample data
@@ -42,12 +44,14 @@ class TemplatePreviewService {
 	 *
 	 * @param TemplateRenderer $templateRenderer Twig template renderer
 	 * @param TemplateService $templateService Template CRUD service
+	 * @param IConfig|null $config System config, for the instance language the lint falls back to
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly TemplateRenderer $templateRenderer,
 		private readonly TemplateService $templateService,
+		private readonly ?IConfig $config = null,
 	) {
 
 	}//end __construct()
@@ -79,6 +83,34 @@ class TemplatePreviewService {
 		);
 
 	}//end preview()
+
+	/**
+	 * Preview template content and lint the result for accessibility.
+	 *
+	 * The lint is advice beside the preview; it never stops one.
+	 *
+	 * @param string $content Template HTML/Twig content
+	 * @param array $data Sample data context for rendering
+	 *
+	 * @return array{html: string, lint: array<int, array<string, mixed>>} The preview and its lint
+	 *
+	 * @throws Exception If rendering fails
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.3
+	 */
+	public function previewWithLint(string $content, array $data): array {
+		$html = $this->preview(content: $content, data: $data);
+		$language = '';
+		if ($this->config !== null) {
+			$language = $this->config->getSystemValueString('default_language', '');
+		}
+
+		return [
+			'html' => $html,
+			'lint' => (new TemplateAccessibilityLint())->lint(html: $html, instanceLanguage: $language),
+		];
+
+	}//end previewWithLint()
 
 	/**
 	 * Preview an existing template with sample data
