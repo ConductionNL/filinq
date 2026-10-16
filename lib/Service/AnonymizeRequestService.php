@@ -224,7 +224,6 @@ class AnonymizeRequestService {
 	 * @return array{status: int, body: array<string, mixed>} The response payload.
 	 *
 	 * @throws \OCA\Filinq\Exception\ConversionFailedException When the PDF cascade is exhausted.
-	 * @throws \OCA\Filinq\Exception\RedactionNotReviewedException When nobody has checked this detection run yet.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
@@ -298,7 +297,6 @@ class AnonymizeRequestService {
 	 * @throws \OCA\Filinq\Exception\ProhibitionGateException When the prohibition gate fires.
 	 * @throws \OCA\Filinq\Exception\ConversionFailedException When the PDF cascade is exhausted.
 	 * @throws DetectionUnavailableException When no live entity detector is behind the run.
-	 * @throws \OCA\Filinq\Exception\RedactionNotReviewedException When nobody has checked this detection run yet.
 	 *
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1

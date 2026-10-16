@@ -54,6 +54,11 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
+ * RedactionNotReviewedException, caught here so a document nobody checked is
+ * answered with a 409 the reviewer can act on instead of falling through to
+ * the catch-all 500.
  */
 class AnonymizationController extends Controller {
 

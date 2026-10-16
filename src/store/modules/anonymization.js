@@ -874,6 +874,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *   before anonymising — covers dossier files the user never opened,
 		 *   which are otherwise missing from the queue.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymiseAllExtracted(options = {}) {
 			const { fileIds, files, ...entryOptions } = options
@@ -1769,6 +1770,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 
 		/**
 		 * Reset the queue, processing flag and dossier records completely.
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		reset() {
 			this.files = []

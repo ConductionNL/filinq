@@ -876,6 +876,7 @@ export default {
 		 * checked or not. Keeps the dossier footer on screen.
 		 *
 		 * @return {number}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		pendingCount() {
 			return this.pendingSourceFiles.length
@@ -1624,6 +1625,7 @@ export default {
 		 * identically.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymizeAll() {
 			// Scope the run to the dossier's pending source files and pass full

@@ -528,6 +528,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		//     return generateUrl('/apps/filinq/api/anonymization/batch/' + this.batchId + '/report')
 		// },
 
+		/**
+		 * Clear the batch, the review state and the dossier form.
+		 *
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
 		reset() {
 			this.stopPolling()
 			Object.assign(this, {

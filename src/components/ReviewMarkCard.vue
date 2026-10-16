@@ -93,6 +93,7 @@ export default {
 		 * Who checked and when, or that nobody did.
 		 *
 		 * @return {string}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		stateLabel() {
 			if (!this.checked || !this.mark) {
@@ -113,6 +114,7 @@ export default {
 		 *
 		 * @param {string} iso The moment.
 		 * @return {string}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		formatMoment(iso) {
 			const date = new Date(iso)
