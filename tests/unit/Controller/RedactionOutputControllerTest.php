@@ -31,14 +31,18 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\RedactionOutputController;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
 use OCA\Filinq\Service\Redaction\PublicationListComposer;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCP\AppFramework\Http;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use RuntimeException;
 
 /**
  * `RedactionOutputController`.
@@ -78,9 +82,11 @@ class RedactionOutputControllerTest extends TestCase {
 	/**
 	 * A controller over the given collaborators.
 	 *
-	 * @param PublicationListComposer $composer   The composer.
-	 * @param DownloadAgreementGate   $agreements The agreement gate.
-	 * @param string                  $uid        Who is asking, or '' for nobody.
+	 * @param PublicationListComposer      $composer   The composer.
+	 * @param DownloadAgreementGate        $agreements The agreement gate.
+	 * @param string                       $uid        Who is asking, or '' for nobody.
+	 * @param RedactionOutputGuard|null    $guard      The review guard, or a silent double.
+	 * @param AnonymizeRequestService|null $access     The file access check, or one that grants.
 	 *
 	 * @return RedactionOutputController The controller.
 	 */
@@ -88,6 +94,8 @@ class RedactionOutputControllerTest extends TestCase {
 		PublicationListComposer $composer,
 		DownloadAgreementGate $agreements,
 		string $uid = 'beheerder',
+		?RedactionOutputGuard $guard = null,
+		?AnonymizeRequestService $access = null,
 	): RedactionOutputController {
 		$session = $this->createMock(IUserSession::class);
 		if ($uid === '') {
@@ -98,16 +106,19 @@ class RedactionOutputControllerTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
 		return new RedactionOutputController(
 			'filinq',
 			$this->createMock(IRequest::class),
-			$this->getMockBuilder(RedactionOutputGuard::class)
-				->disableOriginalConstructor()
-				->onlyMethods(['markChecked'])
-				->getMock(),
+			($guard ?? $this->guard()),
 			$composer,
 			$agreements,
-			$session
+			$session,
+			($access ?? $this->access(denied: [])),
+			$l10n,
+			new NullLogger()
 		);
 	}//end controller()
 
@@ -227,4 +238,136 @@ class RedactionOutputControllerTest extends TestCase {
 		$this->controller($this->composer(), $agreements, '')
 			->acceptAgreement(document: 'doc-1', version: '1');
 	}//end testWithNoSessionTheAcceptanceNamesNobody()
+
+	/**
+	 * A review guard double that can only do what the real one can.
+	 *
+	 * @return RedactionOutputGuard&\PHPUnit\Framework\MockObject\MockObject The double.
+	 */
+	private function guard(): RedactionOutputGuard {
+		return $this->getMockBuilder(RedactionOutputGuard::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['markChecked', 'marksFor'])
+			->getMock();
+	}//end guard()
+
+	/**
+	 * A file access check that refuses the listed file ids with a 404.
+	 *
+	 * @param array<int, int> $denied The file ids the caller cannot open.
+	 *
+	 * @return AnonymizeRequestService The double.
+	 */
+	private function access(array $denied): AnonymizeRequestService {
+		$access = $this->getMockBuilder(AnonymizeRequestService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['verifyFileAccess'])
+			->getMock();
+		$access->method('verifyFileAccess')->willReturnCallback(
+			static function (int $fileId) use ($denied): ?array {
+				if (in_array($fileId, $denied, true) === true) {
+					return ['status' => Http::STATUS_NOT_FOUND, 'body' => ['error' => 'File not found']];
+				}
+
+				return null;
+			}
+		);
+
+		return $access;
+	}//end access()
+
+	/**
+	 * A check is recorded for the session user, over the entities sent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 */
+	public function testACheckIsSignedByTheSessionUser(): void {
+		$entities = [['type' => 'PERSON', 'value' => 'Jan de Wit']];
+		$guard = $this->guard();
+		$guard->expects($this->once())
+			->method('markChecked')
+			->with(42, $entities, 'ingrid', '', '')
+			->willReturn(['document' => '42', 'checkedBy' => 'ingrid']);
+
+		$response = $this->controller($this->composer(), $this->agreements(), 'ingrid', $guard)
+			->markChecked(fileId: 42, entities: $entities);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('ingrid', $response->getData()['checkedBy']);
+	}//end testACheckIsSignedByTheSessionUser()
+
+	/**
+	 * A file the caller cannot open cannot be marked checked, and nothing is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 */
+	public function testAFileTheCallerCannotOpenIsNotMarked(): void {
+		$guard = $this->guard();
+		$guard->expects($this->never())->method('markChecked');
+
+		$response = $this->controller($this->composer(), $this->agreements(), 'ingrid', $guard, $this->access(denied: [42]))
+			->markChecked(fileId: 42, entities: []);
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+	}//end testAFileTheCallerCannotOpenIsNotMarked()
+
+	/**
+	 * A store that cannot record the check says so, and names no internals.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-2
+	 */
+	public function testAMarkThatCannotBeStoredSaysSo(): void {
+		$guard = $this->guard();
+		$guard->method('markChecked')->willThrowException(new RuntimeException('database password in here'));
+
+		$response = $this->controller($this->composer(), $this->agreements(), 'ingrid', $guard)
+			->markChecked(fileId: 42, entities: []);
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertStringNotContainsString('password', $response->getData()['error']);
+	}//end testAMarkThatCannotBeStoredSaysSo()
+
+	/**
+	 * The status read answers only for the files the caller can open.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 */
+	public function testTheStatusLeavesOutFilesTheCallerCannotOpen(): void {
+		$guard = $this->guard();
+		$guard->expects($this->once())
+			->method('marksFor')
+			->with([7, 9])
+			->willReturn([7 => ['checkedBy' => 'ingrid', 'checkedAt' => '2026-10-16T10:00:00+00:00', 'entityCount' => 3]]);
+
+		$response = $this->controller($this->composer(), $this->agreements(), 'ingrid', $guard, $this->access(denied: [8]))
+			->checkedStatus(fileIds: '7,8,9');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('ingrid', $response->getData()['marks'][7]['checkedBy']);
+	}//end testTheStatusLeavesOutFilesTheCallerCannotOpen()
+
+	/**
+	 * Without a session the status read refuses before reading anything.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 */
+	public function testTheStatusNeedsASession(): void {
+		$guard = $this->guard();
+		$guard->expects($this->never())->method('marksFor');
+
+		$response = $this->controller($this->composer(), $this->agreements(), '', $guard)
+			->checkedStatus(fileIds: '7');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testTheStatusNeedsASession()
 }//end class

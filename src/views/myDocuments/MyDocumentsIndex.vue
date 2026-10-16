@@ -71,17 +71,20 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 						:colorMap="kindColorMap" />
 				</template>
 
-				<!-- TODO: re-enable the Status column once a real per-document
-				     checked/reviewed status is available from the backend. The
-				     label is hardcoded ("Not checked") for now, so the column is
-				     hidden rather than showing a placeholder for every row.
 				<template #column-status="{ row }">
-					<span class="my-documents-status">
-						<EyeOffOutline :size="16" class="my-documents-status__icon" />
+					<span
+						v-if="!row.isFolder"
+						class="my-documents-status"
+						:class="{ 'my-documents-status--checked': !!reviewMarks[String(row.fileId)] }"
+						:title="statusTitle(row)">
+						<CheckDecagram
+							v-if="reviewMarks[String(row.fileId)]"
+							:size="16"
+							class="my-documents-status__icon" />
+						<EyeOffOutline v-else :size="16" class="my-documents-status__icon" />
 						{{ statusLabel(row) }}
 					</span>
 				</template>
-				-->
 
 				<template #column-modified="{ row }">
 					{{ formatDate(row.modified) }}
@@ -269,15 +272,14 @@ import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
 import BroomIcon from 'vue-material-design-icons/Broom.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
+import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
-// TODO: re-enable with the Status column (commented out until a real
-// per-document checked status exists).
-// import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
+import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import History from 'vue-material-design-icons/History.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
@@ -298,6 +300,7 @@ import {
 	ocrErrorMessage,
 	runOcr,
 } from '../../services/ocr.js'
+import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
 
@@ -341,7 +344,8 @@ export default {
 		DotsHorizontal,
 		Eye,
 		// TODO: re-enable with the Status column (see import above).
-		// EyeOffOutline,
+		CheckDecagram,
+		EyeOffOutline,
 		Download,
 		ShieldCheckOutline,
 		TextRecognition,
@@ -390,6 +394,8 @@ export default {
 			// result per file id, and which files are running now.
 			ocrAvailable: false,
 			ocrResults: {},
+			// The latest review mark per file id on this page.
+			reviewMarks: {},
 			ocrRunning: {},
 		}
 	},
@@ -405,9 +411,7 @@ export default {
 			return [
 				{ key: 'fileName', label: t('filinq', 'Name') },
 				{ key: 'kind', label: t('filinq', 'Kind') },
-				// TODO: re-enable once a real per-document checked/reviewed status
-				// is available from the backend (label is hardcoded for now).
-				// { key: 'status', label: t('filinq', 'Status') },
+				{ key: 'status', label: t('filinq', 'Status') },
 				{ key: 'modified', label: t('filinq', 'Date') },
 				{ key: 'fileSize', label: t('filinq', 'Size') },
 			]
@@ -495,6 +499,7 @@ export default {
 			 */
 			handler(rows) {
 				this.loadOcrStatus(rows)
+				this.loadReviewMarks(rows)
 			},
 		},
 	},
@@ -1036,13 +1041,59 @@ export default {
 				: t('filinq', 'Concept')
 		},
 
-		// TODO: re-enable when the app has a real per-document checked/reviewed
-		// status. The Status column is commented out for now (both its column
-		// definition and template) because this was hardcoded to "Not checked".
-		// /** Placeholder status until the app has a real "checked" signal. */
-		// statusLabel() {
-		//     return t('filinq', 'Not checked')
-		// },
+		/**
+		 * Read who checked the files on this page, for the Status column.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 */
+		async loadReviewMarks(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const marks = await fetchReviewMarks(ids)
+				this.reviewMarks = { ...this.reviewMarks, ...marks }
+			} catch {
+				// No status read: every row keeps saying "Not checked".
+			}
+		},
+
+		/**
+		 * Whether a person checked the document's findings.
+		 *
+		 * @param {object} row The row.
+		 * @return {string}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 */
+		statusLabel(row) {
+			return this.reviewMarks[String(row.fileId)]
+				? t('filinq', 'Checked')
+				: t('filinq', 'Not checked')
+		},
+
+		/**
+		 * Who checked the document and when, as a tooltip.
+		 *
+		 * @param {object} row The row.
+		 * @return {string}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+		 */
+		statusTitle(row) {
+			const mark = this.reviewMarks[String(row.fileId)]
+			if (!mark) {
+				return ''
+			}
+			return t('filinq', 'Checked by {user} on {date}', {
+				user: mark.checkedBy,
+				date: this.formatDate(mark.checkedAt),
+			})
+		},
+
 		/**
 		 * Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY.
 		 *
@@ -1100,8 +1151,6 @@ export default {
 	transition: color 0.15s ease;
 }
 
-/* TODO: re-enable with the Status column (commented out until a real
-   per-document checked status exists).
 .my-documents-status {
 	display: inline-flex;
 	align-items: center;
@@ -1113,7 +1162,11 @@ export default {
 .my-documents-status__icon {
 	color: var(--color-text-maxcontrast);
 }
-*/
+
+.my-documents-status--checked,
+.my-documents-status--checked .my-documents-status__icon {
+	color: var(--color-success-text);
+}
 
 /* Options menu in the actions-column header (bulk-selection / bulk actions). */
 .my-documents-options {

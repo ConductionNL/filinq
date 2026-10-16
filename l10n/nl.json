@@ -2855,7 +2855,24 @@
         "Documents awaiting my signature": "Documenten die op mijn handtekening wachten",
         "Sign": "Ondertekenen",
         "Decline to sign": "Ondertekenen weigeren",
-        "View document": "Document bekijken"
+        "View document": "Document bekijken",
+        "Check before anonymising": "Controle voor het anonimiseren",
+        "Look at every finding, then mark the document as checked. Anonymising is possible after that.": "Bekijk elke bevinding en markeer het document daarna als gecontroleerd. Pas dan kunt u anonimiseren.",
+        "Mark as checked": "Markeren als gecontroleerd",
+        "Checked by {user} on {date}": "Gecontroleerd door {user} op {date}",
+        "Check the detected data first": "Controleer eerst de gevonden gegevens",
+        "%n file still needs a check before it can be anonymised:": ["%n bestand moet nog gecontroleerd worden voordat het geanonimiseerd kan worden:", "%n bestanden moeten nog gecontroleerd worden voordat ze geanonimiseerd kunnen worden:"],
+        "Anonymize checked files ({count})": "Gecontroleerde bestanden anonimiseren ({count})",
+        "Check per file": "Controle per bestand",
+        "Open each file, compare it with the findings above and mark it as checked. Only checked files are anonymised. Changing the selection asks for a new check.": "Open elk bestand, vergelijk het met de bevindingen hierboven en markeer het als gecontroleerd. Alleen gecontroleerde bestanden worden geanonimiseerd. Als u de selectie wijzigt, is een nieuwe controle nodig.",
+        "Checked by {user}": "Gecontroleerd door {user}",
+        "The checked files are anonymised. %n file was not checked and was left alone:": ["De gecontroleerde bestanden zijn geanonimiseerd. %n bestand is niet gecontroleerd en is overgeslagen:", "De gecontroleerde bestanden zijn geanonimiseerd. %n bestanden zijn niet gecontroleerd en zijn overgeslagen:"],
+        "Checked": "Gecontroleerd",
+        "The detected data changed after the check. Check them again before anonymising.": "De gevonden gegevens zijn na de controle gewijzigd. Controleer ze opnieuw voordat u anonimiseert.",
+        "The check does not say who did it. Check the detected data again before anonymising.": "Bij de controle staat niet wie hem heeft gedaan. Controleer de gevonden gegevens opnieuw voordat u anonimiseert.",
+        "A check is signed by a person, and this request has none.": "Een controle wordt ondertekend door een persoon, en dit verzoek heeft er geen.",
+        "The check could not be recorded, so the document is still not checked. Try again.": "De controle kon niet worden vastgelegd, dus het document is nog niet gecontroleerd. Probeer het opnieuw.",
+        "Ask about at most %s documents at a time.": "Vraag naar hooguit %s documenten tegelijk."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

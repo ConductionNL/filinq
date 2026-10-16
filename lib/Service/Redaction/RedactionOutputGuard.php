@@ -84,7 +84,8 @@ class RedactionOutputGuard {
 			message: (string)($refusal['message'] ?? ''),
 			document: $document,
 			checkedRun: (string)($mark['detectionRun'] ?? ''),
-			currentRun: $runId
+			currentRun: $runId,
+			instruction: (string)($refusal['instruction'] ?? '')
 		);
 
 	}//end assertMayWrite()
@@ -124,6 +125,37 @@ class RedactionOutputGuard {
 		return $this->marks->save(mark: $mark);
 
 	}//end markChecked()
+
+	/**
+	 * The latest mark of each document, keyed by file id, for a status column.
+	 *
+	 * Only who and when travel: the mark says a run was checked, and whether
+	 * that run is still the current one is for the write path to decide.
+	 *
+	 * @param array<int, int> $fileIds The documents.
+	 *
+	 * @return array<int, array{checkedBy: string, checkedAt: string, entityCount: int}> The marks found.
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 */
+	public function marksFor(array $fileIds): array {
+		$marks = [];
+		foreach ($fileIds as $fileId) {
+			$mark = $this->marks->findFor(document: (string)$fileId);
+			if ($mark === null) {
+				continue;
+			}
+
+			$marks[$fileId] = [
+				'checkedBy' => (string)($mark['checkedBy'] ?? ''),
+				'checkedAt' => (string)($mark['checkedAt'] ?? ''),
+				'entityCount' => (int)($mark['entityCount'] ?? 0),
+			];
+		}
+
+		return $marks;
+
+	}//end marksFor()
 
 	/**
 	 * Which of these documents may be written, and why the others may not.

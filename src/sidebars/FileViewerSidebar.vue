@@ -339,7 +339,7 @@ const documentRecordId = computed(() =>
 		<div
 			v-else-if="
 				inDossier
-				&& (batchCount > 0
+				&& (pendingCount > 0
 					|| batchState.running
 					|| completedCount > 0
 					|| isReanonymizable
@@ -347,7 +347,7 @@ const documentRecordId = computed(() =>
 			"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
 			<NcButton
-				v-if="batchCount > 0 || batchState.running"
+				v-if="pendingCount > 0 || batchState.running"
 				wide
 				variant="primary"
 				:disabled="batchState.running || batchCount === 0"
@@ -361,6 +361,25 @@ const documentRecordId = computed(() =>
 			<p v-if="batchSummary" class="dossier-batch-summary">
 				{{ batchSummary }}
 			</p>
+			<div
+				v-if="unreviewedPendingFiles.length > 0 && !batchState.running"
+				class="dossier-review-pending">
+				<p class="dossier-batch-summary">
+					{{
+						n(
+							'filinq',
+							'%n file still needs a check before it can be anonymised:',
+							'%n files still need a check before they can be anonymised:',
+							unreviewedPendingFiles.length,
+						)
+					}}
+				</p>
+				<ul class="dossier-review-pending__list">
+					<li v-for="file in unreviewedPendingFiles" :key="file.fileId">
+						{{ file.fileName }}
+					</li>
+				</ul>
+			</div>
 			<!-- Re-anonymise the currently open file (its original is on screen),
 			     alongside the dossier batch action. Recognised via the durable link
 			     register, so it works for dossiers anonymised in an earlier session. -->
@@ -378,11 +397,19 @@ const documentRecordId = computed(() =>
 			</NcButton>
 			<!-- Second step of a re-anonymise: the source is re-extracted, run the
 			     new anonymisation for just this file (overwrites its output). -->
+			<ReviewMarkCard
+				v-if="reanonReviewActive"
+				:mark="entry.reviewMark || null"
+				:checked="entryChecked"
+				:busy="!!entry.reviewing"
+				:disabled="includedCount === 0 || isAnonymising"
+				:error="reviewMessage"
+				@confirm="onMarkChecked" />
 			<NcButton
 				v-if="reanonReviewActive"
 				wide
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -452,9 +479,16 @@ const documentRecordId = computed(() =>
 					}}
 				</NcCheckboxRadioSwitch>
 			</fieldset>
+			<ReviewMarkCard
+				:mark="entry.reviewMark || null"
+				:checked="entryChecked"
+				:busy="!!entry.reviewing"
+				:disabled="includedCount === 0 || isAnonymising"
+				:error="reviewMessage"
+				@confirm="onMarkChecked" />
 			<NcButton
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -564,6 +598,7 @@ import DdEntityCard from '../components/DdEntityCard.vue'
 import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import DdToggle from '../components/DdToggle.vue'
+import ReviewMarkCard from '../components/ReviewMarkCard.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
@@ -571,6 +606,7 @@ import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
+import { entryIsChecked } from '../store/modules/anonymization.js'
 
 export default {
 	name: 'FileViewerSidebar',
@@ -587,6 +623,7 @@ export default {
 		DdSearchBar,
 		ProhibitionBlockedDialog,
 		RestoreOriginalDialog,
+		ReviewMarkCard,
 		KeyVariant,
 		Plus,
 		ShieldLockOutline,
@@ -824,15 +861,75 @@ export default {
 		},
 
 		/**
-		 * Number of dossier files still awaiting anonymisation. Counts the
-		 * listing's pending source files (see `pendingSourceFiles`) rather than
-		 * the store's `extracted` queue, so it covers files not yet opened —
-		 * the batch is one unit, so the count must reflect the whole dossier.
+		 * Number of dossier files the batch will anonymise: the pending source
+		 * files (see `pendingSourceFiles`) whose findings a person checked.
 		 *
 		 * @return {number}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		batchCount() {
+			return this.reviewedPendingFiles.length
+		},
+
+		/**
+		 * Number of dossier source files without an anonymised copy yet,
+		 * checked or not. Keeps the dossier footer on screen.
+		 *
+		 * @return {number}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		pendingCount() {
 			return this.pendingSourceFiles.length
+		},
+
+		/**
+		 * Pending dossier files whose findings a person checked as they are now.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewedPendingFiles() {
+			return this.pendingSourceFiles.filter((d) =>
+				entryIsChecked(anonymizationStore.findByFileId(d.fileId)),
+			)
+		},
+
+		/**
+		 * Pending dossier files nobody checked yet. The batch leaves them alone.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		unreviewedPendingFiles() {
+			return this.pendingSourceFiles.filter(
+				(d) => !entryIsChecked(anonymizationStore.findByFileId(d.fileId)),
+			)
+		},
+
+		/**
+		 * Whether a person checked the open file's findings as they are now.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		entryChecked() {
+			return entryIsChecked(this.entry)
+		},
+
+		/**
+		 * Why the open file cannot be anonymised yet, or empty.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewMessage() {
+			if (this.entry?.reviewError) {
+				return this.entry.reviewError
+			}
+			if (this.entry?.reviewRequired && !this.entryChecked) {
+				return this.entry.error || t('filinq', 'Check the detected data first')
+			}
+			return ''
 		},
 
 		/**
@@ -871,7 +968,7 @@ export default {
 
 		/**
 		 * Label for the dossier batch button: a live progress count while
-		 * running, otherwise "Anonymize all files (N)". Mirrors
+		 * running, otherwise "Anonymize checked files (N)". Mirrors
 		 * FolderFilesNavigation so both entry points read identically.
 		 *
 		 * @return {string}
@@ -885,7 +982,7 @@ export default {
 					total: this.batchState.total,
 				})
 			}
-			return t('filinq', 'Anonymize all files ({count})', {
+			return t('filinq', 'Anonymize checked files ({count})', {
 				count: this.batchCount,
 			})
 		},
@@ -1447,6 +1544,19 @@ export default {
 		},
 
 		/**
+		 * Record the reviewer's check of the open file's findings.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async onMarkChecked() {
+			if (!this.entry) {
+				return
+			}
+			await anonymizationStore.markEntryChecked(this.entry)
+		},
+
+		/**
 		 * Anonymise the current entry. Wraps the store action so the
 		 * footer button has a single click handler. On success, attach
 		 * the anonymised counterpart to the viewer store and switch over
@@ -1515,13 +1625,14 @@ export default {
 		 * identically.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymizeAll() {
 			// Scope the run to the dossier's pending source files and pass full
 			// descriptors: the store extracts any file the user never opened
 			// before anonymising, so the batch covers the whole dossier — not
 			// just the files that happened to be opened in the viewer.
-			const files = this.pendingSourceFiles.map((d) => ({
+			const files = this.reviewedPendingFiles.map((d) => ({
 				fileId: d.fileId,
 				fileName: d.fileName,
 				path: `${myDocumentsStore.currentPath}/${d.fileName}`,
@@ -2056,5 +2167,12 @@ export default {
 
 .dossier-batch-summary--error {
 	color: var(--color-error);
+}
+
+.dossier-review-pending__list {
+	margin: 4px 0 0;
+	padding-inline-start: 20px;
+	font-size: 0.85rem;
+	list-style: disc;
 }
 </style>

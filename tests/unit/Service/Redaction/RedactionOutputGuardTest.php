@@ -303,4 +303,37 @@ class RedactionOutputGuardTest extends TestCase {
 		$this->assertSame(43, $screened['refused'][0]['fileId']);
 
 	}//end testABatchReportsWhichDocumentsItRefused()
+
+	/**
+	 * The status read names who checked and when, and skips documents with no mark.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-3
+	 */
+	public function testTheStatusReadNamesWhoCheckedAndSkipsTheRest(): void {
+		$this->marks->method('findFor')->willReturnCallback(
+			static function (string $document): ?array {
+				if ($document !== '42') {
+					return null;
+				}
+
+				return [
+					'document' => '42',
+					'detectionRun' => 'run-1',
+					'checkedBy' => 'noor',
+					'checkedAt' => '2026-10-16T09:00:00+00:00',
+					'entityCount' => 2,
+				];
+			}
+		);
+
+		$marks = $this->guard->marksFor(fileIds: [42, 43]);
+
+		$this->assertSame(
+			[42 => ['checkedBy' => 'noor', 'checkedAt' => '2026-10-16T09:00:00+00:00', 'entityCount' => 2]],
+			$marks
+		);
+
+	}//end testTheStatusReadNamesWhoCheckedAndSkipsTheRest()
 }//end class
