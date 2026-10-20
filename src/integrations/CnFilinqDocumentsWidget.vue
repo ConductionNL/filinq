@@ -3,7 +3,7 @@
   - SPDX-License-Identifier: EUPL-1.2
   -->
 <template>
-	<div class="filinq-documents-leaf">
+	<div v-if="!summarised" class="filinq-documents-leaf">
 		<p v-if="loading" class="filinq-documents-leaf__state">
 			{{ t('filinq', 'Looking up documents') }}
 		</p>
@@ -12,10 +12,10 @@
 			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
 			{{ t('filinq', 'The documents could not be loaded') }}
 		</p>
-		<p v-else-if="rows.length === 0" class="filinq-documents-leaf__state">
+		<p v-else-if="rows.length === 0 && !carded" class="filinq-documents-leaf__state">
 			{{ t('filinq', 'No documents yet') }}
 		</p>
-		<ul v-else class="filinq-documents-leaf__list">
+		<ul v-else-if="rows.length > 0" class="filinq-documents-leaf__list">
 			<li
 				v-for="row in rows"
 				:key="row.fileId"
@@ -34,7 +34,9 @@
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { leafReportMixin } from './leafReport.js'
 
 /**
  * The documents Filinq holds for one object.
@@ -46,6 +48,8 @@ import { generateUrl } from '@nextcloud/router'
  */
 export default {
 	name: 'CnFilinqDocumentsWidget',
+
+	mixins: [leafReportMixin],
 	props: {
 		/** The host object's register slug. */
 		register: { type: String, default: '' },
@@ -61,6 +65,23 @@ export default {
 			loading: true,
 			error: false,
 		}
+	},
+
+	computed: {
+		/**
+		 * What this leaf reports to a carding host or a "linked" card.
+		 *
+		 * @return {object} The report.
+		 * @spec openspec/changes/leaves-library-card/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
+		 */
+		leafReport() {
+			return {
+				count: this.rows.length,
+				emptyLabel: t('filinq', 'No documents yet'),
+				noun: t('filinq', 'documents'),
+				rows: this.rows.map((row) => ({ label: row.name, href: this.fileLink(row), icon: 'FileDocumentOutline' })),
+			}
+		},
 	},
 
 	mounted() {
