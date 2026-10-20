@@ -104,6 +104,9 @@ export const documentsLeafDescriptor = {
 	surfaces: SURFACES,
 	referenceType: DOCUMENTS_INTEGRATION_ID,
 	renderMode: 'mount',
+	// No card of its own: a detail page hosts it in the library card and hands
+	// it `onHeader`; a "linked" card hands it `onSummary`.
+	chrome: 'card',
 	mount,
 	unmount,
 	defaultSize: { w: 4, h: 3 },
