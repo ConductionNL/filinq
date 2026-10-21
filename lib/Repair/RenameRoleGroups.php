@@ -184,10 +184,14 @@ class RenameRoleGroups implements IRepairStep {
 			return;
 		}
 
-		$renamed = array_map(
-			static fn (mixed $group): mixed => (is_string($group) === true) ? (self::RENAMES[$group] ?? $group) : $group,
-			$groups
-		);
+		$renamed = [];
+		foreach ($groups as $group) {
+			$renamed[] = $group;
+			if (is_string($group) === true && isset(self::RENAMES[$group]) === true) {
+				$renamed[array_key_last($renamed)] = self::RENAMES[$group];
+			}
+		}
+
 		if ($renamed !== $groups) {
 			$this->appConfig->setValueString(Application::APP_ID, $key, (string) json_encode(array_values(array_unique($renamed, SORT_REGULAR))));
 		}
