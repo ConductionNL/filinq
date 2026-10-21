@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use DateTimeImmutable;
 use Exception;
 use InvalidArgumentException;
 use OCP\App\IAppManager;
@@ -84,7 +85,7 @@ class ConsentUpdateHandler {
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
-	 * @throws \InvalidArgumentException With code 400 for an undeclared status move or missing evidence
+	 * @throws InvalidArgumentException With code 400 for an undeclared status move or missing evidence
 	 * @throws Exception If update fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
@@ -148,7 +149,7 @@ class ConsentUpdateHandler {
 				changes: $allowedData,
 				actor: $actor,
 				evidence: (string) ($data['evidence'] ?? ''),
-				now: new \DateTimeImmutable()
+				now: new DateTimeImmutable()
 			);
 
 			$consentData = array_merge($existing, $allowedData);
@@ -169,7 +170,7 @@ class ConsentUpdateHandler {
 			);
 
 			return $savedObject->getObject();
-		} catch (\InvalidArgumentException $e) {
+		} catch (InvalidArgumentException $e) {
 			throw $e;
 		} catch (Exception $e) {
 			$this->logger->error(
