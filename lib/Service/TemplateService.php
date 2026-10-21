@@ -340,10 +340,7 @@ class TemplateService {
 
 		// The edit lock is enforced here, not only in the editor: a save by
 		// anyone but the holder of a live lock is refused.
-		if (empty($existing['lockedBy']) === false
-			&& $existing['lockedBy'] !== $editor
-			&& $this->isLockExpired(template: $existing) === false
-		) {
+		if ($this->heldByAnother(template: $existing, userId: $editor) === true) {
 			throw new Exception(message: 'Template is locked by another user', code: 409);
 		}
 
@@ -529,21 +526,17 @@ class TemplateService {
 	public function acquireLock(string $id, string $userId): array {
 		$template = $this->getTemplate(id: $id);
 
-		// Check if already locked by another user.
-		if (empty($template['lockedBy']) === false && $template['lockedBy'] !== $userId) {
-			// Check if lock has expired.
-			if ($this->isLockExpired(template: $template) === false) {
-				throw new Exception(
-					message: json_encode(
-						[
-							'error' => 'Template is locked by another user',
-							'lockedBy' => $template['lockedBy'],
-							'lockedAt' => $template['lockedAt'],
-						]
-					),
-					code: 409
-				);
-			}
+		if ($this->heldByAnother(template: $template, userId: $userId) === true) {
+			throw new Exception(
+				message: json_encode(
+					[
+						'error' => 'Template is locked by another user',
+						'lockedBy' => $template['lockedBy'],
+						'lockedAt' => $template['lockedAt'],
+					]
+				),
+				code: 409
+			);
 		}
 
 		// Acquire or refresh the lock.
@@ -577,10 +570,7 @@ class TemplateService {
 		$template = $this->getTemplate(id: $id);
 
 		// Only the lock holder can release (or if lock is expired).
-		if (empty($template['lockedBy']) === false
-			&& $template['lockedBy'] !== $userId
-			&& $this->isLockExpired(template: $template) === false
-		) {
+		if ($this->heldByAnother(template: $template, userId: $userId) === true) {
 			throw new Exception(
 				message: 'Cannot release lock held by another user',
 				code: 403
@@ -598,17 +588,18 @@ class TemplateService {
 	}//end releaseLock()
 
 	/**
-	 * Check if a template's lock has expired.
+	 * Whether another user holds a live edit lock on the template.
 	 *
-	 * @param array $template The template data with lockedAt field
+	 * @param array  $template The template data with lockedBy and lockedAt
+	 * @param string $userId   The user asking
 	 *
-	 * @return bool True if the lock has expired or no lock exists
+	 * @return bool True when someone else holds a lock that has not expired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
 	 */
-	private function isLockExpired(array $template): bool {
-		if (empty($template['lockedAt']) === true) {
-			return true;
+	private function heldByAnother(array $template, string $userId): bool {
+		if (empty($template['lockedBy']) === true || $template['lockedBy'] === $userId || empty($template['lockedAt']) === true) {
+			return false;
 		}
 
 		try {
@@ -621,11 +612,11 @@ class TemplateService {
 				'templates.lock_timeout_minutes',
 				(string)self::LOCK_TIMEOUT_MINUTES
 			);
-			return $diffMins > $timeoutMinutes;
+			return $diffMins <= $timeoutMinutes;
 		} catch (Exception $exception) {
-			// If we cannot parse the lock time, consider it expired.
-			return true;
+			// A lock time that cannot be parsed counts as expired.
+			return false;
 		}
 
-	}//end isLockExpired()
+	}//end heldByAnother()
 }//end class
