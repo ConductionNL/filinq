@@ -342,11 +342,10 @@ class SigningAuditServiceTest extends TestCase {
 		$objectService->expects($this->once())
 			->method('find')
 			->with(
-				$this->equalTo('sign-001'),
-				$this->anything(),
-				$this->anything(),
-				$this->equalTo('signing'),
-				$this->equalTo('signingRequest')
+				$this->identicalTo(value: 'sign-001'),
+				$this->identicalTo(value: 'signing'),
+				$this->identicalTo(value: 'signingRequest'),
+				$this->identicalTo(value: false)
 			)
 			->willReturn($realEntity);
 

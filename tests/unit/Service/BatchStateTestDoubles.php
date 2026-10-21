@@ -335,6 +335,8 @@ class InMemoryObjectServiceFake extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		$this->saveCalls[] = [
 			'register' => $register,
@@ -502,6 +504,8 @@ class RefusingObjectServiceFake extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		throw new RuntimeException('ValidationException: property status is not one of the declared values');
 	}//end saveObject()

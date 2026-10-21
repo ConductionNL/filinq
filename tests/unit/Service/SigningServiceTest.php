@@ -38,6 +38,8 @@ use OCA\Filinq\Service\SigningRequestValidator;
 use OCA\Filinq\Service\SigningService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
@@ -116,6 +118,13 @@ class SigningServiceTest extends TestCase {
 	private \OCP\Files\IRootFolder|MockObject $rootFolder;
 
 	/**
+	 * The folder the initiator's files resolve in.
+	 *
+	 * @var Folder|MockObject
+	 */
+	private Folder|MockObject $userFolder;
+
+	/**
 	 * Set up test environment
 	 *
 	 * @return void
@@ -184,6 +193,8 @@ class SigningServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$eventDispatcher = $this->createMock(IEventDispatcher::class);
 		$this->rootFolder = $this->createMock(\OCP\Files\IRootFolder::class);
+		$this->userFolder = $this->defaultUserFolder();
+		$this->rootFolder->method('getUserFolder')->willReturnCallback(fn (): Folder => $this->userFolder);
 
 		// Real (not mocked) collaborators, so these tests still exercise the
 		// identity-resolution, signer-authorisation and conclusion-emission
@@ -217,6 +228,26 @@ class SigningServiceTest extends TestCase {
 	}//end setUp()
 
 	/**
+	 * A user folder in which every numeric id is a readable PDF.
+	 *
+	 * @return Folder|MockObject
+	 */
+	private function defaultUserFolder(): Folder|MockObject {
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->method('getById')->willReturnCallback(
+			function (int $id): array {
+				$file = $this->createMock(originalClassName: File::class);
+				$file->method('getId')->willReturn($id);
+				$file->method('getName')->willReturn('besluit.pdf');
+				$file->method('getMimeType')->willReturn('application/pdf');
+				return [$file];
+			}
+		);
+
+		return $folder;
+	}//end defaultUserFolder()
+
+	/**
 	 * createRequest() with valid data creates and persists a signing request.
 	 *
 	 * @return void
@@ -224,7 +255,7 @@ class SigningServiceTest extends TestCase {
 	public function testCreateRequestHappyPath(): void {
 		$savedRequest = [
 			'id' => 'req-001',
-			'documentFileId' => 'file-001',
+			'documentFileId' => '1001',
 			'documentName' => 'besluit.pdf',
 			'initiatorUserId' => 'alice',
 			'signatureLevel' => 'SES',
@@ -246,7 +277,7 @@ class SigningServiceTest extends TestCase {
 
 		$result = $this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'besluit.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
@@ -258,6 +289,69 @@ class SigningServiceTest extends TestCase {
 		$this->assertSame('alice', $result['initiatorUserId']);
 
 	}//end testCreateRequestHappyPath()
+
+	/**
+	 * A request may only name a file its initiator can read, and the stored
+	 * name is the file's own, never the one the browser sent.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestRefusesAFileTheInitiatorCannotRead(): void {
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->method('getById')->willReturn([]);
+		$this->userFolder = $folder;
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		try {
+			$this->service->createRequest(
+				data: [
+					'documentFileId' => '4242',
+					'documentName' => 'mine.pdf',
+					'signatureLevel' => 'SES',
+					'signingMode' => 'sequential',
+					'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+				]
+			);
+			$this->fail(message: 'A file outside the initiator\'s folder was accepted');
+		} catch (RuntimeException $e) {
+			$this->assertSame(expected: 403, actual: $e->getCode());
+		}
+
+	}//end testCreateRequestRefusesAFileTheInitiatorCannotRead()
+
+	/**
+	 * The stored document name comes from the file node.
+	 *
+	 * @return void
+	 */
+	public function testCreateRequestTakesTheNameFromTheFile(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$stored = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$stored): array {
+				if (isset($object['initiatorUserId']) === true && $stored === []) {
+					$stored = $object;
+				}
+
+				return $object + ['id' => 'req-1'];
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '42',
+				'documentName' => 'someone-elses-name.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame(expected: '42', actual: $stored['documentFileId']);
+		$this->assertSame(expected: 'besluit.pdf', actual: $stored['documentName']);
+
+	}//end testCreateRequestTakesTheNameFromTheFile()
 
 	/**
 	 * createRequest() persists consumer provenance fields onto the request.
@@ -288,7 +382,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-9',
+				'documentFileId' => '9',
 				'documentName' => 'contract.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
@@ -332,7 +426,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-int',
+				'documentFileId' => '7',
 				'documentName' => 'internal.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
@@ -359,7 +453,7 @@ class SigningServiceTest extends TestCase {
 			try {
 				$this->service->createRequest(
 					data: [
-						'documentFileId' => 'file-001',
+						'documentFileId' => '1001',
 						'documentName' => 'besluit.pdf',
 						'signatureLevel' => 'SES',
 						'signingMode' => 'sequential',
@@ -394,7 +488,7 @@ class SigningServiceTest extends TestCase {
 
 		$result = $this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'besluit.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
@@ -436,7 +530,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'besluit.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'sequential',
@@ -499,7 +593,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'test.pdf',
 				'signatureLevel' => 'INVALID',
 				'signingMode' => 'sequential',
@@ -519,7 +613,7 @@ class SigningServiceTest extends TestCase {
 
 		$this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'test.pdf',
 				'signatureLevel' => 'SES',
 				'signingMode' => 'unknown-mode',
@@ -630,15 +724,31 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testListRequestsFiltersForNonAdminCaller(): void {
-		$this->objectService->method('buildSearchQuery')->willReturn(['_limit' => 1000]);
-		$this->objectService->method('searchObjectsPaginated')->willReturn(
-			[
-				'results' => [
-					['id' => 'req-001', 'status' => 'PENDING', 'initiatorUserId' => 'alice'],
-					['id' => 'req-002', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['alice']],
-					['id' => 'req-003', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['carol']],
-				],
-			]
+		$this->objectService->method('buildSearchQuery')->willReturnCallback(
+			fn (array $requestParams = [], string $register = '', string $schema = ''): array => $requestParams
+		);
+		$this->objectService->method('searchObjectsPaginated')->willReturnCallback(
+			function (array $query = []): array {
+				if (isset($query['userId']) === true) {
+					// The signer records of alice: one on req-002, one under someone else's id.
+					return [
+						'results' => [
+							['id' => 'signer-1', 'signingRequestId' => 'req-002', 'userId' => 'alice'],
+							['id' => 'signer-9', 'signingRequestId' => 'req-003', 'userId' => 'carol'],
+						],
+					];
+				}
+
+				return [
+					'results' => [
+						['id' => 'req-001', 'status' => 'PENDING', 'initiatorUserId' => 'alice'],
+						['id' => 'req-002', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['signer-1']],
+						['id' => 'req-003', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['signer-9']],
+						// A request that lists alice's USER id where a signer record id belongs grants nothing.
+						['id' => 'req-004', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['alice']],
+					],
+				];
+			}
 		);
 
 		$result = $this->service->listRequests(callerUserId: 'alice');
@@ -649,6 +759,7 @@ class SigningServiceTest extends TestCase {
 		$this->assertContains('req-001', $ids);
 		$this->assertContains('req-002', $ids);
 		$this->assertNotContains('req-003', $ids);
+		$this->assertNotContains(needle: 'req-004', haystack: $ids);
 
 	}//end testListRequestsFiltersForNonAdminCaller()
 
@@ -740,21 +851,27 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetRequestAllowsScopedSigner(): void {
-		$this->objectService->method('find')->willReturn(
-			$this->makeSigningRequestEntity(
-				[
-					'id' => 'req-001',
-					'status' => 'PENDING',
-					'initiatorUserId' => 'bob',
-					'signerIds' => ['carol'],
-				]
-			)
+		$this->objectService->method('find')->willReturnCallback(
+			fn (string $id = ''): mixed => match ($id) {
+				'req-001' => $this->makeSigningRequestEntity(
+					data: [
+						'id' => 'req-001',
+						'status' => 'PENDING',
+						'initiatorUserId' => 'bob',
+						'signerIds' => ['signer-1'],
+					]
+				),
+				'signer-1' => ['id' => 'signer-1', 'signingRequestId' => 'req-001', 'userId' => 'carol'],
+				default => null,
+			}
 		);
 
 		$result = $this->service->getRequest(requestId: 'req-001', callerUserId: 'carol');
 
 		$this->assertIsArray($result);
 		$this->assertSame('req-001', $result['id']);
+		$this->assertNull(actual: $this->service->getRequest(requestId: 'req-001', callerUserId: 'mallory'));
+		$this->assertNull(actual: $this->service->getRequest(requestId: 'req-missing', callerUserId: 'carol'));
 
 	}//end testGetRequestAllowsScopedSigner()
 
@@ -999,7 +1116,7 @@ class SigningServiceTest extends TestCase {
 
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
@@ -1059,7 +1176,7 @@ class SigningServiceTest extends TestCase {
 		$file->method('getContent')->willReturn('original-bytes');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$threw = false;
 		try {
@@ -1245,7 +1362,7 @@ class SigningServiceTest extends TestCase {
 		try {
 			$this->service->createRequest(
 				data: [
-					'documentFileId' => 'file-001',
+					'documentFileId' => '1001',
 					'documentName' => 'contract.pdf',
 					'signatureLevel' => 'QES',
 					'signingMode' => 'sequential',
@@ -1276,7 +1393,7 @@ class SigningServiceTest extends TestCase {
 		try {
 			$this->service->createRequest(
 				data: [
-					'documentFileId' => 'file-001',
+					'documentFileId' => '1001',
 					'documentName' => 'contract.pdf',
 					'signatureLevel' => 'SES',
 					'signingMode' => 'sequential',
@@ -1462,7 +1579,7 @@ class SigningServiceTest extends TestCase {
 		$file->method('getContent')->willReturn('original-bytes');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$threw = false;
 		try {
@@ -1634,7 +1751,7 @@ class SigningServiceTest extends TestCase {
 		$file->method('getContent')->willReturn('original-bytes');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
@@ -1682,7 +1799,7 @@ class SigningServiceTest extends TestCase {
 
 		$result = $this->service->createRequest(
 			data: [
-				'documentFileId' => 'file-001',
+				'documentFileId' => '1001',
 				'documentName' => 'besluit.pdf',
 				'signatureLevel' => 'AdES',
 				'provider' => 'validsign',
@@ -1734,10 +1851,12 @@ class SigningServiceTest extends TestCase {
 		$this->providerFactory->method('getProvider')->with('libresign')->willReturn($provider);
 
 		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getId')->willReturn(42);
+		$document->method('getName')->willReturn('besluit.pdf');
 		$document->method('getContent')->willReturn('%PDF-1.7 besluit');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->with(42)->willReturn([$document]);
-		$this->rootFolder->method('getUserFolder')->with('alice')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
@@ -1819,11 +1938,13 @@ class SigningServiceTest extends TestCase {
 		$this->providerFactory->method('getProvider')->with('libresign')->willReturn($provider);
 
 		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getId')->willReturn(42);
+		$document->method('getName')->willReturn('besluit.pdf');
 		$document->method('getContent')->willReturn('%PDF-original');
 		$document->expects($this->once())->method('putContent')->with('%PDF-signed');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$document]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$producer = new SignedArtifactProducer(
 			providerFactory: $this->providerFactory,
@@ -1876,10 +1997,12 @@ class SigningServiceTest extends TestCase {
 		$supporting = $this->makeSupportingProvider();
 		$this->providerFactory->method('getProvider')->willReturn($supporting);
 		$document = $this->createMock(\OCP\Files\File::class);
+		$document->method('getId')->willReturn(42);
+		$document->method('getName')->willReturn('besluit.pdf');
 		$document->method('getContent')->willReturn($content ?? $this->threePagePdf());
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$document]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 		$this->objectService->method('saveObject')->willReturnCallback(
 			function (array $object) use (&$saved): array {
 				$saved[] = $object;
@@ -2085,7 +2208,7 @@ class SigningServiceTest extends TestCase {
 		$file->method('getContent')->willReturn('original-bytes');
 		$folder = $this->createMock(\OCP\Files\Folder::class);
 		$folder->method('getById')->willReturn([$file]);
-		$this->rootFolder->method('getUserFolder')->willReturn($folder);
+		$this->userFolder = $folder;
 
 		$this->service->sign(requestId: 'req-001', signerId: 'signer-002');
 

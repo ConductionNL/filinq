@@ -118,6 +118,8 @@ class EnvelopeObjectStore extends ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		$this->saves[] = [$schema, $object];
 		$id = (string) ($uuid ?? ($object['id'] ?? ''));
@@ -266,7 +268,7 @@ class SigningEnvelopeServiceTest extends TestCase {
 				providerFactory: $providerFactory,
 				userSession: $userSession,
 				request: $request,
-				rootFolder: $this->createMock(IRootFolder::class),
+				rootFolder: $this->initiatorFolder(),
 				finalDocuments: $this->createMock(FinalDocumentService::class)
 			),
 			validator: new SigningRequestValidator(providerFactory: $providerFactory),
@@ -289,6 +291,28 @@ class SigningEnvelopeServiceTest extends TestCase {
 		);
 
 	}//end setUp()
+
+	/**
+	 * A root folder in which the initiator can open every numeric file id.
+	 *
+	 * @return IRootFolder
+	 */
+	private function initiatorFolder(): IRootFolder {
+		$names = ['11' => 'contract.pdf', '12' => 'geheimhouding.pdf', '13' => 'reglement.pdf', '99' => 'los.pdf'];
+		$folder = $this->createMock(originalClassName: \OCP\Files\Folder::class);
+		$folder->method('getById')->willReturnCallback(
+			function (int $id) use ($names): array {
+				$file = $this->createMock(originalClassName: \OCP\Files\File::class);
+				$file->method('getId')->willReturn($id);
+				$file->method('getName')->willReturn(($names[(string)$id] ?? 'document.pdf'));
+				return [$file];
+			}
+		);
+		$root = $this->createMock(originalClassName: IRootFolder::class);
+		$root->method('getUserFolder')->willReturn($folder);
+
+		return $root;
+	}//end initiatorFolder()
 
 	/**
 	 * An envelope of three documents for Bob and Carol.

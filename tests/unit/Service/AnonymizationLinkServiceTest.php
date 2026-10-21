@@ -140,7 +140,7 @@ class AnonymizationLinkServiceTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = ''): mixed {
+			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): mixed {
 				$this->saveCalled = true;
 				$this->captured = $object;
 				if ($this->saveThrows === true) {
