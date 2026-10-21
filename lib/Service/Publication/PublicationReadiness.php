@@ -92,10 +92,9 @@ class PublicationReadiness {
 		$fileId = (string) ($record['documentFileRef'] ?? '');
 		$reasons = [];
 
-		$redacted = (string) ($record['redactedFileRef'] ?? '');
-		if ($redacted === '') {
-			$redacted = (string) $this->store->findRedactedCopy(fileId: $fileId);
-		}
+		// Always derived from the anonymisation link, never taken from the
+		// stored record: the published file is the redacted copy of this document.
+		$redacted = (string) $this->store->findRedactedCopy(fileId: $fileId);
 
 		if ($redacted === '') {
 			$reasons[] = 'Document ' . $fileId . ' has no redacted copy yet';

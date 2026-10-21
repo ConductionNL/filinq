@@ -74,17 +74,19 @@ class PrintJobRepository {
 	public function save(array $job, ?string $uuid = null): array {
 		unset($job['uuid']);
 
-		$arguments = [
-			'object' => $job,
-			'register' => IntakeRepository::REGISTER,
-			'schema' => self::SCHEMA,
-		];
-		if ($uuid !== null && $uuid !== '') {
-			$arguments['uuid'] = $uuid;
+		if ($uuid === '') {
+			$uuid = null;
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $job,
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
+				uuid: $uuid,
+				_rbac: false,
+				_unowned: true
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the print job: ' . $e->getMessage(),
@@ -122,7 +124,8 @@ class PrintJobRepository {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
 				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				schema: self::SCHEMA,
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
@@ -162,7 +165,8 @@ class PrintJobRepository {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: IntakeRepository::REGISTER,
 				schemaSlug: self::SCHEMA,
-				filters: ['requestedBy' => $userId]
+				filters: ['requestedBy' => $userId],
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(

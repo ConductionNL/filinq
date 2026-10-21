@@ -99,6 +99,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/LegalHold/LegalHoldRecordFreeze.php' => 1,
 		'lib/Service/PolicyCrudService.php' => 5,
 		'lib/Service/PolicyMatchService.php' => 2,
+		'lib/Service/PrintJobRepository.php' => 3,
 		'lib/Service/PolicyRetroactiveService.php' => 2,
 		'lib/Service/ProhibitionOverrideCommitter.php' => 1,
 		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 5,
