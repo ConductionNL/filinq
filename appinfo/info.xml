@@ -33,15 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-<<<<<<< HEAD
-    <version>0.2.8-unstable.2026102114300</version>
-=======
-<<<<<<< HEAD
-    <version>0.2.8-unstable.2026102114200</version>
-=======
-    <version>0.2.8-unstable.20261021141000</version>
->>>>>>> fix/s0-schema-tightening
->>>>>>> fix/s0-server-guards
+    <version>0.2.8-unstable.20261021143000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
