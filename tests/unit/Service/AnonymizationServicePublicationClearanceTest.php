@@ -143,13 +143,13 @@ class AnonymizationServicePublicationClearanceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null Match record or null.
 			 */
-			public function matchProhibition(string $entityType, string $entityValue): ?array {
+			public function matchProhibitionHint(string $entityType, string $entityValue): ?array {
 				if ($entityValue === 'Verboden Persoon') {
 					return ['ruleId' => 'rule-x', 'ruleName' => 'Prohibited Rule X'];
 				}
 
 				return null;
-			}//end matchProhibition()
+			}//end matchProhibitionHint()
 		};
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);

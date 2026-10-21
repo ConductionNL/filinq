@@ -441,14 +441,14 @@ class ProhibitionGateService {
 		bool $failClosed,
 	): ?array {
 		try {
-			return $policyService->matchProhibition(
+			return $policyService->matchProhibitionHint(
 				entityType: $entityType,
 				entityValue: $entityValue
 			);
 		} catch (Throwable $e) {
 			if ($failClosed === true) {
 				$this->logger->warning(
-					'ProhibitionGate: matchProhibition threw — failing closed',
+					'ProhibitionGate: matchProhibitionHint threw — failing closed',
 					[
 						'entityId' => $entityId,
 						'entityType' => $entityType,
@@ -458,12 +458,12 @@ class ProhibitionGateService {
 				throw new ProhibitionGateException(
 					missingMatches: [],
 					rejectedOverrides: [],
-					backendUnavailable: 'PolicyMatchService::matchProhibition threw: ' . $e->getMessage()
+					backendUnavailable: 'PolicyMatchService::matchProhibitionHint threw: ' . $e->getMessage()
 				);
 			}
 
 			$this->logger->debug(
-				'ProhibitionGate: matchProhibition threw; skipping entity (legacy fail-open)',
+				'ProhibitionGate: matchProhibitionHint threw; skipping entity (legacy fail-open)',
 				['exception' => $e->getMessage()]
 			);
 
