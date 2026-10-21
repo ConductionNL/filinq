@@ -181,7 +181,7 @@
 				contenteditable="true"
 				:aria-label="t('filinq', 'Template content')"
 				@input="syncFromEditor"
-				v-html="editorHtml" />
+				v-html="safeEditorHtml" />
 
 			<!-- Raw HTML toggle -->
 			<div class="template-detail__raw-toggle">
@@ -230,7 +230,7 @@
 			<div
 				v-else-if="previewHtml"
 				class="template-detail__preview-output"
-				v-html="previewHtml" />
+				v-html="safePreviewHtml" />
 			<NcEmptyContent
 				v-else
 				:name="t('filinq', 'No preview yet')"
@@ -319,6 +319,7 @@ import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 import WizardAuthoringPanel from './WizardAuthoringPanel.vue'
 import { loadTemplateWizard } from '../../services/wizard.js'
 import { useTemplateStore } from '../../store/modules/template.js'
+import { sanitizeHtml } from '../../utils/sanitizeHtml.js'
 
 export default {
 	name: 'TemplateDetail',
@@ -375,6 +376,24 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The stored template HTML, sanitised before it is mounted in the editor.
+		 *
+		 * @return {string}
+		 */
+		safeEditorHtml() {
+			return sanitizeHtml(this.editorHtml)
+		},
+
+		/**
+		 * The rendered preview, sanitised before it is mounted.
+		 *
+		 * @return {string}
+		 */
+		safePreviewHtml() {
+			return sanitizeHtml(this.previewHtml)
+		},
+
 		/**
 		 * Pinia template store accessor for the detail editor.
 		 *
