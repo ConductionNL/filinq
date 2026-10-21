@@ -32,8 +32,13 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import {
+	NcButton,
+	NcDialog,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 
 export default {
 	name: 'ConditionalSectionDialog',

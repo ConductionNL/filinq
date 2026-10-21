@@ -31,8 +31,8 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
-import { NcButton, NcDialog, NcTextField } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcDialog, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'FinalDocumentReasonDialog',

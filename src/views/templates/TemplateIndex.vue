@@ -18,7 +18,7 @@
 			<NcTextField
 				v-model="searchQuery"
 				:label="t('filinq', 'Search templates')"
-				:placeholder="t('filinq', 'Search by name...')"
+				:placeholder="t('filinq', 'Search by name…')"
 				class="template-index__search"
 				@update:modelValue="applyFilters" />
 		</div>
@@ -104,14 +104,14 @@
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcSelect,
 	NcTextField,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
+} from '@nextcloud/vue'
 import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
 import { useTemplateStore } from '../../store/modules/template.js'
 

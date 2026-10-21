@@ -159,14 +159,14 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
 import {
-	CnStatusBadge,
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcTextField,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
+} from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'

@@ -100,7 +100,7 @@
 				<NcTextField
 					v-model="form.changelog"
 					:label="t('filinq', 'Change note (optional)')"
-					:placeholder="t('filinq', 'Describe what changed...')"
+					:placeholder="t('filinq', 'Describe what changed…')"
 					class="template-detail__field" />
 			</div>
 
@@ -305,13 +305,13 @@
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcTextField,
-} from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
+} from '@nextcloud/vue'
 import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
