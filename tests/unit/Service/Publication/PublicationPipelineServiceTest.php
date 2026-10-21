@@ -290,6 +290,21 @@ class PublicationPipelineServiceTest extends TestCase {
 	}//end testANotReadyDocumentSaysWhy()
 
 	/**
+	 * A redacted copy written onto the record is ignored: readiness derives it again.
+	 *
+	 * @return void
+	 */
+	public function testAStoredRedactedCopyIsNotTrusted(): void {
+		$record = $this->pipeline()->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$record['redactedFileRef'] = '42';
+
+		$evaluated = $this->pipeline()->evaluate(record: $record, actor: 'anna');
+
+		$this->assertSame(expected: '43', actual: $evaluated['redactedFileRef']);
+
+	}//end testAStoredRedactedCopyIsNotTrusted()
+
+	/**
 	 * A ready document is handed to OpenCatalogi with its redacted copy, and is published on its date.
 	 *
 	 * @return void

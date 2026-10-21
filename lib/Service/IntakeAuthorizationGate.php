@@ -129,6 +129,33 @@ class IntakeAuthorizationGate {
 	}//end mayWrite()
 
 	/**
+	 * May the current user file a document onto this record?
+	 *
+	 * Write rights on the schema are not enough: the record itself must be
+	 * one OpenRegister lets this user read, or a clerk could aim at any id.
+	 *
+	 * @param string $register The register slug.
+	 * @param string $schema The schema slug.
+	 * @param string $id The record id.
+	 *
+	 * @return bool True when the user may write the schema and can see the record.
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 */
+	public function mayFileOnto(string $register, string $schema, string $id): bool {
+		if ($this->mayWrite(register: $register, schema: $schema) === false) {
+			return false;
+		}
+
+		try {
+			return $this->objectResolver->resolve()->find(id: $id, register: $register, schema: $schema) !== null;
+		} catch (Throwable $e) {
+			return false;
+		}
+
+	}//end mayFileOnto()
+
+	/**
 	 * Read one `authorization.update` declaration against one user.
 	 *
 	 * An EMPTY declaration is OpenRegister's "no restriction", not "nobody":

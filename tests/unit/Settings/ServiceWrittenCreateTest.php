@@ -54,6 +54,8 @@ class ServiceWrittenCreateTest extends TestCase {
 		'sanitizationRecord',
 		'erasureCertificate',
 		'legalHoldCase',
+		'publicationRecord',
+		'printJob',
 	];
 
 	/**
@@ -71,6 +73,7 @@ class ServiceWrittenCreateTest extends TestCase {
 		'lib/Service/Sanitization/SanitizationRecordRepository.php',
 		'lib/Service/SubjectErasure/SubjectErasureStore.php',
 		'lib/Service/LegalHold/LegalHoldCaseRepository.php',
+		'lib/Service/PrintJobRepository.php',
 	];
 
 	/**
@@ -162,4 +165,22 @@ class ServiceWrittenCreateTest extends TestCase {
 			);
 		}
 	}//end testEverySchemaStillDeclaresACascade()
+	/**
+	 * Nobody grants themselves a standing consent, and the intake inbox is the clerks' alone.
+	 *
+	 * @return void
+	 */
+	public function testConsentAndIntakeAreNotOpenToEveryUser(): void {
+		$schemas = $this->schemas();
+
+		$this->assertNotContains(needle: 'authenticated', haystack: $schemas['publicationConsent']['authorization']['create']);
+		$this->assertContains(
+			needle: ['group' => 'authenticated', 'match' => ['scope' => 'document']],
+			haystack: $schemas['publicationConsent']['authorization']['create']
+		);
+		$this->assertSame(expected: ['filinq-intake-clerks'], actual: $schemas['intakeDocument']['authorization']['read']);
+		$this->assertSame(expected: ['filinq-intake-clerks'], actual: $schemas['intakeDocument']['authorization']['update']);
+		$this->assertNotContains(needle: 'consent', haystack: $schemas['publicationProhibition']['authorization']['read']);
+
+	}//end testConsentAndIntakeAreNotOpenToEveryUser()
 }//end class

@@ -272,7 +272,12 @@ class IntakeService {
 
 		$document = $this->waiting(uuid: $uuid);
 		$this->requireWrite(register: IntakeRepository::REGISTER, schema: IntakeRepository::SCHEMA);
-		$this->requireWrite(register: $register, schema: $schema);
+		if ($this->gate->mayFileOnto(register: $register, schema: $schema, id: $id) === false) {
+			throw new IntakeRefusedException(
+				message: 'You may not file a document onto this record.',
+				status: 403
+			);
+		}
 
 		$placedAt = $this->placement->place(
 			fileId: (int)($document['file'] ?? 0),

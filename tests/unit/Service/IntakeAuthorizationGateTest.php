@@ -56,6 +56,7 @@ class IntakeAuthorizationGateTest extends TestCase {
 	 * @param bool $isAdmin Whether the user is an instance admin.
 	 * @param bool $loggedIn Whether anybody is logged in.
 	 * @param bool $registerReadable Whether OpenRegister answers at all.
+	 * @param bool $recordVisible Whether OpenRegister shows the target record to the user.
 	 *
 	 * @return IntakeAuthorizationGate The gate under test.
 	 */
@@ -65,6 +66,7 @@ class IntakeAuthorizationGateTest extends TestCase {
 		bool $isAdmin = false,
 		bool $loggedIn = true,
 		bool $registerReadable = true,
+		bool $recordVisible = true,
 	): IntakeAuthorizationGate {
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		if ($registerReadable === false) {
@@ -82,6 +84,7 @@ class IntakeAuthorizationGateTest extends TestCase {
 			$objectService->method('setRegister')->willReturnSelf();
 			$objectService->method('setSchema')->willReturnSelf();
 			$objectService->method('getCurrentSchemaEntity')->willReturn($schema);
+			$objectService->method('find')->willReturn(($recordVisible === true) ? ['id' => 'zaak-7'] : null);
 			$resolver->method('resolve')->willReturn($objectService);
 		}
 
@@ -236,4 +239,23 @@ class IntakeAuthorizationGateTest extends TestCase {
 		$this->assertFalse($gate->mayWrite(register: 'zaken', schema: 'niet-bestaand'));
 
 	}//end testAnUnknownSchemaFailsClosed()
+	/**
+	 * Filing onto a record needs write rights on the schema AND sight of the record.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 */
+	public function testFilingOntoARecordTheClerkCannotSeeIsRefused(): void {
+		$open = ['authorization' => ['update' => ['authenticated']]];
+
+		$this->assertTrue(condition: $this->gate(declaration: $open)->mayFileOnto(register: 'zaken', schema: 'zaak', id: 'zaak-7'));
+		$this->assertFalse(
+			condition: $this->gate(declaration: $open, recordVisible: false)->mayFileOnto(register: 'zaken', schema: 'zaak', id: 'zaak-7')
+		);
+		$this->assertFalse(
+			condition: $this->gate(declaration: ['authorization' => ['update' => ['clerks']]])->mayFileOnto(register: 'zaken', schema: 'zaak', id: 'zaak-7')
+		);
+
+	}//end testFilingOntoARecordTheClerkCannotSeeIsRefused()
 }//end class
