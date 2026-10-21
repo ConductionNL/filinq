@@ -358,7 +358,8 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			this.batchStatus = 'anonymizing'
 			try {
 				// Step 1 — PATCH per-entity grondslagen / skip decisions onto
-				// every underlying EntityRelation row. Each consolidated entity
+				// every underlying EntityRelation row, through filinq's route so
+				// the publish-never check runs on a skip. Each consolidated entity
 				// may span many files; the relationIds array carries one id
 				// per occurrence. Decisions are applied to every relation so a
 				// single picker selection covers all instances of the value.
@@ -393,7 +394,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 						try {
 							await axios.patch(
 								generateUrl(
-									`/apps/openregister/api/entity-relations/${relationId}`,
+									`/apps/filinq/api/anonymization/relations/${relationId}`,
 								),
 								payload,
 							)
