@@ -136,16 +136,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -339,10 +339,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -358,7 +358,7 @@
           },
           "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "base": {
@@ -434,13 +434,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -612,7 +612,7 @@
             "authenticated"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -648,7 +648,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 1.2: operationele verwerkingslogboeken, korte bewaarplicht",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         },
         "x-openregister-lifecycle": {
           "field": "status",
@@ -790,7 +790,7 @@
               {
                 "kind": "groups",
                 "groups": [
-                  "docudesk-woo-officers"
+                  "filinq-woo-officers"
                 ]
               }
             ],
@@ -944,10 +944,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -987,7 +987,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 3.2: zakelijke correspondentie voor organisatorische continuïteit",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "customDictionary": {
@@ -1092,13 +1092,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -1168,13 +1168,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -1262,10 +1262,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -1406,16 +1406,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "delete": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ]
         },
         "deleted": null,
@@ -1431,7 +1431,7 @@
           },
           "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "generatedDocument": {
@@ -1642,10 +1642,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -1794,16 +1794,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "delete": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ]
         },
         "deleted": null,
@@ -1893,13 +1893,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "update": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "delete": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ]
         },
         "deleted": null,
@@ -1990,13 +1990,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -2126,20 +2126,20 @@
           "reason": "An override audit entry is the only record of a deliberate decision NOT to redact a legally protected entity; it must outlive the prohibition it released, which is itself retained P10Y.",
           "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         },
         "authorization": {
           "read": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         }
       },
@@ -2161,7 +2161,7 @@
               {
                 "kind": "groups",
                 "groups": [
-                  "docudesk-woo-officers"
+                  "filinq-woo-officers"
                 ]
               },
               {
@@ -2506,16 +2506,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -2716,13 +2716,13 @@
             "consent"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         }
       },
@@ -2900,16 +2900,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -2925,7 +2925,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsbewijsmiddelen",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "signingAuditEntry": {
@@ -3078,16 +3078,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -3103,7 +3103,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsauditverslagen als juridisch bewijsmiddel",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "signingRequest": {
@@ -3277,16 +3277,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -3397,7 +3397,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsverzoeken als juridisch bewijsmiddel",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "signingSession": {
@@ -3541,7 +3541,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
@@ -3550,7 +3550,7 @@
             "authenticated"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -3763,10 +3763,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -3920,10 +3920,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -4126,7 +4126,7 @@
             "authenticated"
           ],
           "delete": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ]
         },
         "deleted": null,
@@ -4260,13 +4260,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ],
           "update": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ],
           "delete": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ]
         },
         "deleted": null,

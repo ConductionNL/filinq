@@ -173,7 +173,7 @@ trait SubjectErasureDoubles {
 	 *
 	 * @var array<string, array<int, string>>
 	 */
-	protected array $members = ['petra' => ['docudesk-privacy-officer'], 'root' => ['admin'], 'bob' => ['staff']];
+	protected array $members = ['petra' => ['filinq-privacy-officer'], 'root' => ['admin'], 'bob' => ['staff']];
 
 	/**
 	 * An ObjectEntity whose jsonSerialize is OpenRegister's render shape: the

@@ -8,7 +8,7 @@ Filinq never deletes a document for an erasure request.
 
 ## Who may handle erasure requests
 
-Admins, and the groups in the app setting `subject_erasure_groups` (a JSON list). The default is `["docudesk-privacy-officer","docudesk-policy-admins"]`:
+Admins, and the groups in the app setting `subject_erasure_groups` (a JSON list). The default is `["filinq-privacy-officer","filinq-policy-admins"]`:
 
 ```bash
 occ config:app:set filinq subject_erasure_groups --value='["privacy-officers"]'

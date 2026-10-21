@@ -161,6 +161,7 @@ class IntakeServiceTest extends TestCase {
 				return $mayWriteTarget;
 			}
 		);
+		$gate->method('mayFileOnto')->willReturn($mayWriteTarget);
 
 		$placement = $this->createMock(IntakeFilePlacement::class);
 		$placement->method('place')->willReturn($placedAt);

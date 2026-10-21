@@ -142,6 +142,46 @@ class ProhibitionOverrideCommitter {
 	}//end commit()
 
 	/**
+	 * Record one release made outside the anonymise call, before it is applied.
+	 *
+	 * @param string $ruleId     The prohibition rule released.
+	 * @param int    $relationId The EntityRelation released.
+	 * @param int    $fileId     The document.
+	 * @param string $reason     Why it was released.
+	 * @param string $userId     Who released it.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When OpenRegister is unavailable or the write fails: no release without its audit.
+	 *
+	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+	 */
+	public function recordRelease(string $ruleId, int $relationId, int $fileId, string $reason, string $userId): void {
+		try {
+			$objectService = $this->locator->get(className: 'OCA\OpenRegister\Service\ObjectService');
+		} catch (Throwable $e) {
+			throw new RuntimeException('The override could not be recorded, so it was not applied.', 500, $e);
+		}
+
+		if (is_object($objectService) === false) {
+			throw new RuntimeException('The override could not be recorded, so it was not applied.', 500);
+		}
+
+		$this->writeAudit(
+			objectService: $objectService,
+			auditEntry: [
+				'ruleId' => $ruleId,
+				'entityRelationId' => $relationId,
+				'fileId' => $fileId,
+				'reason' => $reason,
+				'acknowledgedBy' => $userId,
+				'acknowledgedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+			]
+		);
+
+	}//end recordRelease()
+
+	/**
 	 * Write the Filinq audit entry for one released override.
 	 *
 	 * If the audit write fails we MUST NOT proceed to the OR PATCH — fail-closed.

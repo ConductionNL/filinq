@@ -89,7 +89,7 @@ class PublicationController extends Controller {
 		$uid = $this->uid();
 		$results = [];
 		foreach ($this->store->listRecords() as $record) {
-			if ($this->access->mayAct(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
+			if ($this->access->maySee(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
 				$results[] = $this->pipeline->sync(record: $record);
 			}
 		}
@@ -148,7 +148,7 @@ class PublicationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$record = $this->authorised(id: $id);
+		$record = $this->readable(id: $id);
 		if ($record === null) {
 			return $this->forbidden();
 		}
@@ -172,7 +172,7 @@ class PublicationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function readiness(string $id): JSONResponse {
-		$record = $this->authorised(id: $id);
+		$record = $this->readable(id: $id);
 		if ($record === null) {
 			return $this->forbidden();
 		}
@@ -288,6 +288,23 @@ class PublicationController extends Controller {
 		return $record;
 
 	}//end authorised()
+
+	/**
+	 * The record, when the caller may read it.
+	 *
+	 * @param string $id The record
+	 *
+	 * @return array<string, mixed>|null The record, or null for "not found or not yours".
+	 */
+	private function readable(string $id): ?array {
+		$record = $this->store->findRecord(uuid: $id);
+		if ($record === null || $this->access->maySee(uid: $this->uid(), fileId: (string) ($record['documentFileRef'] ?? '')) === false) {
+			return null;
+		}
+
+		return $record;
+
+	}//end readable()
 
 	/**
 	 * Run a pipeline step and answer with its record or its error.

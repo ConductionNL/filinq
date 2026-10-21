@@ -97,7 +97,7 @@ class SubjectErasureRules {
 	 */
 	public const DECIDES = [
 		self::LEGAL_HOLD => 'the legal department that placed the hold',
-		self::PROHIBITION => 'a policy administrator (docudesk-policy-admins)',
+		self::PROHIBITION => 'a policy administrator (filinq-policy-admins)',
 		self::RETENTION => 'the archivist responsible for the selectielijst term',
 	];
 

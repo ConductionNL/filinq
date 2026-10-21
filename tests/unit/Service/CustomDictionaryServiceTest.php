@@ -23,6 +23,7 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCP\IGroupManager;
 use OCA\Filinq\Service\CustomDictionaryAccessGate;
 use OCA\Filinq\Service\CustomDictionaryPayloadNormaliser;
 use OCA\Filinq\Service\CustomDictionaryRepository;
@@ -52,6 +53,7 @@ class CustomDictionaryServiceTest extends TestCase {
 	 * @param ObjectService $objectService ObjectService double.
 	 * @param array<string, bool> $organisationAccess Map of organisationUuid => hasAccess.
 	 * @param string|null $currentUserId Current user id, or null for unauthenticated.
+	 * @param bool $maintainer Whether the user is in the dictionary maintainer group.
 	 *
 	 * @return CustomDictionaryService
 	 */
@@ -59,6 +61,7 @@ class CustomDictionaryServiceTest extends TestCase {
 		ObjectService $objectService,
 		array $organisationAccess = [],
 		?string $currentUserId = 'alice',
+		bool $maintainer = true,
 	): CustomDictionaryService {
 		$settingsService = $this->createMock(SettingsService::class);
 		$settingsService->method('getObjectService')->willReturn($objectService);
@@ -91,6 +94,12 @@ class CustomDictionaryServiceTest extends TestCase {
 			$userSession->method('getUser')->willReturn($user);
 		}
 
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn(false);
+		$groupManager->method('isInGroup')->willReturnCallback(
+			static fn (string $uid, string $group): bool => $maintainer === true && $group === CustomDictionaryAccessGate::MAINTAINER_GROUP
+		);
+
 		return new CustomDictionaryService(
 			repository: new CustomDictionaryRepository(
 				settingsService: $settingsService,
@@ -100,7 +109,8 @@ class CustomDictionaryServiceTest extends TestCase {
 				container: $container,
 				appManager: $appManager,
 				userSession: $userSession,
-				logger: new NullLogger()
+				logger: new NullLogger(),
+				groupManager: $groupManager
 			),
 			normaliser: new CustomDictionaryPayloadNormaliser(),
 			logger: new NullLogger()
@@ -355,4 +365,31 @@ class CustomDictionaryServiceTest extends TestCase {
 		$this->assertSame('Foo', $result[0]['terms'][0]['value']);
 
 	}//end testListActiveDictionariesForDetectionSkipsInactiveAndEmpty()
+	/**
+	 * An organisation member who is no maintainer cannot create, change or delete a list.
+	 *
+	 * @return void
+	 */
+	public function testANonMaintainerCannotChangeDictionaries(): void {
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->expects($this->never())->method('saveObject');
+		$objectService->expects($this->never())->method('deleteObject');
+		$service = $this->makeService(objectService: $objectService, organisationAccess: ['org-1' => true], maintainer: false);
+
+		foreach ([
+			fn () => $service->createDictionary(data: ['name' => 'Wethouders']),
+			fn () => $service->updateDictionary(uuid: 'd-1', data: ['active' => false]),
+			fn () => $service->deleteDictionary(uuid: 'd-1'),
+			fn () => $service->createTerm(dictionaryUuid: 'd-1', data: ['value' => 'Piet']),
+			fn () => $service->deleteTerm(dictionaryUuid: 'd-1', termUuid: 't-1'),
+		] as $call) {
+			try {
+				$call();
+				$this->fail(message: 'A non-maintainer changed a dictionary.');
+			} catch (\RuntimeException $e) {
+				$this->assertStringContainsString(needle: 'maintainer', haystack: $e->getMessage());
+			}
+		}
+
+	}//end testANonMaintainerCannotChangeDictionaries()
 }//end class

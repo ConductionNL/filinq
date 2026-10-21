@@ -27,8 +27,9 @@ use OCP\IGroupManager;
 use Throwable;
 
 /**
- * Admins, plus the groups in `subject_erasure_groups`, which defaults to the
- * two groups the request schema itself grants. An erasure rewrites files across
+ * Admins, plus the groups in `subject_erasure_groups`. This setting is the one
+ * place that says who handles erasures: the erasure schemas grant nobody but
+ * admins through the OpenRegister API. An erasure rewrites files across
  * every user, so the file work happens past the file owners' own permissions:
  * this check is the control, and it runs before anything is read.
  *
@@ -45,11 +46,11 @@ class SubjectErasureAuthority {
 	public const CONFIG_KEY = 'subject_erasure_groups';
 
 	/**
-	 * The groups the subjectErasureRequest schema grants, used when the setting is absent.
+	 * The erasure groups when the setting is absent.
 	 *
 	 * @var string
 	 */
-	public const DEFAULT_GROUPS = '["docudesk-privacy-officer","docudesk-policy-admins"]';
+	public const DEFAULT_GROUPS = '["filinq-privacy-officer","filinq-policy-admins"]';
 
 	/**
 	 * Constructor.

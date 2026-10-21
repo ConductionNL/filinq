@@ -315,8 +315,9 @@ class TemplateService {
 	/**
 	 * Update an existing template with version history
 	 *
-	 * The namespace field cannot be changed after creation.
-	 * A version snapshot of the current state is created before updating.
+	 * The namespace field cannot be changed after creation. A save is refused
+	 * while another user holds a live edit lock, and the previous state is kept
+	 * as a version once the save has succeeded.
 	 *
 	 * @param string $id The template UUID
 	 * @param array $data Updated template data
@@ -333,17 +334,15 @@ class TemplateService {
 
 		$existing = $this->getTemplate(id: $id);
 
-		// Create a version snapshot of the current state before updating.
 		$editor = $this->getCurrentUserId();
 		$changelog = $data['_changelog'] ?? null;
 		unset($data['_changelog']);
 
-		$this->versionService->createVersion(
-			templateId: $id,
-			templateState: $existing,
-			editor: $editor,
-			changelog: $changelog
-		);
+		// The edit lock is enforced here, not only in the editor: a save by
+		// anyone but the holder of a live lock is refused.
+		if ($this->heldByAnother(template: $existing, userId: $editor) === true) {
+			throw new Exception(message: 'Template is locked by another user', code: 409);
+		}
 
 		// Namespace is immutable after creation.
 		unset($data['namespace']);
@@ -361,6 +360,15 @@ class TemplateService {
 			object: $merged,
 			register: $config['register'],
 			schema: $config['schema']
+		);
+
+		// Snapshot the previous state only once the save has gone through, so
+		// a refused save leaves no version row behind.
+		$this->versionService->createVersion(
+			templateId: $id,
+			templateState: $existing,
+			editor: $editor,
+			changelog: $changelog
 		);
 
 		if (is_object($result) === true
@@ -518,21 +526,17 @@ class TemplateService {
 	public function acquireLock(string $id, string $userId): array {
 		$template = $this->getTemplate(id: $id);
 
-		// Check if already locked by another user.
-		if (empty($template['lockedBy']) === false && $template['lockedBy'] !== $userId) {
-			// Check if lock has expired.
-			if ($this->isLockExpired(template: $template) === false) {
-				throw new Exception(
-					message: json_encode(
-						[
-							'error' => 'Template is locked by another user',
-							'lockedBy' => $template['lockedBy'],
-							'lockedAt' => $template['lockedAt'],
-						]
-					),
-					code: 409
-				);
-			}
+		if ($this->heldByAnother(template: $template, userId: $userId) === true) {
+			throw new Exception(
+				message: json_encode(
+					[
+						'error' => 'Template is locked by another user',
+						'lockedBy' => $template['lockedBy'],
+						'lockedAt' => $template['lockedAt'],
+					]
+				),
+				code: 409
+			);
 		}
 
 		// Acquire or refresh the lock.
@@ -566,10 +570,7 @@ class TemplateService {
 		$template = $this->getTemplate(id: $id);
 
 		// Only the lock holder can release (or if lock is expired).
-		if (empty($template['lockedBy']) === false
-			&& $template['lockedBy'] !== $userId
-			&& $this->isLockExpired(template: $template) === false
-		) {
+		if ($this->heldByAnother(template: $template, userId: $userId) === true) {
 			throw new Exception(
 				message: 'Cannot release lock held by another user',
 				code: 403
@@ -587,17 +588,18 @@ class TemplateService {
 	}//end releaseLock()
 
 	/**
-	 * Check if a template's lock has expired.
+	 * Whether another user holds a live edit lock on the template.
 	 *
-	 * @param array $template The template data with lockedAt field
+	 * @param array  $template The template data with lockedBy and lockedAt
+	 * @param string $userId   The user asking
 	 *
-	 * @return bool True if the lock has expired or no lock exists
+	 * @return bool True when someone else holds a lock that has not expired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
 	 */
-	private function isLockExpired(array $template): bool {
-		if (empty($template['lockedAt']) === true) {
-			return true;
+	private function heldByAnother(array $template, string $userId): bool {
+		if (empty($template['lockedBy']) === true || $template['lockedBy'] === $userId || empty($template['lockedAt']) === true) {
+			return false;
 		}
 
 		try {
@@ -610,11 +612,11 @@ class TemplateService {
 				'templates.lock_timeout_minutes',
 				(string)self::LOCK_TIMEOUT_MINUTES
 			);
-			return $diffMins > $timeoutMinutes;
+			return $diffMins <= $timeoutMinutes;
 		} catch (Exception $exception) {
-			// If we cannot parse the lock time, consider it expired.
-			return true;
+			// A lock time that cannot be parsed counts as expired.
+			return false;
 		}
 
-	}//end isLockExpired()
+	}//end heldByAnother()
 }//end class
