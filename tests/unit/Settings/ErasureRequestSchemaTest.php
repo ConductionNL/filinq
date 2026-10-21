@@ -95,7 +95,9 @@ class ErasureRequestSchemaTest extends TestCase {
 
 			$this->assertNotContains('authenticated', $authorization['read'], $slug);
 			$this->assertNotContains('authenticated', $authorization['create'], $slug);
-			$this->assertContains('docudesk-privacy-officer', $authorization['read'], $slug);
+			// The erasure groups live in one place, the subject_erasure_groups
+			// setting the endpoints check; the API grants nobody but admins.
+			$this->assertSame(expected: [], actual: $authorization['read'], message: $slug);
 		}
 	}//end testNeitherSchemaIsReadableByAnyAuthenticatedUser()
 

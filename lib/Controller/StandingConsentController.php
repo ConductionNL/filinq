@@ -136,7 +136,6 @@ class StandingConsentController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
@@ -170,7 +169,6 @@ class StandingConsentController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
@@ -206,7 +204,6 @@ class StandingConsentController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */

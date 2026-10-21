@@ -178,6 +178,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function createDictionary(array $data): array {
+		$this->accessGate->assertMayMaintain();
 		$payload = $this->normaliser->stripFrameworkParams(data: $data);
 		unset($payload['termCount']);
 		$payload['active'] = ($payload['active'] ?? true);
@@ -203,6 +204,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function updateDictionary(string $uuid, array $data): array {
+		$this->accessGate->assertMayMaintain();
 		$existing = $this->findDictionaryOrFail(uuid: $uuid);
 
 		$payload = array_merge($existing, $this->normaliser->stripFrameworkParams(data: $data));
@@ -226,6 +228,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function deleteDictionary(string $uuid): void {
+		$this->accessGate->assertMayMaintain();
 		$existing = $this->findDictionaryOrFail(uuid: $uuid);
 
 		foreach ($this->listTermsForDictionary(dictionary: $existing) as $term) {
@@ -270,6 +273,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function createTerm(string $dictionaryUuid, array $data): array {
+		$this->accessGate->assertMayMaintain();
 		$dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
 
 		$value = trim((string)($data['value'] ?? ''));
@@ -303,6 +307,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function deleteTerm(string $dictionaryUuid, string $termUuid): void {
+		$this->accessGate->assertMayMaintain();
 		$dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
 
 		$term = $this->repository->findOne(schema: self::SCHEMA_TERM, uuid: $termUuid);
@@ -335,6 +340,7 @@ class CustomDictionaryService {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function importTerms(string $dictionaryUuid, string $content, bool $isCsv): array {
+		$this->accessGate->assertMayMaintain();
 		$dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
 
 		if (strlen($content) > self::MAX_IMPORT_BYTES) {

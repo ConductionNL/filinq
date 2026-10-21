@@ -27,6 +27,7 @@ use OCA\Filinq\Service\Publication\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCP\Files\Folder;
+use OCP\IAppConfig;
 use OCP\Files\IRootFolder;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -51,10 +52,17 @@ class PublicationControllerTest extends TestCase {
 	 *
 	 * @param PublicationPipelineService $pipeline The pipeline double
 	 * @param array<string, mixed>|null  $record   What the store finds
+	 * @param OpenCatalogiPlatform|null  $platform The platform double
+	 * @param bool                       $publisher Whether the caller is in a publisher group
 	 *
 	 * @return PublicationController
 	 */
-	private function controller(PublicationPipelineService $pipeline, ?array $record, ?OpenCatalogiPlatform $platform = null): PublicationController {
+	private function controller(
+		PublicationPipelineService $pipeline,
+		?array $record,
+		?OpenCatalogiPlatform $platform = null,
+		bool $publisher = true
+	): PublicationController {
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRecord')->willReturn($record);
 		$store->method('listRecords')->willReturn([['uuid' => 'mine', 'documentFileRef' => '42'], ['uuid' => 'theirs', 'documentFileRef' => '99']]);
@@ -65,6 +73,13 @@ class PublicationControllerTest extends TestCase {
 		$root->method('getUserFolder')->willReturn($folder);
 		$groups = $this->createMock(IGroupManager::class);
 		$groups->method('isAdmin')->willReturn(false);
+		$groups->method('isInGroup')->willReturnCallback(
+			static fn (string $uid, string $group): bool => $publisher === true && $group === 'filinq-publishers'
+		);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $default
+		);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('anna');
@@ -77,7 +92,7 @@ class PublicationControllerTest extends TestCase {
 			$pipeline,
 			$store,
 			($platform ?? $this->createMock(OpenCatalogiPlatform::class)),
-			new PublicationAccess(rootFolder: $root, groups: $groups),
+			new PublicationAccess(rootFolder: $root, groups: $groups, appConfig: $config),
 			$session,
 			new NullLogger()
 		);
@@ -163,4 +178,20 @@ class PublicationControllerTest extends TestCase {
 		}
 
 	}//end testNoRouteChangesTheLog()
+	/**
+	 * A reader who can open the document sees its publication but cannot hand it off.
+	 *
+	 * @return void
+	 */
+	public function testAReaderWhoIsNoPublisherCannotAct(): void {
+		$record = ['uuid' => 'mine', 'documentFileRef' => '42', 'status' => 'draft'];
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$pipeline->expects($this->never())->method('handoff');
+		$pipeline->method('sync')->willReturnArgument(0);
+		$controller = $this->controller(pipeline: $pipeline, record: $record, publisher: false);
+
+		$this->assertSame(expected: 200, actual: $controller->show(id: 'mine')->getStatus());
+		$this->assertSame(expected: 404, actual: $controller->handoff(id: 'mine')->getStatus());
+
+	}//end testAReaderWhoIsNoPublisherCannotAct()
 }//end class

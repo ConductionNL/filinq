@@ -22,6 +22,7 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ProhibitionOverrideCommitter;
 use OCA\Filinq\Service\AnonymisationRunRecords;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
@@ -69,6 +70,13 @@ use Psr\Log\NullLogger;
  */
 class AnonymizationServiceTest extends TestCase {
 	use BuildsAnonymizationService;
+
+	/**
+	 * prohibitionOverrideAudit entries the fake ObjectService stored.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $overrideAudits = [];
 
 	/**
 	 * The Nextcloud file id carried by the relation fixture — the acting user
@@ -623,8 +631,35 @@ class AnonymizationServiceTest extends TestCase {
 		$allowed = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $mapper)
 			->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
 		$this->assertSame(200, $allowed['status']);
+		$this->assertCount(expectedCount: 1, haystack: $this->overrideAudits);
+		$this->assertSame(expected: 'alice', actual: $this->overrideAudits[0]['acknowledgedBy']);
 
 	}//end testSkipSubThresholdProhibitedNeedsForce()
+
+	/**
+	 * Forcing past a prohibition needs the override role: file access is not enough.
+	 *
+	 * @return void
+	 */
+	public function testForcingPastAProhibitionNeedsTheOverrideRole(): void {
+		$mapper = $this->mapperWithProhibitedRelation(0.62);
+		$mapper->expects($this->never())->method('updateDecisionMetadata');
+
+		$result = $this->makeAnonymizationServiceFrom(
+			[
+				'logger' => $this->createMock(LoggerInterface::class),
+				'container' => $this->matcherContainer($this->prohibitionMatcher(), $mapper),
+				'appManager' => $this->openRegisterAppManager(),
+				'userSession' => $this->grantingSession(),
+				'rootFolder' => $this->rootFolderResolving(self::RELATION_FILE_ID),
+				'overrideAuthority' => $this->overrideAuthority(granted: false),
+			]
+		)->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
+
+		$this->assertSame(expected: 422, actual: $result['status']);
+		$this->assertSame(expected: [], actual: $this->overrideAudits);
+
+	}//end testForcingPastAProhibitionNeedsTheOverrideRole()
 
 	/**
 	 * Including an entity (skip=false) is always allowed and forwarded, with no
@@ -1185,14 +1220,17 @@ class AnonymizationServiceTest extends TestCase {
 				logger: $logger,
 				appConfig: $this->createMock(\OCP\IAppConfig::class),
 				container: $container,
-				locator: $locator
+				locator: $locator,
+				authority: $this->overrideAuthority(granted: true)
 			),
 			skipDecisions: new RelationSkipDecisionService(
 				logger: $logger,
 				container: $container,
 				locator: $locator,
 				userSession: $this->grantingSession(),
-				rootFolder: $this->rootFolderResolving(self::RELATION_FILE_ID)
+				rootFolder: $this->rootFolderResolving(self::RELATION_FILE_ID),
+				authority: $this->overrideAuthority(granted: true),
+				committer: new ProhibitionOverrideCommitter(logger: $logger, locator: $locator)
 			)
 		);
 
@@ -1207,12 +1245,20 @@ class AnonymizationServiceTest extends TestCase {
 	 * @return ContainerInterface The container double.
 	 */
 	private function matcherContainer(PolicyMatchService $matcher, ?EntityRelationMapper $mapper): ContainerInterface {
+		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objectService->method('saveObject')->willReturnCallback(
+			function (array $object = []): array {
+				$this->overrideAudits[] = $object;
+				return $object;
+			}
+		);
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static function (string $id) use ($matcher, $mapper) {
+			static function (string $id) use ($matcher, $mapper, $objectService) {
 				return match ($id) {
 					'OCA\Filinq\Service\PolicyMatchService' => $matcher,
 					'OCA\OpenRegister\Db\EntityRelationMapper' => $mapper,
+					'OCA\OpenRegister\Service\ObjectService' => $objectService,
 					default => null,
 				};
 			}
