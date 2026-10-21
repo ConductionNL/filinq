@@ -1,7 +1,7 @@
 <template>
 	<NcDialog
 		:name="dialogName"
-		:canClose="!submitting"
+		:noClose="submitting"
 		size="normal"
 		@closing="$emit('cancel')">
 		<div class="dossier-dialog">

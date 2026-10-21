@@ -60,15 +60,11 @@ copy of that judgement.
 </template>
 
 <script>
-import {
-	CnRegisterSchemaSelect,
-	NcButton,
-	NcDialog,
-	NcSelect,
-} from '@conduction/nextcloud-vue'
+import { CnRegisterSchemaSelect } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'IntakeAssignDialog',
