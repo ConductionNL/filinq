@@ -64,6 +64,8 @@ class ObjectService {
 	 * @param string|null $uuid Optional UUID for updates.
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
+	 * @param bool $_unowned Stamp the system identity as owner on a create.
+	 * @param string|null $_owner An explicit owner for a create.
 	 *
 	 * @return mixed
 	 */
@@ -74,6 +76,8 @@ class ObjectService {
 		?string $uuid = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_unowned = false,
+		?string $_owner = null,
 	) {
 		return null;
 	}//end saveObject()
@@ -165,10 +169,12 @@ class ObjectService {
 	 * Search objects (paginated)
 	 *
 	 * @param array $query Search query
+	 * @param bool $_rbac RBAC bypass flag.
+	 * @param bool $_multitenancy Multitenancy bypass flag.
 	 *
 	 * @return array{results: array, total: int}
 	 */
-	public function searchObjectsPaginated(array $query = []) {
+	public function searchObjectsPaginated(array $query = [], bool $_rbac = true, bool $_multitenancy = true) {
 		return ['results' => [], 'total' => 0];
 	}//end searchObjectsPaginated()
 

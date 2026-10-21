@@ -123,7 +123,8 @@ class SigningExpirationJob extends TimedJob {
 							'schema' => $schema,
 							'status' => $status,
 						],
-					]
+					],
+					_rbac: false
 				);
 
 				foreach ($results as $result) {
@@ -208,7 +209,7 @@ class SigningExpirationJob extends TimedJob {
 		}
 
 		$request['status'] = 'EXPIRED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema);
+		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract (filinq-signing-events): an
 		// expired request is terminal — emit SigningConcludedEvent

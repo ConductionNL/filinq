@@ -382,7 +382,8 @@ class SigningTaskListener implements IEventListener {
 			$object = $objectService->find(
 				id: $objectUuid,
 				register: $binding['register'],
-				schema: $binding['schema']
+				schema: $binding['schema'],
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			// A lookup failure cannot prove ownership: fail closed.
