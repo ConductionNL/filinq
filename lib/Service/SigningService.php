@@ -207,12 +207,7 @@ class SigningService {
 			now: new DateTimeImmutable()
 		);
 
-		// The file is resolved in the initiator's own folder and its name taken
-		// from the node: a request may only name a file its initiator can read.
-		$document = $this->artifactProducer->initiatorDocument(fileId: $request['documentFileId'], initiatorUserId: $initiatorUserId);
-		$request['documentFileId'] = (string)$document->getId();
-		$request['documentName'] = $document->getName();
-
+		$request = $this->withInitiatorDocument(request: $request);
 		// Cross-app delegated-signing contract (filinq-signing-events): when a
 		// consumer raised this request through DocumentSigningRequestedEvent it
 		// carries provenance fields. Persist any present provenance onto the
@@ -252,6 +247,32 @@ class SigningService {
 
 		return $createdRequest;
 	}//end createRequest()
+
+	/**
+	 * Point the request at the file as its initiator sees it.
+	 *
+	 * The file is resolved in the initiator's own folder and its name taken
+	 * from the node: a request may only name a file its initiator can read.
+	 *
+	 * @param array<string, mixed> $request The request being created.
+	 *
+	 * @return array<string, mixed> The request with the file's own id and name.
+	 *
+	 * @throws RuntimeException With code 403 when the initiator cannot read the file.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function withInitiatorDocument(array $request): array {
+		$document = $this->artifactProducer->initiatorDocument(
+			fileId: (string)$request['documentFileId'],
+			initiatorUserId: (string)$request['initiatorUserId']
+		);
+		$request['documentFileId'] = (string)$document->getId();
+		$request['documentName'] = $document->getName();
+
+		return $request;
+
+	}//end withInitiatorDocument()
 
 	/**
 	 * Persist the signer records of a new request, guardians last.
@@ -380,18 +401,8 @@ class SigningService {
 		// WF2 + Wilco #6 fix: scope single-record access to initiator or
 		// signer. Access denied collapses to null (same shape as not-found),
 		// so the controller can emit one 404 regardless.
-		if ($callerUserId !== '') {
-			$isInitiator = ($request['initiatorUserId'] ?? '') === $callerUserId;
-
-			if ($isInitiator === false
-				&& $this->actorResolver->isSignerOf(
-					requestId: $requestId,
-					signerIds: (array)($request['signerIds'] ?? []),
-					userId: $callerUserId
-				) === false
-			) {
-				return null;
-			}
+		if ($this->actorResolver->mayRead(request: $request, requestId: $requestId, userId: $callerUserId) === false) {
+			return null;
 		}
 
 		return $request;
@@ -434,10 +445,7 @@ class SigningService {
 		$paginated = $objectService->searchObjectsPaginated(query: $query, _rbac: false);
 		$results = ($paginated['results'] ?? []);
 
-		$signedRequestIds = [];
-		if ($callerUserId !== '') {
-			$signedRequestIds = $this->actorResolver->requestIdsForSigner(userId: $callerUserId);
-		}
+		$signedRequestIds = $this->actorResolver->requestIdsForSigner(userId: $callerUserId);
 
 		$requests = [];
 		foreach ($results as $result) {
@@ -445,13 +453,8 @@ class SigningService {
 
 			// WF2 security fix: a scoped caller sees only requests they
 			// initiated or are listed as a signer on. Unscoped sees all.
-			if ($callerUserId !== '') {
-				$isInitiator = ($item['initiatorUserId'] ?? '') === $callerUserId;
-				$isSigner = in_array((string)($item['id'] ?? ($item['uuid'] ?? '')), $signedRequestIds, true);
-
-				if ($isInitiator === false && $isSigner === false) {
-					continue;
-				}
+			if ($this->actorResolver->isListedFor(request: $item, userId: $callerUserId, signedRequestIds: $signedRequestIds) === false) {
+				continue;
 			}
 
 			$requests[] = $item;
