@@ -122,13 +122,9 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
-import {
-	CnDataTable,
-	NcButton,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@conduction/nextcloud-vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import {
