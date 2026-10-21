@@ -11,8 +11,7 @@
 			{{ error }}
 		</div>
 		<div v-else class="word-viewer__page">
-			<!-- mammoth output is HTML extracted from the docx; safe enough here
-				since it strips scripts and we never execute it. -->
+			<!-- mammoth does not sanitise; the HTML is sanitised in load(). -->
 			<!-- eslint-disable-next-line vue/no-v-html -->
 			<div ref="content" class="word-viewer__content" v-html="html" />
 		</div>
@@ -31,6 +30,7 @@ import {
 	clearDomHighlights,
 } from '../../services/highlightDom.js'
 import { fileViewerStore } from '../../store/store.js'
+import { sanitizeHtml } from '../../utils/sanitizeHtml.js'
 
 let mammothPromise = null
 
@@ -159,7 +159,7 @@ export default {
 				])
 				const mammoth = mammothModule.default || mammothModule
 				const result = await mammoth.convertToHtml({ arrayBuffer })
-				this.html = result.value
+				this.html = sanitizeHtml(result.value)
 			} catch (err) {
 				console.error('[WordViewer] failed to load docx:', err)
 				this.error = err.message || t('filinq', 'Failed to load document')
