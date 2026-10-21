@@ -66,7 +66,7 @@ class SignedArtifactProducer {
 	 * Constructor.
 	 *
 	 * @param SigningProviderFactory $providerFactory Provider factory (strict resolution).
-	 * @param IUserSession $userSession User session (signer label + folder fallback).
+	 * @param IUserSession $userSession User session (signer label).
 	 * @param IRequest $request HTTP request (client IP for the evidence context).
 	 * @param IRootFolder $rootFolder Root folder (reads the document, stores the signed version).
 	 * @param FinalDocumentService $finalDocuments The final-document guard.
@@ -304,9 +304,9 @@ class SignedArtifactProducer {
 	/**
 	 * Resolve the document File node for the signing request.
 	 *
-	 * Resolves through the initiator's user folder (the request owner), falling
-	 * back to the current signer's folder — either way a node that is not a
-	 * readable/writeable file throws rather than silently skipping the artifact.
+	 * Resolves through the initiator's user folder only. The signer's own
+	 * folder is never consulted: a request names a file of its initiator, and
+	 * resolving it anywhere else would sign and overwrite a file of the signer.
 	 *
 	 * @param int $fileId The Nextcloud file id.
 	 * @param array<string, mixed> $request The signing-request array.
@@ -316,33 +316,49 @@ class SignedArtifactProducer {
 	 * @throws RuntimeException When the file cannot be resolved.
 	 */
 	private function resolveDocumentFile(int $fileId, array $request): File {
-		$candidates = [];
-		$initiator = (string)($request['initiatorUserId'] ?? '');
-		if ($initiator !== '') {
-			$candidates[] = $initiator;
+		try {
+			return $this->initiatorDocument(fileId: $fileId, initiatorUserId: (string)($request['initiatorUserId'] ?? ''));
+		} catch (RuntimeException $e) {
+			throw new RuntimeException('Cannot resolve the document file to sign: ' . $fileId, 0, $e);
 		}
 
-		$current = $this->userSession->getUser();
-		if ($current !== null) {
-			$candidates[] = $current->getUID();
+	}//end resolveDocumentFile()
+
+	/**
+	 * The file a signing request names, as its initiator can open it.
+	 *
+	 * @param mixed  $fileId          The Nextcloud file id the request names.
+	 * @param string $initiatorUserId The user asking for the signatures.
+	 *
+	 * @return File The readable file in the initiator's folder.
+	 *
+	 * @throws RuntimeException With code 403 when the initiator cannot read a file with this id.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function initiatorDocument(mixed $fileId, string $initiatorUserId): File {
+		$id = 0;
+		if (is_numeric($fileId) === true) {
+			$id = (int)$fileId;
 		}
 
-		foreach (array_unique($candidates) as $uid) {
+		if ($id > 0 && $initiatorUserId !== '') {
 			try {
-				$nodes = $this->rootFolder->getUserFolder($uid)->getById($fileId);
+				$nodes = $this->rootFolder->getUserFolder($initiatorUserId)->getById($id);
 			} catch (\Throwable $e) {
-				continue;
+				$nodes = [];
 			}
 
 			foreach ($nodes as $node) {
-				if ($node instanceof File) {
+				if ($node instanceof File && $node->isReadable() === true) {
 					return $node;
 				}
 			}
 		}
 
-		throw new RuntimeException('Cannot resolve the document file to sign: ' . $fileId);
-	}//end resolveDocumentFile()
+		throw new RuntimeException('The document is not available to the initiator', 403);
+
+	}//end initiatorDocument()
 
 	/**
 	 * Resolve a human label for the completing signer.

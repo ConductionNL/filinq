@@ -413,7 +413,8 @@ class GuardianConsentGuard {
 		$object = $this->settingsService->getObjectService()->find(
 			id: $signerId,
 			register: $binding['register'],
-			schema: $binding['schema']
+			schema: $binding['schema'],
+			_rbac: false
 		);
 
 		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {

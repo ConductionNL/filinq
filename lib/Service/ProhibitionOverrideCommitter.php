@@ -160,7 +160,9 @@ class ProhibitionOverrideCommitter {
 			$objectService->saveObject(
 				object: $auditEntry,
 				register: self::OVERRIDE_AUDIT_REGISTER,
-				schema: self::OVERRIDE_AUDIT_SCHEMA
+				schema: self::OVERRIDE_AUDIT_SCHEMA,
+				_rbac: false,
+				_unowned: true
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

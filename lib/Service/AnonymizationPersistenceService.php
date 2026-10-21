@@ -108,7 +108,9 @@ class AnonymizationPersistenceService {
 			$saved = $objectService->saveObject(
 				object: $object,
 				register: 'filinq',
-				schema: 'anonymizationLink'
+				schema: 'anonymizationLink',
+				_rbac: false,
+				_unowned: true
 			);
 			$linkId = $this->extractSavedObjectId(saved: $saved);
 			if ($linkId !== null) {
@@ -176,7 +178,8 @@ class AnonymizationPersistenceService {
 		$objectService->saveObject(
 			object: $existing,
 			register: 'filinq',
-			schema: 'anonymizationLink'
+			schema: 'anonymizationLink',
+			_rbac: false
 		);
 
 	}//end setMappingRef()

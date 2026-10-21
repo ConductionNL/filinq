@@ -182,7 +182,7 @@ class SigningAuditService {
 			$register = $this->config->getValueString('filinq', 'signingRequest_register', '');
 			$schema = $this->config->getValueString('filinq', 'signingRequest_schema', '');
 
-			$object = $objectService->find(id: $signingRequestId, register: $register, schema: $schema);
+			$object = $objectService->find(id: $signingRequestId, register: $register, schema: $schema, _rbac: false);
 			if ($object instanceof ObjectEntity) {
 				return $object;
 			}

@@ -93,7 +93,8 @@ class LibreSignCompletion {
 		$concluded = 0;
 		foreach (['PENDING', 'IN_PROGRESS'] as $status) {
 			$found = $objects->findAll(
-				['filters' => ['register' => $binding['register'], 'schema' => $binding['schema'], 'status' => $status]]
+				['filters' => ['register' => $binding['register'], 'schema' => $binding['schema'], 'status' => $status]],
+				_rbac: false
 			);
 			foreach ($found as $result) {
 				$request = $this->toArray(result: $result);
@@ -132,7 +133,7 @@ class LibreSignCompletion {
 
 		if ($state['status'] === 'CANCELLED') {
 			$request['status'] = 'CANCELLED';
-			$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema']);
+			$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false);
 			$this->record(request: $request, action: 'CANCELLED', metadata: $metadata);
 			$this->emitter->emitIfDelegated(request: $request, status: 'cancelled');
 			return 1;
@@ -146,14 +147,14 @@ class LibreSignCompletion {
 		if ($request['status'] === 'PENDING') {
 			$request['status'] = 'IN_PROGRESS';
 			$request = $this->toArray(
-				result: $objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'])
+				result: $objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false)
 			);
 		}
 
 		$reference = $this->producer->produce(request: $request);
 		$request['status'] = 'COMPLETED';
 		$request['signedDocumentRef'] = $reference;
-		$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema']);
+		$objects->saveObject(object: $request, register: $binding['register'], schema: $binding['schema'], _rbac: false);
 		$this->record(request: $request, action: 'COMPLETED', metadata: $metadata);
 		$this->emitter->emitIfDelegated(request: $request, status: 'signed', signedDocumentRef: $reference);
 

@@ -167,9 +167,19 @@ class SigningService {
 		$defaultLevel = (string)$toggles['signing_default_level'];
 		$defaultProv = (string)$toggles['signing_provider'];
 
+		// The file is resolved in the initiator's own folder and its name taken
+		// from the node: a request may only name a file its initiator can read.
+		$documentFileId = '';
+		$documentName = '';
+		if (empty($data['documentFileId']) === false) {
+			$document = $this->artifactProducer->initiatorDocument(fileId: $data['documentFileId'], initiatorUserId: $initiatorUserId);
+			$documentFileId = (string)$document->getId();
+			$documentName = $document->getName();
+		}
+
 		$request = [
-			'documentFileId' => $data['documentFileId'] ?? '',
-			'documentName' => $data['documentName'] ?? '',
+			'documentFileId' => $documentFileId,
+			'documentName' => $documentName,
 			'initiatorUserId' => $initiatorUserId,
 			'signatureLevel' => $data['signatureLevel'] ?? $defaultLevel,
 			'signingMode' => $data['signingMode'] ?? 'sequential',
@@ -222,7 +232,7 @@ class SigningService {
 		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
+		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false, _unowned: true);
 		$createdRequest = $this->toArray(object: $savedRequest);
 
 		$requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
@@ -231,7 +241,7 @@ class SigningService {
 			signers: $signers,
 			prepared: $prepared
 		);
-		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema);
+		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema, _rbac: false);
 		$createdRequest['assuranceFloor'] = $this->assuranceGate->floorFor(request: $request);
 
 		$this->auditService->logEvent(
@@ -297,7 +307,13 @@ class SigningService {
 			}
 
 			$created = $this->toArray(
-				object: $objectService->saveObject(object: $signerRecord, register: $signerRegister, schema: $signerSchema)
+				object: $objectService->saveObject(
+					object: $signerRecord,
+					register: $signerRegister,
+					schema: $signerSchema,
+					_rbac: false,
+					_unowned: true
+				)
 			);
 			$ids[$index] = (string)($created['id'] ?? $created['uuid'] ?? '');
 		}//end foreach
@@ -327,13 +343,9 @@ class SigningService {
 	 * @return array<string, mixed>|null The signing request, or null when a
 	 *                                   scoped caller (callerUserId set,
 	 *                                   non-admin) is neither initiator nor
-	 *                                   signer (access denied collapses to
-	 *                                   null). A genuinely not-found request
-	 *                                   throws RuntimeException('Signing request
-	 *                                   not found') so the controller can map it
-	 *                                   to a 404.
+	 *                                   signer, or the request does not exist.
 	 *
-	 * @throws RuntimeException When the underlying record does not exist.
+	 * @throws RuntimeException When an unscoped read finds no record.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
 	 *
@@ -352,7 +364,13 @@ class SigningService {
 		// request that does exist.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
-		$object = $objectService->find(id: $requestId, register: $register, schema: $schema);
+		$object = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		if ($object === null && $callerUserId !== '') {
+			// A scoped caller gets the same null for a request that does not
+			// exist as for one that is not theirs, so no answer tells them apart.
+			return null;
+		}
+
 		if ($object === null) {
 			// Genuine not-found: throw so the controller maps it to a single
 			// 404. Access-denied below still collapses to null — the two
@@ -368,9 +386,14 @@ class SigningService {
 		// so the controller can emit one 404 regardless.
 		if ($callerUserId !== '') {
 			$isInitiator = ($request['initiatorUserId'] ?? '') === $callerUserId;
-			$isSignerInList = in_array($callerUserId, (array)($request['signerIds'] ?? []), true);
 
-			if ($isInitiator === false && $isSignerInList === false) {
+			if ($isInitiator === false
+				&& $this->actorResolver->isSignerOf(
+					requestId: $requestId,
+					signerIds: (array)($request['signerIds'] ?? []),
+					userId: $callerUserId
+				) === false
+			) {
 				return null;
 			}
 		}
@@ -412,8 +435,13 @@ class SigningService {
 			schema: $schema
 		);
 
-		$paginated = $objectService->searchObjectsPaginated(query: $query);
+		$paginated = $objectService->searchObjectsPaginated(query: $query, _rbac: false);
 		$results = ($paginated['results'] ?? []);
+
+		$signedRequestIds = [];
+		if ($callerUserId !== '') {
+			$signedRequestIds = $this->actorResolver->requestIdsForSigner(userId: $callerUserId);
+		}
 
 		$requests = [];
 		foreach ($results as $result) {
@@ -423,9 +451,9 @@ class SigningService {
 			// initiated or are listed as a signer on. Unscoped sees all.
 			if ($callerUserId !== '') {
 				$isInitiator = ($item['initiatorUserId'] ?? '') === $callerUserId;
-				$isSignerInList = in_array($callerUserId, (array)($item['signerIds'] ?? []), true);
+				$isSigner = in_array((string)($item['id'] ?? ($item['uuid'] ?? '')), $signedRequestIds, true);
 
-				if ($isInitiator === false && $isSignerInList === false) {
+				if ($isInitiator === false && $isSigner === false) {
 					continue;
 				}
 			}
@@ -549,7 +577,7 @@ class SigningService {
 		}
 		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
 
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
+		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
 		$this->auditService->logEvent(
 			signingRequestId: $requestId,
@@ -605,7 +633,7 @@ class SigningService {
 		// Same latent defect as getRequest(): unconfigured, find() returns null
 		// and this reports "not found" for a request that exists.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
+		$requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
 		if ($requestObject === null) {
 			throw new RuntimeException('Signing request not found: ' . $requestId);
 		}
@@ -637,13 +665,13 @@ class SigningService {
 
 		$signer['status'] = 'DECLINED';
 		$signer['declineReason'] = $reason;
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
+		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
 
 		$signatureLevel = $request['signatureLevel'] ?? 'SES';
 		$provider = $request['provider'] ?? 'native';
 
 		$request['status'] = 'DECLINED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema);
+		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
@@ -705,7 +733,7 @@ class SigningService {
 		}
 
 		$request['status'] = 'CANCELLED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema);
+		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: a cancelled request is terminal
 		// — emit SigningConcludedEvent (status=cancelled) for a delegated request.
@@ -740,7 +768,7 @@ class SigningService {
 
 		foreach ($requestIds as $requestId) {
 			try {
-				$request = $this->getRequest(requestId: $requestId);
+				$request = $this->getRequest(requestId: $requestId, callerUserId: $userId);
 				if ($request === null) {
 					// Treat null as not-found in bulk context (Wilco #6
 					// fix) — generic error, no existence leak.
@@ -812,7 +840,7 @@ class SigningService {
 		$signers = [];
 
 		foreach ($signerIds as $signerId) {
-			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
+			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
 			$signer = $this->toArray(object: $signerObj);
 			$signers[(string)$signerId] = $signer;
 
@@ -822,12 +850,12 @@ class SigningService {
 			}
 		}//end foreach
 
-		$freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema);
+		$freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
 		$freshRequest = $this->toArray(object: $freshObj);
 
 		if ($allSigned === false) {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
+			$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
 			return;
 		}
 
@@ -862,7 +890,8 @@ class SigningService {
 				object: $objectService->saveObject(
 					object: $freshRequest,
 					register: $register,
-					schema: $schema
+					schema: $schema,
+					_rbac: false
 				)
 			);
 		}
@@ -883,7 +912,7 @@ class SigningService {
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
-		$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
+		$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
 
 		// Cross-app delegated-signing contract: emit the terminal
 		// SigningConcludedEvent (status=signed) for a delegated request. The

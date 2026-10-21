@@ -148,7 +148,8 @@ class LegalHoldCaseRepository {
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				uuid: $existing,
-				_rbac: false
+				_rbac: false,
+				_unowned: true
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The hold case could not be saved: ' . $e->getMessage(), code: 0, previous: $e);

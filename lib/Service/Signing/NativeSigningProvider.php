@@ -478,7 +478,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 			$session['id'] = $uuid;
 		}
 
-		$objectService->saveObject(object: $session, register: $register, schema: $schema);
+		$objectService->saveObject(object: $session, register: $register, schema: $schema, _rbac: false, _unowned: true);
 
 	}//end persistSession()
 
@@ -527,7 +527,8 @@ class NativeSigningProvider implements SigningProviderInterface {
 						'schema' => $schema,
 						'externalId' => $externalId,
 					],
-				]
+				],
+				_rbac: false
 			);
 
 			if (is_iterable($results) === false) {

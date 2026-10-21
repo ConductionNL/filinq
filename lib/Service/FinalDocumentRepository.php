@@ -404,17 +404,14 @@ class FinalDocumentRepository {
 		unset($record['uuid']);
 
 		try {
-			$objectService = $this->objectResolver->resolve();
-			$arguments = [
-				'object'   => $record,
-				'register' => self::REGISTER,
-				'schema'   => self::SCHEMA,
-			];
-			if ($uuid !== null) {
-				$arguments['uuid'] = $uuid;
-			}
-
-			$stored = $objectService->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $record,
+				register: self::REGISTER,
+				schema: self::SCHEMA,
+				uuid: $uuid,
+				_rbac: false,
+				_unowned: true
+			);
 		} catch (Throwable $e) {
 			$this->logger->error(
 				message: '[FinalDocumentRepository] could not store a finalisation record',
