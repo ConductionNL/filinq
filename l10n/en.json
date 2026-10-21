@@ -2783,7 +2783,14 @@
         "The check could not be recorded, so the document is still not checked. Try again.": "The check could not be recorded, so the document is still not checked. Try again.",
         "Ask about at most %s documents at a time.": "Ask about at most %s documents at a time.",
         "%n files still need a check before they can be anonymised:": "%n files still need a check before they can be anonymised:",
-        "The checked files are anonymised. %n files were not checked and were left alone:": "The checked files are anonymised. %n files were not checked and were left alone:"
+        "The checked files are anonymised. %n files were not checked and were left alone:": "The checked files are anonymised. %n files were not checked and were left alone:",
+        "Status history": "Status history",
+        "{when}: {who} changed {field} from {from} to {to}": "{when}: {who} changed {field} from {from} to {to}",
+        "Evidence": "Evidence",
+        "Evidence: {evidence}": "Evidence: {evidence}",
+        "How did the answer reach you?": "How did the answer reach you?",
+        "For example: signed form received by post on 20 October": "For example: signed form received by post on 20 October",
+        "Only a consent officer can record the outcome of a consent request.": "Only a consent officer can record the outcome of a consent request."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

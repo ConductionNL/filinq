@@ -335,7 +335,8 @@ class ConsentService {
 			consentId: $consentId,
 			register: $register,
 			schema: $schema,
-			data: $data
+			data: $data,
+			actor: (string) $user?->getUID()
 		);
 
 	}//end validateAndUpdateConsent()
@@ -347,6 +348,7 @@ class ConsentService {
 	 * @param string $register The register ID
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
+	 * @param string $actor The user making the change, recorded on each status event
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -359,12 +361,14 @@ class ConsentService {
 		string $register,
 		string $schema,
 		array $data,
+		string $actor = '',
 	): array {
 		return $this->updateHandler->updateConsentStatus(
 			consentId: $consentId,
 			register: $register,
 			schema: $schema,
-			data: $data
+			data: $data,
+			actor: $actor
 		);
 
 	}//end updateConsentStatus()
