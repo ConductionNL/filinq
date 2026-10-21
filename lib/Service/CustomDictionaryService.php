@@ -107,18 +107,6 @@ class CustomDictionaryService {
 	}//end __construct()
 
 	/**
-	 * What the caller may do with custom dictionaries.
-	 *
-	 * @return array{canMaintain: bool}
-	 *
-	 * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
-	 */
-	public function capabilities(): array {
-		return ['canMaintain' => $this->accessGate->mayMaintain()];
-
-	}//end capabilities()
-
-	/**
 	 * Whether OpenRegister is installed. Callers use this to return an
 	 * explanatory unavailable state instead of crashing (REQ-DDCDR-004).
 	 *
