@@ -208,11 +208,10 @@ class ProhibitionGateService {
 	/**
 	 * Move every release to the rejected list unless the user may override.
 	 *
-	 * @param array{released: array<string, array<string, mixed>>, rejected: array<int, array<string, mixed>>} $split
-	 *        The overrides as splitOverrides() divided them.
-	 * @param string $userId The acting user.
+	 * @param array<string, array<mixed>> $split  The overrides as splitOverrides() divided them.
+	 * @param string                      $userId The acting user.
 	 *
-	 * @return array{released: array<string, array<string, mixed>>, rejected: array<int, array<string, mixed>>}
+	 * @return array<string, array<mixed>> The same shape, with unauthorised releases rejected.
 	 *
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
 	 */
