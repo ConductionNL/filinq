@@ -166,18 +166,10 @@ class ProhibitionGateService {
 			return;
 		}
 
-		$split = $this->splitOverrides(matches: $matches, overrides: $overrides);
-		if ($split['released'] !== [] && $this->authority->mayOverride(userId: $userId) === false) {
-			foreach ($split['released'] as $override) {
-				$split['rejected'][] = [
-					'ruleId' => $override['match']['ruleId'],
-					'entityId' => $override['match']['entityId'],
-					'reason' => 'only a policy admin may override a publication prohibition',
-				];
-			}
-
-			$split['released'] = [];
-		}
+		$split = $this->withoutUnauthorisedReleases(
+			split: $this->splitOverrides(matches: $matches, overrides: $overrides),
+			userId: $userId
+		);
 		$missing = $this->collectMissingMatches(
 			matches: $matches,
 			released: $split['released'],
@@ -212,6 +204,36 @@ class ProhibitionGateService {
 		}
 
 	}//end run()
+
+	/**
+	 * Move every release to the rejected list unless the user may override.
+	 *
+	 * @param array{released: array<string, array<string, mixed>>, rejected: array<int, array<string, mixed>>} $split
+	 *        The overrides as splitOverrides() divided them.
+	 * @param string $userId The acting user.
+	 *
+	 * @return array{released: array<string, array<string, mixed>>, rejected: array<int, array<string, mixed>>}
+	 *
+	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+	 */
+	private function withoutUnauthorisedReleases(array $split, string $userId): array {
+		if ($split['released'] === [] || $this->authority->mayOverride(userId: $userId) === true) {
+			return $split;
+		}
+
+		foreach ($split['released'] as $override) {
+			$split['rejected'][] = [
+				'ruleId' => $override['match']['ruleId'],
+				'entityId' => $override['match']['entityId'],
+				'reason' => 'only a policy admin may override a publication prohibition',
+			];
+		}
+
+		$split['released'] = [];
+
+		return $split;
+
+	}//end withoutUnauthorisedReleases()
 
 	/**
 	 * Read the high-confidence threshold from app config.

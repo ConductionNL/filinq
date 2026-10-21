@@ -148,7 +148,7 @@ class PublicationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$record = $this->authorised(id: $id, act: false);
+		$record = $this->readable(id: $id);
 		if ($record === null) {
 			return $this->forbidden();
 		}
@@ -172,7 +172,7 @@ class PublicationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function readiness(string $id): JSONResponse {
-		$record = $this->authorised(id: $id, act: false);
+		$record = $this->readable(id: $id);
 		if ($record === null) {
 			return $this->forbidden();
 		}
@@ -275,30 +275,36 @@ class PublicationController extends Controller {
 	/**
 	 * The record, when the caller may act on it.
 	 *
-	 * @param string $id  The record
-	 * @param bool   $act True for a step that changes the publication, false to read it
+	 * @param string $id The record
 	 *
 	 * @return array<string, mixed>|null The record, or null for "not found or not yours".
 	 */
-	private function authorised(string $id, bool $act = true): ?array {
+	private function authorised(string $id): ?array {
 		$record = $this->store->findRecord(uuid: $id);
-		if ($record === null) {
-			return null;
-		}
-
-		$fileId = (string) ($record['documentFileRef'] ?? '');
-		$allowed = $this->access->maySee(uid: $this->uid(), fileId: $fileId);
-		if ($act === true) {
-			$allowed = $this->access->mayAct(uid: $this->uid(), fileId: $fileId);
-		}
-
-		if ($allowed === false) {
+		if ($record === null || $this->access->mayAct(uid: $this->uid(), fileId: (string) ($record['documentFileRef'] ?? '')) === false) {
 			return null;
 		}
 
 		return $record;
 
 	}//end authorised()
+
+	/**
+	 * The record, when the caller may read it.
+	 *
+	 * @param string $id The record
+	 *
+	 * @return array<string, mixed>|null The record, or null for "not found or not yours".
+	 */
+	private function readable(string $id): ?array {
+		$record = $this->store->findRecord(uuid: $id);
+		if ($record === null || $this->access->maySee(uid: $this->uid(), fileId: (string) ($record['documentFileRef'] ?? '')) === false) {
+			return null;
+		}
+
+		return $record;
+
+	}//end readable()
 
 	/**
 	 * Run a pipeline step and answer with its record or its error.
