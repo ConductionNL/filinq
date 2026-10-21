@@ -641,19 +641,17 @@ class SigningServiceTest extends TestCase {
 	}//end testGetRequestReturnsObjectWhenFound()
 
 	/**
-	 * getRequest() throws when the request is not found.
+	 * getRequest() answers null for a request that does not exist, the same
+	 * answer a caller gets for one that is not theirs.
 	 *
 	 * @return void
 	 */
-	public function testGetRequestThrowsWhenNotFound(): void {
+	public function testGetRequestReturnsNullWhenNotFound(): void {
 		$this->objectService->method('find')->willReturn(null);
 
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('Signing request not found');
+		$this->assertNull(actual: $this->service->getRequest(requestId: 'does-not-exist'));
 
-		$this->service->getRequest(requestId: 'does-not-exist');
-
-	}//end testGetRequestThrowsWhenNotFound()
+	}//end testGetRequestReturnsNullWhenNotFound()
 
 	/**
 	 * listRequests() returns an array of request arrays when the paginated
