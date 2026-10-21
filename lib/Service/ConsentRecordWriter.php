@@ -324,7 +324,8 @@ class ConsentRecordWriter {
 		$savedObject = $this->getObjectService()->saveObject(
 			object: $updated,
 			register: $register,
-			schema: $schema
+			schema: $schema,
+			_rbac: false
 		);
 
 		$this->logger->info(

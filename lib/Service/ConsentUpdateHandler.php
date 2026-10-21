@@ -45,6 +45,7 @@ class ConsentUpdateHandler {
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param ContainerInterface $container Container for dependency injection
 	 * @param IAppManager $appManager App manager interface
+	 * @param ConsentStatusEvents $statusEvents Declared status moves, recorded as events
 	 *
 	 * @return void
 	 */
@@ -52,6 +53,7 @@ class ConsentUpdateHandler {
 		private readonly LoggerInterface $logger,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
+		private readonly ConsentStatusEvents $statusEvents = new ConsentStatusEvents(),
 	) {
 
 	}//end __construct()
@@ -78,9 +80,11 @@ class ConsentUpdateHandler {
 	 * @param string $register The register ID
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
+	 * @param string $actor The user making the change, recorded on each status event
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
+	 * @throws \InvalidArgumentException With code 400 for an undeclared status move or missing evidence
 	 * @throws Exception If update fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
@@ -90,6 +94,7 @@ class ConsentUpdateHandler {
 		string $register,
 		string $schema,
 		array $data,
+		string $actor = '',
 	): array {
 		try {
 			$objectService = $this->getObjectService();
@@ -101,7 +106,8 @@ class ConsentUpdateHandler {
 			$object = $objectService->find(
 				id: $consentId,
 				register: $register,
-				schema: $schema
+				schema: $schema,
+				_rbac: false
 			);
 
 			if ($object === null) {
@@ -137,12 +143,21 @@ class ConsentUpdateHandler {
 			// overridden by operators (restored after 917b80e7 wiped it).
 			$this->guardPolicyPreemptedTransition(existing: $existing, data: $allowedData);
 
+			$allowedData = $this->statusEvents->apply(
+				existing: $existing,
+				changes: $allowedData,
+				actor: $actor,
+				evidence: (string) ($data['evidence'] ?? ''),
+				now: new \DateTimeImmutable()
+			);
+
 			$consentData = array_merge($existing, $allowedData);
 
 			$savedObject = $objectService->saveObject(
 				object: $consentData,
 				register: $register,
-				schema: $schema
+				schema: $schema,
+				_rbac: false
 			);
 
 			$this->logger->info(
@@ -154,6 +169,8 @@ class ConsentUpdateHandler {
 			);
 
 			return $savedObject->getObject();
+		} catch (\InvalidArgumentException $e) {
+			throw $e;
 		} catch (Exception $e) {
 			$this->logger->error(
 				'Failed to update consent status: ' . $e->getMessage(),

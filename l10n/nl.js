@@ -2846,7 +2846,14 @@ OC.L10N.register(
         "The check does not say who did it. Check the detected data again before anonymising.": "Bij de controle staat niet wie hem heeft gedaan. Controleer de gevonden gegevens opnieuw voordat u anonimiseert.",
         "A check is signed by a person, and this request has none.": "Een controle wordt ondertekend door een persoon, en dit verzoek heeft er geen.",
         "The check could not be recorded, so the document is still not checked. Try again.": "De controle kon niet worden vastgelegd, dus het document is nog niet gecontroleerd. Probeer het opnieuw.",
-        "Ask about at most %s documents at a time.": "Vraag naar hooguit %s documenten tegelijk."
+        "Ask about at most %s documents at a time.": "Vraag naar hooguit %s documenten tegelijk.",
+        "Status history": "Statusgeschiedenis",
+        "{when}: {who} changed {field} from {from} to {to}": "{when}: {who} wijzigde {field} van {from} naar {to}",
+        "Evidence": "Bewijs",
+        "Evidence: {evidence}": "Bewijs: {evidence}",
+        "How did the answer reach you?": "Hoe kwam het antwoord bij u binnen?",
+        "For example: signed form received by post on 20 October": "Bijvoorbeeld: ondertekend formulier per post ontvangen op 20 oktober",
+        "Only a consent officer can record the outcome of a consent request.": "Alleen een toestemmingsfunctionaris kan de uitkomst van een toestemmingsverzoek vastleggen."
     },
     "nplurals=2; plural=(n != 1);"
 )

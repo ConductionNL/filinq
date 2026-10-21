@@ -203,6 +203,8 @@ here with a reason.**
 | `Service/Signing/GuardianConsentGuard.php` | 1 | Reads the signer record a guardian entry points at, inside an authorised create or sign. |
 | `Service/SigningAuditService.php` | 1 | Reads the signing request only to bind an audit entry to it. |
 | `Service/Editing/DocumentGuard.php` | 1 | Looks for a live signing request or anonymisation link on a file to REFUSE an edit; it must see every row whoever asks, or the guard fails open. Returns a refusal sentence only. |
+| `Service/ConsentUpdateHandler.php` | 2 | Reads and saves a consent record only after `ConsentController::update()` found it readable for the caller and confirmed a consent officer, policy admin or admin. Every status change must be a declared move and is appended to `statusEvents` with who, when and the evidence (`ConsentStatusEvents`). The whitelist of mutable fields and the policy pre-emption lock still apply. |
+| `Service/ConsentRecordWriter.php` | 1 | The idempotent re-request path updates an existing consent record for the same document and entity, which another user may have opened; it writes only operator fields and keeps every workflow field (`PRESERVED_FIELDS`). |
 | `Controller/PortalSigningReceiverController.php` | 1 | The signer portal is anonymous by design and binds a `signerRecord` to a token **and** an email **and** a signing-request id, refusing with the same `null` for a wrong email, a wrong request, and an unresolvable register — so no new signal is exposed. |
 
 `Service/ConsentCrudService.php` contains the string `_rbac: false` in a comment that
