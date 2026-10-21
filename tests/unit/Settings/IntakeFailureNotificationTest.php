@@ -94,7 +94,7 @@ class IntakeFailureNotificationTest extends TestCase {
 		$this->assertNotSame([], $recipients);
 		$this->assertSame('groups', $recipients[0]['kind']);
 		$this->assertNotSame([], $recipients[0]['groups']);
-		$this->assertContains('docudesk-woo-officers', $recipients[0]['groups']);
+		$this->assertContains('filinq-woo-officers', $recipients[0]['groups']);
 	}//end testTheRecipientNamesAGroupAndNotAnEmptyList()
 
 	/**

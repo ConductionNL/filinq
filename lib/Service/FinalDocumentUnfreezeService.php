@@ -49,15 +49,13 @@ class FinalDocumentUnfreezeService {
 	/**
 	 * The named right that unfreezing needs.
 	 *
-	 * The `docudesk-` prefix is the family every group in this app already
-	 * belongs to (`docudesk-policy-admins`, `docudesk-signing-admins`). Group
-	 * names are configuration an administrator has already typed on live
-	 * instances, so the family stays on the old prefix rather than splitting in
-	 * two when the app id moves.
+	 * One of the `filinq-*` role groups (`filinq-policy-admins`,
+	 * `filinq-signing-admins`); RenameRoleGroups carries the members of the
+	 * old `docudesk-*` group over.
 	 *
 	 * @var string
 	 */
-	public const UNFREEZE_GROUP = 'docudesk-final-document-admins';
+	public const UNFREEZE_GROUP = 'filinq-final-document-admins';
 
 	/**
 	 * Constructor.

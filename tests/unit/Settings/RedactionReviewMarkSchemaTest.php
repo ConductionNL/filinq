@@ -115,7 +115,7 @@ class RedactionReviewMarkSchemaTest extends TestCase {
 			$authorization['create'],
 			'any authenticated user creating a mark would let somebody approve their own document'
 		);
-		$this->assertContains('docudesk-woo-officers', $authorization['create']);
+		$this->assertContains('filinq-woo-officers', $authorization['create']);
 	}//end testAMarkCannotBeSignedByJustAnybody()
 
 	/**
@@ -129,7 +129,7 @@ class RedactionReviewMarkSchemaTest extends TestCase {
 
 		foreach (['update', 'delete'] as $action) {
 			$this->assertNotContains('authenticated', $authorization[$action], $action);
-			$this->assertContains('docudesk-policy-admins', $authorization[$action], $action);
+			$this->assertContains('filinq-policy-admins', $authorization[$action], $action);
 		}
 	}//end testAMarkCannotBeAmendedByJustAnybody()
 

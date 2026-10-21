@@ -13,7 +13,7 @@ without an entry here.
 > ⚠️ **The group ids below still say `docudesk-`, and that is deliberate.** The app
 > id was renamed `docudesk` → `filinq`; these Nextcloud GROUP ids were not, and must
 > not be renamed as part of a rebrand. OpenRegister provisions a declared group
-> **create-only**, so renaming `docudesk-template-editors` to `filinq-template-editors`
+> **create-only**, so renaming `filinq-template-editors` to `filinq-template-editors`
 > does not rename anything — it creates a **new, empty** group while the existing one
 > keeps every member and nothing reads it any more. An empty group denies everyone
 > except admins and object owners, so the symptom is writes starting to 403 for
@@ -77,15 +77,15 @@ ahead of the content-hash skip, so they exist on every instance.
 
 | Group | Owns |
 |---|---|
-| `docudesk-template-editors` | templates, versions, house style, and the correspondence/document audit rows they produce |
-| `docudesk-policy-admins` | Woo Art. 5 grounds, anonymisation recognisers, consent, prohibition overrides, dossiers |
-| `docudesk-financial-admins` | invoice/receipt extraction and GL-account mapping |
-| `docudesk-signing-admins` | signing requests, signers, sessions, signing audit |
-| `docudesk-privacy-officer` | subject erasure requests and the certificates that close them. Introduced by the erasure change (#1128). |
-| `docudesk-woo-officers` | Woo redaction review: confirming a human looked at the detected entities before a redacted copy may be written. Introduced by the redaction change (#1124); recorded here because a misspelt group denies everyone and logs nothing, so it is indistinguishable from a working access control. |
+| `filinq-template-editors` | templates, versions, house style, and the correspondence/document audit rows they produce |
+| `filinq-policy-admins` | Woo Art. 5 grounds, anonymisation recognisers, consent, prohibition overrides, dossiers |
+| `filinq-financial-admins` | invoice/receipt extraction and GL-account mapping |
+| `filinq-signing-admins` | signing requests, signers, sessions, signing audit |
+| `filinq-privacy-officer` | subject erasure requests and the certificates that close them. Introduced by the erasure change (#1128). |
+| `filinq-woo-officers` | Woo redaction review: confirming a human looked at the detected entities before a redacted copy may be written. Introduced by the redaction change (#1124); recorded here because a misspelt group denies everyone and logs nothing, so it is indistinguishable from a working access control. |
 | `filinq-intake-clerks` | the intake inbox: reading waiting documents, assigning them to a record, rejecting them |
-| `docudesk-standing-consent-admins` | standing consents (publish-always rules for a recurring person) |
-| `docudesk-final-document-admins` | unfreezing a final document, and declaring which record-type states freeze one |
+| `filinq-standing-consent-admins` | standing consents (publish-always rules for a recurring person) |
+| `filinq-final-document-admins` | unfreezing a final document, and declaring which record-type states freeze one |
 
 **They ship empty on purpose.** An empty group denies everyone except admins and
 object owners. That is the correct default and it is immediately visible, which is
@@ -112,11 +112,11 @@ deliberately.
 | `anonymizationLink` | authenticated | authenticated | policy-admins | Written by the anonymiser running as the acting user. |
 | `anonymizationBatch` | **policy-admins** | authenticated | policy-admins | Working state of one multi-file anonymisation run. `read` is restricted because the record lists the filenames of a user's private documents, and the batch owner reaches their own batch through the owner bypass. Filinq's own reads and writes go through `BatchStateRepository` with `_rbac: false` (recorded below) and are ownership-checked in `BatchStateService::getBatch()` instead, so this cascade governs only direct OpenRegister API access. Added with the schema in register v7.10.0 rather than omitted — an omitted cascade is OPEN, so shipping a new schema without one re-opens exactly the hole v7.9.0 closed. |
 | `documentRegistration` | authenticated | **policy-admins** | policy-admins | The post register is a shared record: colleagues across the organisation need to see what came in and what went out, so `read` stays open to authenticated users. Writing is restricted, because a registration is a numbered claim about an official act and its number is drawn from a shared sequence: a number allocated and then abandoned leaves a gap in a series meant to read end to end, and an unexplained gap reads as a lost document. `delete` is restricted for the same reason, and `withdrawnReason` exists so a gap can be explained rather than hidden. |
-| `subjectErasureRequest` | admins only | nobody (server only) | nobody | A request names a person and every document they appear in. Who handles erasures is set in ONE place, the `subject_erasure_groups` setting (default `docudesk-privacy-officer` and `docudesk-policy-admins`) that `SubjectErasureAuthority` checks on every endpoint. The schema grants nobody but admins, so the API and the endpoints cannot disagree when the setting changes. `SubjectErasureStore` writes past the cascade with the system as owner. |
+| `subjectErasureRequest` | admins only | nobody (server only) | nobody | A request names a person and every document they appear in. Who handles erasures is set in ONE place, the `subject_erasure_groups` setting (default `filinq-privacy-officer` and `filinq-policy-admins`) that `SubjectErasureAuthority` checks on every endpoint. The schema grants nobody but admins, so the API and the endpoints cannot disagree when the setting changes. `SubjectErasureStore` writes past the cascade with the system as owner. |
 | `erasureCertificate` | admins only | nobody (server only) | nobody | ⚠️ A certificate cannot be amended. Written by `SubjectErasureStore` past the cascade with the system as owner, and served by the erasure endpoints after `SubjectErasureAuthority` (the `subject_erasure_groups` setting). Empty lists are deliberate. |
 | `redactionReviewMark` | authenticated | **woo-officers + policy-admins** | policy-admins | The mark is the evidence a person looked at the detected entities before a redacted copy was written, so `create` is the act being evidenced and belongs to the officers who perform it. `read` stays open because the mark is what lets anybody else trust the redacted copy, and a review nobody can see proves nothing. |
 | `downloadAgreement` | authenticated | authenticated | policy-admins | `create` is deliberately open: the agreement records that THIS person accepted these terms, so the person accepting has to be able to write it. Restricting it would mean somebody else recording an acceptance on their behalf, which is the one thing the record exists to rule out. `update` and `delete` are restricted, because an acceptance that can be edited afterwards is not evidence of anything. |
-| `publicationConsent` | **policy-admins** | authenticated for `scope: document` only; standing-consent-admins | policy-admins | GDPR consent records about identified people. A data subject's document consent is created by a signed-in user; a standing consent (`scope: entity`, "publish always") only by `docudesk-standing-consent-admins`, so nobody can grant themselves a publish-always rule through the OpenRegister API. |
+| `publicationConsent` | **policy-admins** | authenticated for `scope: document` only; standing-consent-admins | policy-admins | GDPR consent records about identified people. A data subject's document consent is created by a signed-in user; a standing consent (`scope: entity`, "publish always") only by `filinq-standing-consent-admins`, so nobody can grant themselves a publish-always rule through the OpenRegister API. |
 | `publicationProhibition` | **policy-admins** | policy-admins | policy-admins | Publish-never rules. Read was declared for a group named `consent`, which no setup creates; it now names the policy admins who maintain the rules. Matching reads them past the cascade (see `PolicyMatchService`). |
 | `prohibitionOverrideAudit` | **policy-admins** | **authenticated** | policy-admins | ⚠️ `create` is deliberately open. Register v7.7.0 records that restricting it re-breaks the fail-closed override path for the ordinary operator who performs the anonymise: the write is explicitly "if the audit write fails we MUST NOT proceed", so a denied create raises 500 on every acknowledged override and no override can ever be committed. |
 | `signingRequest` | **signing-admins** | authenticated | signing-admins | A signing request names its signers. Safe to restrict: the signer portal resolves records with `_rbac: false` behind its own token binding (see below), so the signer flow does not depend on this cascade. |
@@ -153,7 +153,7 @@ deliberately.
 | `documentContract` | `filinq-contract-managers` | `filinq-contract-managers` | `filinq-contract-managers`, delete admins | A contract carries its value and the people and companies it binds, so the whole schema belongs to the contract managers group, not to every signed-in user. The contract routes (renew, terminate, suggestions) read the contract as the caller first and answer 404 for one they cannot read. Only an admin deletes one: a contract is a record, ended by terminating or renewing it. |
 | `sanitizationRecord` | authenticated | authenticated | nobody updates, delete admins | Written by the sanitize action and the anonymiser as the acting user. It holds counts per category and file ids, never removed content. Nobody may change a record: it is evidence that a file was cleaned, and the publication hand-off reads it. |
 | `emailDocument` | admins | nobody (the system writes) | nobody (the system writes), delete admins | One row per email filed from a watched inbox into a dossier. It names sender, recipients and subject, so the REST API offers it to admins only: every list is empty, which leaves OpenRegister's admin bypass and nothing else. The ingestion job runs as the system and writes past the cascade; the status page and its routes are served by `EmailIngestionController` to admins and delegated admins of the filinq settings only (see the bypass table). The email itself is a file in the dossier folder and follows that folder's permissions. |
-| `wizardDefinition` | signed-in users | template editors (`docudesk-template-editors`) | template editors | The interview in front of a template. Clerks read it to run the wizard; the group that edits templates writes it, like the `template` schema. `WizardService` also refuses a save while another user holds the template's lock (423) and a second active wizard for the same template (409). It holds questions, never answers: the answers of a run are stored on the `generatedDocument` record. |
+| `wizardDefinition` | signed-in users | template editors (`filinq-template-editors`) | template editors | The interview in front of a template. Clerks read it to run the wizard; the group that edits templates writes it, like the `template` schema. `WizardService` also refuses a save while another user holds the template's lock (423) and a second active wizard for the same template (409). It holds questions, never answers: the answers of a run are stored on the `generatedDocument` record. |
 | `classificationResult` | admins | nobody (the system writes) | nobody (the service writes), delete admins | One suggestion per inbound file: a document type, at most one sender name and a dossier reference. It names who a document is from, so the REST API offers it to admins only: every list is empty, which leaves OpenRegister's admin bypass and nothing else. `InboundClassificationService` writes it from the enrichment path and `ClassificationDecisionService` records a person's decision; both go through `ClassificationResultRepository` (see the bypass table). A reviewer reaches a record only through `api/classification`, and only for a file they can open in their own Nextcloud folder. |
 
 | `printJob` | the requester (`requestedBy` = `$userId`) | **nobody** (server only) | nobody | A print job holds a user's rendered letters. Only `PrintJobRepository` writes it, owned by the system, so `requestedBy` is no longer a field the requester (or anyone) can rewrite. The endpoints show a job to the person in `requestedBy` or an admin only. |
@@ -170,11 +170,11 @@ here with a reason.**
 
 | File | Sites | Compensating control |
 |---|---|---|
-| `Service/PolicyCrudService.php` | 5 | `requirePolicyPermission()` asserts membership in `docudesk-policy-admins` / `docudesk-standing-consent-admins` for **every** action including `read`, before the lookup runs. |
+| `Service/PolicyCrudService.php` | 5 | `requirePolicyPermission()` asserts membership in `filinq-policy-admins` / `filinq-standing-consent-admins` for **every** action including `read`, before the lookup runs. |
 | `Service/CustomDictionaryRepository.php` | 4 | Recogniser lists are read during anonymisation, which runs on behalf of a user who may not hold the maintainer group. Read-only; no caller-supplied id reaches it. |
 | `Service/DossierObjectRepository.php` | 3 | Dossier contents are governed by Nextcloud folder permissions, which are checked before the repository is reached. |
 | `Service/EmailIngestion/EmailDocumentRepository.php` | 3 | The email ingestion job files mail as the system from a cron tick, with no user to check, and the idempotency reads must see every record of a dossier. The only other callers are the `api/email-ingestion` routes, which `EmailIngestionController` guards with `#[AuthorizedAdminSetting]` before the repository is reached. No caller-supplied filter reaches OpenRegister beyond status and dossier. |
-| `Service/BatchStateRepository.php` | 3 | Batch state is Filinq's own working state, written and read only by `BatchStateService` — no OpenRegister API caller reaches this class. Ownership is enforced one layer up in `BatchStateService::getBatch()`, which returns `null` (not a distinct error) for a batch belonging to another non-admin user, so a guessed batch id is indistinguishable from an absent one. The bypass is required, not convenient: the cascade restricts `update`/`delete` to `docudesk-policy-admins`, which ships **empty**, so an ordinary user's own extraction run would fail closed at its first status write. |
+| `Service/BatchStateRepository.php` | 3 | Batch state is Filinq's own working state, written and read only by `BatchStateService` — no OpenRegister API caller reaches this class. Ownership is enforced one layer up in `BatchStateService::getBatch()`, which returns `null` (not a distinct error) for a batch belonging to another non-admin user, so a guessed batch id is indistinguishable from an absent one. The bypass is required, not convenient: the cascade restricts `update`/`delete` to `filinq-policy-admins`, which ships **empty**, so an ordinary user's own extraction run would fail closed at its first status write. |
 | `Service/Classification/ClassificationResultRepository.php` | 2 | The suggestion is written from the enrichment path, which runs as the system inside another app's save, and the one-active-record-per-file read must see every record of a file. The schema grants admins only; the people who decide reach a record through `ClassificationDecisionService` alone, which first resolves the file in the caller's own folder and answers 404 for a file they cannot open, the same answer as for a file without a suggestion. |
 | `Service/Classification/ClassificationSources.php` | 1 | Reads the dossier names to propose a dossier on an exact name match. Only the matched dossier's uuid is stored on the suggestion, never its content, and confirming one moves the file only into a dossier folder the reviewer can open themselves; otherwise the filing is recorded, not done. |
 | `Service/PolicyMatchService.php` | 2 | Matching must see every prohibition regardless of the acting user, or an anonymisation silently under-redacts. Fail-closed by design. |
@@ -220,9 +220,9 @@ authorization reads:
 
 ```json
 { "read": ["authenticated"],
-  "create": ["docudesk-template-editors"],
-  "update": ["docudesk-template-editors"],
-  "delete": ["docudesk-template-editors"] }
+  "create": ["filinq-template-editors"],
+  "update": ["filinq-template-editors"],
+  "delete": ["filinq-template-editors"] }
 ```
 
 **Read is deliberately open to authenticated users.** A rate card is quoted back to
@@ -230,7 +230,7 @@ clients; a price nobody inside the organisation may read is a price nobody can q
 and the data is not personal. Multitenancy still applies on the row, so "authenticated"
 means authenticated *within this organisation*, not everyone on the instance.
 
-**Writes are narrowed to `docudesk-template-editors`**, the same group that owns
+**Writes are narrowed to `filinq-template-editors`**, the same group that owns
 templates, because a rate card is priced content of exactly that kind: changing it
 changes what every future quotation says.
 

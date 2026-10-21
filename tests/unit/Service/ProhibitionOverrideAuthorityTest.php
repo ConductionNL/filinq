@@ -59,7 +59,7 @@ class ProhibitionOverrideAuthorityTest extends TestCase {
 	 * @return void
 	 */
 	public function testThePolicyAdminsOverrideByDefault(): void {
-		$this->assertTrue(condition: $this->authority(setting: null, memberOf: ['docudesk-policy-admins'])->mayOverride(userId: 'anna'));
+		$this->assertTrue(condition: $this->authority(setting: null, memberOf: ['filinq-policy-admins'])->mayOverride(userId: 'anna'));
 		$this->assertFalse(condition: $this->authority(setting: null, memberOf: ['staff'])->mayOverride(userId: 'bob'));
 		$this->assertFalse(condition: $this->authority(setting: null, memberOf: [])->mayOverride(userId: ''));
 
@@ -72,7 +72,7 @@ class ProhibitionOverrideAuthorityTest extends TestCase {
 	 */
 	public function testTheSettingNamesTheGroupsAndABrokenOneLeavesAdminsOnly(): void {
 		$this->assertTrue(condition: $this->authority(setting: '["woo-team"]', memberOf: ['woo-team'])->mayOverride(userId: 'anna'));
-		$this->assertFalse(condition: $this->authority(setting: 'not json', memberOf: ['docudesk-policy-admins'])->mayOverride(userId: 'anna'));
+		$this->assertFalse(condition: $this->authority(setting: 'not json', memberOf: ['filinq-policy-admins'])->mayOverride(userId: 'anna'));
 		$this->assertTrue(condition: $this->authority(setting: 'not json', memberOf: [], isAdmin: true)->mayOverride(userId: 'admin'));
 
 	}//end testTheSettingNamesTheGroupsAndABrokenOneLeavesAdminsOnly()

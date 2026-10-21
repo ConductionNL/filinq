@@ -1836,6 +1836,15 @@ interface IGroupManager {
 	 * @return IGroup|null The group, or null when it does not exist.
 	 */
 	public function get($gid);
+
+	/**
+	 * Create a group. Signature pinned to OCP\IGroupManager::createGroup($gid).
+	 *
+	 * @param string $gid The group id.
+	 *
+	 * @return IGroup|null
+	 */
+	public function createGroup($gid);
 }//end interface
 
 /**
@@ -1858,6 +1867,47 @@ interface IGroup {
 	 * @return int|bool The member count, or false when the backend cannot count.
 	 */
 	public function count(string $search = ''): int|bool;
+
+	/**
+	 * The members. Pinned to OCP\IGroup::getUsers().
+	 *
+	 * @return array<int, IUser>
+	 */
+	public function getUsers(): array;
+
+	/**
+	 * Whether a user is a member. Pinned to OCP\IGroup::inGroup().
+	 *
+	 * @param IUser $user The user.
+	 *
+	 * @return bool
+	 */
+	public function inGroup(IUser $user): bool;
+
+	/**
+	 * Add a member. Pinned to OCP\IGroup::addUser().
+	 *
+	 * @param IUser $user The user.
+	 *
+	 * @return void
+	 */
+	public function addUser(IUser $user): void;
+
+	/**
+	 * Remove a member. Pinned to OCP\IGroup::removeUser().
+	 *
+	 * @param IUser $user The user.
+	 *
+	 * @return void
+	 */
+	public function removeUser(IUser $user): void;
+
+	/**
+	 * Delete the group. Pinned to OCP\IGroup::delete().
+	 *
+	 * @return bool
+	 */
+	public function delete(): bool;
 }//end interface
 
 namespace OCP\Files;

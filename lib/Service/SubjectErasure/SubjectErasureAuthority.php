@@ -50,7 +50,7 @@ class SubjectErasureAuthority {
 	 *
 	 * @var string
 	 */
-	public const DEFAULT_GROUPS = '["docudesk-privacy-officer","docudesk-policy-admins"]';
+	public const DEFAULT_GROUPS = '["filinq-privacy-officer","filinq-policy-admins"]';
 
 	/**
 	 * Constructor.

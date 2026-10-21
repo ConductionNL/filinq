@@ -95,8 +95,8 @@ file the terms exist to account for.
 | GET | `/api/redaction/agreement` | The conditions a document is gated on |
 | POST | `/api/redaction/agreement/accept` | Accept them, and unlock the download |
 
-Marking a document checked is restricted to `docudesk-woo-officers` and
-`docudesk-policy-admins`. Both ship empty, so nobody signs an approval by
+Marking a document checked is restricted to `filinq-woo-officers` and
+`filinq-policy-admins`. Both ship empty, so nobody signs an approval by
 default. The checker is taken from the session, never from the request, so no
 caller can sign in somebody else's name.
 

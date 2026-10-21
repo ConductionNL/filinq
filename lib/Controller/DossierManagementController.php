@@ -16,7 +16,7 @@
  * enforced. That cascade currently declares `read: ["authenticated"]`, so the
  * read guard resolves to an existence test for any authenticated user in the
  * organisation; `update` and `delete` are restricted to
- * `docudesk-policy-admins` plus OpenRegister's unconditional owner bypass, so
+ * `filinq-policy-admins` plus OpenRegister's unconditional owner bypass, so
  * an operator can always manage the dossiers they created.
  *
  * The FILE half is real regardless: every listing runs through the caller's own

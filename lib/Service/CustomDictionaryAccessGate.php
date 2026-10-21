@@ -54,7 +54,7 @@ class CustomDictionaryAccessGate {
 	 *
 	 * @var string
 	 */
-	public const MAINTAINER_GROUP = 'docudesk-policy-admins';
+	public const MAINTAINER_GROUP = 'filinq-policy-admins';
 
 	/**
 	 * OpenRegister's app id, used for the install-presence check.

@@ -46,7 +46,7 @@ class ProhibitionOverrideAuthority {
 	 *
 	 * @var string
 	 */
-	public const DEFAULT_GROUPS = '["docudesk-policy-admins"]';
+	public const DEFAULT_GROUPS = '["filinq-policy-admins"]';
 
 	/**
 	 * Constructor.
