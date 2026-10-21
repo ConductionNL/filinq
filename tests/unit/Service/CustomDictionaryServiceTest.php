@@ -392,4 +392,22 @@ class CustomDictionaryServiceTest extends TestCase {
 		}
 
 	}//end testANonMaintainerCannotChangeDictionaries()
+	/**
+	 * The capabilities answer says whether the caller may change dictionaries.
+	 *
+	 * @return void
+	 */
+	public function testCapabilitiesFollowTheMaintainerRole(): void {
+		$objectService = $this->createMock(ObjectService::class);
+
+		$this->assertSame(
+			expected: ['canMaintain' => true],
+			actual: $this->makeService(objectService: $objectService, maintainer: true)->capabilities()
+		);
+		$this->assertSame(
+			expected: ['canMaintain' => false],
+			actual: $this->makeService(objectService: $objectService, maintainer: false)->capabilities()
+		);
+
+	}//end testCapabilitiesFollowTheMaintainerRole()
 }//end class

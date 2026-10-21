@@ -95,6 +95,24 @@ class CustomDictionaryAccessGate {
 	}//end isAvailable()
 
 	/**
+	 * Whether the caller maintains custom dictionaries.
+	 *
+	 * @return bool True for an admin or a member of the maintainer group.
+	 *
+	 * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function mayMaintain(): bool {
+		try {
+			$this->assertMayMaintain();
+		} catch (RuntimeException) {
+			return false;
+		}
+
+		return true;
+
+	}//end mayMaintain()
+
+	/**
 	 * Refuse unless the caller maintains custom dictionaries.
 	 *
 	 * Creating, changing or deleting a list changes what anonymisation

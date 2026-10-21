@@ -95,6 +95,25 @@ class CustomDictionaryController extends Controller {
 	}//end index()
 
 	/**
+	 * What the caller may do with custom dictionaries, so the pages offer only that.
+	 *
+	 * @return JSONResponse `{ canMaintain: bool }`
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/changes/dictionary-actions-for-maintainers/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function capabilities(): JSONResponse {
+		return $this->dispatch(
+			operation: fn (): array => $this->service->capabilities(),
+			failureMessage: 'Failed to read custom dictionary capabilities: ',
+			notFoundMessage: $this->l10n->t('Custom dictionary not found')
+		);
+
+	}//end capabilities()
+
+	/**
 	 * Show a single dictionary.
 	 *
 	 * @param string $id Dictionary UUID.

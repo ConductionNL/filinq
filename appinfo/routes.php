@@ -188,6 +188,7 @@ $extra = [
         // Custom dictionaries — organisation-managed term-list CRUD + import
         // (custom-dictionary-recognition).
         ['name' => 'customDictionary#index', 'url' => 'api/custom-dictionaries', 'verb' => 'GET'],
+        ['name' => 'customDictionary#capabilities', 'url' => 'api/custom-dictionaries/capabilities', 'verb' => 'GET'],
         ['name' => 'customDictionary#create', 'url' => 'api/custom-dictionaries', 'verb' => 'POST'],
         ['name' => 'customDictionary#show', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'GET'],
         ['name' => 'customDictionary#update', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'PUT'],
