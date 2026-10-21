@@ -209,6 +209,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
             -->
             <step>OCA\Filinq\Repair\MigrateSchemaApplicationId</step>
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+            <!-- Hands rows of the server-only evidence schemas to the system identity; idempotent, deletes nothing. -->
+            <step>OCA\Filinq\Repair\UnownEvidenceRecords</step>
             <!-- WRITTEN BUT NEVER REGISTERED until now, so it never ran
                  anywhere. gate-98 (repair-step-registration) found it, and the
                  same step was unregistered in integriq (#1603).
@@ -248,6 +250,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
             <!-- Same step, same reason, same position: LAST. See the comment
                  above the <repair-steps> block. -->
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
+            <!-- Hands rows of the server-only evidence schemas to the system identity; idempotent, deletes nothing. -->
+            <step>OCA\Filinq\Repair\UnownEvidenceRecords</step>
         </install>
     </repair-steps>
     <commands>

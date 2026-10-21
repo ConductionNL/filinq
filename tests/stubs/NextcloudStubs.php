@@ -1706,6 +1706,15 @@ interface IDBConnection {
 	public function executeStatement(string $sql, array $params = [], array $types = []): int;
 
 	/**
+	 * Whether a table exists. Pinned to OCP\IDBConnection::tableExists().
+	 *
+	 * @param string $table The table name without prefix.
+	 *
+	 * @return bool
+	 */
+	public function tableExists(string $table): bool;
+
+	/**
 	 * The active database platform.
 	 *
 	 * Real OCP declares this and RenameDutchColumns calls it to quote identifiers.
