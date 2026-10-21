@@ -403,6 +403,7 @@ export default {
 		 * Recording consent or an objection needs evidence of how it came in.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
 		 */
 		needsEvidence() {
 			const next = this.editData.consentStatus?.value
@@ -414,6 +415,7 @@ export default {
 		 * The recorded status changes, oldest first.
 		 *
 		 * @return {Array<object>}
+		 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
 		 */
 		statusEvents() {
 			return Array.isArray(consentStore.consentItem?.statusEvents)

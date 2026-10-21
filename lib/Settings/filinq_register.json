@@ -528,23 +528,35 @@
                             "type": "object",
                             "properties": {
                                 "field": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "title": "Field",
+                                    "description": "The status field that changed: consentStatus or notificationStatus."
                                 },
                                 "from": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "title": "From",
+                                    "description": "The value before the change."
                                 },
                                 "to": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "title": "To",
+                                    "description": "The value after the change."
                                 },
                                 "by": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "title": "Changed by",
+                                    "description": "The user who made the change."
                                 },
                                 "at": {
                                     "type": "string",
-                                    "format": "date-time"
+                                    "format": "date-time",
+                                    "title": "Changed at",
+                                    "description": "When the change was made."
                                 },
                                 "evidence": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "title": "Evidence",
+                                    "description": "How the answer reached the organisation; required for consent given and objection received."
                                 }
                             }
                         }

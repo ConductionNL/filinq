@@ -456,8 +456,8 @@ class ConsentUpdateHandlerTest extends TestCase {
 		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
 		$this->mockContainer->method('get')->willReturn($objects);
 
-		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionCode(400);
+		$this->expectException(exception: \InvalidArgumentException::class);
+		$this->expectExceptionCode(code: 400);
 
 		$this->handler->updateConsentStatus(
 			consentId: 'c-1',

@@ -38,7 +38,11 @@ class ConsentStatusEventsTest extends TestCase {
 	 *
 	 * @return array<string, mixed>
 	 */
-	private function apply(array $changes, string $evidence = '', array $existing = ['consentStatus' => 'pending', 'notificationStatus' => 'sent']): array {
+	private function apply(
+		array $changes,
+		string $evidence = '',
+		array $existing = ['consentStatus' => 'pending', 'notificationStatus' => 'sent'],
+	): array {
 		return (new ConsentStatusEvents())->apply(
 			existing: $existing,
 			changes: $changes,
@@ -77,8 +81,8 @@ class ConsentStatusEventsTest extends TestCase {
 	 * @return void
 	 */
 	public function testConsentWithoutEvidenceIsRefused(): void {
-		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionCode(400);
+		$this->expectException(exception: InvalidArgumentException::class);
+		$this->expectExceptionCode(code: 400);
 
 		$this->apply(changes: ['consentStatus' => 'objection_received'], evidence: '  ');
 
@@ -90,8 +94,8 @@ class ConsentStatusEventsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUndeclaredMoveIsRefused(): void {
-		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionCode(400);
+		$this->expectException(exception: InvalidArgumentException::class);
+		$this->expectExceptionCode(code: 400);
 
 		$this->apply(changes: ['consentStatus' => 'pending'], existing: ['consentStatus' => 'objection_received']);
 
@@ -103,7 +107,14 @@ class ConsentStatusEventsTest extends TestCase {
 	 * @return void
 	 */
 	public function testEventsAccumulateAndUnchangedValuesAddNone(): void {
-		$earlier = ['field' => 'notificationStatus', 'from' => 'pending', 'to' => 'sent', 'evidence' => '', 'by' => 'bob', 'at' => '2026-10-20T09:00:00+00:00'];
+		$earlier = [
+			'field' => 'notificationStatus',
+			'from' => 'pending',
+			'to' => 'sent',
+			'evidence' => '',
+			'by' => 'bob',
+			'at' => '2026-10-20T09:00:00+00:00',
+		];
 
 		$result = $this->apply(
 			changes: ['consentStatus' => 'pending', 'notificationStatus' => 'delivered'],
