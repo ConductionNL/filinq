@@ -350,7 +350,7 @@ class SignedArtifactProducer {
 			}
 
 			foreach ($nodes as $node) {
-				if ($node instanceof File && $node->isReadable() === true) {
+				if ($node instanceof File) {
 					return $node;
 				}
 			}

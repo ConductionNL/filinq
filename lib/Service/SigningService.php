@@ -167,19 +167,9 @@ class SigningService {
 		$defaultLevel = (string)$toggles['signing_default_level'];
 		$defaultProv = (string)$toggles['signing_provider'];
 
-		// The file is resolved in the initiator's own folder and its name taken
-		// from the node: a request may only name a file its initiator can read.
-		$documentFileId = '';
-		$documentName = '';
-		if (empty($data['documentFileId']) === false) {
-			$document = $this->artifactProducer->initiatorDocument(fileId: $data['documentFileId'], initiatorUserId: $initiatorUserId);
-			$documentFileId = (string)$document->getId();
-			$documentName = $document->getName();
-		}
-
 		$request = [
-			'documentFileId' => $documentFileId,
-			'documentName' => $documentName,
+			'documentFileId' => $data['documentFileId'] ?? '',
+			'documentName' => $data['documentName'] ?? '',
 			'initiatorUserId' => $initiatorUserId,
 			'signatureLevel' => $data['signatureLevel'] ?? $defaultLevel,
 			'signingMode' => $data['signingMode'] ?? 'sequential',
@@ -216,6 +206,12 @@ class SigningService {
 			age: $request['guardianConsentAge'],
 			now: new DateTimeImmutable()
 		);
+
+		// The file is resolved in the initiator's own folder and its name taken
+		// from the node: a request may only name a file its initiator can read.
+		$document = $this->artifactProducer->initiatorDocument(fileId: $request['documentFileId'], initiatorUserId: $initiatorUserId);
+		$request['documentFileId'] = (string)$document->getId();
+		$request['documentName'] = $document->getName();
 
 		// Cross-app delegated-signing contract (filinq-signing-events): when a
 		// consumer raised this request through DocumentSigningRequestedEvent it
