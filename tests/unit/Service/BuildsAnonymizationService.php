@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ProhibitionOverrideAuthority;
+use OCA\Filinq\Service\ProhibitionOverrideCommitter;
 use OCA\Filinq\Service\AnonymisationRunRecords;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
@@ -101,14 +103,17 @@ trait BuildsAnonymizationService {
 				logger: $logger,
 				appConfig: $appConfig,
 				container: $container,
-				locator: $locator
+				locator: $locator,
+				authority: ($deps['overrideAuthority'] ?? $this->overrideAuthority(granted: true))
 			),
 			skipDecisions: new RelationSkipDecisionService(
 				logger: $logger,
 				container: $container,
 				locator: $locator,
 				userSession: ($deps['userSession'] ?? $this->createMock(IUserSession::class)),
-				rootFolder: ($deps['rootFolder'] ?? $this->createMock(IRootFolder::class))
+				rootFolder: ($deps['rootFolder'] ?? $this->createMock(IRootFolder::class)),
+				authority: ($deps['overrideAuthority'] ?? $this->overrideAuthority(granted: true)),
+				committer: new ProhibitionOverrideCommitter(logger: $logger, locator: $locator)
 			)
 		);
 
@@ -209,4 +214,19 @@ trait BuildsAnonymizationService {
 		return $guard;
 
 	}//end reviewingGuardThatAllows()
+
+	/**
+	 * An override authority that grants or refuses every user.
+	 *
+	 * @param bool $granted Whether the user may release a prohibition match.
+	 *
+	 * @return ProhibitionOverrideAuthority
+	 */
+	protected function overrideAuthority(bool $granted): ProhibitionOverrideAuthority {
+		$authority = $this->createMock(originalClassName: ProhibitionOverrideAuthority::class);
+		$authority->method('mayOverride')->willReturn($granted);
+
+		return $authority;
+
+	}//end overrideAuthority()
 }//end trait

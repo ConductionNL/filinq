@@ -104,6 +104,7 @@ class ProhibitionGateService {
 	 * @param IAppConfig $appConfig App configuration for threshold + fail-mode settings.
 	 * @param ContainerInterface $container Container the PolicyMatchService is resolved from.
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
+	 * @param ProhibitionOverrideAuthority $authority Who may release a prohibition match.
 	 *
 	 * @return void
 	 */
@@ -112,6 +113,7 @@ class ProhibitionGateService {
 		private readonly IAppConfig $appConfig,
 		private readonly ContainerInterface $container,
 		private readonly OpenRegisterServiceLocator $locator,
+		private readonly ProhibitionOverrideAuthority $authority,
 	) {
 		$this->committer = new ProhibitionOverrideCommitter(
 			logger: $logger,
@@ -165,6 +167,17 @@ class ProhibitionGateService {
 		}
 
 		$split = $this->splitOverrides(matches: $matches, overrides: $overrides);
+		if ($split['released'] !== [] && $this->authority->mayOverride(userId: $userId) === false) {
+			foreach ($split['released'] as $override) {
+				$split['rejected'][] = [
+					'ruleId' => $override['match']['ruleId'],
+					'entityId' => $override['match']['entityId'],
+					'reason' => 'only a policy admin may override a publication prohibition',
+				];
+			}
+
+			$split['released'] = [];
+		}
 		$missing = $this->collectMissingMatches(
 			matches: $matches,
 			released: $split['released'],

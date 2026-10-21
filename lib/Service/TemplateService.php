@@ -315,8 +315,9 @@ class TemplateService {
 	/**
 	 * Update an existing template with version history
 	 *
-	 * The namespace field cannot be changed after creation.
-	 * A version snapshot of the current state is created before updating.
+	 * The namespace field cannot be changed after creation. A save is refused
+	 * while another user holds a live edit lock, and the previous state is kept
+	 * as a version once the save has succeeded.
 	 *
 	 * @param string $id The template UUID
 	 * @param array $data Updated template data
@@ -333,17 +334,18 @@ class TemplateService {
 
 		$existing = $this->getTemplate(id: $id);
 
-		// Create a version snapshot of the current state before updating.
 		$editor = $this->getCurrentUserId();
 		$changelog = $data['_changelog'] ?? null;
 		unset($data['_changelog']);
 
-		$this->versionService->createVersion(
-			templateId: $id,
-			templateState: $existing,
-			editor: $editor,
-			changelog: $changelog
-		);
+		// The edit lock is enforced here, not only in the editor: a save by
+		// anyone but the holder of a live lock is refused.
+		if (empty($existing['lockedBy']) === false
+			&& $existing['lockedBy'] !== $editor
+			&& $this->isLockExpired(template: $existing) === false
+		) {
+			throw new Exception(message: 'Template is locked by another user', code: 409);
+		}
 
 		// Namespace is immutable after creation.
 		unset($data['namespace']);
@@ -361,6 +363,15 @@ class TemplateService {
 			object: $merged,
 			register: $config['register'],
 			schema: $config['schema']
+		);
+
+		// Snapshot the previous state only once the save has gone through, so
+		// a refused save leaves no version row behind.
+		$this->versionService->createVersion(
+			templateId: $id,
+			templateState: $existing,
+			editor: $editor,
+			changelog: $changelog
 		);
 
 		if (is_object($result) === true

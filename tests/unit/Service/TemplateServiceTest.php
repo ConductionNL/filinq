@@ -427,6 +427,46 @@ class TemplateServiceTest extends TestCase {
 	}//end testUpdateTemplateSnapshotsExistingStateIntoVersionHistory()
 
 	/**
+	 * A save while another user holds a live lock is refused, and leaves no version.
+	 *
+	 * @return void
+	 */
+	public function testUpdateTemplateRefusesASaveUnderSomebodyElsesLock(): void {
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->method('find')->willReturn(
+			['id' => 'uuid-123', 'name' => 'Original', 'lockedBy' => 'bob', 'lockedAt' => (new \DateTime())->format(format: 'c')]
+		);
+		$mockObjectService->expects($this->never())->method('saveObject');
+		$mockVersionService = $this->createMock(TemplateVersionService::class);
+		$mockVersionService->expects($this->never())->method('createVersion');
+		$this->setUpWithOpenRegisterAndVersionService($mockObjectService, $mockVersionService);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')->willReturn(['register' => 'reg-1', 'schema' => 'schema-1']);
+
+		$this->expectExceptionCode(409);
+		$this->templateService->updateTemplate(id: 'uuid-123', data: ['name' => 'Overwritten']);
+
+	}//end testUpdateTemplateRefusesASaveUnderSomebodyElsesLock()
+
+	/**
+	 * A save OpenRegister refuses adds no version row.
+	 *
+	 * @return void
+	 */
+	public function testARefusedSaveAddsNoVersion(): void {
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->method('find')->willReturn(['id' => 'uuid-123', 'name' => 'Original']);
+		$mockObjectService->method('saveObject')->willThrowException(new \RuntimeException('refused', 403));
+		$mockVersionService = $this->createMock(TemplateVersionService::class);
+		$mockVersionService->expects($this->never())->method('createVersion');
+		$this->setUpWithOpenRegisterAndVersionService($mockObjectService, $mockVersionService);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')->willReturn(['register' => 'reg-1', 'schema' => 'schema-1']);
+
+		$this->expectException(\RuntimeException::class);
+		$this->templateService->updateTemplate(id: 'uuid-123', data: ['name' => 'Updated']);
+
+	}//end testARefusedSaveAddsNoVersion()
+
+	/**
 	 * Test deleteTemplate returns true on success
 	 *
 	 * @return void

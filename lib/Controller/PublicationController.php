@@ -89,7 +89,7 @@ class PublicationController extends Controller {
 		$uid = $this->uid();
 		$results = [];
 		foreach ($this->store->listRecords() as $record) {
-			if ($this->access->mayAct(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
+			if ($this->access->maySee(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
 				$results[] = $this->pipeline->sync(record: $record);
 			}
 		}
@@ -148,7 +148,7 @@ class PublicationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		$record = $this->authorised(id: $id);
+		$record = $this->authorised(id: $id, act: false);
 		if ($record === null) {
 			return $this->forbidden();
 		}
@@ -172,7 +172,7 @@ class PublicationController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function readiness(string $id): JSONResponse {
-		$record = $this->authorised(id: $id);
+		$record = $this->authorised(id: $id, act: false);
 		if ($record === null) {
 			return $this->forbidden();
 		}
@@ -275,13 +275,24 @@ class PublicationController extends Controller {
 	/**
 	 * The record, when the caller may act on it.
 	 *
-	 * @param string $id The record
+	 * @param string $id  The record
+	 * @param bool   $act True for a step that changes the publication, false to read it
 	 *
 	 * @return array<string, mixed>|null The record, or null for "not found or not yours".
 	 */
-	private function authorised(string $id): ?array {
+	private function authorised(string $id, bool $act = true): ?array {
 		$record = $this->store->findRecord(uuid: $id);
-		if ($record === null || $this->access->mayAct(uid: $this->uid(), fileId: (string) ($record['documentFileRef'] ?? '')) === false) {
+		if ($record === null) {
+			return null;
+		}
+
+		$fileId = (string) ($record['documentFileRef'] ?? '');
+		$allowed = $this->access->maySee(uid: $this->uid(), fileId: $fileId);
+		if ($act === true) {
+			$allowed = $this->access->mayAct(uid: $this->uid(), fileId: $fileId);
+		}
+
+		if ($allowed === false) {
 			return null;
 		}
 
