@@ -214,11 +214,7 @@ class SigningService {
 		// signing-request object (additive/optional) so the terminal
 		// SigningConcludedEvent can correlate back to the originating consumer.
 		// Internal requests omit these and are unaffected.
-		foreach ([...self::PROVENANCE_FIELDS, 'envelopeRef'] as $field) {
-			if (empty($data[$field]) === false) {
-				$request[$field] = $data[$field];
-			}
-		}
+		$request = $this->withProvenance(request: $request, data: $data);
 		$request = $this->validator->withPlacements(request: $request, data: $data, producer: $this->artifactProducer);
 		$request = $this->artifactProducer->delegate(request: $request, signers: $signers);
 
@@ -247,6 +243,27 @@ class SigningService {
 
 		return $createdRequest;
 	}//end createRequest()
+
+	/**
+	 * Copy the provenance a consuming app sent onto the request.
+	 *
+	 * @param array<string, mixed> $request The request being created.
+	 * @param array<string, mixed> $data    What the consumer sent.
+	 *
+	 * @return array<string, mixed> The request with any provenance fields set.
+	 *
+	 * @spec openspec/changes/filinq-signing-events/specs/filinq-signing-events/spec.md
+	 */
+	private function withProvenance(array $request, array $data): array {
+		foreach ([...self::PROVENANCE_FIELDS, 'envelopeRef'] as $field) {
+			if (empty($data[$field]) === false) {
+				$request[$field] = $data[$field];
+			}
+		}
+
+		return $request;
+
+	}//end withProvenance()
 
 	/**
 	 * Point the request at the file as its initiator sees it.
@@ -362,15 +379,9 @@ class SigningService {
 	 *                                   non-admin) is neither initiator nor
 	 *                                   signer, or the request does not exist.
 	 *
-	 * @throws RuntimeException When an unscoped read finds no record.
+	 * @throws RegisterNotConfiguredException When the signing register is not configured.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
-	 *
-	 * Wilco #6 blocker fix (filinq#100, 2026-06-06): the access-denied path
-	 * still returns null (indistinguishable from the controller's not-found
-	 * 404 for a scoped caller), so an unrelated user cannot probe request-ID
-	 * existence. Not-found now throws a fixed, ID-free message ('Signing
-	 * request not found') — no UUID is echoed, so nothing is leaked.
 	 */
 	public function getRequest(string $requestId, string $callerUserId = ''): ?array {
 		$objectService = $this->settingsService->getObjectService();
@@ -382,18 +393,10 @@ class SigningService {
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
 		$object = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
-		if ($object === null && $callerUserId !== '') {
-			// A scoped caller gets the same null for a request that does not
-			// exist as for one that is not theirs, so no answer tells them apart.
-			return null;
-		}
-
 		if ($object === null) {
-			// Genuine not-found: throw so the controller maps it to a single
-			// 404. Access-denied below still collapses to null — the two
-			// shapes stay indistinguishable to a non-admin caller, preserving
-			// the Wilco #6 anti-existence-probing contract.
-			throw new RuntimeException('Signing request not found');
+			// The same null as for a request that is not the caller's, so no
+			// answer tells "does not exist" from "not yours".
+			return null;
 		}
 
 		$request = $this->toArray(object: $object);
