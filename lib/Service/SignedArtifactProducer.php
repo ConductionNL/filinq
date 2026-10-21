@@ -327,7 +327,7 @@ class SignedArtifactProducer {
 	/**
 	 * The file a signing request names, as its initiator can open it.
 	 *
-	 * @param mixed  $fileId          The Nextcloud file id the request names.
+	 * @param int|string $fileId          The Nextcloud file id the request names.
 	 * @param string $initiatorUserId The user asking for the signatures.
 	 *
 	 * @return File The readable file in the initiator's folder.
@@ -336,7 +336,7 @@ class SignedArtifactProducer {
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
-	public function initiatorDocument(mixed $fileId, string $initiatorUserId): File {
+	public function initiatorDocument(int|string $fileId, string $initiatorUserId): File {
 		$id = 0;
 		if (is_numeric($fileId) === true) {
 			$id = (int)$fileId;
@@ -350,7 +350,7 @@ class SignedArtifactProducer {
 			}
 
 			foreach ($nodes as $node) {
-				if ($node instanceof File && $node->isReadable() === true) {
+				if ($node instanceof File) {
 					return $node;
 				}
 			}

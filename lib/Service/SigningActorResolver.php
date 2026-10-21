@@ -246,6 +246,46 @@ class SigningActorResolver {
 	}//end isSignerOf()
 
 	/**
+	 * May the user read this request: are they its initiator or one of its signers?
+	 *
+	 * @param array<string, mixed> $request   The signing request.
+	 * @param string               $requestId Its id.
+	 * @param string               $userId    The user asking; '' reads unscoped.
+	 *
+	 * @return bool True for an unscoped read, the initiator or a signer.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function mayRead(array $request, string $requestId, string $userId): bool {
+		if ($userId === '' || ($request['initiatorUserId'] ?? '') === $userId) {
+			return true;
+		}
+
+		return $this->isSignerOf(requestId: $requestId, signerIds: (array)($request['signerIds'] ?? []), userId: $userId);
+
+	}//end mayRead()
+
+	/**
+	 * Does a listed request belong in the user's list?
+	 *
+	 * @param array<string, mixed> $request          The signing request.
+	 * @param string               $userId           The user asking; '' lists unscoped.
+	 * @param list<string>         $signedRequestIds The requests the user signs, from requestIdsForSigner().
+	 *
+	 * @return bool True for an unscoped list, the initiator or a signer.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function isListedFor(array $request, string $userId, array $signedRequestIds): bool {
+		if ($userId === '' || ($request['initiatorUserId'] ?? '') === $userId) {
+			return true;
+		}
+
+		return in_array((string)($request['id'] ?? ($request['uuid'] ?? '')), $signedRequestIds, true);
+
+	}//end isListedFor()
+
+	/**
 	 * The ids of every signing request the user is a signer on, in one search.
 	 *
 	 * @param string $userId The signer.
