@@ -55,7 +55,7 @@ by correcting it.
 ### Unfreeze, when you have to
 
 An administrator can unfreeze a final document. It needs the
-`docudesk-final-document-admins` right and a reason, and it leaves a mark on the
+`filinq-final-document-admins` right and a reason, and it leaves a mark on the
 document that nobody can clear.
 
 The exception exists on purpose. Without one, somebody edits the file on the

@@ -22,7 +22,7 @@ vi.mock('@nextcloud/axios', () => ({
 					notificationReach: {
 						staffed: false,
 						failureCount: 1,
-						group: 'docudesk-woo-officers',
+						group: 'filinq-woo-officers',
 						notificationReaches: 0,
 					},
 				},
@@ -35,9 +35,9 @@ describe('reachWarning', () => {
 		const text = reachWarning({
 			staffed: false,
 			failureCount: 2,
-			group: 'docudesk-woo-officers',
+			group: 'filinq-woo-officers',
 		})
-		expect(text).toContain('docudesk-woo-officers')
+		expect(text).toContain('filinq-woo-officers')
 		expect(text).toContain('2')
 	})
 
@@ -45,9 +45,9 @@ describe('reachWarning', () => {
 		const text = reachWarning({
 			staffed: false,
 			failureCount: 0,
-			group: 'docudesk-woo-officers',
+			group: 'filinq-woo-officers',
 		})
-		expect(text).toContain('docudesk-woo-officers')
+		expect(text).toContain('filinq-woo-officers')
 		expect(text).not.toBe('')
 	})
 

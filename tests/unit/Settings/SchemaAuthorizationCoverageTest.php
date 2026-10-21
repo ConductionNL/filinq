@@ -348,7 +348,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	 *
 	 * A substring test is not good enough, and this was measured: planting the
 	 * typo `docudesk-template-editor` (singular) PASSED a `str_contains()` check,
-	 * because it is a prefix of the real `docudesk-template-editors`. A near-miss
+	 * because it is a prefix of the real `filinq-template-editors`. A near-miss
 	 * group name is the single failure mode this assertion exists for, so a check
 	 * that cannot see it is worse than no check — it reports a control that is not
 	 * there.

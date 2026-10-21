@@ -101,7 +101,7 @@ class ServiceWrittenCreateTest extends TestCase {
 		$create = $this->schemas()['signingAuditEntry']['authorization']['create'];
 
 		$this->assertNotContains('authenticated', $create);
-		$this->assertContains('docudesk-signing-admins', $create);
+		$this->assertContains('filinq-signing-admins', $create);
 	}//end testTheRetiredAuditSchemaNoLongerAcceptsAnybodysCreate()
 
 	/**

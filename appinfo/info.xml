@@ -33,7 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.2.8-unstable.20261021142000</version>
+    <version>0.2.8-unstable.20261021143000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
@@ -180,6 +180,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <post-migration>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!-- Copies the docudesk-* role group members into the filinq-* groups; once, deletes nothing. -->
+            <step>OCA\Filinq\Repair\RenameRoleGroups</step>
             <!--
                 THE THIRD STORE KEYED BY APP ID, AND THE TWO ABOVE DO NOT COVER
                 IT. `oc_appconfig` and `oc_preferences` are Nextcloud's; this
@@ -236,6 +238,8 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>
             <step>OCA\Filinq\Repair\MigrateUserPreferences</step>
+            <!-- Copies the docudesk-* role group members into the filinq-* groups; once, deletes nothing. -->
+            <step>OCA\Filinq\Repair\RenameRoleGroups</step>
             <!-- Same step, same reason; see the <post-migration> block. An
                  app-id rename presents to Nextcloud as a FRESH INSTALL, so
                  this block is the one that actually fires on the upgrade the

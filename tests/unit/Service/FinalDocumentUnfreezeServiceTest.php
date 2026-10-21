@@ -147,7 +147,7 @@ class FinalDocumentUnfreezeServiceTest extends TestCase {
 		$service = $this->service(holdsRight: false, rows: [$this->finalRecord()]);
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessageMatches('/docudesk-final-document-admins/');
+		$this->expectExceptionMessageMatches('/filinq-final-document-admins/');
 
 		$service->unfreeze(fileId: 4711, reason: 'The besluit named the wrong street');
 
