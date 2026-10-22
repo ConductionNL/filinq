@@ -110,3 +110,49 @@ describe('folder anonymise: the human check per file', () => {
 		expect(store.reviewedFiles).toEqual([])
 	})
 })
+
+// @spec openspec/changes/folder-skip-through-the-prohibition-check/specs/folder-analysis-anonymization/spec.md
+describe('folder anonymise: skip decisions go through filinq', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockReset()
+		axios.patch.mockReset()
+	})
+
+	it('sends a skip to the filinq relation route, never straight to OpenRegister', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.entities[0]._decisionSkip = true
+		axios.patch.mockResolvedValue({ data: { status: 'ok' } })
+		axios.post.mockImplementation((url) => Promise.resolve({
+			data: url.endsWith('/checked')
+				? { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' }
+				: { anonymizedFileId: 99 },
+		}))
+
+		await store.markFileChecked(store.files[0])
+		await store.anonymizeFolder()
+
+		const urls = axios.patch.mock.calls.map(([url]) => url)
+		expect(urls).toEqual(['/apps/filinq/api/anonymization/relations/11'])
+		expect(axios.patch.mock.calls[0][1]).toEqual({ bases: [], skipAnonymization: true })
+	})
+
+	it('keeps the refusal of a prohibited skip on the entity', async () => {
+		const store = useFolderAnonymizationStore()
+		seedReview(store)
+		store.entities[0]._decisionSkip = true
+		axios.patch.mockRejectedValue({ response: { data: { error: 'Entity is on the publication prohibition list; skipping is not allowed.' } } })
+		axios.post.mockImplementation((url) => Promise.resolve({
+			data: url.endsWith('/checked')
+				? { checkedBy: 'ingrid', checkedAt: '2026-10-16T10:00:00+00:00' }
+				: { anonymizedFileId: 99 },
+		}))
+
+		await store.markFileChecked(store.files[0])
+		await store.anonymizeFolder()
+
+		expect(store.entities[0]._patchError).toContain('prohibition list')
+	})
+})
